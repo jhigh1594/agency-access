@@ -26,13 +26,14 @@ const PLATFORM_NAMES: Record<string, string> = {
 };
 
 interface PlatformConnection {
-  id: string;
   platform: string;
-  status: string;
-  connectedBy: string;
-  connectedAt: string;
+  name: string;
+  category: string;
+  connected: boolean;
+  status?: string;
+  connectedEmail?: string;
+  connectedAt?: string;
   expiresAt?: string;
-  lastRefreshedAt?: string;
   metadata?: Record<string, any>;
 }
 
@@ -40,37 +41,41 @@ interface PlatformConnectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConnectionComplete?: () => void;
+  agencyId?: string; // Optional: if not provided, falls back to orgId from useAuth()
 }
 
 export function PlatformConnectionModal({
   isOpen,
   onClose,
   onConnectionComplete,
+  agencyId,
 }: PlatformConnectionModalProps) {
-  const { orgId } = useAuth();
+  const { orgId: fallbackOrgId } = useAuth();
+  const effectiveAgencyId = agencyId || fallbackOrgId;
   const router = useRouter();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
 
-  // Fetch platform connections
+  // Fetch platform connections - use same endpoint as connections page
   const {
     data: connections = [],
     isLoading,
     error: fetchError,
     refetch,
   } = useQuery<PlatformConnection[]>({
-    queryKey: ['platform-connections', orgId],
+    queryKey: ['available-platforms', effectiveAgencyId],
     queryFn: async () => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${orgId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${effectiveAgencyId}`
       );
       if (!response.ok) throw new Error('Failed to fetch platforms');
       const result = await response.json();
-      return result.data || [];
+      // Filter to only show connected platforms
+      return (result.data || []).filter((p: any) => p.connected);
     },
-    enabled: isOpen && !!orgId,
+    enabled: isOpen && !!effectiveAgencyId,
   });
 
   // Refresh token mutation
@@ -81,7 +86,7 @@ export function PlatformConnectionModal({
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agencyId: orgId }),
+          body: JSON.stringify({ agencyId: effectiveAgencyId }),
         }
       );
       if (!response.ok) throw new Error('Failed to refresh token');
@@ -90,7 +95,7 @@ export function PlatformConnectionModal({
     onSuccess: () => {
       setSuccessMessage('Token refreshed successfully');
       setErrorMessage(null);
-      queryClient.invalidateQueries({ queryKey: ['platform-connections', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['available-platforms', effectiveAgencyId] });
       setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: () => {
@@ -107,7 +112,7 @@ export function PlatformConnectionModal({
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agencyId: orgId }),
+          body: JSON.stringify({ agencyId: effectiveAgencyId }),
         }
       );
       if (!response.ok) throw new Error('Failed to disconnect');
@@ -117,7 +122,7 @@ export function PlatformConnectionModal({
       setSuccessMessage('Platform disconnected successfully');
       setErrorMessage(null);
       setDisconnectPlatform(null);
-      queryClient.invalidateQueries({ queryKey: ['platform-connections', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['available-platforms', effectiveAgencyId] });
       setTimeout(() => setSuccessMessage(null), 3000);
     },
     onError: () => {
@@ -297,44 +302,42 @@ export function PlatformConnectionModal({
               <div className="space-y-3">
                 {connections.map((connection) => (
                   <div
-                    key={connection.id}
+                    key={connection.platform}
                     className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <h3 className="font-semibold text-slate-900">
-                          {PLATFORM_NAMES[connection.platform] || connection.platform}
+                          {connection.name || PLATFORM_NAMES[connection.platform] || connection.platform}
                         </h3>
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClass(
-                            connection.status
+                            connection.status || 'active'
                           )}`}
                         >
-                          {getStatusIcon(connection.status)}
-                          {connection.status}
+                          {getStatusIcon(connection.status || 'active')}
+                          {connection.status || 'active'}
                         </span>
                       </div>
                     </div>
 
                     {/* Connection details */}
                     <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-3">
-                      <div>
-                        <span className="font-medium">Connected by:</span> {connection.connectedBy}
-                      </div>
-                      <div>
-                        <span className="font-medium">Connected:</span>{' '}
-                        {new Date(connection.connectedAt).toLocaleDateString()}
-                      </div>
+                      {connection.connectedEmail && (
+                        <div>
+                          <span className="font-medium">Connected by:</span> {connection.connectedEmail}
+                        </div>
+                      )}
+                      {connection.connectedAt && (
+                        <div>
+                          <span className="font-medium">Connected:</span>{' '}
+                          {new Date(connection.connectedAt).toLocaleDateString()}
+                        </div>
+                      )}
                       {connection.expiresAt && (
                         <div>
                           <span className="font-medium">Expires:</span>{' '}
                           {new Date(connection.expiresAt).toLocaleDateString()}
-                        </div>
-                      )}
-                      {connection.lastRefreshedAt && (
-                        <div>
-                          <span className="font-medium">Last refreshed:</span>{' '}
-                          {new Date(connection.lastRefreshedAt).toLocaleDateString()}
                         </div>
                       )}
                     </div>

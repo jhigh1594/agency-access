@@ -15,8 +15,8 @@
 'use client';
 
 import { Fragment, FormEvent, useMemo, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Plus, Trash2, Check, Loader2, AlertCircle, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,7 +32,7 @@ import { PlatformConnectionModal } from '@/components/platform-connection-modal'
 // Context & Utilities
 import { AccessRequestProvider, useAccessRequest } from '@/contexts/access-request-context';
 import type { IntakeField } from '@/contexts/access-request-context';
-import { getPlatformCount, getGroupCount } from '@/lib/transform-platforms';
+import { getPlatformCount } from '@/lib/transform-platforms';
 import type { AccessRequestTemplate } from '@agency-platform/shared';
 
 // ============================================================
@@ -41,6 +41,7 @@ import type { AccessRequestTemplate } from '@agency-platform/shared';
 
 function AccessRequestWizardContent() {
   const { userId } = useAuth();
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const {
     state,
@@ -62,12 +63,62 @@ function AccessRequestWizardContent() {
   // Platform Connection Modal state
   const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
 
+  // Fetch agency by email - SAME approach as connections page
+  const { data: agencyData } = useQuery({
+    queryKey: ['user-agency', user?.primaryEmailAddress?.emailAddress],
+    queryFn: async () => {
+      const email = user?.primaryEmailAddress?.emailAddress;
+      if (!email) return null;
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?email=${encodeURIComponent(email)}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch agency');
+      const result = await response.json();
+      return result.data?.[0] || null;
+    },
+    enabled: !!user?.primaryEmailAddress?.emailAddress,
+  });
+
+  // Use the agency's UUID id
+  const agencyId = agencyData?.id;
+
+  // Fetch platform connections using the SAME endpoint as connections page
+  const {
+    data: platformConnections = [],
+    isLoading: isLoadingConnections,
+  } = useQuery({
+    queryKey: ['available-platforms', agencyId],
+    queryFn: async () => {
+      if (!agencyId) return [];
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch platforms');
+      const result = await response.json();
+      return result.data || [];
+    },
+    enabled: !!agencyId,
+  });
+
+  // Build platform connection status map for AuthModelSelector
+  // The /agency-platforms/available endpoint returns { platform, connected, ... }
+  const agencyHasConnectedPlatforms = useMemo(() => {
+    const statusMap: Record<string, boolean> = {};
+    platformConnections.forEach((conn: { platform: string; connected?: boolean; status?: string }) => {
+      // Support both formats: 'connected' from /available endpoint, 'status' from direct endpoint
+      if (conn.connected === true || conn.status === 'active') {
+        statusMap[conn.platform] = true;
+      }
+    });
+    return statusMap;
+  }, [platformConnections]);
+
   // Calculate platform counts
   const platformCount = useMemo(
     () => getPlatformCount(state.selectedPlatforms),
     [state.selectedPlatforms]
   );
-  const groupCount = useMemo(() => getGroupCount(state.selectedPlatforms), [state.selectedPlatforms]);
 
   // Validation for current step
   const currentStepValid = useMemo(() => {
@@ -130,7 +181,8 @@ function AccessRequestWizardContent() {
           </p>
         </div>
 
-        {/* Enhanced Progress Steps */}
+        {/* Form & Progress */}
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="py-8">
         <div className="flex items-center justify-center gap-2">
           {steps.map((step, index) => (
@@ -196,307 +248,309 @@ function AccessRequestWizardContent() {
       </div>
 
       {/* Form */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <form id="access-request-form" onSubmit={handleSubmit}>
-          <AnimatePresence mode="wait">
-            {/* Step 0: Template Selection */}
-            {state.currentStep === 0 && (
-              <motion.div
-                key="step-0"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
-              >
-                <TemplateSelector
-                  agencyId={userId!}
-                  selectedTemplate={state.selectedTemplate}
-                  onSelect={handleTemplateSelect}
-                />
+      <form id="access-request-form" onSubmit={handleSubmit}>
+        <AnimatePresence mode="wait">
+          {/* Step 0: Template Selection */}
+          {state.currentStep === 0 && (
+            <motion.div
+            key="step-0"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            >
+            <TemplateSelector
+              agencyId={agencyId!}
+              selectedTemplate={state.selectedTemplate}
+              onSelect={handleTemplateSelect}
+            />
 
-                <div className="mt-6 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                  >
-                    Continue
-                  </button>
-                </div>
+            <div className="mt-6 flex justify-end">
+              <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              >
+              Continue
+              </button>
+            </div>
+            </motion.div>
+          )}
+
+          {/* Step 1: Client Selection */}
+          {state.currentStep === 1 && (
+            <motion.div
+            key="step-1"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            >
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Client Information</h2>
+            <p className="text-sm text-slate-600 mb-6">
+              Select an existing client or create a new one
+            </p>
+
+            <ClientSelector
+              agencyId={agencyId!}
+              value={state.client?.id}
+              onSelect={updateClient}
+            />
+
+            {state.error && (
+              <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+              >
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{state.error}</p>
               </motion.div>
             )}
 
-            {/* Step 1: Client Selection */}
-            {state.currentStep === 1 && (
-              <motion.div
-                key="step-1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            <div className="mt-6 flex justify-between">
+              <button
+              type="button"
+              onClick={() => setStep(0)}
+              className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Client Information</h2>
-                <p className="text-sm text-slate-600 mb-6">
-                  Select an existing client or create a new one
+              Back
+              </button>
+              <button
+              type="button"
+              onClick={() => setStep(2)}
+              disabled={!currentStepValid}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              >
+              Continue
+              </button>
+            </div>
+            </motion.div>
+          )}
+
+          {/* Step 2: Auth Model Selection */}
+          {state.currentStep === 2 && (
+            <motion.div
+            key="step-2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            >
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Authorization Model</h2>
+            <p className="text-sm text-slate-600 mb-6">
+              Choose how clients will authorize access to their platforms
+            </p>
+
+            <AuthModelSelector
+              selectedAuthModel={state.authModel}
+              onSelectionChange={updateAuthModel}
+              agencyHasConnectedPlatforms={agencyHasConnectedPlatforms}
+            />
+
+            {/* Delegated Access helper - show platform connection modal button */}
+            {state.authModel === 'delegated_access' && (
+              <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                <p className="text-sm text-purple-900 font-medium mb-1">
+                  Delegated Access requires platform connections
                 </p>
-
-                <ClientSelector
-                  agencyId={userId!}
-                  value={state.client?.id}
-                  onSelect={updateClient}
-                />
-
-                {state.error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
-                  >
-                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-800">{state.error}</p>
-                  </motion.div>
-                )}
-
-                <div className="mt-6 flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setStep(0)}
-                    className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    disabled={!currentStepValid}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 2: Auth Model Selection */}
-            {state.currentStep === 2 && (
-              <motion.div
-                key="step-2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
-              >
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Authorization Model</h2>
-                <p className="text-sm text-slate-600 mb-6">
-                  Choose how clients will authorize access to their platforms
+                <p className="text-xs text-purple-700">
+                  Your agency must have connected platforms to grant access to clients
                 </p>
-
-                <AuthModelSelector
-                  selectedAuthModel={state.authModel}
-                  onSelectionChange={updateAuthModel}
-                />
-
-                {/* Delegated Access helper - show platform connection modal button */}
-                {state.authModel === 'delegated_access' && (
-                  <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm text-purple-900 font-medium mb-1">
-                          Delegated Access requires platform connections
-                        </p>
-                        <p className="text-xs text-purple-700">
-                          Your agency must have connected platforms to grant access to clients
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsPlatformModalOpen(true)}
-                        className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Manage Platforms
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-6 flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(3)}
-                    disabled={!state.authModel}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                  >
-                    Continue
-                  </button>
                 </div>
-              </motion.div>
+                <button
+                type="button"
+                onClick={() => setIsPlatformModalOpen(true)}
+                className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                >
+                <Plus className="h-4 w-4" />
+                Manage Platforms
+                </button>
+              </div>
+              </div>
             )}
 
-            {/* Step 3: Platforms & Access Level */}
-            {state.currentStep === 3 && (
-              <motion.div
-                key="step-3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            <div className="mt-6 flex justify-between">
+              <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <div className="space-y-8">
-                  {/* Access Level Section */}
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-1">
-                      Access Level for All Platforms
-                    </h2>
-                    <p className="text-sm text-slate-600 mb-4">
-                      This access level will apply to all selected platforms
-                    </p>
-                    <AccessLevelSelector
-                      selectedAccessLevel={state.globalAccessLevel ?? undefined}
-                      onSelectionChange={updateAccessLevel}
-                    />
-                  </div>
+              Back
+              </button>
+              <button
+              type="button"
+              onClick={() => setStep(3)}
+              disabled={!state.authModel}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              >
+              Continue
+              </button>
+            </div>
+            </motion.div>
+          )}
 
-                  {/* Platform Selection Section */}
-                  <div>
-                    <div className="flex items-baseline justify-between mb-4">
-                      <div>
-                        <h2 className="text-lg font-semibold text-slate-900">Select Platforms</h2>
-                        {platformCount > 0 && (
-                          <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-sm text-slate-600 mt-1"
-                          >
-                            <span className="font-semibold text-indigo-600">
-                              {platformCount} {platformCount === 1 ? 'product' : 'products'}
-                            </span>{' '}
-                            selected across {groupCount} {groupCount === 1 ? 'platform' : 'platforms'}
-                          </motion.p>
-                        )}
-                      </div>
-                    </div>
+          {/* Step 3: Platforms & Access Level */}
+          {state.currentStep === 3 && (
+            <motion.div
+            key="step-3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            >
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Platforms & Access</h2>
+            <p className="text-sm text-slate-600 mb-6">
+              Select which platforms to include in this access request
+            </p>
 
-                    <HierarchicalPlatformSelector
-                      selectedPlatforms={state.selectedPlatforms}
-                      onSelectionChange={updatePlatforms}
-                    />
-                  </div>
-                </div>
+            <div className="space-y-6">
+              {/* Access Level Section */}
+              <AccessLevelSelector
+                selectedAccessLevel={state.globalAccessLevel ?? undefined}
+                onSelectionChange={updateAccessLevel}
+              />
 
-                {state.error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
-                  >
-                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-800">{state.error}</p>
-                  </motion.div>
+              {/* Platform Selection Section */}
+              <div>
+              <div className="flex items-baseline justify-between mb-3">
+                <label className="block text-sm font-medium text-slate-700">
+                  Select Platforms
+                </label>
+                {platformCount > 0 && (
+                  <span className="text-sm text-indigo-600 font-medium">
+                    {platformCount} selected
+                  </span>
                 )}
+              </div>
 
-                <div className="mt-6 flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(4)}
-                    disabled={!currentStepValid}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </motion.div>
-            )}
+              <HierarchicalPlatformSelector
+                selectedPlatforms={state.selectedPlatforms}
+                onSelectionChange={updatePlatforms}
+                connectedPlatforms={platformConnections}
+              />
 
-            {/* Step 4: Intake Form Builder */}
-            {state.currentStep === 4 && (
-              <motion.div
-                key="step-4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
-              >
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Intake Form Fields</h2>
-                <p className="text-sm text-slate-600 mb-6">
-                  Collect additional information from clients during authorization
+              {/* Info about connecting more platforms */}
+              {platformConnections.filter((p: any) => p.connected).length > 0 && (
+                <p className="mt-3 text-xs text-slate-500">
+                  Only your connected platforms are shown.{' '}
+                  <a href="/connections" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                    Connect more platforms
+                  </a>{' '}
+                  to include them in access requests.
                 </p>
+              )}
+              </div>
+            </div>
 
-                <div className="space-y-3">
+            {state.error && (
+              <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+              >
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{state.error}</p>
+              </motion.div>
+            )}
+
+            <div className="mt-6 flex justify-between">
+              <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+              Back
+              </button>
+              <button
+              type="button"
+              onClick={() => setStep(4)}
+              disabled={!currentStepValid}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              >
+              Continue
+              </button>
+            </div>
+            </motion.div>
+          )}
+
+          {/* Step 4: Intake Form Builder */}
+          {state.currentStep === 4 && (
+            <motion.div
+            key="step-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            >
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Intake Form Fields</h2>
+            <p className="text-sm text-slate-600 mb-6">
+              Collect additional information from clients during authorization
+            </p>
+
+            <div className="space-y-3">
                   <AnimatePresence mode="popLayout">
-                    {state.intakeFields.map((field, index) => (
-                      <motion.div
-                        key={field.id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
-                      >
-                        <div className="flex-1 space-y-3">
-                          <input
-                            type="text"
-                            value={field.label}
-                            onChange={(e) => updateIntakeField(field.id, { label: e.target.value })}
-                            placeholder="Field label (e.g., Company Website)"
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                          />
-                          <div className="flex items-center gap-3">
-                            <select
-                              value={field.type}
-                              onChange={(e) =>
-                                updateIntakeField(field.id, { type: e.target.value as any })
-                              }
-                              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            >
-                              <option value="text">Text</option>
-                              <option value="email">Email</option>
-                              <option value="phone">Phone</option>
-                              <option value="url">URL</option>
-                              <option value="textarea">Text Area</option>
-                            </select>
-                            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={field.required}
-                                onChange={(e) =>
-                                  updateIntakeField(field.id, { required: e.target.checked })
-                                }
-                                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                              />
-                              Required
-                            </label>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeIntakeField(field.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+              {state.intakeFields.map((field, index) => (
+                <motion.div
+                key={field.id}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+                >
+                <div className="flex-1 space-y-3">
+                  <input
+                type="text"
+                value={field.label}
+                onChange={(e) => updateIntakeField(field.id, { label: e.target.value })}
+                placeholder="Field label (e.g., Company Website)"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <div className="flex items-center gap-3">
+                <select
+                  value={field.type}
+                  onChange={(e) =>
+                    updateIntakeField(field.id, { type: e.target.value as any })
+                  }
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="text">Text</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Phone</option>
+                  <option value="url">URL</option>
+                  <option value="textarea">Text Area</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={field.required}
+                    onChange={(e) =>
+              updateIntakeField(field.id, { required: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Required
+                </label>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeIntakeField(field.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                </motion.div>
+              ))}
+              </AnimatePresence>
 
                   <button
                     type="button"
@@ -683,7 +737,7 @@ function AccessRequestWizardContent() {
 
                 {/* Save as Template Modal */}
                 <SaveAsTemplateModal
-                  agencyId={userId!}
+                  agencyId={agencyId!}
                   createdBy={userId!}
                   isOpen={isSaveTemplateModalOpen}
                   onClose={() => setIsSaveTemplateModalOpen(false)}
@@ -699,13 +753,15 @@ function AccessRequestWizardContent() {
             <PlatformConnectionModal
               isOpen={isPlatformModalOpen}
               onClose={() => setIsPlatformModalOpen(false)}
+              agencyId={agencyId}
               onConnectionComplete={() => {
-                // Refetch platform connections after modal closes
-                queryClient.invalidateQueries({ queryKey: ['platform-connections', userId] });
+                // Refetch platform connections after modal closes - use same key as connections page
+                queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
               }}
             />
           </AnimatePresence>
         </form>
+      </main>
       </div>
     </div>
   );
@@ -716,7 +772,7 @@ function AccessRequestWizardContent() {
 // ============================================================
 
 export default function NewAccessRequestPage() {
-  const { userId } = useAuth();
+  const { userId, orgId } = useAuth();
 
   if (!userId) {
     return (
@@ -726,8 +782,11 @@ export default function NewAccessRequestPage() {
     );
   }
 
+  // Use orgId if available (matches onboarding flow), otherwise fall back to userId
+  const agencyId = orgId || userId;
+
   return (
-    <AccessRequestProvider agencyId={userId}>
+    <AccessRequestProvider agencyId={agencyId}>
       <AccessRequestWizardContent />
     </AccessRequestProvider>
   );
