@@ -7,26 +7,39 @@
 
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
 import type { Platform, AccessRequestStatus } from '@agency-platform/shared';
 
 // Validation schemas
 const createAccessRequestSchema = z.object({
   agencyId: z.string().min(1, 'Agency ID is required'),
+  clientId: z.string().optional(),
   clientName: z.string().min(1, 'Client name is required'),
   clientEmail: z.string().email('Invalid email address'),
+  authModel: z.enum(['client_authorization', 'delegated_access']).optional().default('client_authorization'),
   platforms: z.array(
     z.object({
-      platform: z.enum(['meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']),
+      platform: z.enum([
+        // Meta products
+        'meta_ads', 'instagram', 'whatsapp_business',
+        // Google products
+        'google_ads', 'ga4', 'google_tag_manager', 
+        'google_merchant_center', 'google_search_console', 'youtube_studio',
+        'google_business_profile', 'display_video_360',
+        // Other platforms
+        'linkedin', 'tiktok', 'snapchat',
+      ]),
       accessLevel: z.enum(['manage', 'view_only']),
     })
   ).min(1, 'At least one platform must be selected'),
   intakeFields: z.array(
     z.object({
+      id: z.string().optional(), // Frontend may send id
       label: z.string(),
       type: z.enum(['text', 'email', 'phone', 'url', 'dropdown', 'textarea']),
       required: z.boolean(),
       options: z.array(z.string()).optional(), // For dropdown type
-      order: z.number(),
+      order: z.number().optional(), // Frontend may not send order, we'll assign it
     })
   ).optional(),
   branding: z.object({
@@ -50,8 +63,7 @@ export type UpdateAccessRequestInput = z.infer<typeof updateAccessRequestSchema>
  * Uses crypto.randomBytes for secure random generation
  */
 export function generateUniqueToken(): string {
-  const crypto = require('crypto');
-  const bytes = crypto.randomBytes(6); // 6 bytes = 12 hex characters
+  const bytes = randomBytes(6); // 6 bytes = 12 hex characters
   return bytes.toString('hex').toLowerCase();
 }
 
@@ -129,15 +141,23 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
       };
     }
 
+    // Normalize intakeFields - add order if missing
+    const normalizedIntakeFields = validated.intakeFields?.map((field, index) => ({
+      ...field,
+      order: field.order ?? index,
+    }));
+
     // Create the access request
     const accessRequest = await prisma.accessRequest.create({
       data: {
         agencyId: validated.agencyId,
+        clientId: validated.clientId,
         clientName: validated.clientName,
         clientEmail: validated.clientEmail,
+        authModel: validated.authModel,
         uniqueToken,
         platforms: validated.platforms as any,
-        intakeFields: validated.intakeFields as any,
+        intakeFields: normalizedIntakeFields as any,
         branding: validated.branding as any,
         status: 'pending',
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -157,14 +177,79 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
       };
     }
 
+    // Log the actual error for debugging
+    console.error('Failed to create access request:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
     return {
       data: null,
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to create access request',
+        details: error instanceof Error ? error.message : String(error),
       },
     };
   }
+}
+
+/**
+ * Transform flat platforms array to hierarchical format for frontend
+ * Flat: [{ platform: 'google_ads', accessLevel: 'manage' }]
+ * Hierarchical: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin' }] }]
+ */
+function transformPlatformsToHierarchical(platforms: any[]): any[] {
+  // Map platform products to their groups
+  const platformGroupMap: Record<string, string> = {
+    // Google products
+    'google_ads': 'google',
+    'ga4': 'google',
+    'google_tag_manager': 'google',
+    'google_merchant_center': 'google',
+    'google_search_console': 'google',
+    'youtube_studio': 'google',
+    'google_business_profile': 'google',
+    'display_video_360': 'google',
+    // Meta products
+    'meta_ads': 'meta',
+    'instagram': 'meta',
+    'whatsapp_business': 'meta',
+    // Other platforms (standalone)
+    'linkedin': 'linkedin',
+    'tiktok': 'tiktok',
+    'snapchat': 'snapchat',
+  };
+
+  // Map backend access levels back to frontend access levels
+  const accessLevelMap: Record<string, 'admin' | 'standard' | 'read_only' | 'email_only'> = {
+    'manage': 'admin',
+    'view_only': 'read_only',
+  };
+
+  // Group platforms by platformGroup
+  const grouped = platforms.reduce((acc, platform) => {
+    const platformGroup = platformGroupMap[platform.platform] || platform.platform;
+    
+    if (!acc[platformGroup]) {
+      acc[platformGroup] = [];
+    }
+    
+    acc[platformGroup].push({
+      product: platform.platform,
+      accessLevel: accessLevelMap[platform.accessLevel] || 'admin',
+      accounts: [], // Empty for client_authorization flow
+    });
+    
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  // Convert to hierarchical format
+  return Object.entries(grouped).map(([platformGroup, products]) => ({
+    platformGroup,
+    products,
+  }));
 }
 
 /**
@@ -186,7 +271,19 @@ export async function getAccessRequestById(id: string) {
       };
     }
 
-    return { data: accessRequest, error: null };
+    // Transform platforms from flat to hierarchical format for frontend
+    const platforms = accessRequest.platforms as any[];
+    const hierarchicalPlatforms = Array.isArray(platforms) && platforms.length > 0 && platforms[0]?.platform
+      ? transformPlatformsToHierarchical(platforms)
+      : platforms; // Already in hierarchical format or empty
+
+    return {
+      data: {
+        ...accessRequest,
+        platforms: hierarchicalPlatforms,
+      },
+      error: null,
+    };
   } catch (error) {
     return {
       data: null,
@@ -228,7 +325,19 @@ export async function getAccessRequestByToken(token: string) {
       };
     }
 
-    return { data: accessRequest, error: null };
+    // Transform platforms from flat to hierarchical format for frontend
+    const platforms = accessRequest.platforms as any[];
+    const hierarchicalPlatforms = Array.isArray(platforms) && platforms.length > 0 && platforms[0]?.platform
+      ? transformPlatformsToHierarchical(platforms)
+      : platforms; // Already in hierarchical format or empty
+
+    return {
+      data: {
+        ...accessRequest,
+        platforms: hierarchicalPlatforms,
+      },
+      error: null,
+    };
   } catch (error) {
     return {
       data: null,
@@ -260,7 +369,20 @@ export async function getAgencyAccessRequests(
       skip: filters?.offset,
     });
 
-    return { data: requests, error: null };
+    // Transform platforms from flat to hierarchical format for frontend
+    const transformedRequests = requests.map((request) => {
+      const platforms = request.platforms as any[];
+      const hierarchicalPlatforms = Array.isArray(platforms) && platforms.length > 0 && platforms[0]?.platform
+        ? transformPlatformsToHierarchical(platforms)
+        : platforms; // Already in hierarchical format or empty
+
+      return {
+        ...request,
+        platforms: hierarchicalPlatforms,
+      };
+    });
+
+    return { data: transformedRequests, error: null };
   } catch (error) {
     return {
       data: null,

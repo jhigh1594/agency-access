@@ -16,7 +16,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Check, X, Loader2, ChevronRight, Shield, Lock } from 'lucide-react';
 import { PlatformIcon, PLATFORM_CONFIG } from '@/components/ui';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
@@ -25,7 +25,14 @@ import type { Platform } from '@agency-platform/shared';
 interface AuthorizationPageData {
   agencyName: string;
   clientName: string;
-  platforms: Array<{ platform: Platform; accessLevel: string }>;
+  clientEmail: string;
+  platforms: Array<{
+    platformGroup: Platform;
+    products: Array<{
+      product: string;
+      accessLevel: string;
+    }>;
+  }>;
   intakeFields: Array<{
     id: string;
     label: string;
@@ -43,12 +50,24 @@ interface AuthorizationPageData {
 export default function ClientAuthorizationPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const token = params.token as string;
+
+  // Read URL params for OAuth callback flow
+  const urlConnectionId = searchParams.get('connectionId');
+  const urlPlatform = searchParams.get('platform') as Platform | null;
+  const urlStep = searchParams.get('step');
 
   const [step, setStep] = useState<'loading' | 'intake' | 'platforms' | 'complete'>('loading');
   const [data, setData] = useState<AuthorizationPageData | null>(null);
   const [intakeResponses, setIntakeResponses] = useState<Record<string, string>>({});
   const [completedPlatforms, setCompletedPlatforms] = useState<Set<Platform>>(new Set());
+  
+  // Track OAuth connection info from callback
+  const [oauthConnectionInfo, setOauthConnectionInfo] = useState<{
+    connectionId: string;
+    platform: Platform;
+  } | null>(null);
 
   // Fetch access request data on mount
   useEffect(() => {
@@ -64,7 +83,19 @@ export default function ClientAuthorizationPage() {
         }
 
         setData(result.data);
-        setStep('intake');
+        
+        // Check if returning from OAuth callback (step=2 in URL)
+        if (urlStep === '2' && urlConnectionId && urlPlatform) {
+          // Store connection info for the wizard
+          setOauthConnectionInfo({
+            connectionId: urlConnectionId,
+            platform: urlPlatform,
+          });
+          // Skip intake, go directly to platforms step
+          setStep('platforms');
+        } else {
+          setStep('intake');
+        }
       } catch (err) {
         console.error('Failed to fetch access request:', err);
         setStep('platforms'); // Will show error
@@ -72,7 +103,7 @@ export default function ClientAuthorizationPage() {
     };
 
     fetchData();
-  }, [token]);
+  }, [token, urlStep, urlConnectionId, urlPlatform]);
 
   const handleIntakeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +116,7 @@ export default function ClientAuthorizationPage() {
 
   const isComplete = () => {
     if (!data) return false;
-    return data.platforms.every((p) => completedPlatforms.has(p.platform));
+    return data.platforms.every((p) => completedPlatforms.has(p.platformGroup));
   };
 
   // Show complete screen if all platforms processed
@@ -117,10 +148,10 @@ export default function ClientAuthorizationPage() {
               <X className="h-8 w-8 text-red-600" />
             </div>
             <h1 className="text-xl font-semibold text-slate-900 mb-2">
-              Link Expired or Invalid
+              Link expired
             </h1>
             <p className="text-slate-600 mb-6">
-              This access request link has expired or doesn't exist. Please contact your agency for a new link.
+              This link is no longer valid. Contact your agency for a new one.
             </p>
           </div>
         </div>
@@ -145,7 +176,7 @@ export default function ClientAuthorizationPage() {
               )}
             </div>
             <div className="flex items-center gap-1">
-              {['Intake', 'Connect Platforms', 'Complete'].map((label, i) => {
+              {['Setup', 'Connect', 'Done'].map((label, i) => {
                 const currentStep = step === 'intake' ? 0 : step === 'platforms' ? 1 : 2;
                 const isActive = i <= currentStep;
                 return (
@@ -179,29 +210,14 @@ export default function ClientAuthorizationPage() {
       {/* Main Content */}
       <main className="pt-24 pb-12 px-4">
         <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full mb-4" style={{ backgroundColor: `${primaryColor}15` }}>
-              <Shield className="h-4 w-4" style={{ color: primaryColor }} />
-              <span className="text-sm font-medium" style={{ color: primaryColor }}>
-                Secure Authorization
-              </span>
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              {data.agencyName} needs access to your advertising accounts
-            </h1>
-            <p className="text-lg text-slate-600">
-              Authorize {data.platforms.length} platform{data.platforms.length > 1 ? 's' : ''} to complete the onboarding process
-            </p>
-          </div>
 
           {/* Intake Form Step */}
           {step === 'intake' && (
             <form onSubmit={handleIntakeSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-200">
-                <h2 className="text-xl font-semibold text-slate-900">Additional Information</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Quick Setup</h2>
                 <p className="text-slate-600 mt-1">
-                  Please provide a few details to complete your onboarding
+                  Share a few details about your business
                 </p>
               </div>
 
@@ -260,7 +276,7 @@ export default function ClientAuthorizationPage() {
                   className="w-full py-4 px-6 rounded-xl font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: primaryColor }}
                 >
-                  Continue to Authorization
+                  Continue
                   <ChevronRight className="inline h-5 w-5 ml-2" />
                 </button>
               </div>
@@ -269,8 +285,7 @@ export default function ClientAuthorizationPage() {
               <div className="px-8 py-4 bg-slate-50 flex items-start gap-3">
                 <Lock className="h-5 w-5 text-slate-500 mt-0.5" />
                 <div className="text-sm text-slate-600">
-                  <strong>Secure connection:</strong> We use official OAuth protocols from each platform.
-                  Your credentials are never shared or stored.
+                  <strong>Secure:</strong> Official OAuth only. We never see or store your passwords.
                 </div>
               </div>
             </form>
@@ -280,27 +295,42 @@ export default function ClientAuthorizationPage() {
           {step === 'platforms' && (
             <div className="space-y-8">
               {/* Header */}
-              <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-slate-900 mb-3">
-                  Connect Your Platforms
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                  {data.platforms.length - completedPlatforms.size === 0
+                    ? 'All platforms connected'
+                    : `Connect ${data.platforms.length - completedPlatforms.size} more platform${data.platforms.length - completedPlatforms.size !== 1 ? 's' : ''}`
+                  }
                 </h1>
-                <p className="text-lg text-slate-600">
-                  Authorize {data.platforms.length} platform{data.platforms.length > 1 ? 's' : ''} to give {data.agencyName} access
+                <p className="text-slate-600">
+                  {completedPlatforms.size === 0
+                    ? 'Start by connecting your first platform'
+                    : completedPlatforms.size === data.platforms.length
+                    ? 'You\'re all set'
+                    : `${completedPlatforms.size} of ${data.platforms.length} complete`
+                  }
                 </p>
               </div>
 
-              {/* Stacked Platform Wizards */}
-              {data.platforms.map((platformConfig) => {
-                const platform = platformConfig.platform;
+              {/* Stacked Platform Wizards - one per group */}
+              {data.platforms.map((groupConfig) => {
+                const platform = groupConfig.platformGroup;
                 const platformName = PLATFORM_CONFIG[platform]?.name || platform;
+                
+                // Check if this platform was just authenticated via OAuth callback
+                const isOAuthReturning = oauthConnectionInfo?.platform === platform;
 
                 return (
                   <PlatformAuthWizard
                     key={platform}
                     platform={platform}
                     platformName={platformName}
+                    products={groupConfig.products}
                     accessRequestToken={token}
                     onComplete={() => handlePlatformComplete(platform)}
+                    // Pass connection info if returning from OAuth
+                    initialConnectionId={isOAuthReturning ? oauthConnectionInfo.connectionId : undefined}
+                    initialStep={isOAuthReturning ? 2 : undefined}
                   />
                 );
               })}
@@ -317,16 +347,15 @@ export default function ClientAuthorizationPage() {
                 </div>
 
                 <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                  You're All Set!
+                  All set
                 </h1>
                 <p className="text-slate-600 mb-8">
-                  {data.agencyName} can now access the platforms you authorized.
-                  You can close this window.
+                  {data.agencyName} now has access to the accounts you selected. You can close this window.
                 </p>
 
                 {/* Summary */}
                 <div className="bg-slate-50 rounded-xl p-6 text-left">
-                  <h3 className="font-semibold text-slate-900 mb-4">Connected Platforms</h3>
+                  <h3 className="font-semibold text-slate-900 mb-4">Connected</h3>
                   <div className="space-y-2">
                     {completedPlatforms.size > 0 ? (
                       <div className="flex items-center gap-2 text-emerald-700">
@@ -344,7 +373,7 @@ export default function ClientAuthorizationPage() {
                 </div>
 
                 <p className="text-sm text-slate-500 mt-8">
-                  Need help? Contact {data.clientEmail} or reach out to {data.agencyName}
+                  Questions? Contact {data.agencyName}
                 </p>
               </div>
             </div>

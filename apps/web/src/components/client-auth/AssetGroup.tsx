@@ -190,9 +190,9 @@ export function AssetGroup({
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-3">
             <span className="text-2xl">📭</span>
           </div>
-          <p className="text-slate-600 font-medium">No {title.toLowerCase()} found</p>
+          <p className="text-slate-600 font-medium">No {title.toLowerCase()} available</p>
           <p className="text-sm text-slate-500 mt-1">
-            This account doesn't have any {title.toLowerCase()} to share
+            This account has no {title.toLowerCase()} to share
           </p>
         </div>
       )}

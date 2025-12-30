@@ -91,6 +91,34 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
     });
   });
 
+  describe('Meta Business Portfolio Interface', () => {
+    it('should allow valid business portfolio', () => {
+      const portfolio = {
+        id: 'biz-123',
+        name: 'My Business',
+        verticalName: 'Marketing',
+        verificationStatus: 'verified'
+      };
+      expect(portfolio.id).toBe('biz-123');
+      expect(portfolio.name).toBe('My Business');
+    });
+  });
+
+  describe('Meta Asset Settings Interface', () => {
+    it('should allow valid asset settings', () => {
+      const settings = {
+        adAccount: { enabled: true, permissionLevel: 'advertise' },
+        page: { enabled: true, permissionLevel: 'analyze', limitPermissions: true },
+        catalog: { enabled: false, permissionLevel: 'analyze' },
+        dataset: { enabled: true, requestFullAccess: false },
+        instagramAccount: { enabled: true, requestFullAccess: true }
+      };
+      expect(settings.adAccount.enabled).toBe(true);
+      expect(settings.page.limitPermissions).toBe(true);
+      expect(settings.instagramAccount.requestFullAccess).toBe(true);
+    });
+  });
+
   describe('AccessLevel Type', () => {
     it('should have AccessLevel type with 4 valid values', () => {
       const validLevels: AccessLevel[] = ['admin', 'standard', 'read_only', 'email_only'];

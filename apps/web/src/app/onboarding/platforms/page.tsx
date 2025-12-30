@@ -69,6 +69,19 @@ interface GoogleAccountsResponse {
   hasAccess: boolean;
 }
 
+// Meta business account types
+interface MetaBusinessAccount {
+  id: string;
+  name: string;
+  verticalName?: string;
+  verificationStatus?: string;
+}
+
+interface MetaBusinessAccountsResponse {
+  businesses: MetaBusinessAccount[];
+  hasAccess: boolean;
+}
+
 // Platform definitions
 const SUPPORTED_PLATFORMS = [
   { id: 'google', name: 'Google', description: 'Google Ads, Analytics, Business, Tag Manager, Search Console, Merchant Center' },
@@ -90,6 +103,7 @@ export default function PlatformsPage() {
   const { orgId } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [showGoogleAccounts, setShowGoogleAccounts] = useState(false);
+  const [showMetaBusinesses, setShowMetaBusinesses] = useState(false);
 
   // Fetch agency platform connections
   const {
@@ -126,6 +140,25 @@ export default function PlatformsPage() {
       return result.data;
     },
     enabled: !!orgId && !!googleConnection?.connected && showGoogleAccounts,
+  });
+
+  // Fetch Meta business accounts if Meta is connected
+  const metaConnection = connectedPlatforms?.find((p) => p.platform === 'meta');
+  const {
+    data: metaBusinessAccounts,
+    isLoading: isLoadingMetaBusinesses,
+    refetch: refetchMetaBusinesses,
+  } = useQuery<MetaBusinessAccountsResponse>({
+    queryKey: ['meta-business-accounts', orgId],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${orgId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch Meta business accounts');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!orgId && !!metaConnection?.connected && showMetaBusinesses,
   });
 
   // OAuth initiation mutation
@@ -423,6 +456,89 @@ export default function PlatformsPage() {
                   <p className="text-gray-600">No Google accounts found.</p>
                   <p className="text-sm text-gray-500 mt-1">
                     Try connecting to Google again or check your Google account permissions.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Meta Business Accounts Section - shows when Meta is connected */}
+      {metaConnection?.connected && (
+        <div className="mb-8 border rounded-lg p-6 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Your Meta Business Manager Accounts</h2>
+            <div className="flex gap-2">
+              {!showMetaBusinesses ? (
+                <button
+                  onClick={() => setShowMetaBusinesses(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  View Business Accounts
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => refetchMetaBusinesses()}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={() => setShowMetaBusinesses(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Hide
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {showMetaBusinesses && (
+            <>
+              {isLoadingMetaBusinesses ? (
+                <p className="text-gray-600">Loading Meta Business Manager accounts...</p>
+              ) : metaBusinessAccounts && metaBusinessAccounts.hasAccess ? (
+                <div className="space-y-4">
+                  {metaBusinessAccounts.businesses.length > 0 ? (
+                    metaBusinessAccounts.businesses.map((business) => (
+                      <div key={business.id} className="bg-gray-50 p-4 rounded border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-lg">{business.name}</p>
+                            <p className="text-sm text-gray-600">Business ID: {business.id}</p>
+                            {business.verticalName && (
+                              <p className="text-xs text-gray-500 mt-1">Industry: {business.verticalName}</p>
+                            )}
+                          </div>
+                          {business.verificationStatus && (
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                              business.verificationStatus === 'verified'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {business.verificationStatus}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded">
+                      <p className="text-gray-600">No Business Manager accounts found.</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        You may need to create a Business Manager account or ensure you have access to one.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded">
+                  <p className="text-gray-600">No Meta Business Manager accounts found.</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Try connecting to Meta again or check your Business Manager permissions.
                   </p>
                 </div>
               )}

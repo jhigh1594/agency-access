@@ -184,37 +184,53 @@ function AccessRequestWizardContent() {
         {/* Form & Progress */}
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="py-8">
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-start justify-center">
           {steps.map((step, index) => (
             <Fragment key={step.number}>
-              <motion.div
-                className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                  step.number < state.currentStep
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : step.number === state.currentStep
-                    ? 'bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100'
-                    : 'bg-slate-200 text-slate-600'
-                }`}
-                animate={
-                  step.number === state.currentStep
-                    ? { scale: [1, 1.05, 1], transition: { duration: 0.5 } }
-                    : {}
-                }
-              >
-                {step.number < state.currentStep ? (
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                  >
-                    <Check className="h-5 w-5" />
-                  </motion.div>
-                ) : (
-                  step.number
-                )}
-              </motion.div>
+              {/* Step Circle and Label Container */}
+              <div className="flex flex-col items-center">
+                <motion.div
+                  className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+                    step.number < state.currentStep
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : step.number === state.currentStep
+                      ? 'bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}
+                  animate={
+                    step.number === state.currentStep
+                      ? { scale: [1, 1.05, 1], transition: { duration: 0.5 } }
+                      : {}
+                  }
+                >
+                  {step.number < state.currentStep ? (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    >
+                      <Check className="h-5 w-5" />
+                    </motion.div>
+                  ) : (
+                    step.number
+                  )}
+                </motion.div>
+                {/* Label below circle */}
+                <span
+                  className={`mt-2 text-sm transition-colors ${
+                    step.number === state.currentStep
+                      ? 'text-indigo-600 font-semibold'
+                      : step.number < state.currentStep
+                      ? 'text-slate-500'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+              {/* Connecting line between steps */}
               {index < steps.length - 1 && (
-                <div className="relative h-0.5 w-16 bg-slate-200 overflow-hidden">
+                <div className="relative h-0.5 w-16 bg-slate-200 overflow-hidden mx-2 mt-5">
                   <motion.div
                     className="absolute inset-0 bg-indigo-600"
                     initial={{ scaleX: 0 }}
@@ -227,22 +243,6 @@ function AccessRequestWizardContent() {
                 </div>
               )}
             </Fragment>
-          ))}
-        </div>
-        <div className="flex items-center justify-center gap-8 mt-3 text-sm">
-          {steps.map((step) => (
-            <span
-              key={step.number}
-              className={`transition-colors ${
-                step.number === state.currentStep
-                  ? 'text-indigo-600 font-semibold'
-                  : step.number < state.currentStep
-                  ? 'text-slate-500'
-                  : 'text-slate-400'
-              }`}
-            >
-              {step.label}
-            </span>
           ))}
         </div>
       </div>

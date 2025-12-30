@@ -39,7 +39,7 @@ export class GA4Connector {
     // Use unified Google OAuth credentials (shared across all Google products)
     this.clientId = env.GOOGLE_CLIENT_ID || '';
     this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    this.redirectUri = `${env.FRONTEND_URL}/api/oauth/ga4/callback`;
+    this.redirectUri = `${env.API_URL}/api/oauth/ga4/callback`;
   }
 
   /**
@@ -47,15 +47,17 @@ export class GA4Connector {
    *
    * @param state - CSRF protection token
    * @param scopes - OAuth scopes to request
+   * @param redirectUri - Optional override for redirect URI
    * @returns Authorization URL
    */
   getAuthUrl(
     state: string,
-    scopes: string[] = ['https://www.googleapis.com/auth/analytics.readonly']
+    scopes: string[] = ['https://www.googleapis.com/auth/analytics.readonly'],
+    redirectUri?: string
   ): string {
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri ?? this.redirectUri,
       state,
       scope: scopes.join(' '),
       response_type: 'code',
@@ -70,14 +72,15 @@ export class GA4Connector {
    * Exchange authorization code for access token
    *
    * @param code - Authorization code from OAuth callback
+   * @param redirectUri - Optional override for redirect URI
    * @returns Access token with refresh token
    */
-  async exchangeCode(code: string): Promise<GATokens> {
+  async exchangeCode(code: string, redirectUri?: string): Promise<GATokens> {
     const body = new URLSearchParams({
       code,
       client_id: this.clientId,
       client_secret: this.clientSecret,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri ?? this.redirectUri,
       grant_type: 'authorization_code',
     });
 

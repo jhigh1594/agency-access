@@ -45,7 +45,7 @@ export class GoogleAdsConnector {
   constructor() {
     this.clientId = env.GOOGLE_CLIENT_ID || '';
     this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    this.redirectUri = `${env.FRONTEND_URL}/api/oauth/google-ads/callback`;
+    this.redirectUri = `${env.API_URL}/api/oauth/google-ads/callback`;
   }
 
   /**
@@ -53,12 +53,17 @@ export class GoogleAdsConnector {
    *
    * @param state - CSRF protection token
    * @param scopes - OAuth scopes to request
+   * @param redirectUri - Optional override for redirect URI
    * @returns Authorization URL
    */
-  getAuthUrl(state: string, scopes: string[] = ['https://www.googleapis.com/auth/adwords']): string {
+  getAuthUrl(
+    state: string,
+    scopes: string[] = ['https://www.googleapis.com/auth/adwords'],
+    redirectUri?: string
+  ): string {
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri ?? this.redirectUri,
       state,
       scope: scopes.join(' '),
       response_type: 'code',
@@ -73,14 +78,15 @@ export class GoogleAdsConnector {
    * Exchange authorization code for access token
    *
    * @param code - Authorization code from OAuth callback
+   * @param redirectUri - Optional override for redirect URI
    * @returns Access token with refresh token
    */
-  async exchangeCode(code: string): Promise<GoogleTokens> {
+  async exchangeCode(code: string, redirectUri?: string): Promise<GoogleTokens> {
     const body = new URLSearchParams({
       code,
       client_id: this.clientId,
       client_secret: this.clientSecret,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri ?? this.redirectUri,
       grant_type: 'authorization_code',
     });
 
@@ -152,10 +158,22 @@ export class GoogleAdsConnector {
    */
   async verifyToken(accessToken: string): Promise<boolean> {
     try {
+      const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+      if (!developerToken) {
+        return false;
+      }
+
       // Make a simple API call to verify token
       const response = await fetch(
-        `https://googleads.googleapis.com/v17/customers?access_token=${accessToken}`,
-        { method: 'GET' }
+        'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'developer-token': developerToken,
+            'Content-Type': 'application/json',
+          },
+        }
       );
 
       return response.ok;
@@ -186,11 +204,28 @@ export class GoogleAdsConnector {
     error?: string;
   }> {
     try {
+      const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+      if (!developerToken) {
+        return {
+          hasAccess: false,
+          accessLevel: 'read_only',
+          accounts: [],
+          error: 'GOOGLE_ADS_DEVELOPER_TOKEN not configured',
+        };
+      }
+
       // First, get the accessible accounts for the agency
       // This query returns all accounts the agency has access to
       const accountsResponse = await fetch(
-        `https://googleads.googleapis.com/v17/customers:listAccessibleCustomers?access_token=${agencyAccessToken}`,
-        { method: 'GET' }
+        'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${agencyAccessToken}`,
+            'developer-token': developerToken,
+            'Content-Type': 'application/json',
+          },
+        }
       );
 
       if (!accountsResponse.ok) {

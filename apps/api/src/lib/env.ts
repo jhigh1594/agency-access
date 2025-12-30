@@ -8,8 +8,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().url(),
   FRONTEND_URL: z.string().url().default('http://localhost:3000'),
-  // Backend API URL (for OAuth callbacks, defaults to localhost with PORT)
-  API_URL: z.string().url().optional(),
+  // Backend API URL (for OAuth callbacks, defaults to localhost with PORT if not set)
+  API_URL: z.string().url().default(`http://localhost:${process.env.PORT || 3001}`),
 
   // Clerk Authentication
   CLERK_PUBLISHABLE_KEY: z.string(),

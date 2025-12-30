@@ -56,9 +56,18 @@ await fastify.register(platformAuthorizationRoutes, { prefix: '/api' });
 await fastify.register(clientRoutes, { prefix: '/api' });
 await fastify.register(agencyPlatformsRoutes);
 
-// Health check route
+// Health check and root routes
 fastify.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
+fastify.get('/', async () => {
+  return { 
+    name: 'Agency Access Platform API',
+    version: '0.1.0',
+    status: 'running',
+    documentation: '/health' 
+  };
 });
 
 // Start server

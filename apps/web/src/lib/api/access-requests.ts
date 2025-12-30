@@ -98,7 +98,7 @@ export async function createAccessRequest(
   payload: CreateAccessRequestPayload
 ): Promise<CreateAccessRequestResponse> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/access-requests`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/access-requests`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -110,12 +110,12 @@ export async function createAccessRequest(
 
     // Handle HTTP errors
     if (!response.ok) {
-      // Backend returns { error, errorCode, details }
+      // Backend returns { data: null, error: { code, message, details } }
       return {
         error: {
-          code: data.errorCode || 'UNKNOWN_ERROR',
-          message: data.error || data.message || 'Failed to create access request',
-          details: data.details,
+          code: data.error?.code || 'UNKNOWN_ERROR',
+          message: data.error?.message || data.message || 'Failed to create access request',
+          details: data.error?.details || data.details,
         },
       };
     }
@@ -140,7 +140,7 @@ export async function createAccessRequest(
  */
 export async function getAccessRequest(id: string): Promise<CreateAccessRequestResponse> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/access-requests/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/access-requests/${id}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -151,8 +151,9 @@ export async function getAccessRequest(id: string): Promise<CreateAccessRequestR
     if (!response.ok) {
       return {
         error: {
-          code: data.errorCode || 'UNKNOWN_ERROR',
-          message: data.error || data.message || 'Failed to fetch access request',
+          code: data.error?.code || 'UNKNOWN_ERROR',
+          message: data.error?.message || data.message || 'Failed to fetch access request',
+          details: data.error?.details || data.details,
         },
       };
     }
@@ -175,5 +176,5 @@ export async function getAccessRequest(id: string): Promise<CreateAccessRequestR
  */
 export function getAuthorizationUrl(accessRequest: AccessRequest): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://agencyplatform.com';
-  return `${baseUrl}/client/${accessRequest.uniqueToken}`;
+  return `${baseUrl}/invite/${accessRequest.uniqueToken}`;
 }

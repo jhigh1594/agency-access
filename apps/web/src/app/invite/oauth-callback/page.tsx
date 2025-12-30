@@ -1,42 +1,37 @@
 'use client';
 
 /**
- * OAuth Callback Handler
+ * Static OAuth Callback Handler for Client Authorization
  *
- * Handles redirect after client authorizes on platform (Meta, Google, etc.)
+ * This is a static callback endpoint that works for all client OAuth flows.
+ * The access request token is stored in the OAuth state, so we extract it
+ * after validating the state and redirect to the correct invite page.
  *
  * Flow:
  * 1. Extract code, state, platform from URL params
- * 2. Exchange code for sessionId (backend validates state)
- * 3. Redirect back to invite page with sessionId for asset selection
- *
- * Error Handling:
- * - Invalid state token → Show error + restart flow
- * - Exchange failure → Show error + retry option
- * - Missing params → Show error + return to invite
+ * 2. Exchange code for connectionId (backend validates state and returns token)
+ * 3. Redirect to invite page with connectionId and step=2 for asset selection
  */
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function OAuthCallbackPage() {
+export default function ClientOAuthCallbackPage() {
   const searchParams = useSearchParams();
-  const params = useParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
-  const token = params.token as string;
   const code = searchParams.get('code');
   const state = searchParams.get('state');
-  const platform = searchParams.get('platform');
+  // Note: platform is not in the OAuth callback URL - it's stored in the state
 
   useEffect(() => {
     async function handleCallback() {
       // Validate required params
-      if (!code || !state || !platform) {
+      if (!code || !state) {
         setError('Missing required OAuth parameters. Please restart the authorization flow.');
         setIsProcessing(false);
         return;
@@ -46,10 +41,11 @@ export default function OAuthCallbackPage() {
         setIsProcessing(true);
 
         // Exchange code for connectionId
-        const response = await fetch(`/api/client/${token}/oauth-exchange`, {
+        // The backend will extract both the token and platform from the state
+        const response = await fetch(`/api/client/oauth-exchange`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, state, platform }),
+          body: JSON.stringify({ code, state }), // Platform is in state, not URL
         });
 
         const json = await response.json();
@@ -58,10 +54,14 @@ export default function OAuthCallbackPage() {
           throw new Error(json.error.message || 'Failed to complete authorization');
         }
 
-        const { connectionId } = json.data;
+        const { connectionId, token, platform: platformFromState } = json.data;
 
-        // Redirect back to invite page with connectionId and step=2 (success)
-        router.push(`/invite/${token}?connectionId=${connectionId}&platform=${platform}&step=2`);
+        if (!token) {
+          throw new Error('Access request token not found in response');
+        }
+
+        // Redirect back to invite page with connectionId and step=2 (asset selection)
+        router.push(`/invite/${token}?connectionId=${connectionId}&platform=${platformFromState}&step=2`);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Authorization failed');
         setIsProcessing(false);
@@ -69,7 +69,7 @@ export default function OAuthCallbackPage() {
     }
 
     handleCallback();
-  }, [code, state, platform, token, router]);
+  }, [code, state, router]);
 
   if (error) {
     return (
@@ -90,10 +90,10 @@ export default function OAuthCallbackPage() {
               {error}
             </p>
             <button
-              onClick={() => router.push(`/invite/${token}`)}
+              onClick={() => router.push('/')}
               className="px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-xl hover:bg-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              Return to Authorization
+              Return to Home
             </button>
           </div>
         </motion.div>
@@ -134,3 +134,4 @@ export default function OAuthCallbackPage() {
     </div>
   );
 }
+

@@ -36,7 +36,7 @@ class InfisicalService {
   }
 
   /**
-   * Store OAuth tokens in Infisical
+   * Store OAuth tokens in Infisical (upsert - creates or updates)
    *
    * @param secretName - Unique identifier for the secret (e.g., "meta_token_conn_abc123")
    * @param tokens - OAuth tokens to store (accessToken, refreshToken, etc.)
@@ -66,12 +66,27 @@ class InfisicalService {
       storedAt: new Date().toISOString(),
     });
 
-    await this.client.secrets().createSecret(secretName, {
-      projectId: env.INFISICAL_PROJECT_ID,
-      environment: env.INFISICAL_ENVIRONMENT,
-      secretValue,
-      type: SecretType.Shared,
-    });
+    try {
+      // Try to create the secret
+      await this.client.secrets().createSecret(secretName, {
+        projectId: env.INFISICAL_PROJECT_ID,
+        environment: env.INFISICAL_ENVIRONMENT,
+        secretValue,
+        type: SecretType.Shared,
+      });
+    } catch (error: any) {
+      // If secret already exists, update it instead
+      if (error?.message?.includes('already exists') || error?.statusCode === 400) {
+        await this.client.secrets().updateSecret(secretName, {
+          projectId: env.INFISICAL_PROJECT_ID,
+          environment: env.INFISICAL_ENVIRONMENT,
+          secretValue,
+          type: SecretType.Shared,
+        });
+      } else {
+        throw error;
+      }
+    }
 
     return secretName;
   }

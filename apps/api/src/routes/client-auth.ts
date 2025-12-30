@@ -19,6 +19,7 @@ import { clientAssetsService } from '../services/client-assets.service';
 import { getConnector } from '../services/connectors/factory';
 import { infisical } from '../lib/infisical';
 import { prisma } from '../lib/prisma';
+import { env } from '../lib/env';
 import type { Platform } from '@agency-platform/shared';
 import { z } from 'zod';
 
@@ -28,13 +29,28 @@ const submitIntakeSchema = z.object({
 });
 
 const createOAuthStateSchema = z.object({
-  platform: z.enum(['meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']),
+  platform: z.enum(['google', 'meta', 'meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']),
 });
 
 const oauthExchangeSchema = z.object({
   code: z.string(),
   state: z.string(),
-  platform: z.enum(['meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']),
+  platform: z.enum(['google', 'meta', 'meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']).optional(), // Optional - will be extracted from state
+});
+
+const saveAssetsSchema = z.object({
+  connectionId: z.string(),
+  platform: z.string(), // Allow any platform string (including Google product IDs)
+  selectedAssets: z.object({
+    adAccounts: z.array(z.string()).optional(),
+    pages: z.array(z.string()).optional(),
+    instagramAccounts: z.array(z.string()).optional(),
+    properties: z.array(z.string()).optional(),
+    businessAccounts: z.array(z.string()).optional(),
+    containers: z.array(z.string()).optional(),
+    sites: z.array(z.string()).optional(),
+    merchantAccounts: z.array(z.string()).optional(),
+  }),
 });
 
 export async function clientAuthRoutes(fastify: FastifyInstance) {
@@ -93,6 +109,119 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
     });
   });
 
+  // NEW: Generate OAuth URL for a specific platform
+  fastify.post('/client/:token/oauth-url', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const accessRequest = await accessRequestService.getAccessRequestByToken(token);
+
+    if (accessRequest.error || !accessRequest.data) {
+      return reply.code(404).send({
+        data: null,
+        error: accessRequest.error || {
+          code: 'NOT_FOUND',
+          message: 'Access request not found',
+        },
+      });
+    }
+
+    const validated = createOAuthStateSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid platform',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { platform } = validated.data;
+
+    // Create OAuth state token (include token for redirect after OAuth)
+    const stateResult = await oauthStateService.createState({
+      agencyId: accessRequest.data.agencyId,
+      platform,
+      userEmail: accessRequest.data.clientEmail,
+      accessRequestId: accessRequest.data.id,
+      accessRequestToken: token, // Store token in state for redirect
+      clientEmail: accessRequest.data.clientEmail,
+      timestamp: Date.now(),
+    });
+
+    if (stateResult.error || !stateResult.data) {
+      return reply.code(500).send({
+        data: null,
+        error: stateResult.error || {
+          code: 'STATE_CREATION_FAILED',
+          message: 'Failed to create OAuth state token',
+        },
+      });
+    }
+
+    const state = stateResult.data;
+
+    // Get connector and generate URL
+    // Use static redirect URI (must match what's registered in OAuth app settings)
+    try {
+      const connector = getConnector(platform as Platform);
+      const redirectUri = `${env.FRONTEND_URL}/invite/oauth-callback`;
+
+      // For Google platform group, determine scopes based on requested products
+      let scopes: string[] | undefined;
+      if (platform === 'google') {
+        const platforms = accessRequest.data.platforms as any[];
+        const googleProducts = platforms
+          .filter((p: any) => p.platformGroup === 'google')
+          .flatMap((p: any) => p.products || []);
+
+        // Extract product IDs from product objects
+        const productIds = googleProducts.map((p: any) => 
+          typeof p === 'string' ? p : p.product
+        );
+
+        scopes = [];
+        if (productIds.includes('google_ads')) {
+          scopes.push('https://www.googleapis.com/auth/adwords');
+        }
+        if (productIds.includes('ga4')) {
+          scopes.push('https://www.googleapis.com/auth/analytics.readonly');
+        }
+        if (productIds.includes('google_business_profile')) {
+          scopes.push('https://www.googleapis.com/auth/business.manage');
+        }
+        if (productIds.includes('google_tag_manager')) {
+          scopes.push('https://www.googleapis.com/auth/tagmanager.readonly');
+        }
+        if (productIds.includes('google_merchant_center')) {
+          scopes.push('https://www.googleapis.com/auth/content');
+        }
+        if (productIds.includes('google_search_console')) {
+          // Use full webmasters scope - readonly may not be sufficient for listing sites
+          scopes.push('https://www.googleapis.com/auth/webmasters');
+        }
+        // Add basic profile scope for user info
+        scopes.push('https://www.googleapis.com/auth/userinfo.email');
+      }
+
+      const authUrl = connector.getAuthUrl(state, scopes, redirectUri);
+
+      return reply.send({
+        data: { authUrl, state },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'CONNECTOR_ERROR',
+          message: error instanceof Error ? error.message : 'Failed to generate OAuth URL',
+        },
+      });
+    }
+  });
+
   // NEW: Exchange OAuth code for temporary session
   fastify.post('/client/:token/oauth-exchange', async (request, reply) => {
     const { token } = request.params as { token: string };
@@ -109,9 +238,9 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { code, state, platform } = validated.data;
+    const { code, state, platform: platformFromRequest } = validated.data;
 
-    // Validate OAuth state
+    // Validate OAuth state (contains platform)
     const stateResult = await oauthStateService.validateState(state);
     if (stateResult.error || !stateResult.data) {
       return reply.code(400).send({
@@ -125,8 +254,11 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
 
     const stateData = stateResult.data;
 
-    // Verify platform matches
-    if (stateData.platform !== platform) {
+    // Extract platform from state (source of truth)
+    const platform = stateData.platform;
+
+    // If platform was provided in request, verify it matches state
+    if (platformFromRequest && platformFromRequest !== platform) {
       return reply.code(400).send({
         data: null,
         error: {
@@ -138,11 +270,13 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
 
     try {
       // Get connector and exchange code for tokens
+      // Use static redirect URI (must match what's registered in OAuth app settings)
       const connector = getConnector(platform as Platform);
-      let tokens = await connector.exchangeCode(code);
+      const redirectUri = `${env.FRONTEND_URL}/invite/oauth-callback`;
+      let tokens = await connector.exchangeCode(code, redirectUri);
 
-      // For Meta, get long-lived token (60-day)
-      if (platform === 'meta_ads' && connector.getLongLivedToken) {
+      // For Meta (group-level or product-level), get long-lived token (60-day)
+      if ((platform === 'meta' || platform === 'meta_ads') && connector.getLongLivedToken) {
         tokens = await connector.getLongLivedToken(tokens.accessToken);
       }
 
@@ -194,9 +328,21 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
         expiresAt: tokens.expiresAt,
       });
 
-      // Create platform authorization record
-      const platformAuth = await prisma.platformAuthorization.create({
-        data: {
+      // Create or update platform authorization record (upsert)
+      const platformAuth = await prisma.platformAuthorization.upsert({
+        where: {
+          connectionId_platform: {
+            connectionId: clientConnection.id,
+            platform: platform as Platform,
+          },
+        },
+        update: {
+          secretId: secretName,
+          expiresAt: tokens.expiresAt,
+          status: 'active',
+          metadata: userInfo,
+        },
+        create: {
           connectionId: clientConnection.id,
           platform: platform as Platform,
           secretId: secretName,
@@ -207,7 +353,7 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
       });
 
       // Log authorization in audit trail
-      await auditService.log({
+      await auditService.createAuditLog({
         agencyId: accessRequest.agencyId,
         action: 'CLIENT_AUTHORIZED',
         userEmail: stateData.clientEmail!,
@@ -220,8 +366,13 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
         },
       });
 
+      // Return connectionId, platform, and token for redirect
       return reply.send({
-        data: { connectionId: clientConnection.id, platform },
+        data: { 
+          connectionId: clientConnection.id, 
+          platform,
+          token: stateData.accessRequestToken || accessRequest.uniqueToken, // Return token for redirect
+        },
         error: null,
       });
     } catch (error) {
@@ -235,16 +386,315 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // NEW: Static OAuth exchange endpoint (token extracted from state)
+  fastify.post('/client/oauth-exchange', async (request, reply) => {
+    const validated = oauthExchangeSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid OAuth exchange data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { code, state, platform: platformFromRequest } = validated.data;
+
+    // Validate OAuth state (this contains the token and platform)
+    const stateResult = await oauthStateService.validateState(state);
+    if (stateResult.error || !stateResult.data) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'INVALID_STATE',
+          message: 'Invalid or expired OAuth state token',
+        },
+      });
+    }
+
+    const stateData = stateResult.data;
+
+    // Extract platform from state (source of truth)
+    const platform = stateData.platform;
+
+    // If platform was provided in request, verify it matches state
+    if (platformFromRequest && platformFromRequest !== platform) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'PLATFORM_MISMATCH',
+          message: 'Platform does not match OAuth state',
+        },
+      });
+    }
+
+    // Get token from state (required for redirect)
+    if (!stateData.accessRequestToken) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'MISSING_TOKEN',
+          message: 'Access request token not found in OAuth state',
+        },
+      });
+    }
+
+    try {
+      // Get connector and exchange code for tokens
+      // Use static redirect URI (must match what's registered in OAuth app settings)
+      const connector = getConnector(platform as Platform);
+      const redirectUri = `${env.FRONTEND_URL}/invite/oauth-callback`;
+      let tokens = await connector.exchangeCode(code, redirectUri);
+
+      // For Meta (group-level or product-level), get long-lived token (60-day)
+      if ((platform === 'meta' || platform === 'meta_ads') && connector.getLongLivedToken) {
+        tokens = await connector.getLongLivedToken(tokens.accessToken);
+      }
+
+      // Get user info from platform for metadata
+      const userInfo = await connector.getUserInfo(tokens.accessToken);
+
+      // Get access request to find agency
+      const accessRequest = await prisma.accessRequest.findUnique({
+        where: { id: stateData.accessRequestId! },
+      });
+
+      if (!accessRequest) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'ACCESS_REQUEST_NOT_FOUND',
+            message: 'Access request not found',
+          },
+        });
+      }
+
+      // Create or get existing client connection
+      let clientConnection = await prisma.clientConnection.findFirst({
+        where: {
+          accessRequestId: stateData.accessRequestId!,
+        },
+      });
+
+      if (!clientConnection) {
+        clientConnection = await prisma.clientConnection.create({
+          data: {
+            accessRequestId: stateData.accessRequestId!,
+            agencyId: accessRequest.agencyId,
+            clientEmail: stateData.clientEmail!,
+            status: 'active',
+          },
+        });
+      }
+
+      // Store tokens in Infisical
+      const secretName = infisical.generateSecretName(
+        platform as Platform,
+        clientConnection.id
+      );
+
+      await infisical.storeOAuthTokens(secretName, {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt,
+      });
+
+      // Create or update platform authorization record (upsert)
+      const platformAuth = await prisma.platformAuthorization.upsert({
+        where: {
+          connectionId_platform: {
+            connectionId: clientConnection.id,
+            platform: platform as Platform,
+          },
+        },
+        update: {
+          secretId: secretName,
+          expiresAt: tokens.expiresAt,
+          status: 'active',
+          metadata: userInfo,
+        },
+        create: {
+          connectionId: clientConnection.id,
+          platform: platform as Platform,
+          secretId: secretName,
+          expiresAt: tokens.expiresAt,
+          status: 'active',
+          metadata: userInfo,
+        },
+      });
+
+      // Log authorization in audit trail
+      await auditService.createAuditLog({
+        agencyId: accessRequest.agencyId,
+        action: 'CLIENT_AUTHORIZED',
+        userEmail: stateData.clientEmail!,
+        resourceType: 'client_connection',
+        resourceId: clientConnection.id,
+        metadata: {
+          platform,
+          accessRequestId: stateData.accessRequestId!,
+          platformAuthId: platformAuth.id,
+        },
+      });
+
+      // Return connectionId, platform, and token for redirect
+      return reply.send({
+        data: { 
+          connectionId: clientConnection.id, 
+          platform,
+          token: stateData.accessRequestToken, // Return token from state for redirect
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'OAUTH_ERROR',
+          message: `Failed to exchange OAuth code: ${error}`,
+        },
+      });
+    }
+  });
+
+  // NEW: Save selected assets for a platform
+  fastify.post('/client/:token/save-assets', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = saveAssetsSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid asset selection data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId, platform, selectedAssets } = validated.data;
+
+    try {
+      // 1. Get current ClientConnection
+      const connection = await prisma.clientConnection.findUnique({
+        where: { id: connectionId },
+      });
+
+      if (!connection) {
+        return reply.code(404).send({
+          data: null,
+          error: { code: 'NOT_FOUND', message: 'Connection not found' },
+        });
+      }
+
+      // 2. Update grantedAssets in ClientConnection
+      const currentGrantedAssets = (connection.grantedAssets as any) || {};
+      const updatedGrantedAssets = {
+        ...currentGrantedAssets,
+        [platform]: selectedAssets,
+      };
+
+      await prisma.clientConnection.update({
+        where: { id: connectionId },
+        data: { grantedAssets: updatedGrantedAssets },
+      });
+
+      // 3. Update PlatformAuthorization metadata with specific assets for this platform
+      // Map product to group for authorization lookup
+      const platformStr = String(platform);
+      const platformMap: Record<string, Platform> = {
+        'google_ads': 'google',
+        'ga4': 'google',
+        'google_business_profile': 'google',
+        'google_tag_manager': 'google',
+        'google_search_console': 'google',
+        'google_merchant_center': 'google',
+        'meta_ads': 'meta',
+        'instagram': 'meta',
+      };
+      const authPlatform = platformMap[platformStr] || (platform as Platform);
+
+      const existingAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: authPlatform,
+          },
+        },
+      });
+
+      if (existingAuth) {
+        const existingMetadata = (existingAuth.metadata as any) || {};
+        const updatedMetadata = {
+          ...existingMetadata,
+          selectedAssets: {
+            ...(existingMetadata.selectedAssets || {}),
+            [platform]: selectedAssets, // Nest selections by product ID
+          },
+        };
+
+        await prisma.platformAuthorization.update({
+          where: { id: existingAuth.id },
+          data: { metadata: updatedMetadata },
+        });
+      }
+
+      // 4. Log in audit trail
+      await auditService.createAuditLog({
+        agencyId: connection.agencyId,
+        action: 'CLIENT_ASSETS_SELECTED',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connection.id,
+        metadata: {
+          platform,
+          selectedAssets,
+        },
+      });
+
+      return reply.send({
+        data: { success: true },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'SAVE_ASSETS_ERROR',
+          message: `Failed to save selected assets: ${error}`,
+        },
+      });
+    }
+  });
+
   // Fetch client assets using connection (for display purposes only)
   fastify.get('/client-assets/:connectionId/:platform', async (request, reply) => {
-    const { connectionId, platform } = request.params as { connectionId: string; platform: string };
+    const { connectionId, platform: platformParam } = request.params as { connectionId: string; platform: string };
+
+    // Map product-level platforms to group-level authorizations if needed
+    const platformMap: Record<string, Platform> = {
+      'google_ads': 'google',
+      'ga4': 'google',
+      'google_business_profile': 'google',
+      'google_tag_manager': 'google',
+      'google_search_console': 'google',
+      'google_merchant_center': 'google',
+      'meta_ads': 'meta',
+      'instagram': 'meta',
+    };
+
+    const platform = platformParam as Platform;
+    const authPlatform = platformMap[platformParam] || platform;
 
     // Get platform authorization
     const platformAuth = await prisma.platformAuthorization.findUnique({
       where: {
         connectionId_platform: {
           connectionId,
-          platform: platform as Platform,
+          platform: authPlatform,
         },
       },
     });
@@ -286,9 +736,40 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
 
       // Fetch assets based on platform
       let assets;
+      const platformStr = String(platform);
 
       if (platform === 'meta_ads') {
         assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken);
+      } else if (platform === 'google' || platformStr.startsWith('google_') || platform === 'ga4') {
+        // For Google products, use the GoogleConnector to fetch all accounts
+        const { GoogleConnector } = await import('../services/connectors/google');
+        const googleConnector = new GoogleConnector();
+        const allAccounts = await googleConnector.getAllGoogleAccounts(tokens.accessToken);
+        
+        // Return the appropriate subset based on the specific product
+        if (platformStr === 'google_ads') {
+          assets = allAccounts.adsAccounts;
+        } else if (platformStr === 'ga4') {
+          assets = allAccounts.analyticsProperties;
+        } else if (platformStr === 'google_business_profile') {
+          assets = allAccounts.businessAccounts;
+        } else if (platformStr === 'google_tag_manager') {
+          assets = allAccounts.tagManagerContainers;
+        } else if (platformStr === 'google_search_console') {
+          assets = allAccounts.searchConsoleSites;
+        } else if (platformStr === 'google_merchant_center') {
+          assets = allAccounts.merchantCenterAccounts;
+        } else {
+          // For group-level 'google' or unknown products, return all accounts
+          assets = {
+            adsAccounts: allAccounts.adsAccounts,
+            analyticsProperties: allAccounts.analyticsProperties,
+            businessAccounts: allAccounts.businessAccounts,
+            tagManagerContainers: allAccounts.tagManagerContainers,
+            searchConsoleSites: allAccounts.searchConsoleSites,
+            merchantCenterAccounts: allAccounts.merchantCenterAccounts,
+          };
+        }
       } else {
         return reply.code(400).send({
           data: null,

@@ -169,7 +169,7 @@ export async function oauthTestRoutes(fastify: FastifyInstance) {
 
             <div class="details">
               <h3>Connection Details</h3>
-              <p><strong>User:</strong> ${userInfo.name} (${userInfo.email || 'no email'})</p>
+              <p><strong>User:</strong> ${userInfo.name} (Marketing API - email not available)</p>
               <p><strong>Meta ID:</strong> ${userInfo.id}</p>
               <p><strong>Token Expires:</strong> ${longLivedToken.expiresAt?.toLocaleString()}</p>
               <p><strong>Infisical Secret:</strong> <code>${secretName}</code></p>

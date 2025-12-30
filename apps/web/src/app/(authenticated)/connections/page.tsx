@@ -12,9 +12,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, Unlink, X } from 'lucide-react';
 import { PlatformCard } from '@/components/ui/platform-card';
 import { Platform, PlatformInfo } from '@agency-platform/shared';
+import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
+import { GoogleUnifiedSettings } from '@/components/google-unified-settings';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ConnectionsPage() {
   const router = useRouter();
@@ -25,7 +28,10 @@ export default function ConnectionsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [connectingPlatform, setConnectingPlatform] = useState<Platform | null>(null);
+  const [disconnectingPlatform, setDisconnectingPlatform] = useState<Platform | null>(null);
   const [agencyId, setAgencyId] = useState<string | null>(null);
+  const [managingMetaAssets, setManagingMetaAssets] = useState(false);
+  const [managingGoogleAssets, setManagingGoogleAssets] = useState(false);
 
   // Fetch user's agency by email
   const { data: agencyData } = useQuery({
@@ -52,6 +58,14 @@ export default function ConnectionsPage() {
       setAgencyId(agencyData.id);
     }
   }, [agencyData]);
+
+  const handleManageMetaAssets = () => {
+    setManagingMetaAssets(!managingMetaAssets);
+  };
+
+  const handleManageGoogleAssets = () => {
+    setManagingGoogleAssets(!managingGoogleAssets);
+  };
 
   // Handle OAuth callback redirect
   useEffect(() => {
@@ -97,12 +111,14 @@ export default function ConnectionsPage() {
     enabled: !!agencyId,
   });
 
+
   // Categorize platforms
   const { recommended, other } = useMemo(() => {
     const recommended = platforms.filter((p) => p.category === 'recommended');
     const other = platforms.filter((p) => p.category === 'other');
     return { recommended, other };
   }, [platforms]);
+
 
   // OAuth initiation mutation
   const { mutate: initiateOAuth } = useMutation({
@@ -141,9 +157,55 @@ export default function ConnectionsPage() {
     },
   });
 
+  // Disconnect mutation
+  const { mutate: disconnectPlatform } = useMutation({
+    mutationFn: async (platform: Platform) => {
+      if (!agencyId) {
+        throw new Error('Agency not found. Please complete onboarding first.');
+      }
+
+      setDisconnectingPlatform(platform);
+
+      const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agencyId,
+            revokedBy: userEmail,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to disconnect platform');
+      return response.json();
+    },
+    onSuccess: (_, platform) => {
+      setSuccessMessage(`Successfully disconnected ${platform}!`);
+      setDisconnectingPlatform(null);
+      // Invalidate queries to refresh platform list
+      queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
+      setTimeout(() => setSuccessMessage(null), 5000);
+    },
+    onError: (error) => {
+      setErrorMessage(`Failed to disconnect platform: ${(error as Error).message}`);
+      setDisconnectingPlatform(null);
+      setTimeout(() => setErrorMessage(null), 5000);
+    },
+  });
+
   const handleConnect = (platform: Platform) => {
     setErrorMessage(null);
     initiateOAuth(platform);
+  };
+
+  const handleDisconnect = (platform: Platform) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    disconnectPlatform(platform);
   };
 
   return (
@@ -245,7 +307,10 @@ export default function ConnectionsPage() {
                     connectedEmail={platformInfo.connectedEmail}
                     status={platformInfo.status}
                     isConnecting={connectingPlatform === platformInfo.platform}
+                    isDisconnecting={disconnectingPlatform === platformInfo.platform}
                     onConnect={handleConnect}
+                    onDisconnect={handleDisconnect}
+                    onManageAssets={platformInfo.platform === 'meta' ? handleManageMetaAssets : platformInfo.platform === 'google' ? handleManageGoogleAssets : undefined}
                     variant="featured"
                   />
                 </div>
@@ -267,13 +332,101 @@ export default function ConnectionsPage() {
                   connectedEmail={platformInfo.connectedEmail}
                   status={platformInfo.status}
                   isConnecting={connectingPlatform === platformInfo.platform}
+                  isDisconnecting={disconnectingPlatform === platformInfo.platform}
                   onConnect={handleConnect}
+                  onDisconnect={handleDisconnect}
+                  onManageAssets={platformInfo.platform === 'meta' ? handleManageMetaAssets : platformInfo.platform === 'google' ? handleManageGoogleAssets : undefined}
                 />
               ))}
             </div>
           </div>
         )}
+
       </div>
+
+      {/* Meta Unified Settings Modal */}
+      <AnimatePresence>
+        {managingMetaAssets && agencyId && platforms.some(p => p.platform === 'meta' && p.connected) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setManagingMetaAssets(false)}
+              className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
+                <h2 className="text-xl font-bold text-slate-900">Meta Connection Settings</h2>
+                <button
+                  onClick={() => setManagingMetaAssets(false)}
+                  className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+                >
+                  <X className="h-5 w-5 text-slate-500" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                <MetaUnifiedSettings 
+                  agencyId={agencyId}
+                  onDisconnect={() => {
+                    setManagingMetaAssets(false);
+                    // Optionally trigger disconnect flow
+                  }}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Google Unified Settings Modal */}
+      <AnimatePresence>
+        {managingGoogleAssets && agencyId && platforms.some(p => p.platform === 'google' && p.connected) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setManagingGoogleAssets(false)}
+              className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
+                <h2 className="text-xl font-bold text-slate-900">Google Connection Settings</h2>
+                <button
+                  onClick={() => setManagingGoogleAssets(false)}
+                  className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+                >
+                  <X className="h-5 w-5 text-slate-500" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                <GoogleUnifiedSettings 
+                  agencyId={agencyId}
+                  onDisconnect={() => {
+                    setManagingGoogleAssets(false);
+                    // Optionally trigger disconnect flow
+                  }}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

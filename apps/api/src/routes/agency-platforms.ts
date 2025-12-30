@@ -9,6 +9,7 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { metaAssetsService } from '@/services/meta-assets.service';
+import { googleAssetsService } from '@/services/google-assets.service';
 import { identityVerificationService } from '@/services/identity-verification.service';
 import { oauthStateService } from '@/services/oauth-state.service';
 import { MetaConnector } from '@/services/connectors/meta';
@@ -62,6 +63,9 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
   /**
    * Middleware: Auto-provision agency if it doesn't exist
    * This allows new users to connect platforms without manually creating an agency first
+   * 
+   * NOTE: This middleware is deprecated in favor of using agencyResolutionService
+   * directly in route handlers. Keeping for backward compatibility but should be removed.
    */
   fastify.addHook('onRequest', async (request, reply) => {
     // Get agencyId from query params (GET) or body (POST)
@@ -75,21 +79,19 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       return;
     }
 
-    // Check if agency exists
-    const agency = await prisma.agency.findUnique({
-      where: { id: agencyId },
+    // Use centralized resolution service instead of direct Prisma queries
+    // This prevents creating duplicate agencies
+    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const result = await agencyResolutionService.resolveAgency(agencyId, {
+      createIfMissing: true,
     });
 
-    // Auto-provision agency if it doesn't exist
-    if (!agency) {
-      // Create agency with a default name
-      await prisma.agency.create({
-        data: {
-          id: agencyId,
-          name: 'My Agency',
-          email: `user@${agencyId.slice(0, 8)}.agency`, // Placeholder email
-          // Note: In production, you'd fetch actual user email from Clerk
-        },
+    // Log warning if resolution failed (but don't block request)
+    if (result.error) {
+      fastify.log.warn({
+        msg: 'Agency resolution failed in middleware',
+        error: result.error,
+        agencyId,
       });
     }
   });
@@ -165,8 +167,26 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       });
     }
 
+    // Resolve agency using centralized service
+    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
+      createIfMissing: false,
+    });
+
+    if (agencyResult.error) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: agencyResult.error.code,
+          message: agencyResult.error.message,
+        },
+      });
+    }
+
+    const actualAgencyId = agencyResult.data!.agencyId;
+
     // Get agency connections
-    const result = await agencyPlatformService.getConnections(agencyId);
+    const result = await agencyPlatformService.getConnections(actualAgencyId);
 
     if (result.error) {
       return reply.code(500).send(result);
@@ -313,20 +333,26 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
 
       const stateData = stateResult.data;
 
-      // Auto-provision agency if it doesn't exist
-      let agency = await prisma.agency.findUnique({
-        where: { id: stateData.agencyId },
+      // Resolve agency using centralized service (prevents duplicates)
+      const { agencyResolutionService } = await import('../services/agency-resolution.service');
+      const agencyResult = await agencyResolutionService.getOrCreateAgency(stateData.agencyId, {
+        userEmail: stateData.userEmail,
+        agencyName: 'My Agency',
       });
 
-      if (!agency) {
-        agency = await prisma.agency.create({
-          data: {
-            id: stateData.agencyId,
-            name: 'My Agency',
-            email: stateData.userEmail || 'user@agency.com',
-          },
+      if (agencyResult.error) {
+        const redirectUrl = stateData.redirectUrl || env.FRONTEND_URL;
+        fastify.log.error({
+          error: agencyResult.error,
+          agencyId: stateData.agencyId,
+          userEmail: stateData.userEmail,
         });
+        return reply.redirect(`${redirectUrl}?error=AGENCY_RESOLUTION_FAILED`);
       }
+
+      // Use the resolved agency UUID (never use Clerk ID for connections)
+      const actualAgencyId = agencyResult.data!.agencyId;
+      const agency = agencyResult.data!.agency;
 
       // Get platform connector
       const ConnectorClass = PLATFORM_CONNECTORS[platform as keyof typeof PLATFORM_CONNECTORS];
@@ -373,9 +399,9 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
         }
       }
 
-      // Create platform connection
+      // Create platform connection using the resolved agency UUID
       const connectionResult = await agencyPlatformService.createConnection({
-        agencyId: stateData.agencyId,
+        agencyId: actualAgencyId,
         platform: stateData.platform,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -1052,6 +1078,97 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       return reply.code(500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * GET /agency-platforms/google/asset-settings
+   * Get current asset settings for a Google connection
+   */
+  fastify.get('/agency-platforms/google/asset-settings', async (request, reply) => {
+    const { agencyId } = request.query as { agencyId?: string };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    const result = await googleAssetsService.getAssetSettings(agencyId);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * PATCH /agency-platforms/google/asset-settings
+   * Save asset settings for a Google connection
+   */
+  fastify.patch('/agency-platforms/google/asset-settings', async (request, reply) => {
+    const { agencyId, settings } = request.body as {
+      agencyId?: string;
+      settings?: any;
+    };
+
+    if (!agencyId || !settings) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId and settings are required',
+        },
+      });
+    }
+
+    const result = await googleAssetsService.saveAssetSettings(agencyId, settings);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * PATCH /agency-platforms/google/account
+   * Save selected account for a Google product
+   */
+  fastify.patch('/agency-platforms/google/account', async (request, reply) => {
+    const { agencyId, product, accountId, accountName } = request.body as {
+      agencyId?: string;
+      product?: string;
+      accountId?: string;
+      accountName?: string;
+    };
+
+    if (!agencyId || !product || !accountId || !accountName) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId, product, accountId, and accountName are required',
+        },
+      });
+    }
+
+    const result = await googleAssetsService.saveAccountSelection(
+      agencyId,
+      product,
+      accountId,
+      accountName
+    );
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
     }
 
     return reply.send(result);

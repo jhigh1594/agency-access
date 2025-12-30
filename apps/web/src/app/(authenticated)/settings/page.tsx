@@ -9,11 +9,27 @@
 
 import { useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Settings as SettingsIcon, Users, Bell, Key, Building2, Save } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Settings as SettingsIcon, Users, Bell, Key, Building2, Save, Link2, Loader2 } from 'lucide-react';
+import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
 
 export default function SettingsPage() {
   const { orgId } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Check for platform connections
+  const { data: connections, isLoading: isLoadingConnections } = useQuery({
+    queryKey: ['platform-connections', orgId],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${orgId}`);
+      if (!response.ok) throw new Error('Failed to fetch connections');
+      const result = await response.json();
+      return result.data as any[];
+    },
+    enabled: !!orgId,
+  });
+
+  const isMetaConnected = connections?.some(c => c.platform === 'meta' && c.status === 'active');
 
   const handleSave = async (section: string) => {
     setIsSaving(true);
@@ -92,6 +108,35 @@ export default function SettingsPage() {
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
+          </section>
+
+          {/* Platform Connections Section */}
+          <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <Link2 className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Platform Connections</h2>
+                <p className="text-sm text-slate-600">Manage global settings for your connected platforms</p>
+              </div>
+            </div>
+
+            {isLoadingConnections ? (
+              <div className="py-12 text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+              </div>
+            ) : isMetaConnected && orgId ? (
+              <MetaUnifiedSettings agencyId={orgId} />
+            ) : (
+              <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-lg">
+                <Link2 className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-slate-600 mb-2">No unified platforms connected</p>
+                <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                  Connect Meta or Google in the Connections tab to see granular settings here.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Team Members Section */}

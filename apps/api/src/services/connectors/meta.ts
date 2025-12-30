@@ -1,5 +1,5 @@
 import { env } from '../../lib/env';
-import type { AccessLevel } from '@agency-platform/shared';
+import type { AccessLevel, MetaAdAccount, MetaPage, MetaInstagramAccount, MetaProductCatalog, MetaAllAssets } from '@agency-platform/shared';
 
 /**
  * Meta (Facebook) OAuth Connector
@@ -33,25 +33,55 @@ export class MetaConnector {
   private readonly appSecret: string;
   private readonly redirectUri: string;
 
+  /**
+   * Default Marketing API permissions for agency access
+   *
+   * These are NOT Facebook Login permissions (email, public_profile).
+   * These are Marketing API permissions for ads and business management.
+   *
+   * Simplified to only request Business Manager access, not individual pages.
+   *
+   * Reference: https://developers.facebook.com/docs/marketing-api/overview
+   */
+  static readonly DEFAULT_SCOPES = [
+    'ads_management',      // Create and manage ads
+    'ads_read',            // Read ads data
+    'business_management', // Access Business Manager assets
+    // Note: Removed page permissions to simplify OAuth flow
+    // - pages_read_engagement (no longer needed)
+    // - pages_show_list (no longer needed)
+    // - Instagram permissions require additional product setup
+    // 'instagram_basic',
+    // 'instagram_manage_insights',
+  ];
+
   constructor() {
     this.appId = env.META_APP_ID;
     this.appSecret = env.META_APP_SECRET;
-    this.redirectUri = `${env.FRONTEND_URL.replace('3000', '3001')}/api/oauth/meta/callback`;
+    // Use agency-platforms callback for production (redirects to frontend)
+    // For testing, use /api/oauth/meta/callback in Meta app settings
+    this.redirectUri = `${env.API_URL}/agency-platforms/meta/callback`;
   }
 
   /**
    * Generate OAuth authorization URL
    *
+   * Uses Meta Marketing API permissions (NOT Facebook Login permissions).
+   * Default scopes are for ads management, business management, and page access.
+   *
    * @param state - CSRF protection token (should be stored in session/database)
-   * @param scopes - Permissions to request (default: email, public_profile)
+   * @param scopes - Marketing API permissions to request
+   * @param redirectUri - Optional override for redirect URI (used in client flow)
    * @returns Authorization URL to redirect user to
    */
-  getAuthUrl(state: string, scopes: string[] = ['email', 'public_profile']): string {
+  getAuthUrl(state: string, scopes?: string[], redirectUri?: string): string {
+    // Use default scopes if none provided
+    const scopesToUse = scopes ?? MetaConnector.DEFAULT_SCOPES;
     const params = new URLSearchParams({
       client_id: this.appId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri ?? this.redirectUri,
       state,
-      scope: scopes.join(','),
+      scope: scopesToUse.join(','),
       response_type: 'code',
     });
 
@@ -62,13 +92,14 @@ export class MetaConnector {
    * Exchange authorization code for short-lived access token
    *
    * @param code - Authorization code from OAuth callback
+   * @param redirectUri - Optional override for redirect URI (must match getAuthUrl)
    * @returns Short-lived access token (expires in ~2 hours)
    */
-  async exchangeCode(code: string): Promise<MetaTokens> {
+  async exchangeCode(code: string, redirectUri?: string): Promise<MetaTokens> {
     const params = new URLSearchParams({
       client_id: this.appId,
       client_secret: this.appSecret,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri ?? this.redirectUri,
       code,
     });
 
@@ -154,16 +185,18 @@ export class MetaConnector {
   /**
    * Get user info from Meta Graph API
    *
+   * Note: With Marketing API permissions, email is NOT available.
+   * For agency use cases, you should fetch business and ad account info instead.
+   *
    * @param accessToken - Valid Meta access token
-   * @returns User profile data
+   * @returns User profile data (id, name - email not available with Marketing API)
    */
   async getUserInfo(accessToken: string): Promise<{
     id: string;
     name: string;
-    email?: string;
   }> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/me?fields=id,name,email&access_token=${accessToken}`,
+      `https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -172,7 +205,7 @@ export class MetaConnector {
       throw new Error(`Meta user info fetch failed: ${error}`);
     }
 
-    return (await response.json()) as { id: string; name: string; email?: string };
+    return (await response.json()) as { id: string; name: string };
   }
 
   /**
@@ -217,6 +250,220 @@ export class MetaConnector {
       const error = await response.text();
       throw new Error(`Meta token revocation failed: ${error}`);
     }
+  }
+
+  /**
+   * Get all Meta Business Manager accounts for the agency
+   *
+   * Fetches all Business Manager accounts the agency has access to.
+   * This is used to display available businesses in the UI after connection.
+   *
+   * @param accessToken - Valid Meta access token
+   * @returns Business Manager accounts with metadata
+   */
+  async getBusinessAccounts(accessToken: string): Promise<{
+    businesses: Array<{
+      id: string;
+      name: string;
+      verticalName?: string;
+      verificationStatus?: string;
+    }>;
+    hasAccess: boolean;
+  }> {
+    try {
+      // Fetch all Business Manager accounts
+      const response = await fetch(
+        `https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status&access_token=${accessToken}`,
+        { method: 'GET' }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to fetch business accounts: ${error}`);
+      }
+
+      const data = (await response.json()) as {
+        data?: Array<{
+          id: string;
+          name: string;
+          vertical_name?: string;
+          verification_status?: string;
+        }>;
+      };
+
+      const businesses = (data.data || []).map((business) => ({
+        id: business.id,
+        name: business.name,
+        verticalName: business.vertical_name,
+        verificationStatus: business.verification_status,
+      }));
+
+      return {
+        businesses,
+        hasAccess: businesses.length > 0,
+      };
+    } catch (error) {
+      // If fetching fails, return empty but don't throw - connection still valid
+      return {
+        businesses: [],
+        hasAccess: false,
+      };
+    }
+  }
+
+  /**
+   * Get ad accounts for a business
+   */
+  async getAdAccounts(accessToken: string, businessId: string): Promise<MetaAdAccount[]> {
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}/owned_ad_accounts?fields=id,name,account_status,currency&access_token=${accessToken}`,
+      { method: 'GET' }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to fetch ad accounts: ${error}`);
+    }
+
+    const data = (await response.json()) as {
+      data?: Array<{
+        id: string;
+        name: string;
+        account_status: number;
+        currency: string;
+      }>;
+    };
+
+    return (data.data || []).map((account) => ({
+      id: account.id,
+      name: account.name,
+      accountStatus: account.account_status === 1 ? 'ACTIVE' : 'INACTIVE',
+      currency: account.currency,
+    }));
+  }
+
+  /**
+   * Get pages for a business
+   */
+  async getPages(accessToken: string, businessId: string): Promise<MetaPage[]> {
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}/owned_pages?fields=id,name,category,tasks&access_token=${accessToken}`,
+      { method: 'GET' }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to fetch pages: ${error}`);
+    }
+
+    const data = (await response.json()) as {
+      data?: Array<{
+        id: string;
+        name: string;
+        category: string;
+        tasks: string[];
+      }>;
+    };
+
+    return (data.data || []).map((page) => ({
+      id: page.id,
+      name: page.name,
+      category: page.category,
+      tasks: page.tasks,
+    }));
+  }
+
+  /**
+   * Get Instagram accounts for a business
+   */
+  async getInstagramAccounts(accessToken: string, businessId: string): Promise<MetaInstagramAccount[]> {
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}/instagram_accounts?fields=id,username,profile_picture_url&access_token=${accessToken}`,
+      { method: 'GET' }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to fetch Instagram accounts: ${error}`);
+    }
+
+    const data = (await response.json()) as {
+      data?: Array<{
+        id: string;
+        username: string;
+        profile_picture_url?: string;
+      }>;
+    };
+
+    return (data.data || []).map((account) => ({
+      id: account.id,
+      username: account.username,
+      profilePictureUrl: account.profile_picture_url,
+    }));
+  }
+
+  /**
+   * Get product catalogs for a business
+   */
+  async getProductCatalogs(accessToken: string, businessId: string): Promise<MetaProductCatalog[]> {
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}/owned_product_catalogs?fields=id,name,catalog_type&access_token=${accessToken}`,
+      { method: 'GET' }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to fetch product catalogs: ${error}`);
+    }
+
+    const data = (await response.json()) as {
+      data?: Array<{
+        id: string;
+        name: string;
+        catalog_type: string;
+      }>;
+    };
+
+    return (data.data || []).map((catalog) => ({
+      id: catalog.id,
+      name: catalog.name,
+      catalogType: catalog.catalog_type,
+    }));
+  }
+
+  /**
+   * Get all assets for a business (composite)
+   */
+  async getAllAssets(accessToken: string, businessId: string): Promise<MetaAllAssets> {
+    // Fetch business name first
+    const businessResponse = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}?fields=name&access_token=${accessToken}`,
+      { method: 'GET' }
+    );
+
+    if (!businessResponse.ok) {
+      const error = await businessResponse.text();
+      throw new Error(`Failed to fetch business info: ${error}`);
+    }
+
+    const businessData = (await businessResponse.json()) as { name: string };
+
+    // Fetch all assets in parallel
+    const [adAccounts, pages, instagramAccounts, productCatalogs] = await Promise.all([
+      this.getAdAccounts(accessToken, businessId),
+      this.getPages(accessToken, businessId),
+      this.getInstagramAccounts(accessToken, businessId),
+      this.getProductCatalogs(accessToken, businessId),
+    ]);
+
+    return {
+      businessId,
+      businessName: businessData.name,
+      adAccounts,
+      pages,
+      instagramAccounts,
+      productCatalogs,
+    };
   }
 
   /**

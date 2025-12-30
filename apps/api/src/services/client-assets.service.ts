@@ -11,7 +11,7 @@
  * 3. Display assets to agency or client for informational purposes
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '../lib/logger.js';
 
 export interface MetaAdAccount {
   id: string;
@@ -34,6 +34,19 @@ export interface MetaInstagramAccount {
   id: string;
   username: string;
   profile_picture_url?: string;
+}
+
+export interface GoogleAdsAccount {
+  id: string;
+  name: string;
+  status: string;
+}
+
+export interface GA4Property {
+  id: string;
+  name: string;
+  displayName: string;
+  accountName: string;
 }
 
 export interface MetaAssets {
@@ -189,6 +202,90 @@ class ClientAssetsService {
     } catch (error) {
       logger.error('Failed to fetch Instagram accounts', { error });
       // Return empty array on error - don't fail entire fetch
+      return [];
+    }
+  }
+
+  /**
+   * Fetch accessible Google Ads accounts
+   * Note: This method is deprecated - use GoogleConnector.getAdsAccounts instead
+   * which properly handles the developer token header
+   */
+  async fetchGoogleAdsAccounts(accessToken: string): Promise<GoogleAdsAccount[]> {
+    try {
+      const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+      if (!developerToken) {
+        logger.warn('GOOGLE_ADS_DEVELOPER_TOKEN not configured');
+        return [];
+      }
+
+      const response = await fetch(
+        'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'developer-token': developerToken,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Google Ads API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const resourceNames = data.resourceNames || [];
+
+      return resourceNames.map((name: string) => {
+        const id = name.split('/').pop() || name;
+        return {
+          id,
+          name: `Account ${id}`,
+          status: 'active',
+        };
+      });
+    } catch (error) {
+      logger.error('Failed to fetch Google Ads accounts', { error });
+      return [];
+    }
+  }
+
+  /**
+   * Fetch accessible GA4 properties
+   */
+  async fetchGA4Properties(accessToken: string): Promise<GA4Property[]> {
+    try {
+      const response = await fetch(
+        `https://analyticsadmin.googleapis.com/v1beta/accountSummaries?access_token=${accessToken}`
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`GA4 API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const properties: GA4Property[] = [];
+
+      for (const accountSummary of data.accountSummaries || []) {
+        const accountName = accountSummary.displayName || 'Unknown Account';
+        for (const propSummary of accountSummary.propertySummaries || []) {
+          const id = propSummary.property?.split('/').pop() || '';
+          properties.push({
+            id,
+            name: propSummary.property || '',
+            displayName: propSummary.displayName || `Property ${id}`,
+            accountName,
+          });
+        }
+      }
+
+      return properties;
+    } catch (error) {
+      logger.error('Failed to fetch GA4 properties', { error });
       return [];
     }
   }

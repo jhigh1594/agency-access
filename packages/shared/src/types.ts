@@ -3,7 +3,20 @@ import { z } from 'zod';
 // Platform types (includes both group-level and product-level platforms)
 // Group-level: 'google', 'meta' - single OAuth for multiple products
 // Product-level: 'google_ads', 'ga4', 'meta_ads', etc. - individual OAuth per product
-export const PlatformSchema = z.enum(['google', 'meta', 'google_ads', 'ga4', 'meta_ads', 'tiktok', 'linkedin', 'snapchat', 'instagram']);
+export const PlatformSchema = z.enum([
+  'google', 
+  'meta', 
+  'google_ads', 
+  'ga4', 
+  'meta_ads', 
+  'tiktok', 
+  'tiktok_ads',
+  'linkedin', 
+  'linkedin_ads',
+  'snapchat', 
+  'snapchat_ads',
+  'instagram'
+]);
 export type Platform = z.infer<typeof PlatformSchema>;
 
 // Health status for token monitoring
@@ -198,7 +211,6 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
     description: 'Google Marketing Platform',
     products: [
       { id: 'google_ads', name: 'Google Ads', icon: 'GoogleAdsIcon', description: 'Search and display advertising' },
-      { id: 'google_ads_mcc', name: 'Google Ads MCC', icon: 'GoogleMCCIcon', description: 'Manager account for multiple ad accounts' },
       { id: 'ga4', name: 'Google Analytics 4', icon: 'GA4Icon', description: 'Website and app analytics' },
       { id: 'google_tag_manager', name: 'Tag Manager', icon: 'GTMIcon', description: 'Tag management system' },
       { id: 'google_merchant_center', name: 'Merchant Center', icon: 'GMCIcon', description: 'Product feed management' },
@@ -258,6 +270,166 @@ export interface PlatformGroupConfig {
 
 // Language types
 export type ClientLanguage = 'en' | 'es' | 'nl';
+
+// ============================================================
+// META ASSET TYPES
+// ============================================================
+
+export interface MetaAdAccount {
+  id: string;
+  name: string;
+  accountStatus: string;
+  currency: string;
+}
+
+export interface MetaPage {
+  id: string;
+  name: string;
+  category: string;
+  tasks: string[];
+}
+
+export interface MetaInstagramAccount {
+  id: string;
+  username: string;
+  profilePictureUrl?: string;
+}
+
+export interface MetaProductCatalog {
+  id: string;
+  name: string;
+  catalogType: string;
+}
+
+export interface MetaBusinessPortfolio {
+  id: string;
+  name: string;
+  verticalName?: string;
+  verificationStatus?: string;
+}
+
+export type MetaPagePermission = 
+  | 'content'
+  | 'community_activity'
+  | 'messages'
+  | 'ads'
+  | 'insights'
+  | 'revenue'
+  | 'leads'
+  | 'partial_access'
+  | 'maximum_permissions';
+
+export interface MetaAssetSettings {
+  adAccount: { enabled: boolean; permissionLevel: MetaPermissionLevel };
+  page: { 
+    enabled: boolean; 
+    permissionLevel: MetaPermissionLevel; 
+    limitPermissions?: boolean;
+    selectedPermissions?: MetaPagePermission[];
+  };
+  catalog: { enabled: boolean; permissionLevel: MetaPermissionLevel };
+  dataset: { enabled: boolean; requestFullAccess: boolean };
+  instagramAccount: { enabled: boolean; requestFullAccess: boolean };
+}
+
+export interface MetaAllAssets {
+  businessId: string;
+  businessName: string;
+  adAccounts: MetaAdAccount[];
+  pages: MetaPage[];
+  instagramAccounts: MetaInstagramAccount[];
+  productCatalogs: MetaProductCatalog[];
+}
+
+export type MetaPermissionLevel = 'admin' | 'advertise' | 'analyze' | 'manage';
+
+export interface MetaAssetSelection {
+  assetType: 'ad_account' | 'page' | 'instagram' | 'catalog';
+  assetId: string;
+  permissionLevel: MetaPermissionLevel;
+  selected: boolean;
+}
+
+// ============================================================
+// GOOGLE ASSET TYPES
+// ============================================================
+
+export interface GoogleAdsAccount {
+  id: string;
+  name: string;
+  type: 'google_ads';
+  status: string;
+}
+
+export interface GoogleAnalyticsProperty {
+  id: string;
+  name: string;
+  displayName: string;
+  type: 'ga4';
+  accountName: string;
+}
+
+export interface GoogleBusinessAccount {
+  id: string;
+  name: string;
+  type: 'google_business';
+  locationCount?: number;
+}
+
+export interface GoogleTagManagerContainer {
+  id: string;
+  name: string;
+  type: 'google_tag_manager';
+  accountId: string;
+  accountName: string;
+}
+
+export interface GoogleSearchConsoleSite {
+  id: string;
+  url: string;
+  type: 'google_search_console';
+  permissionLevel: string;
+}
+
+export interface GoogleMerchantCenterAccount {
+  id: string;
+  name: string;
+  type: 'google_merchant_center';
+  websiteUrl?: string;
+}
+
+export interface GoogleAssetSettings {
+  googleAds: {
+    enabled: boolean;
+    accountId?: string;
+    requestManageUsers?: boolean;
+  };
+  googleAnalytics: {
+    enabled: boolean;
+    propertyId?: string;
+    requestManageUsers?: boolean;
+  };
+  googleBusinessProfile: {
+    enabled: boolean;
+    locationId?: string;
+    requestManageUsers?: boolean;
+  };
+  googleTagManager: {
+    enabled: boolean;
+    containerId?: string;
+    requestManageUsers?: boolean;
+  };
+  googleSearchConsole: {
+    enabled: boolean;
+    siteUrl?: string;
+    requestManageUsers?: boolean;
+  };
+  googleMerchantCenter: {
+    enabled: boolean;
+    accountId?: string;
+    requestManageUsers?: boolean;
+  };
+}
 
 // ============================================================
 // CLIENT TYPES

@@ -99,11 +99,12 @@ export async function createConnection(input: CreateConnectionInput) {
       };
     }
 
-    // Check if platform already connected
+    // Check if platform already connected (only active connections block reconnect)
     const existingConnection = await prisma.agencyPlatformConnection.findFirst({
       where: {
         agencyId: validated.agencyId,
         platform: validated.platform,
+        status: 'active', // Only check for active connections
       },
     });
 
@@ -117,6 +118,15 @@ export async function createConnection(input: CreateConnectionInput) {
       };
     }
 
+    // Check if there's a previous revoked connection to reuse
+    const revokedConnection = await prisma.agencyPlatformConnection.findFirst({
+      where: {
+        agencyId: validated.agencyId,
+        platform: validated.platform,
+        status: 'revoked',
+      },
+    });
+
     // Generate secret name for Infisical
     const secretId = `${validated.platform}_agency_${validated.agencyId}`;
 
@@ -128,19 +138,40 @@ export async function createConnection(input: CreateConnectionInput) {
       scope: validated.scope,
     });
 
-    // Create database record
-    const connection = await prisma.agencyPlatformConnection.create({
-      data: {
-        agencyId: validated.agencyId,
-        platform: validated.platform,
-        secretId,
-        status: 'active',
-        expiresAt: validated.expiresAt,
-        scope: validated.scope,
-        metadata: validated.metadata,
-        connectedBy: validated.connectedBy,
-      },
-    });
+    let connection;
+
+    // If reusing a revoked connection, update it; otherwise create new
+    if (revokedConnection) {
+      connection = await prisma.agencyPlatformConnection.update({
+        where: { id: revokedConnection.id },
+        data: {
+          status: 'active',
+          secretId,
+          expiresAt: validated.expiresAt,
+          scope: validated.scope,
+          metadata: validated.metadata,
+          connectedBy: validated.connectedBy,
+          connectedAt: new Date(), // Reset connected time
+          revokedAt: null, // Clear revoked fields
+          revokedBy: null,
+          lastRefreshedAt: null,
+        },
+      });
+    } else {
+      // Create database record
+      connection = await prisma.agencyPlatformConnection.create({
+        data: {
+          agencyId: validated.agencyId,
+          platform: validated.platform,
+          secretId,
+          status: 'active',
+          expiresAt: validated.expiresAt,
+          scope: validated.scope,
+          metadata: validated.metadata,
+          connectedBy: validated.connectedBy,
+        },
+      });
+    }
 
     // Log audit event
     await prisma.auditLog.create({

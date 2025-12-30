@@ -15,25 +15,26 @@ import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
 interface PlatformStepProgressProps {
-  currentStep: 1 | 2;
+  currentStep: 1 | 2 | 3;
 }
 
 const steps = [
   { number: 1, label: 'Connect', icon: '🔗' },
-  { number: 2, label: 'Connected', icon: '✅' },
+  { number: 2, label: 'Choose Accounts', icon: '📋' },
+  { number: 3, label: 'Done', icon: '✅' },
 ];
 
 export function PlatformStepProgress({ currentStep }: PlatformStepProgressProps) {
   return (
     <div className="w-full py-6">
-      <div className="flex items-center justify-between relative">
+      <div className="flex items-center justify-between relative px-4">
         {/* Connecting Line */}
-        <div className="absolute top-6 left-0 right-0 h-1 bg-slate-200 -z-10" />
+        <div className="absolute top-6 left-8 right-8 h-1 bg-slate-200 -z-10" />
         <motion.div
-          className="absolute top-6 left-0 h-1 bg-indigo-600 -z-10"
+          className="absolute top-6 left-8 h-1 bg-indigo-600 -z-10"
           initial={{ width: '0%' }}
           animate={{
-            width: currentStep === 1 ? '0%' : '100%',
+            width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
           }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
         />

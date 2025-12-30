@@ -42,7 +42,7 @@ interface MetaAssets {
 
 interface MetaAssetSelectorProps {
   sessionId: string;
-  onSelectionComplete: (selectedAssets: {
+  onSelectionChange: (selectedAssets: {
     adAccounts: string[];
     pages: string[];
     instagramAccounts: string[];
@@ -52,7 +52,7 @@ interface MetaAssetSelectorProps {
 
 export function MetaAssetSelector({
   sessionId,
-  onSelectionComplete,
+  onSelectionChange,
   onError,
 }: MetaAssetSelectorProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -64,26 +64,24 @@ export function MetaAssetSelector({
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [selectedInstagram, setSelectedInstagram] = useState<Set<string>>(new Set());
 
-  // Fetch assets on mount
-  useEffect(() => {
-    fetchAssets();
-  }, [sessionId]);
-
+  // Fetch assets from backend
   const fetchAssets = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/client-assets/${sessionId}/meta_ads`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/client-assets/${sessionId}/meta_ads`);
       const json = await response.json();
 
       if (json.error) {
-        throw new Error(json.error.message || 'Failed to fetch assets');
+        throw new Error(json.error.message || 'Failed to load accounts');
       }
 
-      setAssets(json.data);
+      const fetchedAssets = json.data || { adAccounts: [], pages: [], instagramAccounts: [] };
+      setAssets(fetchedAssets);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch assets';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load accounts';
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -91,48 +89,22 @@ export function MetaAssetSelector({
     }
   };
 
-  // Calculate total selection count
-  const totalSelected =
-    selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
+  // Fetch assets on mount
+  useEffect(() => {
+    if (sessionId) {
+      fetchAssets();
+    }
+  }, [sessionId]);
 
-  // Convert assets to Asset[] format
-  const adAccountAssets: Asset[] =
-    assets?.adAccounts.map((account) => ({
-      id: account.id,
-      name: account.name,
-      metadata: {
-        id: account.id,
-        status: account.status,
-      },
-    })) || [];
-
-  const pageAssets: Asset[] =
-    assets?.pages.map((page) => ({
-      id: page.id,
-      name: page.name,
-      metadata: {
-        id: page.id,
-        avatar: page.avatar,
-      },
-    })) || [];
-
-  const instagramAssets: Asset[] =
-    assets?.instagramAccounts.map((account) => ({
-      id: account.id,
-      name: account.username,
-      metadata: {
-        id: account.id,
-        avatar: account.avatar,
-      },
-    })) || [];
-
-  const handleContinue = () => {
-    onSelectionComplete({
+  // Notify parent of changes
+  useEffect(() => {
+    onSelectionChange({
       adAccounts: Array.from(selectedAdAccounts),
       pages: Array.from(selectedPages),
       instagramAccounts: Array.from(selectedInstagram),
     });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAdAccounts, selectedPages, selectedInstagram]);
 
   // Loading state
   if (isLoading) {
@@ -142,10 +114,10 @@ export function MetaAssetSelector({
           <div className="text-center">
             <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
             <p className="text-lg font-semibold text-slate-900">
-              Loading your Meta assets...
+              Loading your accounts
             </p>
             <p className="text-sm text-slate-600 mt-1">
-              Fetching ad accounts, pages, and Instagram accounts
+              Finding ad accounts, pages, and Instagram accounts
             </p>
           </div>
         </div>
@@ -160,17 +132,38 @@ export function MetaAssetSelector({
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
           <span className="text-3xl">⚠️</span>
         </div>
-        <h3 className="text-lg font-bold text-red-900 mb-2">Failed to Load Assets</h3>
+        <h3 className="text-lg font-bold text-red-900 mb-2">Couldn't load accounts</h3>
         <p className="text-red-700 mb-4">{error}</p>
         <button
           onClick={fetchAssets}
           className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
         >
-          Try Again
+          Try again
         </button>
       </div>
     );
   }
+
+  // Convert assets to Asset format
+  const adAccountAssets: Asset[] = (assets?.adAccounts || []).map((account) => ({
+    id: account.id,
+    name: account.name,
+    description: account.status || account.currency || '',
+  }));
+
+  const pageAssets: Asset[] = (assets?.pages || []).map((page) => ({
+    id: page.id,
+    name: page.name,
+    description: page.category || '',
+  }));
+
+  const instagramAssets: Asset[] = (assets?.instagramAccounts || []).map((account) => ({
+    id: account.id,
+    name: account.username || account.name || account.id,
+    description: account.name || '',
+  }));
+
+  const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
 
   return (
     <div className="space-y-6">
@@ -179,10 +172,10 @@ export function MetaAssetSelector({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-indigo-900">
-              Assets Selected
+              Selected
             </h3>
             <p className="text-xs text-indigo-700 mt-0.5">
-              Choose which assets to share with the agency
+              Accounts you're sharing
             </p>
           </div>
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 text-white">
@@ -229,34 +222,6 @@ export function MetaAssetSelector({
           }
           defaultExpanded={instagramAssets.length > 0}
         />
-      </div>
-
-      {/* Sticky Footer with Continue Button */}
-      <div className="sticky bottom-0 bg-white border-t-2 border-slate-200 p-6 -mx-6 -mb-6 mt-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-900">
-              {totalSelected} asset{totalSelected !== 1 ? 's' : ''} selected
-            </p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              At least one asset is required to continue
-            </p>
-          </div>
-          <button
-            onClick={handleContinue}
-            disabled={totalSelected === 0}
-            className={`
-              px-8 py-4 rounded-xl font-bold text-lg transition-all duration-200
-              ${
-                totalSelected > 0
-                  ? 'bg-trust text-white hover:bg-amber-600 shadow-lg hover:shadow-xl'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }
-            `}
-          >
-            Continue →
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { Platform, PLATFORM_NAMES } from '@agency-platform/shared';
 import { PlatformIcon } from '@/components/ui/platform-icon';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Unlink } from 'lucide-react';
 
 interface PlatformCardProps {
   platform: Platform;
@@ -10,9 +10,11 @@ interface PlatformCardProps {
   connectedEmail?: string;
   status?: string;
   isConnecting?: boolean;
+  isDisconnecting?: boolean;
   variant?: 'default' | 'featured';
   onConnect: (platform: Platform) => void;
   onDisconnect?: (platform: Platform) => void;
+  onManageAssets?: (platform: Platform) => void;
 }
 
 export function PlatformCard({
@@ -21,9 +23,11 @@ export function PlatformCard({
   connectedEmail,
   status,
   isConnecting = false,
+  isDisconnecting = false,
   variant = 'default',
   onConnect,
   onDisconnect,
+  onManageAssets,
 }: PlatformCardProps) {
   const platformName = PLATFORM_NAMES[platform];
 
@@ -68,14 +72,36 @@ export function PlatformCard({
             </div>
 
             {/* Optional disconnect button */}
-            {onDisconnect && (
-              <button
-                onClick={() => onDisconnect(platform)}
-                className="text-xs text-slate-500 hover:text-red-600 transition-colors mt-2"
-              >
-                Disconnect
-              </button>
-            )}
+            <div className="flex items-center gap-3 mt-2">
+              {onManageAssets && (platform === 'meta' || platform === 'google') && (
+                <button
+                  onClick={() => onManageAssets(platform)}
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+                >
+                  Manage Assets
+                </button>
+              )}
+              
+              {onDisconnect && (
+                <button
+                  onClick={() => onDisconnect(platform)}
+                  disabled={isDisconnecting}
+                  className="text-xs text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDisconnecting ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Disconnecting...
+                    </>
+                  ) : (
+                    <>
+                      <Unlink className="h-3 w-3" />
+                      Disconnect
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </>
         ) : (
           <>

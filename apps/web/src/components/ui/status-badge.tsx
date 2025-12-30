@@ -1,7 +1,7 @@
 /**
  * Status Badge Component
  *
- * Displays status indicators with consistent styling across the application.
+ * Displays status indicators with Industrial Minimal styling.
  * Used for access request status, token health, and other status indicators.
  */
 
@@ -27,37 +27,37 @@ const STATUS_CONFIG: Record<
 > = {
   pending: {
     label: 'Pending',
-    className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    className: 'bg-warning/10 text-warning border border-warning/30',
     icon: <Clock className="h-3 w-3" />,
   },
   authorized: {
     label: 'Authorized',
-    className: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    className: 'bg-success/10 text-success border border-success/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   cancelled: {
     label: 'Cancelled',
-    className: 'bg-gray-100 text-gray-800 border-gray-200',
+    className: 'bg-muted/10 text-muted border border-border',
     icon: <XCircle className="h-3 w-3" />,
   },
   expired: {
     label: 'Expired',
-    className: 'bg-red-100 text-red-800 border-red-200',
+    className: 'bg-error/10 text-error border border-error/30',
     icon: <XCircle className="h-3 w-3" />,
   },
   healthy: {
     label: 'Healthy',
-    className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    className: 'bg-success/10 text-success border border-success/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   expiring: {
     label: 'Expiring Soon',
-    className: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    className: 'bg-warning/10 text-warning border border-warning/30',
     icon: <AlertCircle className="h-3 w-3" />,
   },
   unknown: {
     label: 'Unknown',
-    className: 'bg-gray-100 text-gray-700 border-gray-200',
+    className: 'bg-muted/10 text-muted border border-border',
     icon: <Clock className="h-3 w-3" />,
   },
 };
@@ -67,8 +67,8 @@ const SIZE_CLASSES: Record<
   string
 > = {
   sm: 'px-2 py-0.5 text-xs',
-  md: 'px-3 py-1.5 text-sm',
-  lg: 'px-4 py-2 text-base',
+  md: 'px-2.5 py-1 text-xs',
+  lg: 'px-3 py-1.5 text-sm',
 };
 
 export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
@@ -76,7 +76,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-medium border ${config.className} ${SIZE_CLASSES[size]}`}
+      className={`inline-flex items-center gap-1.5 rounded-sm font-mono font-medium uppercase tracking-wider border ${config.className} ${SIZE_CLASSES[size]}`}
     >
       {config.icon}
       {config.label}

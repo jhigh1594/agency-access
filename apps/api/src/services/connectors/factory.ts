@@ -2,6 +2,7 @@ import type { Platform } from '@agency-platform/shared';
 import { metaConnector } from './meta';
 import { googleAdsConnector } from './google-ads';
 import { ga4Connector } from './ga4';
+import { googleConnector } from './google';
 
 /**
  * Platform Connector Interface
@@ -15,9 +16,14 @@ import { ga4Connector } from './ga4';
  */
 export interface PlatformConnector {
   /**
+   * Generate OAuth authorization URL
+   */
+  getAuthUrl(state: string, scopes?: string[], redirectUri?: string): string;
+
+  /**
    * Exchange authorization code for access tokens
    */
-  exchangeCode(code: string): Promise<any>;
+  exchangeCode(code: string, redirectUri?: string): Promise<any>;
 
   /**
    * Optional: Refresh access token using refresh token
@@ -62,7 +68,9 @@ export interface PlatformConnector {
  * Add new connectors here as they are implemented.
  */
 const connectors: Partial<Record<Platform, PlatformConnector>> = {
+  meta: metaConnector,
   meta_ads: metaConnector,
+  google: googleConnector,
   google_ads: googleAdsConnector,
   ga4: ga4Connector,
 

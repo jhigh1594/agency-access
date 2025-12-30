@@ -66,28 +66,24 @@ export async function clientRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // Look up agency by Clerk user ID or create if doesn't exist
-    let agency = await prisma.agency.findUnique({
-      where: { clerkUserId },
+    // Resolve agency using centralized service (prevents duplicates)
+    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const agencyResult = await agencyResolutionService.getOrCreateAgency(clerkUserId, {
+      userEmail: `${clerkUserId}@clerk.temp`, // Will be improved with actual Clerk user data
+      agencyName: 'My Agency',
     });
 
-    // Auto-provision agency if it doesn't exist
-    if (!agency) {
-      // Extract email from Clerk user ID or use a placeholder
-      // In production, you'd get this from Clerk's user metadata
-      const email = `${clerkUserId}@clerk.temp`;
-
-      agency = await prisma.agency.create({
-        data: {
-          clerkUserId,
-          name: 'My Agency', // Default name, user can update later
-          email,
+    if (agencyResult.error) {
+      return reply.code(400).send({
+        error: {
+          code: agencyResult.error.code,
+          message: agencyResult.error.message,
         },
       });
     }
 
     // Attach the actual agency UUID to request for use in route handlers
-    (request as any).agencyId = agency.id;
+    (request as any).agencyId = agencyResult.data!.agencyId;
   });
 
   /**

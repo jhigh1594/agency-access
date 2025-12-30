@@ -16,6 +16,7 @@ export interface OAuthState {
   timestamp: number;
   // For client authorization flows
   accessRequestId?: string;
+  accessRequestToken?: string; // Unique token for the access request link
   clientEmail?: string;
 }
 

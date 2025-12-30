@@ -4,40 +4,74 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    /* Base - Light mode */
+    --background: 255 255 255;      /* #FFFFFF - page bg */
+    --card: 252 252 252;            /* #FCFCFC - component bg */
+    --foreground: 25 25 25;         /* #191919 - primary text */
+    --muted: 120 120 120;           /* #787878 - secondary text */
+
+    /* Accents */
+    --primary: 0 120 255;           /* #0078FF - Electric Blue */
+    --accent: 255 120 0;            /* #FF7800 - Safety Orange */
+
+    /* Structural */
+    --border: 215 215 215;          /* #D7D7D7 - subtle borders */
+    --border-strong: 180 180 180;   /* #B4B4B4 - emphasized borders */
+
+    /* Technical */
+    --technical: 105 105 105;       /* #696969 - code/data text */
+
+    /* Status */
+    --success: 34 139 34;           /* #228B22 */
+    --warning: 220 140 0;           /* #DC8C00 */
+    --error: 200 30 30;            /* #C81E1E */
+    --destructive: 200 30 30;       /* Alias for error */
+
+    /* Shadcn compatibility aliases */
+    --primary-foreground: 255 255 255;
+    --secondary: 248 248 248;
+    --secondary-foreground: 25 25 25;
+    --muted-foreground: 120 120 120;
+    --accent-foreground: 255 255 255;
+    --destructive-foreground: 255 255 255;
+    --input: 215 215 215;
+    --ring: 0 120 255;
+    --radius: 0;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Base - Dark mode */
+    --background: 18 18 18;         /* #121212 */
+    --card: 24 24 24;               /* #181818 */
+    --foreground: 250 250 250;      /* #FAFAFA */
+    --muted: 150 150 150;           /* #969696 */
+
+    /* Accents */
+    --primary: 65 185 255;          /* #41B9FF */
+    --accent: 255 150 50;          /* #FF9632 */
+
+    /* Structural */
+    --border: 60 60 60;             /* #3C3C3C */
+    --border-strong: 90 90 90;      /* #5A5A5A */
+
+    /* Technical */
+    --technical: 150 150 150;       /* #969696 */
+
+    /* Status */
+    --success: 100 200 100;         /* #64C864 */
+    --warning: 240 180 50;          /* #F0B432 */
+    --error: 235 80 80;            /* #EB5050 */
+    --destructive: 235 80 80;       /* Alias for error */
+
+    /* Shadcn compatibility aliases */
+    --primary-foreground: 25 25 25;
+    --secondary: 30 30 30;
+    --secondary-foreground: 250 250 250;
+    --muted-foreground: 150 150 150;
+    --accent-foreground: 25 25 25;
+    --destructive-foreground: 255 255 255;
+    --input: 60 60 60;
+    --ring: 65 185 255;
   }
 }
 
@@ -51,18 +85,44 @@
 }
 
 @layer utilities {
-  /* Amber/gold trust colors for Bold & Confident design */
-  .text-trust {
-    color: theme('colors.amber.600');
+  /* Technical grid - for dashboard/settings */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(var(--border)) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--border)) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
-  .bg-trust {
-    background-color: theme('colors.amber.500');
+
+  /* Corner decoration - for featured/hero cards ONLY */
+  .corner-accent::before,
+  .corner-accent::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 2px solid rgb(var(--primary));
   }
-  .border-trust {
-    border-color: theme('colors.amber.500');
+  .corner-accent::before {
+    top: 0;
+    left: 0;
+    border-right: none;
+    border-bottom: none;
   }
-  .hover\:bg-trust:hover {
-    background-color: theme('colors.amber.600');
+  .corner-accent::after {
+    bottom: 0;
+    right: 0;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Technical text color utility */
+  .text-technical {
+    color: rgb(var(--technical));
+  }
+
+  /* Border strong utility */
+  .border-border-strong {
+    border-color: rgb(var(--border-strong));
   }
 
   /* Editorial spacing (generous whitespace) */

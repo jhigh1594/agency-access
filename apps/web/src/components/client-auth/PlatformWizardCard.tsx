@@ -18,7 +18,7 @@ import type { Platform } from '@agency-platform/shared';
 interface PlatformWizardCardProps {
   platform: Platform;
   platformName: string;
-  currentStep: 1 | 2;
+  currentStep: 1 | 2 | 3;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -44,7 +44,7 @@ export function PlatformWizardCard({
           <div>
             <h2 className="text-2xl font-bold text-slate-900">{platformName}</h2>
             <p className="text-sm text-slate-600 mt-1">
-              Connect your {platformName} account
+              Connect {platformName}
             </p>
           </div>
         </div>

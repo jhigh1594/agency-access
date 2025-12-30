@@ -62,13 +62,31 @@ const PLATFORM_CONFIG: Record<Platform, IconConfig> = {
     color: 'bg-[#00F2EA]',
     gradient: 'from-[#00F2EA] to-[#FF0050]',
   },
+  tiktok_ads: {
+    name: 'TikTok Ads',
+    icon: siTiktok,
+    color: 'bg-[#00F2EA]',
+    gradient: 'from-[#00F2EA] to-[#FF0050]',
+  },
   linkedin: {
     name: 'LinkedIn Ads',
     icon: 'lucide-linkedin',
     color: 'bg-[#0A66C2]',
     gradient: 'from-[#0A66C2] to-[#004182]',
   },
+  linkedin_ads: {
+    name: 'LinkedIn Ads',
+    icon: 'lucide-linkedin',
+    color: 'bg-[#0A66C2]',
+    gradient: 'from-[#0A66C2] to-[#004182]',
+  },
   snapchat: {
+    name: 'Snapchat Ads',
+    icon: siSnapchat,
+    color: 'bg-[#FFFC00]',
+    gradient: 'from-[#FFFC00] to-[#FFE600]',
+  },
+  snapchat_ads: {
     name: 'Snapchat Ads',
     icon: siSnapchat,
     color: 'bg-[#FFFC00]',
@@ -107,6 +125,25 @@ export function PlatformIcon({
 }: PlatformIconProps) {
   const config = PLATFORM_CONFIG[platform];
   const sizeClass = SIZE_CLASSES[size];
+
+  // Fallback if platform config is missing
+  if (!config) {
+    return (
+      <div className="inline-flex items-center gap-2">
+        <div
+          className={`${sizeClass.container} rounded-lg flex items-center justify-center bg-slate-200`}
+        >
+          <span className="text-slate-500 font-bold">?</span>
+        </div>
+        {showLabel && (
+          <span className={`${sizeClass.text} font-medium text-slate-900`}>
+            {platform}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   const isLucideIcon = config.icon === 'lucide-linkedin';
 
   // Render Lucide icon (LinkedIn)

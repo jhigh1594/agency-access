@@ -10,6 +10,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { agencyPlatformsRoutes } from '../agency-platforms';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { oauthStateService } from '@/services/oauth-state.service';
+import { metaAssetsService } from '@/services/meta-assets.service';
 import { MetaConnector } from '@/services/connectors/meta';
 
 // Mock services
@@ -21,6 +22,14 @@ vi.mock('@/services/agency-platform.service', () => ({
     revokeConnection: vi.fn(),
     refreshConnection: vi.fn(),
     getValidToken: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/meta-assets.service', () => ({
+  metaAssetsService: {
+    saveBusinessPortfolio: vi.fn(),
+    saveAssetSettings: vi.fn(),
+    getAssetSettings: vi.fn(),
   },
 }));
 
@@ -727,6 +736,95 @@ describe('Agency Platforms Routes', () => {
       });
 
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  describe('PATCH /agency-platforms/meta/business', () => {
+    it('should save selected business portfolio', async () => {
+      vi.mocked(metaAssetsService.saveBusinessPortfolio).mockResolvedValue({
+        data: { success: true },
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/agency-platforms/meta/business',
+        payload: {
+          agencyId: 'agency-1',
+          businessId: 'biz-123',
+          businessName: 'My Business',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(metaAssetsService.saveBusinessPortfolio).toHaveBeenCalledWith(
+        'agency-1',
+        'biz-123',
+        'My Business'
+      );
+    });
+
+    it('should return 400 if businessId is missing', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/agency-platforms/meta/business',
+        payload: {
+          agencyId: 'agency-1',
+          businessName: 'My Business',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  describe('PATCH /agency-platforms/meta/asset-settings', () => {
+    it('should save asset settings', async () => {
+      const settings = {
+        adAccount: { enabled: true, permissionLevel: 'advertise' },
+        page: { enabled: true, permissionLevel: 'analyze' },
+        catalog: { enabled: false, permissionLevel: 'analyze' },
+        dataset: { enabled: true, requestFullAccess: false },
+        instagramAccount: { enabled: true, requestFullAccess: true }
+      };
+
+      vi.mocked(metaAssetsService.saveAssetSettings).mockResolvedValue({
+        data: { success: true },
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/agency-platforms/meta/asset-settings',
+        payload: {
+          agencyId: 'agency-1',
+          settings,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(metaAssetsService.saveAssetSettings).toHaveBeenCalledWith('agency-1', settings);
+    });
+  });
+
+  describe('GET /agency-platforms/meta/asset-settings', () => {
+    it('should return current asset settings', async () => {
+      const mockSettings = {
+        adAccount: { enabled: true, permissionLevel: 'analyze' },
+      };
+
+      vi.mocked(metaAssetsService.getAssetSettings).mockResolvedValue({
+        data: mockSettings as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/agency-platforms/meta/asset-settings?agencyId=agency-1',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data).toEqual(mockSettings);
     });
   });
 });
