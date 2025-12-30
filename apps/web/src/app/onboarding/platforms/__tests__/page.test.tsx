@@ -1,0 +1,271 @@
+/**
+ * Onboarding Platforms Page Tests
+ *
+ * Tests for first-time platform connection flow.
+ * Following TDD - tests written before implementation.
+ */
+
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import PlatformsPage from '../page';
+
+// Mock Next.js navigation
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+  useSearchParams: () => ({
+    get: vi.fn(),
+  }),
+}));
+
+// Mock Clerk auth
+vi.mock('@clerk/nextjs', () => ({
+  useAuth: () => ({
+    userId: 'user-123',
+    orgId: 'agency-1',
+  }),
+}));
+
+// Mock React Query
+const mockUseQuery = vi.fn();
+const mockUseMutation = vi.fn();
+
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: (options: any) => mockUseQuery(options),
+  useMutation: (options: any) => mockUseMutation(options),
+}));
+
+describe('Onboarding Platforms Page', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Default: No platforms connected yet
+    mockUseQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    });
+
+    // Default: OAuth initiation mutation
+    mockUseMutation.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
+  });
+
+  describe('Page Content', () => {
+    it('should display page title', () => {
+      render(<PlatformsPage />);
+      expect(screen.getByRole('heading', { name: /connect platforms/i })).toBeInTheDocument();
+    });
+
+    it('should explain delegated access model', () => {
+      render(<PlatformsPage />);
+      expect(screen.getByText(/delegated access/i)).toBeInTheDocument();
+      expect(screen.getByText(/manage client accounts through your own platform/i)).toBeInTheDocument();
+    });
+
+    it('should explain client authorization model', () => {
+      render(<PlatformsPage />);
+      expect(screen.getByText(/client authorization/i)).toBeInTheDocument();
+      expect(screen.getByText(/client authorizes access to their own platform accounts/i)).toBeInTheDocument();
+    });
+
+    it('should display grid of available platforms', () => {
+      render(<PlatformsPage />);
+
+      // Should show all supported platforms
+      expect(screen.getByText('Meta')).toBeInTheDocument();
+      expect(screen.getByText('Google')).toBeInTheDocument();
+      expect(screen.getByText('LinkedIn')).toBeInTheDocument();
+    });
+  });
+
+  describe('Platform Connection Actions', () => {
+    it('should show "Connect" button for unconnected platforms', () => {
+      render(<PlatformsPage />);
+
+      const connectButtons = screen.getAllByRole('button', { name: /connect/i });
+      expect(connectButtons.length).toBeGreaterThan(0);
+    });
+
+    it('should show "Connected" status for connected platforms', () => {
+      // Mock Meta platform as connected
+      mockUseQuery.mockReturnValue({
+        data: [
+          {
+            platform: 'meta',
+            name: 'Meta',
+            connected: true,
+            status: 'active',
+            connectedAt: new Date().toISOString(),
+          },
+        ],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<PlatformsPage />);
+
+      expect(screen.getByText('Meta')).toBeInTheDocument();
+      expect(screen.getByText(/connected/i)).toBeInTheDocument();
+    });
+
+    it('should disable connect button while initiating OAuth', async () => {
+      const user = userEvent.setup();
+      const mutateFn = vi.fn();
+
+      mockUseMutation.mockReturnValue({
+        mutate: mutateFn,
+        isPending: true,
+      });
+
+      render(<PlatformsPage />);
+
+      const connectButton = screen.getAllByRole('button', { name: /connect/i })[0];
+      expect(connectButton).toBeDisabled();
+    });
+
+    it('should call OAuth initiation on connect button click', async () => {
+      const user = userEvent.setup();
+      const mutateFn = vi.fn();
+
+      mockUseMutation.mockReturnValue({
+        mutate: mutateFn,
+        isPending: false,
+      });
+
+      render(<PlatformsPage />);
+
+      const metaConnectButton = screen.getAllByRole('button', { name: /connect/i })[0];
+      await user.click(metaConnectButton);
+
+      expect(mutateFn).toHaveBeenCalled();
+    });
+  });
+
+  describe('OAuth Flow Initiation', () => {
+    it('should redirect to OAuth URL on successful initiation', async () => {
+      const user = userEvent.setup();
+      let capturedOnSuccess: any;
+
+      // Mock useMutation to capture the onSuccess callback
+      mockUseMutation.mockImplementation((options: any) => {
+        capturedOnSuccess = options.onSuccess;
+        return {
+          mutate: (platform: string) => {
+            // Simulate successful mutation
+            capturedOnSuccess({
+              authUrl: 'https://facebook.com/oauth/authorize?client_id=123&state=abc',
+              state: 'abc123',
+            });
+          },
+          isPending: false,
+        };
+      });
+
+      // Mock window.location.href assignment
+      delete (window as any).location;
+      window.location = { href: '' } as any;
+
+      render(<PlatformsPage />);
+
+      const connectButton = screen.getAllByRole('button', { name: /connect/i })[0];
+      await user.click(connectButton);
+
+      await waitFor(() => {
+        expect(window.location.href).toContain('https://facebook.com/oauth/authorize');
+      });
+    });
+
+    it('should show error message if OAuth initiation fails', async () => {
+      const user = userEvent.setup();
+      let capturedOnError: any;
+
+      // Mock useMutation to capture the onError callback
+      mockUseMutation.mockImplementation((options: any) => {
+        capturedOnError = options.onError;
+        return {
+          mutate: (platform: string) => {
+            // Simulate failed mutation
+            capturedOnError(new Error('Network error'));
+          },
+          isPending: false,
+        };
+      });
+
+      render(<PlatformsPage />);
+
+      const connectButton = screen.getAllByRole('button', { name: /connect/i })[0];
+      await user.click(connectButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/failed to connect/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Navigation', () => {
+    it('should show "Skip for now" button', () => {
+      render(<PlatformsPage />);
+      expect(screen.getByRole('button', { name: /skip for now/i })).toBeInTheDocument();
+    });
+
+    it('should navigate to dashboard on skip', async () => {
+      const user = userEvent.setup();
+      render(<PlatformsPage />);
+
+      const skipButton = screen.getByRole('button', { name: /skip for now/i });
+      await user.click(skipButton);
+
+      expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    });
+
+    it('should show "Continue" button when at least one platform is connected', () => {
+      mockUseQuery.mockReturnValue({
+        data: [
+          {
+            platform: 'meta',
+            name: 'Meta',
+            connected: true,
+            status: 'active',
+          },
+        ],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<PlatformsPage />);
+      expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Loading State', () => {
+    it('should show loading state while fetching platforms', () => {
+      mockUseQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+      });
+
+      render(<PlatformsPage />);
+      expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Error State', () => {
+    it('should show error message if fetching platforms fails', () => {
+      mockUseQuery.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: new Error('Failed to fetch platforms'),
+      });
+
+      render(<PlatformsPage />);
+      expect(screen.getByText(/failed to load platforms/i)).toBeInTheDocument();
+    });
+  });
+});

@@ -1,0 +1,103 @@
+/**
+ * Health Badge Component
+ *
+ * Specialized badge for token health status.
+ * Displays visual indicators for healthy, expiring, and expired tokens.
+ */
+
+import { CheckCircle2, AlertCircle, XCircle, Clock } from 'lucide-react';
+
+export type HealthStatus = 'healthy' | 'expiring' | 'expired' | 'unknown';
+
+interface HealthBadgeProps {
+  health: HealthStatus;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const HEALTH_CONFIG: Record<
+  HealthStatus,
+  { label: string; className: string; icon: React.ReactNode }
+> = {
+  healthy: {
+    label: 'Healthy',
+    className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+  },
+  expiring: {
+    label: 'Expiring Soon',
+    className: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    icon: <AlertCircle className="h-4 w-4" />,
+  },
+  expired: {
+    label: 'Expired',
+    className: 'bg-red-100 text-red-700 border-red-200',
+    icon: <XCircle className="h-4 w-4" />,
+  },
+  unknown: {
+    label: 'Unknown',
+    className: 'bg-gray-100 text-gray-700 border-gray-200',
+    icon: <Clock className="h-4 w-4" />,
+  },
+};
+
+const SIZE_CLASSES: Record<
+  NonNullable<HealthBadgeProps['size']>,
+  string
+> = {
+  sm: 'px-2 py-1 text-xs gap-1',
+  md: 'px-3 py-1.5 text-sm gap-2',
+  lg: 'px-4 py-2 text-base gap-2',
+};
+
+export function HealthBadge({ health, size = 'md' }: HealthBadgeProps) {
+  const config = HEALTH_CONFIG[health];
+
+  return (
+    <div
+      className={`inline-flex items-center rounded-full font-medium border ${config.className} ${SIZE_CLASSES[size]}`}
+    >
+      {config.icon}
+      {config.label}
+    </div>
+  );
+}
+
+/**
+ * Expiration Countdown Component
+ *
+ * Displays human-readable expiration time with urgency indicators.
+ */
+
+interface ExpirationCountdownProps {
+  daysUntilExpiry: number;
+  health: HealthStatus;
+}
+
+export function ExpirationCountdown({
+  daysUntilExpiry,
+  health,
+}: ExpirationCountdownProps) {
+  const isUrgent = daysUntilExpiry <= 2;
+
+  if (daysUntilExpiry < 0) {
+    return <span className="text-sm text-red-600 font-medium">Expired</span>;
+  }
+
+  if (daysUntilExpiry === 0) {
+    return <span className="text-sm text-red-600 font-medium">Today</span>;
+  }
+
+  if (daysUntilExpiry === 1) {
+    return <span className="text-sm text-yellow-700 font-medium">Tomorrow</span>;
+  }
+
+  return (
+    <span
+      className={`text-sm ${
+        isUrgent ? 'text-yellow-700 font-medium' : 'text-slate-600'
+      }`}
+    >
+      {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'}
+    </span>
+  );
+}

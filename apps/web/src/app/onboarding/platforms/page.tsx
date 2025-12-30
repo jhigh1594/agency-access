@@ -1,0 +1,454 @@
+'use client';
+
+/**
+ * Onboarding Platforms Page
+ *
+ * First-time platform connection flow.
+ * Allows agencies to connect their OAuth platforms for delegated access.
+ *
+ * Now with unified Google connector - one OAuth gives access to all Google products.
+ */
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { useQuery, useMutation } from '@tanstack/react-query';
+
+// Google account types
+interface GoogleAdsAccount {
+  id: string;
+  name: string;
+  type: 'google_ads';
+  status: string;
+}
+
+interface GoogleAnalyticsProperty {
+  id: string;
+  name: string;
+  displayName: string;
+  type: 'ga4';
+  accountName: string;
+}
+
+interface GoogleBusinessAccount {
+  id: string;
+  name: string;
+  type: 'google_business';
+  locationCount?: number;
+}
+
+interface GoogleTagManagerContainer {
+  id: string;
+  name: string;
+  type: 'google_tag_manager';
+  accountId: string;
+  accountName: string;
+}
+
+interface GoogleSearchConsoleSite {
+  id: string;
+  url: string;
+  type: 'google_search_console';
+  permissionLevel: string;
+}
+
+interface GoogleMerchantCenterAccount {
+  id: string;
+  name: string;
+  type: 'google_merchant_center';
+  websiteUrl?: string;
+}
+
+interface GoogleAccountsResponse {
+  adsAccounts: GoogleAdsAccount[];
+  analyticsProperties: GoogleAnalyticsProperty[];
+  businessAccounts: GoogleBusinessAccount[];
+  tagManagerContainers: GoogleTagManagerContainer[];
+  searchConsoleSites: GoogleSearchConsoleSite[];
+  merchantCenterAccounts: GoogleMerchantCenterAccount[];
+  hasAccess: boolean;
+}
+
+// Platform definitions
+const SUPPORTED_PLATFORMS = [
+  { id: 'google', name: 'Google', description: 'Google Ads, Analytics, Business, Tag Manager, Search Console, Merchant Center' },
+  { id: 'meta', name: 'Meta', description: 'Facebook & Instagram Ads' },
+  { id: 'linkedin', name: 'LinkedIn Ads', description: 'LinkedIn Ads' },
+];
+
+interface Platform {
+  platform: string;
+  name: string;
+  connected: boolean;
+  status?: string;
+  connectedAt?: string;
+  expiresAt?: string;
+}
+
+export default function PlatformsPage() {
+  const router = useRouter();
+  const { orgId } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [showGoogleAccounts, setShowGoogleAccounts] = useState(false);
+
+  // Fetch agency platform connections
+  const {
+    data: connectedPlatforms = [],
+    isLoading,
+    error: fetchError,
+  } = useQuery<Platform[]>({
+    queryKey: ['agency-platforms', orgId],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${orgId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch platforms');
+      const result = await response.json();
+      return result.data || [];
+    },
+    enabled: !!orgId,
+  });
+
+  // Fetch Google accounts if Google is connected
+  const googleConnection = connectedPlatforms?.find((p) => p.platform === 'google');
+  const {
+    data: googleAccounts,
+    isLoading: isLoadingGoogleAccounts,
+    refetch: refetchGoogleAccounts,
+  } = useQuery<GoogleAccountsResponse>({
+    queryKey: ['google-accounts', orgId],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${orgId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch Google accounts');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!orgId && !!googleConnection?.connected && showGoogleAccounts,
+  });
+
+  // OAuth initiation mutation
+  const { mutate: initiatePlatform, isPending } = useMutation({
+    mutationFn: async (platform: string) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/initiate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agencyId: orgId,
+            userEmail: 'admin@agency.com', // TODO: Get from Clerk user
+            redirectUrl: `${window.location.origin}/platforms/callback`,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to initiate OAuth');
+      }
+
+      const result = await response.json();
+      return result.data;
+    },
+    onSuccess: (data) => {
+      // Redirect to OAuth provider
+      window.location.href = data.authUrl;
+    },
+    onError: () => {
+      setError('Failed to connect platform. Please try again.');
+    },
+  });
+
+  const handleConnect = (platform: string) => {
+    setError(null);
+    initiatePlatform(platform);
+  };
+
+  const handleSkip = () => {
+    router.push('/dashboard');
+  };
+
+  const handleContinue = () => {
+    router.push('/dashboard');
+  };
+
+  const hasConnectedPlatforms = connectedPlatforms?.some((p) => p.connected) || false;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading platforms...</p>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-600">Failed to load platforms. Please try again.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-6">Connect Platforms</h1>
+
+      {/* Explanation of authorization models */}
+      <div className="mb-8 space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold text-blue-900 mb-2">Delegated Access</h3>
+          <p className="text-sm text-blue-800">
+            Manage client accounts through your own platform connection. You control access and can
+            act on behalf of clients.
+          </p>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h3 className="font-semibold text-green-900 mb-2">Client Authorization</h3>
+          <p className="text-sm text-green-800">
+            Client authorizes access to their own platform accounts. They maintain ownership and
+            grant you specific permissions.
+          </p>
+        </div>
+      </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Platform grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {SUPPORTED_PLATFORMS.map((platform) => {
+          const connection = connectedPlatforms.find((p) => p.platform === platform.id);
+          const isConnected = connection?.connected || false;
+
+          return (
+            <div
+              key={platform.id}
+              className="border rounded-lg p-6 flex flex-col items-center justify-between"
+            >
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold">{platform.name}</h3>
+                <p className="text-sm text-gray-600">{platform.description}</p>
+              </div>
+
+              {isConnected ? (
+                <div className="text-center">
+                  <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Connected
+                  </span>
+                  {connection.connectedAt && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(connection.connectedAt).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleConnect(platform.id)}
+                  disabled={isPending}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {isPending ? 'Connecting...' : 'Connect'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Google Accounts Section - shows when Google is connected */}
+      {googleConnection?.connected && (
+        <div className="mb-8 border rounded-lg p-6 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Your Google Accounts</h2>
+            <div className="flex gap-2">
+              {!showGoogleAccounts ? (
+                <button
+                  onClick={() => setShowGoogleAccounts(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  View Accounts
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => refetchGoogleAccounts()}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={() => setShowGoogleAccounts(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Hide
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {showGoogleAccounts && (
+            <>
+              {isLoadingGoogleAccounts ? (
+                <p className="text-gray-600">Loading Google accounts...</p>
+              ) : googleAccounts && googleAccounts.hasAccess ? (
+                <div className="space-y-6">
+                  {/* Google Ads */}
+                  {googleAccounts.adsAccounts.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-blue-900 mb-2">Google Ads Accounts ({googleAccounts.adsAccounts.length})</h3>
+                      <div className="space-y-2">
+                        {googleAccounts.adsAccounts.map((account) => (
+                          <div key={account.id} className="bg-gray-50 p-3 rounded border">
+                            <p className="font-medium">{account.name}</p>
+                            <p className="text-sm text-gray-600">ID: {account.id}</p>
+                            <span className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs mt-1">
+                              {account.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Google Analytics */}
+                  {googleAccounts.analyticsProperties.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-blue-900 mb-2">Google Analytics Properties ({googleAccounts.analyticsProperties.length})</h3>
+                      <div className="space-y-2">
+                        {googleAccounts.analyticsProperties.map((property) => (
+                          <div key={property.id} className="bg-gray-50 p-3 rounded border">
+                            <p className="font-medium">{property.displayName}</p>
+                            <p className="text-sm text-gray-600">Account: {property.accountName}</p>
+                            <p className="text-sm text-gray-600">ID: {property.id}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Google Business Profile */}
+                  {googleAccounts.businessAccounts.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-blue-900 mb-2">Google Business Profiles ({googleAccounts.businessAccounts.length})</h3>
+                      <div className="space-y-2">
+                        {googleAccounts.businessAccounts.map((account) => (
+                          <div key={account.id} className="bg-gray-50 p-3 rounded border">
+                            <p className="font-medium">{account.name}</p>
+                            <p className="text-sm text-gray-600">ID: {account.id}</p>
+                            {account.locationCount && (
+                              <p className="text-sm text-gray-600">{account.locationCount} locations</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Google Tag Manager */}
+                  {googleAccounts.tagManagerContainers.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-blue-900 mb-2">Google Tag Manager Containers ({googleAccounts.tagManagerContainers.length})</h3>
+                      <div className="space-y-2">
+                        {googleAccounts.tagManagerContainers.map((container) => (
+                          <div key={container.id} className="bg-gray-50 p-3 rounded border">
+                            <p className="font-medium">{container.name}</p>
+                            <p className="text-sm text-gray-600">Account: {container.accountName}</p>
+                            <p className="text-sm text-gray-600">Container ID: {container.id}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Google Search Console */}
+                  {googleAccounts.searchConsoleSites.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-blue-900 mb-2">Search Console Sites ({googleAccounts.searchConsoleSites.length})</h3>
+                      <div className="space-y-2">
+                        {googleAccounts.searchConsoleSites.map((site) => (
+                          <div key={site.id} className="bg-gray-50 p-3 rounded border">
+                            <p className="font-medium text-sm break-all">{site.url}</p>
+                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mt-1">
+                              {site.permissionLevel}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Google Merchant Center */}
+                  {googleAccounts.merchantCenterAccounts.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-blue-900 mb-2">Merchant Center Accounts ({googleAccounts.merchantCenterAccounts.length})</h3>
+                      <div className="space-y-2">
+                        {googleAccounts.merchantCenterAccounts.map((account) => (
+                          <div key={account.id} className="bg-gray-50 p-3 rounded border">
+                            <p className="font-medium">{account.name}</p>
+                            <p className="text-sm text-gray-600">ID: {account.id}</p>
+                            {account.websiteUrl && (
+                              <p className="text-sm text-gray-600">{account.websiteUrl}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No accounts message */}
+                  {googleAccounts.adsAccounts.length === 0 &&
+                   googleAccounts.analyticsProperties.length === 0 &&
+                   googleAccounts.businessAccounts.length === 0 &&
+                   googleAccounts.tagManagerContainers.length === 0 &&
+                   googleAccounts.searchConsoleSites.length === 0 &&
+                   googleAccounts.merchantCenterAccounts.length === 0 && (
+                    <div className="text-center py-8 bg-gray-50 rounded">
+                      <p className="text-gray-600">No Google accounts found.</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        You may need to grant access to specific Google products through your Google account settings.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded">
+                  <p className="text-gray-600">No Google accounts found.</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Try connecting to Google again or check your Google account permissions.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Navigation buttons */}
+      <div className="flex justify-between">
+        <button
+          onClick={handleSkip}
+          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          Skip for now
+        </button>
+
+        {hasConnectedPlatforms && (
+          <button
+            onClick={handleContinue}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Continue
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
