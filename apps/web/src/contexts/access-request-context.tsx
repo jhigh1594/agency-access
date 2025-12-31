@@ -10,6 +10,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Client, AccessLevel, AccessRequestTemplate, AuthModel } from '@agency-platform/shared';
+import type { CreateAccessRequestPayload } from '@/lib/api/access-requests';
 
 // ============================================================
 // TYPES
@@ -265,12 +266,12 @@ export function AccessRequestProvider({ children, agencyId }: AccessRequestProvi
       );
 
       // Build payload
-      const payload = {
+      const payload: CreateAccessRequestPayload = {
         agencyId,
         clientId: state.client?.id,
         clientName: state.client?.name || '',
         clientEmail: state.client?.email || '',
-        authModel: state.authModel || 'client_authorization',
+        authModel: (state.authModel || 'client_authorization') as 'client_authorization' | 'delegated_access',
         platforms: platformsConfig,
         intakeFields: state.intakeFields.filter((field) => field.label.trim()),
         branding: {
