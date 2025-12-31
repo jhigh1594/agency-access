@@ -53,18 +53,17 @@ class RedisService {
         console.log('✅ Redis client connected');
       });
 
-      // Attempt to connect (will fail silently if unavailable in dev)
-      if (env.NODE_ENV === 'production') {
+      // Attempt to connect (will fail silently if unavailable)
+      // Don't attempt to connect if REDIS_URL points to localhost (not available in production)
+      const isLocalhost = env.REDIS_URL.includes('localhost') || env.REDIS_URL.includes('127.0.0.1');
+      
+      if (!isLocalhost) {
         this.client.connect().catch(() => {
-          // Ignore connection errors in production startup
+          // Ignore connection errors - Redis is optional for core functionality
         });
-      } else {
-        // In development, don't even attempt to connect if REDIS_URL is localhost
-        if (!env.REDIS_URL.includes('localhost') && !env.REDIS_URL.includes('127.0.0.1')) {
-          this.client.connect().catch(() => {
-            // Ignore connection errors
-          });
-        }
+      } else if (env.NODE_ENV === 'production') {
+        // In production with localhost URL, log a warning but don't try to connect
+        console.warn('⚠️  Redis URL points to localhost - Redis features disabled. Set REDIS_URL to your Upstash Redis URL to enable.');
       }
     }
 
