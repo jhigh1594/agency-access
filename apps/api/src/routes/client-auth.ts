@@ -205,6 +205,18 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
         scopes.push('https://www.googleapis.com/auth/userinfo.email');
       }
 
+      if (platform === 'meta' || platform === 'meta_ads') {
+        // Meta client authorization scopes
+        // Instagram Business accounts are accessed through Facebook Pages via business_management
+        // No Instagram-specific OAuth scopes needed
+        scopes = [
+          'ads_management', // Manage ad accounts
+          'ads_read', // Read ads data
+          'business_management', // Access Business Manager (includes Pages and Instagram)
+          'pages_read_engagement', // Read pages engagement data
+        ];
+      }
+
       const authUrl = connector.getAuthUrl(state, scopes, redirectUri);
 
       return reply.send({
@@ -665,6 +677,404 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
         error: {
           code: 'SAVE_ASSETS_ERROR',
           message: `Failed to save selected assets: ${error}`,
+        },
+      });
+    }
+  });
+
+  // Grant Pages access automatically via API
+  fastify.post('/client/:token/grant-pages-access', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = z.object({
+      connectionId: z.string(),
+      pageIds: z.array(z.string()),
+    }).safeParse(request.body);
+
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId, pageIds } = validated.data;
+
+    try {
+      // Get access request to find agency
+      const accessRequest = await accessRequestService.getAccessRequestByToken(token);
+      if (accessRequest.error || !accessRequest.data) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'ACCESS_REQUEST_NOT_FOUND',
+            message: 'Access request not found',
+          },
+        });
+      }
+
+      // Get client connection
+      const connection = await prisma.clientConnection.findUnique({
+        where: { id: connectionId },
+      });
+
+      if (!connection) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'CONNECTION_NOT_FOUND',
+            message: 'Client connection not found',
+          },
+        });
+      }
+
+      // Get platform authorization to retrieve token
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'Meta authorization not found',
+          },
+        });
+      }
+
+      // Get client's OAuth token from Infisical
+      const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
+      if (!tokens || !tokens.accessToken) {
+        return reply.code(500).send({
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        });
+      }
+
+      // Check if token is expired
+      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'TOKEN_EXPIRED',
+            message: 'Your authorization has expired. Please reconnect.',
+          },
+        });
+      }
+
+      // Get agency's Business Manager ID
+      const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+        where: {
+          agencyId_platform: {
+            agencyId: accessRequest.data.agencyId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!agencyConnection) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'AGENCY_BUSINESS_ID_MISSING',
+            message: 'Agency must set up their Meta Business Manager ID before clients can grant access',
+          },
+        });
+      }
+
+      // Get agency's System User ID from metadata
+      const metadata = (agencyConnection.metadata as any) || {};
+      const agencySystemUserId = metadata.systemUserId;
+
+      if (!agencySystemUserId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'AGENCY_SYSTEM_USER_MISSING',
+            message: 'Agency must complete their Meta setup by reconnecting their account before clients can grant access',
+          },
+        });
+      }
+
+      // Import meta-partner service
+      const { metaPartnerService } = await import('../services/meta-partner.service');
+
+      // Grant access to each page
+      const grantedPages: Array<{ id: string; status: 'granted' | 'failed'; error?: string }> = [];
+      const errors: string[] = [];
+
+      fastify.log.info({
+        msg: 'Starting pages access grant',
+        connectionId,
+        pageCount: pageIds.length,
+        agencySystemUserId,
+        pageIds,
+      });
+
+      for (const pageId of pageIds) {
+        try {
+          await metaPartnerService.grantPageAccess(
+            tokens.accessToken,
+            pageId,
+            agencySystemUserId
+          );
+          grantedPages.push({ id: pageId, status: 'granted' });
+          fastify.log.info({
+            msg: 'Page access granted successfully',
+            pageId,
+            connectionId,
+          });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          grantedPages.push({ id: pageId, status: 'failed', error: errorMessage });
+          errors.push(`Page ${pageId}: ${errorMessage}`);
+          
+          fastify.log.error({
+            msg: 'Failed to grant page access',
+            pageId,
+            connectionId,
+            agencySystemUserId,
+            error: errorMessage,
+            errorStack: error instanceof Error ? error.stack : undefined,
+          });
+        }
+      }
+
+      const success = grantedPages.some((p) => p.status === 'granted');
+      
+      fastify.log.info({
+        msg: 'Pages access grant completed',
+        connectionId,
+        success,
+        grantedCount: grantedPages.filter((p) => p.status === 'granted').length,
+        failedCount: grantedPages.filter((p) => p.status === 'failed').length,
+        errors: errors.length > 0 ? errors : undefined,
+      });
+
+      // Update connection grantedAssets with grant results
+      const currentGrantedAssets = (connection.grantedAssets as any) || {};
+      const updatedGrantedAssets = {
+        ...currentGrantedAssets,
+        meta: {
+          ...(currentGrantedAssets.meta || {}),
+          pagesAccessGranted: success,
+          pagesAccessGrantedAt: success ? new Date().toISOString() : undefined,
+          pagesGrantResults: {
+            success,
+            grantedPages,
+            errors: errors.length > 0 ? errors : undefined,
+          },
+        },
+      };
+
+      await prisma.clientConnection.update({
+        where: { id: connectionId },
+        data: { grantedAssets: updatedGrantedAssets },
+      });
+
+      // Create audit log
+      await auditService.createAuditLog({
+        agencyId: accessRequest.data.agencyId,
+        action: 'PAGES_ACCESS_GRANTED',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          grantedPages,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+      });
+
+      return reply.send({
+        data: {
+          success,
+          grantedPages,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'GRANT_ACCESS_ERROR',
+          message: `Failed to grant pages access: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        },
+      });
+    }
+  });
+
+  // Get agency Business Manager ID for manual ad account sharing
+  fastify.get('/client/:token/agency-business-id', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    try {
+      const accessRequest = await accessRequestService.getAccessRequestByToken(token);
+      if (accessRequest.error || !accessRequest.data) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'ACCESS_REQUEST_NOT_FOUND',
+            message: 'Access request not found',
+          },
+        });
+      }
+
+      const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+        where: {
+          agencyId_platform: {
+            agencyId: accessRequest.data.agencyId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!agencyConnection) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AGENCY_BUSINESS_ID_MISSING',
+            message: 'Agency must set up their Meta Business Manager ID before clients can grant access',
+          },
+        });
+      }
+
+      // Get Business Manager ID from businessId field (preferred) or metadata.selectedBusinessId (fallback)
+      const metadata = (agencyConnection.metadata as any) || {};
+      const businessId = agencyConnection.businessId || metadata.selectedBusinessId;
+      const businessName = metadata.selectedBusinessName || metadata.businessName;
+
+      if (!businessId) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AGENCY_BUSINESS_ID_MISSING',
+            message: 'Agency must set up their Meta Business Manager ID before clients can grant access',
+          },
+        });
+      }
+
+      return reply.send({
+        data: {
+          businessId: businessId,
+          businessName: businessName || undefined,
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'FETCH_ERROR',
+          message: `Failed to fetch agency Business Manager ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        },
+      });
+    }
+  });
+
+  // Mark ad account sharing as complete
+  fastify.post('/client/:token/ad-accounts-shared', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = z.object({
+      connectionId: z.string(),
+      sharedAdAccountIds: z.array(z.string()).optional(),
+    }).safeParse(request.body);
+
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId, sharedAdAccountIds } = validated.data;
+
+    try {
+      const accessRequest = await accessRequestService.getAccessRequestByToken(token);
+      if (accessRequest.error || !accessRequest.data) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'ACCESS_REQUEST_NOT_FOUND',
+            message: 'Access request not found',
+          },
+        });
+      }
+
+      const connection = await prisma.clientConnection.findUnique({
+        where: { id: connectionId },
+      });
+
+      if (!connection) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'CONNECTION_NOT_FOUND',
+            message: 'Client connection not found',
+          },
+        });
+      }
+
+      // Update connection grantedAssets with ad account sharing status
+      const currentGrantedAssets = (connection.grantedAssets as any) || {};
+      const updatedGrantedAssets = {
+        ...currentGrantedAssets,
+        meta: {
+          ...(currentGrantedAssets.meta || {}),
+          adAccountsSharedManually: true,
+          adAccountsSharedAt: new Date().toISOString(),
+          sharedAdAccountIds: sharedAdAccountIds || [],
+        },
+      };
+
+      await prisma.clientConnection.update({
+        where: { id: connectionId },
+        data: { grantedAssets: updatedGrantedAssets },
+      });
+
+      // Create audit log
+      await auditService.createAuditLog({
+        agencyId: accessRequest.data.agencyId,
+        action: 'AD_ACCOUNTS_SHARED_MANUALLY',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          sharedAdAccountIds: sharedAdAccountIds || [],
+        },
+      });
+
+      return reply.send({
+        data: {
+          success: true,
+          sharedAt: updatedGrantedAssets.meta.adAccountsSharedAt,
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'UPDATE_ERROR',
+          message: `Failed to update ad account sharing status: ${error instanceof Error ? error.message : 'Unknown error'}`,
         },
       });
     }

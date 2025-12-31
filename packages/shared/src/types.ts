@@ -66,8 +66,11 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   google_ads: 'Google Ads',
   ga4: 'Google Analytics',
   tiktok: 'TikTok Ads',
+  tiktok_ads: 'TikTok Ads',
   linkedin: 'LinkedIn Ads',
+  linkedin_ads: 'LinkedIn Ads',
   snapchat: 'Snapchat Ads',
+  snapchat_ads: 'Snapchat Ads',
   instagram: 'Instagram',
 };
 
@@ -85,14 +88,16 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     'ads_management',
     'ads_read',
     'business_management',
+    // pages_manage_metadata and pages_show_list removed - not valid OAuth scopes
     'pages_read_engagement',
-    'instagram_basic',
-    'instagram_manage_insights',
+    // Instagram accounts are accessed through Facebook Pages via business_management scope
+    // No Instagram-specific OAuth scopes needed
   ],
   meta_ads: [
     'ads_management',
     'ads_read',
     'business_management',
+    // pages_manage_metadata and pages_show_list removed - not valid OAuth scopes
     'pages_read_engagement',
   ],
   google_ads: [
@@ -104,16 +109,27 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
   tiktok: [
     'advertiser.info',
   ],
+  tiktok_ads: [
+    'advertiser.info',
+  ],
   linkedin: [
+    'rw_ads',
+    'r_ads_reporting',
+  ],
+  linkedin_ads: [
     'rw_ads',
     'r_ads_reporting',
   ],
   snapchat: [
     'snapchat-marketing-api',
   ],
+  snapchat_ads: [
+    'snapchat-marketing-api',
+  ],
   instagram: [
-    'instagram_basic',
-    'instagram_manage_insights',
+    // Instagram Business accounts are accessed through Facebook Pages
+    // Use business_management and pages_read_engagement scopes
+    'business_management',
     'pages_read_engagement',
   ],
 };
@@ -398,6 +414,16 @@ export interface GoogleMerchantCenterAccount {
   websiteUrl?: string;
 }
 
+export interface GoogleAccountsResponse {
+  adsAccounts: GoogleAdsAccount[];
+  analyticsProperties: GoogleAnalyticsProperty[];
+  businessAccounts: GoogleBusinessAccount[];
+  tagManagerContainers: GoogleTagManagerContainer[];
+  searchConsoleSites: GoogleSearchConsoleSite[];
+  merchantCenterAccounts: GoogleMerchantCenterAccount[];
+  hasAccess: boolean;
+}
+
 export interface GoogleAssetSettings {
   googleAds: {
     enabled: boolean;
@@ -529,4 +555,58 @@ export interface TemplatesListResponse {
     code: string;
     message: string;
   };
+}
+
+// ============================================================
+// CLIENT DETAIL PAGE TYPES
+// ============================================================
+
+// Client statistics for the detail page
+export interface ClientStats {
+  totalRequests: number;
+  activeConnections: number;
+  pendingConnections: number;
+  expiredConnections: number;
+}
+
+// Activity timeline item for the client's activity tab
+export interface ClientActivityItem {
+  id: string;
+  type: 'request_created' | 'request_completed' | 'connection_created' | 'connection_revoked' | 'client_updated';
+  description: string;
+  timestamp: Date;
+  metadata?: {
+    requestName?: string;
+    platforms?: Platform[];
+    status?: string;
+  };
+}
+
+// Access request with connection status for client detail page
+export interface ClientAccessRequest {
+  id: string;
+  name: string;
+  platforms: Platform[];
+  status: 'pending' | 'partial' | 'completed' | 'expired' | 'revoked';
+  createdAt: Date;
+  authorizedAt?: Date;
+  connectionId?: string;
+  connectionStatus?: 'active' | 'revoked' | 'expired';
+}
+
+// Client detail page API response
+export interface ClientDetailResponse {
+  client: {
+    id: string;
+    name: string;
+    company: string;
+    email: string;
+    website: string | null;
+    language: ClientLanguage;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  stats: ClientStats;
+  accessRequests: ClientAccessRequest[];
+  activity: ClientActivityItem[];
 }

@@ -10,7 +10,7 @@ Fixed Meta OAuth integration that was failing with "Invalid Scopes" and redirect
 
 1. **Wrong Permission Type:** Connector was using Facebook Login permissions (`email`, `public_profile`) instead of Marketing API permissions (`ads_management`, `business_management`)
 
-2. **Unrequested Permissions:** Requesting Instagram permissions (`instagram_basic`, `instagram_manage_insights`) that weren't enabled in the Meta app
+2. **Deprecated Instagram Scopes:** The `instagram_basic` and `instagram_manage_insights` scopes are no longer valid OAuth scopes - Instagram Business accounts are accessed through Facebook Pages via `business_management`
 
 3. **Default Parameter `this` Binding Issue:** Using `this.DEFAULT_SCOPES` as a default parameter value caused transpilation/runtime issues where `scopes` was undefined
 
@@ -119,7 +119,6 @@ getAuthUrl(state: string, scopes?: string[]) {
 - `ads_read`
 - `business_management`
 - `pages_read_engagement`
-- `pages_show_list`
 
 ### Features to Add
 - **Ads Management Standard Access**
@@ -129,10 +128,8 @@ getAuthUrl(state: string, scopes?: string[]) {
 - Development: `http://localhost:3001/agency-platforms/meta/callback`
 - Production: `https://your-api-domain.com/agency-platforms/meta/callback`
 
-### Optional: Instagram Support
-Requires adding **Instagram Graph API** product, then:
-- `instagram_basic`
-- `instagram_manage_insights`
+### Instagram Access
+Instagram Business accounts are accessed through Facebook Pages via the `business_management` scope. No additional Instagram-specific OAuth scopes are required.
 
 ## Testing the Flow
 
