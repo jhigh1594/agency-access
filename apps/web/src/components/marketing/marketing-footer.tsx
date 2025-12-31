@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Route } from 'next';
 
 export function MarketingFooter() {
   return (
@@ -40,12 +41,12 @@ export function MarketingFooter() {
             <h4 className="font-heading text-sm mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/about" className="hover:text-foreground transition-colors">
+                <Link href={"/about" as Route} className="hover:text-foreground transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-foreground transition-colors">
+                <Link href={"/contact" as Route} className="hover:text-foreground transition-colors">
                   Contact
                 </Link>
               </li>
@@ -57,12 +58,12 @@ export function MarketingFooter() {
             <h4 className="font-heading text-sm mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/privacy" className="hover:text-foreground transition-colors">
+                <Link href={"/privacy" as Route} className="hover:text-foreground transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-foreground transition-colors">
+                <Link href={"/terms" as Route} className="hover:text-foreground transition-colors">
                   Terms of Service
                 </Link>
               </li>

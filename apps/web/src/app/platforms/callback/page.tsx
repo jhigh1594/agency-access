@@ -8,7 +8,7 @@
  * For Meta, shows Business Portfolio selector instead of auto-redirect.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,7 +31,7 @@ const PLATFORM_NAMES: Record<string, string> = {
   linkedin: 'LinkedIn',
 };
 
-export default function CallbackPage() {
+function CallbackPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { orgId } = useAuth();
@@ -262,5 +262,20 @@ export default function CallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CallbackPageContent />
+    </Suspense>
   );
 }

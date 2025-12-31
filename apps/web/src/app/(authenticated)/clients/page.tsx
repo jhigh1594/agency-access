@@ -7,7 +7,7 @@
  * Shows connection status, platforms, and quick actions.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Search, Filter, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
@@ -37,7 +37,7 @@ function mapClientStatusToStatusType(status: Client['status']): StatusType {
   return status as StatusType;
 }
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const { user } = useUser();
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get('email');
@@ -244,5 +244,20 @@ export default function ClientsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-slate-50 p-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          <span className="ml-2 text-slate-600">Loading...</span>
+        </div>
+      </div>
+    }>
+      <ClientsPageContent />
+    </Suspense>
   );
 }
