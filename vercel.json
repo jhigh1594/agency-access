@@ -2,6 +2,6 @@
   "buildCommand": "npm run build --workspace=packages/shared && npm run build --workspace=apps/web",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web packages/shared"
+  "rootDirectory": "apps/web"
 }
 
