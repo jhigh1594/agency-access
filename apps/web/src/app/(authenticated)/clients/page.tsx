@@ -14,6 +14,7 @@ import { Users, Search, Filter, Loader2, AlertCircle, ExternalLink } from 'lucid
 import Link from 'next/link';
 import { StatusBadge, PlatformIcon, EmptyState } from '@/components/ui';
 import type { Platform } from '@agency-platform/shared';
+import type { StatusType } from '@/components/ui/status-badge';
 import { useSearchParams } from 'next/navigation';
 
 interface Client {
@@ -26,6 +27,14 @@ interface Client {
   connectionCount: number;
   lastActivityAt: string;
   createdAt: string;
+}
+
+// Map client status to StatusBadge StatusType
+function mapClientStatusToStatusType(status: Client['status']): StatusType {
+  if (status === 'none') {
+    return 'unknown';
+  }
+  return status as StatusType;
 }
 
 export default function ClientsPage() {
@@ -181,7 +190,7 @@ export default function ClientsPage() {
                       <p className="text-xs text-slate-500 mt-1 truncate">{client.company}</p>
                     )}
                   </div>
-                  <StatusBadge status={client.status} />
+                  <StatusBadge status={mapClientStatusToStatusType(client.status)} />
                 </div>
 
                 {/* Platforms */}
