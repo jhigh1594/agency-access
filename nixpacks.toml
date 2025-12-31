@@ -1,0 +1,18 @@
+# Nixpacks configuration for Railway
+# This ensures a clean build process
+
+[phases.setup]
+nixPkgs = ['nodejs-20_x', 'npm']
+
+[phases.install]
+cmds = ['npm install']
+
+[phases.build]
+cmds = [
+  'npm run build --workspace=packages/shared',
+  'cd apps/api && rm -rf dist && npm run db:generate && npm run build'
+]
+
+[start]
+cmd = "cd apps/api && npm start"
+
