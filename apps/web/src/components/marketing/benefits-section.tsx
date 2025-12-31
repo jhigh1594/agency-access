@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { CheckIcon } from '@/components/ui/ui-icons';
 
 const benefits = [
   {
@@ -45,7 +45,7 @@ export function BenefitsSection() {
               >
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-                    <Check className="w-5 h-5 text-success" />
+                    <CheckIcon size={20} className="text-success" />
                   </div>
                 </div>
                 <div>

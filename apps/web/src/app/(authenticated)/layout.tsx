@@ -47,35 +47,35 @@ export default function AuthenticatedLayout({
       label: 'Dashboard',
       href: '/dashboard',
       icon: (
-        <LayoutDashboard className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <LayoutDashboard className="text-neutral-700 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
       label: 'Connections',
       href: '/connections',
       icon: (
-        <Network className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <Network className="text-neutral-700 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
       label: 'Token Health',
       href: '/token-health',
       icon: (
-        <Heart className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <Heart className="text-neutral-700 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
       label: 'Clients',
       href: '/clients',
       icon: (
-        <Users className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <Users className="text-neutral-700 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
       label: 'Settings',
       href: '/settings',
       icon: (
-        <Settings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <Settings className="text-neutral-700 h-5 w-5 flex-shrink-0" />
       ),
     },
   ];
@@ -83,7 +83,7 @@ export default function AuthenticatedLayout({
   return (
     <div
       className={cn(
-        'flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
+        'flex flex-col md:flex-row bg-gray-100 w-full flex-1 mx-auto border border-neutral-200 overflow-hidden',
         'h-screen'
       )}
     >
@@ -100,7 +100,7 @@ export default function AuthenticatedLayout({
                   display: open ? 'inline-block' : 'none',
                   opacity: open ? 1 : 0,
                 }}
-                className="font-semibold text-neutral-700 dark:text-neutral-200 whitespace-nowrap"
+                className="font-semibold text-neutral-700 whitespace-nowrap"
               >
                 Agency Platform
               </motion.span>
@@ -115,7 +115,7 @@ export default function AuthenticatedLayout({
           </div>
 
           {/* User Profile at Bottom */}
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+          <div className="border-t border-neutral-200 pt-4">
             <div className="flex items-center gap-2">
               <UserButton afterSignOutUrl="/" />
               <motion.div
@@ -123,7 +123,7 @@ export default function AuthenticatedLayout({
                   display: open ? 'inline-block' : 'none',
                   opacity: open ? 1 : 0,
                 }}
-                className="text-sm text-neutral-700 dark:text-neutral-200"
+                className="text-sm text-neutral-700"
               >
                 Profile
               </motion.div>
@@ -133,7 +133,7 @@ export default function AuthenticatedLayout({
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-auto bg-white dark:bg-neutral-900">
+      <div className="flex flex-1 flex-col overflow-auto bg-white">
         {children}
       </div>
     </div>

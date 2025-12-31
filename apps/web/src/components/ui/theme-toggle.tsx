@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { SunIcon, MoonIcon } from '@/components/ui/ui-icons';
 import { Button } from './button';
 
 export function ThemeToggle() {
@@ -32,9 +32,9 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
     >
       {theme === 'light' ? (
-        <Moon className="w-5 h-5 text-muted-foreground transition-all" />
+        <MoonIcon size={20} className="text-muted-foreground transition-all" />
       ) : (
-        <Sun className="w-5 h-5 text-accent transition-all" />
+        <SunIcon size={20} className="text-accent transition-all" />
       )}
     </Button>
   );

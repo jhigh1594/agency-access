@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   typedRoutes: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
   // Proxy API requests to backend server (running on port 3001)
   // Only enabled in development. In production, NEXT_PUBLIC_API_URL should point to the deployed backend.
   async rewrites() {

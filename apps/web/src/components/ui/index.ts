@@ -8,6 +8,9 @@
 export { Button } from './button';
 export type { ButtonProps } from './button';
 
+// Card Component
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './card';
+
 export { StatusBadge } from './status-badge';
 export type { StatusType } from './status-badge';
 

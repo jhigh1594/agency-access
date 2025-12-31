@@ -4,52 +4,31 @@
 
 @layer base {
   :root {
-    /* Light Mode - Warm Editorial Aesthetic */
-    --background: 255 251 245;      /* #FFFBF5 - warm cream */
+    /* Light Mode - Clean Editorial Aesthetic */
+    --background: 255 255 255;      /* #FFFFFF - pure white */
     --card: 255 255 255;            /* #FFFFFF - pure white surface */
-    --foreground: 26 24 22;         /* #1A1816 - warm black */
-    --muted: 107 101 96;            /* #6B6560 - warm gray */
-    --muted-foreground: 107 101 96;
+    --foreground: 10 10 10;         /* #0A0A0A - deep black */
+    --muted: 115 115 115;           /* #737373 - neutral gray */
+    --muted-foreground: 115 115 115;
 
-    --primary: 255 107 53;          /* #FF6B35 - warm coral */
-    --primary-foreground: 255 251 245;
+    --primary: 255 107 53;          /* #FF6B35 - AuthHub Coral */
+    --primary-foreground: 255 255 255;
     
-    --secondary: 0 168 150;         /* #00A896 - teal */
-    --secondary-foreground: 255 251 245;
+    --secondary: 0 168 150;         /* #00A896 - Teal */
+    --secondary-foreground: 255 255 255;
     
-    --accent: 255 230 109;          /* #FFE66D - soft gold */
-    --accent-foreground: 26 24 22;
+    --accent: 255 247 237;          /* #FFF7ED - Soft Peach */
+    --accent-foreground: 10 10 10;
 
-    --border: 232 228 223;          /* #E8E4DF - warm neutral */
-    --input: 232 228 223;
+    --border: 231 231 231;          /* #E7E7E7 - light gray border */
+    --input: 231 231 231;
     --ring: 255 107 53;
 
-    --radius: 0.75rem;              /* Playful rounded corners */
+    --radius: 0.75rem;               /* Sleeker rounded corners */
     
-    --chaos-bg: 232 213 213;        /* Soft red-ish for chaos section */
-    --calm-bg: 213 232 224;         /* Soft green-ish for calm section */
-  }
-
-  .dark {
-    /* Dark Mode - Technical/Industrial */
-    --background: 26 24 22;         /* #1A1816 */
-    --card: 36 34 32;               /* #242220 */
-    --foreground: 250 248 245;      /* #FAF8F5 */
-    --muted: 168 164 160;           /* #A8A4A0 */
-    --muted-foreground: 168 164 160;
-
-    --primary: 255 130 85;          /* #FF8255 */
-    --primary-foreground: 26 24 22;
-    
-    --secondary: 45 212 191;        /* #2DD4BF */
-    --secondary-foreground: 26 24 22;
-    
-    --accent: 255 217 61;           /* #FFD93D */
-    --accent-foreground: 26 24 22;
-
-    --border: 58 56 54;             /* #3A3836 */
-    --input: 58 56 54;
-    --ring: 255 130 85;
+    /* Section specific backgrounds */
+    --warm-gray: 245 245 244;       /* #F5F5F4 */
+    --peach: 255 247 237;           /* #FFF7ED */
   }
 }
 
@@ -58,7 +37,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans), system-ui, sans-serif;
   }
 }
@@ -77,7 +56,7 @@
   .reveal {
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .reveal.visible {
@@ -85,14 +64,14 @@
     transform: translateY(0);
   }
 
-  /* Floating animation for illustrations */
+  /* Floating animation */
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-15px); }
   }
 
   .animate-float {
-    animation: float 4s ease-in-out infinite;
+    animation: float 5s ease-in-out infinite;
   }
 
   /* Staggered entrance helpers */
@@ -101,19 +80,102 @@
   .stagger-3 { transition-delay: 300ms; }
   .stagger-4 { transition-delay: 400ms; }
   .stagger-5 { transition-delay: 500ms; }
+
+  /* Warm Mesh Background (Subtle) */
+  .bg-warm-mesh {
+    background: 
+      radial-gradient(circle at 0% 0%, rgb(var(--accent) / 0.4) 0%, transparent 40%),
+      radial-gradient(circle at 100% 100%, rgb(var(--secondary) / 0.05) 0%, transparent 40%);
+  }
+
+  /* Clean Card Style */
+  .clean-card {
+    @apply bg-card border border-border/60 shadow-[0_2px_4px_rgba(0,0,0,0.02),0_8px_16px_rgba(0,0,0,0.02)] transition-all duration-500;
+  }
+  
+  .clean-card:hover {
+    @apply shadow-[0_4px_8px_rgba(0,0,0,0.04),0_16px_32px_rgba(0,0,0,0.04)] -translate-y-1 border-primary/20;
+  }
+
+  /* Animation keyframes for combined featured section */
+  @keyframes animation-path {
+    0% {
+      offset-distance: 0%;
+    }
+    100% {
+      offset-distance: 100%;
+    }
+  }
+
+  @keyframes scaleUp {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-scaleUp {
+    animation: scaleUp 0.3s ease-out forwards;
+  }
 }
 
-/* Custom Scrollbar for the warm aesthetic */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
   background: rgb(var(--background));
 }
 ::-webkit-scrollbar-thumb {
   background: rgb(var(--border));
-  border-radius: 5px;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--muted));
+}
+
+/* ========================================
+   Clerk Modal Styling - Larger and Centered
+   ======================================== */
+
+/* Modal backdrop - the flex container */
+.cl-modalBackdrop {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2rem !important;
+}
+
+/* Modal content - the actual modal wrapper */
+.cl-modalContent {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Card box - contains the card */
+.cl-cardBox {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 600px !important;
+}
+
+/* The card itself */
+.cl-card {
+  width: 100% !important;
+  max-width: 600px !important;
+  margin: auto !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Root box - already has mx-auto w-full from appearance config */
+.cl-rootBox {
+  width: 100% !important;
+  max-width: 600px !important;
 }

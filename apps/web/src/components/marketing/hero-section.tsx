@@ -2,9 +2,8 @@
 
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRightIcon, GlobeIcon, ShieldCheckIcon } from '@/components/ui/ui-icons';
 import { motion, Variants, Transition } from 'framer-motion';
-import Image from 'next/image';
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -12,13 +11,13 @@ const container: Variants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
-      delayChildren: 0.3,
+      delayChildren: 0.2,
     },
   },
 };
 
 const itemTransition: Transition = {
-  duration: 0.6,
+  duration: 0.8,
   ease: [0.22, 1, 0.36, 1],
 };
 
@@ -33,78 +32,138 @@ const item: Variants = {
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden pt-24 pb-32 sm:pt-32 sm:pb-40">
+    <section className="relative pt-20 pb-32 overflow-hidden bg-background">
+      {/* Background Mesh */}
+      <div className="absolute inset-0 bg-warm-mesh opacity-50 -z-10" />
+      
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-          {/* Left: Content */}
-          <motion.div 
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="flex-1 text-left"
-          >
-            <motion.div variants={item} className="mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
-              <span className="mr-2">✨</span>
-              Client access in 5 minutes. Not 5 days.
-            </motion.div>
-
-            <motion.h1 variants={item} className="font-display text-5xl sm:text-6xl lg:text-7xl tracking-tight text-foreground mb-8 leading-[1.1]">
-              OAuth Onboarding
-              <br />
-              <span className="text-primary">That Actually Works</span>
-            </motion.h1>
-
-            <motion.p variants={item} className="text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed">
-              AuthHub replaces the 47-email onboarding saga with a single branded link. 
-              Clients click, you connect, everyone's happy.
-            </motion.p>
-
-            <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 items-start mb-12">
-              <SignUpButton mode="modal">
-                <Button variant="primary" size="xl" rightIcon={<ArrowRight className="w-5 h-5" />}>
-                  Start Free Trial
-                </Button>
-              </SignUpButton>
-              <Button variant="secondary" size="xl">
-                Watch Demo
-              </Button>
-            </motion.div>
-
-            {/* Platform Logos Staggered */}
-            <motion.div variants={item} className="flex flex-wrap items-center gap-8 opacity-70">
-              <span className="text-sm font-mono text-muted-foreground uppercase tracking-widest font-medium">Supports</span>
-              <div className="flex gap-6 items-center grayscale opacity-50">
-                <span className="font-bold">Meta</span>
-                <span className="font-bold">Google</span>
-                <span className="font-bold">LinkedIn</span>
-                <span className="font-bold">TikTok</span>
-              </div>
-            </motion.div>
+        <motion.div 
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="max-w-4xl mx-auto text-center mb-20"
+        >
+          {/* Eyebrow */}
+          <motion.div variants={item} className="mb-6 inline-flex items-center rounded-full border border-border bg-card/50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse" />
+            Join 2,400+ marketing agencies
           </motion.div>
 
-          {/* Right: Illustration */}
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="flex-1 relative w-full max-w-2xl"
-          >
-            <div className="animate-float">
-              <Image 
-                src="/illustrations/hero-illustration.svg" 
-                alt="AuthHub Illustration" 
-                width={600} 
-                height={500} 
-                className="w-full h-auto drop-shadow-2xl"
-                priority
-              />
+          {/* Headline */}
+          <motion.h1 variants={item} className="font-display text-5xl sm:text-7xl lg:text-8xl tracking-tight text-foreground mb-8 leading-[1.05]">
+            Client Access in <br />
+            <span className="italic text-primary">5 Minutes.</span> Not 5 Days.
+          </motion.h1>
+
+          {/* Subheadline */}
+          <motion.p variants={item} className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+            The easy button for agency access to client accounts. Replace 47-email onboarding 
+            sagas with a single branded link.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <SignUpButton mode="modal">
+              <Button variant="primary" size="xl" className="rounded-full shadow-2xl shadow-primary/20" rightIcon={<ArrowRightIcon size={20} />}>
+                Start Free Trial
+              </Button>
+            </SignUpButton>
+            <Button variant="ghost" size="xl" className="rounded-full font-bold uppercase tracking-widest text-xs">
+              Watch Demo
+            </Button>
+          </motion.div>
+        </motion.div>
+
+          {/* Dashboard Mockup (CSS Only) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 40, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 1, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="relative max-w-5xl mx-auto"
+        >
+          <div className="relative bg-white border border-border rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] overflow-hidden aspect-[16/10] sm:aspect-[16/9]">
+            {/* Window Controls */}
+            <div className="h-12 border-b border-border bg-warm-gray/30 flex items-center px-6 gap-2">
+              <div className="w-3 h-3 rounded-full bg-border" />
+              <div className="w-3 h-3 rounded-full bg-border" />
+              <div className="w-3 h-3 rounded-full bg-border" />
             </div>
             
-            {/* Accents */}
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-accent/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-700" />
-          </motion.div>
-        </div>
+            {/* Sidebar & Content Layout */}
+            <div className="flex h-[calc(100%-48px)]">
+              {/* Sidebar */}
+              <div className="w-16 sm:w-56 border-r border-border bg-warm-gray/5 p-6 space-y-6">
+                <div className="h-5 w-32 bg-border/40 rounded-full hidden sm:block" />
+                <div className="space-y-4 pt-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="flex gap-4 items-center">
+                      <div className="w-8 h-8 rounded-lg bg-border/20" />
+                      <div className="h-2 w-24 bg-border/10 rounded hidden sm:block" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Main Area */}
+              <div className="flex-1 p-8 space-y-10">
+                {/* Header */}
+                <div className="flex justify-between items-center">
+                  <div className="h-8 w-48 bg-border/30 rounded-full" />
+                  <div className="h-10 w-32 bg-primary/5 border border-primary/10 rounded-full flex items-center justify-center">
+                    <div className="h-2 w-16 bg-primary/20 rounded" />
+                  </div>
+                </div>
+                
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-32 bg-warm-gray/10 border border-border rounded-2xl p-6 space-y-4">
+                      <div className="h-2 w-16 bg-border/20 rounded" />
+                      <div className="h-8 w-24 bg-border/30 rounded" />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* List Table */}
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex gap-6 items-center h-16 bg-white border border-border/40 rounded-xl px-6 shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-border/20" />
+                      <div className="h-3 w-48 bg-border/10 rounded" />
+                      <div className="ml-auto h-3 w-24 bg-border/10 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Floating Glass Overlay (Client Preview) - Better Integrated */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white/90 backdrop-blur-xl border border-border rounded-[2.5rem] p-10 shadow-[0_48px_96px_-12px_rgba(0,0,0,0.15)] scale-90 sm:scale-100">
+              <div className="flex justify-center mb-8">
+                <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center text-white shadow-2xl shadow-primary/30 relative">
+                  <GlobeIcon size={40} />
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-secondary border-4 border-white animate-bounce" />
+                </div>
+              </div>
+              <h3 className="text-center font-display text-3xl mb-3">Connect Platforms</h3>
+              <p className="text-center text-muted-foreground mb-10 text-base font-medium">AuthHub is requesting access to:</p>
+              <div className="space-y-4 mb-10">
+                {['Meta Ads', 'Google Ads', 'GA4'].map(p => (
+                  <div key={p} className="flex items-center justify-between p-4 rounded-2xl bg-warm-gray/20 border border-border/50">
+                    <span className="text-sm font-bold">{p}</span>
+                    <div className="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center">
+                      <ShieldCheckIcon size={16} color="rgb(var(--secondary))" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button variant="primary" className="w-full rounded-2xl h-14 text-base font-bold shadow-xl shadow-primary/20">Grant Access</Button>
+            </div>
+          </div>
+          
+          {/* Subtle Glows */}
+          <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-40 bg-primary/5 blur-[120px] -z-10" />
+        </motion.div>
       </div>
     </section>
   );
