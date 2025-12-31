@@ -5,7 +5,7 @@ import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -26,6 +26,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * - md: Default size
  * - lg: Large prominent buttons
  * - xl: Extra-large call-to-action buttons
+ * - icon: Square icon-only buttons (typically w-10 h-10)
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -60,6 +61,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       md: 'px-6 py-3 text-base rounded-xl',
       lg: 'px-8 py-4 text-lg rounded-xl',
       xl: 'px-12 py-5 text-xl rounded-2xl',
+      icon: 'p-0 w-10 h-10 rounded-full',
     };
 
     return (

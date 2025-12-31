@@ -3,10 +3,10 @@
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, Variants, Transition } from 'framer-motion';
 import Image from 'next/image';
 
-const container = {
+const container: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -17,9 +17,18 @@ const container = {
   },
 };
 
-const item = {
+const itemTransition: Transition = {
+  duration: 0.6,
+  ease: [0.22, 1, 0.36, 1],
+};
+
+const item: Variants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: itemTransition
+  },
 };
 
 export function HeroSection() {

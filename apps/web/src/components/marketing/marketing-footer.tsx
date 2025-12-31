@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Route } from 'next';
 
 export function MarketingFooter() {
   return (
@@ -28,15 +29,15 @@ export function MarketingFooter() {
             <div>
               <h4 className="font-bold uppercase tracking-widest text-xs mb-6">Company</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-primary transition-colors">About</Link></li>
-                <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+                <li><Link href={"/about" as Route} className="hover:text-primary transition-colors">About</Link></li>
+                <li><Link href={"/contact" as Route} className="hover:text-primary transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold uppercase tracking-widest text-xs mb-6">Legal</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                <li><Link href={"/privacy" as Route} className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link href={"/terms" as Route} className="hover:text-primary transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
@@ -47,8 +48,8 @@ export function MarketingFooter() {
             © {new Date().getFullYear()} AuthHub. All rights reserved.
           </p>
           <div className="flex gap-8 text-sm text-muted-foreground">
-            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <Link href={"/privacy" as Route} className="hover:text-primary transition-colors">Privacy</Link>
+            <Link href={"/terms" as Route} className="hover:text-primary transition-colors">Terms</Link>
           </div>
         </div>
       </div>
