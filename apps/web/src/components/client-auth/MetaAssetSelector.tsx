@@ -18,7 +18,7 @@
 import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { MultiSelectCombobox, type MultiSelectOption } from '@/components/ui/multi-select-combobox';
-import { Loader2 } from 'lucide-react';
+import { AssetSelectorLoading, AssetSelectorError } from './AssetSelectorStates';
 
 interface MetaAssets {
   adAccounts: Array<{
@@ -47,6 +47,13 @@ interface MetaAssetSelectorProps {
     adAccounts: string[];
     pages: string[];
     instagramAccounts: string[];
+    // Extended properties for grant step
+    selectedPagesWithNames?: Array<{ id: string; name: string }>;
+    selectedAdAccountsWithNames?: Array<{ id: string; name: string }>;
+    selectedInstagramWithNames?: Array<{ id: string; name: string }>;
+    allPages?: MetaAssets['pages'];
+    allAdAccounts?: MetaAssets['adAccounts'];
+    allInstagramAccounts?: MetaAssets['instagramAccounts'];
   }) => void;
   onError?: (error: string) => void;
 }
@@ -134,38 +141,20 @@ export function MetaAssetSelector({
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
-            <p className="text-lg font-semibold text-slate-900">
-              Loading your accounts
-            </p>
-            <p className="text-sm text-slate-600 mt-1">
-              Finding ad accounts, pages, and Instagram accounts
-            </p>
-          </div>
-        </div>
-      </div>
+      <AssetSelectorLoading
+        message="Finding your ad accounts, pages, and Instagram accounts..."
+      />
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-          <span className="text-3xl">⚠️</span>
-        </div>
-        <h3 className="text-lg font-bold text-red-900 mb-2">Couldn't load accounts</h3>
-        <p className="text-red-700 mb-4">{error}</p>
-        <button
-          onClick={fetchAssets}
-          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
-        >
-          Try again
-        </button>
-      </div>
+      <AssetSelectorError
+        title="Couldn't load Meta accounts"
+        message={error}
+        onRetry={fetchAssets}
+      />
     );
   }
 

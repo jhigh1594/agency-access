@@ -92,7 +92,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Request Not Found</h1>
           <p className="text-gray-600 mb-6">{error || 'Could not load access request'}</p>
           <button
-            onClick={() => router.push('/access-requests')}
+            onClick={() => router.push('/dashboard')}
             className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Back to Dashboard
@@ -249,7 +249,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
           className="flex flex-col sm:flex-row gap-4"
         >
           <motion.button
-            onClick={() => router.push('/access-requests')}
+            onClick={() => router.push('/dashboard')}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-medium shadow-sm"

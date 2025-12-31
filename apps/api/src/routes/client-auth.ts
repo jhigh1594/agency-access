@@ -810,6 +810,7 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
       }
 
       // Import meta-partner service
+      // @ts-ignore - Dynamic import, module exists at runtime
       const { metaPartnerService } = await import('../services/meta-partner.service');
 
       // Grant access to each page

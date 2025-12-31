@@ -6,8 +6,10 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import type { Client } from '@prisma/client';
 import type { ClientLanguage } from '@agency-platform/shared';
+import type { Prisma } from '@prisma/client';
+
+type Client = Prisma.ClientGetPayload<{}>;
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -231,4 +233,305 @@ export async function deleteClient(
   });
 
   return true;
+}
+
+/**
+ * Get clients with enriched connection and platform data
+ */
+export async function getClientsWithConnections(
+  dto: GetClientsDto
+): Promise<PaginatedResult<any>> {
+  const { agencyId, search, limit = 50, offset = 0 } = dto;
+
+  // Build where clause
+  const where: any = { agencyId };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { company: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  // Get clients with their connections and authorizations
+  const [clients, total] = await Promise.all([
+    prisma.client.findMany({
+      where,
+      include: {
+        accessRequests: {
+          include: {
+            connection: {
+              include: {
+                authorizations: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.client.count({ where }),
+  ]);
+
+  // Transform to enriched format
+  const enrichedClients = clients.map((client) => {
+    const requests = client.accessRequests || [];
+    const latestRequest = requests[0];
+    const connection = latestRequest?.connection;
+    const authorizations = connection?.authorizations || [];
+
+    // Determine status
+    let status: 'active' | 'pending' | 'expired' | 'revoked' | 'none' = 'none';
+    if (connection && connection.status === 'active') {
+      status = 'active';
+    } else if (latestRequest && latestRequest.status === 'pending') {
+      status = 'pending';
+    } else if (connection && connection.status === 'revoked') {
+      status = 'revoked';
+    } else if (latestRequest && latestRequest.status === 'expired') {
+      status = 'expired';
+    }
+
+    return {
+      id: client.id,
+      name: client.name,
+      email: client.email,
+      company: client.company,
+      platforms: authorizations.map((auth) => auth.platform),
+      status,
+      connectionCount: requests.filter(r => r.connection).length,
+      lastActivityAt: latestRequest?.createdAt || client.createdAt,
+      createdAt: client.createdAt,
+    };
+  });
+
+  return {
+    data: enrichedClients,
+    pagination: {
+      total,
+      limit,
+      offset,
+    },
+  };
+}
+
+// ============================================================
+// CLIENT DETAIL PAGE TYPES
+// ============================================================
+
+export interface ClientDetailDto {
+  clientId: string;
+  agencyId: string;
+}
+
+export interface ClientDetailResponse {
+  client: Client;
+  stats: {
+    totalRequests: number;
+    activeConnections: number;
+    pendingConnections: number;
+    expiredConnections: number;
+  };
+  accessRequests: Array<{
+    id: string;
+    name: string;
+    platforms: string[];
+    status: string;
+    createdAt: Date;
+    authorizedAt?: Date | null;
+    connectionId?: string | null;
+    connectionStatus?: string | null;
+  }>;
+  activity: Array<{
+    id: string;
+    type: string;
+    description: string;
+    timestamp: Date;
+    metadata?: Record<string, any>;
+  }>;
+}
+
+/**
+ * Get detailed client information including stats, access requests, and activity timeline
+ * @returns Client detail response or null if client not found
+ */
+export async function getClientDetail(
+  dto: ClientDetailDto
+): Promise<ClientDetailResponse | null> {
+  const { clientId, agencyId } = dto;
+
+  // Fetch client with all related data
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    include: {
+      accessRequests: {
+        include: {
+          connection: {
+            include: {
+              authorizations: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  });
+
+  if (!client) {
+    return null;
+  }
+
+  // Verify agency ownership
+  if (client.agencyId !== agencyId) {
+    return null;
+  }
+
+  // Parse platforms from each access request
+  const accessRequestsWithPlatforms = client.accessRequests.map((request) => {
+    // Parse platforms from JSON - handle both hierarchical and flat formats
+    let platforms: string[] = [];
+    const platformsData = request.platforms as any;
+
+    if (platformsData) {
+      if (typeof platformsData === 'object') {
+        // Hierarchical format: { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
+        for (const group in platformsData) {
+          const groupPlatforms = platformsData[group];
+          if (Array.isArray(groupPlatforms)) {
+            platforms.push(...groupPlatforms);
+          }
+        }
+      } else if (Array.isArray(platformsData)) {
+        platforms = platformsData;
+      }
+    }
+
+    const connection = request.connection;
+    const connectionStatus = connection?.status || null;
+    const authorizations = connection?.authorizations || [];
+
+    // Override platforms with actual authorizations if connection exists
+    if (authorizations.length > 0) {
+      platforms = authorizations.map((auth) => auth.platform);
+    }
+
+    return {
+      id: request.id,
+      name: request.clientName,
+      platforms,
+      status: request.status,
+      createdAt: request.createdAt,
+      authorizedAt: request.authorizedAt,
+      connectionId: connection?.id,
+      connectionStatus,
+    };
+  });
+
+  // Calculate stats
+  const totalRequests = client.accessRequests.length;
+  const activeConnections = client.accessRequests.filter(
+    (r) => r.connection?.status === 'active'
+  ).length;
+  const pendingConnections = client.accessRequests.filter(
+    (r) => r.status === 'pending' || r.status === 'partial'
+  ).length;
+  const expiredConnections = client.accessRequests.filter(
+    (r) => r.status === 'expired' || r.connection?.status === 'expired'
+  ).length;
+
+  // Build activity timeline from request and connection events
+  const activity: Array<{
+    id: string;
+    type: string;
+    description: string;
+    timestamp: Date;
+    metadata?: Record<string, any>;
+  }> = [];
+
+  for (const request of client.accessRequests) {
+    // Request created
+    activity.push({
+      id: `request-${request.id}-created`,
+      type: 'request_created',
+      description: `Access request "${request.clientName}" was created`,
+      timestamp: request.createdAt,
+      metadata: {
+        requestName: request.clientName,
+        platforms: accessRequestsWithPlatforms.find((ar) => ar.id === request.id)?.platforms || [],
+      },
+    });
+
+    // Connection created (when authorized)
+    if (request.authorizedAt) {
+      activity.push({
+        id: `request-${request.id}-authorized`,
+        type: 'request_completed',
+        description: `Client authorized access for "${request.clientName}"`,
+        timestamp: request.authorizedAt,
+        metadata: {
+          requestName: request.clientName,
+          platforms: accessRequestsWithPlatforms.find((ar) => ar.id === request.id)?.platforms || [],
+          status: request.status,
+        },
+      });
+    }
+
+    // Connection created
+    if (request.connection) {
+      activity.push({
+        id: `connection-${request.connection.id}-created`,
+        type: 'connection_created',
+        description: `Connection established for "${request.clientName}"`,
+        timestamp: request.connection.createdAt,
+        metadata: {
+          requestName: request.clientName,
+          platforms: accessRequestsWithPlatforms.find((ar) => ar.id === request.id)?.platforms || [],
+        },
+      });
+    }
+
+    // Connection revoked
+    if (request.connection?.revokedAt) {
+      activity.push({
+        id: `connection-${request.connection.id}-revoked`,
+        type: 'connection_revoked',
+        description: `Access revoked for "${request.clientName}"`,
+        timestamp: request.connection.revokedAt,
+        metadata: {
+          requestName: request.clientName,
+          platforms: accessRequestsWithPlatforms.find((ar) => ar.id === request.id)?.platforms || [],
+          status: request.connection.status,
+        },
+      });
+    }
+  }
+
+  // Client updated event
+  if (client.updatedAt > client.createdAt) {
+    activity.push({
+      id: `client-${client.id}-updated`,
+      type: 'client_updated',
+      description: 'Client information was updated',
+      timestamp: client.updatedAt,
+    });
+  }
+
+  // Sort activity by timestamp descending (newest first)
+  activity.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  return {
+    client,
+    stats: {
+      totalRequests,
+      activeConnections,
+      pendingConnections,
+      expiredConnections,
+    },
+    accessRequests: accessRequestsWithPlatforms,
+    activity,
+  };
 }

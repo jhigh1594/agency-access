@@ -13,12 +13,12 @@
  * 3. Redirect to invite page with connectionId and step=2 for asset selection
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function ClientOAuthCallbackPage() {
+function ClientOAuthCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +132,18 @@ export default function ClientOAuthCallbackPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function ClientOAuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+      </div>
+    }>
+      <ClientOAuthCallbackContent />
+    </Suspense>
   );
 }
 

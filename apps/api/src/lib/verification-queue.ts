@@ -6,7 +6,7 @@
  */
 
 import { Queue } from 'bullmq';
-import { env } from './env';
+import { env } from './env.js';
 import type { AccessLevel } from '@agency-platform/shared';
 
 // Redis connection options for IORedis

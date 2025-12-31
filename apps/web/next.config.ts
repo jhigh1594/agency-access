@@ -5,14 +5,13 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
   // Proxy API requests to backend server (running on port 3001)
+  // Only enabled in development. In production, NEXT_PUBLIC_API_URL should point to the deployed backend.
   async rewrites() {
+    if (process.env.NODE_ENV === 'production') {
+      return [];
+    }
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001';
     return [
       {

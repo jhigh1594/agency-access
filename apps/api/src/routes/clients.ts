@@ -14,6 +14,8 @@ import {
   updateClient,
   findClientByEmail,
   deleteClient,
+  getClientsWithConnections,
+  getClientDetail,
   ClientError,
 } from '@/services/client.service';
 import type { ClientLanguage } from '@agency-platform/shared';
@@ -144,7 +146,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const result = await getClients({
+    const result = await getClientsWithConnections({
       agencyId,
       ...validationResult.data,
     });
@@ -172,6 +174,28 @@ export async function clientRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send({ data: client });
+  });
+
+  /**
+   * GET /api/clients/:id/detail
+   * Get detailed client information including stats, access requests, and activity
+   */
+  fastify.get('/clients/:id/detail', async (request, reply) => {
+    const agencyId = (request as any).agencyId;
+    const { id } = request.params as { id: string };
+
+    const detail = await getClientDetail({ clientId: id, agencyId });
+
+    if (!detail) {
+      return reply.code(404).send({
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Client not found',
+        },
+      });
+    }
+
+    return reply.send({ data: detail });
   });
 
   /**

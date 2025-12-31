@@ -1,16 +1,17 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
-import { env } from './lib/env';
-import { oauthTestRoutes } from './routes/oauth-test';
-import { agencyRoutes } from './routes/agencies';
-import { accessRequestRoutes } from './routes/access-requests';
-import { tokenHealthRoutes } from './routes/token-health';
-import { clientAuthRoutes } from './routes/client-auth';
-import { templateRoutes } from './routes/templates';
-import { platformAuthorizationRoutes } from './routes/platform-authorization';
-import { clientRoutes } from './routes/clients';
-import { agencyPlatformsRoutes } from './routes/agency-platforms';
+import { env } from './lib/env.js';
+import { oauthTestRoutes } from './routes/oauth-test.js';
+import { agencyRoutes } from './routes/agencies.js';
+import { accessRequestRoutes } from './routes/access-requests.js';
+import { tokenHealthRoutes } from './routes/token-health.js';
+import { clientAuthRoutes } from './routes/client-auth.js';
+import { templateRoutes } from './routes/templates.js';
+import { platformAuthorizationRoutes } from './routes/platform-authorization.js';
+import { clientRoutes } from './routes/clients.js';
+import { agencyPlatformsRoutes } from './routes/agency-platforms.js';
+import { dashboardRoutes } from './routes/dashboard.js';
 
 const fastify = Fastify({
   logger: {
@@ -54,6 +55,7 @@ await fastify.register(clientAuthRoutes, { prefix: '/api' });
 await fastify.register(templateRoutes, { prefix: '/api' });
 await fastify.register(platformAuthorizationRoutes, { prefix: '/api' });
 await fastify.register(clientRoutes, { prefix: '/api' });
+await fastify.register(dashboardRoutes, { prefix: '/api' });
 await fastify.register(agencyPlatformsRoutes);
 
 // Health check and root routes

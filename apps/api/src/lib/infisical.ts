@@ -1,5 +1,5 @@
 import { InfisicalSDK, SecretType } from '@infisical/sdk';
-import { env } from './env';
+import { env } from './env.js';
 
 /**
  * Infisical client singleton for managing OAuth tokens and secrets

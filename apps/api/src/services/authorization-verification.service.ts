@@ -13,9 +13,9 @@
 
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
-import { metaConnector } from './connectors/meta';
-import { googleAdsConnector } from './connectors/google-ads';
-import { ga4Connector } from './connectors/ga4';
+import { metaConnector } from './connectors/meta.js';
+import { googleAdsConnector } from './connectors/google-ads.js';
+import { ga4Connector } from './connectors/ga4.js';
 import type { AccessLevel } from '@agency-platform/shared';
 
 // Validation schemas
@@ -349,7 +349,7 @@ async function updateAccessRequestStatus(accessRequestId: string): Promise<void>
   });
 
   // Count verified vs total
-  const verifiedCount = verifications.filter((v) => v.status === 'verified').length;
+  const verifiedCount = verifications.filter((v: any) => v.status === 'verified').length;
   const totalCount = verifications.length;
 
   // Determine new status

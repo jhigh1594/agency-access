@@ -88,8 +88,8 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
 
       // Get list of active platform connections
       const allConnections = connectionsResult.data || [];
-      const activeConnections = allConnections.filter((c) => c.status === 'active');
-      const connectedPlatforms = activeConnections.map((c) => c.platform);
+      const activeConnections = allConnections.filter((c: any) => c.status === 'active');
+      const connectedPlatforms = activeConnections.map((c: any) => c.platform);
 
       // Extract requested platform groups from the hierarchical structure
       const requestedPlatforms = platforms.map((p: any) => p.platformGroup);
@@ -98,8 +98,8 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
       fastify.log.info({
         originalAgencyId: agencyId,
         resolvedAgencyId: resolvedAgencyId,
-        allConnections: allConnections.map((c) => ({ platform: c.platform, status: c.status })),
-        activeConnections: activeConnections.map((c) => c.platform),
+        allConnections: allConnections.map((c: any) => ({ platform: c.platform, status: c.status })),
+        activeConnections: activeConnections.map((c: any) => c.platform),
         connectedPlatforms,
         requestedPlatforms,
       });

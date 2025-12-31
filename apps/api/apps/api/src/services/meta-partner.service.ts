@@ -157,7 +157,7 @@ class MetaPartnerService {
    * @param pageId - Page ID
    * @param businessId - Agency's Business Manager ID
    */
-  private async grantPageAccess(
+  async grantPageAccess(
     clientToken: string,
     pageId: string,
     businessId: string

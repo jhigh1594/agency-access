@@ -25,7 +25,9 @@ import { GA4AssetSelector } from './GA4AssetSelector';
 import { GoogleAssetSelector } from './GoogleAssetSelector';
 import { AutomaticPagesGrant } from './AutomaticPagesGrant';
 import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
-import { PlatformIcon, PLATFORM_CONFIG } from '@/components/ui';
+import { StepHelpText } from './StepHelpText';
+import { AssetSelectorDisabled } from './AssetSelectorDisabled';
+import { PlatformIcon, PLATFORM_CONFIG, Button } from '@/components/ui';
 import type { Platform } from '@agency-platform/shared';
 
 interface PlatformAuthWizardProps {
@@ -240,27 +242,55 @@ export function PlatformAuthWizard({
               </div>
             )}
 
-            <button
+            <Button
               onClick={handleConnectClick}
-              disabled={isProcessing}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 font-bold text-lg rounded-xl border-2 border-slate-300 hover:bg-amber-500 hover:text-white hover:border-amber-500 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              isLoading={isProcessing}
+              size="xl"
+              rightIcon={!isProcessing ? <ExternalLink className="w-5 h-5" /> : undefined}
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  Connect {platformName}
-                  <ExternalLink className="w-5 h-5" />
-                </>
-              )}
-            </button>
+              Connect {platformName}
+            </Button>
+
+            <StepHelpText
+              title="What happens when you click Connect?"
+              description="You'll be redirected to {platformName} to sign in and authorize access."
+              steps={[
+                `Click "Connect ${platformName}" above`,
+                `Sign in to your ${platformName} account`,
+                'Approve the requested permissions',
+                'Return here to select which accounts to share',
+              ]}
+            />
           </div>
         );
 
       case 2:
+        // If user hasn't completed OAuth yet, show message to go to Step 1
+        if (!connectionId) {
+          return (
+            <div className="text-center space-y-6 py-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-100 mb-4">
+                <span className="text-4xl">🔐</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                  Please connect your account first
+                </h3>
+                <p className="text-lg text-slate-600 max-w-md mx-auto mb-6">
+                  You need to complete Step 1 before you can select accounts to share.
+                </p>
+              </div>
+              <Button
+                onClick={() => setCurrentStep(1)}
+                variant="primary"
+                size="lg"
+              >
+                Go to Step 1
+              </Button>
+            </div>
+          );
+        }
+
         return (
           <div className="space-y-12">
             {/* Choose Accounts Section - Collapsible */}
@@ -329,25 +359,31 @@ export function PlatformAuthWizard({
                       </div>
 
                       {p.product === 'meta_ads' && (
-                        <MetaAssetSelector
-                          sessionId={connectionId!}
-                          onSelectionChange={(selectedAssets) => {
-                            // Store both IDs and full asset objects for grant step
-                            // selectedAssets now includes selectedPagesWithNames, etc. from MetaAssetSelector
-                            handleProductSelectionChange(p.product, selectedAssets);
-                          }}
-                          onError={setError}
-                        />
+                        <div className="relative">
+                          <MetaAssetSelector
+                            sessionId={connectionId!}
+                            onSelectionChange={(selectedAssets) => {
+                              // Store both IDs and full asset objects for grant step
+                              // selectedAssets now includes selectedPagesWithNames, etc. from MetaAssetSelector
+                              handleProductSelectionChange(p.product, selectedAssets);
+                            }}
+                            onError={setError}
+                          />
+                          {!connectionId && <AssetSelectorDisabled />}
+                        </div>
                       )}
 
                       {/* Use generic GoogleAssetSelector for all Google products */}
                       {(p.product.startsWith('google_') || p.product === 'ga4') && (
-                        <GoogleAssetSelector
-                          sessionId={connectionId!}
-                          product={p.product}
-                          onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
-                          onError={setError}
-                        />
+                        <div className="relative">
+                          <GoogleAssetSelector
+                            sessionId={connectionId!}
+                            product={p.product}
+                            onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
+                            onError={setError}
+                          />
+                          {!connectionId && <AssetSelectorDisabled />}
+                        </div>
                       )}
                     </div>
                   );
@@ -357,30 +393,15 @@ export function PlatformAuthWizard({
                         {/* Unified Batch Save Button - only show if assets haven't been saved yet */}
                         {!assetsSaved && !isProcessing && hasGroupSelections() && (
             <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t-2 border-slate-200 p-8 -mx-8 -mb-8 mt-12 flex justify-center">
-              <button
+              <Button
                 onClick={handleBatchSave}
-                disabled={isProcessing || !hasGroupSelections()}
-                className={`
-                  px-12 py-5 rounded-2xl font-bold text-xl transition-all duration-200 flex items-center gap-3
-                  ${
-                    hasGroupSelections()
-                      ? 'bg-white text-slate-900 border-2 border-slate-300 hover:bg-amber-500 hover:text-white hover:border-amber-500 shadow-xl hover:scale-[1.02] active:scale-[0.98]'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed border-2 border-slate-200'
-                  }
-                `}
+                disabled={!hasGroupSelections()}
+                isLoading={isProcessing}
+                size="xl"
+                rightIcon={!isProcessing ? <CheckCircle2 className="w-6 h-6" /> : undefined}
               >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    Confirm selection
-                    <CheckCircle2 className="w-6 h-6" />
-                  </>
-                )}
-              </button>
+                Confirm selection
+              </Button>
             </div>
                         )}
                       </div>
@@ -388,6 +409,28 @@ export function PlatformAuthWizard({
                   )}
                 </AnimatePresence>
           </div>
+
+          {/* Section Divider for Meta Grant Access */}
+          {platform === 'meta' && metaNeedsGrantStep && connectionId && assetsSaved && (() => {
+            const metaAssets = groupAssets['meta_ads'] || {};
+            const hasPages = (metaAssets.pages?.length ?? 0) > 0;
+            const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
+
+            if (!hasPages && !hasAdAccounts) {
+              return null;
+            }
+
+            return (
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t-2 border-slate-200" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-4 text-sm text-slate-500 font-semibold">then</span>
+                </div>
+              </div>
+            );
+          })()}
 
             {/* Grant Access Section (for Meta after assets are saved) - Collapsible */}
             {platform === 'meta' && metaNeedsGrantStep && connectionId && assetsSaved && (() => {
@@ -522,13 +565,14 @@ export function PlatformAuthWizard({
                           {/* Continue button when both are complete */}
                           {(pagesGranted || !hasPages) && (adAccountsShared || !hasAdAccounts) && (
                             <div className="mt-8 flex justify-center">
-                              <button
+                              <Button
                                 onClick={() => setCurrentStep(3)}
-                                className="px-12 py-5 rounded-2xl font-bold text-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-3"
+                                size="xl"
+                                variant="primary"
+                                rightIcon={<CheckCircle2 className="w-6 h-6" />}
                               >
                                 Continue
-                                <CheckCircle2 className="w-6 h-6" />
-                              </button>
+                              </Button>
                 </div>
               )}
                         </div>
@@ -611,12 +655,14 @@ export function PlatformAuthWizard({
               })}
             </div>
 
-            <button
+            <Button
               onClick={onComplete}
-              className="px-12 py-4 mt-8 bg-emerald-600 text-white font-bold text-lg rounded-xl hover:bg-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              variant="success"
+              size="lg"
+              className="mt-8"
             >
-                  Next platform →
-            </button>
+              Next platform →
+            </Button>
           </div>
         );
 

@@ -275,7 +275,7 @@ export default function PlatformsPage() {
                   <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                     Connected
                   </span>
-                  {connection.connectedAt && (
+                  {connection?.connectedAt && (
                     <p className="text-xs text-gray-500 mt-2">
                       {new Date(connection.connectedAt).toLocaleDateString()}
                     </p>

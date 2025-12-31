@@ -17,7 +17,7 @@
 import { Fragment, FormEvent, useMemo, useState } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { Plus, Trash2, Check, Loader2, AlertCircle, Save } from 'lucide-react';
+import { Plus, Trash2, Check, Loader2, AlertCircle, Save, Shield, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Phase 5 Components
@@ -62,6 +62,12 @@ function AccessRequestWizardContent() {
 
   // Platform Connection Modal state
   const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
+
+  // Customize tab state (for Step 3: Form Fields | Branding)
+  const [customizeTab, setCustomizeTab] = useState<'fields' | 'branding'>('fields');
+
+  // Template expanded state (for Step 1: Collapsible template section)
+  const [templateExpanded, setTemplateExpanded] = useState(false);
 
   // Fetch agency by email - SAME approach as connections page
   const { data: agencyData } = useQuery({
@@ -160,14 +166,12 @@ function AccessRequestWizardContent() {
     }
   };
 
-  // Step labels (0-5 with auth model)
+  // Step labels (1-4 with new streamlined flow)
   const steps = [
-    { number: 0, label: 'Template' },
-    { number: 1, label: 'Client' },
-    { number: 2, label: 'Auth Mode' },
-    { number: 3, label: 'Platforms' },
-    { number: 4, label: 'Form Fields' },
-    { number: 5, label: 'Branding' },
+    { number: 1, label: 'Fundamentals' },
+    { number: 2, label: 'Platforms' },
+    { number: 3, label: 'Customize' },
+    { number: 4, label: 'Review' },
   ];
 
   return (
@@ -181,104 +185,63 @@ function AccessRequestWizardContent() {
           </p>
         </div>
 
-        {/* Form & Progress */}
+        {/* Form & Progress - New Linear Progress */}
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="py-8">
-        <div className="flex items-start justify-center">
-          {steps.map((step, index) => (
-            <Fragment key={step.number}>
-              {/* Step Circle and Label Container */}
-              <div className="flex flex-col items-center">
-                <motion.div
-                  className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                    step.number < state.currentStep
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : step.number === state.currentStep
-                      ? 'bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100'
-                      : 'bg-slate-200 text-slate-600'
-                  }`}
-                  animate={
-                    step.number === state.currentStep
-                      ? { scale: [1, 1.05, 1], transition: { duration: 0.5 } }
-                      : {}
-                  }
-                >
-                  {step.number < state.currentStep ? (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                    >
-                      <Check className="h-5 w-5" />
-                    </motion.div>
-                  ) : (
-                    step.number
-                  )}
-                </motion.div>
-                {/* Label below circle */}
-                <span
-                  className={`mt-2 text-sm transition-colors ${
-                    step.number === state.currentStep
-                      ? 'text-indigo-600 font-semibold'
-                      : step.number < state.currentStep
-                      ? 'text-slate-500'
-                      : 'text-slate-400'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-              {/* Connecting line between steps */}
-              {index < steps.length - 1 && (
-                <div className="relative h-0.5 w-16 bg-slate-200 overflow-hidden mx-2 mt-5">
-                  <motion.div
-                    className="absolute inset-0 bg-indigo-600"
-                    initial={{ scaleX: 0 }}
-                    animate={{
-                      scaleX: step.number < state.currentStep ? 1 : 0,
-                    }}
-                    transition={{ duration: 0.5 }}
-                    style={{ transformOrigin: 'left' }}
-                  />
+          {/* Linear Progress Bar */}
+          <div className="mb-8">
+            <div className="relative h-1 bg-slate-200 rounded-full overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-indigo-600"
+                initial={{ width: 0 }}
+                animate={{
+                  width: `${((state.currentStep) / steps.length) * 100}%`,
+                }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+              />
+            </div>
+
+            {/* Step Markers */}
+            <div className="flex justify-between mt-4">
+              {steps.map((step) => (
+                <div key={step.number} className="flex flex-col items-center gap-1.5">
+                  <span
+                    className={`text-xs font-mono font-medium tracking-wide ${
+                      step.number <= state.currentStep
+                        ? 'text-indigo-600'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    STEP {String(step.number).padStart(2, '0')}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      step.number === state.currentStep
+                        ? 'text-slate-900'
+                        : step.number < state.currentStep
+                        ? 'text-slate-600'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {step.label}
+                  </span>
                 </div>
-              )}
-            </Fragment>
-          ))}
-        </div>
+              ))}
+            </div>
+
+            {/* Percentage Indicator */}
+            <div className="text-right mt-2">
+              <span className="text-xs font-mono font-medium text-slate-500">
+                {Math.round((state.currentStep / steps.length) * 100)}% COMPLETE
+              </span>
+            </div>
+          </div>
       </div>
 
       {/* Form */}
       <form id="access-request-form" onSubmit={handleSubmit}>
         <AnimatePresence mode="wait">
-          {/* Step 0: Template Selection */}
-          {state.currentStep === 0 && (
-            <motion.div
-            key="step-0"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
-            >
-            <TemplateSelector
-              agencyId={agencyId!}
-              selectedTemplate={state.selectedTemplate}
-              onSelect={handleTemplateSelect}
-            />
-
-            <div className="mt-6 flex justify-end">
-              <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-              >
-              Continue
-              </button>
-            </div>
-            </motion.div>
-          )}
-
-          {/* Step 1: Client Selection */}
+          {/* Step 1: Fundamentals (Template + Client + Auth Model) */}
           {state.currentStep === 1 && (
             <motion.div
             key="step-1"
@@ -286,119 +249,150 @@ function AccessRequestWizardContent() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            className="space-y-6"
             >
-            <h2 className="text-lg font-semibold text-slate-900 mb-1">Client Information</h2>
-            <p className="text-sm text-slate-600 mb-6">
-              Select an existing client or create a new one
-            </p>
+            {/* Main Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+              <h2 className="text-xl font-semibold text-slate-900 mb-1">Fundamentals</h2>
+              <p className="text-base text-slate-600 mb-6">
+                Set up the basics for your access request
+              </p>
 
-            <ClientSelector
-              agencyId={agencyId!}
-              value={state.client?.id}
-              onSelect={updateClient}
-            />
+              {/* Vertical Flow with Clear Sections */}
+              <div className="relative space-y-10 pl-5">
+                {/* Connecting line - runs through all sections */}
+                <div className="absolute left-[18px] top-3 bottom-3 w-px bg-slate-200 pointer-events-none" />
+
+                {/* Section 1: Client (Primary, Required) */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-indigo-100 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-indigo-700">1</span>
+                    </div>
+                    <div>
+                      <label className="block text-base font-semibold text-slate-900">
+                        Select Client <span className="text-red-500">*</span>
+                      </label>
+                      <p className="text-sm text-slate-500">Who is this access request for?</p>
+                    </div>
+                  </div>
+                  <div className="ml-10">
+                    <ClientSelector
+                      agencyId={agencyId!}
+                      value={state.client?.id}
+                      onSelect={updateClient}
+                    />
+                  </div>
+                </div>
+
+                {/* Section 2: Auth Model (Secondary, Has Default) */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-slate-600">2</span>
+                    </div>
+                    <div>
+                      <label className="block text-base font-semibold text-slate-900">
+                        Authorization Model
+                      </label>
+                      <p className="text-sm text-slate-500">How will you access their platform accounts?</p>
+                    </div>
+                  </div>
+                  <div className="ml-10">
+                    <AuthModelSelector
+                      agencyHasConnectedPlatforms={agencyHasConnectedPlatforms}
+                    />
+                  </div>
+                </div>
+
+                {/* Section 3: Template (Optional, Collapsible) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateExpanded(!templateExpanded)}
+                    className="flex items-center gap-3 w-full text-left group"
+                  >
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-slate-600">3</span>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-base font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                        Start from Template <span className="text-slate-400 font-normal">(Optional)</span>
+                      </label>
+                      <p className="text-sm text-slate-500">
+                        {templateExpanded ? 'Hide template selector' : 'Skip manually configuring platforms and branding'}
+                      </p>
+                    </div>
+                    <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${
+                      templateExpanded ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+
+                  {templateExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-10 mt-4"
+                    >
+                      <TemplateSelector
+                        agencyId={agencyId!}
+                        selectedTemplate={state.selectedTemplate}
+                        onSelect={updateTemplate}
+                      />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Quick Actions - only shown for delegated_access */}
+            {state.authModel === 'delegated_access' && (
+              <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="text-base font-medium text-slate-900">Need to connect platforms?</p>
+                  <p className="text-sm text-slate-600">Connect your agency's platform accounts to use delegated access</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPlatformModalOpen(true)}
+                  className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-base rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Manage Platform Connections
+                </button>
+              </div>
+            )}
 
             {state.error && (
               <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
               >
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{state.error}</p>
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-base text-red-800">{state.error}</p>
               </motion.div>
             )}
 
-            <div className="mt-6 flex justify-between">
+            {/* Navigation */}
+            <div className="flex justify-end">
               <button
-              type="button"
-              onClick={() => setStep(0)}
-              className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                type="button"
+                onClick={() => setStep(2)}
+                disabled={!state.client || !state.authModel}
+                className="px-8 py-3 bg-indigo-600 text-white text-base rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md font-medium"
               >
-              Back
-              </button>
-              <button
-              type="button"
-              onClick={() => setStep(2)}
-              disabled={!currentStepValid}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-              >
-              Continue
+                Continue to Platforms
               </button>
             </div>
-            </motion.div>
+          </motion.div>
           )}
 
-          {/* Step 2: Auth Model Selection */}
+          {/* Step 2: Platforms & Access Level */}
           {state.currentStep === 2 && (
             <motion.div
             key="step-2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
-            >
-            <h2 className="text-lg font-semibold text-slate-900 mb-1">Authorization Model</h2>
-            <p className="text-sm text-slate-600 mb-6">
-              Choose how clients will authorize access to their platforms
-            </p>
-
-            <AuthModelSelector
-              selectedAuthModel={state.authModel}
-              onSelectionChange={updateAuthModel}
-              agencyHasConnectedPlatforms={agencyHasConnectedPlatforms}
-            />
-
-            {/* Delegated Access helper - show platform connection modal button */}
-            {state.authModel === 'delegated_access' && (
-              <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                <p className="text-sm text-purple-900 font-medium mb-1">
-                  Delegated Access requires platform connections
-                </p>
-                <p className="text-xs text-purple-700">
-                  Your agency must have connected platforms to grant access to clients
-                </p>
-                </div>
-                <button
-                type="button"
-                onClick={() => setIsPlatformModalOpen(true)}
-                className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
-                <Plus className="h-4 w-4" />
-                Manage Platforms
-                </button>
-              </div>
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-between">
-              <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-              Back
-              </button>
-              <button
-              type="button"
-              onClick={() => setStep(3)}
-              disabled={!state.authModel}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-              >
-              Continue
-              </button>
-            </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: Platforms & Access Level */}
-          {state.currentStep === 3 && (
-            <motion.div
-            key="step-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -411,7 +405,7 @@ function AccessRequestWizardContent() {
             </p>
 
             <div className="space-y-6">
-              {/* Access Level Section */}
+              {/* Access Level Section - Prominent at top */}
               <AccessLevelSelector
                 selectedAccessLevel={state.globalAccessLevel ?? undefined}
                 onSelectionChange={updateAccessLevel}
@@ -463,40 +457,70 @@ function AccessRequestWizardContent() {
             <div className="mt-6 flex justify-between">
               <button
               type="button"
-              onClick={() => setStep(2)}
+              onClick={() => setStep(1)}
               className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               >
               Back
               </button>
               <button
               type="button"
-              onClick={() => setStep(4)}
+              onClick={() => setStep(3)}
               disabled={!currentStepValid}
               className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
               >
-              Continue
+              Continue to Customize
               </button>
             </div>
             </motion.div>
           )}
 
-          {/* Step 4: Intake Form Builder */}
-          {state.currentStep === 4 && (
+          {/* Step 3: Customize (Intake Fields + Branding with tabs) */}
+          {state.currentStep === 3 && (
             <motion.div
-            key="step-4"
+            key="step-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
             className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
             >
-            <h2 className="text-lg font-semibold text-slate-900 mb-1">Intake Form Fields</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Customize</h2>
             <p className="text-sm text-slate-600 mb-6">
-              Collect additional information from clients during authorization
+              Add form fields and customize branding <span className="text-slate-400">(optional)</span>
             </p>
 
-            <div className="space-y-3">
-                  <AnimatePresence mode="popLayout">
+            {/* Simple Tabs - Form Fields | Branding */}
+            <div className="mb-6">
+              <div className="flex gap-4 border-b border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setCustomizeTab('fields')}
+                  className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                    customizeTab === 'fields'
+                      ? 'text-indigo-600 border-b-2 border-indigo-600'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Form Fields ({state.intakeFields.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomizeTab('branding')}
+                  className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                    customizeTab === 'branding'
+                      ? 'text-indigo-600 border-b-2 border-indigo-600'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Branding
+                </button>
+              </div>
+            </div>
+
+            {/* Form Fields Tab */}
+            {customizeTab === 'fields' && (
+              <div className="space-y-3">
+                <AnimatePresence mode="popLayout">
               {state.intakeFields.map((field, index) => (
                 <motion.div
                 key={field.id}
@@ -552,110 +576,73 @@ function AccessRequestWizardContent() {
               ))}
               </AnimatePresence>
 
-                  <button
-                    type="button"
-                    onClick={addIntakeField}
-                    className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Field
-                  </button>
-                </div>
-
-                <div className="mt-6 flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setStep(3)}
-                    className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(5)}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </motion.div>
+              <button
+                type="button"
+                onClick={addIntakeField}
+                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+              >
+                <Plus className="h-4 w-4" />
+                Add Field
+              </button>
+              </div>
             )}
 
-            {/* Step 5: Branding */}
-            {state.currentStep === 5 && (
-              <motion.div
-                key="step-5"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
-              >
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">
-                  Branding <span className="text-slate-500 font-normal">(Optional)</span>
-                </h2>
-                <p className="text-sm text-slate-600 mb-6">
-                  Customize the authorization page with your agency branding
-                </p>
+            {/* Branding Tab */}
+            {customizeTab === 'branding' && (
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="logoUrl" className="block text-sm font-medium text-slate-700 mb-1">
+                    Logo URL
+                  </label>
+                  <input
+                    type="url"
+                    id="logoUrl"
+                    value={state.branding.logoUrl}
+                    onChange={(e) => updateBranding({ logoUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="https://your-agency.com/logo.png"
+                  />
+                </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="logoUrl" className="block text-sm font-medium text-slate-700 mb-1">
-                      Logo URL
-                    </label>
+                <div>
+                  <label htmlFor="primaryColor" className="block text-sm font-medium text-slate-700 mb-1">
+                    Primary Color
+                  </label>
+                  <div className="flex items-center gap-3">
                     <input
-                      type="url"
-                      id="logoUrl"
-                      value={state.branding.logoUrl}
-                      onChange={(e) => updateBranding({ logoUrl: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="https://your-agency.com/logo.png"
+                      type="color"
+                      id="primaryColor"
+                      value={state.branding.primaryColor}
+                      onChange={(e) => updateBranding({ primaryColor: e.target.value })}
+                      className="h-11 w-20 rounded-lg cursor-pointer border border-slate-300"
+                    />
+                    <input
+                      type="text"
+                      value={state.branding.primaryColor}
+                      onChange={(e) => updateBranding({ primaryColor: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                      placeholder="#6366f1"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label
-                      htmlFor="primaryColor"
-                      className="block text-sm font-medium text-slate-700 mb-1"
-                    >
-                      Primary Color
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        id="primaryColor"
-                        value={state.branding.primaryColor}
-                        onChange={(e) => updateBranding({ primaryColor: e.target.value })}
-                        className="h-11 w-20 rounded-lg cursor-pointer border border-slate-300"
-                      />
-                      <input
-                        type="text"
-                        value={state.branding.primaryColor}
-                        onChange={(e) => updateBranding({ primaryColor: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-                        placeholder="#6366f1"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="subdomain" className="block text-sm font-medium text-slate-700 mb-1">
-                      Subdomain
-                    </label>
-                    <div className="flex items-center">
-                      <input
-                        type="text"
-                        id="subdomain"
-                        value={state.branding.subdomain}
-                        onChange={(e) => updateBranding({ subdomain: e.target.value.toLowerCase() })}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="my-agency"
-                        pattern="[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?"
-                      />
-                      <span className="px-4 py-2 bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg text-slate-600 text-sm">
-                        .agencyplatform.com
-                      </span>
-                    </div>
+                <div>
+                  <label htmlFor="subdomain" className="block text-sm font-medium text-slate-700 mb-1">
+                    Subdomain
+                  </label>
+                  <div className="flex items-center">
+                    <input
+                      type="text"
+                      id="subdomain"
+                      value={state.branding.subdomain}
+                      onChange={(e) => updateBranding({ subdomain: e.target.value.toLowerCase() })}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="my-agency"
+                      pattern="[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?"
+                    />
+                    <span className="px-4 py-2 bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg text-slate-600 text-sm">
+                      .agencyplatform.com
+                    </span>
                   </div>
                 </div>
 
@@ -664,7 +651,7 @@ function AccessRequestWizardContent() {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-6 p-4 border border-slate-200 rounded-lg overflow-hidden"
+                    className="p-4 border border-slate-200 rounded-lg overflow-hidden"
                   >
                     <p className="text-sm font-medium text-slate-700 mb-3">Preview</p>
                     <div
@@ -693,28 +680,239 @@ function AccessRequestWizardContent() {
                     </div>
                   </motion.div>
                 )}
+              </div>
+            )}
 
+            {state.error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+              >
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800">{state.error}</p>
+              </motion.div>
+            )}
+
+            <div className="mt-6 flex justify-between">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              >
+                Review & Create
+              </button>
+            </div>
+            </motion.div>
+          )}
+
+            {/* Step 4: Review & Create */}
+            {state.currentStep === 4 && (
+              <motion.div
+                key="step-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900 mb-1">Review & Create</h2>
+                  <p className="text-sm text-slate-600">
+                    Review your access request settings before creating
+                  </p>
+                </div>
+
+                {/* Summary Card */}
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 divide-y divide-slate-200">
+                  {/* Client Section */}
+                  <div className="p-4 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-lg font-semibold text-slate-600">
+                          {state.client?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Client</p>
+                        <p className="text-base font-semibold text-slate-900">{state.client?.name || 'Not selected'}</p>
+                        {state.client?.email && (
+                          <p className="text-sm text-slate-600">{state.client.email}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Auth Model Section */}
+                  <div className="p-4 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <Shield className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Authorization Model</p>
+                        <p className="text-base font-semibold text-slate-900">
+                          {state.authModel === 'delegated_access' ? 'Delegated Access' : 'Client Authorization'}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {state.authModel === 'delegated_access'
+                            ? 'Agency grants access using their own platform connections'
+                            : 'Client authorizes their own platform accounts'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Platforms Section */}
+                  <div className="p-4 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                        <Check className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Platforms</p>
+                        <div className="flex items-center gap-2 flex-wrap mt-1">
+                          {Object.entries(state.selectedPlatforms).map(([platform, products]) => (
+                            <span
+                              key={platform}
+                              className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700"
+                            >
+                              {platform} ({products.length})
+                            </span>
+                          ))}
+                          {platformCount === 0 && (
+                            <span className="text-sm text-slate-500 italic">No platforms selected</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600 mt-1">{platformCount} product{platformCount !== 1 ? 's' : ''} selected</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Access Level Section */}
+                  <div className="p-4 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
+                        <Shield className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Access Level</p>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
+                          state.globalAccessLevel! === 'admin'
+                            ? 'bg-red-100 text-red-700'
+                            : state.globalAccessLevel! === 'standard'
+                            ? 'bg-blue-100 text-blue-700'
+                            : state.globalAccessLevel! === 'read_only'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {state.globalAccessLevel! === 'admin'
+                            ? 'ADMIN'
+                            : state.globalAccessLevel! === 'standard'
+                            ? 'STANDARD'
+                            : state.globalAccessLevel! === 'read_only'
+                            ? 'READ ONLY'
+                            : 'EMAIL ONLY'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Intake Fields Section */}
+                  <div className="p-4 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
+                        <Plus className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Form Fields</p>
+                        <p className="text-base font-semibold text-slate-900">
+                          {state.intakeFields.length} field{state.intakeFields.length !== 1 ? 's' : ''}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {state.intakeFields.filter(f => f.required).length} required, {state.intakeFields.filter(f => !f.required).length} optional
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Branding Section (if configured) */}
+                  {(state.branding.logoUrl || state.branding.primaryColor !== '#6366f1' || state.branding.subdomain) && (
+                    <div className="p-4 flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-full bg-pink-50 flex items-center justify-center flex-shrink-0">
+                          {state.branding.logoUrl ? (
+                            <img src={state.branding.logoUrl} alt="" className="h-5 w-5 object-contain" />
+                          ) : (
+                            <span className="text-xs font-bold text-pink-600">B</span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Branding</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {state.branding.logoUrl && (
+                              <span className="text-sm text-slate-700">Custom logo</span>
+                            )}
+                            {state.branding.primaryColor !== '#6366f1' && (
+                              <span className="text-sm text-slate-700">Custom color</span>
+                            )}
+                            {state.branding.subdomain && (
+                              <span className="text-sm text-slate-700">{state.branding.subdomain}.agencyplatform.com</span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Preview */}
+                        {(state.branding.logoUrl || state.branding.primaryColor !== '#6366f1') && (
+                          <div
+                            className="w-24 h-12 rounded-md flex items-center justify-center text-xs font-medium text-center px-2"
+                            style={{
+                              backgroundColor: state.branding.primaryColor + '15',
+                              color: state.branding.primaryColor,
+                            }}
+                          >
+                            {state.branding.logoUrl ? (
+                              <img src={state.branding.logoUrl} alt="" className="h-6 w-6 object-contain" />
+                            ) : (
+                              <span className="truncate">Preview</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Error Display */}
                 {state.error && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                    className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
                   >
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-800">{state.error}</p>
                   </motion.div>
                 )}
 
-                <div className="mt-6 flex justify-between">
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setStep(4)}
-                      className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                      disabled={state.submitting}
-                    >
-                      Back
-                    </button>
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                    disabled={state.submitting}
+                  >
+                    Back
+                  </button>
+
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setIsSaveTemplateModalOpen(true)}
@@ -724,15 +922,15 @@ function AccessRequestWizardContent() {
                       <Save className="h-4 w-4" />
                       Save as Template
                     </button>
+                    <button
+                      type="submit"
+                      disabled={state.submitting}
+                      className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md flex items-center gap-2"
+                    >
+                      {state.submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {state.submitting ? 'Creating Request...' : 'Create Access Request'}
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={state.submitting}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md flex items-center gap-2"
-                  >
-                    {state.submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {state.submitting ? 'Creating Request...' : 'Create Request'}
-                  </button>
                 </div>
 
                 {/* Save as Template Modal */}

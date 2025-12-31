@@ -228,8 +228,8 @@ export function getAccessLevelDescription(accessLevel: AccessLevel): string {
  * @returns Platform instructions with steps and notes
  */
 export function generateInstructions(input: GenerateInstructionsInput): {
-  data?: PlatformInstructions;
-  error?: { code: string; message: string };
+  data: PlatformInstructions | null;
+  error: { code: string; message: string } | null;
 } {
   try {
     const template = INSTRUCTION_TEMPLATES[input.platform];
@@ -262,7 +262,6 @@ export function generateInstructions(input: GenerateInstructionsInput): {
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to generate instructions',
-        details: String(error),
       },
     };
   }

@@ -24,6 +24,7 @@ describe('PlatformAuthWizard', () => {
   const mockToken = 'test-token';
   const mockPlatform = 'meta_ads';
   const mockPlatformName = 'Meta';
+  const mockProducts = [{ product: 'meta_ads', accessLevel: 'standard' }];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,6 +42,7 @@ describe('PlatformAuthWizard', () => {
       <PlatformAuthWizard
         platform={mockPlatform}
         platformName={mockPlatformName}
+        products={mockProducts}
         accessRequestToken={mockToken}
         onComplete={mockOnComplete}
       />
@@ -62,6 +64,7 @@ describe('PlatformAuthWizard', () => {
       <PlatformAuthWizard
         platform={mockPlatform}
         platformName={mockPlatformName}
+        products={mockProducts}
         accessRequestToken={mockToken}
         onComplete={mockOnComplete}
       />
@@ -103,6 +106,7 @@ describe('PlatformAuthWizard', () => {
       <PlatformAuthWizard
         platform={mockPlatform}
         platformName={mockPlatformName}
+        products={mockProducts}
         accessRequestToken={mockToken}
         onComplete={mockOnComplete}
       />
@@ -131,6 +135,7 @@ describe('PlatformAuthWizard', () => {
       <PlatformAuthWizard
         platform={mockPlatform}
         platformName={mockPlatformName}
+        products={mockProducts}
         accessRequestToken={mockToken}
         onComplete={mockOnComplete}
       />

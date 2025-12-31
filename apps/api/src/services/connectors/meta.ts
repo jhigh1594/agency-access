@@ -46,13 +46,9 @@ export class MetaConnector {
   static readonly DEFAULT_SCOPES = [
     'ads_management',      // Create and manage ads
     'ads_read',            // Read ads data
-    'business_management', // Access Business Manager assets
-    // Note: Removed page permissions to simplify OAuth flow
-    // - pages_read_engagement (no longer needed)
-    // - pages_show_list (no longer needed)
-    // - Instagram permissions require additional product setup
-    // 'instagram_basic',
-    // 'instagram_manage_insights',
+    'business_management', // Access Business Manager assets (includes page management)
+    // Note: pages_manage_metadata and pages_show_list are not valid OAuth scopes
+    // They are automatically granted with business_management or configured at app level
   ];
 
   constructor() {

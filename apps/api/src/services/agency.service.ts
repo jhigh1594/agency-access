@@ -45,7 +45,7 @@ export async function createAgency(input: CreateAgencyInput) {
     }
 
     // Use transaction to create agency and admin member atomically
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const agency = await tx.agency.create({
         data: {
           name: validated.name,

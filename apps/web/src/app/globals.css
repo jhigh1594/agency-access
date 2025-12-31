@@ -10,9 +10,12 @@
     --foreground: 25 25 25;         /* #191919 - primary text */
     --muted: 120 120 120;           /* #787878 - secondary text */
 
-    /* Accents */
-    --primary: 0 120 255;           /* #0078FF - Electric Blue */
-    --accent: 255 120 0;            /* #FF7800 - Safety Orange */
+    /* Accents - Refined palette for industrial minimal aesthetic */
+    --primary: 79 70 229;           /* #4F46E5 - Vibrant Indigo */
+    --primary-dark: 67 56 202;      /* #4338CA - Darker Indigo */
+    --primary-light: 165 180 252;   /* #A5B4FC - Light Indigo */
+    --accent: 245 158 11;           /* #F59E0B - Warm Amber */
+    --accent-bg: 254 243 199;       /* #FEF3C7 - Amber Background */
 
     /* Structural */
     --border: 215 215 215;          /* #D7D7D7 - subtle borders */
@@ -81,6 +84,13 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Base font for the application - refined industrial aesthetic */
+    font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Technical font for monospace elements */
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   }
 }
 
@@ -201,5 +211,52 @@
   }
   .animation-delay-400 {
     animation-delay: 400ms;
+  }
+
+  /* ============================================================
+     TYPOGRAPHY UTILITIES
+     Refined industrial minimal aesthetic
+  ============================================================ */
+
+  /* Display font - Page titles (bold, tight) */
+  .font-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  /* Heading font - Section titles (semibold, balanced) */
+  .font-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Label font - Metadata labels (uppercase, spaced) */
+  .font-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem; /* 12px */
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+  }
+
+  /* Mono label font - Technical labels like "STEP 01" */
+  .font-mono-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem; /* 13px */
+    font-weight: 500;
+  }
+
+  /* Tracking utilities for refined typography */
+  .tracking-tight {
+    letter-spacing: -0.02em;
+  }
+  .tracking-normal-tight {
+    letter-spacing: -0.01em;
+  }
+  .tracking-wide {
+    letter-spacing: 0.02em;
   }
 }

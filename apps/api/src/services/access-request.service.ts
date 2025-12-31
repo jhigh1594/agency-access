@@ -97,7 +97,7 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         select: { branding: true },
       });
 
-      const subdomainTaken = agencyRequests.some((req) => {
+      const subdomainTaken = agencyRequests.some((req: any) => {
         const branding = req.branding as any;
         return branding?.subdomain === validated.branding?.subdomain;
       });
@@ -370,7 +370,7 @@ export async function getAgencyAccessRequests(
     });
 
     // Transform platforms from flat to hierarchical format for frontend
-    const transformedRequests = requests.map((request) => {
+    const transformedRequests = requests.map((request: any) => {
       const platforms = request.platforms as any[];
       const hierarchicalPlatforms = Array.isArray(platforms) && platforms.length > 0 && platforms[0]?.platform
         ? transformPlatformsToHierarchical(platforms)

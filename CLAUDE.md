@@ -203,32 +203,83 @@ The backend uses Zod validation in `apps/api/src/lib/env.ts` for environment var
 3. TypeScript will enforce the env var exists at runtime
 
 ### Platform Connectors
-OAuth connectors go in `apps/api/src/services/connectors/`. Each platform connector implements:
+OAuth connectors go in `apps/api/src/services/connectors/`. Each platform connector implements the `PlatformConnector` interface defined in `factory.ts`.
 
+**Connector Interface:**
 ```typescript
-export class MetaConnector {
-  // 1. Generate OAuth authorization URL with state for CSRF protection
-  getAuthUrl(state: string): string { }
-
-  // 2. Exchange authorization code for tokens
-  async exchangeCode(code: string): Promise<Tokens> { }
-
-  // 3. Get long-lived tokens (platform-specific, e.g., Meta 60-day tokens)
-  async getLongLivedToken(shortToken: string): Promise<Tokens> { }
-
-  // 4. Refresh expired access tokens
-  async refreshToken(refreshToken: string): Promise<Tokens> { }
-
-  // 5. Verify token is valid
-  async verifyToken(accessToken: string): Promise<boolean> { }
-
-  // 6. Get user info (for metadata storage)
-  async getUserInfo(accessToken: string): Promise<UserInfo> { }
-
-  // 7. (Optional) Revoke token when connection ends
-  async revokeToken(accessToken: string): Promise<void> { }
+export interface PlatformConnector {
+  // Required methods
+  getAuthUrl(state: string, scopes?: string[], redirectUri?: string): string;
+  exchangeCode(code: string, redirectUri?: string): Promise<any>;
+  verifyToken(accessToken: string): Promise<boolean>;
+  getUserInfo(accessToken: string): Promise<any>;
+  
+  // Optional methods (implement if platform supports)
+  refreshToken?(refreshToken: string): Promise<any>;
+  getLongLivedToken?(shortToken: string): Promise<any>;
+  verifyClientAccess?(agencyAccessToken: string, ...args: any[]): Promise<any>;
+  revokeToken?(accessToken: string): Promise<void>;
 }
 ```
+
+**Adding a New Platform Connector:**
+
+1. **Use the Template**
+   - Copy `apps/api/src/services/connectors/TEMPLATE.ts` to `[platform].ts`
+   - Replace all `[Platform]` placeholders with your platform name
+   - Follow the template's inline comments and examples
+
+2. **Add Platform to Shared Types** (`packages/shared/src/types.ts`)
+   ```typescript
+   // Add to PlatformSchema enum
+   export const PlatformSchema = z.enum([
+     // ... existing
+     'beehiiv', 'kit', 'zapier',
+   ]);
+   
+   // Add to PLATFORM_NAMES
+   export const PLATFORM_NAMES: Record<Platform, string> = {
+     // ... existing
+     beehiiv: 'Beehiiv',
+     kit: 'Kit',
+     zapier: 'Zapier',
+   };
+   
+   // Add to PLATFORM_SCOPES (check platform OAuth docs)
+   export const PLATFORM_SCOPES: Record<Platform, string[]> = {
+     // ... existing
+     beehiiv: ['read', 'write'],
+     kit: ['read', 'write'],
+     zapier: ['read', 'write'],
+   };
+   ```
+
+3. **Add Environment Variables** (`apps/api/src/lib/env.ts`)
+   ```typescript
+   const envSchema = z.object({
+     // ... existing
+     BEEHIIV_CLIENT_ID: z.string(),
+     BEEHIIV_CLIENT_SECRET: z.string(),
+     // ... add for each platform
+   });
+   ```
+   Also update `apps/api/.env.example` with placeholder values.
+
+4. **Register Connector** (`apps/api/src/services/connectors/factory.ts`)
+   ```typescript
+   import { beehiivConnector } from './beehiiv';
+   
+   const connectors: Partial<Record<Platform, PlatformConnector>> = {
+     // ... existing
+     beehiiv: beehiivConnector,
+   };
+   ```
+
+5. **Test OAuth Flow**
+   - Test full flow: authorize → exchange code → store in Infisical → verify token
+   - Test token refresh (if supported)
+   - Test token verification
+   - Test user info retrieval
 
 **Platform configuration:**
 - Platform definitions: `packages/shared/src/types.ts` (`PlatformSchema`)
@@ -237,8 +288,29 @@ export class MetaConnector {
 
 **Connector pattern notes:**
 - Meta requires exchanging short-lived tokens for 60-day tokens (use `getLongLivedToken`)
+- Google Ads requires a `developer-token` header for all API calls
 - Store all metadata (user IDs, business IDs, ad accounts) in `PlatformAuthorization.metadata` as JSON
 - OAuth state is managed by `OAuthStateService` using Redis for CSRF protection
+- **NEVER store tokens in database** - always use Infisical and store only `secretId`
+
+**Template File:**
+- Full template available at `apps/api/src/services/connectors/TEMPLATE.ts`
+- Includes detailed comments, examples, and all required/optional methods
+- Copy and customize for new platforms
+
+### Client Authorization Pattern
+Clients authorize platforms through a simplified 2-step wizard:
+1. **OAuth**: Redirect to platform, authorize requested scopes.
+2. **Asset Selection**: Backend fetches all accessible assets (ad accounts, pages, etc.), client selects which ones to share.
+
+**Asset fetching endpoints:**
+- `GET /api/client-assets/:connectionId/:platform`
+- Google uses `GoogleConnector.getAllGoogleAccounts()` to fetch all products.
+- Meta uses `clientAssetsService.fetchMetaAssets()` to fetch ad accounts, pages, and Instagram.
+
+**Asset selection storage:**
+- Selected IDs are saved in `ClientConnection.grantedAssets` and `PlatformAuthorization.metadata.selectedAssets`.
+- Format: `{ adAccounts: string[], pages: string[], ... }`
 
 ### Authorization Models
 The platform supports two distinct authorization models (set per `AccessRequest`):
@@ -334,14 +406,46 @@ await prisma.accessRequest.create({
    ```
 
 ### Adding a Platform Connector
-1. Add platform to `PlatformSchema` in `packages/shared/src/types.ts`
-2. Add OAuth scopes to `PLATFORM_SCOPES` constant
-3. Add platform display name to `PLATFORM_NAMES`
-4. Create connector class in `apps/api/src/services/connectors/{platform}.ts`
-5. Implement all required methods (getAuthUrl, exchangeCode, refreshToken, etc.)
-6. Add platform credentials to `apps/api/.env` and `apps/api/.env.example`
-7. Update `apps/api/src/lib/env.ts` with new env vars
-8. Test full OAuth flow: authorize → exchange code → store in Infisical → verify token
+
+**Quick Start:**
+1. Copy `apps/api/src/services/connectors/TEMPLATE.ts` to `apps/api/src/services/connectors/[platform].ts`
+2. Replace all `[Platform]` placeholders with your platform name
+3. Follow the detailed steps below
+
+**Detailed Steps:**
+
+1. **Create Connector File**
+   - Copy `TEMPLATE.ts` to `[platform].ts` (e.g., `beehiiv.ts`)
+   - Replace placeholders: `[Platform]`, `[PLATFORM]`, `[platform]`
+   - Update OAuth URLs, endpoints, and scopes based on platform documentation
+   - Implement platform-specific methods (e.g., `getLongLivedToken` if needed)
+
+2. **Add Platform to Shared Types** (`packages/shared/src/types.ts`)
+   - Add to `PlatformSchema` enum
+   - Add to `PLATFORM_NAMES` object
+   - Add to `PLATFORM_SCOPES` object (check platform OAuth docs for correct scopes)
+
+3. **Add Environment Variables**
+   - Add to `apps/api/src/lib/env.ts` (`envSchema` Zod object)
+   - Add to `apps/api/.env.example` with placeholder values
+   - Format: `[PLATFORM]_CLIENT_ID` and `[PLATFORM]_CLIENT_SECRET`
+
+4. **Register Connector** (`apps/api/src/services/connectors/factory.ts`)
+   - Import your connector instance
+   - Add to `connectors` object mapping platform to connector
+
+5. **Test OAuth Flow**
+   - Test authorization URL generation
+   - Test code exchange for tokens
+   - Test token refresh (if supported)
+   - Test token verification
+   - Test user info retrieval
+   - Verify tokens are stored in Infisical (not database)
+
+**Template File:**
+- Full template with examples: `apps/api/src/services/connectors/TEMPLATE.ts`
+- Includes all required and optional methods with detailed comments
+- Platform-specific examples and patterns included
 
 ### Background Jobs & Redis
 The platform uses BullMQ with Redis for background job processing:

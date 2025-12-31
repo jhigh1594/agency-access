@@ -237,7 +237,9 @@ export async function revokeConnection(
     }
 
     // Delete tokens from Infisical
-    await infisical.deleteOAuthTokens(connection.secretId);
+    if (connection.secretId) {
+      await infisical.deleteOAuthTokens(connection.secretId);
+    }
 
     // Update database record
     const updatedConnection = await prisma.agencyPlatformConnection.update({
@@ -306,7 +308,9 @@ export async function refreshConnection(
     }
 
     // Update tokens in Infisical
-    await infisical.updateOAuthTokens(connection.secretId, newTokens);
+    if (connection.secretId) {
+      await infisical.updateOAuthTokens(connection.secretId, newTokens);
+    }
 
     // Update database record
     const updatedConnection = await prisma.agencyPlatformConnection.update({
@@ -375,6 +379,15 @@ export async function getValidToken(agencyId: string, platform: string) {
     }
 
     // Get tokens from Infisical
+    if (!connection.secretId) {
+      return {
+        data: null,
+        error: {
+          code: 'TOKEN_NOT_FOUND',
+          message: 'No secret ID associated with this connection',
+        },
+      };
+    }
     const tokens = await infisical.getOAuthTokens(connection.secretId);
 
     // Check if token needs refresh (within 5 days of expiry)
@@ -391,11 +404,13 @@ export async function getValidToken(agencyId: string, platform: string) {
           const newTokens = await connector.refreshToken(tokens.refreshToken);
 
           // Update Infisical with new tokens
-          await infisical.updateOAuthTokens(connection.secretId, {
-            accessToken: newTokens.accessToken,
-            refreshToken: newTokens.refreshToken || tokens.refreshToken,
-            expiresAt: newTokens.expiresAt,
-          });
+          if (connection.secretId) {
+            await infisical.updateOAuthTokens(connection.secretId, {
+              accessToken: newTokens.accessToken,
+              refreshToken: newTokens.refreshToken || tokens.refreshToken,
+              expiresAt: newTokens.expiresAt,
+            });
+          }
 
           // Update database with new expiration
           await prisma.agencyPlatformConnection.update({

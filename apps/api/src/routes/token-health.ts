@@ -8,13 +8,24 @@
 import { FastifyInstance } from 'fastify';
 import type { Platform } from '@agency-platform/shared';
 import { connectionService } from '../services/connection.service';
+import { agencyResolutionService } from '../services/agency-resolution.service';
 
 export async function tokenHealthRoutes(fastify: FastifyInstance) {
   // Get token health for all connections
   fastify.get('/token-health', async (request, reply) => {
-    const { agencyId } = (request as any).user; // From Clerk JWT
+    const { agencyId: queryAgencyId } = request.query as { agencyId?: string };
+    const clerkUserId = request.headers['x-agency-id'] as string;
+    
+    let targetAgencyId = queryAgencyId;
+    
+    if (!targetAgencyId && clerkUserId) {
+      const agencyResult = await agencyResolutionService.resolveAgency(clerkUserId);
+      if (!agencyResult.error && agencyResult.data) {
+        targetAgencyId = agencyResult.data.agencyId;
+      }
+    }
 
-    if (!agencyId) {
+    if (!targetAgencyId) {
       return reply.code(401).send({
         data: null,
         error: {
@@ -24,7 +35,7 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const result = await connectionService.getTokenHealth(agencyId);
+    const result = await connectionService.getTokenHealth(targetAgencyId);
 
     if (result.error) {
       return reply.code(500).send({
@@ -38,9 +49,29 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
 
   // Get connections for an agency
   fastify.get('/connections', async (request, reply) => {
-    const { agencyId } = (request as any).user; // From Clerk JWT
+    const { agencyId: queryAgencyId } = request.query as { agencyId?: string };
+    const clerkUserId = request.headers['x-agency-id'] as string;
+    
+    let targetAgencyId = queryAgencyId;
+    
+    if (!targetAgencyId && clerkUserId) {
+      const agencyResult = await agencyResolutionService.resolveAgency(clerkUserId);
+      if (!agencyResult.error && agencyResult.data) {
+        targetAgencyId = agencyResult.data.agencyId;
+      }
+    }
 
-    const result = await connectionService.getAgencyConnections(agencyId);
+    if (!targetAgencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    const result = await connectionService.getAgencyConnections(targetAgencyId);
 
     if (result.error) {
       return reply.code(500).send({

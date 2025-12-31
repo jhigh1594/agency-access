@@ -11,6 +11,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   RefreshCw,
   Clock,
@@ -79,7 +80,11 @@ export default function TokenHealthPage() {
     } catch (err) {
       console.error('Failed to refresh token:', err);
     } finally {
-      setRefreshing(new Set([...refreshing].delete(tokenId)));
+      setRefreshing((prev) => {
+        const next = new Set(prev);
+        next.delete(tokenId);
+        return next;
+      });
     }
   };
 
@@ -126,25 +131,21 @@ export default function TokenHealthPage() {
           <StatCard
             label="Total Connections"
             value={stats.total}
-            color="slate"
             icon={<Clock className="h-5 w-5" />}
           />
           <StatCard
             label="Healthy"
             value={stats.healthy}
-            color="emerald"
             icon={<CheckCircle2 className="h-5 w-5" />}
           />
           <StatCard
             label="Expiring Soon"
             value={stats.expiring}
-            color="yellow"
             icon={<AlertCircle className="h-5 w-5" />}
           />
           <StatCard
             label="Expired"
             value={stats.expired}
-            color="red"
             icon={<XCircle className="h-5 w-5" />}
           />
         </div>

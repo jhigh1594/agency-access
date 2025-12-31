@@ -265,7 +265,7 @@ export async function getSecurityEvents(agencyId: string, days: number) {
       select: { id: true },
     });
 
-    const connectionIds = connections.map((c) => c.id);
+    const connectionIds = connections.map((c: any) => c.id);
 
     // Calculate date threshold
     const startDate = new Date();

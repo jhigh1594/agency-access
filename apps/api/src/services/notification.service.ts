@@ -7,6 +7,8 @@
 
 import { prisma } from '../lib/prisma.js';
 import { notificationQueue } from '../lib/queue.js';
+import { sendClientAuthorizationEmail } from './email.service.js';
+import { env } from '../lib/env';
 
 export interface NotificationPayload {
   agencyId: string;
@@ -94,10 +96,9 @@ export async function sendNotification(payload: NotificationPayload) {
       select: {
         id: true,
         name: true,
-        // TODO: Add notification preferences fields to Agency model
-        // webhookUrl: true,
-        // notificationEmail: true,
-        // slackChannelId: true,
+        email: true,
+        notificationEmail: true,
+        notificationEnabled: true,
       },
     });
 
@@ -112,37 +113,58 @@ export async function sendNotification(payload: NotificationPayload) {
       };
     }
 
-    // TODO: Implement your chosen notification method here
-    //
-    // Example email implementation:
-    // if (agency.notificationEmail) {
-    //   await sendEmail({
-    //     to: agency.notificationEmail,
-    //     subject: `${payload.clientName} authorized access`,
-    //     html: `
-    //       <h2>Client Authorization Complete</h2>
-    //       <p>${payload.clientName} (${payload.clientEmail}) has authorized access to:</p>
-    //       <ul>${payload.platforms.map(p => `<li>${p}</li>`).join('')}</ul>
-    //       <p>You can now access their advertising accounts.</p>
-    //     `,
-    //   });
-    // }
-    //
-    // Example webhook implementation:
-    // if (agency.webhookUrl) {
-    //   await fetch(agency.webhookUrl, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({
-    //       event: 'client.authorized',
-    //       data: payload,
-    //     }),
-    //   });
-    // }
+    // Skip if notifications are disabled
+    if (agency.notificationEnabled === false) {
+      console.log('Notifications disabled for agency', agency.id);
+      return { data: true, error: null };
+    }
 
-    console.log('Notification sent (placeholder)', {
-      agencyId: payload.agencyId,
+    // Determine target email
+    const targetEmail = agency.notificationEmail || agency.email;
+
+    if (!targetEmail) {
+      console.error('No target email found for agency notification', agency.id);
+      return {
+        data: null,
+        error: {
+          code: 'NO_TARGET_EMAIL',
+          message: 'No target email found for agency notification',
+        },
+      };
+    }
+
+    // Send email via email service
+    const result = await sendClientAuthorizationEmail({
+      to: targetEmail,
+      clientName: payload.clientName,
+      clientEmail: payload.clientEmail,
       platforms: payload.platforms,
+      dashboardUrl: `${env.FRONTEND_URL}/dashboard`,
+    });
+
+    if (result.error) {
+      return result;
+    }
+
+    // Log to audit trail (optional - could be done here or in worker)
+    await prisma.auditLog.create({
+      data: {
+        agencyId: agency.id,
+        userEmail: 'system',
+        action: 'NOTIFICATION_SENT',
+        resourceType: 'access_request',
+        resourceId: payload.accessRequestId,
+        metadata: {
+          targetEmail,
+          platforms: payload.platforms,
+          notificationType: 'client_authorized',
+        },
+      },
+    });
+
+    console.log('Notification sent successfully', {
+      agencyId: payload.agencyId,
+      targetEmail,
     });
 
     return { data: true, error: null };

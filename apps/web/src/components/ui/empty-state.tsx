@@ -36,7 +36,7 @@ export function EmptyState({
       <p className="text-slate-600 mt-1 max-w-sm mx-auto">{description}</p>
       {(actionLabel && actionHref) && (
         <Link
-          href={actionHref}
+          href={actionHref as any}
           className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
           {actionLabel}

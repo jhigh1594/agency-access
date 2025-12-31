@@ -18,6 +18,11 @@ model Agency {
   email                String                       @unique
   subscriptionTier     String?                      @map("subscription_tier")
   settings             Json?
+  
+  // Notification settings
+  notificationEmail    String?                      @map("notification_email")
+  notificationEnabled  Boolean                      @default(true) @map("notification_enabled")
+
   createdAt            DateTime                     @default(now()) @map("created_at")
   updatedAt            DateTime                     @updatedAt @map("updated_at")
 

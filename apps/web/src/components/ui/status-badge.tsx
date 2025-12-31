@@ -14,7 +14,10 @@ export type StatusType =
   | 'cancelled'
   | 'healthy'
   | 'expiring'
-  | 'unknown';
+  | 'unknown'
+  | 'active'
+  | 'revoked'
+  | 'invalid';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -35,10 +38,25 @@ const STATUS_CONFIG: Record<
     className: 'bg-success/10 text-success border border-success/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
+  active: {
+    label: 'Active',
+    className: 'bg-success/10 text-success border border-success/30',
+    icon: <CheckCircle2 className="h-3 w-3" />,
+  },
   cancelled: {
     label: 'Cancelled',
     className: 'bg-muted/10 text-muted border border-border',
     icon: <XCircle className="h-3 w-3" />,
+  },
+  revoked: {
+    label: 'Revoked',
+    className: 'bg-error/10 text-error border border-error/30',
+    icon: <XCircle className="h-3 w-3" />,
+  },
+  invalid: {
+    label: 'Invalid',
+    className: 'bg-error/10 text-error border border-error/30',
+    icon: <AlertCircle className="h-3 w-3" />,
   },
   expired: {
     label: 'Expired',

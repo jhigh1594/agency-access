@@ -10,7 +10,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, Loader2, Mail, Building2, Users, Sparkles, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,7 +51,8 @@ const TIMEZONES = [
 ];
 
 export default function AgencyOnboardingPage() {
-  const { userId, user } = useAuth();
+  const { userId } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(1);

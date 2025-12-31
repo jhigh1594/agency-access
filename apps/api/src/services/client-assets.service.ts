@@ -112,7 +112,7 @@ class ClientAssetsService {
         throw new Error(`Meta API error (ad accounts): ${error}`);
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
       return data.data || [];
     } catch (error) {
       logger.error('Failed to fetch ad accounts', { error });
@@ -138,7 +138,7 @@ class ClientAssetsService {
         throw new Error(`Meta API error (pages): ${error}`);
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
       return data.data || [];
     } catch (error) {
       logger.error('Failed to fetch pages', { error });
@@ -169,7 +169,7 @@ class ClientAssetsService {
         throw new Error(`Meta API error (businesses): ${error}`);
       }
 
-      const businessesData = await businessesResponse.json();
+      const businessesData: any = await businessesResponse.json();
       const businesses = businessesData.data || [];
 
       if (businesses.length === 0) {
@@ -186,17 +186,17 @@ class ClientAssetsService {
           return [];
         }
 
-        const igData = await igResponse.json();
+        const igData: any = await igResponse.json();
         return igData.data || [];
       });
 
       const instagramAccountsArrays = await Promise.all(instagramAccountsPromises);
 
       // Flatten arrays and deduplicate by ID
-      const allAccounts = instagramAccountsArrays.flat();
+      const allAccounts: any[] = instagramAccountsArrays.flat();
       const uniqueAccounts = Array.from(
-        new Map(allAccounts.map((account) => [account.id, account])).values()
-      );
+        new Map(allAccounts.map((account: any) => [account.id, account])).values()
+      ) as MetaInstagramAccount[];
 
       return uniqueAccounts;
     } catch (error) {
@@ -236,7 +236,7 @@ class ClientAssetsService {
         throw new Error(`Google Ads API error: ${error}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       const resourceNames = data.resourceNames || [];
 
       return resourceNames.map((name: string) => {
@@ -267,7 +267,7 @@ class ClientAssetsService {
         throw new Error(`GA4 API error: ${error}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
       const properties: GA4Property[] = [];
 
       for (const accountSummary of data.accountSummaries || []) {

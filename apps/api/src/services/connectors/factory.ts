@@ -1,8 +1,8 @@
 import type { Platform } from '@agency-platform/shared';
-import { metaConnector } from './meta';
-import { googleAdsConnector } from './google-ads';
-import { ga4Connector } from './ga4';
-import { googleConnector } from './google';
+import { metaConnector } from './meta.js';
+import { googleAdsConnector } from './google-ads.js';
+import { ga4Connector } from './ga4.js';
+import { googleConnector } from './google.js';
 
 /**
  * Platform Connector Interface

@@ -71,8 +71,8 @@ export async function platformAuthorizationRoutes(fastify: FastifyInstance) {
 
     // Filter to identity-mode connections and map by platform
     const identityConnections = (connectionsResult.data || [])
-      .filter((c) => c.connectionMode === 'identity')
-      .reduce((acc, conn) => {
+      .filter((c: any) => c.connectionMode === 'identity')
+      .reduce((acc: any, conn: any) => {
         // Map platform to platform group (google_ads -> google, etc.)
         const platformGroup = conn.platform;
         acc[platformGroup] = {

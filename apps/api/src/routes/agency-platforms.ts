@@ -208,7 +208,7 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
 
     // Build available platforms list with connection status
     const availablePlatforms = allPlatforms.map((platform) => {
-      const connection = connections.find((c) => c.platform === platform);
+      const connection = connections.find((c: any) => c.platform === platform);
 
       // Extract email from metadata with fallback chain
       let connectedEmail: string | undefined;

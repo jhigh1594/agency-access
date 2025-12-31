@@ -87,7 +87,7 @@ const initialState: AccessRequestFormState = {
   client: null,
   authModel: 'delegated_access', // Default to recommended option
   selectedPlatforms: {},
-  globalAccessLevel: null,
+  globalAccessLevel: 'standard', // Smart default: standard access level
   intakeFields: [
     {
       id: '1',
@@ -102,7 +102,7 @@ const initialState: AccessRequestFormState = {
     primaryColor: '#6366f1',
     subdomain: '',
   },
-  currentStep: 0,
+  currentStep: 1, // Start at step 1 for 4-step flow
   submitting: false,
   error: null,
 };
@@ -190,25 +190,18 @@ export function AccessRequestProvider({ children, agencyId }: AccessRequestProvi
   const validateStep = useCallback(
     (step: number): { valid: boolean; error?: string } => {
       switch (step) {
-        case 0:
-          // Template selection is optional
-          return { valid: true };
-
         case 1:
-          // Client must be selected
+          // Step 1: Fundamentals (Template + Client + Auth Model)
+          // Template is optional, but Client is required
           if (!state.client) {
             return { valid: false, error: 'Please select a client' };
           }
+          // Auth model has default value, so always valid
           return { valid: true };
 
         case 2:
-          // Auth model must be selected (Step 1.5 in the wizard, but validated as part of step 2)
-          // For now, we'll treat auth model selection as part of step 1 flow
-          // If the user hasn't selected auth model yet, they need to complete it
-          return { valid: true };
-
-        case 3:
-          // At least one platform product + access level required
+          // Step 2: Platforms + Access Level
+          // At least one platform product required
           const platformCount = Object.values(state.selectedPlatforms).reduce(
             (sum, products) => sum + products.length,
             0
@@ -218,21 +211,17 @@ export function AccessRequestProvider({ children, agencyId }: AccessRequestProvi
             return { valid: false, error: 'Please select at least one platform' };
           }
 
-          if (!state.globalAccessLevel) {
-            return { valid: false, error: 'Please select an access level' };
-          }
-
+          // Access level has default value (standard), so always valid
           return { valid: true };
 
-        case 4:
+        case 3:
+          // Step 3: Customize (Intake Fields + Branding)
           // Intake fields validation - all labels must be filled
           const invalidFields = state.intakeFields.filter((field) => !field.label.trim());
           if (invalidFields.length > 0) {
             return { valid: false, error: 'All intake fields must have a label' };
           }
-          return { valid: true };
 
-        case 5:
           // Subdomain validation (optional field)
           if (state.branding.subdomain) {
             // Alphanumeric + hyphen, 3-63 chars, no leading/trailing hyphens
@@ -244,6 +233,10 @@ export function AccessRequestProvider({ children, agencyId }: AccessRequestProvi
               };
             }
           }
+          return { valid: true };
+
+        case 4:
+          // Step 4: Review - No validation needed (summary only)
           return { valid: true };
 
         default:

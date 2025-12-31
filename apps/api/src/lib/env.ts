@@ -33,6 +33,9 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   // Legacy: Google Ads-specific credentials (optional, for API access)
   GOOGLE_ADS_DEVELOPER_TOKEN: z.string().optional(),
+  
+  // Notifications
+  RESEND_API_KEY: z.string().optional(),
 
   LOG_LEVEL: z.string().default('info'),
 });

@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { env } from './env';
+import { env } from './env.js';
 
 /**
  * Redis client singleton for caching and session management
@@ -35,8 +35,9 @@ class RedisService {
         },
       });
 
-      this.client.on('error', (error) => {
-        if (error.code === 'ECONNREFUSED' && env.NODE_ENV !== 'production') {
+      this.client.on('error', (error: Error & { code?: string }) => {
+        const errorCode = error.code;
+        if (errorCode === 'ECONNREFUSED' && env.NODE_ENV !== 'production') {
           // Suppress connection refused errors in development (Redis optional)
           if (!(global as any).redisWarningShown) {
             console.warn('⚠️  Redis unavailable - background jobs and notifications disabled');

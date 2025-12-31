@@ -35,7 +35,7 @@ export async function createClientConnection(input: {
     }
 
     // Create connection and platform authorizations in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create the connection
       const connection = await tx.clientConnection.create({
         data: {

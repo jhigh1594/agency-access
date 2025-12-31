@@ -5,11 +5,11 @@
  */
 
 import { Queue, Worker, QueueEvents } from 'bullmq';
-import { env } from './env';
+import { env } from './env.js';
 import { connectionService } from '../services/connection.service';
 import { accessRequestService } from '../services/access-request.service';
 import { auditService } from '../services/audit.service';
-import { prisma } from './prisma';
+import { prisma } from './prisma.js';
 import { getConnector } from '../services/connectors/factory';
 
 // Redis connection options for IORedis

@@ -18,7 +18,8 @@ import type { Platform } from '@agency-platform/shared';
 interface PlatformWizardCardProps {
   platform: Platform;
   platformName: string;
-  currentStep: 1 | 2 | 3;
+  currentStep: 1 | 2 | 3 | 4;
+  totalSteps?: 3 | 4;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -27,6 +28,7 @@ export function PlatformWizardCard({
   platform,
   platformName,
   currentStep,
+  totalSteps = 3,
   children,
   footer,
 }: PlatformWizardCardProps) {
@@ -48,7 +50,7 @@ export function PlatformWizardCard({
             </p>
           </div>
         </div>
-        <PlatformStepProgress currentStep={currentStep} />
+        <PlatformStepProgress currentStep={currentStep} totalSteps={totalSteps} />
       </div>
 
       {/* Content: Step-specific content with animation */}

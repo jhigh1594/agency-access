@@ -14,7 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
-import { Loader2 } from 'lucide-react';
+import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
 
 interface GoogleAssetSelectorProps {
   sessionId: string; // connectionId
@@ -60,6 +60,19 @@ export function GoogleAssetSelector({
   const [assets, setAssets] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Get title based on product type (defined early since it's used in early returns)
+  const getTitle = () => {
+    const titles: Record<string, string> = {
+      'google_ads': 'Ad Accounts',
+      'ga4': 'Analytics Properties',
+      'google_business_profile': 'Business Profile Locations',
+      'google_tag_manager': 'Tag Manager Containers',
+      'google_search_console': 'Search Console Sites',
+      'google_merchant_center': 'Merchant Center Accounts',
+    };
+    return titles[product] || 'Accounts';
+  };
 
   // Fetch assets from backend
   const fetchAssets = async () => {
@@ -108,31 +121,19 @@ export function GoogleAssetSelector({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
-            <p className="text-lg font-semibold text-slate-900">
-              Loading your accounts
-            </p>
-          </div>
-        </div>
-      </div>
+      <AssetSelectorLoading
+        message={`Loading your ${getTitle().toLowerCase()}...`}
+      />
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
-        <h3 className="text-lg font-bold text-red-900 mb-2">Couldn't load accounts</h3>
-        <p className="text-red-700 mb-4">{error}</p>
-        <button
-          onClick={fetchAssets}
-          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
-        >
-          Try again
-        </button>
-      </div>
+      <AssetSelectorError
+        title={`Couldn't load ${getTitle()}`}
+        message={error}
+        onRetry={fetchAssets}
+      />
     );
   }
 
@@ -170,24 +171,12 @@ export function GoogleAssetSelector({
 
   const totalSelected = selectedIds.size;
 
-  // Get title based on product type
-  const getTitle = () => {
-    const titles: Record<string, string> = {
-      'google_ads': 'Ad Accounts',
-      'ga4': 'Analytics Properties',
-      'google_business_profile': 'Business Profile Locations',
-      'google_tag_manager': 'Tag Manager Containers',
-      'google_search_console': 'Search Console Sites',
-      'google_merchant_center': 'Merchant Center Accounts',
-    };
-    return titles[product] || 'Accounts';
-  };
-
   if (assetList.length === 0) {
     return (
-      <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-8 text-center">
-        <p className="text-slate-600">No {getTitle().toLowerCase()} found.</p>
-      </div>
+      <AssetSelectorEmpty
+        title={`No ${getTitle()} found`}
+        description={`We couldn't find any ${getTitle().toLowerCase()} for this Google account. You may need to create one first in your Google ${getTitle().includes('Account') ? 'account' : 'product'} center.`}
+      />
     );
   }
 

@@ -4,6 +4,10 @@
  * Central exports for shared UI components.
  */
 
+// Button Component
+export { Button } from './button';
+export type { ButtonProps } from './button';
+
 export { StatusBadge } from './status-badge';
 export type { StatusType } from './status-badge';
 
@@ -23,3 +27,7 @@ export { SearchInput } from './search-input';
 
 export { FilterDropdown } from './filter-dropdown';
 export type { FilterOption } from './filter-dropdown';
+
+// Multi-Select Combobox
+export { MultiSelectCombobox } from './multi-select-combobox';
+export type { MultiSelectOption } from './multi-select-combobox';

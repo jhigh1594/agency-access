@@ -1,153 +1,84 @@
 /**
  * AuthModelSelector Component
  *
- * Step 1.5 in access request wizard: Choose authorization model.
- *
- * Two modes:
- * - Delegated Access (recommended): Agency uses their own platform accounts to manage client campaigns
- * - Client Authorization: Client OAuths their accounts to agency for API access
+ * Simplified component showing Delegated Access as the single authorization model.
+ * Client Authorization has been removed - Delegated Access is now the only model.
  */
 
 'use client';
 
-import { motion } from 'framer-motion';
-import { CheckCircle2, Users, Building2, Star } from 'lucide-react';
-import { AuthModel, AUTH_MODEL_DESCRIPTIONS } from '@agency-platform/shared';
+import { AlertCircle, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { AuthModel } from '@agency-platform/shared';
 
 interface AuthModelSelectorProps {
-  selectedAuthModel: AuthModel | null;
-  onSelectionChange: (authModel: AuthModel) => void;
-  disabled?: boolean;
-  agencyHasConnectedPlatforms?: Record<string, boolean>; // For delegated access validation
+  agencyHasConnectedPlatforms?: Record<string, boolean>;
 }
 
-const AUTH_MODEL_ICONS: Record<AuthModel, React.ComponentType<{ className?: string }>> = {
-  delegated_access: Building2,
-  client_authorization: Users,
-};
-
-const AUTH_MODEL_COLORS: Record<AuthModel, { bg: string; border: string; text: string; ring: string }> = {
-  delegated_access: {
-    bg: 'bg-indigo-50',
-    border: 'border-indigo-200',
-    text: 'text-indigo-700',
-    ring: 'ring-indigo-500',
-  },
-  client_authorization: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-700',
-    ring: 'ring-blue-500',
-  },
-};
-
 export function AuthModelSelector({
-  selectedAuthModel,
-  onSelectionChange,
-  disabled = false,
   agencyHasConnectedPlatforms = {},
 }: AuthModelSelectorProps) {
-  // delegated_access first (recommended)
-  const models: AuthModel[] = ['delegated_access', 'client_authorization'];
-
-  // Check if delegated access is available (agency has connected platforms)
   const hasAnyConnectedPlatform = Object.values(agencyHasConnectedPlatforms).some(Boolean);
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-slate-600">
-        Choose how you'll access your client's platforms
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {models.map((model, index) => {
-          const Icon = AUTH_MODEL_ICONS[model];
-          const isSelected = selectedAuthModel === model;
-          const colors = AUTH_MODEL_COLORS[model];
-          const info = AUTH_MODEL_DESCRIPTIONS[model];
-          const isRecommended = model === 'delegated_access';
-
-          // Delegated access is disabled if agency has no connected platforms
-          const isDelegatedAccessDisabled =
-            model === 'delegated_access' && !hasAnyConnectedPlatform;
-
-          return (
-            <motion.button
-              key={model}
-              type="button"
-              onClick={() => !disabled && !isDelegatedAccessDisabled && onSelectionChange(model)}
-              disabled={disabled || isDelegatedAccessDisabled}
-              className={`relative p-5 rounded-lg border-2 text-left transition-all ${
-                isSelected
-                  ? `${colors.border} ${colors.bg} ring-2 ring-offset-2 ${colors.ring}`
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              } ${
-                disabled || isDelegatedAccessDisabled
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'cursor-pointer'
-              }`}
-              whileHover={!disabled && !isDelegatedAccessDisabled ? { scale: 1.02 } : {}}
-              whileTap={!disabled && !isDelegatedAccessDisabled ? { scale: 0.98 } : {}}
-            >
-              {/* Recommended badge */}
-              {isRecommended && (
-                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
-                  <Star className="h-3 w-3 fill-amber-800" />
-                  {info.recommendation}
-                </div>
-              )}
-
-              {/* Selected indicator (underneath badge if selected) */}
-              {isSelected && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="absolute top-3 right-3"
-                  style={{ right: isRecommended ? '100px' : '12px' }}
-                >
-                  <CheckCircle2 className={`h-5 w-5 ${colors.text}`} />
-                </motion.div>
-              )}
-
-              {/* Icon */}
-              <div className={`inline-flex p-2 rounded-lg ${colors.bg} mb-3`}>
-                <Icon className={`h-5 w-5 ${colors.text}`} />
-              </div>
-
-              {/* Title */}
-              <h3 className={`font-semibold text-sm mb-1 ${isSelected ? colors.text : 'text-slate-900'}`}>
-                {info.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-xs text-slate-600 mb-2">
-                {info.description}
-              </p>
-
-              {/* Use case */}
-              <div className={`text-xs ${colors.text} bg-white/50 rounded px-2 py-1 inline-block`}>
-                {info.useCase}
-              </div>
-
-              {/* Warning for delegated access without platforms */}
-              {model === 'delegated_access' && !hasAnyConnectedPlatform && (
-                <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-xs text-yellow-800">
-                    ⚠️ Connect platforms first in Settings to use this mode
-                  </p>
-                </div>
-              )}
-            </motion.button>
-          );
-        })}
+    <div className="border border-slate-200 rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded bg-indigo-100 flex items-center justify-center">
+            <LinkIcon className="h-5 w-5 text-indigo-700" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-slate-900">Delegated Access</h3>
+            <p className="text-sm text-slate-500">Use your agency's platform accounts</p>
+          </div>
+          {hasAnyConnectedPlatform && (
+            <div className="flex items-center gap-1.5 text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Active</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Info banner */}
-      <div className="mt-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
-        <p className="text-xs text-indigo-900">
-          <strong>Recommended:</strong> Delegated Access gives you full UI access to manage client campaigns.
-          Use Client Authorization only for API integrations and reporting.
+      {/* Description */}
+      <div className="p-5">
+        <p className="text-base text-slate-600 leading-relaxed">
+          Your agency uses its own platform connections to manage the client's campaigns. You'll have full
+          UI access to create, edit, and manage campaigns directly in the platform interfaces.
         </p>
+
+        {/* Warning if no platforms connected */}
+        {!hasAnyConnectedPlatform && (
+          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-base font-medium text-amber-900">Platforms Required</p>
+              <p className="text-sm text-amber-800 mt-1">
+                You need to connect platforms to your agency before using delegated access.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Connected Platforms Summary */}
+        {hasAnyConnectedPlatform && (
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <p className="text-sm text-slate-500 mb-2">Connected platforms:</p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(agencyHasConnectedPlatforms)
+                .filter(([, connected]) => connected)
+                .map(([platform]) => (
+                  <span
+                    key={platform}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded text-sm font-medium text-green-800"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-green-600" />
+                    {platform}
+                  </span>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

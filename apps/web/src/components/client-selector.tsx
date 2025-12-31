@@ -37,7 +37,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'existing' | 'new'>('existing');
 
   // New client form state
   const [newClient, setNewClient] = useState({
@@ -133,7 +133,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
       const json = await response.json();
       // Handle both formats: { data: client } and direct client object
       const createdClient: Client = 'data' in json ? json.data : json;
-      setShowNewClientForm(false);
+      setActiveTab('existing'); // Switch back to existing tab
       setNewClient({ name: '', company: '', email: '', language: 'en' });
       onSelect(createdClient);
       loadClients(); // Refresh client list
@@ -145,57 +145,73 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
   };
 
   const handleCancelNewClient = () => {
-    setShowNewClientForm(false);
+    setActiveTab('existing');
     setNewClient({ name: '', company: '', email: '', language: 'en' });
     setFormErrors({});
   };
 
   return (
-    <div className="space-y-4">
-      {!showNewClientForm ? (
-        <>
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search clients..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search clients"
-              tabIndex={-1}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
+    <div className="border border-slate-200 rounded-lg overflow-hidden">
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab('existing')}
+          className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
+            activeTab === 'existing'
+              ? 'text-indigo-600 border-indigo-600 bg-indigo-50/50'
+              : 'text-slate-600 border-transparent hover:text-slate-800 hover:bg-slate-50'
+          }`}
+        >
+          Existing Clients
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('new')}
+          className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
+            activeTab === 'new'
+              ? 'text-indigo-600 border-indigo-600 bg-indigo-50/50'
+              : 'text-slate-600 border-transparent hover:text-slate-800 hover:bg-slate-50'
+          }`}
+        >
+          Create New
+        </button>
+      </div>
 
-          {/* Add New Client Button */}
-          <button
-            type="button"
-            onClick={() => setShowNewClientForm(true)}
-            tabIndex={-1}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add new client
-          </button>
+      {/* Tab Content */}
+      <div className="p-5">
+        {activeTab === 'existing' ? (
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search existing clients..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search clients"
+                className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+              />
+            </div>
 
           {/* Loading State */}
           {loading && (
-            <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
+            <div className="flex items-center justify-center py-10" role="status" aria-live="polite">
               <Loader2 className="h-6 w-6 animate-spin text-indigo-600 mr-2" />
-              <span className="text-slate-600">Loading clients...</span>
+              <span className="text-slate-600 text-base">Loading clients...</span>
             </div>
           )}
 
           {/* Error State */}
           {error && !loading && (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <AlertCircle className="h-8 w-8 text-red-500" />
-              <p className="text-slate-600">Failed to load clients</p>
+            <div className="flex flex-col items-center gap-3 py-10 text-center">
+              <AlertCircle className="h-9 w-9 text-red-500" />
+              <p className="text-slate-600 text-base">Failed to load clients</p>
               <button
                 type="button"
                 onClick={loadClients}
-                className="px-4 py-2 text-indigo-600 hover:text-indigo-700"
+                className="px-5 py-2.5 text-indigo-600 hover:text-indigo-700 text-base rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Retry
               </button>
@@ -204,8 +220,8 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
           {/* Empty State */}
           {!loading && !error && (clients?.length ?? 0) === 0 && (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <p className="text-slate-600">No clients found</p>
+            <div className="flex flex-col items-center gap-3 py-10 text-center">
+              <p className="text-slate-600 text-base">No clients found</p>
               <p className="text-sm text-slate-500">
                 {searchQuery ? 'Try a different search term' : 'Add your first client to get started'}
               </p>
@@ -217,13 +233,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
             <div className="space-y-2" role="listbox" aria-label="Clients">
               {clients?.map((client) => {
                 const isSelected = value === client.id;
+                const languageInfo = client.language && SUPPORTED_LANGUAGES[client.language];
                 return (
                   <button
                     key={client.id}
                     type="button"
                     role="button"
                     onClick={() => handleSelectClient(client)}
-                    className={`w-full text-left px-4 py-3 border rounded-lg transition-colors flex items-center gap-3 ${
+                    className={`w-full text-left px-4 py-3.5 border rounded-lg transition-colors flex items-center gap-3 ${
                       isSelected
                         ? 'border-indigo-500 bg-indigo-50'
                         : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -231,16 +248,16 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                     aria-selected={isSelected}
                   >
                     <div className="flex-1">
-                      <p className="font-medium text-slate-900">{client.name}</p>
+                      <p className="font-semibold text-slate-900 text-base">{client.name}</p>
                       <p className="text-sm text-slate-600">{client.company}</p>
                       <p className="text-xs text-slate-500 mt-1">{client.email}</p>
                     </div>
                     {isSelected && (
                       <Check className="h-5 w-5 text-indigo-600" />
                     )}
-                    {client.language !== 'en' && (
-                      <span className="text-xs" title={SUPPORTED_LANGUAGES[client.language].name}>
-                        {SUPPORTED_LANGUAGES[client.language].flag}
+                    {languageInfo && client.language !== 'en' && (
+                      <span className="text-sm" title={languageInfo.name}>
+                        {languageInfo.flag}
                       </span>
                     )}
                   </button>
@@ -248,26 +265,32 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
               })}
             </div>
           )}
-        </>
-      ) : (
-        /* New Client Form */
-        <div className="bg-white border border-slate-200 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Create new client</h3>
-            <button
-              type="button"
-              onClick={handleCancelNewClient}
-              className="p-1 text-slate-400 hover:text-slate-600"
-              aria-label="Close form"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
+        ) : (
+          /* New Client Form */
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">Create new client</h3>
+              <button
+                type="button"
+                onClick={handleCancelNewClient}
+                className="text-sm text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
 
-          <div className="space-y-4">
+            {/* Error */}
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-base text-red-800">{error}</p>
+              </div>
+            )}
+
             {/* Name */}
             <div>
-              <label htmlFor="client-name" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="client-name" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Client Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -276,14 +299,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 value={newClient.name}
                 onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateClient()}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base ${
                   formErrors.name ? 'border-red-300' : 'border-slate-300'
                 }`}
                 aria-invalid={!!formErrors.name}
                 aria-describedby={formErrors.name ? 'name-error' : undefined}
               />
               {formErrors.name && (
-                <p id="name-error" className="mt-1 text-sm text-red-600">
+                <p id="name-error" className="mt-1.5 text-sm text-red-600">
                   {formErrors.name}
                 </p>
               )}
@@ -291,7 +314,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Company */}
             <div>
-              <label htmlFor="client-company" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="client-company" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Company <span className="text-red-500">*</span>
               </label>
               <input
@@ -300,14 +323,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 value={newClient.company}
                 onChange={(e) => setNewClient({ ...newClient, company: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateClient()}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base ${
                   formErrors.company ? 'border-red-300' : 'border-slate-300'
                 }`}
                 aria-invalid={!!formErrors.company}
                 aria-describedby={formErrors.company ? 'company-error' : undefined}
               />
               {formErrors.company && (
-                <p id="company-error" className="mt-1 text-sm text-red-600">
+                <p id="company-error" className="mt-1.5 text-sm text-red-600">
                   {formErrors.company}
                 </p>
               )}
@@ -315,7 +338,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Email */}
             <div>
-              <label htmlFor="client-email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="client-email" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -324,14 +347,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 value={newClient.email}
                 onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateClient()}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base ${
                   formErrors.email ? 'border-red-300' : 'border-slate-300'
                 }`}
                 aria-invalid={!!formErrors.email}
                 aria-describedby={formErrors.email ? 'email-error' : undefined}
               />
               {formErrors.email && (
-                <p id="email-error" className="mt-1 text-sm text-red-600">
+                <p id="email-error" className="mt-1.5 text-sm text-red-600">
                   {formErrors.email}
                 </p>
               )}
@@ -339,7 +362,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Language */}
             <div>
-              <label htmlFor="client-language" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="client-language" className="block text-sm font-medium text-slate-700 mb-1.5">
                 <span className="flex items-center gap-1">
                   <Globe className="h-4 w-4" />
                   Language
@@ -349,7 +372,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 id="client-language"
                 value={newClient.language}
                 onChange={(e) => setNewClient({ ...newClient, language: e.target.value as ClientLanguage })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
               >
                 {Object.entries(SUPPORTED_LANGUAGES).map(([code, { name, flag }]) => (
                   <option key={code} value={code}>
@@ -359,29 +382,21 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
               </select>
             </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={handleCancelNewClient}
-              disabled={creating}
-              className="px-4 py-2 text-slate-700 hover:text-slate-900 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleCreateClient}
-              disabled={creating}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
-            >
-              {creating && <Loader2 className="h-4 w-4 animate-spin" />}
-              Create Client
-            </button>
+            {/* Actions */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleCreateClient}
+                disabled={creating}
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 text-base font-medium"
+              >
+                {creating && <Loader2 className="h-4 w-4 animate-spin" />}
+                Create Client
+              </button>
+            </div>
           </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

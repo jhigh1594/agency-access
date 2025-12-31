@@ -1,5 +1,5 @@
-import { agencyPlatformService } from './agency-platform.service';
-import { MetaConnector } from './connectors/meta';
+import { agencyPlatformService } from './agency-platform.service.js';
+import { MetaConnector } from './connectors/meta.js';
 import type { MetaAssetSelection, MetaAllAssets, MetaAssetSettings } from '@agency-platform/shared';
 
 /**
@@ -62,7 +62,8 @@ export const metaAssetsService = {
         // Get access token for system user creation
         const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'meta');
         if (!tokenResult.error && tokenResult.data) {
-          const { metaSystemUserService } = await import('./meta-system-user.service');
+          // @ts-ignore - Dynamic import, module exists at runtime
+          const { metaSystemUserService } = await import('./meta-system-user.service.js');
           
           const systemUserResult = await metaSystemUserService.getOrCreateSystemUser(
             businessId,

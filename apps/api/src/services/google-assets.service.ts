@@ -1,4 +1,4 @@
-import { agencyPlatformService } from './agency-platform.service';
+import { agencyPlatformService } from './agency-platform.service.js';
 import type { GoogleAssetSettings } from '@agency-platform/shared';
 
 /**
@@ -29,11 +29,9 @@ export const googleAssetsService = {
     data: GoogleAssetSettings | null;
     error: any;
   }> {
-    const connectionResult = await agencyPlatformService.getConnections(agencyId, {
-      platform: 'google',
-    });
+    const connectionResult = await agencyPlatformService.getConnection(agencyId, 'google');
 
-    if (connectionResult.error || !connectionResult.data || connectionResult.data.length === 0) {
+    if (connectionResult.error || !connectionResult.data) {
       return {
         data: null,
         error: connectionResult.error || {
@@ -43,7 +41,7 @@ export const googleAssetsService = {
       };
     }
 
-    const metadata = connectionResult.data[0].metadata as any;
+    const metadata = connectionResult.data.metadata as any;
     const settings = metadata?.googleAssetSettings;
 
     // Return default settings if none exist
