@@ -13,6 +13,7 @@
     "dev:api": "npm run dev --workspace=apps/api",
     "db:seed": "npm run db:seed --workspace=apps/api",
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
+    "build:web": "npm run build --workspace=packages/shared && npm run build --workspace=apps/web",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces"
