@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   '/invite/(.*)',
   '/platforms/callback',
   '/onboarding/(.*)',
+  // Marketing routes are public (handled by route group)
 ])
 
 export default clerkMiddleware(async (auth, request) => {

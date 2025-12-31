@@ -50,3 +50,4 @@ apps/api/prisma/migrations/
 
 # OS
 Thumbs.db
+.vercel
