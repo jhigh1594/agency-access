@@ -25,9 +25,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           rootBox: 'mx-auto',
         },
       }}
-      // Redirect to onboarding after signup
+      // Redirect to onboarding after signup (new users only)
       afterSignUpUrl="/onboarding/agency"
-      afterSignInUrl="/onboarding/agency"
+      // Redirect existing users to dashboard (they'll be redirected to onboarding if needed)
+      afterSignInUrl="/dashboard"
     >
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </ClerkProvider>

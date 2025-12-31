@@ -76,19 +76,21 @@ export default function AgencyOnboardingPage() {
   // 3. Simpler than React Query with enabled flag for this one-time check
   useEffect(() => {
     const checkExistingAgency = async () => {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) {
+      if (!userId) {
         setCheckingAgency(false);
         return;
       }
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agencies?email=${encodeURIComponent(email)}`);
+        // Check by clerkUserId (most reliable identifier)
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`
+        );
         if (response.ok) {
           const result = await response.json();
           if (result.data && result.data.length > 0) {
             // User already has an agency, skip onboarding
-            router.replace('/connections');
+            router.replace('/dashboard');
             return;
           }
         }
@@ -100,7 +102,7 @@ export default function AgencyOnboardingPage() {
     };
 
     checkExistingAgency();
-  }, [user, router]);
+  }, [userId, router]);
 
   // Step 2: Team Members
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
