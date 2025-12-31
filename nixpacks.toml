@@ -1,8 +1,6 @@
 # Nixpacks configuration for Railway
 # This ensures a clean build process
-
-[phases.setup]
-nixPkgs = ['nodejs-20_x', 'npm']
+# Nixpacks will auto-detect Node.js from package.json
 
 [phases.install]
 cmds = ['npm install']
