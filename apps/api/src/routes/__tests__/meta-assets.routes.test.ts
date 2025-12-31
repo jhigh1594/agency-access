@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { agencyPlatformsRoutes } from '../agency-platforms';
+import { agencyPlatformsRoutes } from '../agency-platforms.js';
 import { metaAssetsService } from '@/services/meta-assets.service';
 import { prisma } from '@/lib/prisma';
 

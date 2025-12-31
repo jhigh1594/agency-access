@@ -6,8 +6,8 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { getDashboardStats } from '../services/connection-aggregation.service';
-import { agencyResolutionService } from '../services/agency-resolution.service';
+import { getDashboardStats } from '../services/connection-aggregation.service.js';
+import { agencyResolutionService } from '../services/agency-resolution.service.js';
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
   /**

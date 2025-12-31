@@ -5,7 +5,7 @@
  * Used by the dashboard and other summary views.
  */
 
-import { prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma.js';
 import type { AccessRequestStatus } from '@agency-platform/shared';
 
 export interface DashboardStats {

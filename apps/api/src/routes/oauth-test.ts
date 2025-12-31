@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { metaConnector } from '../services/connectors/meta';
-import { infisical } from '../lib/infisical';
-import { oauthStateService } from '../services/oauth-state.service';
+import { metaConnector } from '../services/connectors/meta.js';
+import { infisical } from '../lib/infisical.js';
+import { oauthStateService } from '../services/oauth-state.service.js';
 
 /**
  * Test routes for Meta OAuth flow

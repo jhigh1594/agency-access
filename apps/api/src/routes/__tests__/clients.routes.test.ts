@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { clientRoutes } from '../clients';
+import { clientRoutes } from '../clients.js';
 import * as clientService from '@/services/client.service';
 
 // Mock service

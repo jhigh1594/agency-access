@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { accessRequestRoutes } from '../access-requests';
+import { accessRequestRoutes } from '../access-requests.js';
 import * as accessRequestService from '@/services/access-request.service';
 import * as agencyPlatformService from '@/services/agency-platform.service';
 

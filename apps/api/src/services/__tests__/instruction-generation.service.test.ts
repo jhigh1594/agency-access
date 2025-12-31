@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { instructionGenerationService } from '../instruction-generation.service';
+import { instructionGenerationService } from '../instruction-generation.service.js';
 import type { AccessLevel } from '@agency-platform/shared';
 
 describe('InstructionGenerationService', () => {

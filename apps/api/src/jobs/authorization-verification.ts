@@ -6,8 +6,8 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { env } from '../lib/env';
-import { executeVerification } from '../services/authorization-verification.service';
+import { env } from '../lib/env.js';
+import { executeVerification } from '../services/authorization-verification.service.js';
 import type { AccessLevel } from '@agency-platform/shared';
 
 const connectionOptions = {

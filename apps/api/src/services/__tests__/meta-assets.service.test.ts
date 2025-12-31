@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { agencyPlatformService } from '../agency-platform.service';
-import { MetaConnector } from '../connectors/meta';
-import { metaAssetsService } from '../meta-assets.service';
+import { agencyPlatformService } from '../agency-platform.service.js';
+import { MetaConnector } from '../connectors/meta.js';
+import { metaAssetsService } from '../meta-assets.service.js';
 
 // Mock dependencies
 vi.mock('../agency-platform.service');

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { clientAuthRoutes } from '../client-auth';
+import { clientAuthRoutes } from '../client-auth.js';
 import * as accessRequestService from '@/services/access-request.service';
 import { oauthStateService } from '@/services/oauth-state.service';
 import { getConnector } from '@/services/connectors/factory';

@@ -8,7 +8,7 @@
 import { prisma } from '../lib/prisma.js';
 import { notificationQueue } from '../lib/queue.js';
 import { sendClientAuthorizationEmail } from './email.service.js';
-import { env } from '../lib/env';
+import { env } from '../lib/env.js';
 
 export interface NotificationPayload {
   agencyId: string;

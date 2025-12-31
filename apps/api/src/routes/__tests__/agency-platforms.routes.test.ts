@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { agencyPlatformsRoutes } from '../agency-platforms';
+import { agencyPlatformsRoutes } from '../agency-platforms.js';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { oauthStateService } from '@/services/oauth-state.service';
 import { metaAssetsService } from '@/services/meta-assets.service';

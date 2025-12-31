@@ -6,11 +6,11 @@
 
 import { Queue, Worker, QueueEvents } from 'bullmq';
 import { env } from './env.js';
-import { connectionService } from '../services/connection.service';
-import { accessRequestService } from '../services/access-request.service';
-import { auditService } from '../services/audit.service';
+import { connectionService } from '../services/connection.service.js';
+import { accessRequestService } from '../services/access-request.service.js';
+import { auditService } from '../services/audit.service.js';
 import { prisma } from './prisma.js';
-import { getConnector } from '../services/connectors/factory';
+import { getConnector } from '../services/connectors/factory.js';
 
 // Redis connection options for IORedis
 const connectionOptions = {
@@ -78,7 +78,7 @@ export async function startTokenRefreshWorker() {
         }
 
         // Retrieve tokens from Infisical
-        const { infisical } = await import('../lib/infisical');
+        const { infisical } = await import('../lib/infisical.js');
         const tokens = await infisical.retrieveOAuthTokens(auth.secretId);
 
         if (!tokens || !tokens.refreshToken) {
@@ -221,7 +221,7 @@ export async function startNotificationWorker() {
       const { agencyId, accessRequestId, clientEmail, clientName, platforms, completedAt } = job.data;
 
       try {
-        const { notificationService } = await import('../services/notification.service');
+        const { notificationService } = await import('../services/notification.service.js');
 
         const result = await notificationService.sendNotification({
           agencyId,

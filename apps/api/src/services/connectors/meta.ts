@@ -1,4 +1,4 @@
-import { env } from '../../lib/env';
+import { env } from '../../lib/env.js';
 import type { AccessLevel, MetaAdAccount, MetaPage, MetaInstagramAccount, MetaProductCatalog, MetaAllAssets } from '@agency-platform/shared';
 
 /**

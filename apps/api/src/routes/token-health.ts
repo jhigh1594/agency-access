@@ -7,8 +7,8 @@
 
 import { FastifyInstance } from 'fastify';
 import type { Platform } from '@agency-platform/shared';
-import { connectionService } from '../services/connection.service';
-import { agencyResolutionService } from '../services/agency-resolution.service';
+import { connectionService } from '../services/connection.service.js';
+import { agencyResolutionService } from '../services/agency-resolution.service.js';
 
 export async function tokenHealthRoutes(fastify: FastifyInstance) {
   // Get token health for all connections

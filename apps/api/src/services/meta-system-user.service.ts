@@ -1,5 +1,5 @@
 
-import { env } from '../lib/env';
+import { env } from '../lib/env.js';
 
 interface CreateSystemUserResponse {
   id: string; // App-scoped System User ID

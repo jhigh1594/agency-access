@@ -6,12 +6,12 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { env } from '../lib/env';
-import { prisma } from '../lib/prisma';
-import { connectionService } from '../services/connection.service';
-import { auditService } from '../services/audit.service';
-import { infisical } from '../lib/infisical';
-import { getConnector } from '../services/connectors/factory';
+import { env } from '../lib/env.js';
+import { prisma } from '../lib/prisma.js';
+import { connectionService } from '../services/connection.service.js';
+import { auditService } from '../services/audit.service.js';
+import { infisical } from '../lib/infisical.js';
+import { getConnector } from '../services/connectors/factory.js';
 import type { Platform } from '@agency-platform/shared';
 
 const connectionOptions = {

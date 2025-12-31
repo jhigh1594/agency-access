@@ -84,7 +84,7 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
 
     // Use centralized resolution service instead of direct Prisma queries
     // This prevents creating duplicate agencies
-    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
     const result = await agencyResolutionService.resolveAgency(agencyId, {
       createIfMissing: true,
     });
@@ -171,7 +171,7 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
     }
 
     // Resolve agency using centralized service
-    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
     const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
       createIfMissing: false,
     });
@@ -337,7 +337,7 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       const stateData = stateResult.data;
 
       // Resolve agency using centralized service (prevents duplicates)
-      const { agencyResolutionService } = await import('../services/agency-resolution.service');
+      const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
       const agencyResult = await agencyResolutionService.getOrCreateAgency(stateData.agencyId, {
         userEmail: stateData.userEmail,
         agencyName: 'My Agency',

@@ -69,7 +69,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
     }
 
     // Resolve agency using centralized service (prevents duplicates)
-    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
     const agencyResult = await agencyResolutionService.getOrCreateAgency(clerkUserId, {
       userEmail: `${clerkUserId}@clerk.temp`, // Will be improved with actual Clerk user data
       agencyName: 'My Agency',

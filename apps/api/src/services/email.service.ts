@@ -5,7 +5,7 @@
  */
 
 import { Resend } from 'resend';
-import { env } from '../lib/env';
+import { env } from '../lib/env.js';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 

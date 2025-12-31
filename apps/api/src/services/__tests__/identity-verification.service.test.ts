@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { identityVerificationService } from '../identity-verification.service';
+import { identityVerificationService } from '../identity-verification.service.js';
 
 // Mock prisma with factory function to avoid hoisting issues
 vi.mock('@/lib/prisma', () => ({

@@ -6,7 +6,7 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { templateService } from '../services/template.service';
+import { templateService } from '../services/template.service.js';
 
 export async function templateRoutes(fastify: FastifyInstance) {
   // Get all templates for an agency

@@ -6,9 +6,9 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { accessRequestService } from '../services/access-request.service';
-import { agencyPlatformService } from '../services/agency-platform.service';
-import { prisma } from '../lib/prisma';
+import { accessRequestService } from '../services/access-request.service.js';
+import { agencyPlatformService } from '../services/agency-platform.service.js';
+import { prisma } from '../lib/prisma.js';
 
 export async function accessRequestRoutes(fastify: FastifyInstance) {
   // Create access request
@@ -17,7 +17,7 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
     let { agencyId, authModel = 'client_authorization', platforms = [] } = requestBody;
 
     // Resolve agency using centralized service (ensures consistency)
-    const { agencyResolutionService } = await import('../services/agency-resolution.service');
+    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
     const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
       createIfMissing: false, // Don't auto-create for access requests
     });

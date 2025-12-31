@@ -11,15 +11,15 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { accessRequestService } from '../services/access-request.service';
-import { auditService } from '../services/audit.service';
-import { oauthStateService } from '../services/oauth-state.service';
-import { notificationService } from '../services/notification.service';
-import { clientAssetsService } from '../services/client-assets.service';
-import { getConnector } from '../services/connectors/factory';
-import { infisical } from '../lib/infisical';
-import { prisma } from '../lib/prisma';
-import { env } from '../lib/env';
+import { accessRequestService } from '../services/access-request.service.js';
+import { auditService } from '../services/audit.service.js';
+import { oauthStateService } from '../services/oauth-state.service.js';
+import { notificationService } from '../services/notification.service.js';
+import { clientAssetsService } from '../services/client-assets.service.js';
+import { getConnector } from '../services/connectors/factory.js';
+import { infisical } from '../lib/infisical.js';
+import { prisma } from '../lib/prisma.js';
+import { env } from '../lib/env.js';
 import type { Platform } from '@agency-platform/shared';
 import { z } from 'zod';
 
@@ -811,7 +811,7 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
 
       // Import meta-partner service
       // @ts-ignore - Dynamic import, module exists at runtime
-      const { metaPartnerService } = await import('../services/meta-partner.service');
+      const { metaPartnerService } = await import('../services/meta-partner.service.js');
 
       // Grant access to each page
       const grantedPages: Array<{ id: string; status: 'granted' | 'failed'; error?: string }> = [];
@@ -1153,7 +1153,7 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
         assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken);
       } else if (platform === 'google' || platformStr.startsWith('google_') || platform === 'ga4') {
         // For Google products, use the GoogleConnector to fetch all accounts
-        const { GoogleConnector } = await import('../services/connectors/google');
+        const { GoogleConnector } = await import('../services/connectors/google.js');
         const googleConnector = new GoogleConnector();
         const allAccounts = await googleConnector.getAllGoogleAccounts(tokens.accessToken);
         

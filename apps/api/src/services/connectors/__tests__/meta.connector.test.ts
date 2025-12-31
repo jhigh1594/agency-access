@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MetaConnector } from '../meta';
+import { MetaConnector } from '../meta.js';
 
 // Mock env
 vi.mock('../../../lib/env', () => ({

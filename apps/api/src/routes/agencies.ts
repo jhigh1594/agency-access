@@ -6,7 +6,7 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { agencyService } from '../services/agency.service';
+import { agencyService } from '../services/agency.service.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
   // List agencies with optional filters

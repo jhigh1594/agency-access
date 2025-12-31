@@ -9,11 +9,11 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { accessRequestService } from '../services/access-request.service';
-import { agencyPlatformService } from '../services/agency-platform.service';
-import { instructionGenerationService } from '../services/instruction-generation.service';
-import { authorizationVerificationService } from '../services/authorization-verification.service';
-import { prisma } from '../lib/prisma';
+import { accessRequestService } from '../services/access-request.service.js';
+import { agencyPlatformService } from '../services/agency-platform.service.js';
+import { instructionGenerationService } from '../services/instruction-generation.service.js';
+import { authorizationVerificationService } from '../services/authorization-verification.service.js';
+import { prisma } from '../lib/prisma.js';
 import type { AccessLevel } from '@agency-platform/shared';
 
 export async function platformAuthorizationRoutes(fastify: FastifyInstance) {

@@ -23,7 +23,7 @@
  * Documentation: [Link to platform's OAuth documentation]
  */
 
-import { env } from '../../lib/env';
+import { env } from '../../lib/env.js';
 import type { AccessLevel } from '@agency-platform/shared';
 
 // ============================================================================
