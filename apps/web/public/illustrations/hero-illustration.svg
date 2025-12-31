@@ -1,0 +1,20 @@
+<svg width="600" height="500" viewBox="0 0 600 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hand-drawn style person (simplified) -->
+  <path d="M250 400C250 400 230 350 230 300C230 250 260 220 300 220C340 220 370 250 370 300C370 350 350 400 350 400" stroke="#1A1816" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="300" cy="180" r="40" stroke="#1A1816" stroke-width="3"/>
+  <path d="M260 180C260 180 270 190 300 190C330 190 340 180 340 180" stroke="#1A1816" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Floating Link Icon with Coral Accent -->
+  <g transform="translate(420, 150) rotate(-15)">
+    <rect x="0" y="0" width="80" height="80" rx="20" fill="#FF6B35" fill-opacity="0.1" stroke="#FF6B35" stroke-width="3"/>
+    <path d="M30 50L50 30" stroke="#FF6B35" stroke-width="4" stroke-linecap="round"/>
+    <path d="M40 30H50V40" stroke="#FF6B35" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 40V50H40" stroke="#FF6B35" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Floating Shapes (Claymorphism/Playful) -->
+  <circle cx="150" cy="120" r="15" fill="#FFE66D" fill-opacity="0.5"/>
+  <rect x="480" y="350" width="30" height="30" rx="8" transform="rotate(45 480 350)" fill="#00A896" fill-opacity="0.3"/>
+  <path d="M100 350C120 330 140 370 160 350" stroke="#6B6560" stroke-width="2" stroke-dasharray="4 4"/>
+</svg>
+

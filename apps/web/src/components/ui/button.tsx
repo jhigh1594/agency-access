@@ -47,11 +47,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Variant styles (use NonNullable to exclude undefined from Record key type)
     const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
-      primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-xl',
-      secondary: 'bg-white text-slate-900 border-2 border-slate-300 hover:bg-amber-500 hover:text-white hover:border-amber-500',
-      success: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg',
-      danger: 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg',
-      ghost: 'bg-transparent text-slate-700 hover:bg-slate-100',
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl active:scale-95',
+      secondary: 'bg-white text-foreground border-2 border-border hover:bg-accent/20 hover:border-accent active:scale-95',
+      success: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md hover:shadow-lg active:scale-95',
+      danger: 'bg-error text-white hover:bg-error/90 shadow-md hover:shadow-lg active:scale-95',
+      ghost: 'bg-transparent text-muted-foreground hover:bg-muted/10 active:scale-95',
     };
 
     // Size styles (use NonNullable to exclude undefined from Record key type)

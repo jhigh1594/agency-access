@@ -1,0 +1,23 @@
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clean Solution/Calm Flow -->
+  <rect x="50" y="150" width="120" height="100" rx="16" fill="white" stroke="#00A896" stroke-width="3"/>
+  <rect x="430" y="150" width="120" height="100" rx="16" fill="white" stroke="#00A896" stroke-width="3"/>
+  
+  <!-- The Connecting Link -->
+  <path d="M170 200H430" stroke="#00A896" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 8"/>
+  <circle cx="300" cy="200" r="40" fill="#D5E8E0" stroke="#00A896" stroke-width="2"/>
+  
+  <g transform="translate(285, 185)">
+    <path d="M10 20L20 10" stroke="#00A896" stroke-width="4" stroke-linecap="round"/>
+    <path d="M15 10H20V15" stroke="#00A896" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M10 15V20H15" stroke="#00A896" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Success Dots -->
+  <circle cx="80" cy="180" r="6" fill="#00A896"/>
+  <circle cx="110" cy="180" r="6" fill="#00A896"/>
+  <circle cx="140" cy="180" r="6" fill="#00A896"/>
+  
+  <path d="M460 190L480 210L510 170" stroke="#00A896" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+

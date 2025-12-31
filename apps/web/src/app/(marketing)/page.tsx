@@ -1,9 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { HeroSection } from '@/components/marketing/hero-section';
-import { FeaturesSection } from '@/components/marketing/features-section';
-import { BenefitsSection } from '@/components/marketing/benefits-section';
+import { PainSection } from '@/components/marketing/pain-section';
+import { SolutionSection } from '@/components/marketing/solution-section';
 import { HowItWorksSection } from '@/components/marketing/how-it-works-section';
+import { TrustSection } from '@/components/marketing/trust-section';
 import { CTASection } from '@/components/marketing/cta-section';
 
 export default async function MarketingPage() {
@@ -15,13 +16,13 @@ export default async function MarketingPage() {
   }
 
   return (
-    <>
+    <main className="relative bg-background">
       <HeroSection />
-      <FeaturesSection />
-      <BenefitsSection />
+      <PainSection />
+      <SolutionSection />
       <HowItWorksSection />
+      <TrustSection />
       <CTASection />
-    </>
+    </main>
   );
 }
-

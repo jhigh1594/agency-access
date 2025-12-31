@@ -1,71 +1,71 @@
-import { ArrowRight } from 'lucide-react';
+'use client';
+
+import { motion } from 'framer-motion';
+import { MousePointer2, Link as LinkIcon, ShieldCheck, Zap } from 'lucide-react';
 
 const steps = [
   {
-    number: '01',
-    title: 'Create Access Request',
-    description:
-      'Select platforms (Meta, Google Ads, etc.), customize branding, and generate a unique link.',
+    icon: LinkIcon,
+    title: 'Generate Link',
+    desc: 'Select platforms and get your branded link.',
   },
   {
-    number: '02',
-    title: 'Client Clicks Link',
-    description:
-      'Client sees your branded page, fills out intake form, and authorizes each platform sequentially.',
+    icon: MousePointer2,
+    title: 'Client Authorizes',
+    desc: 'Client clicks and grants access in seconds.',
   },
   {
-    number: '03',
-    title: 'Select Assets',
-    description:
-      'Client chooses which ad accounts, pages, or properties to share. Full control and transparency.',
+    icon: ShieldCheck,
+    title: 'Choose Assets',
+    desc: 'Client selects ad accounts and pages.',
   },
   {
-    number: '04',
+    icon: Zap,
     title: 'Instant Access',
-    description:
-      'You get immediate API-level access. Tokens stored securely, refreshed automatically.',
+    desc: 'You get secure, long-lived tokens.',
   },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-24 sm:py-32 bg-card">
+    <section id="how-it-works" className="py-24 sm:py-32 bg-card/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl sm:text-5xl tracking-tight mb-4">
-              How It Works
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              From request to access in 5 minutes. Here's the flow:
-            </p>
-          </div>
+        <div className="text-center mb-20">
+          <h2 className="font-display text-4xl sm:text-5xl tracking-tight mb-6">
+            Four Steps to Freedom
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            We&apos;ve simplified the most annoying part of agency life into a 
+            seamless, automated flow.
+          </p>
+        </div>
 
-          <div className="space-y-8">
-            {steps.map((step, index) => (
-              <div key={index} className="flex gap-6">
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <span className="font-mono-label text-primary text-2xl font-bold">
-                      {step.number}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex-1 pt-2">
-                  <h3 className="font-heading text-2xl mb-2">{step.title}</h3>
-                  <p className="text-muted-foreground text-lg">{step.description}</p>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className="hidden md:flex items-center justify-center pt-8">
-                    <ArrowRight className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative">
+          {/* Connecting Lines (Desktop) */}
+          <div className="hidden lg:block absolute top-1/4 left-[10%] right-[10%] h-px bg-border -z-10" />
+          
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="relative group"
+            >
+              <div className="w-16 h-16 rounded-[1.25rem] bg-background border border-border flex items-center justify-center text-primary mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                <step.icon className="w-8 h-8" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
+              <p className="text-muted-foreground leading-relaxed">{step.desc}</p>
+              
+              <div className="absolute -top-4 -left-4 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-lg">
+                {i + 1}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
-

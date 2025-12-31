@@ -4,77 +4,52 @@
 
 @layer base {
   :root {
-    /* Base - Light mode */
-    --background: 255 255 255;      /* #FFFFFF - page bg */
-    --card: 252 252 252;            /* #FCFCFC - component bg */
-    --foreground: 25 25 25;         /* #191919 - primary text */
-    --muted: 120 120 120;           /* #787878 - secondary text */
+    /* Light Mode - Warm Editorial Aesthetic */
+    --background: 255 251 245;      /* #FFFBF5 - warm cream */
+    --card: 255 255 255;            /* #FFFFFF - pure white surface */
+    --foreground: 26 24 22;         /* #1A1816 - warm black */
+    --muted: 107 101 96;            /* #6B6560 - warm gray */
+    --muted-foreground: 107 101 96;
 
-    /* Accents - Refined palette for industrial minimal aesthetic */
-    --primary: 79 70 229;           /* #4F46E5 - Vibrant Indigo */
-    --primary-dark: 67 56 202;      /* #4338CA - Darker Indigo */
-    --primary-light: 165 180 252;   /* #A5B4FC - Light Indigo */
-    --accent: 245 158 11;           /* #F59E0B - Warm Amber */
-    --accent-bg: 254 243 199;       /* #FEF3C7 - Amber Background */
+    --primary: 255 107 53;          /* #FF6B35 - warm coral */
+    --primary-foreground: 255 251 245;
+    
+    --secondary: 0 168 150;         /* #00A896 - teal */
+    --secondary-foreground: 255 251 245;
+    
+    --accent: 255 230 109;          /* #FFE66D - soft gold */
+    --accent-foreground: 26 24 22;
 
-    /* Structural */
-    --border: 215 215 215;          /* #D7D7D7 - subtle borders */
-    --border-strong: 180 180 180;   /* #B4B4B4 - emphasized borders */
+    --border: 232 228 223;          /* #E8E4DF - warm neutral */
+    --input: 232 228 223;
+    --ring: 255 107 53;
 
-    /* Technical */
-    --technical: 105 105 105;       /* #696969 - code/data text */
-
-    /* Status */
-    --success: 34 139 34;           /* #228B22 */
-    --warning: 220 140 0;           /* #DC8C00 */
-    --error: 200 30 30;            /* #C81E1E */
-    --destructive: 200 30 30;       /* Alias for error */
-
-    /* Shadcn compatibility aliases */
-    --primary-foreground: 255 255 255;
-    --secondary: 248 248 248;
-    --secondary-foreground: 25 25 25;
-    --muted-foreground: 120 120 120;
-    --accent-foreground: 255 255 255;
-    --destructive-foreground: 255 255 255;
-    --input: 215 215 215;
-    --ring: 0 120 255;
-    --radius: 0;
+    --radius: 0.75rem;              /* Playful rounded corners */
+    
+    --chaos-bg: 232 213 213;        /* Soft red-ish for chaos section */
+    --calm-bg: 213 232 224;         /* Soft green-ish for calm section */
   }
 
   .dark {
-    /* Base - Dark mode */
-    --background: 18 18 18;         /* #121212 */
-    --card: 24 24 24;               /* #181818 */
-    --foreground: 250 250 250;      /* #FAFAFA */
-    --muted: 150 150 150;           /* #969696 */
+    /* Dark Mode - Technical/Industrial */
+    --background: 26 24 22;         /* #1A1816 */
+    --card: 36 34 32;               /* #242220 */
+    --foreground: 250 248 245;      /* #FAF8F5 */
+    --muted: 168 164 160;           /* #A8A4A0 */
+    --muted-foreground: 168 164 160;
 
-    /* Accents */
-    --primary: 65 185 255;          /* #41B9FF */
-    --accent: 255 150 50;          /* #FF9632 */
+    --primary: 255 130 85;          /* #FF8255 */
+    --primary-foreground: 26 24 22;
+    
+    --secondary: 45 212 191;        /* #2DD4BF */
+    --secondary-foreground: 26 24 22;
+    
+    --accent: 255 217 61;           /* #FFD93D */
+    --accent-foreground: 26 24 22;
 
-    /* Structural */
-    --border: 60 60 60;             /* #3C3C3C */
-    --border-strong: 90 90 90;      /* #5A5A5A */
-
-    /* Technical */
-    --technical: 150 150 150;       /* #969696 */
-
-    /* Status */
-    --success: 100 200 100;         /* #64C864 */
-    --warning: 240 180 50;          /* #F0B432 */
-    --error: 235 80 80;            /* #EB5050 */
-    --destructive: 235 80 80;       /* Alias for error */
-
-    /* Shadcn compatibility aliases */
-    --primary-foreground: 25 25 25;
-    --secondary: 30 30 30;
-    --secondary-foreground: 250 250 250;
-    --muted-foreground: 150 150 150;
-    --accent-foreground: 25 25 25;
-    --destructive-foreground: 255 255 255;
-    --input: 60 60 60;
-    --ring: 65 185 255;
+    --border: 58 56 54;             /* #3A3836 */
+    --input: 58 56 54;
+    --ring: 255 130 85;
   }
 }
 
@@ -84,179 +59,61 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Base font for the application - refined industrial aesthetic */
-    font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-
-  /* Technical font for monospace elements */
-  .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    font-family: var(--font-sans), system-ui, sans-serif;
   }
 }
 
 @layer utilities {
-  /* Technical grid - for dashboard/settings */
-  .bg-grid {
-    background-image:
-      linear-gradient(to right, rgb(var(--border)) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(var(--border)) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-
-  /* Corner decoration - for featured/hero cards ONLY */
-  .corner-accent::before,
-  .corner-accent::after {
-    content: '';
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border: 2px solid rgb(var(--primary));
-  }
-  .corner-accent::before {
-    top: 0;
-    left: 0;
-    border-right: none;
-    border-bottom: none;
-  }
-  .corner-accent::after {
-    bottom: 0;
-    right: 0;
-    border-left: none;
-    border-top: none;
-  }
-
-  /* Technical text color utility */
-  .text-technical {
-    color: rgb(var(--technical));
-  }
-
-  /* Border strong utility */
-  .border-border-strong {
-    border-color: rgb(var(--border-strong));
-  }
-
-  /* Editorial spacing (generous whitespace) */
-  .space-editorial > * + * {
-    margin-top: 3rem; /* 48px */
-  }
-  .space-editorial-sm > * + * {
-    margin-top: 2rem; /* 32px */
-  }
-
-  /* Shimmer animation for loading states */
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
-  }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-    background: linear-gradient(
-      90deg,
-      rgba(241, 245, 249, 0) 0%,
-      rgba(241, 245, 249, 0.8) 50%,
-      rgba(241, 245, 249, 0) 100%
-    );
-    background-size: 200% 100%;
-  }
-
-  /* Scale-in animation for success states */
-  @keyframes scale-in {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-
-  /* Slide-up animation for banners */
-  @keyframes slide-up {
-    from {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.4s ease-out;
-  }
-
-  /* Stagger delay utilities for sequential reveals */
-  .animation-delay-100 {
-    animation-delay: 100ms;
-  }
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-  .animation-delay-300 {
-    animation-delay: 300ms;
-  }
-  .animation-delay-400 {
-    animation-delay: 400ms;
-  }
-
-  /* ============================================================
-     TYPOGRAPHY UTILITIES
-     Refined industrial minimal aesthetic
-  ============================================================ */
-
-  /* Display font - Page titles (bold, tight) */
+  /* Typography */
   .font-display {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+    font-family: var(--font-display), serif;
+  }
+  
+  .font-mono {
+    font-family: var(--font-mono), monospace;
   }
 
-  /* Heading font - Section titles (semibold, balanced) */
-  .font-heading {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+  /* Reveal on Scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Label font - Metadata labels (uppercase, spaced) */
-  .font-label {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.75rem; /* 12px */
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    font-weight: 500;
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 
-  /* Mono label font - Technical labels like "STEP 01" */
-  .font-mono-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8125rem; /* 13px */
-    font-weight: 500;
+  /* Floating animation for illustrations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
   }
 
-  /* Tracking utilities for refined typography */
-  .tracking-tight {
-    letter-spacing: -0.02em;
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
   }
-  .tracking-normal-tight {
-    letter-spacing: -0.01em;
-  }
-  .tracking-wide {
-    letter-spacing: 0.02em;
-  }
+
+  /* Staggered entrance helpers */
+  .stagger-1 { transition-delay: 100ms; }
+  .stagger-2 { transition-delay: 200ms; }
+  .stagger-3 { transition-delay: 300ms; }
+  .stagger-4 { transition-delay: 400ms; }
+  .stagger-5 { transition-delay: 500ms; }
+}
+
+/* Custom Scrollbar for the warm aesthetic */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--muted));
 }
