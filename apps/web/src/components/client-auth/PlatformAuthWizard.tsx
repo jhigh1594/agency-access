@@ -15,14 +15,16 @@
  * - grantedAssets: confirmation from backend after grant
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Loader2, ExternalLink, CheckCircle2, ChevronDown } from 'lucide-react';
 import { PlatformWizardCard } from './PlatformWizardCard';
 import { MetaAssetSelector } from './MetaAssetSelector';
 import { GoogleAdsAssetSelector } from './GoogleAdsAssetSelector';
 import { GA4AssetSelector } from './GA4AssetSelector';
 import { GoogleAssetSelector } from './GoogleAssetSelector';
+import { AutomaticPagesGrant } from './AutomaticPagesGrant';
+import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
 import { PlatformIcon, PLATFORM_CONFIG } from '@/components/ui';
 import type { Platform } from '@agency-platform/shared';
 
@@ -47,11 +49,25 @@ export function PlatformAuthWizard({
   initialStep,
 }: PlatformAuthWizardProps) {
   // Initialize with props if returning from OAuth callback
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep || 1);
+  // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
+  const metaNeedsGrantStep = platform === 'meta' && products.some(
+    (p) => p.product === 'meta_ads'
+  );
+  const maxSteps = 3;
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep ? (initialStep > 3 ? 3 : initialStep as 1 | 2 | 3) : 1);
   const [connectionId, setConnectionId] = useState<string | null>(initialConnectionId || null);
   const [groupAssets, setGroupAssets] = useState<Record<string, any>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string | null>(null);
+  const [businessIdLoading, setBusinessIdLoading] = useState(false);
+  const [businessIdError, setBusinessIdError] = useState<string | null>(null);
+  const [pagesGranted, setPagesGranted] = useState(false);
+  const [adAccountsShared, setAdAccountsShared] = useState(false);
+  const [assetsSaved, setAssetsSaved] = useState(false);
+  const [chooseAccountsExpanded, setChooseAccountsExpanded] = useState(true);
+  const [grantAccessExpanded, setGrantAccessExpanded] = useState(true);
 
   // Step 1: Initiate OAuth
   const handleConnectClick = async () => {
@@ -89,6 +105,35 @@ export function PlatformAuthWizard({
     }));
   }, []);
 
+  // Fetch Business Manager ID for Meta
+  useEffect(() => {
+    if (platform === 'meta' && currentStep >= 2 && !businessId && !businessIdLoading) {
+      const fetchBusinessId = async () => {
+        setBusinessIdLoading(true);
+        setBusinessIdError(null);
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          const response = await fetch(`${apiUrl}/api/client/${accessRequestToken}/agency-business-id`);
+          const json = await response.json();
+          
+          if (json.error) {
+            setBusinessIdError(json.error.message || 'Failed to load Business Manager ID');
+          } else if (json.data) {
+            setBusinessId(json.data.businessId);
+            setBusinessName(json.data.businessName || null);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Business Manager ID';
+          setBusinessIdError(errorMessage);
+          console.error('Failed to fetch Business Manager ID:', error);
+        } finally {
+          setBusinessIdLoading(false);
+        }
+      };
+      fetchBusinessId();
+    }
+  }, [platform, currentStep, accessRequestToken, businessId, businessIdLoading]);
+
   // Step 2: Handle batch save for all products in the group
   const handleBatchSave = async () => {
     if (!connectionId) return;
@@ -121,7 +166,37 @@ export function PlatformAuthWizard({
         }
       }
 
-      setCurrentStep(3);
+      // Mark assets as saved
+      setAssetsSaved(true);
+      // Collapse "Choose Accounts" section after saving
+      setChooseAccountsExpanded(false);
+      // Expand "Grant Access" section if needed
+      if (metaNeedsGrantStep) {
+        const metaAssets = groupAssets['meta_ads'] || {};
+        const hasPages = (metaAssets.pages?.length ?? 0) > 0;
+        const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
+        if (hasPages || hasAdAccounts) {
+          setGrantAccessExpanded(true);
+        }
+      }
+
+      // After saving, stay on step 2 to show grant access UI (for Meta) or go to final step
+      // For Meta with pages/ad accounts, grant access is shown in step 2
+      // For other platforms or Meta without grant needs, go to final step
+      if (metaNeedsGrantStep) {
+        const metaAssets = groupAssets['meta_ads'] || {};
+        const hasPages = (metaAssets.pages?.length ?? 0) > 0;
+        const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
+        
+        // Stay on step 2 to show grant access UI
+        if (hasPages || hasAdAccounts) {
+          // Already on step 2, grant access UI will appear below
+        } else {
+          setCurrentStep(3);
+        }
+      } else {
+        setCurrentStep(3);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save assets');
     } finally {
@@ -188,17 +263,40 @@ export function PlatformAuthWizard({
       case 2:
         return (
           <div className="space-y-12">
-            <div className="text-center">
-              <h3 className="text-3xl font-bold text-slate-900 mb-3">
+            {/* Choose Accounts Section - Collapsible */}
+            <div className="border-2 border-slate-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setChooseAccountsExpanded(!chooseAccountsExpanded)}
+                className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors"
+              >
+                <div className="text-left">
+                  <h3 className="text-2xl font-bold text-slate-900">
                 Choose accounts to share
               </h3>
-              <p className="text-lg text-slate-600 max-w-md mx-auto">
+                  <p className="text-sm text-slate-600 mt-1">
                 Select the specific accounts you want to share.
               </p>
             </div>
+                <motion.div
+                  animate={{ rotate: chooseAccountsExpanded ? 0 : -90 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="w-6 h-6 text-slate-600" />
+                </motion.div>
+              </button>
 
+              <AnimatePresence initial={false}>
+                {chooseAccountsExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 space-y-6">
             {error && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700 mb-6">
+                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700">
                 {error}
               </div>
             )}
@@ -233,7 +331,11 @@ export function PlatformAuthWizard({
                       {p.product === 'meta_ads' && (
                         <MetaAssetSelector
                           sessionId={connectionId!}
-                          onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
+                          onSelectionChange={(selectedAssets) => {
+                            // Store both IDs and full asset objects for grant step
+                            // selectedAssets now includes selectedPagesWithNames, etc. from MetaAssetSelector
+                            handleProductSelectionChange(p.product, selectedAssets);
+                          }}
                           onError={setError}
                         />
                       )}
@@ -252,7 +354,8 @@ export function PlatformAuthWizard({
                 })}
             </div>
 
-            {/* Unified Batch Save Button */}
+                        {/* Unified Batch Save Button - only show if assets haven't been saved yet */}
+                        {!assetsSaved && !isProcessing && hasGroupSelections() && (
             <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t-2 border-slate-200 p-8 -mx-8 -mb-8 mt-12 flex justify-center">
               <button
                 onClick={handleBatchSave}
@@ -279,8 +382,164 @@ export function PlatformAuthWizard({
                 )}
               </button>
             </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
           </div>
-        );
+
+            {/* Grant Access Section (for Meta after assets are saved) - Collapsible */}
+            {platform === 'meta' && metaNeedsGrantStep && connectionId && assetsSaved && (() => {
+          const metaAssets = groupAssets['meta_ads'] || {};
+          const selectedPages = metaAssets.selectedPagesWithNames || 
+            (metaAssets.pages || []).map((id: string) => {
+              const allPages = metaAssets.allPages || [];
+              const page = allPages.find((p: any) => p.id === id);
+              return { id, name: page?.name || id };
+            });
+          const selectedAdAccounts = metaAssets.selectedAdAccountsWithNames ||
+            (metaAssets.adAccounts || []).map((id: string) => {
+              const allAdAccounts = metaAssets.allAdAccounts || [];
+              const account = allAdAccounts.find((a: any) => a.id === id);
+              return { id, name: account?.name || id };
+            });
+          const hasPages = selectedPages.length > 0;
+          const hasAdAccounts = selectedAdAccounts.length > 0;
+
+              // Only show grant access UI if there are pages or ad accounts
+              if (!hasPages && !hasAdAccounts) {
+                return null;
+              }
+
+          return (
+                <div className="border-2 border-slate-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setGrantAccessExpanded(!grantAccessExpanded)}
+                    className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="text-left">
+                      <h3 className="text-2xl font-bold text-slate-900">
+                        Grant access
+                      </h3>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Complete the steps below to grant access to your selected accounts.
+                      </p>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: grantAccessExpanded ? 0 : -90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="w-6 h-6 text-slate-600" />
+                    </motion.div>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {grantAccessExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-6">
+
+                  {/* Show error banner if Business Manager ID is missing */}
+                  {businessIdError && (
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700 mb-6">
+                      <p className="font-semibold">{businessIdError}</p>
+                    </div>
+                  )}
+                  
+              {error && (
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700 mb-6">
+                  {error}
+                </div>
+              )}
+
+              {hasPages && (
+                <AutomaticPagesGrant
+                  selectedPages={selectedPages}
+                  accessLevel="Admin"
+                      connectionId={connectionId}
+                  accessRequestToken={accessRequestToken}
+                  onGrantComplete={(results) => {
+                    setPagesGranted(results.some((r) => r.status === 'granted'));
+                    // If ad accounts also need sharing, wait; otherwise advance
+                    if (!hasAdAccounts || adAccountsShared) {
+                          setCurrentStep(3);
+                    }
+                  }}
+                  onError={setError}
+                />
+              )}
+
+              {hasAdAccounts && businessId && (
+                    <div className={hasPages ? 'mt-8' : ''}>
+                  <AdAccountSharingInstructions
+                    businessId={businessId}
+                    businessName={businessName || undefined}
+                    selectedAdAccounts={selectedAdAccounts}
+                    accessRequestToken={accessRequestToken}
+                        connectionId={connectionId}
+                    onComplete={() => {
+                      setAdAccountsShared(true);
+                      // If pages also need granting, wait; otherwise advance
+                      if (!hasPages || pagesGranted) {
+                            setCurrentStep(3);
+                      }
+                    }}
+                    onError={setError}
+                  />
+                </div>
+              )}
+
+              {hasAdAccounts && !businessId && (
+                    <div className={`border-2 rounded-xl p-6 ${
+                      businessIdError 
+                        ? 'bg-red-50 border-red-200' 
+                        : 'bg-amber-50 border-amber-200'
+                    }`}>
+                      {businessIdLoading ? (
+                        <p className="text-amber-800 flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading Business Manager ID...
+                        </p>
+                      ) : businessIdError ? (
+                        <div className="space-y-2">
+                          <p className="text-red-800 font-semibold">Error loading Business Manager ID</p>
+                          <p className="text-red-700 text-sm">{businessIdError}</p>
+                        </div>
+                      ) : (
+                  <p className="text-amber-800">
+                    Loading Business Manager ID...
+                  </p>
+                      )}
+                    </div>
+                  )}
+
+                          {/* Continue button when both are complete */}
+                          {(pagesGranted || !hasPages) && (adAccountsShared || !hasAdAccounts) && (
+                            <div className="mt-8 flex justify-center">
+                              <button
+                                onClick={() => setCurrentStep(3)}
+                                className="px-12 py-5 rounded-2xl font-bold text-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-3"
+                              >
+                                Continue
+                                <CheckCircle2 className="w-6 h-6" />
+                              </button>
+                </div>
+              )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })()}
+            </div>
+          );
 
       case 3:
         return (
@@ -371,6 +630,7 @@ export function PlatformAuthWizard({
       platform={platform}
       platformName={platformName}
       currentStep={currentStep}
+      totalSteps={maxSteps}
     >
       {renderStepContent()}
     </PlatformWizardCard>

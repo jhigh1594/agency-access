@@ -17,6 +17,7 @@
 
 import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
+import { MultiSelectCombobox, type MultiSelectOption } from '@/components/ui/multi-select-combobox';
 import { Loader2 } from 'lucide-react';
 
 interface MetaAssets {
@@ -98,13 +99,37 @@ export function MetaAssetSelector({
 
   // Notify parent of changes
   useEffect(() => {
+    // Include full asset objects for grant step
+    const selectedPagesWithNames = Array.from(selectedPages).map((id) => {
+      const page = assets?.pages.find((p) => p.id === id);
+      return page ? { id: page.id, name: page.name } : { id, name: id };
+    });
+    
+    const selectedAdAccountsWithNames = Array.from(selectedAdAccounts).map((id) => {
+      const account = assets?.adAccounts.find((a) => a.id === id);
+      return account ? { id: account.id, name: account.name } : { id, name: id };
+    });
+    
+    const selectedInstagramWithNames = Array.from(selectedInstagram).map((id) => {
+      const account = assets?.instagramAccounts.find((a) => a.id === id);
+      return account ? { id: account.id, name: account.username || account.name || id } : { id, name: id };
+    });
+
     onSelectionChange({
       adAccounts: Array.from(selectedAdAccounts),
       pages: Array.from(selectedPages),
       instagramAccounts: Array.from(selectedInstagram),
+      // Include full objects for grant step
+      selectedPagesWithNames,
+      selectedAdAccountsWithNames,
+      selectedInstagramWithNames,
+      // Store all assets for lookup
+      allPages: assets?.pages || [],
+      allAdAccounts: assets?.adAccounts || [],
+      allInstagramAccounts: assets?.instagramAccounts || [],
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAdAccounts, selectedPages, selectedInstagram]);
+  }, [selectedAdAccounts, selectedPages, selectedInstagram, assets]);
 
   // Loading state
   if (isLoading) {
@@ -144,14 +169,14 @@ export function MetaAssetSelector({
     );
   }
 
-  // Convert assets to Asset format
-  const adAccountAssets: Asset[] = (assets?.adAccounts || []).map((account) => ({
+  // Convert assets to Asset format (for Instagram) and MultiSelectOption format (for Ad Accounts and Pages)
+  const adAccountAssets = (assets?.adAccounts || []).map((account) => ({
     id: account.id,
     name: account.name,
     description: account.status || account.currency || '',
   }));
 
-  const pageAssets: Asset[] = (assets?.pages || []).map((page) => ({
+  const pageAssets = (assets?.pages || []).map((page) => ({
     id: page.id,
     name: page.name,
     description: page.category || '',
@@ -160,7 +185,10 @@ export function MetaAssetSelector({
   const instagramAssets: Asset[] = (assets?.instagramAccounts || []).map((account) => ({
     id: account.id,
     name: account.username || account.name || account.id,
-    description: account.name || '',
+    metadata: {
+      id: account.id,
+      avatar: account.avatar,
+    },
   }));
 
   const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
@@ -186,30 +214,57 @@ export function MetaAssetSelector({
 
       {/* Asset Groups */}
       <div className="space-y-6">
-        <AssetGroup
-          title="Ad Accounts"
-          assets={adAccountAssets}
-          selectedIds={selectedAdAccounts}
-          onSelectionChange={setSelectedAdAccounts}
-          icon={
+        {/* Ad Accounts - Multi-select Combobox */}
+        <div>
+          <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
               <span className="text-white text-lg">💼</span>
             </div>
-          }
-        />
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Ad Accounts</h3>
+              <p className="text-sm text-slate-600 mt-0.5">
+                {selectedAdAccounts.size} of {adAccountAssets.length} selected
+              </p>
+            </div>
+          </div>
+          <MultiSelectCombobox
+            options={adAccountAssets.map((asset) => ({
+              id: asset.id,
+              name: asset.name,
+              description: asset.description,
+            }))}
+            selectedIds={selectedAdAccounts}
+            onSelectionChange={setSelectedAdAccounts}
+            placeholder="Select ad accounts..."
+          />
+        </div>
 
-        <AssetGroup
-          title="Pages"
-          assets={pageAssets}
-          selectedIds={selectedPages}
-          onSelectionChange={setSelectedPages}
-          icon={
+        {/* Pages - Multi-select Combobox */}
+        <div>
+          <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <span className="text-white text-lg">📄</span>
             </div>
-          }
-        />
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Pages</h3>
+              <p className="text-sm text-slate-600 mt-0.5">
+                {selectedPages.size} of {pageAssets.length} selected
+              </p>
+            </div>
+          </div>
+          <MultiSelectCombobox
+            options={pageAssets.map((asset) => ({
+              id: asset.id,
+              name: asset.name,
+              description: asset.description,
+            }))}
+            selectedIds={selectedPages}
+            onSelectionChange={setSelectedPages}
+            placeholder="Select pages..."
+          />
+        </div>
 
+        {/* Instagram Accounts - Keep as AssetGroup for now */}
         <AssetGroup
           title="Instagram Accounts"
           assets={instagramAssets}
