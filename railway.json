@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm run build --workspace=packages/shared && cd apps/api && rm -rf dist && npm run db:generate && npm run build"
+    "buildCommand": "npm run build --workspace=packages/shared && cd apps/api && rm -rf dist node_modules/.cache && npm run db:generate && npm run build && ls -la dist/routes/oauth-test.js && head -3 dist/routes/oauth-test.js"
   },
   "deploy": {
     "startCommand": "cd apps/api && npm start",

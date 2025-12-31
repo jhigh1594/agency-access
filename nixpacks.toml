@@ -10,7 +10,8 @@ cmds = ['npm install']
 [phases.build]
 cmds = [
   'npm run build --workspace=packages/shared',
-  'cd apps/api && rm -rf dist && npm run db:generate && npm run build'
+  'cd apps/api && rm -rf dist node_modules/.cache && npm run db:generate && npm run build',
+  'cd apps/api && echo "Verifying build:" && head -3 dist/routes/oauth-test.js'
 ]
 
 [start]
