@@ -170,8 +170,8 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow-sm border border-slate-200">
           <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Recent Access Requests</h2>
-            <Link href="/access-requests" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-              View All
+            <Link href="/access-requests/new" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+              Create New
             </Link>
           </div>
 
