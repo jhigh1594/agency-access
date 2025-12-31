@@ -142,19 +142,25 @@
    Clerk Modal Styling - Larger and Centered
    ======================================== */
 
-/* Modal backdrop - the flex container */
+/* Modal backdrop - force full viewport and flex centering */
 .cl-modalBackdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 2rem !important;
 }
 
-/* Modal content - the actual modal wrapper */
+/* Modal content - ensure it centers within backdrop */
 .cl-modalContent {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  width: 100% !important;
+  max-width: 600px !important;
 }
 
 /* Card box - contains the card */
@@ -170,12 +176,80 @@
 .cl-card {
   width: 100% !important;
   max-width: 600px !important;
-  margin: auto !important;
+  margin: 0 auto !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Root box - already has mx-auto w-full from appearance config */
+/* Root box - ensure full width */
 .cl-rootBox {
   width: 100% !important;
   max-width: 600px !important;
+  margin: 0 auto !important;
+}
+
+/* Footer cleanup */
+.cl-footer {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  padding: 0.625rem 1.5rem !important;
+  margin: 0 !important;
+  border-top: 1px solid rgb(var(--border) / 0.5) !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+  border-radius: 0 0 0.75rem 0.75rem !important;
+}
+
+/* Footer action section */
+.cl-footerAction {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.25rem !important;
+  font-size: 0.8125rem !important;
+}
+
+.cl-footerActionText {
+  color: rgb(var(--muted-foreground)) !important;
+  font-size: 0.8125rem !important;
+}
+
+.cl-footerActionLink {
+  color: rgb(var(--primary)) !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  text-decoration: none !important;
+}
+
+.cl-footerActionLink:hover {
+  text-decoration: underline !important;
+}
+
+/* Hide Clerk branding, "Development mode" text, and powered by section */
+.cl-internal-1dauvpw,
+.cl-internal-1v0alra,
+.cl-internal-1scq7x4,
+.cl-internal-1scxde7,
+.cl-internal-1k7jtru,
+.cl-internal-11sq9g0,
+.cl-internal-y44tp9,
+.cl-internal-zye28q {
+  display: none !important;
+}
+
+/* Ensure card has proper background and overflow */
+.cl-card {
+  width: 100% !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  background-color: #ffffff !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 0.75rem !important;
 }

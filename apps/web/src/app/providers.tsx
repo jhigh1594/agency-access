@@ -22,12 +22,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ClerkProvider
       appearance={{
         variables: {
+          // Increase base font size
+          fontSize: '16px',
           // Spacing
           spacing: '1.5rem',
         },
         layout: {
-          // Show optional fields
-          showOptionalFields: true,
+          // Hide optional fields
+          showOptionalFields: false,
           // Social buttons placement
           socialButtonsPlacement: 'top',
         },
@@ -42,20 +44,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
           form: 'padding: 1.5rem;',
           // Header section
           header: 'padding-bottom: 1.5rem;',
-          // Title text
-          headerTitle: 'font-size: 1.5rem; font-weight: 600;',
-          // Subtitle
-          headerSubtitle: 'font-size: 0.875rem; color: rgb(var(--muted-foreground));',
-          // Input fields
-          input: 'border: 1px solid rgb(var(--border)); border-radius: 0.5rem;',
-          // Primary button
-          formButtonPrimary: 'background-color: rgb(var(--primary)); border-radius: 0.5rem; font-weight: 500;',
-          // Social buttons
-          socialButtonsBlockButton: 'border: 1px solid rgb(var(--border)); border-radius: 0.5rem;',
+          // Title text - larger
+          headerTitle: 'font-size: 1.75rem; font-weight: 600; color: rgb(var(--foreground));',
+          // Subtitle - larger
+          headerSubtitle: 'font-size: 1rem; color: rgb(var(--muted-foreground));',
+          // Form field labels - larger
+          formFieldLabel: 'font-size: 0.95rem; font-weight: 500; color: rgb(var(--foreground));',
+          // Input fields - larger text
+          input: 'border: 1px solid rgb(var(--border)); border-radius: 0.5rem; font-size: 1rem; padding: 0.75rem;',
+          // Primary button - larger text
+          formButtonPrimary: 'background-color: rgb(var(--primary)); border-radius: 0.5rem; font-weight: 500; font-size: 1rem; padding: 0.75rem 1.5rem;',
+          // Social buttons - larger text
+          socialButtonsBlockButton: 'border: 1px solid rgb(var(--border)); border-radius: 0.5rem; font-size: 1rem; padding: 0.75rem;',
           // Footer section
           footer: 'padding-top: 1.5rem; margin-top: 1.5rem;',
-          // Divider
-          dividerText: 'color: rgb(var(--muted-foreground));',
+          // Footer action link (Sign up link)
+          footerActionLink: 'color: rgb(var(--primary)); font-weight: 600; font-size: 0.95rem; text-decoration: none;',
+          footerActionText: 'color: rgb(var(--muted-foreground)); font-size: 0.95rem;',
+          // Divider - larger
+          dividerText: 'color: rgb(var(--muted-foreground)); font-size: 0.9rem;',
         },
       }}
       // Redirect to onboarding after signup (new users only)
