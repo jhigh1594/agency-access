@@ -116,9 +116,17 @@ export function MetaBusinessPortfolioSelector({
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-6">
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-1">Select Business Portfolio</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-lg font-bold text-slate-900">Select Business Portfolio</h3>
+            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
+              Required
+            </span>
+          </div>
           <p className="text-sm text-slate-500">
-            Choose the Meta Business Portfolio you want to use for this connection.
+            Choose the Meta Business Portfolio you want to use for this connection. This is required to manage client assets.
+          </p>
+          <p className="text-xs text-slate-400 mt-2 italic">
+            Don't worry, you can always change this selection later in your Meta connection settings.
           </p>
         </div>
 

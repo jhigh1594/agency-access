@@ -8,7 +8,7 @@
  * Users can connect platforms directly from this page via OAuth.
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,7 +19,7 @@ import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
 import { GoogleUnifiedSettings } from '@/components/google-unified-settings';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ConnectionsPage() {
+function ConnectionsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userId } = useAuth();
@@ -139,7 +139,7 @@ export default function ConnectionsPage() {
           body: JSON.stringify({
             agencyId,
             userEmail,
-            redirectUrl: `${window.location.origin}/connections`,
+            redirectUrl: `${window.location.origin}/platforms/callback`,
           }),
         }
       );
@@ -428,5 +428,17 @@ export default function ConnectionsPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function ConnectionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    }>
+      <ConnectionsPageContent />
+    </Suspense>
   );
 }

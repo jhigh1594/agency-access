@@ -234,39 +234,34 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
       {isExpanded && (
         <div className="p-6 space-y-6">
           {/* Business Portfolio Selector */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 mb-3">Meta Business Portfolio</h3>
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                Meta Business Portfolio
+                {selectedBusinessId && (
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                    Stored
+                  </span>
+                )}
+              </h3>
+            </div>
             <div className="relative">
               <select
                 value={selectedBusinessId}
                 onChange={(e) => handleBusinessSelect(e.target.value)}
                 className="w-full px-4 py-3 pr-10 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none"
               >
-                <option value="">Select a portfolio...</option>
+                <option value="" disabled>Select a portfolio...</option>
                 {businesses.map((business) => (
                   <option key={business.id} value={business.id}>
                     {business.name} ({business.id})
                   </option>
                 ))}
               </select>
-              {selectedBusinessId && (
-                <button
-                  onClick={handleClearBusiness}
-                  className="absolute right-8 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded"
-                >
-                  <X className="h-4 w-4 text-slate-500" />
-                </button>
-              )}
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Don't see your Business Portfolio? To refresh this list{' '}
-              <button 
-                onClick={() => window.location.reload()} 
-                className="text-indigo-600 font-medium hover:underline"
-              >
-                log in again
-              </button>
+              The selected portfolio will be used to manage all client assets. Changing this will re-configure your system user access.
             </p>
           </div>
 

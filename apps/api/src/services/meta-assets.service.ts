@@ -10,6 +10,10 @@ import type { MetaAssetSelection, MetaAllAssets, MetaAssetSettings } from '@agen
 export const metaAssetsService = {
   /**
    * Save selected Business Portfolio for a Meta connection
+   * 
+   * Stores the Business Manager ID in both:
+   * 1. AgencyPlatformConnection.businessId (for client access granting)
+   * 2. metadata.selectedBusinessId (for UI display)
    */
   async saveBusinessPortfolio(
     agencyId: string,
@@ -19,10 +23,82 @@ export const metaAssetsService = {
     data: any;
     error: any;
   }> {
-    return agencyPlatformService.updateConnectionMetadata(agencyId, 'meta', {
+    // First, update metadata
+    const metadataResult = await agencyPlatformService.updateConnectionMetadata(agencyId, 'meta', {
       selectedBusinessId: businessId,
       selectedBusinessName: businessName,
     });
+
+    if (metadataResult.error) {
+      return metadataResult;
+    }
+
+    // Also update the businessId field on the connection record
+    // This is needed for client access granting
+    try {
+      const connection = await agencyPlatformService.getConnection(agencyId, 'meta');
+      
+      if (connection.error || !connection.data) {
+        return {
+          data: null,
+          error: {
+            code: 'CONNECTION_NOT_FOUND',
+            message: 'Meta connection not found',
+          },
+        };
+      }
+
+      const { prisma } = await import('@/lib/prisma');
+      const updatedConnection = await prisma.agencyPlatformConnection.update({
+        where: { id: connection.data.id },
+        data: {
+          businessId: businessId,
+        },
+      });
+
+      // After business ID is set, create/retrieve system user
+      // We do this even if systemUserId is already present in case they switched business managers
+      try {
+        // Get access token for system user creation
+        const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'meta');
+        if (!tokenResult.error && tokenResult.data) {
+          const { metaSystemUserService } = await import('./meta-system-user.service');
+          
+          const systemUserResult = await metaSystemUserService.getOrCreateSystemUser(
+            businessId,
+            tokenResult.data
+          );
+
+          if (!systemUserResult.error && systemUserResult.data) {
+            // Update metadata with system user ID
+            const latestMetadata = (updatedConnection.metadata as any) || {};
+            await prisma.agencyPlatformConnection.update({
+              where: { id: connection.data.id },
+              data: {
+                metadata: {
+                  ...latestMetadata,
+                  systemUserId: systemUserResult.data,
+                },
+              },
+            });
+          }
+        }
+      } catch (error) {
+        // Log but don't fail - system user can be created later
+        console.error('Failed to create system user when setting business ID:', error);
+      }
+
+      return { data: updatedConnection, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to update Business Manager ID',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
+    }
   },
 
   /**
@@ -47,11 +123,9 @@ export const metaAssetsService = {
     data: MetaAssetSettings | null;
     error: any;
   }> {
-    const connectionResult = await agencyPlatformService.getConnections(agencyId, {
-      platform: 'meta',
-    });
+    const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
 
-    if (connectionResult.error || !connectionResult.data || connectionResult.data.length === 0) {
+    if (connectionResult.error || !connectionResult.data) {
       return {
         data: null,
         error: connectionResult.error || {
@@ -61,7 +135,7 @@ export const metaAssetsService = {
       };
     }
 
-    const metadata = connectionResult.data[0].metadata as any;
+    const metadata = connectionResult.data.metadata as any;
     const settings = metadata?.assetSettings;
 
     // Return default settings if none exist

@@ -42,6 +42,9 @@ export default function CallbackPage() {
   const success = searchParams.get('success') === 'true';
   const platform = searchParams.get('platform');
   const errorCode = searchParams.get('error');
+  const requireBusinessSelection = searchParams.get('requireBusinessSelection') === 'true';
+  const connectionId = searchParams.get('connectionId');
+  const agencyIdParam = searchParams.get('agencyId');
 
   const platformName = platform ? PLATFORM_NAMES[platform] || platform : 'Platform';
   const errorMessage = errorCode
@@ -50,37 +53,43 @@ export default function CallbackPage() {
 
   const isLoading = !success && !errorCode;
 
-  // Save Business Portfolio Mutation
-  const { mutate: savePortfolio, isPending: isSaving } = useMutation({
+  // Complete Meta OAuth Mutation
+  const { mutate: completeMetaOauth, isPending: isSaving } = useMutation({
     mutationFn: async ({ businessId, businessName }: { businessId: string; businessName: string }) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business`, {
-        method: 'PATCH',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/complete-oauth`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agencyId: orgId,
+          agencyId: agencyIdParam || orgId,
+          connectionId,
           businessId,
           businessName,
         }),
       });
-      if (!response.ok) throw new Error('Failed to save portfolio');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to complete connection');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['platform-connections', orgId] });
-      queryClient.invalidateQueries({ queryKey: ['available-platforms', orgId] });
+      const targetAgencyId = agencyIdParam || orgId;
+      queryClient.invalidateQueries({ queryKey: ['platform-connections', targetAgencyId] });
+      queryClient.invalidateQueries({ queryKey: ['available-platforms', targetAgencyId] });
       router.push('/connections?success=true&platform=meta');
     },
   });
 
   const handlePortfolioSelect = (businessId: string, businessName: string) => {
-    savePortfolio({ businessId, businessName });
+    completeMetaOauth({ businessId, businessName });
   };
 
   // Auto-redirect on success (except for Meta which needs portfolio selection)
   useEffect(() => {
     if (!success) return;
     
-    if (platform === 'meta' && orgId) {
+    // For Meta, we ALWAYS show the portfolio selector as a required step
+    if (platform === 'meta' || requireBusinessSelection) {
       setShowPortfolioSelector(true);
       return;
     }
@@ -111,7 +120,7 @@ export default function CallbackPage() {
 
   if (success) {
     // Show Business Portfolio selector for Meta
-    if (showPortfolioSelector && orgId) {
+    if (showPortfolioSelector && (orgId || agencyIdParam)) {
       return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
           <div className="max-w-lg w-full">
@@ -135,7 +144,7 @@ export default function CallbackPage() {
               <p className="text-slate-600">Now select your Meta Business Portfolio</p>
             </div>
             <MetaBusinessPortfolioSelector 
-              agencyId={orgId} 
+              agencyId={(agencyIdParam || orgId) as string} 
               onSelect={handlePortfolioSelect} 
               isSaving={isSaving}
             />

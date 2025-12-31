@@ -37,8 +37,11 @@ const PLATFORM_NAMES: Record<Platform, string> = {
   google_ads: 'Google Ads',
   ga4: 'Google Analytics',
   tiktok: 'TikTok Ads',
+  tiktok_ads: 'TikTok Ads',
   linkedin: 'LinkedIn Ads',
+  linkedin_ads: 'LinkedIn Ads',
   snapchat: 'Snapchat Ads',
+  snapchat_ads: 'Snapchat Ads',
   instagram: 'Instagram',
 };
 
@@ -436,7 +439,20 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
         return reply.redirect(`${redirectUrl}?error=${connectionResult.error.code}`);
       }
 
-      // Redirect to success page
+      // Handle Meta specific flow (Business Portfolio selection)
+      // This is now a required step for the Meta OAuth flow
+      if (platform === 'meta' && connectionResult.data) {
+        const connection = connectionResult.data;
+        
+        // ALWAYS redirect to the specific callback page for Meta selection
+        // This ensures the user land on the page that has the MetaBusinessPortfolioSelector
+        const baseUrl = env.FRONTEND_URL;
+        return reply.redirect(
+          `${baseUrl}/platforms/callback?success=true&platform=meta&requireBusinessSelection=true&connectionId=${connection.id}&agencyId=${actualAgencyId}`
+        );
+      }
+
+      // Standard redirect for other platforms or if Meta businessId already set
       const redirectUrl = stateData.redirectUrl || env.FRONTEND_URL;
       return reply.redirect(`${redirectUrl}?success=true&platform=${platform}`);
     } catch (error) {
@@ -895,6 +911,63 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       data: businessAccounts,
       error: null,
     });
+  });
+
+  /**
+   * POST /agency-platforms/meta/complete-oauth
+   * Complete Meta OAuth by selecting a Business Portfolio and creating a system user
+   */
+  fastify.post('/agency-platforms/meta/complete-oauth', async (request, reply) => {
+    const { agencyId, businessId, businessName, connectionId } = request.body as {
+      agencyId?: string;
+      businessId?: string;
+      businessName?: string;
+      connectionId?: string;
+    };
+
+    if (!agencyId || !businessId || !businessName || !connectionId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId, businessId, businessName, and connectionId are required',
+        },
+      });
+    }
+
+    try {
+      // 1. Update the business portfolio selection
+      const result = await metaAssetsService.saveBusinessPortfolio(agencyId, businessId, businessName);
+
+      if (result.error) {
+        return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+      }
+
+      // 2. The saveBusinessPortfolio service already handles system user creation
+      // but let's ensure the connection metadata is fully updated
+      const connection = await prisma.agencyPlatformConnection.findUnique({
+        where: { id: connectionId },
+      });
+
+      return reply.send({
+        data: connection,
+        error: null,
+      });
+    } catch (error) {
+      fastify.log.error({
+        msg: 'Failed to complete Meta OAuth',
+        error: error instanceof Error ? error.message : String(error),
+        agencyId,
+        businessId,
+      });
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to complete Meta OAuth flow',
+        },
+      });
+    }
   });
 
   /**
