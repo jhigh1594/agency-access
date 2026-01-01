@@ -11,7 +11,9 @@ import { z } from 'zod';
 // Validation schemas
 const createAgencySchema = z.object({
   name: z.string().min(1, 'Agency name is required'),
-  adminEmail: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address'),
+  clerkUserId: z.string().optional(),
+  settings: z.record(z.any()).optional(),
 });
 
 const inviteMemberSchema = z.object({
@@ -29,12 +31,44 @@ export async function createAgency(input: CreateAgencyInput) {
   try {
     const validated = createAgencySchema.parse(input);
 
+    // Check if agency with this clerkUserId already exists
+    if (validated.clerkUserId) {
+      const existingByClerk = await prisma.agency.findUnique({
+        where: { clerkUserId: validated.clerkUserId },
+      });
+
+      if (existingByClerk) {
+        return {
+          data: null,
+          error: {
+            code: 'AGENCY_EXISTS',
+            message: 'An agency already exists for this user',
+          },
+        };
+      }
+    }
+
+    // Check if agency with this email already exists
+    const existingByEmail = await prisma.agency.findUnique({
+      where: { email: validated.email },
+    });
+
+    if (existingByEmail) {
+      return {
+        data: null,
+        error: {
+          code: 'AGENCY_EXISTS',
+          message: 'An agency with this email already exists',
+        },
+      };
+    }
+
     // Check if agency with this name already exists
-    const existing = await prisma.agency.findFirst({
+    const existingByName = await prisma.agency.findFirst({
       where: { name: validated.name },
     });
 
-    if (existing) {
+    if (existingByName) {
       return {
         data: null,
         error: {
@@ -49,7 +83,9 @@ export async function createAgency(input: CreateAgencyInput) {
       const agency = await tx.agency.create({
         data: {
           name: validated.name,
-          email: validated.adminEmail, // Use admin email as agency email
+          email: validated.email,
+          clerkUserId: validated.clerkUserId || null,
+          settings: validated.settings || null,
           subscriptionTier: 'STARTER',
         },
       });
@@ -57,7 +93,7 @@ export async function createAgency(input: CreateAgencyInput) {
       const admin = await tx.agencyMember.create({
         data: {
           agencyId: agency.id,
-          email: validated.adminEmail,
+          email: validated.email,
           role: 'admin',
         },
       });
@@ -65,7 +101,7 @@ export async function createAgency(input: CreateAgencyInput) {
       return { agency, admin };
     });
 
-    return { data: result, error: null };
+    return { data: result.agency, error: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
