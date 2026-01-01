@@ -25,32 +25,33 @@ const benefits = [
 
 export function BenefitsSection() {
   return (
-    <section className="py-24 sm:py-32 bg-background">
+    <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl sm:text-5xl tracking-tight mb-4">
+          <div className="text-center mb-12 sm:mb-16 px-4">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight mb-3 sm:mb-4">
               Why Agencies Choose Us
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base sm:text-lg text-muted-foreground">
               Join agencies that have eliminated the biggest bottleneck in client onboarding.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             {benefits.map((benefit, index) => (
               <div
                 key={index}
-                className="flex gap-4 p-6 rounded-xl border border-border bg-card"
+                className="flex gap-3 sm:gap-4 p-4 sm:p-6 rounded-xl border border-border bg-card touch-feedback"
               >
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-                    <CheckIcon size={20} className="text-success" />
+                  <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-success/10 flex items-center justify-center">
+                    <CheckIcon size={20} className="text-success sm:hidden" />
+                    <CheckIcon size={16} className="text-success hidden sm:block" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-heading text-xl mb-2">{benefit.title}</h3>
-                  <p className="text-muted-foreground">{benefit.description}</p>
+                  <h3 className="font-heading text-lg sm:text-xl mb-1.5 sm:mb-2">{benefit.title}</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">{benefit.description}</p>
                 </div>
               </div>
             ))}

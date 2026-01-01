@@ -44,7 +44,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     // Base styles common to all variants
-    const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-feedback';
 
     // Variant styles (use NonNullable to exclude undefined from Record key type)
     const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
@@ -56,12 +56,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     // Size styles (use NonNullable to exclude undefined from Record key type)
+    // All sizes ensure minimum 44px height for touch targets (iOS HIG)
     const sizeStyles: Record<NonNullable<ButtonProps['size']>, string> = {
-      sm: 'px-4 py-2 text-sm rounded-lg',
-      md: 'px-6 py-3 text-base rounded-xl',
-      lg: 'px-8 py-4 text-lg rounded-xl',
-      xl: 'px-12 py-5 text-xl rounded-2xl',
-      icon: 'p-0 w-10 h-10 rounded-full',
+      sm: 'px-4 py-3 text-sm rounded-lg min-h-[44px]', // Increased py-2→py-3 for mobile
+      md: 'px-6 py-3 text-base rounded-xl min-h-[48px]',
+      lg: 'px-8 py-4 text-lg rounded-xl min-h-[52px]',
+      xl: 'px-12 py-5 text-xl rounded-2xl min-h-[56px]',
+      icon: 'p-0 w-11 h-11 rounded-full min-h-[44px]', // Increased w-10→w-11 for 44px minimum
     };
 
     return (

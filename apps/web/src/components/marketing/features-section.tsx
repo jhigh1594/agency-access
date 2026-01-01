@@ -77,18 +77,20 @@ const features: Array<{
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-24 sm:py-32 bg-white">
+    <section id="features" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto text-center mb-20">
-          <h2 className="font-display text-4xl sm:text-5xl tracking-tight mb-6">
+        {/* Section Header - Better mobile spacing */}
+        <div className="max-w-2xl mx-auto text-center mb-12 sm:mb-16 md:mb-20 px-4">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl tracking-tight mb-4 sm:mb-6">
             Everything You Need
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
             Built specifically for marketing agencies who need fast, secure client onboarding.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        {/* Features Grid - Mobile optimized */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -96,17 +98,19 @@ export function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="clean-card p-8 flex gap-8 group"
+              className="clean-card p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-8 group"
             >
               <div className="flex-1">
-                <div className="mb-6 group-hover:scale-105 transition-transform duration-300">
-                  <feature.icon size={32} className="text-foreground" strokeWidth={1.5} />
+                <div className="mb-4 sm:mb-6 group-hover:scale-105 transition-transform duration-300">
+                  <feature.icon size={28} className="sm:hidden text-foreground" strokeWidth={1.5} />
+                  <feature.icon size={32} className="hidden sm:block text-foreground" strokeWidth={1.5} />
                 </div>
-                <h3 className="font-bold text-xl mb-3">{feature.title}</h3>
+                <h3 className="font-bold text-lg sm:text-xl mb-2 sm:mb-3">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed text-sm">{feature.description}</p>
               </div>
-              
-              <div className="hidden sm:block w-32 h-32 flex-shrink-0">
+
+              {/* Mobile mockup - smaller but visible */}
+              <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 mx-auto sm:mx-0">
                 <div className="w-full h-full group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-500">
                   {feature.mockup}
                 </div>

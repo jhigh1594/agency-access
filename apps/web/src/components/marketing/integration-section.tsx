@@ -9,14 +9,14 @@ export function IntegrationSection() {
       <IntegrationHero />
       
       {/* Testimonial Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay: 0.5 }}
-        className="max-w-xl mx-auto text-center py-12"
+        className="max-w-xl mx-auto text-center py-8 sm:py-12 px-4"
       >
-        <p className="text-base sm:text-lg text-gray-700 mb-6 leading-relaxed">
+        <p className="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6 leading-relaxed">
           &ldquo;AuthHub has transformed how we work saving us 15+ hours per week. The best automation tool! It connects everything seamlessly&rdquo;
         </p>
         <div className="flex items-center justify-center gap-3">

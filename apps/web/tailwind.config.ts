@@ -6,6 +6,14 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // Add custom xs breakpoint for small mobile devices
+  screens: {
+    'xs': '480px',
+    'sm': '640px',
+    'md': '768px',
+    'lg': '1024px',
+    'xl': '1280px',
+  },
   theme: {
     extend: {
       colors: {
@@ -38,6 +46,9 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      spacing: {
+        'mobile-safe': 'env(safe-area-inset-bottom)',
       },
       fontFamily: {
         display: ["var(--font-display)", "serif"],
