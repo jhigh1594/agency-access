@@ -4,6 +4,7 @@
  * Agency Dashboard
  *
  * Main dashboard for agencies to view access requests and client connections.
+ * Optimized to use a single unified API endpoint for better performance.
  */
 
 import { Plus, Users, Key, Activity, Loader2, AlertCircle } from 'lucide-react';
@@ -15,83 +16,57 @@ import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const [agencyId, setAgencyId] = useState<string | null>(null);
+  const { getToken } = useAuth();
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
-  // Fetch agency by email (same pattern as connections page)
-  const { data: agencyData, isLoading: isLoadingAgency } = useQuery({
-    queryKey: ['user-agency', user?.primaryEmailAddress?.emailAddress],
-    queryFn: async () => {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) return null;
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?email=${encodeURIComponent(email)}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch agency');
-      const result = await response.json();
-      return result.data?.[0] || null;
-    },
-    enabled: !!user?.primaryEmailAddress?.emailAddress,
-  });
-
+  // Get Clerk token for API authentication
   useEffect(() => {
-    if (agencyData?.id) {
-      setAgencyId(agencyData.id);
+    async function fetchToken() {
+      const token = await getToken();
+      setAuthToken(token);
     }
-  }, [agencyData]);
+    fetchToken();
+  }, [getToken]);
 
-  // Fetch dashboard stats
-  const { data: statsData, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['dashboard-stats', agencyId],
+  // Single unified query that fetches all dashboard data at once
+  // This replaces 4 separate API calls (agency, stats, requests, connections)
+  const { data: dashboardData, isLoading, error, refetch } = useQuery({
+    queryKey: ['dashboard', user?.id],
     queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/stats?agencyId=${agencyId}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch stats');
+      if (!authToken) throw new Error('No auth token');
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
+        headers: {
+          'x-agency-id': authToken,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+
       return response.json();
     },
-    enabled: !!agencyId,
+    enabled: !!authToken,
+    staleTime: 5 * 60 * 1000, // 5 minutes - consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true, // Refetch when component mounts
+    placeholderData: (previousData) => previousData, // Use stale data while refetching (stale-while-revalidate)
   });
 
-  // Fetch recent access requests
-  const { data: requestsData, isLoading: isLoadingRequests } = useQuery({
-    queryKey: ['recent-requests', agencyId],
-    queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/${agencyId}/access-requests?limit=10`
-      );
-      if (!response.ok) throw new Error('Failed to fetch requests');
-      return response.json();
-    },
-    enabled: !!agencyId,
-  });
-
-  // Fetch client connections
-  const { data: connectionsData, isLoading: isLoadingConnections } = useQuery({
-    queryKey: ['client-connections', agencyId],
-    queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/connections?agencyId=${agencyId}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch connections');
-      return response.json();
-    },
-    enabled: !!agencyId,
-  });
-
-  const stats = statsData?.data || {
+  const agency = dashboardData?.data?.agency;
+  const stats = dashboardData?.data?.stats || {
     totalRequests: 0,
     pendingRequests: 0,
     activeConnections: 0,
     totalPlatforms: 0,
   };
+  const requests = dashboardData?.data?.requests || [];
+  const connections = dashboardData?.data?.connections || [];
 
-  const requests = requestsData?.data || [];
-  const connections = connectionsData?.data || [];
-
-  const isLoading = isLoadingAgency || isLoadingStats || isLoadingRequests || isLoadingConnections;
-
-  if (isLoading && !agencyId) {
+  // Show loading state only on first load
+  if (isLoading && !dashboardData) {
     return (
       <div className="flex-1 bg-slate-50 p-8 flex items-center justify-center">
         <div className="text-center">
@@ -102,7 +77,31 @@ export default function DashboardPage() {
     );
   }
 
-  if (!agencyId && !isLoadingAgency && user?.primaryEmailAddress?.emailAddress) {
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex-1 bg-slate-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-red-600 mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-red-900 mb-2">Failed to Load Dashboard</h2>
+            <p className="text-red-800 mb-4">
+              {error instanceof Error ? error.message : 'An error occurred while loading the dashboard.'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding prompt if no agency found
+  if (!agency && !isLoading) {
     return (
       <div className="flex-1 bg-slate-50 p-8">
         <div className="max-w-7xl mx-auto">
@@ -237,13 +236,13 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-4">
                     <div className="flex -space-x-2">
                       {connection.authorizations?.map((auth: any) => (
-                        <div 
-                          key={auth.id} 
+                        <div
+                          key={auth.id}
                           className="h-7 w-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden"
                           title={auth.platform}
                         >
-                          <img 
-                            src={auth.platform.includes('google') ? '/google-ads.svg' : '/meta-color.svg'} 
+                          <img
+                            src={auth.platform.includes('google') ? '/google-ads.svg' : '/meta-color.svg'}
                             className="h-4 w-4"
                             alt={auth.platform}
                           />

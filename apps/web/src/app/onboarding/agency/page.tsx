@@ -12,6 +12,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Check, Loader2, Mail, Building2, Users, Sparkles, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,9 +52,10 @@ const TIMEZONES = [
 ];
 
 export default function AgencyOnboardingPage() {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const { user } = useUser();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -153,6 +155,23 @@ export default function AgencyOnboardingPage() {
       const result = await response.json();
       setCreatedAgencyId(result.data.id);
       setLoading(false);
+
+      // Prefetch dashboard data for instant load when user navigates there
+      const authToken = await getToken();
+      if (authToken) {
+        queryClient.prefetchQuery({
+          queryKey: ['dashboard', userId],
+          queryFn: async () => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
+              headers: { 'x-agency-id': authToken },
+            });
+            if (!response.ok) throw new Error('Failed to fetch dashboard');
+            return response.json();
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        });
+      }
+
       setCurrentStep(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create agency');

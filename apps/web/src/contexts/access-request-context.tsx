@@ -9,6 +9,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { QueryClient } from '@tanstack/react-query';
 import { Client, AccessLevel, AccessRequestTemplate, AuthModel } from '@agency-platform/shared';
 import type { CreateAccessRequestPayload } from '@/lib/api/access-requests';
 
@@ -115,9 +116,10 @@ const initialState: AccessRequestFormState = {
 interface AccessRequestProviderProps {
   children: ReactNode;
   agencyId: string;
+  queryClient?: QueryClient;
 }
 
-export function AccessRequestProvider({ children, agencyId }: AccessRequestProviderProps) {
+export function AccessRequestProvider({ children, agencyId, queryClient }: AccessRequestProviderProps) {
   const router = useRouter();
   const [state, setState] = useState<AccessRequestFormState>(initialState);
 
@@ -318,6 +320,10 @@ export function AccessRequestProvider({ children, agencyId }: AccessRequestProvi
 
       // Success! Navigate to success page
       if (result.data) {
+        // Invalidate dashboard cache so it shows fresh data when user returns
+        // We use the wildcard pattern to invalidate all dashboard queries
+        queryClient?.invalidateQueries({ queryKey: ['dashboard'] });
+
         router.push(`/access-requests/${result.data.id}/success`);
       }
     } catch (err) {
