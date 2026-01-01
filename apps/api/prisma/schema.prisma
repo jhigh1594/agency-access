@@ -157,6 +157,7 @@ model AccessRequest {
   client       Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
   connection   ClientConnection?
 
+  @@index([agencyId, status])
   @@map("access_requests")
 }
 
@@ -179,6 +180,7 @@ model ClientConnection {
   agency          Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   authorizations  PlatformAuthorization[]
 
+  @@index([agencyId, status])
   @@map("client_connections")
 }
 
@@ -197,6 +199,7 @@ model PlatformAuthorization {
   connection       ClientConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([connectionId, platform])
+  @@index([connectionId, status])
   @@map("platform_authorizations")
 }
 

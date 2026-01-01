@@ -971,6 +971,7 @@ function AccessRequestWizardContent() {
 
 export default function NewAccessRequestPage() {
   const { userId, orgId } = useAuth();
+  const queryClient = useQueryClient();
 
   if (!userId) {
     return (
@@ -984,7 +985,7 @@ export default function NewAccessRequestPage() {
   const agencyId = orgId || userId;
 
   return (
-    <AccessRequestProvider agencyId={agencyId}>
+    <AccessRequestProvider agencyId={agencyId} queryClient={queryClient}>
       <AccessRequestWizardContent />
     </AccessRequestProvider>
   );
