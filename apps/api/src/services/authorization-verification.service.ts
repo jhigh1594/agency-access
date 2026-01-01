@@ -17,6 +17,7 @@ import { metaConnector } from './connectors/meta.js';
 import { googleAdsConnector } from './connectors/google-ads.js';
 import { ga4Connector } from './connectors/ga4.js';
 import type { AccessLevel } from '@agency-platform/shared';
+import { invalidateCache } from '@/lib/cache.js';
 
 // Validation schemas
 const initiateVerificationSchema = {
@@ -368,6 +369,17 @@ async function updateAccessRequestStatus(accessRequestId: string): Promise<void>
       ...(newStatus === 'completed' ? { authorizedAt: new Date() } : {}),
     },
   });
+
+  // Invalidate dashboard cache for this agency
+  // Fetch the access request to get the agency ID
+  const accessRequest = await prisma.accessRequest.findUnique({
+    where: { id: accessRequestId },
+    select: { agencyId: true },
+  });
+
+  if (accessRequest) {
+    await invalidateCache(`dashboard:${accessRequest.agencyId}:*`);
+  }
 }
 
 /**

@@ -10,6 +10,7 @@ import { infisical } from '@/lib/infisical';
 import { getConnector } from '@/services/connectors/factory';
 import type { Platform } from '@agency-platform/shared';
 import { z } from 'zod';
+import { invalidateCache } from '@/lib/cache.js';
 
 /**
  * Create a new client connection with platform authorizations
@@ -67,6 +68,9 @@ export async function createClientConnection(input: {
 
       return connection;
     });
+
+    // Invalidate dashboard cache for this agency
+    await invalidateCache(`dashboard:${accessRequest.agencyId}:*`);
 
     return { data: result, error: null };
   } catch (error) {

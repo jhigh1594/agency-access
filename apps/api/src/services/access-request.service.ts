@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import type { Platform, AccessRequestStatus } from '@agency-platform/shared';
+import { invalidateCache } from '@/lib/cache.js';
 
 // Validation schemas
 const createAccessRequestSchema = z.object({
@@ -163,6 +164,9 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       },
     });
+
+    // Invalidate dashboard cache for this agency
+    await invalidateCache(`dashboard:${validated.agencyId}:*`);
 
     return { data: accessRequest, error: null };
   } catch (error) {

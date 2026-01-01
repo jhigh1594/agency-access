@@ -8,20 +8,140 @@
 import { FastifyInstance } from 'fastify';
 import { getDashboardStats } from '../services/connection-aggregation.service.js';
 import { agencyResolutionService } from '../services/agency-resolution.service.js';
+import { accessRequestService } from '../services/access-request.service.js';
+import { connectionService } from '../services/connection.service.js';
+import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
   /**
+   * GET /api/dashboard
+   *
+   * Unified dashboard endpoint that returns all dashboard data in a single request.
+   * Replaces multiple API calls for better performance.
+   *
+   * Returns:
+   * - agency: Agency info (id, name, email)
+   * - stats: Dashboard statistics (totalRequests, pendingRequests, activeConnections, totalPlatforms)
+   * - requests: Recent access requests (limit 10)
+   * - connections: Active client connections with authorizations
+   */
+  fastify.get('/dashboard', async (request, reply) => {
+    const clerkUserId = request.headers['x-agency-id'] as string;
+
+    if (!clerkUserId) {
+      return reply.code(401).send({
+        data: null,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'x-agency-id header is required',
+        },
+      });
+    }
+
+    // Resolve agency ONCE (prevents duplicate lookups)
+    const agencyResult = await agencyResolutionService.resolveAgency(clerkUserId);
+
+    if (agencyResult.error || !agencyResult.data) {
+      return reply.code(404).send({
+        data: null,
+        error: agencyResult.error || {
+          code: 'AGENCY_NOT_FOUND',
+          message: 'Agency not found',
+        },
+      });
+    }
+
+    const { agencyId, agency } = agencyResult.data;
+
+    // Use caching layer for dashboard data
+    const cacheKey = CacheKeys.dashboard(agencyId);
+    const cachedResult = await getCached<{
+      agency: { id: string; name: string; email: string };
+      stats: { totalRequests: number; pendingRequests: number; activeConnections: number; totalPlatforms: number };
+      requests: any[];
+      connections: any[];
+    }>({
+      key: cacheKey,
+      ttl: CacheTTL.MEDIUM, // 5 minutes
+      fetch: async () => {
+        // Parallel fetch ALL dashboard data
+        const [statsResult, requestsResult, connectionsResult] = await Promise.all([
+          getDashboardStats(agencyId),
+          accessRequestService.getAgencyAccessRequests(agencyId, { limit: 10 }),
+          connectionService.getAgencyConnections(agencyId),
+        ]);
+
+        // Check for errors in any of the parallel requests
+        if (statsResult.error) {
+          return { data: null, error: statsResult.error };
+        }
+
+        if (requestsResult.error) {
+          return { data: null, error: requestsResult.error };
+        }
+
+        if (connectionsResult.error) {
+          return { data: null, error: connectionsResult.error };
+        }
+
+        // Return consolidated dashboard data in the expected format
+        return {
+          data: {
+            agency: {
+              id: agency!.id,
+              name: agency!.name,
+              email: agency!.email,
+            },
+            stats: statsResult.data!,
+            requests: requestsResult.data!,
+            connections: connectionsResult.data!,
+          },
+          error: null,
+        };
+      },
+    });
+
+    // Handle errors from fetch function
+    if (cachedResult.error || !cachedResult.data) {
+      return reply.code(500).send({
+        data: null,
+        error: cachedResult.error || {
+          code: 'DASHBOARD_FETCH_ERROR',
+          message: 'Failed to fetch dashboard data',
+        },
+      });
+    }
+
+    // Add cache status header for monitoring
+    reply.header('X-Cache', cachedResult.cached ? 'HIT' : 'MISS');
+
+    // Add Cache-Control header for browser-level stale-while-revalidate
+    // - 5 minutes max age (browser can cache for 5 min)
+    // - 10 minutes stale-while-revalidate (can serve stale while refreshing in background)
+    // - private: Never cache by shared caches (CDNs, proxies)
+    reply.header('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
+
+    // Return consolidated dashboard data
+    return reply.send({
+      data: cachedResult.data,
+      error: null,
+    });
+  });
+
+  /**
    * GET /api/dashboard/stats
    * Get aggregated statistics for the agency dashboard
+   *
+   * @deprecated Use GET /api/dashboard instead (returns stats + more data)
    */
   fastify.get('/dashboard/stats', async (request, reply) => {
     const { agencyId: queryAgencyId } = request.query as { agencyId?: string };
-    
+
     // Fallback to agency ID from header if not in query
     const clerkUserId = request.headers['x-agency-id'] as string;
-    
+
     let targetAgencyId = queryAgencyId;
-    
+
     if (!targetAgencyId && clerkUserId) {
       const agencyResult = await agencyResolutionService.resolveAgency(clerkUserId);
       if (!agencyResult.error && agencyResult.data) {
@@ -51,4 +171,3 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
     return reply.send(result);
   });
 }
-

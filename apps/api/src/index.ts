@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
+import compress from '@fastify/compress';
 import { env } from './lib/env.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
@@ -12,6 +13,7 @@ import { platformAuthorizationRoutes } from './routes/platform-authorization.js'
 import { clientRoutes } from './routes/clients.js';
 import { agencyPlatformsRoutes } from './routes/agency-platforms.js';
 import { dashboardRoutes } from './routes/dashboard.js';
+import { performanceMiddleware } from './middleware/performance.js';
 
 const fastify = Fastify({
   logger: {
@@ -39,6 +41,15 @@ await fastify.register(cors, {
   origin: allowedOrigins,
   credentials: true,
 });
+
+// Register compression middleware
+await fastify.register(compress, {
+  encodings: ['gzip', 'deflate', 'br'],
+  threshold: 1024, // Only compress responses larger than 1KB
+});
+
+// Register performance monitoring middleware
+fastify.addHook('onRequest', performanceMiddleware);
 
 // Register JWT for Clerk verification
 await fastify.register(jwt, {
@@ -69,6 +80,12 @@ await fastify.register(agencyPlatformsRoutes);
 // Health check and root routes
 fastify.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
+// Performance monitoring endpoint
+fastify.get('/performance-stats', async () => {
+  const { getPerformanceStats } = await import('./middleware/performance.js');
+  return getPerformanceStats();
 });
 
 fastify.get('/', async () => {

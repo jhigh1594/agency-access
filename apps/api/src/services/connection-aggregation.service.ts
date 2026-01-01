@@ -16,56 +16,52 @@ export interface DashboardStats {
 }
 
 /**
- * Get aggregated dashboard statistics for an agency
+ * Get aggregated dashboard statistics for an agency.
+ *
+ * Optimized version using groupBy and raw SQL for better performance.
+ * - Uses groupBy to get counts by status in a single query
+ * - Uses raw SQL for distinct platform count (faster than findMany + distinct)
  */
 export async function getDashboardStats(agencyId: string): Promise<{ data: DashboardStats | null; error: any }> {
   try {
-    const [
-      totalRequests,
-      pendingRequests,
-      activeConnections,
-      platformAuths,
-    ] = await Promise.all([
-      // Total access requests
-      prisma.accessRequest.count({
+    // Use groupBy for more efficient aggregation
+    // This gets all request counts in a single query instead of multiple count() calls
+    const [requestStats, connectionStats, platformCount] = await Promise.all([
+      // Get all request counts by status in one query
+      prisma.accessRequest.groupBy({
+        by: ['status'],
         where: { agencyId },
+        _count: true,
       }),
-      // Pending access requests
-      prisma.accessRequest.count({
-        where: {
-          agencyId,
-          status: 'pending',
-        },
+      // Get all connection counts by status in one query
+      prisma.clientConnection.groupBy({
+        by: ['status'],
+        where: { agencyId },
+        _count: true,
       }),
-      // Active client connections
-      prisma.clientConnection.count({
-        where: {
-          agencyId,
-          status: 'active',
-        },
-      }),
-      // Unique platforms across all active authorizations
-      prisma.platformAuthorization.findMany({
-        where: {
-          connection: {
-            agencyId,
-            status: 'active',
-          },
-          status: 'active',
-        },
-        select: {
-          platform: true,
-        },
-        distinct: ['platform'],
-      }),
+      // Use raw SQL for distinct platform count (more efficient than Prisma's distinct)
+      prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(DISTINCT pa.platform) as count
+        FROM platform_authorizations pa
+        INNER JOIN client_connections cc ON pa.connection_id = cc.id
+        WHERE cc.agency_id = ${agencyId}
+          AND cc.status = 'active'
+          AND pa.status = 'active'
+      `,
     ]);
+
+    // Transform groupBy results into stats
+    const totalRequests = requestStats.reduce((sum, r) => sum + r._count, 0);
+    const pendingRequests = requestStats.find((r) => r.status === 'pending')?._count || 0;
+    const activeConnections = connectionStats.find((c) => c.status === 'active')?._count || 0;
+    const totalPlatforms = Number(platformCount[0]?.count || 0);
 
     return {
       data: {
         totalRequests,
         pendingRequests,
         activeConnections,
-        totalPlatforms: platformAuths.length,
+        totalPlatforms,
       },
       error: null,
     };
@@ -103,4 +99,3 @@ export async function getClientConnectionSummary(agencyId: string) {
     };
   }
 }
-
