@@ -27,8 +27,16 @@ const fastify = Fastify({
 });
 
 // Register plugins
+// CORS configuration: Allow both development and production origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://www.authhub.co',
+  'https://authhub.co',
+  env.FRONTEND_URL, // Include from env in case it's different
+].filter((origin, index, self) => self.indexOf(origin) === index); // Remove duplicates
+
 await fastify.register(cors, {
-  origin: env.FRONTEND_URL,
+  origin: allowedOrigins,
   credentials: true,
 });
 

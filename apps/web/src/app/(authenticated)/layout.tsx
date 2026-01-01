@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth, UserButton } from '@clerk/nextjs';
-import { redirect } from 'next/navigation';
+import { redirect, usePathname, useRouter } from 'next/navigation';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -10,7 +10,7 @@ import {
   Users,
   Settings,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -21,6 +21,9 @@ export default function AuthenticatedLayout({
 }) {
   const { userId, isLoaded, orgId } = useAuth();
   const [open, setOpen] = useState(false);
+  const [checkingAgency, setCheckingAgency] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Development bypass for testing
   const isDevelopmentBypass = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
@@ -30,8 +33,47 @@ export default function AuthenticatedLayout({
     redirect('/');
   }
 
-  // Show loading state while auth loads (skip in bypass mode)
-  if (!isDevelopmentBypass && !isLoaded) {
+  // Check if user has an agency and redirect to onboarding if needed
+  useEffect(() => {
+    const checkAgencyAndRedirect = async () => {
+      // Skip if bypassing auth or if already on onboarding page
+      if (isDevelopmentBypass || pathname?.startsWith('/onboarding')) {
+        setCheckingAgency(false);
+        return;
+      }
+
+      if (!isLoaded || !userId) {
+        setCheckingAgency(false);
+        return;
+      }
+
+      try {
+        // Check if user has an agency by clerkUserId
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`
+        );
+        
+        if (response.ok) {
+          const result = await response.json();
+          // If no agency found, redirect to onboarding
+          if (!result.data || result.data.length === 0) {
+            router.replace('/onboarding/agency');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check agency for redirect:', err);
+        // On error, don't block the user - let them through
+      } finally {
+        setCheckingAgency(false);
+      }
+    };
+
+    checkAgencyAndRedirect();
+  }, [userId, isLoaded, pathname, isDevelopmentBypass, router]);
+
+  // Show loading state while auth loads or while checking agency (skip in bypass mode)
+  if (!isDevelopmentBypass && (!isLoaded || checkingAgency)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="text-center">
