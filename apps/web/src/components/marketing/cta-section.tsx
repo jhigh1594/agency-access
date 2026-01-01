@@ -4,8 +4,24 @@ import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { ArrowRightIcon, CheckIcon } from '@/components/ui/ui-icons';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 export function CTASection() {
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show button after scrolling more than 50px
+      if (window.scrollY > 50) {
+        setHasScrolled(true);
+      } else {
+        setHasScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   return (
     <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white relative">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -74,8 +90,14 @@ export function CTASection() {
         </motion.div>
       </div>
 
-      {/* Sticky Mobile CTA Button - Shows after scrolling past main CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-background via-background to-transparent md:hidden pointer-events-none">
+      {/* Sticky Mobile CTA Button - Shows after scrolling starts */}
+      <div 
+        className={`fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-background via-background to-transparent md:hidden pointer-events-none transition-all duration-300 ${
+          hasScrolled 
+            ? 'opacity-100 translate-y-0' 
+            : 'opacity-0 translate-y-full pointer-events-none'
+        }`}
+      >
         <div className="pointer-events-auto">
           <SignUpButton mode="modal">
             <Button
