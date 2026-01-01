@@ -76,16 +76,18 @@ export function CTASection() {
 
       {/* Sticky Mobile CTA Button - Shows after scrolling past main CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-background via-background to-transparent md:hidden pointer-events-none">
-        <SignUpButton mode="modal" className="pointer-events-auto">
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full rounded-full shadow-2xl touch-feedback-bounce"
-            rightIcon={<ArrowRightIcon size={18} />}
-          >
-            Start Free Trial
-          </Button>
-        </SignUpButton>
+        <div className="pointer-events-auto">
+          <SignUpButton mode="modal">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full rounded-full shadow-2xl touch-feedback-bounce"
+              rightIcon={<ArrowRightIcon size={18} />}
+            >
+              Start Free Trial
+            </Button>
+          </SignUpButton>
+        </div>
       </div>
     </section>
   );
