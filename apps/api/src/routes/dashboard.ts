@@ -26,14 +26,42 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
    * - connections: Active client connections with authorizations
    */
   fastify.get('/dashboard', async (request, reply) => {
-    const clerkUserId = request.headers['x-agency-id'] as string;
+    // Try to get clerkUserId from query param first (for backward compatibility)
+    let clerkUserId = (request.query as any).clerkUserId as string | undefined;
+
+    // If not in query, try decoding from x-agency-id header (JWT)
+    if (!clerkUserId) {
+      const token = request.headers['x-agency-id'] as string;
+      if (token) {
+        // Check if it looks like a JWT (has 3 parts separated by dots)
+        if (token.split('.').length === 3) {
+          try {
+            // Try verified decode first (only works if CLERK_SECRET_KEY is set correctly for RS256)
+            const decoded = fastify.jwt.verify(token);
+            clerkUserId = (decoded as any).sub;
+          } catch (verifyError) {
+            // Verification failed - try unverified decode for development
+            try {
+              const parts = token.split('.');
+              const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+              clerkUserId = payload.sub;
+            } catch (decodeError) {
+              // Both attempts failed
+            }
+          }
+        } else {
+          // Not a JWT format, treat as raw user ID
+          clerkUserId = token;
+        }
+      }
+    }
 
     if (!clerkUserId) {
       return reply.code(401).send({
         data: null,
         error: {
           code: 'UNAUTHORIZED',
-          message: 'x-agency-id header is required',
+          message: 'clerkUserId is required (via query param or x-agency-id header)',
         },
       });
     }

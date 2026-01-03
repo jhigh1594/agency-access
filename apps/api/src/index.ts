@@ -13,6 +13,7 @@ import { platformAuthorizationRoutes } from './routes/platform-authorization.js'
 import { clientRoutes } from './routes/clients.js';
 import { agencyPlatformsRoutes } from './routes/agency-platforms.js';
 import { dashboardRoutes } from './routes/dashboard.js';
+import { beehiivRoutes } from './routes/beehiiv.js';
 import { performanceMiddleware } from './middleware/performance.js';
 
 const fastify = Fastify({
@@ -40,6 +41,9 @@ const allowedOrigins = [
 await fastify.register(cors, {
   origin: allowedOrigins,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-agency-id'],
+  exposedHeaders: ['x-cache'],
 });
 
 // Register compression middleware
@@ -76,6 +80,7 @@ await fastify.register(platformAuthorizationRoutes, { prefix: '/api' });
 await fastify.register(clientRoutes, { prefix: '/api' });
 await fastify.register(dashboardRoutes, { prefix: '/api' });
 await fastify.register(agencyPlatformsRoutes);
+await fastify.register(beehiivRoutes);
 
 // Health check and root routes
 fastify.get('/health', async () => {

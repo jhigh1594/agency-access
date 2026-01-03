@@ -14,6 +14,8 @@ import { identityVerificationService } from '@/services/identity-verification.se
 import { oauthStateService } from '@/services/oauth-state.service';
 import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
+import { KitConnector } from '@/services/connectors/kit';
+import { BeehiivConnector } from '@/services/connectors/beehiiv';
 import type { Platform } from '@agency-platform/shared';
 import { env } from '@/lib/env';
 import type { GoogleAccountsResponse } from '@/services/connectors/google';
@@ -43,6 +45,8 @@ const PLATFORM_NAMES: Record<Platform, string> = {
   snapchat: 'Snapchat Ads',
   snapchat_ads: 'Snapchat Ads',
   instagram: 'Instagram',
+  kit: 'Kit',
+  beehiiv: 'Beehiiv',
 };
 
 // Platform categorization helper
@@ -51,8 +55,8 @@ function getPlatformCategory(platform: Platform): 'recommended' | 'other' {
   return recommended.includes(platform) ? 'recommended' : 'other';
 }
 
-// Supported platforms for agency connections (group-level platforms)
-const SUPPORTED_PLATFORMS = ['google', 'meta', 'linkedin'] as const;
+// Supported platforms for agency connections
+const SUPPORTED_PLATFORMS = ['google', 'meta', 'linkedin', 'kit', 'beehiiv'] as const;
 type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
 // Platform connector mapping
@@ -60,6 +64,8 @@ const PLATFORM_CONNECTORS = {
   google: GoogleConnector,
   meta: MetaConnector,
   linkedin: MetaConnector, // LinkedIn not implemented yet, placeholder
+  kit: KitConnector,
+  beehiiv: BeehiivConnector,
 } as const;
 
 export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
@@ -197,13 +203,13 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
 
     const connections = result.data || [];
 
-    // Only return group-level platforms (unified connectors)
-    // Product-level platforms (google_ads, ga4, meta_ads) are now subsumed under unified platforms
+    // Return all available platforms (both group-level and standalone platforms)
     const allPlatforms: Platform[] = [
       'google',   // Includes: google_ads, ga4, business, tag manager, search console, merchant
       'meta',     // Includes: meta_ads (facebook & instagram)
       'linkedin',
-      // Note: TikTok, Snapchat, Instagram standalone can be added here when needed
+      'kit',      // Kit (ConvertKit) - standalone OAuth 2.0
+      'beehiiv',  // Beehiiv - API key authentication (team invitation workflow)
     ];
 
     // Build available platforms list with connection status

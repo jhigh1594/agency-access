@@ -53,13 +53,26 @@ export default function AuthenticatedLayout({
           `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`
         );
         
-        if (response.ok) {
-          const result = await response.json();
-          // If no agency found, redirect to onboarding
-          if (!result.data || result.data.length === 0) {
-            router.replace('/onboarding/agency');
-            return;
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Failed to fetch agencies:', response.status, errorText);
+          // On error, don't block the user - let them through
+          return;
+        }
+        
+        const result = await response.json();
+        
+        // Check for API-level errors
+        if (result.error) {
+          console.error('API error fetching agencies:', result.error);
+          // On error, don't block the user - let them through
+          return;
+        }
+        
+        // If no agency found, redirect to unified onboarding
+        if (!result.data || result.data.length === 0) {
+          router.replace('/onboarding/unified');
+          return;
         }
       } catch (err) {
         console.error('Failed to check agency for redirect:', err);

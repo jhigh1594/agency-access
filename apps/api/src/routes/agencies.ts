@@ -11,21 +11,54 @@ import { agencyService } from '../services/agency.service.js';
 export async function agencyRoutes(fastify: FastifyInstance) {
   // List agencies with optional filters
   fastify.get('/agencies', async (request, reply) => {
-    const { email, clerkUserId } = request.query as {
-      email?: string;
-      clerkUserId?: string;
-    };
+    try {
+      const { email, clerkUserId } = request.query as {
+        email?: string;
+        clerkUserId?: string;
+      };
 
-    const result = await agencyService.listAgencies({ email, clerkUserId });
+      fastify.log.info('GET /agencies', { email, clerkUserId });
 
-    if (result.error) {
+      // Validate that at least one filter is provided
+      if (!email && !clerkUserId) {
+        fastify.log.warn('GET /agencies: No filter provided');
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Either email or clerkUserId query parameter is required',
+          },
+        });
+      }
+
+      const result = await agencyService.listAgencies({ email, clerkUserId });
+
+      if (result.error) {
+        fastify.log.error('GET /agencies: Service error', result.error);
+        return reply.code(500).send({
+          data: null,
+          error: result.error,
+        });
+      }
+
+      // Ensure we always return a valid response format
+      const response = {
+        data: result.data || [],
+        error: null,
+      };
+      
+      fastify.log.info('GET /agencies: Success', { count: response.data.length });
+      return reply.send(response);
+    } catch (error) {
+      fastify.log.error('Error in GET /agencies:', error);
       return reply.code(500).send({
         data: null,
-        error: result.error,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to retrieve agencies',
+        },
       });
     }
-
-    return reply.send(result);
   });
 
   // Get agency by ID
