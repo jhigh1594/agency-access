@@ -3,6 +3,48 @@ import { metaConnector } from './meta.js';
 import { googleAdsConnector } from './google-ads.js';
 import { ga4Connector } from './ga4.js';
 import { googleConnector } from './google.js';
+import { linkedinConnector } from './linkedin.js';
+import { kitConnector } from './kit.js';
+import { beehiivConnector } from './beehiiv.js';
+
+// Export new hybrid architecture components
+export { BaseConnector, ConnectorError } from './base.connector.js';
+export type { NormalizedTokenResponse } from './base.connector.js';
+export { PLATFORM_CONFIGS, getPlatformConfig, hasPlatformConfig } from './registry.config.js';
+
+/**
+ * ============================================================================
+ * HYBRID CONNECTOR ARCHITECTURE
+ * ============================================================================
+ *
+ * This factory supports TWO connector patterns:
+ *
+ * 1. **LEGACY PATTERN** (Existing connectors: meta, google, google-ads, ga4)
+ *    - Standalone classes implementing full PlatformConnector interface
+ *    - Each has its own OAuth flow implementation
+ *    - Located in: meta.ts, google.ts, google-ads.ts, ga4.ts
+ *
+ * 2. **NEW PATTERN** (BaseConnector + Registry)
+ *    - Extend BaseConnector class for standard OAuth 2.0 platforms
+ *    - Configuration-driven via registry.config.ts
+ *    - ~80% less code for standard OAuth platforms
+ *    - See: TEMPLATE.ts for usage examples
+ *
+ * MIGRATION:
+ * - Legacy connectors continue to work unchanged
+ * - New platforms should use BaseConnector pattern
+ * - Existing connectors can be migrated gradually (not urgent)
+ *
+ * ADDING A NEW CONNECTOR (New Pattern):
+ * 1. Add platform to packages/shared/src/types.ts (PlatformSchema, PLATFORM_NAMES, PLATFORM_SCOPES)
+ * 2. Add env vars to apps/api/src/lib/env.ts
+ * 3. Add config to registry.config.ts
+ * 4. Create connector extending BaseConnector
+ * 5. Register connector in the `connectors` object below
+ * 6. Add OAuth callback route in apps/api/src/routes/oauth.ts
+ *
+ * ============================================================================
+ */
 
 /**
  * Platform Connector Interface
@@ -68,17 +110,25 @@ export interface PlatformConnector {
  * Add new connectors here as they are implemented.
  */
 const connectors: Partial<Record<Platform, PlatformConnector>> = {
+  // Legacy pattern connectors
   meta: metaConnector,
   meta_ads: metaConnector,
   google: googleConnector,
   google_ads: googleAdsConnector,
   ga4: ga4Connector,
 
+  // New pattern connectors (BaseConnector)
+  linkedin: linkedinConnector,
+  linkedin_ads: linkedinConnector, // Alias for same connector
+  kit: kitConnector, // Kit (ConvertKit) - standalone pattern (like Meta)
+
+  // API Key authentication connectors (non-OAuth)
+  beehiiv: beehiivConnector as any, // Beehiiv uses API key auth (team invitation workflow)
+
   // TODO: Add remaining platforms when connectors are implemented
-  // tiktok: tiktokConnector,
-  // linkedin: linkedinConnector,
-  // snapchat: snapchatConnector,
-  // instagram: instagramConnector,
+  // tiktok: tiktokConnector,       // Can use new pattern
+  // snapchat: snapchatConnector,   // Can use new pattern
+  // instagram: instagramConnector, // Can use new pattern
 };
 
 /**

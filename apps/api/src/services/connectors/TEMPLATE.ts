@@ -1,26 +1,138 @@
 /**
  * ⚠️ TEMPLATE FILE - DO NOT USE DIRECTLY ⚠️
- * 
- * This file is a template for creating new platform connectors.
- * It will NOT compile as-is - you must copy it and replace all placeholders.
  *
- * Usage:
- * 1. Copy this file to `[platform].ts` (e.g., `beehiiv.ts`)
- * 2. Replace all [Platform] placeholders with your platform name (PascalCase)
- * 3. Replace all [PLATFORM] placeholders with your platform identifier (UPPERCASE)
- * 4. Replace all [platform] placeholders with your platform identifier (lowercase)
- * 5. Update OAuth URLs, endpoints, and scopes based on platform documentation
- * 6. Implement platform-specific methods (getLongLivedToken if needed)
- * 7. Add environment variables to `apps/api/src/lib/env.ts`
- * 8. Register connector in `apps/api/src/services/connectors/factory.ts`
- * 9. Add platform to `packages/shared/src/types.ts` (PlatformSchema, PLATFORM_NAMES, PLATFORM_SCOPES)
+ * ============================================================================
+ * HYBRID CONNECTOR ARCHITECTURE - CHOOSE YOUR PATTERN
+ * ============================================================================
  *
- * Example replacements for "Beehiiv":
- * - [Platform] → Beehiiv
- * - [PLATFORM] → BEEHIIV
- * - [platform] → beehiiv
+ * This codebase supports TWO connector patterns. Choose the one that fits
+ * your platform's OAuth implementation:
  *
- * Documentation: [Link to platform's OAuth documentation]
+ * ┌─────────────────────────────────────────────────────────────────────────────┐
+ * │ PATTERN 1: BaseConnector (RECOMMENDED for standard OAuth 2.0)              │
+ * │                                                                             │
+ * │ Best for: Platforms following standard OAuth 2.0 spec                      │
+ * │   - Google, LinkedIn, TikTok, Snapchat, most modern platforms               │
+ * │                                                                             │
+ * │ Benefits:                                                                   │
+ * │   - ~80% less code (~50 lines vs 300+)                                     │
+ * │   - Centralized OAuth flow (write once, works for all)                     │
+ * │   - Configuration-driven (add to registry.config.ts)                        │
+ * │   - Automatic error handling, token refresh, verification                  │
+ * │                                                                             │
+ * │ How to use:                                                                 │
+ * │   1. Add config to registry.config.ts                                      │
+ * │   2. Extend BaseConnector                                                  │
+ * │   3. Implement only normalizeResponse()                                    │
+ * │                                                                             │
+ * │ See: SECTION A below - "BaseConnector Pattern Example"                     │
+ * │ Reference: linkedin.ts (working example)                                   │
+ * └─────────────────────────────────────────────────────────────────────────────┘
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────────┐
+ * │ PATTERN 2: Standalone Class (Legacy/Custom flows)                          │
+ * │                                                                             │
+ * │ Best for: Platforms with non-standard OAuth flows                          │
+ * │   - Meta (long-lived token exchange), custom auth flows                    │
+ * │                                                                             │
+ * │ Benefits:                                                                   │
+ * │   - Full control over OAuth implementation                                 │
+ * │   - Flexibility for weird platform quirks                                  │
+ * │   - No inheritance constraints                                             │
+ * │                                                                             │
+ * │ How to use:                                                                 │
+ * │   Copy this entire template and customize                                  │
+ * │                                                                             │
+ * │ See: SECTION B below - "Full Template (Legacy Pattern)"                    │
+ * │ Reference: meta.ts, google.ts (working examples)                           │
+ * └─────────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * QUICK DECISION GUIDE
+ * ============================================================================
+ *
+ * Does your platform follow standard OAuth 2.0?
+ *   - Authorization URL with client_id, redirect_uri, state, scope, response_type=code
+ *   - Token endpoint accepts authorization_code grant type
+ *   - Returns access_token (and optionally refresh_token, expires_in)
+ *
+ *   YES → Use BaseConnector (Pattern 1) - Much faster!
+ *   NO  → Use Full Template (Pattern 2) - More control
+ *
+ * Still not sure? Check if your platform is in registry.config.ts.
+ * If yes, someone already configured it → Use BaseConnector.
+ *
+ * ============================================================================
+ */
+
+// ============================================================================
+// SECTION A: BaseConnector Pattern Example (RECOMMENDED)
+// ============================================================================
+
+/**
+ * EXAMPLE: Using BaseConnector for a standard OAuth 2.0 platform
+ *
+ * This is all the code you need for platforms like LinkedIn, TikTok, Snapchat.
+ * Only ~50 lines vs 300+ with the legacy pattern!
+ *
+ * Step-by-step:
+ * 1. Add env vars to apps/api/src/lib/env.ts
+ * 2. Add platform to packages/shared/src/types.ts
+ * 3. Add config to registry.config.ts (OAuth endpoints, scopes, etc.)
+ * 4. Create this file (extending BaseConnector)
+ * 5. Register in factory.ts
+ * 6. Add OAuth callback route in apps/api/src/routes/oauth.ts
+ */
+
+// import { BaseConnector, NormalizedTokenResponse } from './base.connector.js';
+
+// /**
+//  * [Platform] Connector
+//  *
+//  * Uses BaseConnector pattern for standard OAuth 2.0 flow.
+//  * Only need to implement normalizeResponse() to handle response format.
+//  */
+// export class [Platform]Connector extends BaseConnector {
+//   constructor() {
+//     super('[platform]' as any); // Platform key from registry.config.ts
+//   }
+
+//   /**
+//    * Normalize platform's token response to our standard format
+//    *
+//    * @param data - Raw response from platform's token endpoint
+//    * @returns Normalized token response
+//    */
+//   normalizeResponse(data: any): NormalizedTokenResponse {
+//     return {
+//       accessToken: data.access_token,        // Map platform field
+//       refreshToken: data.refresh_token,       // If supported
+//       expiresIn: data.expires_in,             // Convert to number
+//       expiresAt: new Date(Date.now() + data.expires_in * 1000),
+//       tokenType: data.token_type ?? 'Bearer',
+//       metadata: {
+//         platform: '[platform]',
+//         authorizedAt: new Date().toISOString(),
+//       },
+//     };
+//   }
+// }
+
+// // Export singleton instance (factory pattern)
+// export const [platform]Connector = new [Platform]Connector();
+
+// ============================================================================
+// SECTION B: Full Template (Legacy Pattern - For Special Cases)
+// ============================================================================
+
+/**
+ * For platforms with non-standard OAuth flows, use this full template.
+ *
+ * Copy and customize this for platforms that need:
+ * - Custom token exchanges (e.g., Meta's long-lived tokens)
+ * - Multi-step authorization flows
+ * - Non-standard request/response formats
+ * - Special verification or revocation methods
  */
 
 import { env } from '../../lib/env.js';

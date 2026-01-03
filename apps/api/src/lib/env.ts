@@ -28,6 +28,13 @@ const envSchema = z.object({
   META_APP_ID: z.string(),
   META_APP_SECRET: z.string(),
 
+  // Kit (ConvertKit) OAuth
+  KIT_CLIENT_ID: z.string().optional(),
+  KIT_CLIENT_SECRET: z.string().optional(),
+
+  // Beehiiv API (Agency's API key for team access)
+  BEEHIIV_API_KEY: z.string().optional(),
+
   // Google OAuth (unified - covers all Google products)
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

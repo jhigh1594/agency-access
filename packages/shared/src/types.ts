@@ -4,18 +4,20 @@ import { z } from 'zod';
 // Group-level: 'google', 'meta' - single OAuth for multiple products
 // Product-level: 'google_ads', 'ga4', 'meta_ads', etc. - individual OAuth per product
 export const PlatformSchema = z.enum([
-  'google', 
-  'meta', 
-  'google_ads', 
-  'ga4', 
-  'meta_ads', 
-  'tiktok', 
+  'google',
+  'meta',
+  'google_ads',
+  'ga4',
+  'meta_ads',
+  'tiktok',
   'tiktok_ads',
-  'linkedin', 
+  'linkedin',
   'linkedin_ads',
-  'snapchat', 
+  'snapchat',
   'snapchat_ads',
-  'instagram'
+  'instagram',
+  'kit', // Kit (ConvertKit) - OAuth 2.0
+  'beehiiv', // Beehiiv - API key authentication (team invitation workflow)
 ]);
 export type Platform = z.infer<typeof PlatformSchema>;
 
@@ -64,6 +66,8 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   snapchat: 'Snapchat Ads',
   snapchat_ads: 'Snapchat Ads',
   instagram: 'Instagram',
+  kit: 'Kit',
+  beehiiv: 'Beehiiv',
 };
 
 // Platform OAuth scopes
@@ -124,6 +128,14 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     'business_management',
     'pages_read_engagement',
   ],
+  kit: [
+    // Kit OAuth scopes
+    'public', // Default scope, fine-grained coming soon
+  ],
+  beehiiv: [
+    // Beehiiv uses API key authentication (team invitation workflow)
+    // No OAuth scopes required
+  ],
 };
 
 // Platform categorization for UI display
@@ -131,7 +143,7 @@ export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
   recommended: ['google', 'meta', 'linkedin'] as const,
   // Product-level platforms (legacy, still supported)
-  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram'] as const,
+  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv'] as const,
 } as const;
 
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
@@ -491,6 +503,11 @@ export interface BrandingConfig {
   primaryColor: string;
   subdomain: string;
 }
+
+// Platform selection format for hierarchical platform organization
+// Used in access requests and templates
+// Format: { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
+export type PlatformSelection = Record<string, string[]>;
 
 // Access Request Template - mirrors AccessRequest wizard state
 export interface AccessRequestTemplate {
