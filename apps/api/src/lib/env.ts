@@ -40,7 +40,27 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   // Legacy: Google Ads-specific credentials (optional, for API access)
   GOOGLE_ADS_DEVELOPER_TOKEN: z.string().optional(),
-  
+
+  // TikTok OAuth
+  TIKTOK_APP_ID: z.string().optional(),
+  TIKTOK_APP_SECRET: z.string().optional(),
+
+  // Mailchimp OAuth
+  MAILCHIMP_CLIENT_ID: z.string().optional(),
+  MAILCHIMP_CLIENT_SECRET: z.string().optional(),
+
+  // Pinterest OAuth
+  PINTEREST_CLIENT_ID: z.string().optional(),
+  PINTEREST_CLIENT_SECRET: z.string().optional(),
+
+  // Klaviyo OAuth
+  KLAVIYO_CLIENT_ID: z.string().optional(),
+  KLAVIYO_CLIENT_SECRET: z.string().optional(),
+
+  // Shopify OAuth
+  SHOPIFY_API_KEY: z.string().optional(),
+  SHOPIFY_API_SECRET_KEY: z.string().optional(),
+
   // Notifications
   RESEND_API_KEY: z.string().optional(),
 

@@ -18,6 +18,10 @@ export const PlatformSchema = z.enum([
   'instagram',
   'kit', // Kit (ConvertKit) - OAuth 2.0
   'beehiiv', // Beehiiv - API key authentication (team invitation workflow)
+  'mailchimp', // Mailchimp - OAuth 2.0
+  'pinterest', // Pinterest Ads - OAuth 2.0
+  'klaviyo', // Klaviyo - OAuth 2.0 with PKCE
+  'shopify', // Shopify - OAuth 2.0 with shop context
 ]);
 export type Platform = z.infer<typeof PlatformSchema>;
 
@@ -68,6 +72,35 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   instagram: 'Instagram',
   kit: 'Kit',
   beehiiv: 'Beehiiv',
+  mailchimp: 'Mailchimp',
+  pinterest: 'Pinterest',
+  klaviyo: 'Klaviyo',
+  shopify: 'Shopify',
+};
+
+// Platform domains for Brandfetch Logo API
+export const PLATFORM_DOMAINS: Record<Platform, string> = {
+  // Group-level platforms
+  google: 'google.com',
+  meta: 'meta.com',
+  linkedin: 'linkedin.com',
+
+  // Product-level platforms
+  google_ads: 'google.com',
+  ga4: 'google.com',
+  meta_ads: 'meta.com',
+  tiktok: 'tiktok.com',
+  tiktok_ads: 'tiktok.com',
+  linkedin_ads: 'linkedin.com',
+  snapchat: 'snapchat.com',
+  snapchat_ads: 'snapchat.com',
+  instagram: 'instagram.com',
+  kit: 'kit.com',
+  beehiiv: 'beehiiv.com',
+  mailchimp: 'mailchimp.com',
+  pinterest: 'pinterest.com',
+  klaviyo: 'klaviyo.com',
+  shopify: 'shopify.com',
 };
 
 // Platform OAuth scopes
@@ -136,6 +169,27 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     // Beehiiv uses API key authentication (team invitation workflow)
     // No OAuth scopes required
   ],
+  mailchimp: [
+    // Mailchimp uses account-level permissions - no granular OAuth scopes
+    // Access token grants access based on user's account permissions
+  ],
+  pinterest: [
+    'ads:read',
+    'ads:write',
+    'user_accounts:read',
+  ],
+  klaviyo: [
+    'lists:write',
+    'campaigns:write',
+    'metrics:read',
+    'events:read',
+  ],
+  shopify: [
+    'read_products',
+    'read_orders',
+    'read_customers',
+    'read_marketing_events',
+  ],
 };
 
 // Platform categorization for UI display
@@ -143,7 +197,7 @@ export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
   recommended: ['google', 'meta', 'linkedin'] as const,
   // Product-level platforms (legacy, still supported)
-  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv'] as const,
+  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'pinterest', 'klaviyo', 'shopify'] as const,
 } as const;
 
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
@@ -272,6 +326,38 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
     description: 'Snapchat Marketing',
     products: [
       { id: 'snapchat_ads', name: 'Snapchat Ads', icon: 'SnapchatAdsIcon', description: 'Augmented reality advertising' },
+    ],
+  },
+  mailchimp: {
+    name: 'Mailchimp',
+    icon: 'MailchimpIcon',
+    description: 'Email Marketing Platform',
+    products: [
+      { id: 'mailchimp', name: 'Mailchimp', icon: 'MailchimpIcon', description: 'Email marketing and automation' },
+    ],
+  },
+  pinterest: {
+    name: 'Pinterest',
+    icon: 'PinterestIcon',
+    description: 'Pinterest Marketing',
+    products: [
+      { id: 'pinterest', name: 'Pinterest Ads', icon: 'PinterestAdsIcon', description: 'Visual discovery and advertising' },
+    ],
+  },
+  klaviyo: {
+    name: 'Klaviyo',
+    icon: 'KlaviyoIcon',
+    description: 'Email & SMS Marketing',
+    products: [
+      { id: 'klaviyo', name: 'Klaviyo', icon: 'KlaviyoIcon', description: 'Email and SMS marketing automation' },
+    ],
+  },
+  shopify: {
+    name: 'Shopify',
+    icon: 'ShopifyIcon',
+    description: 'E-commerce Platform',
+    products: [
+      { id: 'shopify', name: 'Shopify', icon: 'ShopifyIcon', description: 'Online store and e-commerce platform' },
     ],
   },
 };

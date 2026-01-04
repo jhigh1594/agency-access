@@ -6,6 +6,11 @@ import { googleConnector } from './google.js';
 import { linkedinConnector } from './linkedin.js';
 import { kitConnector } from './kit.js';
 import { beehiivConnector } from './beehiiv.js';
+import { mailchimpConnector } from './mailchimp.js';
+import { pinterestConnector } from './pinterest.js';
+import { klaviyoConnector } from './klaviyo.js';
+import { shopifyConnector } from './shopify.js';
+import { tiktokConnector } from './tiktok.js';
 
 // Export new hybrid architecture components
 export { BaseConnector, ConnectorError } from './base.connector.js';
@@ -125,10 +130,13 @@ const connectors: Partial<Record<Platform, PlatformConnector>> = {
   // API Key authentication connectors (non-OAuth)
   beehiiv: beehiivConnector as any, // Beehiiv uses API key auth (team invitation workflow)
 
-  // TODO: Add remaining platforms when connectors are implemented
-  // tiktok: tiktokConnector,       // Can use new pattern
-  // snapchat: snapchatConnector,   // Can use new pattern
-  // instagram: instagramConnector, // Can use new pattern
+  // New platform connectors
+  tiktok: tiktokConnector,
+  tiktok_ads: tiktokConnector, // Alias for same connector
+  mailchimp: mailchimpConnector,
+  pinterest: pinterestConnector,
+  klaviyo: klaviyoConnector,
+  shopify: shopifyConnector,
 };
 
 /**

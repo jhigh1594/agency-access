@@ -52,6 +52,12 @@ export interface PlatformOAuthConfig {
   /** Platform requires short → long token exchange after authorization */
   requiresLongLivedExchange?: boolean;
 
+  /** Platform requires PKCE (Proof Key for Code Exchange) for OAuth */
+  requiresPKCE?: boolean;
+
+  /** Platform requires shop context in URLs (e.g., Shopify) */
+  requiresShopContext?: boolean;
+
   /** Platform-specific headers for API calls (e.g., developer tokens) */
   apiHeaders?: Record<string, string>;
 
@@ -214,6 +220,21 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
   },
 
   // ========================================================================
+  // BEEHIIV PLATFORMS
+  // ========================================================================
+  // Note: Beehiiv uses API key authentication, not OAuth
+  // This config is for type compatibility only
+
+  beehiiv: {
+    name: 'Beehiiv',
+    authUrl: '', // Beehiiv uses API key auth, not OAuth
+    tokenUrl: '',
+    scopeSeparator: ' ',
+    supportsRefreshTokens: false,
+    defaultScopes: [], // Beehiiv uses API key, not OAuth scopes
+  },
+
+  // ========================================================================
   // TIKTOK PLATFORMS
   // ========================================================================
 
@@ -259,6 +280,68 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     userInfoUrl: 'https://adsapi.snapchat.com/v1/me',
     supportsRefreshTokens: true,
     defaultScopes: ['snapchat-marketing-api'],
+  },
+
+  // ========================================================================
+  // MAILCHIMP PLATFORMS
+  // ========================================================================
+
+  mailchimp: {
+    name: 'Mailchimp',
+    authUrl: 'https://login.mailchimp.com/oauth2/authorize',
+    tokenUrl: 'https://login.mailchimp.com/oauth2/token',
+    scopeSeparator: ',',
+    userInfoUrl: 'https://login.mailchimp.com/oauth2/metadata', // Metadata endpoint for server prefix
+    supportsRefreshTokens: false, // Tokens never expire
+    defaultScopes: [], // Mailchimp uses account-level permissions, no scopes
+  },
+
+  // ========================================================================
+  // PINTEREST PLATFORMS
+  // ========================================================================
+
+  pinterest: {
+    name: 'Pinterest',
+    authUrl: 'https://www.pinterest.com/oauth/',
+    tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
+    scopeSeparator: ',',
+    userInfoUrl: 'https://api.pinterest.com/v5/user_account',
+    supportsRefreshTokens: true, // Continuous refresh tokens (don't expire)
+    defaultScopes: ['ads:read', 'ads:write', 'user_accounts:read'],
+  },
+
+  // ========================================================================
+  // KLAVIYO PLATFORMS
+  // ========================================================================
+
+  klaviyo: {
+    name: 'Klaviyo',
+    authUrl: 'https://www.klaviyo.com/oauth/authorize',
+    tokenUrl: 'https://a.klaviyo.com/oauth/token', // NOTE: a.klaviyo.com subdomain
+    scopeSeparator: ' ',
+    userInfoUrl: 'https://a.klaviyo.com/api/accounts/',
+    supportsRefreshTokens: true, // Refresh tokens expire after 90 days of no-use
+    // Klaviyo requires PKCE (Proof Key for Code Exchange)
+    // This flag is checked in the connector to add code_challenge parameters
+    requiresPKCE: true,
+    defaultScopes: ['lists:write', 'campaigns:write', 'metrics:read', 'events:read'],
+  },
+
+  // ========================================================================
+  // SHOPIFY PLATFORMS
+  // ========================================================================
+
+  shopify: {
+    name: 'Shopify',
+    // Shopify uses shop-specific URLs: https://{shop}.myshopify.com/admin/oauth/authorize
+    // The {shop} placeholder is replaced at runtime
+    authUrl: 'https://{shop}.myshopify.com/admin/oauth/authorize',
+    tokenUrl: 'https://{shop}.myshopify.com/admin/oauth/access_token',
+    scopeSeparator: ',',
+    supportsRefreshTokens: false, // Access tokens don't expire
+    // Shopify requires shop context in URLs
+    requiresShopContext: true,
+    defaultScopes: ['read_products', 'read_orders', 'read_customers', 'read_marketing_events'],
   },
 };
 
