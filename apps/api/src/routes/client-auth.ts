@@ -29,13 +29,13 @@ const submitIntakeSchema = z.object({
 });
 
 const createOAuthStateSchema = z.object({
-  platform: z.enum(['google', 'meta', 'meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']),
+  platform: z.enum(['google', 'meta', 'meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat', 'mailchimp', 'pinterest', 'klaviyo', 'shopify']),
 });
 
 const oauthExchangeSchema = z.object({
   code: z.string(),
   state: z.string(),
-  platform: z.enum(['google', 'meta', 'meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat']).optional(), // Optional - will be extracted from state
+  platform: z.enum(['google', 'meta', 'meta_ads', 'google_ads', 'ga4', 'linkedin', 'instagram', 'tiktok', 'snapchat', 'mailchimp', 'pinterest', 'klaviyo', 'shopify']).optional(), // Optional - will be extracted from state
 });
 
 const saveAssetsSchema = z.object({
@@ -626,6 +626,11 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
         'google_merchant_center': 'google',
         'meta_ads': 'meta',
         'instagram': 'meta',
+        'mailchimp': 'mailchimp',
+        'pinterest': 'pinterest',
+        'klaviyo': 'klaviyo',
+        'shopify': 'shopify',
+        'tiktok': 'tiktok',
       };
       const authPlatform = platformMap[platformStr] || (platform as Platform);
 
@@ -1095,6 +1100,11 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
       'google_merchant_center': 'google',
       'meta_ads': 'meta',
       'instagram': 'meta',
+      'mailchimp': 'mailchimp',
+      'pinterest': 'pinterest',
+      'klaviyo': 'klaviyo',
+      'shopify': 'shopify',
+      'tiktok': 'tiktok',
     };
 
     const platform = platformParam as Platform;
@@ -1151,6 +1161,40 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
 
       if (platform === 'meta_ads') {
         assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken);
+      } else if (platform === 'mailchimp') {
+        // Mailchimp requires dc (data center) prefix from metadata
+        const metadata = (platformAuth.metadata as any) || {};
+        const dc = metadata.dc;
+        if (!dc) {
+          return reply.code(400).send({
+            data: null,
+            error: {
+              code: 'MISSING_METADATA',
+              message: 'Mailchimp data center (dc) not found in authorization metadata',
+            },
+          });
+        }
+        assets = await clientAssetsService.fetchMailchimpAssets(tokens.accessToken, dc);
+      } else if (platform === 'pinterest') {
+        assets = await clientAssetsService.fetchPinterestAssets(tokens.accessToken);
+      } else if (platform === 'klaviyo') {
+        assets = await clientAssetsService.fetchKlaviyoAssets(tokens.accessToken);
+      } else if (platform === 'shopify') {
+        // Shopify requires shop name from metadata
+        const metadata = (platformAuth.metadata as any) || {};
+        const shop = metadata.shop;
+        if (!shop) {
+          return reply.code(400).send({
+            data: null,
+            error: {
+              code: 'MISSING_METADATA',
+              message: 'Shopify shop name not found in authorization metadata',
+            },
+          });
+        }
+        assets = await clientAssetsService.fetchShopifyAssets(tokens.accessToken, shop);
+      } else if (platform === 'tiktok') {
+        assets = await clientAssetsService.fetchTikTokAssets(tokens.accessToken);
       } else if (platform === 'google' || platformStr.startsWith('google_') || platform === 'ga4') {
         // For Google products, use the GoogleConnector to fetch all accounts
         const { GoogleConnector } = await import('../services/connectors/google.js');

@@ -289,6 +289,226 @@ class ClientAssetsService {
       return [];
     }
   }
+
+  // ==========================================================================
+  // NEW PLATFORM ASSET FETCHING (Mailchimp, Pinterest, Klaviyo, Shopify, TikTok)
+  // ==========================================================================
+
+  /**
+   * Fetch Mailchimp assets (lists/audiences and campaigns)
+   *
+   * @param accessToken - Client's OAuth access token
+   * @param dc - Data center prefix (e.g., "us12") from metadata
+   * @returns Object containing arrays of lists and campaigns
+   */
+  async fetchMailchimpAssets(accessToken: string, dc: string): Promise<{
+    lists: any[];
+    campaigns: any[];
+  }> {
+    logger.info('Fetching Mailchimp assets');
+
+    try {
+      const baseUrl = `https://${dc}.api.mailchimp.com/3.0/`;
+
+      // Fetch lists (audiences)
+      const listsResponse = await fetch(`${baseUrl}lists?count=100`, {
+        headers: { 'Authorization': `OAuth ${accessToken}` },
+      });
+
+      // Fetch campaigns
+      const campaignsResponse = await fetch(`${baseUrl}campaigns?count=100`, {
+        headers: { 'Authorization': `OAuth ${accessToken}` },
+      });
+
+      const listsData = await listsResponse.json() as any;
+      const campaignsData = await campaignsResponse.json() as any;
+
+      logger.info('Successfully fetched Mailchimp assets', {
+        listCount: listsData.lists?.length || 0,
+        campaignCount: campaignsData.campaigns?.length || 0,
+      });
+
+      return {
+        lists: listsData.lists || [],
+        campaigns: campaignsData.campaigns || [],
+      };
+    } catch (error) {
+      logger.error('Failed to fetch Mailchimp assets', { error });
+      return { lists: [], campaigns: [] };
+    }
+  }
+
+  /**
+   * Fetch Pinterest ad accounts
+   *
+   * @param accessToken - Client's OAuth access token
+   * @returns Object containing arrays of ad accounts
+   */
+  async fetchPinterestAssets(accessToken: string): Promise<{
+    adAccounts: any[];
+  }> {
+    logger.info('Fetching Pinterest assets');
+
+    try {
+      // Fetch ad accounts
+      const adAccountsResponse = await fetch('https://api.pinterest.com/v5/ad_accounts', {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+
+      const adAccountsData = await adAccountsResponse.json() as any;
+
+      logger.info('Successfully fetched Pinterest assets', {
+        adAccountCount: adAccountsData.items?.length || 0,
+      });
+
+      return {
+        adAccounts: adAccountsData.items || [],
+      };
+    } catch (error) {
+      logger.error('Failed to fetch Pinterest assets', { error });
+      return { adAccounts: [] };
+    }
+  }
+
+  /**
+   * Fetch Klaviyo assets (lists and campaigns)
+   *
+   * @param accessToken - Client's OAuth access token
+   * @returns Object containing arrays of lists and campaigns
+   */
+  async fetchKlaviyoAssets(accessToken: string): Promise<{
+    lists: any[];
+    campaigns: any[];
+  }> {
+    logger.info('Fetching Klaviyo assets');
+
+    try {
+      const baseUrl = 'https://a.klaviyo.com/api/';
+
+      // Fetch lists (audiences)
+      const listsResponse = await fetch(`${baseUrl}lists/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+
+      // Fetch campaigns
+      const campaignsResponse = await fetch(`${baseUrl}campaigns/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+
+      const listsData = await listsResponse.json() as any;
+      const campaignsData = await campaignsResponse.json() as any;
+
+      logger.info('Successfully fetched Klaviyo assets', {
+        listCount: listsData.data?.length || 0,
+        campaignCount: campaignsData.data?.length || 0,
+      });
+
+      return {
+        lists: listsData.data || [],
+        campaigns: campaignsData.data || [],
+      };
+    } catch (error) {
+      logger.error('Failed to fetch Klaviyo assets', { error });
+      return { lists: [], campaigns: [] };
+    }
+  }
+
+  /**
+   * Fetch Shopify store information
+   *
+   * @param accessToken - Client's OAuth access token
+   * @param shop - Shop name (e.g., "my-store" from my-store.myshopify.com)
+   * @returns Object containing store metrics
+   */
+  async fetchShopifyAssets(accessToken: string, shop: string): Promise<{
+    products: number;
+    orders: number;
+    customers: number;
+    shop: string;
+  }> {
+    logger.info('Fetching Shopify assets');
+
+    try {
+      const baseUrl = `https://${shop}.myshopify.com/admin/api/2024-01/`;
+
+      // Fetch products count
+      const productsResponse = await fetch(`${baseUrl}products/count.json`, {
+        headers: { 'X-Shopify-Access-Token': accessToken },
+      });
+
+      // Fetch orders count
+      const ordersResponse = await fetch(`${baseUrl}orders/count.json`, {
+        headers: { 'X-Shopify-Access-Token': accessToken },
+      });
+
+      // Fetch customers count
+      const customersResponse = await fetch(`${baseUrl}customers/count.json`, {
+        headers: { 'X-Shopify-Access-Token': accessToken },
+      });
+
+      const productsData = await productsResponse.json() as any;
+      const ordersData = await ordersResponse.json() as any;
+      const customersData = await customersResponse.json() as any;
+
+      logger.info('Successfully fetched Shopify assets', {
+        products: productsData.count || 0,
+        orders: ordersData.count || 0,
+        customers: customersData.count || 0,
+      });
+
+      return {
+        products: productsData.count || 0,
+        orders: ordersData.count || 0,
+        customers: customersData.count || 0,
+        shop,
+      };
+    } catch (error) {
+      logger.error('Failed to fetch Shopify assets', { error });
+      return { products: 0, orders: 0, customers: 0, shop };
+    }
+  }
+
+  /**
+   * Fetch TikTok advertisers
+   *
+   * @param accessToken - Client's OAuth access token
+   * @returns Object containing arrays of advertisers
+   */
+  async fetchTikTokAssets(accessToken: string): Promise<{
+    advertisers: any[];
+  }> {
+    logger.info('Fetching TikTok assets');
+
+    try {
+      // Fetch advertiser info
+      const advertiserResponse = await fetch(
+        'https://business-api.tiktok.com/open_api/v1.3/advertiser/info/',
+        {
+          method: 'POST',
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            advertiser_id: null, // Fetch all accessible advertisers
+          }),
+        }
+      );
+
+      const advertiserData = await advertiserResponse.json() as any;
+
+      logger.info('Successfully fetched TikTok assets', {
+        advertiserCount: advertiserData.data?.list?.length || 0,
+      });
+
+      return {
+        advertisers: advertiserData.data?.list || [],
+      };
+    } catch (error) {
+      logger.error('Failed to fetch TikTok assets', { error });
+      return { advertisers: [] };
+    }
+  }
 }
 
 export const clientAssetsService = new ClientAssetsService();
