@@ -203,7 +203,25 @@ The backend uses Zod validation in `apps/api/src/lib/env.ts` for environment var
 3. TypeScript will enforce the env var exists at runtime
 
 ### Platform Connectors
-OAuth connectors go in `apps/api/src/services/connectors/`. Each platform connector implements the `PlatformConnector` interface defined in `factory.ts`.
+OAuth connectors go in `apps/api/src/services/connectors/`. The system uses a **configuration-driven registry pattern** with a base connector class for code reuse.
+
+**Architecture:**
+
+1. **`registry.config.ts`** - Centralized OAuth configuration for all platforms
+   - Contains OAuth endpoints, scope separators, auth params, API headers
+   - Flags for platform behaviors: `requiresLongLivedExchange`, `supportsRefreshTokens`, etc.
+   - Most platforms can be added with configuration alone
+
+2. **`base.connector.ts`** - Reusable OAuth implementation
+   - All connectors extend `BaseConnector` for common OAuth flows
+   - Handles authorization URL generation, code exchange, token verification
+   - Override methods only for platform-specific quirks
+
+3. **`[platform].ts`** - Platform-specific connectors (when needed)
+   - Extend `BaseConnector` and override specific methods
+   - Required for non-standard flows (e.g., Beehiiv API key auth, Kit JSON token exchange)
+
+4. **`factory.ts`** - Connector instantiation and caching
 
 **Connector Interface:**
 ```typescript
@@ -213,7 +231,7 @@ export interface PlatformConnector {
   exchangeCode(code: string, redirectUri?: string): Promise<any>;
   verifyToken(accessToken: string): Promise<boolean>;
   getUserInfo(accessToken: string): Promise<any>;
-  
+
   // Optional methods (implement if platform supports)
   refreshToken?(refreshToken: string): Promise<any>;
   getLongLivedToken?(shortToken: string): Promise<any>;
@@ -224,19 +242,14 @@ export interface PlatformConnector {
 
 **Adding a New Platform Connector:**
 
-1. **Use the Template**
-   - Copy `apps/api/src/services/connectors/TEMPLATE.ts` to `[platform].ts`
-   - Replace all `[Platform]` placeholders with your platform name
-   - Follow the template's inline comments and examples
-
-2. **Add Platform to Shared Types** (`packages/shared/src/types.ts`)
+1. **Add Platform to Shared Types** (`packages/shared/src/types.ts`)
    ```typescript
    // Add to PlatformSchema enum
    export const PlatformSchema = z.enum([
      // ... existing
      'beehiiv', 'kit', 'zapier',
    ]);
-   
+
    // Add to PLATFORM_NAMES
    export const PLATFORM_NAMES: Record<Platform, string> = {
      // ... existing
@@ -244,7 +257,7 @@ export interface PlatformConnector {
      kit: 'Kit',
      zapier: 'Zapier',
    };
-   
+
    // Add to PLATFORM_SCOPES (check platform OAuth docs)
    export const PLATFORM_SCOPES: Record<Platform, string[]> = {
      // ... existing
@@ -254,41 +267,78 @@ export interface PlatformConnector {
    };
    ```
 
+2. **Add to Registry Configuration** (`apps/api/src/services/connectors/registry.config.ts`)
+   ```typescript
+   export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
+     // ... existing
+     zapier: {
+       name: 'Zapier',
+       authUrl: 'https://zapier.com/oauth/authorize',
+       tokenUrl: 'https://zapier.com/oauth/token',
+       scopeSeparator: ' ',
+       userInfoUrl: 'https://api.zapier.com/v2/user',
+       supportsRefreshTokens: true,
+       defaultScopes: ['read', 'write'],
+     },
+   };
+   ```
+
 3. **Add Environment Variables** (`apps/api/src/lib/env.ts`)
    ```typescript
    const envSchema = z.object({
      // ... existing
-     BEEHIIV_CLIENT_ID: z.string(),
-     BEEHIIV_CLIENT_SECRET: z.string(),
+     ZAPIER_CLIENT_ID: z.string(),
+     ZAPIER_CLIENT_SECRET: z.string(),
      // ... add for each platform
    });
    ```
    Also update `apps/api/.env.example` with placeholder values.
 
-4. **Register Connector** (`apps/api/src/services/connectors/factory.ts`)
+4. **Create Platform Connector** (if needed)
+   - Copy `apps/api/src/services/connectors/TEMPLATE.ts` to `[platform].ts`
+   - Extend `BaseConnector` instead of implementing from scratch
+   - Override only platform-specific methods
+   - Most standard OAuth 2.0 platforms don't need this step
+
+5. **Register in Factory** (`apps/api/src/services/connectors/factory.ts`)
    ```typescript
-   import { beehiivConnector } from './beehiiv';
-   
+   import { zapierConnector } from './zapier'; // if custom connector needed
+
    const connectors: Partial<Record<Platform, PlatformConnector>> = {
      // ... existing
-     beehiiv: beehiivConnector,
+     zapier: zapierConnector, // or use createConnector('zapier') for config-only
    };
    ```
 
-5. **Test OAuth Flow**
+6. **Test OAuth Flow**
    - Test full flow: authorize → exchange code → store in Infisical → verify token
    - Test token refresh (if supported)
    - Test token verification
    - Test user info retrieval
 
-**Platform configuration:**
-- Platform definitions: `packages/shared/src/types.ts` (`PlatformSchema`)
-- OAuth scopes: `PLATFORM_SCOPES` constant (maps platform to required scopes)
-- Current platforms: meta_ads, google_ads, ga4, tiktok, linkedin, snapchat, instagram
+**Platform Hierarchy:**
+
+The platform supports two types of platforms:
+- **Group-level** (`google`, `meta`, `linkedin`): Single OAuth for multiple products
+- **Product-level** (`google_ads`, `ga4`, `meta_ads`): Individual OAuth per product
+
+```typescript
+// Categorized for UI display
+export const PLATFORM_CATEGORIES = {
+  recommended: ['google', 'meta', 'linkedin'] as const,  // Group-level (recommended)
+  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv'] as const,
+};
+```
+
+**Current platforms:**
+- Group-level: `google`, `meta`, `linkedin`
+- Product-level: `google_ads`, `ga4`, `meta_ads`, `tiktok`, `snapchat`, `instagram`, `kit`, `beehiiv`
 
 **Connector pattern notes:**
 - Meta requires exchanging short-lived tokens for 60-day tokens (use `getLongLivedToken`)
 - Google Ads requires a `developer-token` header for all API calls
+- Kit uses JSON request body for token exchange (not form-encoded)
+- Beehiiv uses API key authentication (team invitation workflow, not OAuth)
 - Store all metadata (user IDs, business IDs, ad accounts) in `PlatformAuthorization.metadata` as JSON
 - OAuth state is managed by `OAuthStateService` using Redis for CSRF protection
 - **NEVER store tokens in database** - always use Infisical and store only `secretId`
@@ -296,7 +346,7 @@ export interface PlatformConnector {
 **Template File:**
 - Full template available at `apps/api/src/services/connectors/TEMPLATE.ts`
 - Includes detailed comments, examples, and all required/optional methods
-- Copy and customize for new platforms
+- Copy and customize for new platforms with non-standard flows
 
 ### Client Authorization Pattern
 Clients authorize platforms through a simplified 2-step wizard:
@@ -313,15 +363,9 @@ Clients authorize platforms through a simplified 2-step wizard:
 - Format: `{ adAccounts: string[], pages: string[], ... }`
 
 ### Authorization Models
-The platform supports two distinct authorization models (set per `AccessRequest`):
+The platform currently supports one authorization model (set per `AccessRequest`):
 
-**1. Client Authorization (default: `authModel: 'client_authorization'`)**
-- Client authorizes their own platform accounts to the agency
-- Client clicks OAuth link, logs into platform, grants access
-- Tokens stored in `PlatformAuthorization` linked to `ClientConnection`
-- Use case: Agency needs access to client's existing ad accounts
-
-**2. Delegated Access (`authModel: 'delegated_access'`)**
+**Delegated Access (`authModel: 'delegated_access'`)**
 - Agency grants access to client using agency's own platform connection
 - Requires agency to have `AgencyPlatformConnection` for the platform
 - Agency delegates specific permissions/accounts to client
@@ -329,7 +373,42 @@ The platform supports two distinct authorization models (set per `AccessRequest`
 - Use case: Agency manages ads from their own account, gives client view-only access
 
 **Implementation note:**
-The `AccessRequest.authModel` field determines which flow to use. Frontend and backend must handle both flows differently in the authorization UI and token management.
+The `AccessRequest.authModel` field is set to `'delegated_access'` for all access requests. Frontend and backend handle the flow through agency-owned connections.
+
+### Access Levels & Granular Permissions
+
+The platform supports granular access levels for platform connections:
+
+**Access Levels:**
+- `admin` - Full control over the account (create, edit, delete, manage billing, add/remove users)
+- `standard` - Can create and edit, but not delete (create campaigns, edit settings, view reports)
+- `read_only` - View-only access for reporting (view campaigns, view reports, export data)
+- `email_only` - Basic email access for notifications (receive email reports, view shared dashboards)
+
+**Usage:**
+```typescript
+import { AccessLevel, ACCESS_LEVEL_DESCRIPTIONS } from '@agency-platform/shared';
+
+// In access request creation
+const accessRequest = await prisma.accessRequest.create({
+  data: {
+    globalAccessLevel: 'standard', // Applied to all platforms
+    platforms: {
+      meta: ['meta_ads'],
+      google: ['google_ads', 'ga4']
+    }
+  }
+});
+
+// Access level descriptions for UI
+const levelInfo = ACCESS_LEVEL_DESCRIPTIONS['standard'];
+// { title: 'Standard Access', description: 'Can create and edit...', permissions: [...] }
+```
+
+**Permission mapping to platform-specific scopes:**
+- Access levels are translated to platform-specific OAuth scopes during authorization
+- Different platforms may map to different scopes based on their capabilities
+- See `PLATFORM_SCOPES` in `packages/shared/src/types.ts` for platform-specific scope definitions
 
 ### Templates & Custom Branding
 Agencies can create reusable templates and customize the client-facing experience:
@@ -407,45 +486,15 @@ await prisma.accessRequest.create({
 
 ### Adding a Platform Connector
 
+See the **Platform Connectors** section above for detailed instructions on adding new platforms.
+
 **Quick Start:**
-1. Copy `apps/api/src/services/connectors/TEMPLATE.ts` to `apps/api/src/services/connectors/[platform].ts`
-2. Replace all `[Platform]` placeholders with your platform name
-3. Follow the detailed steps below
-
-**Detailed Steps:**
-
-1. **Create Connector File**
-   - Copy `TEMPLATE.ts` to `[platform].ts` (e.g., `beehiiv.ts`)
-   - Replace placeholders: `[Platform]`, `[PLATFORM]`, `[platform]`
-   - Update OAuth URLs, endpoints, and scopes based on platform documentation
-   - Implement platform-specific methods (e.g., `getLongLivedToken` if needed)
-
-2. **Add Platform to Shared Types** (`packages/shared/src/types.ts`)
-   - Add to `PlatformSchema` enum
-   - Add to `PLATFORM_NAMES` object
-   - Add to `PLATFORM_SCOPES` object (check platform OAuth docs for correct scopes)
-
-3. **Add Environment Variables**
-   - Add to `apps/api/src/lib/env.ts` (`envSchema` Zod object)
-   - Add to `apps/api/.env.example` with placeholder values
-   - Format: `[PLATFORM]_CLIENT_ID` and `[PLATFORM]_CLIENT_SECRET`
-
-4. **Register Connector** (`apps/api/src/services/connectors/factory.ts`)
-   - Import your connector instance
-   - Add to `connectors` object mapping platform to connector
-
-5. **Test OAuth Flow**
-   - Test authorization URL generation
-   - Test code exchange for tokens
-   - Test token refresh (if supported)
-   - Test token verification
-   - Test user info retrieval
-   - Verify tokens are stored in Infisical (not database)
-
-**Template File:**
-- Full template with examples: `apps/api/src/services/connectors/TEMPLATE.ts`
-- Includes all required and optional methods with detailed comments
-- Platform-specific examples and patterns included
+1. Add platform to `packages/shared/src/types.ts` (`PlatformSchema`, `PLATFORM_NAMES`, `PLATFORM_SCOPES`)
+2. Add OAuth config to `apps/api/src/services/connectors/registry.config.ts`
+3. Add environment variables to `apps/api/src/lib/env.ts` and `apps/api/.env.example`
+4. Create custom connector only if platform has non-standard OAuth flow (extend `BaseConnector`)
+5. Register in `apps/api/src/services/connectors/factory.ts`
+6. Test OAuth flow end-to-end, verify Infisical token storage
 
 ### Background Jobs & Redis
 The platform uses BullMQ with Redis for background job processing:

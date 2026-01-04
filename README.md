@@ -41,7 +41,7 @@ agency-access-platform/
 - **Database:** PostgreSQL (Neon) + Prisma ORM
 - **Jobs:** BullMQ
 - **Cache:** Redis (Upstash)
-- **Token Storage:** AWS Secrets Manager
+- **Token Storage:** Infisical
 - **Deployment:** Railway
 
 ## 🚀 Quick Start
@@ -53,7 +53,7 @@ agency-access-platform/
 - PostgreSQL database (recommend [Neon](https://neon.tech))
 - Redis instance (recommend [Upstash](https://upstash.com))
 - Clerk account
-- AWS account (for Secrets Manager)
+- Infisical account (for secrets management)
 
 ### 1. Clone and Install
 
@@ -72,7 +72,8 @@ cp apps/api/.env.example apps/api/.env
 Edit `apps/api/.env` and fill in:
 - `DATABASE_URL` - Your Neon PostgreSQL connection string
 - `CLERK_SECRET_KEY` - From Clerk dashboard
-- `AWS_ACCESS_KEY_ID` & `AWS_SECRET_ACCESS_KEY` - From AWS IAM
+- `INFISICAL_CLIENT_ID` & `INFISICAL_CLIENT_SECRET` - From Infisical
+- `INFISICAL_PROJECT_ID` & `INFISICAL_ENVIRONMENT` - From Infisical project
 - `REDIS_URL` - Your Upstash Redis URL
 
 **Frontend (`apps/web/.env.local`):**
@@ -188,9 +189,9 @@ export class MetaConnector {
 
 ### Token Storage
 - **NEVER** store tokens in PostgreSQL directly
-- **ALWAYS** use AWS Secrets Manager for OAuth tokens
+- **ALWAYS** use Infisical for OAuth tokens
 - Encrypt secret IDs at rest
-- Rotate AWS keys quarterly
+- Rotate Infisical Machine Identity credentials quarterly
 
 ### Authentication
 - Clerk handles all user auth
@@ -249,8 +250,10 @@ railway up
 ```bash
 railway variables set DATABASE_URL=postgresql://...
 railway variables set CLERK_SECRET_KEY=sk_live_...
-railway variables set AWS_ACCESS_KEY_ID=...
-railway variables set AWS_SECRET_ACCESS_KEY=...
+railway variables set INFISICAL_CLIENT_ID=...
+railway variables set INFISICAL_CLIENT_SECRET=...
+railway variables set INFISICAL_PROJECT_ID=...
+railway variables set INFISICAL_ENVIRONMENT=prod
 railway variables set REDIS_URL=...
 ```
 
@@ -327,6 +330,6 @@ This is a private project. For access, contact the project owner.
 - Prisma
 - PostgreSQL
 - Redis
-- AWS Secrets Manager
+- Infisical
 - Clerk
 - TailwindCSS
