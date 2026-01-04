@@ -70,7 +70,7 @@ export function PlatformConnectionRow({
     <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors">
       {/* Platform column (col-span-4) */}
       <div className="col-span-4 flex items-center gap-3">
-        <PlatformIcon platform={connection.platform as any} size="md" variant="gradient" />
+        <PlatformIcon platform={connection.platform as any} size="md" />
         <div className="min-w-0">
           <p className="font-medium text-slate-900 truncate">{platformName}</p>
           {connection.metadata?.businessName && (

@@ -27,7 +27,8 @@ import { AutomaticPagesGrant } from './AutomaticPagesGrant';
 import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
 import { StepHelpText } from './StepHelpText';
 import { AssetSelectorDisabled } from './AssetSelectorDisabled';
-import { PlatformIcon, PLATFORM_CONFIG, Button } from '@/components/ui';
+import { PlatformIcon, Button } from '@/components/ui';
+import { PLATFORM_NAMES } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
 
 interface PlatformAuthWizardProps {
@@ -349,7 +350,7 @@ export function PlatformAuthWizard({
                     'google_business_profile': 'Google Business Profile',
                     'meta_ads': 'Meta Ads',
                   };
-                  const productName = PLATFORM_CONFIG[p.product as Platform]?.name || productNameMap[p.product] || p.product;
+                  const productName = PLATFORM_NAMES[p.product as Platform] || productNameMap[p.product] || p.product;
                   
                   return (
                     <div key={p.product} className="space-y-6">
@@ -622,7 +623,7 @@ export function PlatformAuthWizard({
                   'google_business_profile': 'Google Business Profile',
                   'meta_ads': 'Meta Ads',
                 };
-                const productName = PLATFORM_CONFIG[product as Platform]?.name || productNameMap[product] || product;
+                const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
                 
                 return (
                   <motion.div

@@ -16,6 +16,11 @@ import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
 import { KitConnector } from '@/services/connectors/kit';
 import { BeehiivConnector } from '@/services/connectors/beehiiv';
+import { TikTokConnector } from '@/services/connectors/tiktok';
+import { MailchimpConnector } from '@/services/connectors/mailchimp';
+import { PinterestConnector } from '@/services/connectors/pinterest';
+import { KlaviyoConnector } from '@/services/connectors/klaviyo';
+import { ShopifyConnector } from '@/services/connectors/shopify';
 import type { Platform } from '@agency-platform/shared';
 import { env } from '@/lib/env';
 import type { GoogleAccountsResponse } from '@/services/connectors/google';
@@ -47,6 +52,10 @@ const PLATFORM_NAMES: Record<Platform, string> = {
   instagram: 'Instagram',
   kit: 'Kit',
   beehiiv: 'Beehiiv',
+  mailchimp: 'Mailchimp',
+  pinterest: 'Pinterest',
+  klaviyo: 'Klaviyo',
+  shopify: 'Shopify',
 };
 
 // Platform categorization helper
@@ -56,7 +65,7 @@ function getPlatformCategory(platform: Platform): 'recommended' | 'other' {
 }
 
 // Supported platforms for agency connections
-const SUPPORTED_PLATFORMS = ['google', 'meta', 'linkedin', 'kit', 'beehiiv'] as const;
+const SUPPORTED_PLATFORMS = ['google', 'meta', 'linkedin', 'kit', 'beehiiv', 'tiktok', 'mailchimp', 'pinterest', 'klaviyo', 'shopify'] as const;
 type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
 // Platform connector mapping
@@ -66,6 +75,11 @@ const PLATFORM_CONNECTORS = {
   linkedin: MetaConnector, // LinkedIn not implemented yet, placeholder
   kit: KitConnector,
   beehiiv: BeehiivConnector,
+  tiktok: TikTokConnector,
+  mailchimp: MailchimpConnector,
+  pinterest: PinterestConnector,
+  klaviyo: KlaviyoConnector,
+  shopify: ShopifyConnector,
 } as const;
 
 export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
@@ -205,11 +219,16 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
 
     // Return all available platforms (both group-level and standalone platforms)
     const allPlatforms: Platform[] = [
-      'google',   // Includes: google_ads, ga4, business, tag manager, search console, merchant
-      'meta',     // Includes: meta_ads (facebook & instagram)
+      'google',     // Includes: google_ads, ga4, business, tag manager, search console, merchant
+      'meta',       // Includes: meta_ads (facebook & instagram)
       'linkedin',
-      'kit',      // Kit (ConvertKit) - standalone OAuth 2.0
-      'beehiiv',  // Beehiiv - API key authentication (team invitation workflow)
+      'kit',        // Kit (ConvertKit) - standalone OAuth 2.0
+      'beehiiv',    // Beehiiv - API key authentication (team invitation workflow)
+      'tiktok',     // TikTok Ads - OAuth 2.0
+      'mailchimp',  // Mailchimp - OAuth 2.0
+      'pinterest',  // Pinterest Ads - OAuth 2.0
+      'klaviyo',    // Klaviyo - OAuth 2.0 with PKCE
+      'shopify',    // Shopify - OAuth 2.0 with shop context
     ];
 
     // Build available platforms list with connection status

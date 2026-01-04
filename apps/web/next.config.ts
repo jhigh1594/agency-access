@@ -12,7 +12,15 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.brandfetch.io',
+        pathname: '/**',
+      },
     ],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [24, 32, 64, 96, 128],
+    imageSizes: [24, 32, 64, 96, 128],
   },
   // Proxy API requests to backend server (running on port 3001)
   // Only enabled in development. In production, NEXT_PUBLIC_API_URL should point to the deployed backend.

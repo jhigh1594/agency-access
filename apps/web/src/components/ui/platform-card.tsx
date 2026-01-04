@@ -41,7 +41,7 @@ export function PlatformCard({
     <div className={`bg-white border border-slate-200 rounded-lg ${paddingClass} hover:shadow-md transition-shadow ${isFeatured ? 'shadow-sm' : ''}`}>
       {/* Platform Icon and Name */}
       <div className={`flex flex-col items-center gap-4 mb-${isFeatured ? '6' : '4'}`}>
-        <PlatformIcon platform={platform} size={iconSize as any} variant="gradient" />
+        <PlatformIcon platform={platform} size={iconSize as any} />
         <h3 className={`${textClass} font-semibold text-slate-900 text-center`}>
           {platformName}
         </h3>

@@ -42,7 +42,7 @@ export function PlatformWizardCard({
       {/* Header: Platform branding + progress */}
       <div className="border-b-2 border-slate-200 p-6 bg-gradient-to-br from-slate-50 to-white">
         <div className="flex items-center gap-4 mb-4">
-          <PlatformIcon platform={platform} size="lg" variant="gradient" />
+          <PlatformIcon platform={platform} size="lg" />
           <div>
             <h2 className="text-2xl font-bold text-slate-900">{platformName}</h2>
             <p className="text-sm text-slate-600 mt-1">

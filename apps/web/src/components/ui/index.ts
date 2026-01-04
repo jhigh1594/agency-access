@@ -14,7 +14,7 @@ export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
 export { StatusBadge } from './status-badge';
 export type { StatusType } from './status-badge';
 
-export { PlatformIcon, PLATFORM_CONFIG } from './platform-icon';
+export { PlatformIcon } from './platform-icon';
 export type { Platform } from '@agency-platform/shared';
 
 export { StatCard } from './stat-card';

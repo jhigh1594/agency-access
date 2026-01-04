@@ -21,7 +21,7 @@ import {
   AlertCircle,
   XCircle,
 } from 'lucide-react';
-import { StatCard, HealthBadge, ExpirationCountdown, PlatformIcon, formatRelativeTime, PLATFORM_CONFIG } from '@/components/ui';
+import { StatCard, HealthBadge, ExpirationCountdown, PlatformIcon, formatRelativeTime } from '@/components/ui';
 import type { Platform, HealthStatus } from '@agency-platform/shared';
 
 type TokenHealth = {

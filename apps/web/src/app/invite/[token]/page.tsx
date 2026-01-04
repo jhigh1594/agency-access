@@ -18,8 +18,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Check, X, Loader2, ChevronRight, Shield, Lock } from 'lucide-react';
-import { PlatformIcon, PLATFORM_CONFIG } from '@/components/ui';
+import { PlatformIcon } from '@/components/ui';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
+import { PLATFORM_NAMES } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
 
 interface AuthorizationPageData {
@@ -315,7 +316,7 @@ export default function ClientAuthorizationPage() {
               {/* Stacked Platform Wizards - one per group */}
               {data.platforms.map((groupConfig) => {
                 const platform = groupConfig.platformGroup;
-                const platformName = PLATFORM_CONFIG[platform]?.name || platform;
+                const platformName = PLATFORM_NAMES[platform];
                 
                 // Check if this platform was just authenticated via OAuth callback
                 const isOAuthReturning = oauthConnectionInfo?.platform === platform;
@@ -362,7 +363,7 @@ export default function ClientAuthorizationPage() {
                         <Check className="h-4 w-4" />
                         <span className="text-sm">
                           {Array.from(completedPlatforms)
-                            .map((p) => PLATFORM_CONFIG[p].name)
+                            .map((p) => PLATFORM_NAMES[p])
                             .join(', ')}
                         </span>
                       </div>
