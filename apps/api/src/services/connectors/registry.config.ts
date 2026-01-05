@@ -206,17 +206,17 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
   // ========================================================================
   // KIT PLATFORMS
   // ========================================================================
+  // Note: Kit uses team invitation flow (manual), not OAuth
+  // This config is for type compatibility only
+  // OAuth implementation preserved in kit.ts connector (commented out)
 
   kit: {
     name: 'Kit',
-    authUrl: 'https://api.kit.com/v4/oauth/authorize',
-    tokenUrl: 'https://api.kit.com/v4/oauth/token',
+    authUrl: '', // Kit uses team invitation flow, not OAuth
+    tokenUrl: '',
     scopeSeparator: ' ',
-    userInfoUrl: 'https://api.kit.com/v4/account',
-    supportsRefreshTokens: true,
-    // Kit uses JSON request body for token exchange (not form-encoded)
-    // Handled in KitConnector class
-    defaultScopes: ['public'],
+    supportsRefreshTokens: false,
+    defaultScopes: [], // Kit uses team invitations, not OAuth scopes
   },
 
   // ========================================================================

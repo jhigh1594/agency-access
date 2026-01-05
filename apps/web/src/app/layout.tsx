@@ -24,14 +24,19 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "AuthHub - Client Access in 5 Minutes",
   description: "One link replaces weeks of OAuth setup. Connect to Meta, Google Ads, GA4, LinkedIn, and more.",
+  icons: {
+    icon: "/authhub.png",
+    apple: "/authhub.png",
+  },
   openGraph: {
     title: "AuthHub - Client Access in 5 Minutes",
     description: "One link replaces weeks of OAuth setup.",
-    images: ["/og-image.jpg"],
+    images: ["/authhub.png"],
     url: "https://authhub.io",
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/authhub.png"],
   },
 };
 

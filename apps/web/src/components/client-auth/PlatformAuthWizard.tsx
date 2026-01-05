@@ -16,6 +16,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, CheckCircle2, ChevronDown } from 'lucide-react';
 import { PlatformWizardCard } from './PlatformWizardCard';
@@ -51,6 +52,28 @@ export function PlatformAuthWizard({
   initialConnectionId,
   initialStep,
 }: PlatformAuthWizardProps) {
+  const router = useRouter();
+
+  // Redirect platforms to manual flow (no OAuth - uses team invitations)
+  useEffect(() => {
+    if (platform === 'beehiiv') {
+      router.push(`/invite/${accessRequestToken}/beehiiv/manual` as any);
+    }
+    if (platform === 'kit') {
+      router.push(`/invite/${accessRequestToken}/kit/manual` as any);
+    }
+    // TODO: Add mailchimp and klaviyo redirects
+  }, [platform, accessRequestToken, router]);
+
+  // Early return for manual flow platforms (redirecting)
+  if (platform === 'beehiiv' || platform === 'kit') {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
   // Initialize with props if returning from OAuth callback
   // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
   const metaNeedsGrantStep = platform === 'meta' && products.some(

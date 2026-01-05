@@ -2,7 +2,7 @@
 
 import { Platform, PLATFORM_NAMES } from '@agency-platform/shared';
 import { PlatformIcon } from '@/components/ui/platform-icon';
-import { Loader2, Unlink } from 'lucide-react';
+import { Loader2, Unlink, Edit } from 'lucide-react';
 
 interface PlatformCardProps {
   platform: Platform;
@@ -15,6 +15,7 @@ interface PlatformCardProps {
   onConnect: (platform: Platform) => void;
   onDisconnect?: (platform: Platform) => void;
   onManageAssets?: (platform: Platform) => void;
+  onEditEmail?: (platform: Platform, currentEmail: string) => void;
 }
 
 export function PlatformCard({
@@ -28,8 +29,11 @@ export function PlatformCard({
   onConnect,
   onDisconnect,
   onManageAssets,
+  onEditEmail,
 }: PlatformCardProps) {
   const platformName = PLATFORM_NAMES[platform];
+  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+  const isManualPlatform = manualPlatforms.includes(platform);
 
   // Featured variant has larger padding and icon size
   const isFeatured = variant === 'featured';
@@ -81,7 +85,17 @@ export function PlatformCard({
                   Manage Assets
                 </button>
               )}
-              
+
+              {onEditEmail && isManualPlatform && connectedEmail && (
+                <button
+                  onClick={() => onEditEmail(platform, connectedEmail)}
+                  className="text-xs text-slate-500 hover:text-slate-700 font-medium transition-colors flex items-center gap-1"
+                >
+                  <Edit className="h-3 w-3" />
+                  Edit Email
+                </button>
+              )}
+
               {onDisconnect && (
                 <button
                   onClick={() => onDisconnect(platform)}

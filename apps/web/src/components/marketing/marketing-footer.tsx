@@ -8,8 +8,14 @@ export function MarketingFooter() {
         <div className="flex flex-col md:flex-row justify-between gap-8 sm:gap-12">
           <div className="max-w-xs space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg">AH</div>
-              <span className="font-display text-xl tracking-tight">AuthHub</span>
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img 
+                  src="/authhub.png" 
+                  alt="AuthHub" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="font-display text-2xl tracking-tight">AuthHub</span>
             </div>
             <p className="text-muted-foreground leading-relaxed text-sm">
               The easy button for agency access to client accounts.

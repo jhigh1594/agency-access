@@ -428,6 +428,7 @@ function AccessRequestWizardContent() {
                 selectedPlatforms={state.selectedPlatforms}
                 onSelectionChange={updatePlatforms}
                 connectedPlatforms={platformConnections}
+                agencyId={agencyId}
               />
 
               {/* Info about connecting more platforms */}

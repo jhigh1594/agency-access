@@ -17,6 +17,7 @@ import { PlatformCard } from '@/components/ui/platform-card';
 import { Platform, PlatformInfo } from '@agency-platform/shared';
 import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
 import { GoogleUnifiedSettings } from '@/components/google-unified-settings';
+import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ConnectionsPageContent() {
@@ -32,6 +33,12 @@ function ConnectionsPageContent() {
   const [agencyId, setAgencyId] = useState<string | null>(null);
   const [managingMetaAssets, setManagingMetaAssets] = useState(false);
   const [managingGoogleAssets, setManagingGoogleAssets] = useState(false);
+
+  // Manual invitation modal state
+  const [manualInvitationPlatform, setManualInvitationPlatform] = useState<string | null>(null);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [currentEmail, setCurrentEmail] = useState<string>('');
 
   // Fetch user's agency by email
   const { data: agencyData } = useQuery({
@@ -199,7 +206,40 @@ function ConnectionsPageContent() {
 
   const handleConnect = (platform: Platform) => {
     setErrorMessage(null);
-    initiateOAuth(platform);
+
+    // Check if this is a manual invitation platform
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    if (manualPlatforms.includes(platform)) {
+      // Open manual invitation modal in create mode
+      setManualInvitationPlatform(platform);
+      setIsManualModalOpen(true);
+    } else {
+      // Use OAuth flow
+      initiateOAuth(platform);
+    }
+  };
+
+  const handleEditEmail = (platform: Platform, currentEmail: string) => {
+    setErrorMessage(null);
+    setCurrentEmail(currentEmail);
+    setIsEditingEmail(true);
+    // Open manual invitation modal in edit mode
+    setManualInvitationPlatform(platform);
+    setIsManualModalOpen(true);
+  };
+
+  const handleManualModalClose = () => {
+    setIsManualModalOpen(false);
+    setManualInvitationPlatform(null);
+    setIsEditingEmail(false);
+    setCurrentEmail('');
+  };
+
+  const handleManualSuccess = () => {
+    // Refetch platforms to update the UI
+    if (agencyId) {
+      queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
+    }
   };
 
   const handleDisconnect = (platform: Platform) => {
@@ -311,6 +351,7 @@ function ConnectionsPageContent() {
                     onConnect={handleConnect}
                     onDisconnect={handleDisconnect}
                     onManageAssets={platformInfo.platform === 'meta' ? handleManageMetaAssets : platformInfo.platform === 'google' ? handleManageGoogleAssets : undefined}
+                    onEditEmail={handleEditEmail}
                     variant="featured"
                   />
                 </div>
@@ -336,6 +377,7 @@ function ConnectionsPageContent() {
                   onConnect={handleConnect}
                   onDisconnect={handleDisconnect}
                   onManageAssets={platformInfo.platform === 'meta' ? handleManageMetaAssets : platformInfo.platform === 'google' ? handleManageGoogleAssets : undefined}
+                  onEditEmail={handleEditEmail}
                 />
               ))}
             </div>
@@ -427,6 +469,19 @@ function ConnectionsPageContent() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Manual Invitation Modal */}
+      {manualInvitationPlatform && agencyId && (
+        <ManualInvitationModal
+          isOpen={isManualModalOpen}
+          onClose={handleManualModalClose}
+          platform={manualInvitationPlatform}
+          agencyId={agencyId}
+          onSuccess={handleManualSuccess}
+          mode={isEditingEmail ? 'edit' : 'create'}
+          currentEmail={currentEmail}
+        />
+      )}
     </div>
   );
 }

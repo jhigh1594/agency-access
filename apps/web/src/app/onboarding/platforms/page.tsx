@@ -7,12 +7,14 @@
  * Allows agencies to connect their OAuth platforms for delegated access.
  *
  * Now with unified Google connector - one OAuth gives access to all Google products.
+ * Also supports manual invitation platforms (Kit, Mailchimp, Beehiiv, Klaviyo).
  */
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 
 // Google account types
 interface GoogleAdsAccount {
@@ -84,9 +86,13 @@ interface MetaBusinessAccountsResponse {
 
 // Platform definitions
 const SUPPORTED_PLATFORMS = [
-  { id: 'google', name: 'Google', description: 'Google Ads, Analytics, Business, Tag Manager, Search Console, Merchant Center' },
-  { id: 'meta', name: 'Meta', description: 'Facebook & Instagram Ads' },
-  { id: 'linkedin', name: 'LinkedIn Ads', description: 'LinkedIn Ads' },
+  { id: 'google', name: 'Google', description: 'Google Ads, Analytics, Business, Tag Manager, Search Console, Merchant Center', type: 'oauth' },
+  { id: 'meta', name: 'Meta', description: 'Facebook & Instagram Ads', type: 'oauth' },
+  { id: 'linkedin', name: 'LinkedIn Ads', description: 'LinkedIn Ads', type: 'oauth' },
+  { id: 'kit', name: 'Kit', description: 'Email marketing - team invitation', type: 'manual' },
+  { id: 'mailchimp', name: 'Mailchimp', description: 'Email marketing - team invitation', type: 'manual' },
+  { id: 'beehiiv', name: 'Beehiiv', description: 'Newsletter platform - team invitation', type: 'manual' },
+  { id: 'klaviyo', name: 'Klaviyo', description: 'Email marketing & automation - team invitation', type: 'manual' },
 ];
 
 interface Platform {
@@ -101,9 +107,14 @@ interface Platform {
 export default function PlatformsPage() {
   const router = useRouter();
   const { orgId } = useAuth();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [showGoogleAccounts, setShowGoogleAccounts] = useState(false);
   const [showMetaBusinesses, setShowMetaBusinesses] = useState(false);
+
+  // Manual invitation modal state
+  const [manualInvitationPlatform, setManualInvitationPlatform] = useState<string | null>(null);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
   // Fetch agency platform connections
   const {
@@ -193,9 +204,29 @@ export default function PlatformsPage() {
     },
   });
 
-  const handleConnect = (platform: string) => {
+  const handleConnect = (platform: string, platformType?: string) => {
     setError(null);
-    initiatePlatform(platform);
+
+    // Check if this is a manual invitation platform
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    if (manualPlatforms.includes(platform)) {
+      // Open manual invitation modal
+      setManualInvitationPlatform(platform);
+      setIsManualModalOpen(true);
+    } else {
+      // Use OAuth flow
+      initiatePlatform(platform);
+    }
+  };
+
+  const handleManualModalClose = () => {
+    setIsManualModalOpen(false);
+    setManualInvitationPlatform(null);
+  };
+
+  const handleManualSuccess = () => {
+    // Refetch platforms to update the UI
+    queryClient.invalidateQueries({ queryKey: ['agency-platforms', orgId] });
   };
 
   const handleSkip = () => {
@@ -565,6 +596,17 @@ export default function PlatformsPage() {
           </button>
         )}
       </div>
+
+      {/* Manual Invitation Modal */}
+      {manualInvitationPlatform && (
+        <ManualInvitationModal
+          isOpen={isManualModalOpen}
+          onClose={handleManualModalClose}
+          platform={manualInvitationPlatform}
+          agencyId={orgId || ''}
+          onSuccess={handleManualSuccess}
+        />
+      )}
     </div>
   );
 }

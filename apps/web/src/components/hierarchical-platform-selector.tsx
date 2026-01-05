@@ -3,27 +3,36 @@
  *
  * Simplified platform selection - only shows connected platforms.
  * Includes toggle switches for each platform to select/deselect all products.
+ *
+ * For manual invitation platforms (Kit, Beehiiv, Mailchimp, Klaviyo),
+ * shows email configuration UI instead of product selection.
  */
 
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Check, AlertCircle, Link2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check, AlertCircle, Link2, Edit, Mail } from 'lucide-react';
 import { PLATFORM_HIERARCHY } from '@agency-platform/shared';
 import Link from 'next/link';
+import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 
 interface ConnectedPlatform {
   platform: string;
   name: string;
   connected: boolean;
   status?: string;
+  connectedEmail?: string;
 }
 
 interface HierarchicalPlatformSelectorProps {
   selectedPlatforms: Record<string, string[]>;
   onSelectionChange: (platforms: Record<string, string[]>) => void;
   connectedPlatforms?: ConnectedPlatform[];
+  agencyId?: string; // For manual invitation modal
 }
+
+// Platforms that use manual invitation flow instead of OAuth
+const MANUAL_INVITATION_PLATFORMS = new Set(['kit', 'beehiiv', 'mailchimp', 'klaviyo']);
 
 interface GroupState {
   [key: string]: boolean;
@@ -33,8 +42,14 @@ export function HierarchicalPlatformSelector({
   selectedPlatforms,
   onSelectionChange,
   connectedPlatforms = [],
+  agencyId,
 }: HierarchicalPlatformSelectorProps) {
   const [expandedGroups, setExpandedGroups] = useState<GroupState>({});
+
+  // Manual invitation modal state
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
+  const [editingEmail, setEditingEmail] = useState<string>('');
 
   // Filter to only show connected platforms
   const connectedPlatformIds = useMemo(() => {
@@ -140,6 +155,30 @@ export function HierarchicalPlatformSelector({
     [selectedPlatforms]
   );
 
+  // Handle email edit for manual invitation platforms
+  const handleEditEmail = useCallback((platform: string, currentEmail: string) => {
+    setEditingPlatform(platform);
+    setEditingEmail(currentEmail);
+    setManualModalOpen(true);
+  }, []);
+
+  const handleManualModalClose = useCallback(() => {
+    setManualModalOpen(false);
+    setEditingPlatform(null);
+    setEditingEmail('');
+  }, []);
+
+  const handleManualSuccess = useCallback(() => {
+    setManualModalOpen(false);
+    setEditingPlatform(null);
+    setEditingEmail('');
+  }, []);
+
+  // Get the connected email for a platform
+  const getPlatformEmail = useCallback((platform: string) => {
+    return connectedPlatforms.find(p => p.platform === platform)?.connectedEmail;
+  }, [connectedPlatforms]);
+
   // Empty state - no connected platforms
   if (availableGroups.length === 0) {
     return (
@@ -241,63 +280,137 @@ export function HierarchicalPlatformSelector({
               </div>
             </div>
 
-            {/* Products List (Expanded) */}
-            {isExpanded && (
-              <div className="border-t border-slate-200 p-4 bg-slate-50/50 space-y-3">
-                {/* Select All */}
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name={`Select all ${group.name} products`}
-                    checked={selectAllChecked}
-                    ref={input => {
-                      if (input) {
-                        input.indeterminate = selectAllIndeterminate;
-                      }
-                    }}
-                    onChange={() => handleSelectAll(groupKey, group.products)}
-                    className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <span className="text-sm font-medium text-slate-700">
-                    Select all ({group.products.length})
-                  </span>
-                </label>
+            {/* Products List (Expanded) - Show email UI for manual invitation platforms */}
+            {isExpanded && (() => {
+              const isManualPlatform = MANUAL_INVITATION_PLATFORMS.has(groupKey);
+              const platformEmail = getPlatformEmail(groupKey);
 
-                {/* Individual Products */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-7">
-                  {group.products.map(product => {
-                    const isSelected = isProductSelected(groupKey, product.id);
-
-                    return (
-                      <label
-                        key={product.id}
-                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                          isSelected ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-slate-100'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          name={product.name}
-                          aria-label={product.name}
-                          checked={isSelected}
-                          onChange={() => handleProductToggle(groupKey, product.id)}
-                          className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <span className={`text-sm ${isSelected ? 'text-indigo-900 font-medium' : 'text-slate-700'}`}>
-                          {product.name}
-                        </span>
-                        {isSelected && (
-                          <Check className="h-3.5 w-3.5 text-indigo-600 ml-auto" />
+              if (isManualPlatform) {
+                // Email Configuration UI for manual invitation platforms
+                return (
+                  <div className="border-t border-slate-200 p-4 bg-slate-50/50">
+                    <div className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg">
+                      <div className="flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center">
+                          <Mail className="h-5 w-5 text-indigo-600" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-slate-900 mb-1">
+                          Invitation Email
+                        </h4>
+                        <p className="text-xs text-slate-600 mb-3">
+                          Clients will invite this email to their {group.name} account
+                        </p>
+                        {platformEmail ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+                              <p className="text-sm font-mono text-slate-700 truncate" title={platformEmail}>
+                                {platformEmail}
+                              </p>
+                            </div>
+                            {agencyId && (
+                              <button
+                                type="button"
+                                onClick={() => handleEditEmail(groupKey, platformEmail)}
+                                className="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
+                              >
+                                <Edit className="h-3 w-3" />
+                                Edit
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <p className="text-xs text-amber-800">
+                              No email configured.{' '}
+                              <Link
+                                href="/connections"
+                                className="font-medium underline hover:text-amber-900"
+                              >
+                                Connect {group.name}
+                              </Link>{' '}
+                              to set up the invitation email.
+                            </p>
+                          </div>
                         )}
-                      </label>
-                    );
-                  })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Standard Product Selection UI for other platforms
+              return (
+                <div className="border-t border-slate-200 p-4 bg-slate-50/50 space-y-3">
+                  {/* Select All */}
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={`Select all ${group.name} products`}
+                      checked={selectAllChecked}
+                      ref={input => {
+                        if (input) {
+                          input.indeterminate = selectAllIndeterminate;
+                        }
+                      }}
+                      onChange={() => handleSelectAll(groupKey, group.products)}
+                      className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      Select all ({group.products.length})
+                    </span>
+                  </label>
+
+                  {/* Individual Products */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-7">
+                    {group.products.map(product => {
+                      const isSelected = isProductSelected(groupKey, product.id);
+
+                      return (
+                        <label
+                          key={product.id}
+                          className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                            isSelected ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-slate-100'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            name={product.name}
+                            aria-label={product.name}
+                            checked={isSelected}
+                            onChange={() => handleProductToggle(groupKey, product.id)}
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                          />
+                          <span className={`text-sm ${isSelected ? 'text-indigo-900 font-medium' : 'text-slate-700'}`}>
+                            {product.name}
+                          </span>
+                          {isSelected && (
+                            <Check className="h-3.5 w-3.5 text-indigo-600 ml-auto" />
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         );
       })}
+
+      {/* Manual Invitation Modal */}
+      {editingPlatform && agencyId && (
+        <ManualInvitationModal
+          isOpen={manualModalOpen}
+          onClose={handleManualModalClose}
+          platform={editingPlatform}
+          agencyId={agencyId}
+          onSuccess={handleManualSuccess}
+          mode="edit"
+          currentEmail={editingEmail}
+        />
+      )}
     </div>
   );
 }

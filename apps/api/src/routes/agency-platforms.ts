@@ -14,7 +14,8 @@ import { identityVerificationService } from '@/services/identity-verification.se
 import { oauthStateService } from '@/services/oauth-state.service';
 import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
-import { KitConnector } from '@/services/connectors/kit';
+// Kit now uses team invitation flow (manual), not OAuth
+// import { KitConnector } from '@/services/connectors/kit';
 import { BeehiivConnector } from '@/services/connectors/beehiiv';
 import { TikTokConnector } from '@/services/connectors/tiktok';
 import { MailchimpConnector } from '@/services/connectors/mailchimp';
@@ -73,7 +74,8 @@ const PLATFORM_CONNECTORS = {
   google: GoogleConnector,
   meta: MetaConnector,
   linkedin: MetaConnector, // LinkedIn not implemented yet, placeholder
-  kit: KitConnector,
+  // Kit uses team invitation flow (manual), not OAuth - no connector needed
+  // kit: KitConnector,
   beehiiv: BeehiivConnector,
   tiktok: TikTokConnector,
   mailchimp: MailchimpConnector,
@@ -235,9 +237,12 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
     const availablePlatforms = allPlatforms.map((platform) => {
       const connection = connections.find((c: any) => c.platform === platform);
 
-      // Extract email from metadata with fallback chain
+      // Extract email from connection with fallback chain
+      // Priority: agencyEmail (manual invitations) > metadata fields > connectedBy
       let connectedEmail: string | undefined;
-      if (connection?.metadata) {
+      if (connection?.agencyEmail) {
+        connectedEmail = connection.agencyEmail;
+      } else if (connection?.metadata) {
         const meta = connection.metadata as Record<string, any>;
         connectedEmail =
           meta.email ||
@@ -718,6 +723,289 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send(result);
+  });
+
+  /**
+   * POST /agency-platforms/:platform/manual-connect
+   *
+   * Create manual invitation connection (no OAuth tokens).
+   * Used for platforms that use team invitation flow instead of OAuth.
+   *
+   * Platforms: kit, mailchimp, beehiiv, klaviyo
+   */
+  fastify.post('/agency-platforms/:platform/manual-connect', async (request, reply) => {
+    const { platform } = request.params as { platform: string };
+    const { agencyId, invitationEmail } = request.body as {
+      agencyId?: string;
+      invitationEmail?: string;
+    };
+
+    // Validate platform
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    if (!manualPlatforms.includes(platform)) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'UNSUPPORTED_PLATFORM',
+          message: `Platform "${platform}" does not support manual invitation flow. Supported platforms: ${manualPlatforms.join(', ')}`,
+        },
+      });
+    }
+
+    // Validate required fields
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    if (!invitationEmail) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'invitationEmail is required',
+        },
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(invitationEmail)) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'INVALID_EMAIL',
+          message: 'Invalid email format',
+        },
+      });
+    }
+
+    // Resolve agency using centralized service
+    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
+    const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
+      createIfMissing: false,
+    });
+
+    if (agencyResult.error || !agencyResult.data) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'AGENCY_NOT_FOUND',
+          message: 'Agency not found',
+        },
+      });
+    }
+
+    const actualAgencyId = agencyResult.data.agencyId;
+
+    // Check if platform already connected
+    const existingConnection = await prisma.agencyPlatformConnection.findFirst({
+      where: {
+        agencyId: actualAgencyId,
+        platform,
+        status: 'active',
+      },
+    });
+
+    if (existingConnection) {
+      return reply.code(409).send({
+        data: null,
+        error: {
+          code: 'PLATFORM_ALREADY_CONNECTED',
+          message: `${PLATFORM_NAMES[platform as Platform]} is already connected`,
+        },
+      });
+    }
+
+    // Create manual invitation connection (no OAuth tokens)
+    const connection = await prisma.agencyPlatformConnection.create({
+      data: {
+        agencyId: actualAgencyId,
+        platform,
+        connectionMode: 'manual_invitation',
+        agencyEmail: invitationEmail.toLowerCase(),
+        secretId: null, // Manual invitation doesn't need tokens
+        status: 'active',
+        verificationStatus: 'pending',
+        connectedBy: 'agency', // Will be updated when we have proper auth
+        metadata: {
+          authMethod: 'manual_team_invitation',
+          invitationEmail: invitationEmail.toLowerCase(),
+          invitationSentAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    // Log audit event
+    await prisma.auditLog.create({
+      data: {
+        agencyId: actualAgencyId,
+        action: 'AGENCY_MANUAL_INVITATION_CONNECTED',
+        userEmail: 'agency', // Will be updated when we have proper auth
+        agencyConnectionId: connection.id,
+        metadata: {
+          platform,
+          connectionMode: 'manual_invitation',
+          invitationEmail: invitationEmail.toLowerCase(),
+        },
+        ipAddress: '0.0.0.0', // Will be populated by middleware
+        userAgent: 'unknown', // Will be populated by middleware
+      },
+    });
+
+    return reply.code(201).send({
+      data: {
+        connectionId: connection.id,
+        platform: connection.platform,
+        agencyEmail: connection.agencyEmail,
+        status: connection.status,
+        connectedAt: connection.connectedAt,
+      },
+      error: null,
+    });
+  });
+
+  /**
+   * PATCH /agency-platforms/:platform/manual-invitation
+   *
+   * Update the invitation email for a manual invitation connection.
+   * Used when agency wants to change the email that receives client invitations.
+   *
+   * Platforms: kit, mailchimp, beehiiv, klaviyo
+   */
+  fastify.patch('/agency-platforms/:platform/manual-invitation', async (request, reply) => {
+    const { platform } = request.params as { platform: string };
+    const { agencyId, invitationEmail } = request.body as {
+      agencyId?: string;
+      invitationEmail?: string;
+    };
+
+    // Validate platform
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    if (!manualPlatforms.includes(platform)) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'UNSUPPORTED_PLATFORM',
+          message: `Platform "${platform}" does not support manual invitation flow. Supported platforms: ${manualPlatforms.join(', ')}`,
+        },
+      });
+    }
+
+    // Validate required fields
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    if (!invitationEmail) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'invitationEmail is required',
+        },
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(invitationEmail)) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'INVALID_EMAIL',
+          message: 'Invalid email format',
+        },
+      });
+    }
+
+    // Resolve agency
+    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
+    const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
+      createIfMissing: false,
+    });
+
+    if (agencyResult.error || !agencyResult.data) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'AGENCY_NOT_FOUND',
+          message: 'Agency not found',
+        },
+      });
+    }
+
+    const actualAgencyId = agencyResult.data.agencyId;
+
+    // Find existing connection
+    const existingConnection = await prisma.agencyPlatformConnection.findFirst({
+      where: {
+        agencyId: actualAgencyId,
+        platform,
+      },
+    });
+
+    if (!existingConnection) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'CONNECTION_NOT_FOUND',
+          message: `No connection found for ${PLATFORM_NAMES[platform as Platform]}`,
+        },
+      });
+    }
+
+    // Update the email
+    const updatedConnection = await prisma.agencyPlatformConnection.update({
+      where: { id: existingConnection.id },
+      data: {
+        agencyEmail: invitationEmail.toLowerCase(),
+        metadata: {
+          ...(existingConnection.metadata as any || {}),
+          invitationEmail: invitationEmail.toLowerCase(),
+          invitationEmailUpdatedAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    // Log audit event
+    await prisma.auditLog.create({
+      data: {
+        agencyId: actualAgencyId,
+        action: 'AGENCY_MANUAL_INVITATION_UPDATED',
+        userEmail: 'agency', // Will be updated when we have proper auth
+        agencyConnectionId: existingConnection.id,
+        metadata: {
+          platform,
+          previousEmail: existingConnection.agencyEmail,
+          newEmail: invitationEmail.toLowerCase(),
+        },
+        ipAddress: '0.0.0.0', // Will be populated by middleware
+        userAgent: 'unknown', // Will be populated by middleware
+      },
+    });
+
+    return reply.send({
+      data: {
+        connectionId: updatedConnection.id,
+        platform: updatedConnection.platform,
+        agencyEmail: updatedConnection.agencyEmail,
+        status: updatedConnection.status,
+        connectedAt: updatedConnection.connectedAt,
+      },
+      error: null,
+    });
   });
 
   /**

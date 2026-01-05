@@ -360,6 +360,22 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
       { id: 'shopify', name: 'Shopify', icon: 'ShopifyIcon', description: 'Online store and e-commerce platform' },
     ],
   },
+  kit: {
+    name: 'Kit',
+    icon: 'KitIcon',
+    description: 'Email Marketing Platform',
+    products: [
+      { id: 'kit', name: 'Kit', icon: 'KitIcon', description: 'Email marketing and automation' },
+    ],
+  },
+  beehiiv: {
+    name: 'Beehiiv',
+    icon: 'BeehiivIcon',
+    description: 'Newsletter Platform',
+    products: [
+      { id: 'beehiiv', name: 'Beehiiv', icon: 'BeehiivIcon', description: 'Newsletter publishing and growth' },
+    ],
+  },
 };
 
 // Platform product configuration for access requests
