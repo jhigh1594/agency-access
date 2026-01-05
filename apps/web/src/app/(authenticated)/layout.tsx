@@ -20,7 +20,7 @@ export default function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const { userId, isLoaded, orgId } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [checkingAgency, setCheckingAgency] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
@@ -102,35 +102,35 @@ export default function AuthenticatedLayout({
       label: 'Dashboard',
       href: '/dashboard',
       icon: (
-        <LayoutDashboard className="text-neutral-700 h-5 w-5 flex-shrink-0" />
+        <LayoutDashboard className="text-neutral-700 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Connections',
       href: '/connections',
       icon: (
-        <Network className="text-neutral-700 h-5 w-5 flex-shrink-0" />
+        <Network className="text-neutral-700 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Token Health',
       href: '/token-health',
       icon: (
-        <Heart className="text-neutral-700 h-5 w-5 flex-shrink-0" />
+        <Heart className="text-neutral-700 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Clients',
       href: '/clients',
       icon: (
-        <Users className="text-neutral-700 h-5 w-5 flex-shrink-0" />
+        <Users className="text-neutral-700 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Settings',
       href: '/settings',
       icon: (
-        <Settings className="text-neutral-700 h-5 w-5 flex-shrink-0" />
+        <Settings className="text-neutral-700 h-6 w-6 flex-shrink-0" />
       ),
     },
   ];
@@ -146,18 +146,34 @@ export default function AuthenticatedLayout({
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {/* Logo */}
-            <div className="flex items-center gap-2 mb-8">
-              <div className="h-7 w-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm">A</span>
-              </div>
+            <div className={cn(
+              "flex items-center gap-3 mb-8 overflow-hidden min-h-[2rem]",
+              open ? "justify-center md:justify-start" : "justify-center"
+            )}>
+              <motion.div 
+                className="flex items-center justify-center flex-shrink-0"
+                animate={{
+                  width: open ? "2rem" : "1.25rem",
+                  height: open ? "2rem" : "1.25rem",
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                <img 
+                  src="/authhub.png" 
+                  alt="AuthHub" 
+                  className="w-full h-full object-contain"
+                  style={{ imageRendering: 'high-quality' }}
+                />
+              </motion.div>
               <motion.span
                 animate={{
                   display: open ? 'inline-block' : 'none',
                   opacity: open ? 1 : 0,
+                  width: open ? 'auto' : 0,
                 }}
-                className="font-semibold text-neutral-700 whitespace-nowrap"
+                className="font-semibold text-xl text-neutral-700 whitespace-nowrap overflow-hidden"
               >
-                Agency Platform
+                AuthHub
               </motion.span>
             </div>
 

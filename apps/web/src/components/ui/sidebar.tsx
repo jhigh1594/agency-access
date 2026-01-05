@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
 import React, { useState, createContext, useContext } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface Links {
   label: string;
@@ -41,7 +42,7 @@ export const SidebarProvider = ({
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   animate?: boolean;
 }) => {
-  const [openState, setOpenState] = useState(false);
+  const [openState, setOpenState] = useState(true);
 
   const open = openProp !== undefined ? openProp : openState;
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
@@ -89,16 +90,38 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        "h-full px-4 py-4 hidden md:flex md:flex-col bg-card border-r border-border w-[300px] flex-shrink-0",
+        "h-full py-4 hidden md:flex md:flex-col bg-card border-r border-border w-[250px] max-w-[250px] flex-shrink-0 relative",
         className
       )}
       animate={{
-        width: animate ? (open ? "300px" : "60px") : "300px",
+        width: animate ? (open ? "250px" : "60px") : "250px",
+        paddingLeft: open ? "1rem" : "0.5rem",
+        paddingRight: open ? "1rem" : "0.5rem",
       }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      {...props}
+      transition={{
+        duration: 0.3,
+        ease: [0.25, 0.1, 0.25, 1],
+      }}
+      {...(props as any)}
     >
+      {/* Collapse/Expand Button */}
+      <button
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "absolute top-4 -right-3 z-10 p-1.5 rounded-full bg-card border border-border shadow-sm hover:bg-accent transition-colors",
+          "flex items-center justify-center"
+        )}
+        aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+      >
+        <motion.div
+          animate={{
+            rotate: open ? 0 : 180,
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronLeft className="h-4 w-4 text-foreground" />
+        </motion.div>
+      </button>
       {children}
     </motion.div>
   );
@@ -164,25 +187,76 @@ export const SidebarLink = ({
   props?: LinkProps<any>;
 }) => {
   const { open, animate } = useSidebar();
+  const pathname = usePathname();
+  const isActive = pathname === link.href;
+  
   return (
-    <Link
-      href={link.href as any}
-      className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2",
-        className
-      )}
-      {...props}
+    <motion.div
+      animate={{
+        paddingLeft: open ? "0" : "0",
+        paddingRight: open ? "0.5rem" : "0",
+      }}
+      transition={{
+        duration: 0.3,
+        ease: [0.25, 0.1, 0.25, 1],
+      }}
+      className="rounded-lg"
     >
-      {link.icon}
-      <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
-        className="text-foreground text-sm font-sans group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+      <Link
+        href={link.href as any}
+        className={cn(
+          "flex items-center group/sidebar rounded-lg transition-colors w-full",
+          "hover:bg-neutral-100",
+          isActive && "bg-neutral-100",
+          open ? "justify-start pl-3 py-2" : "justify-center px-4 py-3",
+          className
+        )}
+        {...props}
       >
-        {link.label}
-      </motion.span>
-    </Link>
+        <motion.div
+          animate={{
+            marginRight: open ? "0.5rem" : "0",
+          }}
+          transition={{
+            duration: 0.3,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          className="flex-shrink-0 flex items-center justify-center"
+          style={{
+            height: "24px",
+            width: "24px",
+          }}
+        >
+          {link.icon}
+        </motion.div>
+        <motion.div
+          animate={{
+            width: animate ? (open ? "180px" : "0px") : "180px",
+            opacity: animate ? (open ? 1 : 0) : 1,
+          }}
+          transition={{
+            width: {
+              duration: 0.3,
+              ease: [0.25, 0.1, 0.25, 1],
+            },
+            opacity: {
+              duration: 0.25,
+              ease: [0.25, 0.1, 0.25, 1],
+              delay: open ? 0.08 : 0,
+            },
+          }}
+          className="overflow-hidden"
+        >
+          <span
+            className={cn(
+              "text-base font-sans group-hover/sidebar:translate-x-1 transition duration-150 whitespace-nowrap inline-block !p-0 !m-0",
+              isActive ? "text-neutral-900 font-medium" : "text-neutral-700"
+            )}
+          >
+            {link.label}
+          </span>
+        </motion.div>
+      </Link>
+    </motion.div>
   );
 };
