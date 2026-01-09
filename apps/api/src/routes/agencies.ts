@@ -7,6 +7,7 @@
 
 import { FastifyInstance } from 'fastify';
 import { agencyService } from '../services/agency.service.js';
+import { sendError } from '../lib/response.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
   // List agencies with optional filters
@@ -22,23 +23,13 @@ export async function agencyRoutes(fastify: FastifyInstance) {
       // Validate that at least one filter is provided
       if (!email && !clerkUserId) {
         fastify.log.warn('GET /agencies: No filter provided');
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Either email or clerkUserId query parameter is required',
-          },
-        });
+        return sendValidationError(reply, 'Either email or clerkUserId query parameter is required');
       }
 
       const result = await agencyService.listAgencies({ email, clerkUserId });
 
       if (result.error) {
-        fastify.log.error('GET /agencies: Service error', result.error);
-        return reply.code(500).send({
-          data: null,
-          error: result.error,
-        });
+        return sendError(reply, result.error.code, result.error.message, 500, result.error);
       }
 
       // Ensure we always return a valid response format
@@ -51,13 +42,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
       return reply.send(response);
     } catch (error) {
       fastify.log.error('Error in GET /agencies:', error);
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to retrieve agencies',
-        },
-      });
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve agencies', 500);
     }
   });
 
@@ -68,10 +53,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     const result = await agencyService.getAgency(id);
 
     if (result.error) {
-      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, result.error.code === 'NOT_FOUND' ? 404 : 500);
     }
 
     return reply.send(result);
@@ -83,13 +65,10 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       const statusCode = result.error.code === 'AGENCY_EXISTS' ? 409 : 400;
-      return reply.code(statusCode).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
-    return reply.code(201).send(result);
+    return reply.send(result);
   });
 
   // Update agency
@@ -100,10 +79,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
-      return reply.code(statusCode).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
     return reply.send(result);
@@ -116,10 +92,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     const result = await agencyService.getAgencyMembers(id);
 
     if (result.error) {
-      return reply.code(500).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, 500);
     }
 
     return reply.send(result);
@@ -134,13 +107,10 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       const statusCode = result.error.code === 'MEMBER_EXISTS' ? 409 : 400;
-      return reply.code(statusCode).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
-    return reply.code(201).send(result);
+    return reply.send(result);
   });
 
   // Bulk invite members (for onboarding)
@@ -151,13 +121,10 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       const statusCode = result.error.code === 'AGENCY_NOT_FOUND' ? 404 : 400;
-      return reply.code(statusCode).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
-    return reply.code(201).send(result);
+    return reply.send(result);
   });
 
   // Get onboarding status
@@ -168,10 +135,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       const statusCode = result.error.code === 'AGENCY_NOT_FOUND' ? 404 : 500;
-      return reply.code(statusCode).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
     return reply.send(result);
@@ -186,10 +150,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
     if (result.error) {
       const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
-      return reply.code(statusCode).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
     return reply.send(result);
@@ -202,10 +163,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     const result = await agencyService.removeMember(id);
 
     if (result.error) {
-      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send({
-        data: null,
-        error: result.error,
-      });
+      return sendError(reply, result.error.code, result.error.message, result.error.code === 'NOT_FOUND' ? 404 : 500);
     }
 
     return reply.send({ data: { success: true }, error: null });
