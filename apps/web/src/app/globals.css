@@ -13,10 +13,10 @@
 
     --primary: 255 107 53;          /* #FF6B35 - AuthHub Coral */
     --primary-foreground: 255 255 255;
-    
+
     --secondary: 0 168 150;         /* #00A896 - Teal */
     --secondary-foreground: 255 255 255;
-    
+
     --accent: 255 247 237;          /* #FFF7ED - Soft Peach */
     --accent-foreground: 10 10 10;
 
@@ -25,10 +25,30 @@
     --ring: 255 107 53;
 
     --radius: 0.75rem;               /* Sleeker rounded corners */
-    
+
     /* Section specific backgrounds */
     --warm-gray: 245 245 244;       /* #F5F5F4 */
     --peach: 255 247 237;           /* #FFF7ED */
+
+    /* ========================================
+       ACID BRUTALISM DESIGN TOKENS
+       ======================================== */
+
+    /* PRIMARY SURFACES - High contrast base */
+    --ink: 9 9 11;                  /* #09090B - Deep black for backgrounds */
+    --paper: 250 250 250;           /* #FAFAFA - Off-white for surfaces */
+
+    /* BRAND COLORS - Preserved as accents */
+    --coral: 255 107 53;            /* #FF6B35 - AuthHub Coral - accent (10% usage) */
+    --teal: 0 168 150;              /* #00A896 - AuthHub Teal - accent (5% usage) */
+
+    /* BRUTALIST ACCENTS */
+    --acid: 204 255 0;              /* #CCFF00 - Acid green for kinetic elements (2% usage) */
+    --electric: 139 92 246;         /* #8B5CF6 - Electric purple for hover states */
+
+    /* BORDERS & SHADOWS */
+    --border-hard: 0 0 0;           /* #000000 - Pure black borders */
+    --shadow-hard: 0 0 0;           /* Pure black for hard shadows */
   }
 }
 
@@ -47,9 +67,74 @@
   .font-display {
     font-family: var(--font-display), serif;
   }
-  
+
+  .font-dela {
+    font-family: var(--font-dela), cursive;
+  }
+
   .font-mono {
     font-family: var(--font-mono), monospace;
+  }
+
+  /* ========================================
+     BRUTALIST UTILITIES
+     ======================================== */
+
+  /* Brutalist Card - Hard borders and shadows */
+  .brutalist-card {
+    @apply border-2 border-black rounded-none shadow-[4px_4px_0px_#000];
+    @apply hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px];
+    @apply transition-all duration-200;
+  }
+
+  /* Brutalist Button */
+  .brutalist-btn {
+    @apply border-2 border-black rounded-none font-bold uppercase;
+    @apply shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000];
+    @apply hover:translate-x-[-2px] hover:translate-y-[-2px];
+    @apply transition-all duration-200;
+  }
+
+  /* Ink/Paper surfaces */
+  .bg-ink {
+    background-color: rgb(var(--ink));
+  }
+
+  .bg-paper {
+    background-color: rgb(var(--paper));
+  }
+
+  .text-ink {
+    color: rgb(var(--ink));
+  }
+
+  .text-paper {
+    color: rgb(var(--paper));
+  }
+
+  /* Brand colors */
+  .bg-coral {
+    background-color: rgb(var(--coral));
+  }
+
+  .text-coral {
+    color: rgb(var(--coral));
+  }
+
+  .bg-teal {
+    background-color: rgb(var(--teal));
+  }
+
+  .text-teal {
+    color: rgb(var(--teal));
+  }
+
+  .bg-acid {
+    background-color: rgb(var(--acid));
+  }
+
+  .text-acid {
+    color: rgb(var(--acid));
   }
 
   /* Reveal on Scroll */
@@ -123,6 +208,30 @@
   }
 
   /* ========================================
+     BRUTALIST ANIMATIONS
+     ======================================== */
+
+  /* Hard shadow hover animation */
+  @keyframes shadow-brutal {
+    0% { box-shadow: 4px 4px 0px #000; }
+    100% { box-shadow: 6px 6px 0px #000; transform: translate(-2px, -2px); }
+  }
+
+  .animate-brutal-hover:hover {
+    animation: shadow-brutal 0.2s ease-out forwards;
+  }
+
+  /* Marquee scroll (slow) */
+  @keyframes scroll-left-slow {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-scroll-slow {
+    animation: scroll-left-slow 40s linear infinite;
+  }
+
+  /* ========================================
      Mobile Optimization Utilities
      ======================================== */
 
@@ -189,6 +298,66 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+/* ========================================
+   PILLAR AI STYLE UTILITIES
+   ======================================== */
+
+/* Enhanced hard shadows */
+.shadow-hard-xl {
+  box-shadow: 8px 8px 0px 0px rgb(var(--border-hard));
+}
+
+/* Float animation for floating cards */
+@keyframes float-pillar {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-float-pillar {
+  animation: float-pillar 5s ease-in-out infinite;
+}
+
+/* Glitch text effect on hover */
+.glitch-text:hover {
+  animation: glitch-pillar 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes glitch-pillar {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* Diagonal lines background pattern */
+.diagonal-lines {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(9, 9, 11, 0.03) 10px,
+    rgba(9, 9, 11, 0.03) 20px
+  );
 }
 
 /* Custom Scrollbar */

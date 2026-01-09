@@ -1,0 +1,140 @@
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="400" fill="#F5F5F5"/>
+  
+  <!-- Title -->
+  <text x="300" y="30" font-family="sans-serif" font-size="24" font-weight="900" text-anchor="middle" fill="#1A1816" letter-spacing="0.1em">THE OAUTH NIGHTMARE</text>
+  
+  <!-- Platform Logos - Positioned in corners to avoid overlap -->
+  <!-- Facebook (f) - Bottom Left -->
+  <g transform="translate(30, 340)">
+    <rect width="40" height="40" fill="#FF6B35" stroke="#1A1816" stroke-width="2"/>
+    <text x="20" y="28" font-family="sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#1A1816">f</text>
+  </g>
+  
+  <!-- Google (G) - Top Right -->
+  <g transform="translate(530, 40)">
+    <circle cx="20" cy="20" r="20" fill="#FF6B35" stroke="#1A1816" stroke-width="2"/>
+    <text x="20" y="28" font-family="sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1A1816">G</text>
+  </g>
+  
+  <!-- X (Twitter) - Top Left -->
+  <g transform="translate(30, 50)">
+    <rect width="40" height="40" fill="#FF6B35" stroke="#1A1816" stroke-width="2"/>
+    <!-- X logo - two intersecting lines -->
+    <path d="M12 12 L28 28 M28 12 L12 28" stroke="#1A1816" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- LinkedIn (in) - Bottom Right -->
+  <g transform="translate(530, 340)">
+    <rect width="40" height="40" fill="#FF6B35" stroke="#1A1816" stroke-width="2"/>
+    <text x="20" y="28" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#1A1816">in</text>
+  </g>
+  
+  <!-- Window 1 - Top Left -->
+  <g transform="translate(80, 80) rotate(-5)">
+    <rect width="140" height="100" fill="#F5F5F5" stroke="#1A1816" stroke-width="2"/>
+    <rect x="0" y="0" width="140" height="25" fill="#FF6B35"/>
+    <text x="70" y="18" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1A1816">LOGIN FAILED</text>
+    <rect x="20" y="40" width="100" height="20" fill="none" stroke="#FF6B35" stroke-width="2"/>
+    <text x="70" y="54" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1A1816">RETRY</text>
+    <rect x="5" y="5" width="12" height="12" fill="#1A1816"/>
+  </g>
+  
+  <!-- Window 2 - Center Top -->
+  <g transform="translate(250, 60) rotate(3)">
+    <rect width="140" height="100" fill="#F5F5F5" stroke="#1A1816" stroke-width="2"/>
+    <rect x="0" y="0" width="140" height="25" fill="#FF6B35"/>
+    <text x="70" y="18" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1A1816">LOGIN FAILED</text>
+    <rect x="20" y="40" width="100" height="20" fill="none" stroke="#FF6B35" stroke-width="2"/>
+    <text x="70" y="54" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1A1816">CONNECT</text>
+    <rect x="5" y="5" width="12" height="12" fill="#1A1816"/>
+  </g>
+  
+  <!-- Window 3 - Right Center -->
+  <g transform="translate(380, 120) rotate(-3)">
+    <rect width="140" height="100" fill="#F5F5F5" stroke="#1A1816" stroke-width="2"/>
+    <rect x="0" y="0" width="140" height="25" fill="#FF6B35"/>
+    <text x="70" y="18" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1A1816">LOGIN FAILED</text>
+    <rect x="20" y="40" width="100" height="20" fill="none" stroke="#FF6B35" stroke-width="2"/>
+    <text x="70" y="54" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1A1816">RETRY</text>
+    <rect x="5" y="5" width="12" height="12" fill="#1A1816"/>
+  </g>
+  
+  <!-- Window 4 - Center -->
+  <g transform="translate(200, 150) rotate(2)">
+    <rect width="140" height="100" fill="#F5F5F5" stroke="#1A1816" stroke-width="2"/>
+    <rect x="0" y="0" width="140" height="25" fill="#FF6B35"/>
+    <text x="70" y="18" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1A1816">LOGIN FAILED</text>
+    <rect x="20" y="40" width="100" height="20" fill="none" stroke="#FF6B35" stroke-width="2"/>
+    <text x="70" y="54" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1A1816">CONNECT</text>
+    <rect x="5" y="5" width="12" height="12" fill="#1A1816"/>
+  </g>
+  
+  <!-- Window 5 - Bottom Left -->
+  <g transform="translate(120, 220) rotate(-4)">
+    <rect width="140" height="100" fill="#F5F5F5" stroke="#1A1816" stroke-width="2"/>
+    <rect x="0" y="0" width="140" height="25" fill="#FF6B35"/>
+    <text x="70" y="18" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1A1816">LOGIN FAILED</text>
+    <rect x="20" y="40" width="100" height="20" fill="none" stroke="#FF6B35" stroke-width="2"/>
+    <text x="70" y="54" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1A1816">RETRY</text>
+    <rect x="5" y="5" width="12" height="12" fill="#1A1816"/>
+  </g>
+  
+  <!-- Window 6 - Bottom Right -->
+  <g transform="translate(320, 240) rotate(5)">
+    <rect width="140" height="100" fill="#F5F5F5" stroke="#1A1816" stroke-width="2"/>
+    <rect x="0" y="0" width="140" height="25" fill="#FF6B35"/>
+    <text x="70" y="18" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1A1816">LOGIN FAILED</text>
+    <rect x="20" y="40" width="100" height="20" fill="none" stroke="#FF6B35" stroke-width="2"/>
+    <text x="70" y="54" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#1A1816">CONNECT</text>
+    <rect x="5" y="5" width="12" height="12" fill="#1A1816"/>
+  </g>
+  
+  <!-- Tangled Connection Lines - Routed to avoid platform logos -->
+  <!-- Line from Facebook (bottom left) to Window 1 - stops at icon edge -->
+  <path d="M70 360 Q100 280 150 180" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 1 to Window 2 -->
+  <path d="M220 130 Q240 100 320 110" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 2 to Google (top right) - stops before icon -->
+  <path d="M390 110 Q450 60 510 50" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 3 to Twitter (top left) - stops before icon -->
+  <path d="M380 170 Q200 100 70 70" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 4 to Window 5 -->
+  <path d="M270 250 Q200 240 260 320" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 5 to Facebook (bottom left) - stops before icon -->
+  <path d="M190 320 Q120 340 70 340" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 6 to LinkedIn (bottom right) - stops before icon -->
+  <path d="M460 290 Q500 320 530 340" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 2 to Window 4 -->
+  <path d="M320 160 Q280 180 270 200" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Window 3 to Window 6 -->
+  <path d="M460 220 Q420 240 390 280" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Google (top right) to Window 3 - starts from icon edge -->
+  <path d="M510 50 Q480 90 460 170" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Twitter (top left) to Window 1 - starts from icon edge -->
+  <path d="M70 70 Q100 80 150 130" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from Facebook (bottom left) to Window 5 - starts from icon edge -->
+  <path d="M70 360 Q100 300 190 270" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Line from LinkedIn (bottom right) to Window 6 - starts from icon edge -->
+  <path d="M530 340 Q480 300 390 280" stroke="#1A1816" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Arrowhead marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#1A1816"/>
+    </marker>
+  </defs>
+</svg>

@@ -7,7 +7,7 @@ import { SolutionSection } from '@/components/marketing/solution-section';
 import CombinedFeaturedSection from '@/components/ui/combined-featured-section';
 import { IntegrationSection } from '@/components/marketing/integration-section';
 import { HowItWorksSection } from '@/components/marketing/how-it-works-section';
-import { TrustSection } from '@/components/marketing/trust-section';
+import { SuccessStoriesSection } from '@/components/marketing/success-stories-section';
 import { CTASection } from '@/components/marketing/cta-section';
 
 export default async function MarketingPage() {
@@ -27,7 +27,7 @@ export default async function MarketingPage() {
       <CombinedFeaturedSection />
       <IntegrationSection />
       <HowItWorksSection />
-      <TrustSection />
+      <SuccessStoriesSection />
       <CTASection />
     </main>
   );

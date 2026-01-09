@@ -14,6 +14,7 @@ import {
   SiGoogleanalytics,
 } from "react-icons/si";
 import type { IconType } from "react-icons";
+import { Zap } from "lucide-react";
 
 interface IconItem {
   icon?: IconType;
@@ -50,47 +51,53 @@ const ICONS_ROW2: IconItem[] = [
 ];
 
 // Utility to repeat icons enough times for seamless scroll
-const repeatedIcons = (icons: IconItem[], repeat = 4): IconItem[] => 
+const repeatedIcons = (icons: IconItem[], repeat = 4): IconItem[] =>
   Array.from({ length: repeat }).flatMap(() => icons);
 
 export default function IntegrationHero() {
   return (
-    <section className="relative py-32 overflow-hidden bg-white">
-      {/* Light grid background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
+    <section className="relative py-32 overflow-hidden bg-white border-y-2 border-black">
+      {/* Brutalist grid background */}
+      <div className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+          backgroundSize: '50px 50px'
+        }}
+      />
 
       {/* Content */}
       <div className="relative max-w-7xl mx-auto px-6 text-center">
-        <span className="inline-block px-3 py-1 mb-4 text-sm rounded-full border border-gray-200 bg-white text-black">
-          ⚡ Integration
-        </span>
-        <h1 className="text-4xl lg:text-6xl font-display font-bold tracking-tight text-gray-900">
+        <div className="inline-flex items-center gap-2 border-2 border-black bg-acid text-black px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist rounded-[0.75rem] mb-6">
+          <Zap size={14} />
+          Integration
+        </div>
+        <h1 className="font-dela text-4xl lg:text-6xl tracking-tight text-ink">
           Connect, Automate, and Scale
         </h1>
-        <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
+        <p className="mt-4 text-lg text-gray-600 max-w-xl mx-auto font-mono">
           AuthHub integrates effortlessly with your favorite tools, ensuring a smooth and automated workflow.
         </p>
-        <Button variant="primary" size="lg" className="mt-8">
+        <Button variant="brutalist" size="lg" className="mt-8">
           Get started
         </Button>
 
-        {/* Carousel */}
+        {/* Carousel - Brutalist platform cards */}
         <div className="mt-12 overflow-hidden relative pb-2">
           {/* Row 1 */}
-          <div className="flex gap-10 whitespace-nowrap animate-scroll-left">
+          <div className="flex gap-6 whitespace-nowrap animate-scroll-left">
             {repeatedIcons(ICONS_ROW1, 4).map((item, i) => {
               const Icon = item.icon;
               const bgColor = item.bgColor || "white";
-              
+
               return (
-                <div 
-                  key={`row1-${i}`} 
-                  className="h-16 w-16 flex-shrink-0 rounded-full shadow-md flex items-center justify-center border border-gray-100 overflow-hidden"
+                <div
+                  key={`row1-${i}`}
+                  className="h-16 w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
                   style={{ backgroundColor: bgColor }}
                 >
                   {item.image ? (
-                    <Image 
-                      src={item.image} 
+                    <Image
+                      src={item.image}
                       alt={item.name}
                       width={40}
                       height={40}
@@ -106,20 +113,20 @@ export default function IntegrationHero() {
           </div>
 
           {/* Row 2 */}
-          <div className="flex gap-10 whitespace-nowrap mt-6 animate-scroll-right">
+          <div className="flex gap-6 whitespace-nowrap mt-6 animate-scroll-right">
             {repeatedIcons(ICONS_ROW2, 4).map((item, i) => {
               const Icon = item.icon;
               const bgColor = item.bgColor || "white";
-              
+
               return (
-                <div 
-                  key={`row2-${i}`} 
-                  className="h-16 w-16 flex-shrink-0 rounded-full shadow-md flex items-center justify-center border border-gray-100 overflow-hidden"
+                <div
+                  key={`row2-${i}`}
+                  className="h-16 w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
                   style={{ backgroundColor: bgColor }}
                 >
                   {item.image ? (
-                    <Image 
-                      src={item.image} 
+                    <Image
+                      src={item.image}
                       alt={item.name}
                       width={40}
                       height={40}
@@ -135,12 +142,11 @@ export default function IntegrationHero() {
           </div>
 
           {/* Fade overlays */}
-          <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-white to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+          <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-white via-white to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white via-white to-transparent pointer-events-none" />
         </div>
       </div>
 
     </section>
   );
 }
-

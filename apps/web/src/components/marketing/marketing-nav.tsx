@@ -73,35 +73,35 @@ export function MarketingNav() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-white/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
+        {/* Logo - Brutalist box */}
         <Link href="/" className="flex items-center space-x-3 group" onClick={handleLinkClick}>
-          <div className="w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
-            <img 
-              src="/authhub.png" 
-              alt="AuthHub" 
+          <div className="w-14 h-14 flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_#000] rounded-none bg-white group-hover:shadow-[6px_6px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all duration-200 relative">
+            <img
+              src="/authhub.png"
+              alt="AuthHub"
               className="w-full h-full object-contain"
             />
           </div>
-          <span className="font-display text-3xl tracking-tight text-foreground font-bold group-hover:text-primary transition-colors">AuthHub</span>
+          <span className="font-dela text-3xl tracking-tight text-ink font-bold group-hover:text-coral transition-colors">AuthHub</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-10">
-          <Link href="#features" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Features</Link>
-          <Link href="#how-it-works" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">How It Works</Link>
-          <Link href="#pricing" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Pricing</Link>
+        {/* Desktop Navigation - Brutalist pills */}
+        <div className="hidden md:flex items-center space-x-3">
+          <Link href="#features" className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Features</Link>
+          <Link href="#how-it-works" className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">How It Works</Link>
+          <Link href="#pricing" className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Pricing</Link>
         </div>
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
-          <div className="h-6 w-px bg-border" />
+        {/* Desktop Actions - Brutalist buttons */}
+        <div className="hidden md:flex items-center gap-3">
+          <div className="h-6 w-px bg-black" />
           <SignInButton mode="modal">
-            <Button variant="ghost" size="sm" className="font-bold uppercase tracking-widest text-xs">Sign In</Button>
+            <Button variant="brutalist-ghost" size="sm" className="font-bold uppercase tracking-wider text-xs">Sign In</Button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <Button variant="primary" size="md" className="font-bold uppercase tracking-widest text-xs px-6">Get Started</Button>
+            <Button variant="brutalist" size="md" className="font-bold uppercase tracking-wider text-xs px-6">Get Started</Button>
           </SignUpButton>
         </div>
 
@@ -131,60 +131,60 @@ export function MarketingNav() {
               aria-hidden="true"
             />
 
-            {/* Mobile Menu Panel */}
+            {/* Mobile Menu Panel - Brutalist bento grid */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-sm bg-background md:hidden shadow-2xl overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-sm bg-white md:hidden shadow-brutalist-xl overflow-y-auto border-l-2 border-black"
             >
               <div className="flex flex-col h-full">
                 {/* Mobile Menu Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
-                  <span className="font-display text-xl font-bold">Menu</span>
+                <div className="flex items-center justify-between p-4 border-b-2 border-black">
+                  <span className="font-dela text-xl font-bold">Menu</span>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center p-2 min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/10 touch-feedback"
+                    className="flex items-center justify-center p-2 min-h-[44px] min-w-[44px] border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] touch-feedback transition-all duration-200"
                     aria-label="Close menu"
                   >
                     <MenuIcon open={true} />
                   </button>
                 </div>
 
-                {/* Mobile Menu Content */}
-                <div className="flex-1 p-6 space-y-2">
-                  {/* Navigation Links */}
-                  <div className="space-y-2 mb-8">
+                {/* Mobile Menu Content - Bento grid layout */}
+                <div className="flex-1 p-4">
+                  {/* Navigation Links - Brutalist grid */}
+                  <div className="grid grid-cols-1 gap-3 mb-6">
                     <Link
                       href="#features"
                       onClick={handleLinkClick}
-                      className="block py-4 px-6 text-lg font-bold min-h-[56px] flex items-center rounded-xl hover:bg-muted/10 transition-colors touch-feedback"
+                      className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
                     >
                       Features
                     </Link>
                     <Link
                       href="#how-it-works"
                       onClick={handleLinkClick}
-                      className="block py-4 px-6 text-lg font-bold min-h-[56px] flex items-center rounded-xl hover:bg-muted/10 transition-colors touch-feedback"
+                      className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
                     >
                       How It Works
                     </Link>
                     <Link
                       href="#pricing"
                       onClick={handleLinkClick}
-                      className="block py-4 px-6 text-lg font-bold min-h-[56px] flex items-center rounded-xl hover:bg-muted/10 transition-colors touch-feedback"
+                      className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
                     >
                       Pricing
                     </Link>
                   </div>
 
-                  {/* Auth Buttons */}
-                  <div className="space-y-3 pt-8 border-t border-border">
+                  {/* Auth Buttons - Brutalist */}
+                  <div className="space-y-3 pt-6 border-t-2 border-black">
                     <SignInButton mode="modal">
                       <Button
-                        variant="ghost"
-                        className="w-full font-bold uppercase tracking-widest text-sm py-6"
+                        variant="brutalist-ghost"
+                        className="w-full font-bold uppercase tracking-wider text-sm py-6"
                         onClick={handleLinkClick}
                       >
                         Sign In
@@ -192,8 +192,8 @@ export function MarketingNav() {
                     </SignInButton>
                     <SignUpButton mode="modal">
                       <Button
-                        variant="primary"
-                        className="w-full font-bold uppercase tracking-widest text-sm py-6 shadow-xl"
+                        variant="brutalist"
+                        className="w-full font-bold uppercase tracking-wider text-sm py-6"
                         onClick={handleLinkClick}
                       >
                         Get Started

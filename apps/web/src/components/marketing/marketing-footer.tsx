@@ -3,21 +3,21 @@ import type { Route } from 'next';
 
 export function MarketingFooter() {
   return (
-    <footer className="bg-card py-16 sm:py-20 md:py-24 border-t border-border">
+    <footer className="bg-white py-16 sm:py-20 md:py-24 border-t-2 border-black">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between gap-8 sm:gap-12">
           <div className="max-w-xs space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 flex items-center justify-center">
-                <img 
-                  src="/authhub.png" 
-                  alt="AuthHub" 
+              <div className="w-10 h-10 flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_#000] rounded-none bg-white">
+                <img
+                  src="/authhub.png"
+                  alt="AuthHub"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="font-display text-2xl tracking-tight">AuthHub</span>
+              <span className="font-dela text-2xl tracking-tight text-ink">AuthHub</span>
             </div>
-            <p className="text-muted-foreground leading-relaxed text-sm">
+            <p className="text-gray-600 leading-relaxed text-sm font-mono">
               The easy button for agency access to client accounts.
               Replace weeks of back-and-forth with one link.
             </p>
@@ -25,37 +25,37 @@ export function MarketingFooter() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-12 w-full md:w-auto">
             <div>
-              <h4 className="font-bold uppercase tracking-widest text-xs mb-4 sm:mb-6">Product</h4>
-              <ul className="space-y-3 sm:space-y-4 text-sm text-muted-foreground">
-                <li><Link href="#features" className="hover:text-primary transition-colors">Features</Link></li>
-                <li><Link href="#how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
-                <li><Link href="#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Product</h4>
+              <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
+                <li><Link href="#features" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
+                <li><Link href="#how-it-works" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
+                <li><Link href="#pricing" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Pricing</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold uppercase tracking-widest text-xs mb-4 sm:mb-6">Company</h4>
-              <ul className="space-y-3 sm:space-y-4 text-sm text-muted-foreground">
-                <li><Link href={"/about" as Route} className="hover:text-primary transition-colors">About</Link></li>
-                <li><Link href={"/contact" as Route} className="hover:text-primary transition-colors">Contact</Link></li>
+              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Company</h4>
+              <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
+                <li><Link href={"/about" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">About</Link></li>
+                <li><Link href={"/contact" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Contact</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold uppercase tracking-widest text-xs mb-4 sm:mb-6">Legal</h4>
-              <ul className="space-y-3 sm:space-y-4 text-sm text-muted-foreground">
-                <li><Link href={"/privacy" as Route} className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-                <li><Link href={"/terms" as Route} className="hover:text-primary transition-colors">Terms of Service</Link></li>
+              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Legal</h4>
+              <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
+                <li><Link href={"/privacy" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy Policy</Link></li>
+                <li><Link href={"/terms" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 sm:mt-16 md:mt-24 pt-6 sm:pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
-          <p className="text-xs sm:text-sm text-muted-foreground">
+        <div className="mt-12 sm:mt-16 md:mt-24 pt-6 sm:pt-8 border-t-2 border-black flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+          <p className="text-xs sm:text-sm text-gray-600 font-mono">
             © {new Date().getFullYear()} AuthHub. All rights reserved.
           </p>
-          <div className="flex gap-6 sm:gap-8 text-xs sm:text-sm text-muted-foreground">
-            <Link href={"/privacy" as Route} className="hover:text-primary transition-colors">Privacy</Link>
-            <Link href={"/terms" as Route} className="hover:text-primary transition-colors">Terms</Link>
+          <div className="flex gap-6 sm:gap-8 text-xs sm:text-sm text-gray-600 font-mono">
+            <Link href={"/privacy" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy</Link>
+            <Link href={"/terms" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms</Link>
           </div>
         </div>
       </div>

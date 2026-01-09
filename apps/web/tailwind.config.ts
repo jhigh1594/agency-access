@@ -41,6 +41,13 @@ const config: Config = {
         ring: "rgb(var(--ring) / <alpha-value>)",
         "warm-gray": "rgb(var(--warm-gray) / <alpha-value>)",
         peach: "rgb(var(--peach) / <alpha-value>)",
+        /* Brutalist colors */
+        ink: "rgb(var(--ink) / <alpha-value>)",
+        paper: "rgb(var(--paper) / <alpha-value>)",
+        coral: "rgb(var(--coral) / <alpha-value>)",
+        teal: "rgb(var(--teal) / <alpha-value>)",
+        acid: "rgb(var(--acid) / <alpha-value>)",
+        electric: "rgb(var(--electric) / <alpha-value>)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -51,6 +58,7 @@ const config: Config = {
         'mobile-safe': 'env(safe-area-inset-bottom)',
       },
       fontFamily: {
+        dela: ["var(--font-dela)", "cursive"],
         display: ["var(--font-display)", "serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
@@ -68,11 +76,26 @@ const config: Config = {
           "0%": { transform: "translateX(-50%)" },
           "100%": { transform: "translateX(0)" },
         },
+        "scroll-left-slow": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "marquee": {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.6s ease-out forwards",
         "scroll-left": "scroll-left 30s linear infinite",
         "scroll-right": "scroll-right 30s linear infinite",
+        "scroll-slow": "scroll-left-slow 40s linear infinite",
+        "marquee": "marquee 30s linear infinite",
+      },
+      boxShadow: {
+        'brutalist': '4px 4px 0px #000',
+        'brutalist-lg': '6px 6px 0px #000',
+        'brutalist-xl': '8px 8px 0px #000',
       },
     },
   },

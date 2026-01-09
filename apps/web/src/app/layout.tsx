@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Outfit, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Outfit, JetBrains_Mono, Dela_Gothic_One } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -18,6 +18,13 @@ const outfit = Outfit({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  display: "swap",
+});
+
+const delaGothicOne = Dela_Gothic_One({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-dela",
   display: "swap",
 });
 
@@ -46,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${outfit.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${outfit.variable} ${jetbrainsMono.variable} ${delaGothicOne.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

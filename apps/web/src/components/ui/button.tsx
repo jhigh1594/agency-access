@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'brutalist' | 'brutalist-ghost' | 'brutalist-rounded' | 'brutalist-ghost-rounded';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -53,6 +53,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       success: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md hover:shadow-lg active:scale-95',
       danger: 'bg-error text-white hover:bg-error/90 shadow-md hover:shadow-lg active:scale-95',
       ghost: 'bg-transparent text-muted-foreground hover:bg-muted/10 active:scale-95',
+      // Brutalist variants - Hard shadows, no rounded corners, uppercase
+      brutalist: 'bg-coral text-white border-2 border-black rounded-none shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      'brutalist-ghost': 'bg-transparent text-ink border-2 border-black rounded-none hover:bg-black hover:text-paper hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      // Rounded brutalist variants - Same styling but with rounded corners
+      'brutalist-rounded': 'bg-coral text-white border-2 border-black rounded-[0.75rem] shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      'brutalist-ghost-rounded': 'bg-transparent text-ink border-2 border-black rounded-[0.75rem] hover:bg-black hover:text-paper hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
     };
 
     // Size styles (use NonNullable to exclude undefined from Record key type)

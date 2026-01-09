@@ -15,12 +15,12 @@ const features: Array<{
     title: 'Single Branded Link',
     description: 'Send clients one link that handles all platform authorizations. Customize with your agency branding.',
     mockup: (
-      <div className="w-full h-full bg-warm-gray/30 rounded-lg p-2 space-y-2 border border-border/50">
-        <div className="h-2 w-3/4 bg-primary/20 rounded" />
-        <div className="h-8 w-full bg-white rounded-md border border-border/50 shadow-sm flex items-center px-2">
-          <div className="h-1 w-full bg-warm-gray rounded" />
+      <div className="w-full h-full bg-gray-100 rounded-none p-2 space-y-2 border-2 border-black shadow-[4px_4px_0px_#000]">
+        <div className="h-2 w-3/4 bg-coral/20 rounded-none" />
+        <div className="h-8 w-full bg-white rounded-none border-2 border-black flex items-center px-2">
+          <div className="h-1 w-full bg-gray-200 rounded-none" />
         </div>
-        <div className="h-6 w-full bg-primary rounded-md shadow-sm" />
+        <div className="h-6 w-full bg-coral rounded-none" />
       </div>
     )
   },
@@ -29,13 +29,13 @@ const features: Array<{
     title: '5-Minute Setup',
     description: 'Replace 2-3 days of back-and-forth emails with an automated flow. Clients complete authorization in minutes.',
     mockup: (
-      <div className="w-full h-full bg-warm-gray/30 rounded-lg p-3 flex flex-col justify-center gap-2 border border-border/50">
+      <div className="w-full h-full bg-gray-100 rounded-none p-3 flex flex-col justify-center gap-2 border-2 border-black shadow-[4px_4px_0px_#000]">
         {[1, 2, 3].map(i => (
           <div key={i} className="flex gap-2 items-center">
-            <div className={`w-4 h-4 rounded-full ${i === 1 ? 'bg-secondary' : 'bg-border'} flex items-center justify-center`}>
-              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+            <div className={`w-4 h-4 rounded-none border-2 border-black ${i === 1 ? 'bg-teal' : 'bg-white'} flex items-center justify-center`}>
+              <div className="w-1.5 h-1.5 bg-white rounded-none" />
             </div>
-            <div className="h-1.5 w-full bg-warm-gray rounded" />
+            <div className="h-1.5 w-full bg-gray-200 rounded-none" />
           </div>
         ))}
       </div>
@@ -46,15 +46,15 @@ const features: Array<{
     title: 'Secure OAuth Tokens',
     description: 'No more password sharing. All tokens stored securely in Infisical with audit logging. Enterprise-grade security.',
     mockup: (
-      <div className="w-full h-full bg-warm-gray/30 rounded-lg p-3 space-y-3 border border-border/50">
+      <div className="w-full h-full bg-gray-100 rounded-none p-3 space-y-3 border-2 border-black shadow-[4px_4px_0px_#000]">
         <div className="flex justify-center">
-          <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center border border-secondary/20">
-            <Shield size={16} className="text-secondary" />
+          <div className="w-8 h-8 rounded-none border-2 border-black bg-teal/20 flex items-center justify-center">
+            <Shield size={16} className="text-teal" strokeWidth={2.5} />
           </div>
         </div>
         <div className="space-y-1.5">
-          <div className="h-1 w-full bg-warm-gray rounded" />
-          <div className="h-1 w-5/6 bg-warm-gray rounded" />
+          <div className="h-1 w-full bg-gray-200 rounded-none" />
+          <div className="h-1 w-5/6 bg-gray-200 rounded-none" />
         </div>
       </div>
     )
@@ -64,10 +64,10 @@ const features: Array<{
     title: 'Multi-Platform Support',
     description: 'Meta Ads, Google Ads, GA4, LinkedIn, TikTok, and more. One flow, all platforms, all your assets.',
     mockup: (
-      <div className="w-full h-full bg-warm-gray/30 rounded-lg p-2 grid grid-cols-2 gap-2 border border-border/50">
+      <div className="w-full h-full bg-gray-100 rounded-none p-2 grid grid-cols-2 gap-2 border-2 border-black shadow-[4px_4px_0px_#000]">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-full bg-white rounded border border-border/50 flex items-center justify-center p-1">
-            <div className="w-full h-1 bg-warm-gray/50 rounded" />
+          <div key={i} className="h-full bg-white rounded-none border-2 border-black flex items-center justify-center p-1">
+            <div className="w-full h-1 bg-gray-200 rounded-none" />
           </div>
         ))}
       </div>
@@ -77,20 +77,20 @@ const features: Array<{
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white">
+    <section id="features" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-paper">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header - Better mobile spacing */}
+        {/* Section Header - Brutalist styling */}
         <div className="max-w-2xl mx-auto text-center mb-12 sm:mb-16 md:mb-20 px-4">
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl tracking-tight mb-4 sm:mb-6">
+          <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl tracking-tight mb-4 sm:mb-6 text-ink">
             Everything You Need
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-600 leading-relaxed font-mono">
             Built specifically for marketing agencies who need fast, secure client onboarding.
           </p>
         </div>
 
-        {/* Features Grid - Mobile optimized */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+        {/* Features Grid - Checkerboard pattern with brutalist styling */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-black border-2 border-black max-w-5xl mx-auto shadow-brutalist-xl">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -98,20 +98,27 @@ export function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="clean-card p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-8 group"
+              className={`p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-8 group ${
+                i % 2 === 0 ? 'bg-white' : 'bg-coral'
+              }`}
             >
               <div className="flex-1">
-                <div className="mb-4 sm:mb-6 group-hover:scale-105 transition-transform duration-300">
-                  <feature.icon size={28} className="sm:hidden text-foreground" strokeWidth={1.5} />
-                  <feature.icon size={32} className="hidden sm:block text-foreground" strokeWidth={1.5} />
+                {/* Icon in brutalist bordered box */}
+                <div className="mb-4 sm:mb-6 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border-2 border-black bg-white shadow-[4px_4px_0px_#000] group-hover:shadow-[6px_6px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all duration-200 flex-shrink-0">
+                  <feature.icon size={24} className="sm:hidden text-ink" strokeWidth={2.5} />
+                  <feature.icon size={28} className="hidden sm:block text-ink" strokeWidth={2.5} />
                 </div>
-                <h3 className="font-bold text-lg sm:text-xl mb-2 sm:mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed text-sm">{feature.description}</p>
+                <h3 className={`font-black text-lg sm:text-xl mb-2 sm:mb-3 uppercase tracking-wider ${i % 2 === 0 ? 'text-ink' : 'text-white'}`}>
+                  {feature.title}
+                </h3>
+                <p className={`leading-relaxed text-sm font-mono ${i % 2 === 0 ? 'text-gray-600' : 'text-white/90'}`}>
+                  {feature.description}
+                </p>
               </div>
 
-              {/* Mobile mockup - smaller but visible */}
+              {/* Mobile mockup - Brutalist styling */}
               <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 mx-auto sm:mx-0">
-                <div className="w-full h-full group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-500">
+                <div className="w-full h-full group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-[6px_6px_0px_#000] transition-all duration-200">
                   {feature.mockup}
                 </div>
               </div>
