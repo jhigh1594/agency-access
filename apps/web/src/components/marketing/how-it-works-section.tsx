@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { SignUpButton } from '@clerk/nextjs';
 import { Link2, Shield, Users, BarChart3 } from 'lucide-react';
 import { Reveal } from './reveal';
+import { ScheduleDemoModal } from './schedule-demo-modal';
 
 const steps = [
   {
@@ -52,6 +53,7 @@ export function HowItWorksSection() {
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   return (
     <section
@@ -333,9 +335,7 @@ export function HowItWorksSection() {
                       variant="brutalist-ghost"
                       size="lg"
                       className="bg-transparent text-ink border-2 border-black hover:bg-ink hover:text-paper hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-brutalist-sm"
-                      data-cal-link="pillar-ai/authhub-demo"
-                      data-cal-namespace="authhub-demo"
-                      data-cal-config='{"layout":"month_view","theme":"light"}'
+                      onClick={() => setIsDemoModalOpen(true)}
                     >
                       Schedule Demo
                     </Button>
@@ -347,6 +347,7 @@ export function HowItWorksSection() {
         </div>
       </div>
       
+      <ScheduleDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </section>
   );
 }

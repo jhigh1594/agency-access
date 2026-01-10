@@ -58,6 +58,7 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
 
         // Configure UI
         (window as any).Cal.ns["authhub-demo"]("ui", {
+          theme: "light",
           hideEventTypeDetails: false,
           layout: "month_view"
         });

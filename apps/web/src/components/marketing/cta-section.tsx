@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowRightIcon, CheckIcon } from '@/components/ui/ui-icons';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { ScheduleDemoModal } from './schedule-demo-modal';
+
 export function CTASection() {
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,9 +64,7 @@ export function CTASection() {
                 variant="brutalist-ghost"
                 size="xl"
                 className="w-full sm:w-auto font-bold uppercase tracking-wider text-xs"
-                data-cal-link="pillar-ai/authhub-demo"
-                data-cal-namespace="authhub-demo"
-                data-cal-config='{"layout":"month_view","theme":"light"}'
+                onClick={() => setIsDemoModalOpen(true)}
               >
                 Schedule a Demo
               </Button>
@@ -113,6 +114,8 @@ export function CTASection() {
           </SignUpButton>
         </div>
       </div>
+      
+      <ScheduleDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </section>
   );
 }

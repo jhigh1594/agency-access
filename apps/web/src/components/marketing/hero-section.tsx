@@ -6,7 +6,11 @@ import { GlobeIcon, ShieldCheckIcon, ZapIcon } from '@/components/ui/ui-icons';
 import { TrendingUp, Clock, Sparkles, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Reveal } from './reveal';
+import { ScheduleDemoModal } from './schedule-demo-modal';
+import { useState } from 'react';
+
 export function HeroSection() {
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   return (
     <section className="relative min-h-screen overflow-hidden bg-paper border-b-2 border-black">
       {/* Diagonal lines background pattern */}
@@ -82,9 +86,7 @@ export function HeroSection() {
                   variant="brutalist-ghost-rounded" 
                   size="xl" 
                   className="flex-1 sm:flex-none text-center min-w-[180px]"
-                  data-cal-link="pillar-ai/authhub-demo"
-                  data-cal-namespace="authhub-demo"
-                  data-cal-config='{"layout":"month_view","theme":"light"}'
+                  onClick={() => setIsDemoModalOpen(true)}
                 >
                   Schedule Demo
                 </Button>
@@ -201,6 +203,8 @@ export function HeroSection() {
           </div>
         </div>
       </div>
+      
+      <ScheduleDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </section>
   );
 }
