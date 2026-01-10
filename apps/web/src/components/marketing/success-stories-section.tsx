@@ -11,7 +11,7 @@ const CASE_STUDIES = [
     company: 'Pillar AI Agency',
     industry: 'AI Automation',
     location: 'Austin, TX',
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800',
     quote:
       'We were spending days just trying to get access to client accounts before we could even start building automations. AuthHub changed everything. Now our clients connect their platforms in 5 minutes, and we can start building workflows the same day instead of waiting a week.',
     author: 'AJ S.',
@@ -26,7 +26,7 @@ const CASE_STUDIES = [
     company: 'Scale Media Agency',
     industry: 'Paid Social',
     location: 'New York, NY',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=800',
     quote:
       'We scaled from 15 to 45 clients without hiring more staff. The automated OAuth flow handles everything. No more password sharing, no more security risks.',
     author: 'Marcus Chen',
@@ -41,7 +41,7 @@ const CASE_STUDIES = [
     company: 'Apex Digital',
     industry: 'Full-Service Agency',
     location: 'San Francisco, CA',
-    image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800',
     quote:
       'From chaos to organized in 1 week. Every OAuth token stored securely, every client connected in minutes. Our team can finally focus on strategy instead of admin.',
     author: 'Emily Rodriguez',
