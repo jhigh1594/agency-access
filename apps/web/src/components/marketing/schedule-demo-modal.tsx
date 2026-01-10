@@ -10,19 +10,46 @@ interface ScheduleDemoModalProps {
 }
 
 export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
-  // Load lemcal script when modal opens
+  // Load Cal.com script when modal opens
   useEffect(() => {
-    if (isOpen) {
-      // Check if script is already loaded
-      const existingScript = document.querySelector('script[src="https://cdn.lemcal.com/lemcal-integrations.min.js"]');
-      
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.lemcal.com/lemcal-integrations.min.js';
-        script.defer = true;
-        document.body.appendChild(script);
-      }
-    }
+    if (!isOpen || typeof window === 'undefined') return;
+
+    // Initialize Cal.com embed loader
+    (function (C: any, A: string, L: string) {
+      let p = function (a: any, ar: any) { a.q.push(ar); };
+      let d = C.document;
+      C.Cal = C.Cal || function () {
+        let cal = C.Cal;
+        let ar = arguments;
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q || [];
+          d.head.appendChild(d.createElement("script")).src = A;
+          cal.loaded = true;
+        }
+        if (ar[0] === L) {
+          const api = function () { p(api, arguments); };
+          const namespace = ar[1];
+          api.q = api.q || [];
+          if (typeof namespace === "string") {
+            cal.ns[namespace] = cal.ns[namespace] || api;
+            p(cal.ns[namespace], ar);
+            p(cal, ["initNamespace", namespace]);
+          } else p(cal, ar);
+          return;
+        }
+        p(cal, ar);
+      };
+    })(window, "https://app.cal.com/embed/embed.js", "init");
+
+    // Initialize Cal.com with namespace
+    (window as any).Cal("init", "authhub-demo", { origin: "https://app.cal.com" });
+
+    // Configure UI
+    (window as any).Cal.ns["authhub-demo"]("ui", {
+      hideEventTypeDetails: false,
+      layout: "month_view"
+    });
   }, [isOpen]);
 
   return (
@@ -69,12 +96,13 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
                 </button>
               </div>
 
-              {/* Content - Lemcal Embed */}
+              {/* Content - Cal.com Embed */}
               <div className="flex-1 overflow-y-auto px-6 py-6 bg-paper min-h-[500px]">
                 <div 
-                  className="lemcal-embed-booking-calendar" 
-                  data-user="usr_aL9FN5c4HgaRuHc4m" 
-                  data-meeting-type="met_GMNRzSYzaGpHXDLkq"
+                  data-cal-link="pillar-ai/authhub-demo"
+                  data-cal-namespace="authhub-demo"
+                  data-cal-config='{"layout":"month_view"}'
+                  className="w-full"
                 ></div>
               </div>
             </div>
