@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 
 export default function CombinedFeaturedSection() {
   return (
-    <section className="py-16 sm:py-20 md:py-24 border-y-2 border-black bg-paper relative overflow-hidden">
+    <section id="trusted-by-agencies" className="py-16 sm:py-20 md:py-24 border-y-2 border-black bg-paper relative overflow-hidden">
       {/* Diagonal lines background */}
       <div className="absolute inset-0 opacity-20 pointer-events-none -z-10 diagonal-lines" />
       

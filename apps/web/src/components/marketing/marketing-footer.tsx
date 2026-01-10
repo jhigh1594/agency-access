@@ -1,7 +1,54 @@
+'use client';
+
 import Link from 'next/link';
 import type { Route } from 'next';
 
 export function MarketingFooter() {
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const href = e.currentTarget.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const scrollToElement = () => {
+          const targetElement = document.getElementById(targetId);
+          
+          if (targetElement) {
+            const headerHeight = 80; // h-20 = 80px
+            const elementTop = targetElement.getBoundingClientRect().top;
+            const elementPosition = elementTop + window.pageYOffset;
+            const offsetPosition = elementPosition - headerHeight;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth',
+            });
+          } else {
+            // Retry once after a short delay if element not found
+            setTimeout(() => {
+              const retryElement = document.getElementById(targetId);
+              if (retryElement) {
+                const headerHeight = 80;
+                const elementTop = retryElement.getBoundingClientRect().top;
+                const elementPosition = elementTop + window.pageYOffset;
+                const offsetPosition = elementPosition - headerHeight;
+                
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: 'smooth',
+                });
+              }
+            }, 100);
+          }
+        };
+        
+        scrollToElement();
+      });
+    }
+  };
+
   return (
     <footer className="bg-white py-16 sm:py-20 md:py-24 border-t-2 border-black">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,9 +74,8 @@ export function MarketingFooter() {
             <div>
               <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Product</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
-                <li><Link href="#features" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
-                <li><Link href="#how-it-works" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
-                <li><Link href="#pricing" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Pricing</Link></li>
+                <li><Link href="#trusted-by-agencies" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
+                <li><Link href="#how-it-works" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
               </ul>
             </div>
             <div>

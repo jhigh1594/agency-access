@@ -68,8 +68,58 @@ export function MarketingNav() {
     };
   }, [mobileMenuOpen]);
 
-  const handleLinkClick = () => {
-    setMobileMenuOpen(false);
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const href = e.currentTarget.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      
+      // Capture menu state before closing
+      const wasMenuOpen = mobileMenuOpen;
+      
+      // Close mobile menu first
+      setMobileMenuOpen(false);
+      
+      // Use requestAnimationFrame to ensure DOM is ready, then scroll
+      requestAnimationFrame(() => {
+        const scrollToElement = () => {
+          const targetElement = document.getElementById(targetId);
+          
+          if (targetElement) {
+            const headerHeight = 80; // h-20 = 80px
+            const elementTop = targetElement.getBoundingClientRect().top;
+            const elementPosition = elementTop + window.pageYOffset;
+            const offsetPosition = elementPosition - headerHeight;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth',
+            });
+          } else {
+            // Retry once after a short delay if element not found
+            setTimeout(() => {
+              const retryElement = document.getElementById(targetId);
+              if (retryElement) {
+                const headerHeight = 80;
+                const elementTop = retryElement.getBoundingClientRect().top;
+                const elementPosition = elementTop + window.pageYOffset;
+                const offsetPosition = elementPosition - headerHeight;
+                
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: 'smooth',
+                });
+              }
+            }, 100);
+          }
+        };
+        
+        // Small delay to ensure mobile menu animation completes if it was open
+        setTimeout(scrollToElement, wasMenuOpen ? 300 : 0);
+      });
+    } else {
+      setMobileMenuOpen(false);
+    }
   };
 
   return (
@@ -89,9 +139,8 @@ export function MarketingNav() {
 
         {/* Desktop Navigation - Brutalist pills */}
         <div className="hidden md:flex items-center space-x-3">
-          <Link href="#features" className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Features</Link>
-          <Link href="#how-it-works" className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">How It Works</Link>
-          <Link href="#pricing" className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Pricing</Link>
+          <Link href="#trusted-by-agencies" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Features</Link>
+          <Link href="#how-it-works" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">How It Works</Link>
         </div>
 
         {/* Desktop Actions - Brutalist buttons */}
@@ -157,7 +206,7 @@ export function MarketingNav() {
                   {/* Navigation Links - Brutalist grid */}
                   <div className="grid grid-cols-1 gap-3 mb-6">
                     <Link
-                      href="#features"
+                      href="#trusted-by-agencies"
                       onClick={handleLinkClick}
                       className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
                     >
@@ -169,13 +218,6 @@ export function MarketingNav() {
                       className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
                     >
                       How It Works
-                    </Link>
-                    <Link
-                      href="#pricing"
-                      onClick={handleLinkClick}
-                      className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black rounded-none hover:bg-black hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
-                    >
-                      Pricing
                     </Link>
                   </div>
 
