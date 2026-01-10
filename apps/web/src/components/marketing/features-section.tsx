@@ -1,7 +1,7 @@
 'use client';
 
 import { Link2, Zap, Shield, Grid3x3 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 
 const features: Array<{
@@ -92,7 +92,7 @@ export function FeaturesSection() {
         {/* Features Grid - Checkerboard pattern with brutalist styling */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-black border-2 border-black max-w-5xl mx-auto shadow-brutalist-xl">
           {features.map((feature, i) => (
-            <motion.div
+            <m.div
               key={feature.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -122,7 +122,7 @@ export function FeaturesSection() {
                   {feature.mockup}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>

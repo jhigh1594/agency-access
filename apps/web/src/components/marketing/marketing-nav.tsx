@@ -4,7 +4,7 @@ import { SignInButton, SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 function MenuIcon({ open }: { open: boolean }) {
   return (
@@ -22,13 +22,13 @@ function MenuIcon({ open }: { open: boolean }) {
     >
       {open ? (
         <>
-          <motion.path
+          <m.path
             d="M18 6L6 18"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.1 }}
           />
-          <motion.path
+          <m.path
             d="M6 6l12 12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -172,7 +172,7 @@ export function MarketingNav() {
         {mobileMenuOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -183,7 +183,7 @@ export function MarketingNav() {
             />
 
             {/* Mobile Menu Panel - Brutalist bento grid */}
-            <motion.div
+            <m.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -246,7 +246,7 @@ export function MarketingNav() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

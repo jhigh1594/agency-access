@@ -1,7 +1,7 @@
 'use client'
 
 import { Activity, Globe, Shield, Zap } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 export default function CombinedFeaturedSection() {
   return (
@@ -11,7 +11,7 @@ export default function CombinedFeaturedSection() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -29,12 +29,12 @@ export default function CombinedFeaturedSection() {
           <p className="font-mono text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
             See how agencies are transforming client onboarding from a 3-day bottleneck to a 5-minute flow.
           </p>
-        </motion.div>
+        </m.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
 
         {/* 1. ONE LINK EVERY PLATFORM - Top Left */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -78,10 +78,10 @@ export default function CombinedFeaturedSection() {
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Completion</div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* 2. REAL-TIME ACTIVITY - Top Right */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -108,7 +108,7 @@ export default function CombinedFeaturedSection() {
               { title: "Google Connected", time: "3m ago", icon: "🔍" },
               { title: "Token Auto-Refresh", time: "6m ago", icon: "🔄" },
             ].map((item, i) => (
-              <motion.div
+              <m.div
                 key={i}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -120,13 +120,13 @@ export default function CombinedFeaturedSection() {
                   <div className="text-xs sm:text-sm font-bold text-ink">{item.title}</div>
                   <div className="text-[10px] text-gray-600">{item.time}</div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* 3. CHART - Bottom Left - OAuth Analytics */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -175,10 +175,10 @@ export default function CombinedFeaturedSection() {
               <div className="font-dela text-sm font-bold text-ink">1,247 This Month</div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* 4. SECURITY - Bottom Right */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -226,7 +226,7 @@ export default function CombinedFeaturedSection() {
               </li>
             ))}
           </ul>
-        </motion.div>
+        </m.div>
         </div>
       </div>
     </section>

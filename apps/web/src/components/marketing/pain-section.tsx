@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { Reveal } from './reveal';
 
@@ -141,7 +141,7 @@ function StatCard({
   const textColor = color === 'coral' || color === 'teal' ? 'text-white' : 'text-ink';
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -160,7 +160,7 @@ function StatCard({
       <div className="font-mono text-xs sm:text-sm opacity-75">
         {description}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -175,7 +175,7 @@ function ChatMessage({
   const isAgency = message.sender === 'Agency';
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
@@ -205,7 +205,7 @@ function ChatMessage({
           </span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -220,27 +220,27 @@ export function PainSection() {
         <Reveal delay={0.2}>
           <div className="max-w-4xl mx-auto text-center mb-12 sm:mb-16 md:mb-20">
             {/* Warning badge */}
-            <motion.div
+            <m.div
               initial={{ rotate: -2 }}
               whileInView={{ rotate: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3 }}
               className="inline-flex items-center gap-2 border-2 border-coral bg-coral text-white px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] font-mono shadow-brutalist-lg mb-6 rounded-lg hover:shadow-brutalist-xl hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
             >
-              <motion.span
+              <m.span
                 animate={{ opacity: [1, 0.6, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 ⚠️
-              </motion.span>
+              </m.span>
               The Reality of Agency Onboarding
-              <motion.span
+              <m.span
                 animate={{ opacity: [1, 0.6, 1] }}
                 transition={{ duration: 2, repeat: Infinity, delay: 0.7 }}
               >
                 ⚠️
-              </motion.span>
-            </motion.div>
+              </m.span>
+            </m.div>
 
             {/* Main headline */}
             <h2 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.05] tracking-tight mb-6 text-ink">
@@ -307,7 +307,7 @@ export function PainSection() {
           <Reveal delay={0.8}>
             <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mt-12 sm:mt-16">
               {painPoints.map((point, i) => (
-                <motion.div
+                <m.div
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -323,14 +323,14 @@ export function PainSection() {
                   <div className="font-medium text-xs sm:text-sm leading-tight opacity-90">
                     {point.description}
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </Reveal>
 
           {/* BOTTOM CTA - Hope */}
           <Reveal delay={1}>
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -349,7 +349,7 @@ export function PainSection() {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </Reveal>
         </div>
       </div>

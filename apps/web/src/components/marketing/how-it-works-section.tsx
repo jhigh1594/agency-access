@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { m, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState } from 'react';
 import { ArrowRightIcon, ClockIcon, CheckIcon, ZapIcon } from '@/components/ui/ui-icons';
 import { Button } from '@/components/ui/button';
@@ -73,8 +73,9 @@ export function HowItWorksSection() {
       />
 
       {/* Animated gradient blob */}
-      <motion.div
+      <m.div
         className="absolute top-20 right-10 w-96 h-96 bg-acid/5 rounded-full blur-3xl -z-10"
+        initial={{ scale: 1, opacity: 0.05 }}
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.05, 0.1, 0.05],
@@ -144,7 +145,7 @@ export function HowItWorksSection() {
           <div className="relative">
             {/* Vertical Progress Line */}
             <div className="absolute left-4 sm:left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gray-200 -z-10 hidden md:block" />
-            <motion.div
+            <m.div
               className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-acid -z-10 hidden md:block origin-top"
               style={{ height: lineHeight }}
             />
@@ -153,18 +154,18 @@ export function HowItWorksSection() {
             <div className="space-y-8 sm:space-y-12">
               {steps.map((step, index) => (
                 <Reveal key={step.number} delay={0.4 + index * 0.1}>
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: 50 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-100px' }}
-                    transition={{ delay: index * 0.15, duration: 0.6 }}
+                    viewport={{ once: true, margin: '-50px' }}
+                    transition={{ delay: index * 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className={`relative flex flex-col ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-6 sm:gap-8`}
                     onMouseEnter={() => setHoveredStep(step.number)}
                     onMouseLeave={() => setHoveredStep(null)}
                   >
                     {/* Step Number Indicator */}
                     <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 items-center justify-center z-20">
-                      <motion.div
+                      <m.div
                         className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center shadow-brutalist font-dela text-lg font-black text-ink"
                         animate={{
                           backgroundColor: hoveredStep === step.number ? `rgb(var(--${step.color}))` : '#fff',
@@ -174,12 +175,12 @@ export function HowItWorksSection() {
                         transition={{ duration: 0.2 }}
                       >
                         {step.number}
-                      </motion.div>
+                      </m.div>
                     </div>
 
                     {/* Content Card */}
                     <div className={`flex-1 w-full ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
-                      <motion.div
+                      <m.div
                         className="bg-white border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
                         whileHover={{ y: -4, boxShadow: '8px 8px 0px #000' }}
                       >
@@ -214,7 +215,7 @@ export function HowItWorksSection() {
                         </div>
 
                         {/* Visual Preview (shown on hover) */}
-                        <motion.div
+                        <m.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{
                             opacity: hoveredStep === step.number ? 1 : 0,
@@ -235,21 +236,21 @@ export function HowItWorksSection() {
                               </div>
                             </div>
                           </div>
-                        </motion.div>
+                        </m.div>
 
                         {/* Hover Arrow */}
-                        <motion.div
+                        <m.div
                           className="absolute -bottom-2 -right-2 w-10 h-10 bg-acid border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           animate={{ rotate: hoveredStep === step.number ? 45 : 0 }}
                         >
                           <ArrowRightIcon size={16} className="text-black" />
-                        </motion.div>
-                      </motion.div>
+                        </m.div>
+                      </m.div>
                     </div>
 
                     {/* Empty div for layout balance */}
                     <div className="flex-1 hidden md:block" />
-                  </motion.div>
+                  </m.div>
                 </Reveal>
               ))}
             </div>
@@ -264,12 +265,12 @@ export function HowItWorksSection() {
                 { value: '50+', label: 'Agencies', icon: Users, color: 'coral' },
                 { value: '5 min', label: 'Avg Setup', icon: ClockIcon, color: 'electric' },
               ].map((stat, i) => (
-                <motion.div
+                <m.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 1.3 + i * 0.1 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ delay: 1.3 + i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   className="bg-white border-2 border-black p-4 sm:p-6 rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-y-1 transition-all duration-200 text-center group"
                 >
                   <div className={`flex items-center justify-center mb-2`}>
@@ -290,17 +291,18 @@ export function HowItWorksSection() {
                   <div className="text-xs sm:text-sm font-mono text-gray-600 uppercase tracking-wider">
                     {stat.label}
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </Reveal>
 
           {/* CTA Section */}
           <Reveal delay={1.5}>
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="mt-12 sm:mt-16 md:mt-20 text-center"
             >
               <div className="inline-block bg-white text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-xl relative overflow-hidden group">
@@ -342,7 +344,7 @@ export function HowItWorksSection() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </Reveal>
         </div>
       </div>

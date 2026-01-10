@@ -3,7 +3,7 @@
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { ArrowRightIcon, CheckIcon } from '@/components/ui/ui-icons';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ScheduleDemoModal } from './schedule-demo-modal';
 
@@ -27,10 +27,11 @@ export function CTASection() {
   return (
     <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-paper relative">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="relative rounded-none border-2 border-black bg-white p-8 sm:p-12 md:p-16 lg:p-24 overflow-hidden text-center shadow-brutalist-xl"
         >
           {/* Background Accents - Brutalist */}
@@ -90,7 +91,7 @@ export function CTASection() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Sticky Mobile CTA Button - Shows after scrolling starts */}

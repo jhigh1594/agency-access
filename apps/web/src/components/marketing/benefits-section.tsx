@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { CheckIcon } from '@/components/ui/ui-icons';
 
 const benefits = [
@@ -31,7 +31,7 @@ export function BenefitsSection() {
     <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-paper">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -43,11 +43,11 @@ export function BenefitsSection() {
             <p className="text-base sm:text-lg text-gray-600 font-mono">
               Join agencies that have eliminated the biggest bottleneck in client onboarding.
             </p>
-          </motion.div>
+          </m.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             {benefits.map((benefit, index) => (
-              <motion.div
+              <m.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -66,7 +66,7 @@ export function BenefitsSection() {
                   <h3 className="font-black text-lg sm:text-xl mb-1.5 sm:mb-2 uppercase tracking-wider text-ink">{benefit.title}</h3>
                   <p className="text-gray-600 text-sm sm:text-base leading-relaxed font-mono">{benefit.description}</p>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>

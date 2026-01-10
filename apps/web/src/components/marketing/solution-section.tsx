@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ShieldCheckIcon, ZapIcon, UsersIcon, BarChart3Icon } from '@/components/ui/ui-icons';
 
 const stats = [
@@ -19,7 +19,7 @@ export function SolutionSection() {
           <div className="flex-1 relative w-full h-[450px] xs:h-[400px] sm:h-[480px] md:h-[560px] lg:h-[500px] order-2 lg:order-1 mt-8 sm:mt-0">
             <div className="absolute inset-0 flex items-center justify-center">
               {/* Layer 3 (Bottom) - Brutalist */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 40, rotateX: 45, rotateZ: -10 }}
                 whileInView={{ opacity: 0.3, y: 60, rotateX: 45, rotateZ: -10 }}
                 viewport={{ once: true }}
@@ -27,7 +27,7 @@ export function SolutionSection() {
               />
 
               {/* Layer 2 (Middle) - Brutalist */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20, rotateX: 45, rotateZ: -10 }}
                 whileInView={{ opacity: 0.6, y: 30, rotateX: 45, rotateZ: -10 }}
                 viewport={{ once: true }}
@@ -36,7 +36,7 @@ export function SolutionSection() {
               />
 
               {/* Layer 1 (Top) - Brutalist with teal accent */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 0, rotateX: 45, rotateZ: -10 }}
                 whileInView={{ opacity: 1, y: 0, rotateX: 45, rotateZ: -10 }}
                 viewport={{ once: true }}
@@ -52,11 +52,11 @@ export function SolutionSection() {
                 <div className="mt-auto h-6 xs:h-8 sm:h-10 w-full bg-coral/10 border-2 border-black rounded-none flex items-center justify-center">
                   <div className="h-1 xs:h-1.5 sm:h-2 w-8 xs:w-10 sm:w-12 bg-coral/30 rounded-none" />
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Floating Stat Cards - Brutalist teal cards */}
               {stats.map((stat, i) => (
-                <motion.div
+                <m.div
                   key={stat.label}
                   initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20, y: 20 }}
                   whileInView={{ opacity: 1, x: 0, y: 0 }}
@@ -79,7 +79,7 @@ export function SolutionSection() {
                     <p className="text-[10px] xs:text-xs sm:text-sm font-black text-white leading-tight xs:leading-none truncate font-mono">{stat.value}</p>
                     <p className="text-[8px] xs:text-[9px] sm:text-[10px] uppercase tracking-wide xs:tracking-widest font-bold text-white/80 mt-0.5 xs:mt-1">{stat.label}</p>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </div>

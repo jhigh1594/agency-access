@@ -4,7 +4,7 @@ import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { GlobeIcon, ShieldCheckIcon, ZapIcon } from '@/components/ui/ui-icons';
 import { TrendingUp, Clock, Sparkles, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
 import { useState } from 'react';
@@ -49,7 +49,7 @@ export function HeroSection() {
                     fill="none"
                     style={{ marginTop: '8px' }}
                   >
-                    <motion.path
+                    <m.path
                       d="M2 10Q100 -2 198 10"
                       stroke="rgb(var(--coral))"
                       strokeWidth="6"
@@ -128,7 +128,7 @@ export function HeroSection() {
             <div className="absolute inset-0 border-2 border-black border-dashed rounded-[3rem] -rotate-3 z-0" />
 
             {/* Floating Card 1 - Top Right */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 1.2 }}
@@ -143,10 +143,10 @@ export function HeroSection() {
                   <div className="text-xs font-mono">10x Faster</div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Floating Card 2 - Bottom Left */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.4, type: 'spring' }}
@@ -156,10 +156,10 @@ export function HeroSection() {
               <div className="flex items-center gap-2 font-dela text-sm">
                 <Check className="w-4 h-4" /> Request Received. Access Granted
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Main Dashboard Preview */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.8, duration: 0.8 }}
@@ -199,7 +199,7 @@ export function HeroSection() {
                   </Button>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </div>

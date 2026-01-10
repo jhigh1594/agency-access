@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import { UsersIcon } from '@/components/ui/ui-icons';
 
@@ -57,14 +57,14 @@ const CASE_STUDIES = [
 // Simple reveal animation component
 function Reveal({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -105,7 +105,7 @@ export function SuccessStoriesSection() {
         {/* Carousel Content */}
         <div className="relative">
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={currentIndex}
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
@@ -114,7 +114,7 @@ export function SuccessStoriesSection() {
               className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center"
             >
               {/* Company Info Card */}
-              <motion.div
+              <m.div
                 whileHover={{ y: -2, boxShadow: '6px 6px 0px #000', x: -2 }}
                 className="relative aspect-[4/3] bg-paper border-2 border-black rounded-[0.75rem] overflow-hidden shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200 group order-2 md:order-1"
               >
@@ -131,7 +131,7 @@ export function SuccessStoriesSection() {
                   <h3 className="font-dela text-2xl sm:text-3xl text-white mb-1">{currentStudy.company}</h3>
                   <p className="text-white/70 font-mono text-sm">{currentStudy.location}</p>
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Testimonial & Metrics */}
               <div className="order-1 md:order-2">
@@ -166,7 +166,7 @@ export function SuccessStoriesSection() {
                   {currentStudy.metrics.map((metric, i) => {
                     const Icon = metric.icon;
                     return (
-                      <motion.div
+                      <m.div
                         key={metric.label}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -192,12 +192,12 @@ export function SuccessStoriesSection() {
                             <span className="text-ink font-dela text-base sm:text-xl">{metric.after}</span>
                           </div>
                         </div>
-                      </motion.div>
+                      </m.div>
                     );
                   })}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
 
           {/* Navigation Controls */}

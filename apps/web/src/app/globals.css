@@ -152,6 +152,47 @@
     transform: translateY(0);
   }
 
+  /* Reveal Element Animations - CSS-based entrance animations */
+  .reveal-element {
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0s);
+  }
+
+  /* Before html.mounted, keep content visible to prevent hydration mismatch */
+  html:not(.mounted) .reveal-element {
+    opacity: 1;
+    transform: translate(0, 0);
+    transition: none;
+  }
+
+  /* After mounting, hide elements until they become visible */
+  html.mounted .reveal-element.reveal-up {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+
+  html.mounted .reveal-element.reveal-down {
+    opacity: 0;
+    transform: translateY(-3rem);
+  }
+
+  html.mounted .reveal-element.reveal-left {
+    opacity: 0;
+    transform: translateX(3rem);
+  }
+
+  html.mounted .reveal-element.reveal-right {
+    opacity: 0;
+    transform: translateX(-3rem);
+  }
+
+  /* When .visible class is added, reveal the element */
+  html.mounted .reveal-element.visible {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+
   /* Floating animation */
   @keyframes float {
     0%, 100% { transform: translateY(0); }
@@ -159,6 +200,10 @@
   }
 
   .animate-float {
+    animation: none;
+  }
+
+  html.mounted .animate-float {
     animation: float 5s ease-in-out infinite;
   }
 
@@ -207,6 +252,10 @@
   }
 
   .animate-scaleUp {
+    animation: none;
+  }
+
+  html.mounted .animate-scaleUp {
     animation: scaleUp 0.3s ease-out forwards;
   }
 
@@ -231,6 +280,10 @@
   }
 
   .animate-scroll-slow {
+    animation: none;
+  }
+
+  html.mounted .animate-scroll-slow {
     animation: scroll-left-slow 40s linear infinite;
   }
 
@@ -301,6 +354,20 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Suppress animations until mounted to prevent glitches */
+  .animate-pulse,
+  .animate-marquee {
+    animation: none !important;
+  }
+
+  html.mounted .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+
+  html.mounted .animate-marquee {
+    animation: marquee 30s linear infinite !important;
+  }
 }
 
 /* ========================================
@@ -323,6 +390,10 @@
 }
 
 .animate-float-pillar {
+  animation: none;
+}
+
+html.mounted .animate-float-pillar {
   animation: float-pillar 5s ease-in-out infinite;
 }
 

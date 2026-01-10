@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 const agencies = [
   "GrowthFlow", "AdStream", "ScaleUp", "BrandSync", "PixelPerfect", "NexusAds"
@@ -21,7 +21,7 @@ export function SocialProofSection() {
       {/* Marquee container */}
       <div className="relative overflow-hidden">
         {/* Marquee track - infinite scroll animation */}
-        <motion.div
+        <m.div
           initial={{ x: 0 }}
           animate={{ x: '-50%' }}
           transition={{
@@ -29,7 +29,7 @@ export function SocialProofSection() {
             ease: 'linear',
             repeat: Infinity,
           }}
-          className="flex gap-6 sm:gap-12 whitespace-nowrap"
+          className="flex gap-6 sm:gap-12 whitespace-nowrap animate-marquee"
         >
           {marqueeAgencies.map((name, i) => (
             <div
@@ -46,7 +46,7 @@ export function SocialProofSection() {
               </span>
             </div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

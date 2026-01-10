@@ -1,10 +1,14 @@
 'use client';
 
+import '@/lib/suppress-extension-hydration'; // Suppress browser extension hydration warnings
 import { ClerkProvider } from '@clerk/nextjs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { LazyMotion, domAnimation } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
   // Create a new QueryClient instance per request to avoid sharing state between users
   const [queryClient] = useState(
     () =>
@@ -20,9 +24,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
+  useEffect(() => {
+    // Mark as mounted to enable animations
+    setMounted(true);
+    // Add class to body to enable CSS animations
+    document.documentElement.classList.add('mounted');
+    return () => {
+      document.documentElement.classList.remove('mounted');
+    };
+  }, []);
+
   return (
-    <ClerkProvider
-      appearance={{
+    <LazyMotion features={domAnimation} strict>
+      <ClerkProvider
+        appearance={{
         variables: {
           // Increase base font size
           fontSize: '16px',
@@ -72,7 +87,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       // Redirect existing users to dashboard (they'll be redirected to onboarding if needed)
       afterSignInUrl="/dashboard"
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </ClerkProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </ClerkProvider>
+    </LazyMotion>
   );
 }

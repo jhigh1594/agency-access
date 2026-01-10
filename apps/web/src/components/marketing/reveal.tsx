@@ -1,7 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 
 interface RevealProps {
   children: ReactNode;
@@ -10,29 +9,68 @@ interface RevealProps {
 }
 
 export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
-  const getInitialPosition = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Map direction to CSS class
+  const getDirectionClass = () => {
     switch (direction) {
       case 'up':
-        return { opacity: 0, y: 50 };
+        return 'reveal-up';
       case 'down':
-        return { opacity: 0, y: -50 };
+        return 'reveal-down';
       case 'left':
-        return { opacity: 0, x: 50 };
+        return 'reveal-left';
       case 'right':
-        return { opacity: 0, x: -50 };
+        return 'reveal-right';
       default:
-        return { opacity: 0, y: 50 };
+        return 'reveal-up';
     }
   };
 
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            // Optional: Unobserve after revealing for better performance
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        // Trigger animation when element is 10% visible
+        threshold: 0.1,
+        // Start observing slightly before element enters viewport
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    observer.observe(element);
+
+    return () => {
+      if (element) {
+        observer.unobserve(element);
+      }
+    };
+  }, []);
+
+  // Set CSS variable for delay
+  const style = {
+    '--reveal-delay': `${delay}s`,
+  } as React.CSSProperties;
+
   return (
-    <motion.div
-      initial={getInitialPosition()}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
+    <div
+      ref={ref}
+      className={`reveal-element ${getDirectionClass()} ${isVisible ? 'visible' : ''}`}
+      style={style}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

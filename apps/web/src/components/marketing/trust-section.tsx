@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ShieldCheckIcon, LockIcon, GlobeIcon } from '@/components/ui/ui-icons';
 
 export function TrustSection() {
@@ -9,7 +9,7 @@ export function TrustSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Testimonial - Brutalist card */}
         <div className="max-w-4xl mx-auto text-center mb-16 sm:mb-24 px-2">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -30,7 +30,7 @@ export function TrustSection() {
 
             {/* Quote Mark - Brutalist */}
             <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-12 text-coral/10 font-dela text-6xl sm:text-8xl md:text-[12rem] leading-none select-none -z-0">&ldquo;</div>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Security Grid - Brutalist cards */}
@@ -40,7 +40,7 @@ export function TrustSection() {
             { icon: LockIcon, title: "Secure Storage", desc: "Tokens stored in Infisical vault with audit logs." },
             { icon: GlobeIcon, title: "Privacy First", desc: "GDPR and CCPA compliant architecture." },
           ].map((item, i) => (
-            <motion.div
+            <m.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -55,7 +55,7 @@ export function TrustSection() {
               </div>
               <h3 className="text-base sm:text-lg font-black mb-2 sm:mb-3 uppercase tracking-wider">{item.title}</h3>
               <p className="text-gray-600 leading-relaxed text-xs sm:text-sm font-mono">{item.desc}</p>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
