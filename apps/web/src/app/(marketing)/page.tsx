@@ -9,6 +9,7 @@ import { IntegrationSection } from '@/components/marketing/integration-section';
 import { HowItWorksSection } from '@/components/marketing/how-it-works-section';
 import { SuccessStoriesSection } from '@/components/marketing/success-stories-section';
 import { CTASection } from '@/components/marketing/cta-section';
+import { CalEmbedScript } from '@/components/marketing/cal-embed-script';
 
 export default async function MarketingPage() {
   const { userId } = await auth();
@@ -20,6 +21,7 @@ export default async function MarketingPage() {
 
   return (
     <main className="relative bg-background">
+      <CalEmbedScript />
       <HeroSection />
       <SocialProofSection />
       <PainSection />
