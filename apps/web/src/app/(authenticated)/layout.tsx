@@ -162,7 +162,7 @@ export default function AuthenticatedLayout({
                   src="/authhub.png" 
                   alt="AuthHub" 
                   className="w-full h-full object-contain"
-                  style={{ imageRendering: 'high-quality' }}
+                  style={{ imageRendering: 'crisp-edges' }}
                 />
               </motion.div>
               <motion.span
