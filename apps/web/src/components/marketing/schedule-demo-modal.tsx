@@ -15,31 +15,6 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
   useEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
 
-    // Create and inject custom styles for Cal.com embed container
-    const styleId = 'cal-custom-styles';
-    let style = document.getElementById(styleId) as HTMLStyleElement;
-    if (!style) {
-      style = document.createElement('style');
-      style.id = styleId;
-      document.head.appendChild(style);
-    }
-    
-    style.textContent = `
-      /* Cal.com Embed Brutalist Container Styling */
-      #my-cal-inline-authhub-demo {
-        border: 2px solid #000 !important;
-        border-radius: 0 !important;
-        background: rgb(250, 250, 250) !important;
-      }
-      
-      #my-cal-inline-authhub-demo iframe {
-        border: none !important;
-        border-radius: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-      }
-    `;
-
     // Initialize Cal.com embed loader
     (function (C: any, A: string, L: string) {
       let p = function (a: any, ar: any) { a.q.push(ar); };
@@ -81,9 +56,14 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
           calLink: "pillar-ai/authhub-demo",
         });
 
-        // Configure UI - Cal.com supports limited theming via API
+        // Configure UI with custom brand color
         (window as any).Cal.ns["authhub-demo"]("ui", {
           theme: "light",
+          cssVarsPerTheme: {
+            light: {
+              "cal-brand": "#FF6B35"
+            }
+          },
           hideEventTypeDetails: false,
           layout: "month_view"
         });
@@ -160,11 +140,11 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
               </div>
 
               {/* Content - Cal.com Inline Embed */}
-              <div className="flex-1 overflow-hidden bg-paper min-h-0 p-0">
+              <div className="flex-1 overflow-hidden bg-paper min-h-0">
                 <div
                   ref={embedRef}
                   id="my-cal-inline-authhub-demo"
-                  className="w-full h-full border-2 border-black rounded-none"
+                  className="w-full h-full"
                   style={{ width: '100%', minHeight: '600px', height: '100%' }}
                 />
               </div>
