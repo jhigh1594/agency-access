@@ -265,7 +265,7 @@ export function UnifiedOnboardingProvider({
       case 1: // Agency profile - requires agency name
         return state.agencyName.trim().length > 0;
       case 2: // Client selection - requires client name and email
-        return state.clientName?.trim().length > 0 && state.clientEmail?.trim().length > 0;
+        return ((state.clientName ?? '').trim().length > 0) && ((state.clientEmail ?? '').trim().length > 0);
       case 3: // Platform selection - requires at least one platform
         const platformCount = Object.values(state.selectedPlatforms || {}).reduce(
           (sum, platforms) => sum + (platforms?.length || 0),
