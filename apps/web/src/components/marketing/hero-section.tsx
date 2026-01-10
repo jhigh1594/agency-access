@@ -66,8 +66,8 @@ export function HeroSection() {
             {/* Subheadline */}
             <Reveal delay={0.4}>
               <p className="font-mono text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 leading-tight opacity-90 mt-4 text-ink">
-                Join <span className="text-ink font-bold bg-coral/20 px-1 mx-1">50+ agencies</span> saving hundreds of hours every month.
-                Replace <span className="bg-acid/30 px-1 mx-1 font-bold">47-email onboarding</span> with a single link.
+                Join <span className="font-bold">50+ agencies</span> saving <span className="text-ink font-bold bg-teal/20 px-1 mx-1">hundreds of hours</span> every month.
+                Replace <span className="font-bold">47-email onboarding</span> with a <span className="text-ink font-bold bg-acid/20 px-1 mx-1">single link</span>.
               </p>
             </Reveal>
 
