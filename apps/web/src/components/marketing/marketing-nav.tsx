@@ -68,8 +68,10 @@ export function MarketingNav() {
     };
   }, [mobileMenuOpen]);
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const href = e.currentTarget.getAttribute('href');
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    const target = e.currentTarget;
+    const href = target.getAttribute('href');
+    
     if (href && href.startsWith('#')) {
       e.preventDefault();
       const targetId = href.substring(1);
