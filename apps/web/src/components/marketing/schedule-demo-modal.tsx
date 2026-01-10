@@ -29,9 +29,9 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
           cal.loaded = true;
         }
         if (ar[0] === L) {
-          const api = function () { p(api, arguments); };
-          const namespace = ar[1];
+          const api: { (): void; q: any[] } = function () { p(api, arguments); };
           api.q = api.q || [];
+          const namespace = ar[1];
           if (typeof namespace === "string") {
             cal.ns[namespace] = cal.ns[namespace] || api;
             p(cal.ns[namespace], ar);
