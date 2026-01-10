@@ -157,7 +157,7 @@ export default function UnifiedOnboardingPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (isLoaded && !userId) {
-      router.push('/sign-in');
+      router.push('/sign-in' as any);
     }
   }, [isLoaded, userId, router]);
 
