@@ -114,7 +114,7 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col pointer-events-auto border-2 border-black"
+              className="relative bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col pointer-events-auto border-2 border-black"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -135,12 +135,12 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
               </div>
 
               {/* Content - Cal.com Inline Embed */}
-              <div className="flex-1 overflow-y-auto px-6 py-6 bg-paper min-h-0">
+              <div className="flex-1 overflow-hidden bg-paper min-h-0">
                 <div
                   ref={embedRef}
                   id="my-cal-inline-authhub-demo"
-                  className="w-full overflow-auto"
-                  style={{ width: '100%', minHeight: '500px', maxHeight: '70vh' }}
+                  className="w-full h-full"
+                  style={{ width: '100%', minHeight: '600px', height: '100%' }}
                 />
               </div>
             </div>
