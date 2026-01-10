@@ -8,18 +8,18 @@ import { UsersIcon } from '@/components/ui/ui-icons';
 // Data structure for case studies
 const CASE_STUDIES = [
   {
-    company: 'GrowthFlow Agency',
-    industry: 'Digital Marketing',
+    company: 'Pillar AI Agency',
+    industry: 'AI Automation',
     location: 'Austin, TX',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800',
     quote:
-      'AuthHub literally saved our onboarding process. We went from 3-day delays to 5-minute setups. Our clients love the simplicity, and we love having our time back.',
-    author: 'Sarah Jenkins',
-    role: 'Founder',
+      'We were spending days just trying to get access to client accounts before we could even start building automations. AuthHub changed everything. Now our clients connect their platforms in 5 minutes, and we can start building workflows the same day instead of waiting a week.',
+    author: 'AJ S.',
+    role: 'Co-Founder',
     metrics: [
-      { label: 'Client Setup Time', before: '3-5 days', after: '< 5 min', icon: Clock },
-      { label: 'Onboarding Rate', before: '45%', after: '92%', icon: TrendingUp },
-      { label: 'Monthly Clients', before: '8', after: '24', icon: UsersIcon },
+      { label: 'Platform Connection Time', before: '2-3 days', after: '< 5 min', icon: Clock },
+      { label: 'Automation Setup Speed', before: '1 week', after: 'Same day', icon: TrendingUp },
+      { label: 'Active Client Projects', before: '12', after: '38', icon: UsersIcon },
     ],
   },
   {
