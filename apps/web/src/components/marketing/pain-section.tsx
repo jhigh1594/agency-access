@@ -258,7 +258,7 @@ export function PainSection() {
               "Insanity is doing the same thing over and over again and expecting different results."
             </p>
             <p className="font-mono text-sm sm:text-base font-bold text-coral mt-2">
-              One link. Full client access.
+              Stop the insanity. One link. Full client access
             </p>
           </div>
         </Reveal>
@@ -345,7 +345,7 @@ export function PainSection() {
                     STOP THE INSANITY
                   </div>
                   <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                    One link. Full client access.
+                    Stop the insanity. One link. Full client access
                   </p>
                 </div>
               </div>

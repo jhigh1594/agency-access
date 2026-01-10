@@ -36,7 +36,7 @@ const steps = [
   {
     number: 4,
     title: 'Instant Access',
-    description: 'Receive secure, long-lived OAuth tokens via API or export to your favorite tools.',
+    description: 'Start working immediately. Access never expires, no more chasing clients for permissions.',
     icon: BarChart3,
     color: 'electric',
     time: 'Forever',
