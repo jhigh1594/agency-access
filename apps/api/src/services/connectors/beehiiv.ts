@@ -67,7 +67,8 @@ export class BeehiivConnector {
       throw new Error(`Failed to fetch publication: ${error}`);
     }
 
-    return response.json();
+    const publication = await response.json() as BeehiivPublication;
+    return publication;
   }
 
   /**

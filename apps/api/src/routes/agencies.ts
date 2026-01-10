@@ -7,7 +7,7 @@
 
 import { FastifyInstance } from 'fastify';
 import { agencyService } from '../services/agency.service.js';
-import { sendError } from '../lib/response.js';
+import { sendError, sendValidationError } from '../lib/response.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
   // List agencies with optional filters
@@ -18,7 +18,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         clerkUserId?: string;
       };
 
-      fastify.log.info('GET /agencies', { email, clerkUserId });
+      fastify.log.info({ email, clerkUserId }, 'GET /agencies');
 
       // Validate that at least one filter is provided
       if (!email && !clerkUserId) {
@@ -29,7 +29,8 @@ export async function agencyRoutes(fastify: FastifyInstance) {
       const result = await agencyService.listAgencies({ email, clerkUserId });
 
       if (result.error) {
-        return sendError(reply, result.error.code, result.error.message, 500, result.error);
+        fastify.log.error({ error: result.error }, 'GET /agencies: Service error');
+        return sendError(reply, result.error.code, result.error.message, 500);
       }
 
       // Ensure we always return a valid response format
@@ -38,10 +39,10 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         error: null,
       };
       
-      fastify.log.info('GET /agencies: Success', { count: response.data.length });
+      fastify.log.info({ count: response.data.length }, 'GET /agencies: Success');
       return reply.send(response);
     } catch (error) {
-      fastify.log.error('Error in GET /agencies:', error);
+      fastify.log.error({ error }, 'Error in GET /agencies');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve agencies', 500);
     }
   });

@@ -413,7 +413,13 @@ export abstract class BaseConnector {
       );
     }
 
-    return response.json();
+    const userInfo = await response.json() as {
+      id: string;
+      email?: string;
+      name?: string;
+      [key: string]: any;
+    };
+    return userInfo;
   }
 
   // ==========================================================================

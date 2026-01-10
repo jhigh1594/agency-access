@@ -65,6 +65,7 @@ export class BeehiivVerificationService {
           status: 'active',
           verificationStatus: 'verified',
           lastVerifiedAt: new Date(),
+          connectedBy: 'system@authhub.com', // TODO: Get actual user email from request
           metadata: {
             publicationId: clientPublicationId,
             publicationName: accessResult.publication?.name,

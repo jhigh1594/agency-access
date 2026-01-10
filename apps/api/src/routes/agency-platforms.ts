@@ -25,6 +25,7 @@ import { ShopifyConnector } from '@/services/connectors/shopify';
 import type { Platform } from '@agency-platform/shared';
 import { env } from '@/lib/env';
 import type { GoogleAccountsResponse } from '@/services/connectors/google';
+import type { PlatformConnector } from '@/services/connectors/factory';
 
 // Meta business accounts response type
 interface MetaBusinessAccountsResponse {
@@ -319,6 +320,18 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       return reply.code(500).send(stateResult);
     }
 
+    // Check if platform uses manual invitation (no OAuth)
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    if (manualPlatforms.includes(platform)) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'MANUAL_INVITATION_PLATFORM',
+          message: `${platform} uses manual invitation flow, not OAuth`,
+        },
+      });
+    }
+
     // Get platform connector
     const ConnectorClass = PLATFORM_CONNECTORS[platform as keyof typeof PLATFORM_CONNECTORS];
     if (!ConnectorClass) {
@@ -331,7 +344,7 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const connector = new ConnectorClass();
+    const connector = new ConnectorClass() as PlatformConnector;
 
     // Generate OAuth authorization URL
     const authUrl = connector.getAuthUrl(stateResult.data!);
@@ -387,6 +400,13 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
       const actualAgencyId = agencyResult.data!.agencyId;
       const agency = agencyResult.data!.agency;
 
+      // Check if platform uses manual invitation (no OAuth)
+      const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+      if (manualPlatforms.includes(platform)) {
+        const redirectUrl = stateData.redirectUrl || env.FRONTEND_URL;
+        return reply.redirect(`${redirectUrl}?error=MANUAL_INVITATION_PLATFORM`);
+      }
+
       // Get platform connector
       const ConnectorClass = PLATFORM_CONNECTORS[platform as keyof typeof PLATFORM_CONNECTORS];
       if (!ConnectorClass) {
@@ -394,7 +414,7 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
         return reply.redirect(`${redirectUrl}?error=CONNECTOR_NOT_IMPLEMENTED`);
       }
 
-      const connector = new ConnectorClass();
+      const connector = new ConnectorClass() as PlatformConnector;
 
       // Exchange authorization code for tokens
       let tokens;
