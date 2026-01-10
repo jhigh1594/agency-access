@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
 
 interface ScheduleDemoModalProps {
   isOpen: boolean;
@@ -10,47 +9,6 @@ interface ScheduleDemoModalProps {
 }
 
 export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
-  // Load Cal.com script when modal opens
-  useEffect(() => {
-    if (!isOpen || typeof window === 'undefined') return;
-
-    // Initialize Cal.com embed loader
-    (function (C: any, A: string, L: string) {
-      let p = function (a: any, ar: any) { a.q.push(ar); };
-      let d = C.document;
-      C.Cal = C.Cal || function () {
-        let cal = C.Cal;
-        let ar = arguments;
-        if (!cal.loaded) {
-          cal.ns = {};
-          cal.q = cal.q || [];
-          d.head.appendChild(d.createElement("script")).src = A;
-          cal.loaded = true;
-        }
-        if (ar[0] === L) {
-          const api = function () { p(api, arguments); };
-          const namespace = ar[1];
-          api.q = api.q || [];
-          if (typeof namespace === "string") {
-            cal.ns[namespace] = cal.ns[namespace] || api;
-            p(cal.ns[namespace], ar);
-            p(cal, ["initNamespace", namespace]);
-          } else p(cal, ar);
-          return;
-        }
-        p(cal, ar);
-      };
-    })(window, "https://app.cal.com/embed/embed.js", "init");
-
-    // Initialize Cal.com with namespace
-    (window as any).Cal("init", "authhub-demo", { origin: "https://app.cal.com" });
-
-    // Configure UI
-    (window as any).Cal.ns["authhub-demo"]("ui", {
-      hideEventTypeDetails: false,
-      layout: "month_view"
-    });
-  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -97,13 +55,14 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
               </div>
 
               {/* Content - Cal.com Embed */}
-              <div className="flex-1 overflow-y-auto px-6 py-6 bg-paper min-h-[500px]">
-                <div 
-                  data-cal-link="pillar-ai/authhub-demo"
-                  data-cal-namespace="authhub-demo"
-                  data-cal-config='{"layout":"month_view"}'
-                  className="w-full"
-                ></div>
+              <div className="flex-1 overflow-hidden px-6 py-6 bg-paper">
+                <iframe
+                  src="https://app.cal.com/pillar-ai/authhub-demo/embed?layout=month_view"
+                  className="w-full h-full min-h-[600px] border-0 rounded-lg"
+                  title="Schedule a demo with AuthHub"
+                  allow="camera; microphone; geolocation"
+                  style={{ minHeight: '600px' }}
+                />
               </div>
             </div>
           </motion.div>
