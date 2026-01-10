@@ -45,7 +45,7 @@ function selectionToFlat(selection: PlatformSelection): Platform[] {
   const flat: Platform[] = [];
   for (const [group, platforms] of Object.entries(selection || {})) {
     if (platforms) {
-      flat.push(...platforms);
+      flat.push(...(platforms as Platform[]));
     }
   }
   return flat;
