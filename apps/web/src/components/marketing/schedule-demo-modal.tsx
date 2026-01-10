@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 interface ScheduleDemoModalProps {
   isOpen: boolean;
@@ -9,6 +10,84 @@ interface ScheduleDemoModalProps {
 }
 
 export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
+  const embedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    // Initialize Cal.com embed loader
+    (function (C: any, A: string, L: string) {
+      let p = function (a: any, ar: any) { a.q.push(ar); };
+      let d = C.document;
+      C.Cal = C.Cal || function () {
+        let cal = C.Cal;
+        let ar = arguments;
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q || [];
+          d.head.appendChild(d.createElement("script")).src = A;
+          cal.loaded = true;
+        }
+        if (ar[0] === L) {
+          const api = function () { p(api, arguments); };
+          const namespace = ar[1];
+          api.q = api.q || [];
+          if (typeof namespace === "string") {
+            cal.ns[namespace] = cal.ns[namespace] || api;
+            p(cal.ns[namespace], ar);
+            p(cal, ["initNamespace", namespace]);
+          } else p(cal, ar);
+          return;
+        }
+        p(cal, ar);
+      };
+    })(window, "https://app.cal.com/embed/embed.js", "init");
+
+    // Initialize Cal.com with namespace
+    (window as any).Cal("init", "authhub-demo", { origin: "https://app.cal.com" });
+
+    // Wait for script to load and DOM to be ready
+    const initInline = () => {
+      if (embedRef.current && (window as any).Cal?.ns?.["authhub-demo"]) {
+        // Initialize inline embed
+        (window as any).Cal.ns["authhub-demo"]("inline", {
+          elementOrSelector: "#my-cal-inline-authhub-demo",
+          config: { layout: "month_view" },
+          calLink: "pillar-ai/authhub-demo",
+        });
+
+        // Configure UI
+        (window as any).Cal.ns["authhub-demo"]("ui", {
+          hideEventTypeDetails: false,
+          layout: "month_view"
+        });
+      }
+    };
+
+    // Check if Cal is already loaded
+    if ((window as any).Cal?.loaded) {
+      // Small delay to ensure DOM is ready
+      setTimeout(initInline, 100);
+    } else {
+      // Wait for script to load
+      const checkInterval = setInterval(() => {
+        if ((window as any).Cal?.loaded && embedRef.current) {
+          clearInterval(checkInterval);
+          initInline();
+        }
+      }, 100);
+
+      // Cleanup interval after 10 seconds
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval);
+      }, 10000);
+
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -54,14 +133,13 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
                 </button>
               </div>
 
-              {/* Content - Cal.com Embed */}
+              {/* Content - Cal.com Inline Embed */}
               <div className="flex-1 overflow-hidden px-6 py-6 bg-paper">
-                <iframe
-                  src="https://app.cal.com/pillar-ai/authhub-demo/embed?layout=month_view"
-                  className="w-full h-full min-h-[600px] border-0 rounded-lg"
-                  title="Schedule a demo with AuthHub"
-                  allow="camera; microphone; geolocation"
-                  style={{ minHeight: '600px' }}
+                <div
+                  ref={embedRef}
+                  id="my-cal-inline-authhub-demo"
+                  className="w-full h-full min-h-[600px] overflow-scroll"
+                  style={{ width: '100%', height: '100%', overflow: 'scroll', minHeight: '600px' }}
                 />
               </div>
             </div>
