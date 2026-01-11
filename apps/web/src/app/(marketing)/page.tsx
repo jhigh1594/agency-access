@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { HeroSection } from '@/components/marketing/hero-section';
 import { SocialProofSection } from '@/components/marketing/social-proof-section';
 import { PainSection } from '@/components/marketing/pain-section';
-import { SolutionSection } from '@/components/marketing/solution-section';
+import { SolutionSection } from '@/components/marketing/solution-section-new';
 import CombinedFeaturedSection from '@/components/ui/combined-featured-section';
 import { IntegrationSection } from '@/components/marketing/integration-section';
 import { HowItWorksSection } from '@/components/marketing/how-it-works-section';

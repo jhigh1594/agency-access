@@ -152,48 +152,55 @@
     transform: translateY(0);
   }
 
-  /* Reveal Element Animations - CSS-based entrance animations */
+  /* Reveal Element Animations - CSS-based entrance animations
+   * Uses opacity-based approach to prevent three-state hydration flicker
+   * Timing:
+   * 1. SSR/Hydration: Content visible (opacity: 1), no transitions
+   * 2. html.hydrated: Enable CSS transitions
+   * 3. html.animations-ready: Elements can now animate in
+   */
   .reveal-element {
+    will-change: opacity, transform;
     transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
                 transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     transition-delay: var(--reveal-delay, 0s);
   }
 
-  /* Before html.mounted, keep content visible to prevent hydration mismatch */
-  html:not(.mounted) .reveal-element {
-    opacity: 1;
-    transform: translate(0, 0);
-    transition: none;
+  /* Before hydration, keep content fully visible with no transitions (prevents SSR mismatch) */
+  html:not(.hydrated) .reveal-element {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 
-  /* After mounting, hide elements until they become visible */
-  html.mounted .reveal-element.reveal-up {
+  /* After hydrated, reveal elements can now animate (smooth entrance) */
+  html.animations-ready .reveal-element.reveal-up {
     opacity: 0;
     transform: translateY(3rem);
   }
 
-  html.mounted .reveal-element.reveal-down {
+  html.animations-ready .reveal-element.reveal-down {
     opacity: 0;
     transform: translateY(-3rem);
   }
 
-  html.mounted .reveal-element.reveal-left {
+  html.animations-ready .reveal-element.reveal-left {
     opacity: 0;
     transform: translateX(3rem);
   }
 
-  html.mounted .reveal-element.reveal-right {
+  html.animations-ready .reveal-element.reveal-right {
     opacity: 0;
     transform: translateX(-3rem);
   }
 
   /* When .visible class is added, reveal the element */
-  html.mounted .reveal-element.visible {
+  html.animations-ready .reveal-element.visible {
     opacity: 1;
     transform: translate(0, 0);
   }
 
-  /* Floating animation */
+  /* Floating animation - starts smoothly after animations ready */
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-15px); }
@@ -201,9 +208,10 @@
 
   .animate-float {
     animation: none;
+    will-change: transform;
   }
 
-  html.mounted .animate-float {
+  html.animations-ready .animate-float {
     animation: float 5s ease-in-out infinite;
   }
 
@@ -255,7 +263,7 @@
     animation: none;
   }
 
-  html.mounted .animate-scaleUp {
+  html.animations-ready .animate-scaleUp {
     animation: scaleUp 0.3s ease-out forwards;
   }
 
@@ -283,7 +291,7 @@
     animation: none;
   }
 
-  html.mounted .animate-scroll-slow {
+  html.animations-ready .animate-scroll-slow {
     animation: scroll-left-slow 40s linear infinite;
   }
 
@@ -398,17 +406,19 @@
     }
   }
 
-  /* Suppress animations until mounted to prevent glitches */
+  /* Suppress animations until animations-ready to prevent glitches
+   * This ensures smooth entrance without jumps or flicker
+   */
   .animate-pulse,
   .animate-marquee {
     animation: none !important;
   }
 
-  html.mounted .animate-pulse {
+  html.animations-ready .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
   }
 
-  html.mounted .animate-marquee {
+  html.animations-ready .animate-marquee {
     animation: marquee 30s linear infinite !important;
   }
 }
@@ -420,6 +430,134 @@
 /* Enhanced hard shadows */
 .shadow-hard-xl {
   box-shadow: 8px 8px 0px 0px rgb(var(--border-hard));
+}
+
+/* ========================================
+   EMAIL APOCALYPSE COLLAPSE UTILITIES
+   ======================================== */
+
+/* Brutalist borders - 3px hard border */
+.border-brutalist {
+  border: 3px solid rgb(var(--border-hard));
+}
+
+.border-brutalist-thick {
+  border: 4px solid rgb(var(--border-hard));
+}
+
+/* Brutalist hard shadows - no blur */
+.shadow-brutalist {
+  box-shadow: 4px 4px 0px rgb(var(--border-hard));
+}
+
+.shadow-brutalist-lg {
+  box-shadow: 6px 6px 0px rgb(var(--border-hard));
+}
+
+.shadow-brutalist-xl {
+  box-shadow: 8px 8px 0px rgb(var(--border-hard));
+}
+
+.shadow-brutalist-2xl {
+  box-shadow: 12px 12px 0px rgb(var(--border-hard));
+}
+
+.shadow-brutalist-3xl {
+  box-shadow: 16px 16px 0px rgb(var(--border-hard));
+}
+
+/* Hover lift effect - brutalist style */
+.hover-lift-brutalist {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-lift-brutalist:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px rgb(var(--border-hard));
+}
+
+/* ========================================
+   EMAIL COLLAPSE ANIMATIONS
+   ======================================== */
+
+/* Chaos float - random delay for email cards */
+@keyframes float-chaos {
+  0%, 100% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--rotation, 0deg)); }
+}
+
+.animate-float-chaos {
+  animation: none;
+  will-change: transform;
+}
+
+html.animations-ready .animate-float-chaos {
+  animation: float-chaos 5s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Order float - calm synchronized float */
+@keyframes float-order {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.animate-float-order {
+  animation: none;
+  will-change: transform;
+}
+
+html.animations-ready .animate-float-order {
+  animation: float-order 3s ease-in-out infinite;
+}
+
+/* Collapse to center animation */
+@keyframes collapse-center {
+  0% {
+    transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--rotation, 0deg)) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-collapse {
+  animation: collapse-center 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Expand reveal animation */
+@keyframes expand-reveal {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-expand {
+  animation: expand-reveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Stats ticker animation */
+@keyframes ticker-up {
+  0% { transform: translateY(100%); opacity: 0; }
+  20% { transform: translateY(0); opacity: 1; }
+  80% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+.animate-ticker {
+  animation: ticker-up 2s ease-in-out infinite;
+}
+
+/* Collapse button pulse */
+@keyframes pulse-button {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-pulse-button {
+  animation: pulse-button 2s ease-in-out infinite;
 }
 
 /* Float animation for floating cards */
@@ -434,9 +572,10 @@
 
 .animate-float-pillar {
   animation: none;
+  will-change: transform;
 }
 
-html.mounted .animate-float-pillar {
+html.animations-ready .animate-float-pillar {
   animation: float-pillar 5s ease-in-out infinite;
 }
 
