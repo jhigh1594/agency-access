@@ -303,9 +303,9 @@ export function PainSection() {
             </div>
           </div>
 
-          {/* PAIN POINTS GRID */}
+          {/* PAIN POINTS GRID - Hidden on mobile */}
           <Reveal delay={0.8}>
-            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mt-12 sm:mt-16">
+            <div className="hidden sm:grid sm:grid-cols-2 gap-3 sm:gap-4 mt-12 sm:mt-16">
               {painPoints.map((point, i) => (
                 <m.div
                   key={i}

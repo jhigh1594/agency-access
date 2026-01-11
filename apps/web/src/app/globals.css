@@ -344,6 +344,49 @@
     }
   }
 
+  /* Mobile Range Slider - Larger touch targets */
+  @media (max-width: 767px) {
+    /* Range slider track - taller on mobile */
+    input[type="range"] {
+      height: 8px !important;
+      border-radius: 4px;
+    }
+
+    /* Range slider thumb - larger and easier to grab */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50%;
+      background: rgb(var(--coral));
+      border: 2px solid #000;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50%;
+      background: rgb(var(--coral));
+      border: 2px solid #000;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    /* Range slider thumb active state */
+    input[type="range"]::-webkit-slider-thumb:active {
+      box-shadow: 3px 3px 0px #000;
+      transform: scale(1.05);
+    }
+
+    input[type="range"]::-moz-range-thumb:active {
+      box-shadow: 3px 3px 0px #000;
+      transform: scale(1.05);
+    }
+  }
+
   /* Respect User's Motion Preferences */
   @media (prefers-reduced-motion: reduce) {
     *,

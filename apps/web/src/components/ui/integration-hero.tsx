@@ -77,9 +77,11 @@ export default function IntegrationHero() {
         <p className="mt-4 text-lg text-gray-600 max-w-xl mx-auto font-mono">
           AuthHub integrates effortlessly with your favorite tools, ensuring a smooth and automated workflow.
         </p>
-        <Button variant="brutalist" size="lg" className="mt-8">
-          Get started
-        </Button>
+        <div className="flex justify-center">
+          <Button variant="brutalist" size="lg" className="mt-8 min-w-[200px]">
+            Get started
+          </Button>
+        </div>
 
         {/* Carousel - Brutalist platform cards */}
         <div className="mt-12 overflow-hidden relative pb-2">
@@ -92,7 +94,7 @@ export default function IntegrationHero() {
               return (
                 <div
                   key={`row1-${i}`}
-                  className="h-16 w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+                  className="h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
                   style={{ backgroundColor: bgColor }}
                 >
                   {item.image ? (
@@ -121,7 +123,7 @@ export default function IntegrationHero() {
               return (
                 <div
                   key={`row2-${i}`}
-                  className="h-16 w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+                  className="h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
                   style={{ backgroundColor: bgColor }}
                 >
                   {item.image ? (

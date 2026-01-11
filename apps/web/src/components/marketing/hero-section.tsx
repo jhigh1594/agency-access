@@ -82,9 +82,9 @@ export function HeroSection() {
                     Start Free Trial
                   </Button>
                 </SignUpButton>
-                <Button 
-                  variant="brutalist-ghost-rounded" 
-                  size="xl" 
+                <Button
+                  variant="brutalist-ghost-rounded"
+                  size="xl"
                   className="flex-1 sm:flex-none text-center min-w-[180px]"
                   onClick={() => setIsDemoModalOpen(true)}
                 >
@@ -118,8 +118,8 @@ export function HeroSection() {
             </Reveal>
           </div>
 
-          {/* Right Column - Dashboard Mockup with Floating Cards */}
-          <div className="lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
+          {/* Right Column - Dashboard Mockup with Floating Cards - Hidden on mobile */}
+          <div className="hidden lg:block lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
             {/* Background shapes */}
             <div
               className="absolute inset-0 bg-acid rounded-[3rem] border-3 border-black rotate-3 z-0 shadow-hard-xl opacity-20 animate-pulse"

@@ -5,15 +5,20 @@
   "description": "OAuth aggregation platform for marketing agencies",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "tools/*"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:api": "npm run dev --workspace=apps/api",
+    "dev:design-os": "cd tools/design-os && npm run dev",
+    "design-os": "bash ./scripts/start-design-os.sh",
+    "design-os:quick": "bash ./scripts/design-os.sh",
     "db:seed": "npm run db:seed --workspace=apps/api",
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
     "build:web": "npm run build --workspace=packages/shared && npm run build --workspace=apps/web",
+    "build:design-os": "cd tools/design-os && npm run build",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces"
