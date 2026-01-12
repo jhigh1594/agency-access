@@ -3,7 +3,7 @@
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { GlobeIcon, ShieldCheckIcon, ZapIcon } from '@/components/ui/ui-icons';
-import { TrendingUp, Clock, Sparkles, Check } from 'lucide-react';
+import { TrendingUp, Check } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
@@ -127,7 +127,7 @@ export function HeroSection() {
           <div className="hidden lg:block lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
             {/* Background shapes */}
             <div
-              className="absolute inset-0 bg-acid rounded-[3rem] border-3 border-black rotate-3 z-0 shadow-hard-xl opacity-20 animate-pulse"
+              className="absolute inset-0 bg-acid rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-hard-xl opacity-20 animate-pulse"
               style={{ animationDuration: '4s' }}
             />
             <div className="absolute inset-0 border-2 border-black border-dashed rounded-[3rem] -rotate-3 z-0" />
@@ -137,15 +137,17 @@ export function HeroSection() {
               initial={shouldAnimate ? { opacity: 0, x: 50, y: 20 } : false}
               animate={shouldAnimate ? { opacity: 1, x: 0, y: 0 } : undefined}
               transition={{ delay: 1.0, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="absolute top-10 right-0 z-20 animate-float-pillar bg-paper border-2 border-black p-4 rounded-xl shadow-brutalist max-w-[200px] rotate-6 group"
+              className="absolute top-10 right-0 z-20 bg-paper border-2 border-black p-4 rounded-xl shadow-brutalist max-w-[200px] rotate-6 group"
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-teal/20 p-2 rounded-lg border border-black text-teal">
-                  <TrendingUp className="w-6 h-6" />
-                </div>
-                <div className="text-ink">
-                  <div className="font-dela text-sm">Avg. Savings</div>
-                  <div className="text-xs font-mono">10x Faster</div>
+              <div className="animate-float-pillar">
+                <div className="flex items-center gap-3">
+                  <div className="bg-teal/20 p-2 rounded-lg border border-black text-teal">
+                    <TrendingUp className="w-6 h-6" />
+                  </div>
+                  <div className="text-ink">
+                    <div className="font-dela text-sm">Avg. Savings</div>
+                    <div className="text-xs font-mono">10x Faster</div>
+                  </div>
                 </div>
               </div>
             </m.div>
@@ -155,11 +157,12 @@ export function HeroSection() {
               initial={shouldAnimate ? { opacity: 0, scale: 0.8, x: -30 } : false}
               animate={shouldAnimate ? { opacity: 1, scale: 1, x: 0 } : undefined}
               transition={{ delay: 1.2, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="absolute bottom-20 -left-4 z-20 animate-float-pillar bg-ink text-paper border-2 border-black px-4 py-2 rounded-[0.75rem] shadow-brutalist -rotate-6"
-              style={{ animationDelay: '1s' }}
+              className="absolute bottom-20 -left-4 z-20 bg-ink text-paper border-2 border-black px-4 py-2 rounded-[0.75rem] shadow-brutalist -rotate-6"
             >
-              <div className="flex items-center gap-2 font-dela text-sm">
-                <Check className="w-4 h-4" /> Request Received. Access Granted
+              <div className="animate-float-pillar" style={{ animationDelay: '1s' }}>
+                <div className="flex items-center gap-2 font-dela text-sm">
+                  <Check className="w-4 h-4" /> Request Received. Access Granted
+                </div>
               </div>
             </m.div>
 

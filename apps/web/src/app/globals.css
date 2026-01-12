@@ -446,6 +446,10 @@
 }
 
 /* Brutalist hard shadows - no blur */
+.shadow-brutalist-sm {
+  box-shadow: 2px 2px 0px rgb(var(--border-hard));
+}
+
 .shadow-brutalist {
   box-shadow: 4px 4px 0px rgb(var(--border-hard));
 }
@@ -577,6 +581,17 @@ html.animations-ready .animate-float-order {
 
 html.animations-ready .animate-float-pillar {
   animation: float-pillar 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-pillar,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .glitch-text:hover {
+    animation: none;
+  }
 }
 
 /* Glitch text effect on hover */

@@ -1,6 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { Mail, Link2, AlertCircle } from 'lucide-react';
 import {
   ImageComparison,
@@ -256,9 +257,10 @@ export function SolutionSectionNew() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.5 }}
-                className="inline-flex items-center gap-3 bg-[#00A896] text-white px-8 py-4 rounded-xl font-mono text-sm font-bold uppercase tracking-[0.15em] border-4 border-black shadow-brutalist-lg hover:shadow-brutalist-xl hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-0 active:translate-y-0 active:shadow-brutalist transition-all duration-200"
+                className="inline-flex items-center justify-center gap-3 bg-teal text-white px-8 sm:px-10 py-5 rounded-2xl font-bold text-xl uppercase tracking-wide border-2 border-black shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200 min-h-[56px] touch-feedback"
               >
                 Start Free Trial
+                <ArrowRight className="w-5 h-5" />
               </m.a>
             </div>
           </div>
