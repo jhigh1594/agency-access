@@ -8,9 +8,12 @@ import { m } from 'framer-motion';
 import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
 import { useState } from 'react';
+import { useAnimationOrchestrator } from '@/hooks/use-animation-orchestrator';
 
 export function HeroSection() {
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const { shouldAnimate } = useAnimationOrchestrator();
+
   return (
     <section className="relative min-h-screen overflow-hidden bg-paper border-b-2 border-black">
       {/* Diagonal lines background pattern */}
@@ -26,7 +29,7 @@ export function HeroSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           {/* Left Column - Content */}
-          <div className="lg:col-span-7 flex flex-col items-start gap-6 z-10 text-center lg:text-left">
+          <div className="lg:col-span-7 flex flex-col items-start gap-6 z-10 text-center lg:text-left w-full">
             {/* Badge - Tilted with rotation */}
             <Reveal delay={0.2}>
               <div className="inline-flex items-center gap-2 border-2 border-black bg-ink text-paper px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
@@ -54,8 +57,8 @@ export function HeroSection() {
                       stroke="rgb(var(--coral))"
                       strokeWidth="6"
                       strokeLinecap="round"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
+                      initial={shouldAnimate ? { pathLength: 0 } : false}
+                      animate={shouldAnimate ? { pathLength: 1 } : undefined}
                       transition={{ duration: 1.5, delay: 1 }}
                     />
                   </svg>
@@ -75,23 +78,25 @@ export function HeroSection() {
             </Reveal>
 
             {/* CTAs */}
-            <Reveal delay={0.5}>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md mx-auto lg:mx-0 mt-6">
-                <SignUpButton mode="modal">
-                  <Button variant="brutalist-rounded" size="xl" className="flex-1 sm:flex-none text-center min-w-[180px]" rightIcon={<ZapIcon size={18} />}>
-                    Start Free Trial
+            <div className="w-full px-2 sm:px-0">
+              <Reveal delay={0.5}>
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 w-full mt-6 self-stretch">
+                  <SignUpButton mode="modal">
+                    <Button variant="brutalist-rounded" size="xl" className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10" rightIcon={<ZapIcon size={18} />}>
+                      Start Free Trial
+                    </Button>
+                  </SignUpButton>
+                  <Button
+                    variant="brutalist-ghost-rounded"
+                    size="xl"
+                    className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
+                    onClick={() => setIsDemoModalOpen(true)}
+                  >
+                    Schedule Demo
                   </Button>
-                </SignUpButton>
-                <Button
-                  variant="brutalist-ghost-rounded"
-                  size="xl"
-                  className="flex-1 sm:flex-none text-center min-w-[180px]"
-                  onClick={() => setIsDemoModalOpen(true)}
-                >
-                  Schedule Demo
-                </Button>
-              </div>
-            </Reveal>
+                </div>
+              </Reveal>
+            </div>
 
             {/* Trust Badge with avatars */}
             <Reveal delay={0.6}>
@@ -129,9 +134,9 @@ export function HeroSection() {
 
             {/* Floating Card 1 - Top Right */}
             <m.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.2 }}
+              initial={shouldAnimate ? { opacity: 0, x: 50, y: 20 } : false}
+              animate={shouldAnimate ? { opacity: 1, x: 0, y: 0 } : undefined}
+              transition={{ delay: 1.0, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="absolute top-10 right-0 z-20 animate-float-pillar bg-paper border-2 border-black p-4 rounded-xl shadow-brutalist max-w-[200px] rotate-6 group"
             >
               <div className="flex items-center gap-3">
@@ -147,9 +152,9 @@ export function HeroSection() {
 
             {/* Floating Card 2 - Bottom Left */}
             <m.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.4, type: 'spring' }}
+              initial={shouldAnimate ? { opacity: 0, scale: 0.8, x: -30 } : false}
+              animate={shouldAnimate ? { opacity: 1, scale: 1, x: 0 } : undefined}
+              transition={{ delay: 1.2, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="absolute bottom-20 -left-4 z-20 animate-float-pillar bg-ink text-paper border-2 border-black px-4 py-2 rounded-[0.75rem] shadow-brutalist -rotate-6"
               style={{ animationDelay: '1s' }}
             >
@@ -160,8 +165,8 @@ export function HeroSection() {
 
             {/* Main Dashboard Preview */}
             <m.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : false}
+              animate={shouldAnimate ? { opacity: 1, scale: 1 } : undefined}
               transition={{ delay: 0.8, duration: 0.8 }}
               className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-hard-xl group"
             >
@@ -185,13 +190,19 @@ export function HeroSection() {
                   <h3 className="text-center font-dela text-2xl md:text-3xl mb-2 text-ink">Connect Your Platforms</h3>
                   <p className="text-center text-gray-600 mb-6 text-sm font-mono">AuthHub is requesting access to:</p>
                   <div className="space-y-3 mb-6">
-                    {['Meta Ads', 'Google Ads', 'GA4', 'LinkedIn Ads'].map(p => (
-                      <div key={p} className="flex items-center justify-between p-3 border-2 border-black bg-gray-50 rounded-none shadow-brutalist-sm">
+                    {['Meta Ads', 'Google Ads', 'GA4', 'LinkedIn Ads'].map((p, i) => (
+                      <m.div
+                        key={p}
+                        initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+                        animate={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
+                        transition={{ delay: 1.0 + (i * 0.15), duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="flex items-center justify-between p-3 border-2 border-black bg-gray-50 rounded-none shadow-brutalist-sm"
+                      >
                         <span className="text-sm font-bold text-ink">{p}</span>
                         <div className="w-5 h-5 rounded-[0.5rem] bg-teal/20 border-2 border-black flex items-center justify-center flex-shrink-0">
                           <ShieldCheckIcon size={14} />
                         </div>
-                      </div>
+                      </m.div>
                     ))}
                   </div>
                   <Button variant="brutalist-rounded" className="w-full h-12 text-sm font-bold group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
@@ -203,7 +214,7 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-      
+
       <ScheduleDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </section>
   );

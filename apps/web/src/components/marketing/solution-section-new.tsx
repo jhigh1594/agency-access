@@ -30,7 +30,7 @@ function BeforeState() {
         <h3 className="font-dela text-2xl sm:text-3xl text-gray-900 mb-2">
           Current State
         </h3>
-        <p className="font-mono text-xs text-gray-600">
+        <p className="font-mono text-sm sm:text-base text-gray-600">
           47 emails • 3 days lost • $600+ wasted
         </p>
       </div>
@@ -97,7 +97,7 @@ function AfterState() {
       {/* Header */}
       <div className="text-center mb-8">
         <h3 className="font-dela text-2xl sm:text-3xl text-gray-900 mb-2">
-          With Our Platform
+          With AuthHub
         </h3>
         <p className="font-mono text-xs text-gray-600">
           1 link • 5 minutes • $0 cost
@@ -186,6 +186,9 @@ export function SolutionSectionNew() {
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none diagonal-lines" />
 
+      {/* Full-width divider line at top */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-black" />
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* HEADER */}
         <Reveal delay={0.2}>
@@ -261,6 +264,9 @@ export function SolutionSectionNew() {
           </div>
         </Reveal>
       </div>
+
+      {/* Full-width thin divider line at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-black" />
     </section>
   );
 }

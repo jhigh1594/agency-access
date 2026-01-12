@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useMobile } from '@/hooks/use-mobile';
+import { useAnimationOrchestrator } from '@/hooks/use-animation-orchestrator';
 
 interface RevealProps {
   children: ReactNode;
@@ -9,16 +10,23 @@ interface RevealProps {
   direction?: 'up' | 'down' | 'left' | 'right';
 }
 
+/**
+ * Reveal Component
+ *
+ * Wraps content to animate it in when it enters the viewport.
+ * Uses the animation orchestrator to ensure smooth, coordinated entrance
+ * without flicker or layout shifts.
+ *
+ * Timing:
+ * - Waits for animationsReady before creating IntersectionObserver
+ * - Prevents SSR observer creation
+ * - Smooth opacity-based entrance
+ */
 export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const isMobile = useMobile();
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Ensure we only run the effect after client-side hydration
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const { animationsReady } = useAnimationOrchestrator();
 
   // Map direction to CSS class
   const getDirectionClass = () => {
@@ -38,7 +46,9 @@ export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
 
   useEffect(() => {
     const element = ref.current;
-    if (!element || !isMounted) return;
+    // Defer Intersection Observer creation until animations ready
+    // This prevents premature observer creation during SSR/hydration
+    if (!element || !animationsReady) return;
 
     // Mobile-optimized observer options
     const observerOptions: IntersectionObserverInit = {
@@ -68,7 +78,7 @@ export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
         observer.unobserve(element);
       }
     };
-  }, [isMobile, isMounted]);
+  }, [isMobile, animationsReady]);
 
   // Set CSS variable for delay
   const style = {

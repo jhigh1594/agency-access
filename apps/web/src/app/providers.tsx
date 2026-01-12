@@ -7,8 +7,6 @@ import { LazyMotion, domAnimation } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
   // Create a new QueryClient instance per request to avoid sharing state between users
   const [queryClient] = useState(
     () =>
@@ -25,12 +23,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    // Mark as mounted to enable animations
-    setMounted(true);
-    // Add class to body to enable CSS animations
-    document.documentElement.classList.add('mounted');
+    // Phase 1: Add html.hydrated class on mount
+    // This enables CSS transitions for smooth entrance
+    requestAnimationFrame(() => {
+      document.documentElement.classList.add('hydrated');
+    });
+
+    // Phase 2: After 100ms delay, add html.animations-ready class
+    // This allows layout to settle before animations start
+    const timeoutId = setTimeout(() => {
+      document.documentElement.classList.add('animations-ready');
+    }, 100);
+
     return () => {
-      document.documentElement.classList.remove('mounted');
+      clearTimeout(timeoutId);
     };
   }, []);
 

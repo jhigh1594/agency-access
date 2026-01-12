@@ -8,6 +8,7 @@ import { SignUpButton } from '@clerk/nextjs';
 import { Link2, Shield, Users, BarChart3 } from 'lucide-react';
 import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
+import { useAnimationOrchestrator } from '@/hooks/use-animation-orchestrator';
 
 const steps = [
   {
@@ -54,6 +55,7 @@ export function HowItWorksSection() {
   const lineHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const { shouldAnimate } = useAnimationOrchestrator();
 
   return (
     <section
@@ -75,11 +77,11 @@ export function HowItWorksSection() {
       {/* Animated gradient blob */}
       <m.div
         className="absolute top-20 right-10 w-96 h-96 bg-acid/5 rounded-full blur-3xl -z-10"
-        initial={{ scale: 1, opacity: 0.05 }}
-        animate={{
+        initial={shouldAnimate ? { scale: 1, opacity: 0.05 } : false}
+        animate={shouldAnimate ? {
           scale: [1, 1.2, 1],
           opacity: [0.05, 0.1, 0.05],
-        }}
+        } : undefined}
         transition={{
           duration: 8,
           repeat: Infinity,
@@ -155,8 +157,8 @@ export function HowItWorksSection() {
               {steps.map((step, index) => (
                 <Reveal key={step.number} delay={0.4 + index * 0.1}>
                   <m.div
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={shouldAnimate ? { opacity: 0, y: 50 } : false}
+                    whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
                     viewport={{ once: true, margin: '-50px' }}
                     transition={{ delay: index * 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className={`relative flex flex-col ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-6 sm:gap-8`}
@@ -216,7 +218,7 @@ export function HowItWorksSection() {
 
                         {/* Visual Preview (shown on hover) */}
                         <m.div
-                          initial={{ opacity: 0, height: 0 }}
+                          initial={shouldAnimate ? { opacity: 0, height: 0 } : false}
                           animate={{
                             opacity: hoveredStep === step.number ? 1 : 0,
                             height: hoveredStep === step.number ? 'auto' : 0,
@@ -267,8 +269,8 @@ export function HowItWorksSection() {
               ].map((stat, i) => (
                 <m.div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+                  whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
                   viewport={{ once: true, margin: '-50px' }}
                   transition={{ delay: 1.3 + i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   className="bg-white border-2 border-black p-4 sm:p-6 rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-y-1 transition-all duration-200 text-center group"
@@ -299,8 +301,8 @@ export function HowItWorksSection() {
           {/* CTA Section */}
           <Reveal delay={1.5}>
             <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+              whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="mt-12 sm:mt-16 md:mt-20 text-center"
@@ -348,7 +350,7 @@ export function HowItWorksSection() {
           </Reveal>
         </div>
       </div>
-      
+
       <ScheduleDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </section>
   );
