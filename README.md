@@ -17,8 +17,8 @@ A SaaS platform that replaces 2-3 days of manual OAuth setup with a 5-minute aut
 ```
 agency-access-platform/
 ├── apps/
-│   ├── web/          # Next.js 16 frontend (Vercel)
-│   └── api/          # Fastify backend (Railway)
+│   ├── web/          # Next.js 16 frontend (Render)
+│   └── api/          # Fastify backend (Render)
 ├── packages/
 │   └── shared/       # Shared TypeScript types
 └── README.md
@@ -32,7 +32,7 @@ agency-access-platform/
 - **Styling:** TailwindCSS + shadcn/ui
 - **Auth:** Clerk
 - **State:** React Query
-- **Deployment:** Vercel
+- **Deployment:** Render
 
 ### Backend (apps/api)
 - **Runtime:** Node.js 20+
@@ -42,7 +42,7 @@ agency-access-platform/
 - **Jobs:** BullMQ
 - **Cache:** Redis (Upstash)
 - **Token Storage:** Infisical
-- **Deployment:** Railway
+- **Deployment:** Render
 
 ## 🚀 Quick Start
 
@@ -217,45 +217,16 @@ See `apps/api/prisma/schema.prisma` for full schema.
 
 ## 🚢 Deployment
 
-### Frontend (Vercel)
+### Render (Frontend + Backend)
 
-```bash
-# From root
-cd apps/web
-vercel
-```
-
-### Backend (Railway)
-
-```bash
-# From root
-cd apps/api
-railway up
-```
-
-Or use the Railway CLI:
-```bash
-railway init
-railway link [project-id]
-railway up
-```
+Create a Render project using the `render.yaml` blueprint in the repo root.
+This will provision both services and run the monorepo build commands.
 
 ### Environment Variables
 
-**Vercel (Frontend):**
-- Add environment variables in Vercel dashboard
-- Production variables must match `.env.local.example`
-
-**Railway (Backend):**
-```bash
-railway variables set DATABASE_URL=postgresql://...
-railway variables set CLERK_SECRET_KEY=sk_live_...
-railway variables set INFISICAL_CLIENT_ID=...
-railway variables set INFISICAL_CLIENT_SECRET=...
-railway variables set INFISICAL_PROJECT_ID=...
-railway variables set INFISICAL_ENVIRONMENT=prod
-railway variables set REDIS_URL=...
-```
+**Render (Frontend + Backend):**
+- Add environment variables in Render dashboard (or via CLI)
+- Production variables must match `.env.local.example` and `apps/api/.env.example`
 
 ## 📖 API Documentation
 

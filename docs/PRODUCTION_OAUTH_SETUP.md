@@ -13,14 +13,14 @@ Your app currently supports these OAuth platforms:
 
 ## Critical Production Requirements
 
-### 1. Environment Variables (Railway Backend)
+### 1. Environment Variables (Render Backend)
 
-All of these must be set in Railway with **production values**:
+All of these must be set in Render with **production values**:
 
 ```bash
 # Core URLs (set after deployment)
-API_URL=https://your-service.railway.app
-FRONTEND_URL=https://your-app.vercel.app
+API_URL=https://your-service.onrender.com
+FRONTEND_URL=https://your-app.onrender.com
 
 # Meta OAuth (REQUIRED)
 META_APP_ID=your-production-meta-app-id
@@ -44,8 +44,8 @@ REDIS_URL=...
 
 **Important:** 
 - Use **production** OAuth app credentials, not test/dev credentials
-- `API_URL` must be your Railway backend URL
-- `FRONTEND_URL` must be your Vercel frontend URL
+- `API_URL` must be your Render backend URL
+- `FRONTEND_URL` must be your Render frontend URL
 
 ---
 
@@ -63,13 +63,13 @@ REDIS_URL=...
 **In Meta App Settings → Basic:**
 
 1. **App Domains:** Add your production domain
-   - Example: `your-app.vercel.app`
+   - Example: `your-app.onrender.com`
 
 2. **Privacy Policy URL:** Required for production
-   - Example: `https://your-app.vercel.app/privacy`
+   - Example: `https://your-app.onrender.com/privacy`
 
 3. **Terms of Service URL:** Required for production
-   - Example: `https://your-app.vercel.app/terms`
+   - Example: `https://your-app.onrender.com/terms`
 
 ### Step 3: Configure OAuth Redirect URIs
 
@@ -78,7 +78,7 @@ REDIS_URL=...
 Add these **Valid OAuth Redirect URIs**:
 
 ```
-https://your-service.railway.app/agency-platforms/meta/callback
+https://your-service.onrender.com/agency-platforms/meta/callback
 ```
 
 **Important:** 
@@ -115,7 +115,7 @@ https://your-service.railway.app/agency-platforms/meta/callback
 1. Go to **Settings** → **Basic**
 2. Copy **App ID** → Use as `META_APP_ID`
 3. Copy **App Secret** → Use as `META_APP_SECRET`
-4. Add to Railway environment variables
+4. Add to Render environment variables
 
 ### Step 7: Configure Business Manager (Optional but Recommended)
 
@@ -127,8 +127,8 @@ For production, set up Business Manager partner access:
 
 **Callback URL Pattern:**
 ```
-Backend: https://your-service.railway.app/agency-platforms/meta/callback
-Frontend: https://your-app.vercel.app/platforms/callback
+Backend: https://your-service.onrender.com/agency-platforms/meta/callback
+Frontend: https://your-app.onrender.com/platforms/callback
 ```
 
 ---
@@ -151,9 +151,9 @@ Frontend: https://your-app.vercel.app/platforms/callback
    - **App name:** Your app name
    - **User support email:** Your email
    - **Developer contact:** Your email
-   - **App domain:** `your-app.vercel.app`
-   - **Privacy Policy URL:** `https://your-app.vercel.app/privacy`
-   - **Terms of Service URL:** `https://your-app.vercel.app/terms`
+   - **App domain:** `your-app.onrender.com`
+   - **Privacy Policy URL:** `https://your-app.onrender.com/privacy`
+   - **Terms of Service URL:** `https://your-app.onrender.com/terms`
 
 3. **Scopes:** Add these scopes:
    - `https://www.googleapis.com/auth/adwords` (Google Ads)
@@ -179,7 +179,7 @@ Frontend: https://your-app.vercel.app/platforms/callback
 Add this redirect URI:
 
 ```
-https://your-service.railway.app/agency-platforms/google/callback
+https://your-service.onrender.com/agency-platforms/google/callback
 ```
 
 **Important:**
@@ -203,7 +203,7 @@ Enable these APIs in **APIs & Services** → **Library**:
 2. Find your OAuth 2.0 Client ID
 3. Copy **Client ID** → Use as `GOOGLE_CLIENT_ID`
 4. Copy **Client secret** → Use as `GOOGLE_CLIENT_SECRET`
-5. Add to Railway environment variables
+5. Add to Render environment variables
 
 ### Step 6: Google Ads Developer Token (Optional)
 
@@ -212,24 +212,24 @@ If using Google Ads API:
 1. Go to [Google Ads API Center](https://ads.google.com/aw/apicenter)
 2. Apply for developer token
 3. Copy token → Use as `GOOGLE_ADS_DEVELOPER_TOKEN`
-4. Add to Railway environment variables
+4. Add to Render environment variables
 
 **Callback URL Pattern:**
 ```
-Backend: https://your-service.railway.app/agency-platforms/google/callback
-Frontend: https://your-app.vercel.app/invite/oauth-callback
+Backend: https://your-service.onrender.com/agency-platforms/google/callback
+Frontend: https://your-app.onrender.com/invite/oauth-callback
 ```
 
 ---
 
-## 4. Vercel Frontend Configuration
+## 4. Render Frontend Configuration
 
 ### Environment Variables
 
-Set these in Vercel dashboard:
+Set these in Render dashboard:
 
 ```bash
-NEXT_PUBLIC_API_URL=https://your-service.railway.app
+NEXT_PUBLIC_API_URL=https://your-service.onrender.com
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
 CLERK_SECRET_KEY=sk_live_...
 ```
@@ -239,10 +239,10 @@ CLERK_SECRET_KEY=sk_live_...
 1. Go to [Clerk Dashboard](https://dashboard.clerk.com/)
 2. Select your production application
 3. Go to **Settings** → **Domains**
-4. Add your production domain: `your-app.vercel.app`
+4. Add your production domain: `your-app.onrender.com`
 5. Update **Redirect URLs**:
-   - After sign-in: `https://your-app.vercel.app/dashboard`
-   - After sign-up: `https://your-app.vercel.app/onboarding`
+   - After sign-in: `https://your-app.onrender.com/dashboard`
+   - After sign-up: `https://your-app.onrender.com/onboarding`
 
 ---
 
@@ -303,7 +303,7 @@ CLERK_SECRET_KEY=sk_live_...
 
 ### Environment Security
 
-- [ ] All environment variables set in Railway/Vercel
+- [ ] All environment variables set in Render
 - [ ] No default/development values in production
 - [ ] Clerk keys are production keys (`pk_live_`, `sk_live_`)
 - [ ] Infisical environment is `production`
@@ -346,9 +346,9 @@ CLERK_SECRET_KEY=sk_live_...
 
 ### Check OAuth Flow
 
-1. **Check Railway Logs:**
+1. **Check Render Logs:**
    ```bash
-   railway logs
+   render logs
    ```
 
 2. **Check OAuth State:**
@@ -362,8 +362,8 @@ CLERK_SECRET_KEY=sk_live_...
 
 ### Health Checks
 
-- **Backend Health:** `https://your-service.railway.app/health`
-- **Frontend:**** Check Vercel deployment status
+- **Backend Health:** `https://your-service.onrender.com/health`
+- **Frontend:** Check Render deployment status
 
 ---
 
@@ -372,15 +372,15 @@ CLERK_SECRET_KEY=sk_live_...
 ### Agency Platform Connections
 
 ```
-Meta:    https://your-service.railway.app/agency-platforms/meta/callback
-Google:  https://your-service.railway.app/agency-platforms/google/callback
+Meta:    https://your-service.onrender.com/agency-platforms/meta/callback
+Google:  https://your-service.onrender.com/agency-platforms/google/callback
 ```
 
 ### Client Authorization Flow
 
 ```
-Meta:    https://your-app.vercel.app/invite/oauth-callback?platform=meta
-Google:  https://your-app.vercel.app/invite/oauth-callback?platform=google
+Meta:    https://your-app.onrender.com/invite/oauth-callback?platform=meta
+Google:  https://your-app.onrender.com/invite/oauth-callback?platform=google
 ```
 
 **Important:** Client flow uses frontend URL, agency flow uses backend URL.
@@ -389,7 +389,7 @@ Google:  https://your-app.vercel.app/invite/oauth-callback?platform=google
 
 ## 10. Next Steps
 
-1. ✅ Set all environment variables in Railway
+1. ✅ Set all environment variables in Render
 2. ✅ Configure Meta OAuth app with production callback URL
 3. ✅ Configure Google OAuth app with production callback URL
 4. ✅ Publish OAuth apps (or add test users)
@@ -403,6 +403,4 @@ Google:  https://your-app.vercel.app/invite/oauth-callback?platform=google
 
 - [Meta OAuth Documentation](https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow)
 - [Google OAuth Documentation](https://developers.google.com/identity/protocols/oauth2)
-- [Railway Deployment Guide](./RAILWAY_DEPLOYMENT.md)
-- [Vercel Deployment Guide](./VERCEL_DEPLOYMENT.md)
-
+- [Render Deployment Guide](./RENDER_DEPLOYMENT.md)

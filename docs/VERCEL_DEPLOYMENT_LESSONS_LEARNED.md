@@ -5,6 +5,8 @@
 **Deployment:** Vercel Production  
 **Status:** ✅ Successful
 
+> **Deprecated:** This document describes the historical Vercel deployment. The current deployment target is Render for both frontend and backend. See `docs/RENDER_DEPLOYMENT.md` and `render.yaml`.
+
 ## Executive Summary
 
 Successfully deployed a Next.js 16 monorepo frontend to Vercel after resolving multiple configuration challenges. Key learnings include monorepo setup, TypeScript strict mode requirements, and Vercel's rootDirectory behavior.
@@ -361,4 +363,3 @@ After deployment:
 **Document Version:** 1.0  
 **Last Updated:** December 31, 2025  
 **Maintained By:** Development Team
-

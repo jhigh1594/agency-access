@@ -4,59 +4,53 @@ This guide covers deploying the Agency Access Platform. The platform consists of
 
 ## Architecture
 
-- **Frontend**: Next.js (App Router), deployed to **Vercel**.
-- **Backend**: Fastify API, deployed to **Railway** (or Render/Heroku).
+- **Frontend**: Next.js (App Router), deployed to **Render**.
+- **Backend**: Fastify API, deployed to **Render**.
 - **Database**: PostgreSQL (Neon).
 - **Cache/Queue**: Redis (Upstash).
 - **Secrets**: Infisical.
 
-## 1. Backend Deployment (Railway)
+## 1. Backend Deployment (Render)
 
 The backend should be deployed first to obtain the API URL.
 
 ### Prerequisites
 
-- Railway account connected to your GitHub repo.
+- Render account connected to your GitHub repo.
 - PostgreSQL database (e.g., Neon).
 - Redis instance (e.g., Upstash).
 - Infisical project set up.
 
 ### Deployment Steps
 
-1. Create a new project on Railway.
-2. Add a service from your GitHub repository.
-3. Set the **Root Directory** to `apps/api`.
-4. Configure the following environment variables:
+1. Create a new project on Render using the `render.yaml` blueprint.
+2. Configure the following environment variables for the API service:
    - `NODE_ENV=production`
    - `PORT=3001`
    - `DATABASE_URL` (PostgreSQL connection string)
    - `REDIS_URL` (Redis connection string)
-   - `FRONTEND_URL` (Your Vercel deployment URL)
+   - `FRONTEND_URL` (Your Render frontend URL)
    - `INFISICAL_CLIENT_ID` / `INFISICAL_CLIENT_SECRET` / `INFISICAL_PROJECT_ID` / `INFISICAL_ENV`
    - `CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`
    - Platform OAuth credentials (META_APP_ID, etc.)
-5. Railway will automatically build and deploy using the `build` and `start` scripts in `apps/api/package.json`.
+3. Render will automatically build and deploy using the commands in `render.yaml`.
 
-## 2. Frontend Deployment (Vercel)
+## 2. Frontend Deployment (Render)
 
 ### Prerequisites
 
-- Vercel account connected to your GitHub repo.
+- Render account connected to your GitHub repo.
 - Deployed backend URL (from step 1).
 
 ### Deployment Steps
 
-1. Create a new project on Vercel.
-2. Select your repository.
-3. Configure the **Project Settings**:
-   - **Framework Preset**: Next.js
-   - **Root Directory**: `apps/web`
-4. Add the following **Environment Variables**:
+1. Use the same Render project and ensure the frontend service is created from `render.yaml`.
+2. Add the following **Environment Variables**:
    - `NEXT_PUBLIC_API_URL`: Your deployed backend URL (e.g., `https://api.yourdomain.com`)
-   - `NEXT_PUBLIC_APP_URL`: Your Vercel deployment URL (e.g., `https://app.yourdomain.com`)
+   - `NEXT_PUBLIC_APP_URL`: Your Render frontend URL (e.g., `https://app.yourdomain.com`)
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
    - `CLERK_SECRET_KEY`
-5. Deploy. Vercel will use the `vercel.json` in the root to build the monorepo correctly.
+3. Deploy. Render will use the `render.yaml` commands to build the monorepo correctly.
 
 ## 3. Post-Deployment Configuration
 
@@ -74,7 +68,5 @@ Update your Clerk dashboard with the production URLs:
 
 ## Monitoring
 
-- **Vercel**: Deployment logs and Vercel Analytics.
-- **Railway**: Runtime logs and service health.
+- **Render**: Deployment logs and runtime metrics.
 - **Sentry**: (Optional) For error tracking.
-

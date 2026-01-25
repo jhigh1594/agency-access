@@ -2,12 +2,12 @@
 
 ## 🎯 What You Need to Do
 
-### 1. Set Environment Variables in Railway
+### 1. Set Environment Variables in Render
 
 **Critical Variables:**
 ```bash
-API_URL=https://your-service.railway.app          # Your Railway backend URL
-FRONTEND_URL=https://your-app.vercel.app          # Your Vercel frontend URL
+API_URL=https://your-service.onrender.com         # Your Render backend URL
+FRONTEND_URL=https://your-app.onrender.com         # Your Render frontend URL
 META_APP_ID=your-meta-app-id                      # From Meta App Settings
 META_APP_SECRET=your-meta-app-secret              # From Meta App Settings
 GOOGLE_CLIENT_ID=your-google-client-id            # From Google Cloud Console
@@ -20,7 +20,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret    # From Google Cloud Console
 
 1. **Add Redirect URI:**
    ```
-   https://your-service.railway.app/agency-platforms/meta/callback
+   https://your-service.onrender.com/agency-platforms/meta/callback
    ```
 
 2. **Request Permissions:**
@@ -36,7 +36,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret    # From Google Cloud Console
 
 1. **Add Redirect URI:**
    ```
-   https://your-service.railway.app/agency-platforms/google/callback
+   https://your-service.onrender.com/agency-platforms/google/callback
    ```
 
 2. **Configure OAuth Consent Screen:**
@@ -51,8 +51,8 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret    # From Google Cloud Console
 
 ### 4. Test the Flow
 
-1. Deploy backend to Railway
-2. Deploy frontend to Vercel
+1. Deploy backend to Render
+2. Deploy frontend to Render
 3. Test agency platform connection
 4. Test client authorization flow
 
@@ -73,12 +73,12 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret    # From Google Cloud Console
 ## 🔗 Key Callback URLs
 
 **Agency Platform Connections:**
-- Meta: `https://your-service.railway.app/agency-platforms/meta/callback`
-- Google: `https://your-service.railway.app/agency-platforms/google/callback`
+- Meta: `https://your-service.onrender.com/agency-platforms/meta/callback`
+- Google: `https://your-service.onrender.com/agency-platforms/google/callback`
 
 **Client Authorization:**
-- Meta: `https://your-app.vercel.app/invite/oauth-callback?platform=meta`
-- Google: `https://your-app.vercel.app/invite/oauth-callback?platform=google`
+- Meta: `https://your-app.onrender.com/invite/oauth-callback?platform=meta`
+- Google: `https://your-app.onrender.com/invite/oauth-callback?platform=google`
 
 ## ⚠️ Important Notes
 
@@ -92,6 +92,4 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret    # From Google Cloud Console
 
 - **Detailed Setup:** [PRODUCTION_OAUTH_SETUP.md](./PRODUCTION_OAUTH_SETUP.md)
 - **Quick Checklist:** [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md)
-- **Railway Deployment:** [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
-- **Vercel Deployment:** [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
-
+- **Render Deployment:** [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)

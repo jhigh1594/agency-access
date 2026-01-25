@@ -23,14 +23,14 @@
 
 ## ⚠️ What Needs to Be Done
 
-### 1. Environment Variables (Railway)
+### 1. Environment Variables (Render)
 
-Set these in Railway dashboard → Variables:
+Set these in Render dashboard → Environment:
 
 ```bash
 # URLs (set after deployment)
-API_URL=https://your-service.railway.app
-FRONTEND_URL=https://your-app.vercel.app
+API_URL=https://your-service.onrender.com
+FRONTEND_URL=https://your-app.onrender.com
 
 # Meta OAuth
 META_APP_ID=your-meta-app-id
@@ -48,7 +48,7 @@ GOOGLE_ADS_DEVELOPER_TOKEN=your-token  # Optional
 
 1. **Valid OAuth Redirect URIs:**
    ```
-   https://your-service.railway.app/agency-platforms/meta/callback
+   https://your-service.onrender.com/agency-platforms/meta/callback
    ```
 
 2. **App Review:**
@@ -64,7 +64,7 @@ GOOGLE_ADS_DEVELOPER_TOKEN=your-token  # Optional
 
 1. **Authorized Redirect URIs:**
    ```
-   https://your-service.railway.app/agency-platforms/google/callback
+   https://your-service.onrender.com/agency-platforms/google/callback
    ```
 
 2. **OAuth Consent Screen:**
@@ -117,7 +117,7 @@ GOOGLE_ADS_DEVELOPER_TOKEN=your-token  # Optional
    - Secret name format: `meta_connection_{id}_meta_ads`
 
 3. **Check Logs:**
-   - No errors in Railway logs
+   - No errors in Render logs
    - Token refresh jobs running
 
 ## 🚨 Common Issues
@@ -132,4 +132,3 @@ GOOGLE_ADS_DEVELOPER_TOKEN=your-token  # Optional
 ## 📋 Full Documentation
 
 See [PRODUCTION_OAUTH_SETUP.md](./PRODUCTION_OAUTH_SETUP.md) for detailed setup instructions.
-
