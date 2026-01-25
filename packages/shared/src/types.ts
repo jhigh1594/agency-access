@@ -672,6 +672,308 @@ export interface TemplatesListResponse {
 // CLIENT DETAIL PAGE TYPES
 // ============================================================
 
+// ============================================================
+// SUBSCRIPTION TIERS & QUOTA MANAGEMENT
+// ============================================================
+
+// Subscription tiers - updated for Creem integration
+export const SubscriptionTierSchema = z.enum(['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE']);
+export type SubscriptionTier = z.infer<typeof SubscriptionTierSchema>;
+
+export const SUBSCRIPTION_TIER_NAMES: Record<SubscriptionTier, string> = {
+  STARTER: 'Starter',
+  AGENCY: 'Agency',
+  PRO: 'Pro',
+  ENTERPRISE: 'Enterprise',
+};
+
+// Subscription status types
+export const SubscriptionStatusSchema = z.enum([
+  'active',
+  'canceled',
+  'past_due',
+  'incomplete',
+  'incomplete_expired',
+  'trialing',
+]);
+export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
+
+// ============================================================
+// CREEM-SPECIFIC SUBSCRIPTION TYPES
+// ============================================================
+
+// Creem subscription details from API
+export interface CreemSubscription {
+  id: string;
+  customerId: string;
+  productId: string;
+  status: SubscriptionStatus;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  trialStart?: string;
+  trialEnd?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Creem invoice details
+export interface CreemInvoice {
+  id: string;
+  subscriptionId: string;
+  amount: number; // in cents
+  currency: string;
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+  invoiceDate?: string;
+  dueDate?: string;
+  paidAt?: string;
+  invoiceUrl?: string;
+  invoicePdfUrl?: string;
+}
+
+// ============================================================
+// TIER LIMITS CONFIGURATION
+// ============================================================
+
+// Tier limits for different resources
+export interface TierLimits {
+  accessRequests: {
+    limit: number | 'unlimited';
+    used: number;
+    remaining: number;
+  };
+  clients: {
+    limit: number | 'unlimited';
+    used: number;
+    remaining: number;
+  };
+  members: {
+    limit: number | 'unlimited';
+    used: number;
+    remaining: number;
+  };
+  templates: {
+    limit: number | 'unlimited';
+    used: number;
+    remaining: number;
+  };
+}
+
+export type TierLimitsDetails = TierLimits;
+
+// Tier limits configuration (source of truth)
+export const TIER_LIMITS: Record<SubscriptionTier, {
+  accessRequests: number;
+  clients: number;
+  members: number;
+  templates: number;
+  clientOnboards: number;
+  platformAudits: number;
+  teamSeats: number;
+  features: string[];
+  priceMonthly: number;
+  priceYearly: number;
+  description: string;
+}> = {
+  STARTER: {
+    accessRequests: 10,
+    clients: 5,
+    members: 2,
+    templates: 3,
+    clientOnboards: 36,
+    platformAudits: 120,
+    teamSeats: 1,
+    features: ['all_platforms', 'email_support'],
+    priceMonthly: 40,
+    priceYearly: 480,
+    description: 'Perfect for small agencies getting started',
+  },
+  AGENCY: {
+    accessRequests: 50,
+    clients: 25,
+    members: 5,
+    templates: 10,
+    clientOnboards: 120,
+    platformAudits: 600,
+    teamSeats: 5,
+    features: ['all_platforms', 'priority_support', 'custom_branding', 'api_access', 'white_label'],
+    priceMonthly: 93,
+    priceYearly: 1120,
+    description: 'For established agencies scaling fast',
+  },
+  PRO: {
+    accessRequests: 100,
+    clients: 50,
+    members: 10,
+    templates: 20,
+    clientOnboards: 600,
+    platformAudits: 3000,
+    teamSeats: -1,
+    features: ['all_platforms', 'priority_support', 'custom_branding', 'api_access', 'multi_brand'],
+    priceMonthly: 187,
+    priceYearly: 2240,
+    description: 'For growing agencies with more clients',
+  },
+  ENTERPRISE: {
+    accessRequests: -1, // unlimited
+    clients: -1,
+    members: -1,
+    templates: -1,
+    clientOnboards: -1,
+    platformAudits: -1,
+    teamSeats: -1,
+    features: ['all_platforms', 'dedicated_support', 'custom_branding', 'api_access', 'white_label', 'sso'],
+    priceMonthly: 299,
+    priceYearly: 2990,
+    description: 'Unlimited everything for large agencies',
+  },
+};
+
+// Detailed tier information for UI display
+export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
+  title: string;
+  description: string;
+  price: { monthly: number; yearly: number };
+  features: string[];
+}> = {
+  STARTER: {
+    title: 'Starter',
+    description: 'Perfect for small agencies getting started',
+    price: { monthly: 40, yearly: 480 },
+    features: [
+      'Up to 10 access requests',
+      'Up to 5 clients',
+      'Up to 2 team members',
+      'All platform integrations',
+      'Email support',
+    ],
+  },
+  AGENCY: {
+    title: 'Agency',
+    description: 'For established agencies scaling fast',
+    price: { monthly: 93, yearly: 1120 },
+    features: [
+      'Up to 50 access requests',
+      'Up to 25 clients',
+      'Up to 5 team members',
+      'All platform integrations',
+      'White-label branding',
+      'Priority support',
+    ],
+  },
+  PRO: {
+    title: 'Pro',
+    description: 'For growing agencies with more clients',
+    price: { monthly: 187, yearly: 2240 },
+    features: [
+      'Up to 100 access requests',
+      'Up to 50 clients',
+      'Up to 10 team members',
+      'All platform integrations',
+      'Priority support',
+      'Custom branding',
+      'API access',
+    ],
+  },
+  ENTERPRISE: {
+    title: 'Enterprise',
+    description: 'Unlimited everything for large agencies',
+    price: { monthly: 299, yearly: 2990 },
+    features: [
+      'Unlimited access requests',
+      'Unlimited clients',
+      'Unlimited team members',
+      'All platform integrations',
+      'Dedicated support',
+      'White-label options',
+      'SSO integration',
+      'Custom contracts',
+    ],
+  },
+};
+
+// ============================================================
+// USAGE QUOTA TYPES
+// ============================================================
+
+// Usage metric types for quota tracking (legacy, for backward compatibility)
+export const MetricTypeSchema = z.enum([
+  'client_onboards',
+  'platform_audits',
+  'team_seats',
+  'access_requests',
+  'clients',
+  'members',
+  'templates',
+]);
+export type MetricType = z.infer<typeof MetricTypeSchema>;
+
+// Usage snapshot for dashboard display
+export interface UsageSnapshot {
+  agencyId: string;
+  tier: SubscriptionTier;
+  tierName: string;
+  metrics: {
+    clientOnboards: MetricUsage;
+    platformAudits: MetricUsage;
+    teamSeats: MetricUsage;
+  };
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+}
+
+export interface MetricUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+  resetsAt?: Date;
+  isUnlimited: boolean;
+}
+
+// Usage quota check result
+export interface QuotaCheckResult {
+  allowed: boolean;
+  metric: MetricType;
+  limit: number;
+  used: number;
+  remaining: number;
+  resetsAt?: Date;
+}
+
+// Quota exceeded error response
+export interface QuotaExceededError {
+  code: 'QUOTA_EXCEEDED';
+  message: string;
+  metric: MetricType;
+  limit: number;
+  used: number;
+  resetsAt?: Date;
+  upgradeUrl: string;
+  currentTier: SubscriptionTier;
+  suggestedTier: SubscriptionTier;
+}
+
+// Clerk metadata schemas
+export interface ClerkPublicMetadata extends Record<string, unknown> {
+  subscriptionTier: SubscriptionTier;
+  tierName: string;
+  features: string[];
+}
+
+export interface ClerkPrivateMetadata extends Record<string, unknown> {
+  quotaLimits: {
+    clientOnboards: { limit: number; used: number; resetsAt: string };
+    platformAudits: { limit: number; used: number; resetsAt: string };
+    teamSeats: { limit: number; used: number };
+  };
+  subscriptionStatus: 'active' | 'past_due' | 'canceled' | 'trialing';
+  subscriptionId?: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  trialEndsAt?: string;
+}
+
 // Client statistics for the detail page
 export interface ClientStats {
   totalRequests: number;

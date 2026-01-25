@@ -14,7 +14,15 @@ import {
   PlatformGroupConfig,
   ClientLanguage,
   SUPPORTED_LANGUAGES,
+  // Subscription tier types (will be implemented)
+  SubscriptionTierSchema,
+  TIER_LIMITS,
+  SUBSCRIPTION_TIER_NAMES,
+  MetricTypeSchema,
 } from '../types';
+
+// Type imports for TypeScript validation
+import type { SubscriptionTier, MetricType, UsageSnapshot, MetricUsage, QuotaExceededError } from '../types';
 
 describe('Phase 5: Shared Types - TDD Tests', () => {
   describe('PLATFORM_HIERARCHY', () => {
@@ -289,6 +297,205 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       const { PLATFORM_NAMES } = require('../types');
       expect(PLATFORM_NAMES).toBeDefined();
       expect(PLATFORM_NAMES.meta_ads).toBe('Meta Ads');
+    });
+  });
+});
+
+describe('Pricing Tiers & Quota Management - TDD Tests', () => {
+  describe('SubscriptionTier Schema', () => {
+    it('should validate STARTER tier', () => {
+      const result = SubscriptionTierSchema.safeParse('STARTER');
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate AGENCY tier', () => {
+      const result = SubscriptionTierSchema.safeParse('AGENCY');
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate PRO tier', () => {
+      const result = SubscriptionTierSchema.safeParse('PRO');
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate ENTERPRISE tier', () => {
+      const result = SubscriptionTierSchema.safeParse('ENTERPRISE');
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject invalid tier', () => {
+      const result = SubscriptionTierSchema.safeParse('BASIC');
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject lowercase tier', () => {
+      const result = SubscriptionTierSchema.safeParse('starter');
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('SUBSCRIPTION_TIER_NAMES', () => {
+    it('should have display names for all tiers', () => {
+      expect(SUBSCRIPTION_TIER_NAMES).toBeDefined();
+      expect(SUBSCRIPTION_TIER_NAMES.STARTER).toBe('Starter');
+      expect(SUBSCRIPTION_TIER_NAMES.AGENCY).toBe('Agency');
+      expect(SUBSCRIPTION_TIER_NAMES.PRO).toBe('Pro');
+      expect(SUBSCRIPTION_TIER_NAMES.ENTERPRISE).toBe('Enterprise');
+    });
+  });
+
+  describe('TIER_LIMITS Configuration', () => {
+    it('should have limits defined for STARTER tier', () => {
+      const starter = TIER_LIMITS.STARTER;
+      expect(starter).toBeDefined();
+      expect(starter.accessRequests).toBe(10);
+      expect(starter.clients).toBe(5);
+      expect(starter.members).toBe(2);
+      expect(starter.templates).toBe(3);
+      expect(starter.clientOnboards).toBe(36);
+      expect(starter.platformAudits).toBe(120);
+      expect(starter.teamSeats).toBe(1);
+      expect(starter.priceMonthly).toBe(40);
+      expect(starter.priceYearly).toBe(480);
+    });
+
+    it('should have limits defined for AGENCY tier', () => {
+      const agency = TIER_LIMITS.AGENCY;
+      expect(agency).toBeDefined();
+      expect(agency.accessRequests).toBe(50);
+      expect(agency.clients).toBe(25);
+      expect(agency.members).toBe(5);
+      expect(agency.templates).toBe(10);
+      expect(agency.clientOnboards).toBe(120);
+      expect(agency.platformAudits).toBe(600);
+      expect(agency.teamSeats).toBe(5);
+      expect(agency.priceMonthly).toBe(93);
+      expect(agency.priceYearly).toBe(1120);
+    });
+
+    it('should have limits defined for PRO tier', () => {
+      const pro = TIER_LIMITS.PRO;
+      expect(pro).toBeDefined();
+      expect(pro.accessRequests).toBe(100);
+      expect(pro.clients).toBe(50);
+      expect(pro.members).toBe(10);
+      expect(pro.templates).toBe(20);
+      expect(pro.clientOnboards).toBe(600);
+      expect(pro.platformAudits).toBe(3000);
+      expect(pro.teamSeats).toBe(-1);
+      expect(pro.priceMonthly).toBe(187);
+      expect(pro.priceYearly).toBe(2240);
+    });
+
+    it('should have limits defined for ENTERPRISE tier', () => {
+      const enterprise = TIER_LIMITS.ENTERPRISE;
+      expect(enterprise).toBeDefined();
+      expect(enterprise.accessRequests).toBe(-1); // unlimited
+      expect(enterprise.clients).toBe(-1);
+      expect(enterprise.members).toBe(-1);
+      expect(enterprise.templates).toBe(-1);
+      expect(enterprise.priceMonthly).toBe(299);
+      expect(enterprise.priceYearly).toBe(2990);
+    });
+
+    it('should have features array for each tier', () => {
+      expect(TIER_LIMITS.STARTER.features).toBeInstanceOf(Array);
+      expect(TIER_LIMITS.PRO.features).toBeInstanceOf(Array);
+      expect(TIER_LIMITS.ENTERPRISE.features).toBeInstanceOf(Array);
+
+      // STARTER should have basic features
+      expect(TIER_LIMITS.STARTER.features).toContain('all_platforms');
+      expect(TIER_LIMITS.STARTER.features).toContain('email_support');
+
+      // PRO should have additional features
+      expect(TIER_LIMITS.PRO.features).toContain('priority_support');
+      expect(TIER_LIMITS.PRO.features).toContain('custom_branding');
+
+      // ENTERPRISE should have all features
+      expect(TIER_LIMITS.ENTERPRISE.features).toContain('white_label');
+      expect(TIER_LIMITS.ENTERPRISE.features).toContain('sso');
+    });
+
+    it('should have increasing limits across tiers', () => {
+      const starter = TIER_LIMITS.STARTER.accessRequests;
+      const pro = TIER_LIMITS.PRO.accessRequests;
+
+      expect(starter).toBeLessThan(pro);
+    });
+  });
+
+  describe('MetricType Schema', () => {
+    it('should validate client_onboards metric', () => {
+      const result = MetricTypeSchema.safeParse('client_onboards');
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate platform_audits metric', () => {
+      const result = MetricTypeSchema.safeParse('platform_audits');
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate team_seats metric', () => {
+      const result = MetricTypeSchema.safeParse('team_seats');
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject invalid metric type', () => {
+      const result = MetricTypeSchema.safeParse('api_calls');
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('TypeScript Type Validation', () => {
+    it('should allow valid SubscriptionTier type', () => {
+      const tier: SubscriptionTier = 'STARTER';
+      expect(tier).toBe('STARTER');
+    });
+
+    it('should allow valid MetricType type', () => {
+      const metric: MetricType = 'client_onboards';
+      expect(metric).toBe('client_onboards');
+    });
+
+    it('should allow MetricUsage interface', () => {
+      const usage: MetricUsage = {
+        used: 10,
+        limit: 36,
+        remaining: 26,
+        percentage: 27.78,
+        resetsAt: new Date('2025-01-01'),
+        isUnlimited: false,
+      };
+      expect(usage.used).toBe(10);
+      expect(usage.remaining).toBe(26);
+    });
+
+    it('should allow MetricUsage with unlimited seats', () => {
+      const usage: MetricUsage = {
+        used: 100,
+        limit: -1,
+        remaining: -1,
+        percentage: 0,
+        isUnlimited: true,
+      };
+      expect(usage.isUnlimited).toBe(true);
+      expect(usage.limit).toBe(-1);
+    });
+
+    it('should allow QuotaExceededError interface', () => {
+      const error: QuotaExceededError = {
+        code: 'QUOTA_EXCEEDED',
+        message: 'You have reached your access requests limit',
+        metric: 'access_requests',
+        limit: 10,
+        used: 10,
+        resetsAt: new Date('2025-01-01'),
+        upgradeUrl: '/pricing?upgrade=PRO',
+        currentTier: 'STARTER',
+        suggestedTier: 'PRO',
+      };
+      expect(error.code).toBe('QUOTA_EXCEEDED');
+      expect(error.suggestedTier).toBe('PRO');
     });
   });
 });
