@@ -12,17 +12,19 @@
 
 import type { SubscriptionTier } from '@agency-platform/shared';
 
-export const CREEM_PRODUCT_IDS: Record<SubscriptionTier, string> = {
+const CREEM_PRODUCT_IDS: Record<Exclude<SubscriptionTier, 'ENTERPRISE'>, string> = {
   STARTER: 'prod_79jS6KXv2wilYkPQQjmGVP',
   AGENCY: 'prod_2cT8b4pPcNFq47h29DlNTz',
   PRO: 'prod_12lDKXew8bJqbUmTGpLZbR',
-  ENTERPRISE: 'prod_2cT8b4pPcNFq47h29DlNTz',
 };
 
 /**
  * Get the Creem product ID for a given subscription tier
  */
 export function getProductId(tier: SubscriptionTier): string {
+  if (tier === 'ENTERPRISE') {
+    throw new Error('Enterprise tier does not have a Creem product ID');
+  }
   return CREEM_PRODUCT_IDS[tier];
 }
 

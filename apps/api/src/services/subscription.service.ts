@@ -105,7 +105,15 @@ class SubscriptionService {
     }
 
     // Create checkout session
-    const productId = getProductId(tier);
+    let productId: string;
+    try {
+      productId = getProductId(tier);
+    } catch (error) {
+      return {
+        data: null,
+        error: { code: 'INVALID_TIER', message: 'Tier is not available for checkout' },
+      };
+    }
     const checkoutResult = await creem.createCheckoutSession({
       customer: creemCustomerId,
       customerEmail: agency.email,

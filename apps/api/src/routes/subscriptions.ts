@@ -44,7 +44,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       }
 
       // Validate tier
-      const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+      const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
       if (!validTiers.includes(body.tier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }
