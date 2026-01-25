@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import compress from '@fastify/compress';
 import { env } from './lib/env.js';
+import { getCorsOptions } from './lib/cors.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
 import { accessRequestRoutes } from './routes/access-requests.js';
@@ -13,7 +14,10 @@ import { platformAuthorizationRoutes } from './routes/platform-authorization.js'
 import { clientRoutes } from './routes/clients.js';
 import { agencyPlatformsRoutes } from './routes/agency-platforms.js';
 import { dashboardRoutes } from './routes/dashboard.js';
+import { usageRoutes } from './routes/usage.js';
+import { webhookRoutes } from './routes/webhooks.js';
 import { beehiivRoutes } from './routes/beehiiv.js';
+import { subscriptionRoutes } from './routes/subscriptions.js';
 import { performanceMiddleware } from './middleware/performance.js';
 
 const fastify = Fastify({
@@ -30,21 +34,7 @@ const fastify = Fastify({
 });
 
 // Register plugins
-// CORS configuration: Allow both development and production origins
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://www.authhub.co',
-  'https://authhub.co',
-  env.FRONTEND_URL, // Include from env in case it's different
-].filter((origin, index, self) => self.indexOf(origin) === index); // Remove duplicates
-
-await fastify.register(cors, {
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-agency-id'],
-  exposedHeaders: ['x-cache'],
-});
+await fastify.register(cors, getCorsOptions(env.FRONTEND_URL));
 
 // Register compression middleware
 await fastify.register(compress, {
@@ -79,8 +69,11 @@ await fastify.register(templateRoutes, { prefix: '/api' });
 await fastify.register(platformAuthorizationRoutes, { prefix: '/api' });
 await fastify.register(clientRoutes, { prefix: '/api' });
 await fastify.register(dashboardRoutes, { prefix: '/api' });
+await fastify.register(usageRoutes, { prefix: '/api' });
+await fastify.register(webhookRoutes, { prefix: '/api' });
 await fastify.register(agencyPlatformsRoutes);
 await fastify.register(beehiivRoutes);
+await fastify.register(subscriptionRoutes, { prefix: '/api' });
 
 // Health check and root routes
 fastify.get('/health', async () => {

@@ -1,0 +1,540 @@
+import { FastifyInstance } from 'fastify';
+import { prisma } from '@/lib/prisma';
+import { agencyPlatformService } from '@/services/agency-platform.service';
+import { metaAssetsService } from '@/services/meta-assets.service';
+import { googleAssetsService } from '@/services/google-assets.service';
+import { MetaConnector } from '@/services/connectors/meta';
+import { GoogleConnector } from '@/services/connectors/google';
+import type { GoogleAccountsResponse } from '@/services/connectors/google';
+
+interface MetaBusinessAccountsResponse {
+  businesses: Array<{
+    id: string;
+    name: string;
+    verticalName?: string;
+    verificationStatus?: string;
+  }>;
+  hasAccess: boolean;
+}
+
+export async function registerAssetRoutes(fastify: FastifyInstance) {
+  /**
+   * GET /agency-platforms/google/accounts
+   * Fetch all Google accounts for an agency's Google connection
+   */
+  fastify.get('/agency-platforms/google/accounts', async (request, reply) => {
+    const { agencyId, refresh } = request.query as {
+      agencyId?: string;
+      refresh?: string;
+    };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    const connectionResult = await agencyPlatformService.getConnection(agencyId, 'google');
+
+    if (connectionResult.error || !connectionResult.data) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'GOOGLE_NOT_CONNECTED',
+          message: 'Google is not connected. Please connect your Google account first.',
+        },
+      });
+    }
+
+    const connection = connectionResult.data;
+
+    if (refresh === 'true') {
+      try {
+        const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'google');
+
+        if (tokenResult.error || !tokenResult.data) {
+          return reply.code(500).send({
+            data: null,
+            error: {
+              code: 'TOKEN_ERROR',
+              message: 'Failed to get valid access token',
+            },
+          });
+        }
+
+        const googleConnector = new GoogleConnector();
+        const googleAccounts = await googleConnector.getAllGoogleAccounts(tokenResult.data);
+
+        await agencyPlatformService.updateConnectionMetadata(agencyId, 'google', {
+          googleAccounts: {
+            adsAccounts: googleAccounts.adsAccounts,
+            analyticsProperties: googleAccounts.analyticsProperties,
+            businessAccounts: googleAccounts.businessAccounts,
+            tagManagerContainers: googleAccounts.tagManagerContainers,
+            searchConsoleSites: googleAccounts.searchConsoleSites,
+            merchantCenterAccounts: googleAccounts.merchantCenterAccounts,
+            hasAccess: googleAccounts.hasAccess,
+          },
+        });
+
+        return reply.send({
+          data: googleAccounts,
+          error: null,
+        });
+      } catch (error) {
+        return reply.code(500).send({
+          data: null,
+          error: {
+            code: 'FETCH_FAILED',
+            message: 'Failed to fetch Google accounts',
+            details: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+      }
+    }
+
+    const meta = connection.metadata as Record<string, any> | undefined;
+    const googleAccounts = meta?.googleAccounts as GoogleAccountsResponse | undefined;
+
+    if (!googleAccounts) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'NO_ACCOUNTS_FOUND',
+          message: 'No Google accounts found. Try refreshing with ?refresh=true',
+        },
+      });
+    }
+
+    return reply.send({
+      data: googleAccounts,
+      error: null,
+    });
+  });
+
+  /**
+   * GET /agency-platforms/meta/business-accounts
+   * Fetch all Meta Business Manager accounts for an agency's Meta connection
+   */
+  fastify.get('/agency-platforms/meta/business-accounts', async (request, reply) => {
+    const { agencyId, refresh } = request.query as {
+      agencyId?: string;
+      refresh?: string;
+    };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
+
+    if (connectionResult.error || !connectionResult.data) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'META_NOT_CONNECTED',
+          message: 'Meta is not connected. Please connect your Meta account first.',
+        },
+      });
+    }
+
+    const connection = connectionResult.data;
+
+    if (refresh === 'true') {
+      try {
+        const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'meta');
+
+        if (tokenResult.error || !tokenResult.data) {
+          return reply.code(500).send({
+            data: null,
+            error: {
+              code: 'TOKEN_ERROR',
+              message: 'Failed to get valid access token',
+            },
+          });
+        }
+
+        const metaConnector = new MetaConnector();
+        const businessAccounts = await metaConnector.getBusinessAccounts(tokenResult.data);
+
+        await agencyPlatformService.updateConnectionMetadata(agencyId, 'meta', {
+          metaBusinessAccounts: {
+            businesses: businessAccounts.businesses,
+            hasAccess: businessAccounts.hasAccess,
+          },
+        });
+
+        return reply.send({
+          data: businessAccounts,
+          error: null,
+        });
+      } catch (error) {
+        return reply.code(500).send({
+          data: null,
+          error: {
+            code: 'FETCH_FAILED',
+            message: 'Failed to fetch Meta business accounts',
+            details: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+      }
+    }
+
+    const meta = connection.metadata as Record<string, any> | undefined;
+    const businessAccounts = meta?.metaBusinessAccounts as MetaBusinessAccountsResponse | undefined;
+
+    if (!businessAccounts) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'NO_ACCOUNTS_FOUND',
+          message: 'No Meta business accounts found. Try refreshing with ?refresh=true',
+        },
+      });
+    }
+
+    return reply.send({
+      data: businessAccounts,
+      error: null,
+    });
+  });
+
+  /**
+   * POST /agency-platforms/meta/complete-oauth
+   * Complete Meta OAuth by selecting a Business Portfolio and creating a system user
+   */
+  fastify.post('/agency-platforms/meta/complete-oauth', async (request, reply) => {
+    const { agencyId, businessId, businessName, connectionId } = request.body as {
+      agencyId?: string;
+      businessId?: string;
+      businessName?: string;
+      connectionId?: string;
+    };
+
+    if (!agencyId || !businessId || !businessName || !connectionId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId, businessId, businessName, and connectionId are required',
+        },
+      });
+    }
+
+    try {
+      const result = await metaAssetsService.saveBusinessPortfolio(agencyId, businessId, businessName);
+
+      if (result.error) {
+        return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+      }
+
+      const connection = await prisma.agencyPlatformConnection.findUnique({
+        where: { id: connectionId },
+      });
+
+      return reply.send({
+        data: connection,
+        error: null,
+      });
+    } catch (error) {
+      fastify.log.error({
+        msg: 'Failed to complete Meta OAuth',
+        error: error instanceof Error ? error.message : String(error),
+        agencyId,
+        businessId,
+      });
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to complete Meta OAuth flow',
+        },
+      });
+    }
+  });
+
+  /**
+   * PATCH /agency-platforms/meta/business
+   * Save selected Business Portfolio for a Meta connection
+   */
+  fastify.patch('/agency-platforms/meta/business', async (request, reply) => {
+    const { agencyId, businessId, businessName } = request.body as {
+      agencyId?: string;
+      businessId?: string;
+      businessName?: string;
+    };
+
+    if (!agencyId || !businessId || !businessName) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId, businessId, and businessName are required',
+        },
+      });
+    }
+
+    const result = await metaAssetsService.saveBusinessPortfolio(agencyId, businessId, businessName);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * PATCH /agency-platforms/meta/asset-settings
+   * Save asset settings for a Meta connection
+   */
+  fastify.patch('/agency-platforms/meta/asset-settings', async (request, reply) => {
+    const { agencyId, settings } = request.body as {
+      agencyId?: string;
+      settings?: any;
+    };
+
+    if (!agencyId || !settings) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId and settings are required',
+        },
+      });
+    }
+
+    const result = await metaAssetsService.saveAssetSettings(agencyId, settings);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * GET /agency-platforms/meta/asset-settings
+   * Get current asset settings for a Meta connection
+   */
+  fastify.get('/agency-platforms/meta/asset-settings', async (request, reply) => {
+    const { agencyId } = request.query as { agencyId?: string };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    const result = await metaAssetsService.getAssetSettings(agencyId);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * GET /agency-platforms/meta/assets/:businessId
+   * Fetch all assets for a specific Meta business
+   */
+  fastify.get('/agency-platforms/meta/assets/:businessId', async (request, reply) => {
+    const { businessId } = request.params as { businessId: string };
+    const { agencyId } = request.query as { agencyId?: string };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' },
+      });
+    }
+
+    const result = await metaAssetsService.getAssetsForBusiness(agencyId, businessId);
+
+    if (result.error) {
+      return reply.code(500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * GET /agency-platforms/meta/assets/summary
+   * Returns summary of all businesses and their asset counts
+   */
+  fastify.get('/agency-platforms/meta/assets/summary', async (request, reply) => {
+    const { agencyId } = request.query as { agencyId?: string };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' },
+      });
+    }
+
+    const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
+    if (connectionResult.error || !connectionResult.data) {
+      return reply.code(404).send({
+        data: null,
+        error: { code: 'META_NOT_CONNECTED', message: 'Meta is not connected' },
+      });
+    }
+
+    const meta = connectionResult.data.metadata as any;
+    const businesses = meta?.metaBusinessAccounts?.businesses || [];
+
+    const summaries = await Promise.all(
+      businesses.map(async (business: any) => {
+        const result = await metaAssetsService.getAssetsForBusiness(agencyId, business.id);
+        if (result.data) {
+          return {
+            businessId: business.id,
+            businessName: business.name,
+            adAccountsCount: result.data.adAccounts.length,
+            pagesCount: result.data.pages.length,
+            instagramAccountsCount: result.data.instagramAccounts.length,
+            productCatalogsCount: result.data.productCatalogs.length,
+          };
+        }
+        return {
+          businessId: business.id,
+          businessName: business.name,
+          error: result.error,
+        };
+      })
+    );
+
+    return reply.send({ data: summaries, error: null });
+  });
+
+  /**
+   * PATCH /agency-platforms/meta/selections
+   * Save granular asset selections for a Meta connection
+   */
+  fastify.patch('/agency-platforms/meta/selections', async (request, reply) => {
+    const { agencyId, selections } = request.body as {
+      agencyId?: string;
+      selections?: any[];
+    };
+
+    if (!agencyId || !selections) {
+      return reply.code(400).send({
+        data: null,
+        error: { code: 'VALIDATION_ERROR', message: 'agencyId and selections are required' },
+      });
+    }
+
+    const result = await metaAssetsService.saveAssetSelections(agencyId, selections);
+
+    if (result.error) {
+      return reply.code(500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * GET /agency-platforms/google/asset-settings
+   * Get current asset settings for a Google connection
+   */
+  fastify.get('/agency-platforms/google/asset-settings', async (request, reply) => {
+    const { agencyId } = request.query as { agencyId?: string };
+
+    if (!agencyId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId is required',
+        },
+      });
+    }
+
+    const result = await googleAssetsService.getAssetSettings(agencyId);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * PATCH /agency-platforms/google/asset-settings
+   * Save asset settings for a Google connection
+   */
+  fastify.patch('/agency-platforms/google/asset-settings', async (request, reply) => {
+    const { agencyId, settings } = request.body as {
+      agencyId?: string;
+      settings?: any;
+    };
+
+    if (!agencyId || !settings) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId and settings are required',
+        },
+      });
+    }
+
+    const result = await googleAssetsService.saveAssetSettings(agencyId, settings);
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  /**
+   * PATCH /agency-platforms/google/account
+   * Save selected account for a Google product
+   */
+  fastify.patch('/agency-platforms/google/account', async (request, reply) => {
+    const { agencyId, product, accountId, accountName } = request.body as {
+      agencyId?: string;
+      product?: string;
+      accountId?: string;
+      accountName?: string;
+    };
+
+    if (!agencyId || !product || !accountId || !accountName) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId, product, accountId, and accountName are required',
+        },
+      });
+    }
+
+    const result = await googleAssetsService.saveAccountSelection(
+      agencyId,
+      product,
+      accountId,
+      accountName
+    );
+
+    if (result.error) {
+      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+    }
+
+    return reply.send(result);
+  });
+}

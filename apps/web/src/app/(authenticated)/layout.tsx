@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 export default function AuthenticatedLayout({
   children,
@@ -150,7 +150,7 @@ export default function AuthenticatedLayout({
               "flex items-center gap-3 mb-8 overflow-hidden min-h-[2rem]",
               open ? "justify-center md:justify-start" : "justify-center"
             )}>
-              <motion.div 
+              <m.div 
                 className="flex items-center justify-center flex-shrink-0"
                 animate={{
                   width: open ? "2rem" : "1.25rem",
@@ -164,8 +164,8 @@ export default function AuthenticatedLayout({
                   className="w-full h-full object-contain"
                   style={{ imageRendering: 'crisp-edges' }}
                 />
-              </motion.div>
-              <motion.span
+              </m.div>
+              <m.span
                 animate={{
                   display: open ? 'inline-block' : 'none',
                   opacity: open ? 1 : 0,
@@ -174,7 +174,7 @@ export default function AuthenticatedLayout({
                 className="font-semibold text-xl text-neutral-700 whitespace-nowrap overflow-hidden"
               >
                 AuthHub
-              </motion.span>
+              </m.span>
             </div>
 
             {/* Navigation Links */}
@@ -189,7 +189,7 @@ export default function AuthenticatedLayout({
           <div className="border-t border-neutral-200 pt-4">
             <div className="flex items-center gap-2">
               <UserButton afterSignOutUrl="/" />
-              <motion.div
+              <m.div
                 animate={{
                   display: open ? 'inline-block' : 'none',
                   opacity: open ? 1 : 0,
@@ -197,7 +197,7 @@ export default function AuthenticatedLayout({
                 className="text-sm text-neutral-700"
               >
                 Profile
-              </motion.div>
+              </m.div>
             </div>
           </div>
         </SidebarBody>

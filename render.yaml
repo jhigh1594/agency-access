@@ -73,25 +73,3 @@ services:
         value: https://api.creem.io/v1
       - key: LOG_LEVEL
         value: info
-
-  - type: web
-    name: agency-access-web
-    env: node
-    plan: free
-    rootDir: .
-    buildCommand: npm install && npm run build --workspace=packages/shared && npm run build --workspace=apps/web
-    startCommand: cd apps/web && npm run start
-    autoDeploy: true
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        sync: false
-      - key: NEXT_PUBLIC_APP_URL
-        sync: false
-      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: CLERK_SECRET_KEY
-        sync: false
-      - key: NEXT_PUBLIC_BRANDFETCH_CLIENT_ID
-        sync: false
-      - key: NEXT_PUBLIC_CREEM_PUBLISHABLE_KEY
-        sync: false

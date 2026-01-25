@@ -33,6 +33,8 @@ model Agency {
   platformConnections  AgencyPlatformConnection[]
   clients              Client[]
   templates            AccessRequestTemplate[]
+  usageCounters        AgencyUsageCounter[]
+  subscription         Subscription?
 
   @@map("agencies")
 }
@@ -248,4 +250,95 @@ model AuthorizationVerification {
   @@unique([connectionId, platform])
   @@index([accessRequestId, status])
   @@map("authorization_verifications")
+}
+
+// Agency usage counters for quota tracking
+model AgencyUsageCounter {
+  id               String    @id @default(uuid())
+  agencyId         String    @map("agency_id")
+  metricType       String    @map("metric_type") // 'client_onboards', 'platform_audits', 'team_seats'
+  period           String    // 'current_year', 'all_time'
+  count            Int       @default(0)
+  resetAt          DateTime? @map("reset_at")
+  lastIncrementedAt DateTime @default(now()) @map("last_incremented_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  agency           Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@unique([agencyId, metricType, period])
+  @@index([agencyId, metricType])
+  @@map("agency_usage_counters")
+}
+
+// ============================================================
+// SUBSCRIPTION AND BILLING MODELS
+// ============================================================
+
+model Subscription {
+  id                    String              @id @default(uuid())
+  agencyId              String              @map("agency_id")
+
+  // Creem integration fields
+  creemCustomerId       String?             @map("creem_customer_id")
+  creemSubscriptionId   String?             @map("creem_subscription_id")
+
+  // Subscription details
+  tier                  String              @default("STARTER") // 'STARTER', 'PRO', 'ENTERPRISE'
+  status                String              @default("active") // 'active', 'canceled', 'past_due', 'incomplete', 'incomplete_expired'
+
+  // Billing cycle
+  currentPeriodStart    DateTime?           @map("current_period_start")
+  currentPeriodEnd      DateTime?           @map("current_period_end")
+  cancelAtPeriodEnd     Boolean             @default(false) @map("cancel_at_period_end")
+
+  // Trial and discounts
+  trialStart            DateTime?           @map("trial_start")
+  trialEnd              DateTime?           @map("trial_end")
+
+  // Metadata
+  creemData             Json?               @map("creem_data") // Store full Creem subscription object
+
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+
+  agency                Agency              @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  invoices              Invoice[]
+
+  @@unique([agencyId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id                    String              @id @default(uuid())
+  subscriptionId        String              @map("subscription_id")
+
+  // Creem integration
+  creemInvoiceId        String              @unique @map("creem_invoice_id")
+
+  // Invoice details
+  amount                Int                 // Store in cents
+  currency              String              @default("usd")
+  status                String              // 'draft', 'open', 'paid', 'void', 'uncollectible'
+
+  // Dates
+  invoiceDate           DateTime?           @map("invoice_date")
+  dueDate               DateTime?           @map("due_date")
+  paidAt                DateTime?           @map("paid_at")
+
+  // Links
+  invoiceUrl            String?             @map("invoice_url")
+  invoicePdfUrl         String?             @map("invoice_pdf_url")
+
+  // Metadata
+  creemData             Json?               @map("creem_data")
+
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+
+  subscription          Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, status])
+  @@map("invoices")
 }

@@ -12,6 +12,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { Settings as SettingsIcon, Users, Bell, Key, Building2, Save, Link2, Loader2 } from 'lucide-react';
 import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
+import { BillingSettingsCard } from '@/components/settings/billing-card';
 
 export default function SettingsPage() {
   const { orgId } = useAuth();
@@ -247,6 +248,9 @@ export default function SettingsPage() {
               </p>
             </div>
           </section>
+
+          {/* Billing & Subscription Section */}
+          <BillingSettingsCard />
         </div>
       </div>
     </div>

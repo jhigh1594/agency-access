@@ -25,7 +25,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Do you offer discounts for annual billing?",
-    answer: "Yes! Annual billing saves you 20% compared to monthly billing. Most agencies choose annual billing for the savings and convenience.",
+    answer: "Yes! Annual billing saves you 25% compared to monthly billing. Most agencies choose annual billing for the savings and convenience.",
   },
   {
     question: "How secure is my OAuth data?",

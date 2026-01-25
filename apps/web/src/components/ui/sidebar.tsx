@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
 import React, { useState, createContext, useContext } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -72,7 +72,7 @@ export const Sidebar = ({
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
+export const SidebarBody = (props: React.ComponentProps<typeof m.div>) => {
   return (
     <>
       <DesktopSidebar {...props} />
@@ -85,10 +85,10 @@ export const DesktopSidebar = ({
   className,
   children,
   ...props
-}: React.ComponentProps<typeof motion.div>) => {
+}: React.ComponentProps<typeof m.div>) => {
   const { open, setOpen, animate } = useSidebar();
   return (
-    <motion.div
+    <m.div
       className={cn(
         "h-full py-4 hidden md:flex md:flex-col bg-card border-r border-border w-[250px] max-w-[250px] flex-shrink-0 relative",
         className
@@ -113,17 +113,17 @@ export const DesktopSidebar = ({
         )}
         aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
       >
-        <motion.div
+        <m.div
           animate={{
             rotate: open ? 0 : 180,
           }}
           transition={{ duration: 0.2 }}
         >
           <ChevronLeft className="h-4 w-4 text-foreground" />
-        </motion.div>
+        </m.div>
       </button>
       {children}
-    </motion.div>
+    </m.div>
   );
 };
 
@@ -149,7 +149,7 @@ export const MobileSidebar = ({
         </div>
         <AnimatePresence>
           {open && (
-            <motion.div
+            <m.div
               initial={{ x: "-100%", opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "-100%", opacity: 0 }}
@@ -169,7 +169,7 @@ export const MobileSidebar = ({
                 <X />
               </div>
               {children}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
@@ -191,7 +191,7 @@ export const SidebarLink = ({
   const isActive = pathname === link.href;
   
   return (
-    <motion.div
+    <m.div
       animate={{
         paddingLeft: open ? "0" : "0",
         paddingRight: open ? "0.5rem" : "0",
@@ -213,7 +213,7 @@ export const SidebarLink = ({
         )}
         {...props}
       >
-        <motion.div
+        <m.div
           animate={{
             marginRight: open ? "0.5rem" : "0",
           }}
@@ -228,8 +228,8 @@ export const SidebarLink = ({
           }}
         >
           {link.icon}
-        </motion.div>
-        <motion.div
+        </m.div>
+        <m.div
           animate={{
             width: animate ? (open ? "180px" : "0px") : "180px",
             opacity: animate ? (open ? 1 : 0) : 1,
@@ -255,8 +255,8 @@ export const SidebarLink = ({
           >
             {link.label}
           </span>
-        </motion.div>
+        </m.div>
       </Link>
-    </motion.div>
+    </m.div>
   );
 };

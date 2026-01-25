@@ -77,8 +77,13 @@ describe('Client Auth Routes', () => {
       // Verify connector was called with the correct redirectUri
       expect(mockConnector.getAuthUrl).toHaveBeenCalledWith(
         mockState,
-        undefined,
-        `http://localhost:3000/invite/${mockToken}/oauth-callback?platform=${mockPlatform}`
+        [
+          'ads_management',
+          'ads_read',
+          'business_management',
+          'pages_read_engagement',
+        ],
+        'http://localhost:3000/invite/oauth-callback'
       );
     });
 
@@ -163,9 +168,8 @@ describe('Client Auth Routes', () => {
       // but we can check if the connector was called correctly before it failed.
       expect(mockConnector.exchangeCode).toHaveBeenCalledWith(
         mockCode,
-        `http://localhost:3000/invite/${mockToken}/oauth-callback?platform=${mockPlatform}`
+        'http://localhost:3000/invite/oauth-callback'
       );
     });
   });
 });
-

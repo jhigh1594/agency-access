@@ -35,12 +35,14 @@ export function PricingTierCard({
   buttonText,
   buttonVariant = 'brutalist',
 }: PricingTierCardProps) {
-  const displayPrice = isYearly ? yearlyPrice : monthlyPrice;
-  const period = isYearly ? '/year' : '/mo';
+  const yearlyDiscountedPrice = Math.round(yearlyPrice * 0.75);
+  const monthlyDisplayPrice = Math.round(monthlyPrice);
+  const yearlyMonthlyEquivalent = Math.round(yearlyDiscountedPrice / 12);
+  const displayPrice = isYearly ? yearlyMonthlyEquivalent : monthlyDisplayPrice;
+  const period = '/mo';
   const alternatePrice = isYearly
-    ? `$${Math.round(yearlyPrice / 12)}/mo`
-    : `$${yearlyPrice}/yr`;
-  const alternateText = isYearly ? 'billed yearly' : 'billed yearly';
+    ? `$${yearlyDiscountedPrice} billed yearly`
+    : 'billed monthly';
 
   const cardBaseClasses = `relative border-2 transition-all duration-200 ${
     isPro
@@ -87,7 +89,7 @@ export function PricingTierCard({
           </span>
         </div>
         <div className={`font-mono text-xs ${textColorMutedClass} mt-1`}>
-          or {alternatePrice} {alternateText}
+          {alternatePrice}
         </div>
       </div>
 

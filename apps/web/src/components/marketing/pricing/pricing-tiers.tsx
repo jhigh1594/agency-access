@@ -111,8 +111,8 @@ export function PricingTiers() {
             <PricingTierCard
               name="Starter"
               description="For growing agencies getting started"
-              yearlyPrice={420}
-              monthlyPrice={35}
+              yearlyPrice={480}
+              monthlyPrice={40}
               isYearly={isYearly}
               features={tierFeatures.starter}
               buttonText="Start Free Trial"
@@ -131,8 +131,8 @@ export function PricingTiers() {
               <PricingTierCard
                 name="Agency"
                 description="For established agencies scaling fast"
-                yearlyPrice={900}
-                monthlyPrice={75}
+                yearlyPrice={1120}
+                monthlyPrice={93.33}
                 isYearly={isYearly}
                 isPopular={true}
                 features={tierFeatures.agency}
@@ -147,8 +147,8 @@ export function PricingTiers() {
             <PricingTierCard
               name="Pro"
               description="For large agencies with multi-brand needs"
-              yearlyPrice={2490}
-              monthlyPrice={208}
+              yearlyPrice={2240}
+              monthlyPrice={186.67}
               isYearly={isYearly}
               isPro={true}
               features={tierFeatures.pro}
