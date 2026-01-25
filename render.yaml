@@ -1,0 +1,97 @@
+services:
+  - type: web
+    name: agency-access-api
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install && npm run build --workspace=packages/shared && cd apps/api && npm run db:generate && npm run build
+    startCommand: cd apps/api && npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        sync: false
+      - key: API_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: INFISICAL_CLIENT_ID
+        sync: false
+      - key: INFISICAL_CLIENT_SECRET
+        sync: false
+      - key: INFISICAL_PROJECT_ID
+        sync: false
+      - key: INFISICAL_ENVIRONMENT
+        value: production
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: TIKTOK_APP_ID
+        sync: false
+      - key: TIKTOK_APP_SECRET
+        sync: false
+      - key: MAILCHIMP_CLIENT_ID
+        sync: false
+      - key: MAILCHIMP_CLIENT_SECRET
+        sync: false
+      - key: PINTEREST_CLIENT_ID
+        sync: false
+      - key: PINTEREST_CLIENT_SECRET
+        sync: false
+      - key: KLAVIYO_CLIENT_ID
+        sync: false
+      - key: KLAVIYO_CLIENT_SECRET
+        sync: false
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET_KEY
+        sync: false
+      - key: BEEHIIV_API_KEY
+        sync: false
+      - key: CREEM_API_KEY
+        sync: false
+      - key: CREEM_WEBHOOK_SECRET
+        sync: false
+      - key: CREEM_API_URL
+        value: https://api.creem.io/v1
+      - key: LOG_LEVEL
+        value: info
+
+  - type: web
+    name: agency-access-web
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install && npm run build --workspace=packages/shared && npm run build --workspace=apps/web
+    startCommand: cd apps/web && npm run start
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_BRANDFETCH_CLIENT_ID
+        sync: false
+      - key: NEXT_PUBLIC_CREEM_PUBLISHABLE_KEY
+        sync: false
