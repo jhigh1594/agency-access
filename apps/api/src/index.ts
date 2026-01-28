@@ -99,9 +99,14 @@ fastify.get('/', async () => {
 const start = async () => {
   try {
     // Start background workers (optional - graceful degradation if Redis unavailable)
+    // Use a timeout to prevent blocking server startup
     try {
       const { startNotificationWorker } = await import('./lib/queue.js');
-      await startNotificationWorker();
+      const workerPromise = startNotificationWorker();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Worker startup timeout')), 10000)
+      );
+      await Promise.race([workerPromise, timeoutPromise]);
       fastify.log.info('Notification worker started');
     } catch (workerErr) {
       fastify.log.warn('Failed to start notification worker (Redis may be unavailable)');

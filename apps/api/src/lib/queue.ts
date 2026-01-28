@@ -22,13 +22,14 @@ const connectionOptions = {
   enableReadyCheck: false,
   // Disable reconnection attempts in development when Redis is unavailable
   retryStrategy: (times: number) => {
-    if (env.NODE_ENV !== 'production') {
-      // In development, stop retrying after first failure
+    // Stop retrying after 3 attempts to prevent blocking server startup
+    if (times > 3) {
       return null;
     }
-    // In production, retry with exponential backoff
-    return Math.min(times * 50, 2000);
+    // Retry with exponential backoff
+    return Math.min(times * 100, 1000);
   },
+  connectTimeout: 5000, // 5 second connection timeout
 };
 
 // Create queues
