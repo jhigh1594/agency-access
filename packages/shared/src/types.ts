@@ -201,9 +201,9 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
 // Platform categorization for UI display
 export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
-  recommended: ['google', 'meta', 'linkedin'] as const,
+  recommended: ['google', 'meta', 'linkedin', 'pinterest'] as const,
   // Product-level platforms (legacy, still supported)
-  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'pinterest', 'klaviyo', 'shopify'] as const,
+  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify'] as const,
 } as const;
 
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
