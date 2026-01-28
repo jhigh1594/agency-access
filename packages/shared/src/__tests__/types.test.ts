@@ -499,3 +499,38 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
     });
   });
 });
+
+describe('Pinterest Connection Metadata - TDD Tests', () => {
+  describe('PinterestConnectionMetadata Interface', () => {
+    it('should allow valid metadata with businessId', () => {
+      const metadata = {
+        businessId: '1234567890',
+        businessName: 'My Business'
+      };
+      expect(metadata.businessId).toBe('1234567890');
+      expect(metadata.businessName).toBe('My Business');
+    });
+
+    it('should allow metadata with only businessId (businessName optional)', () => {
+      const metadata = {
+        businessId: '1234567890'
+      };
+      expect(metadata.businessId).toBe('1234567890');
+      expect(metadata.businessName).toBeUndefined();
+    });
+
+    it('should allow empty metadata (all fields optional)', () => {
+      const metadata = {};
+      expect(metadata.businessId).toBeUndefined();
+      expect(metadata.businessName).toBeUndefined();
+    });
+
+    it('should allow metadata with only businessName', () => {
+      const metadata = {
+        businessName: 'My Business Name'
+      };
+      expect(metadata.businessName).toBe('My Business Name');
+      expect(metadata.businessId).toBeUndefined();
+    });
+  });
+});

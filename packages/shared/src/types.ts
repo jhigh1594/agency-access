@@ -142,10 +142,16 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     'advertiser.info',
   ],
   linkedin: [
+    'openid',
+    'profile',
+    'email',
     'rw_ads',
     'r_ads_reporting',
   ],
   linkedin_ads: [
+    'openid',
+    'profile',
+    'email',
     'rw_ads',
     'r_ads_reporting',
   ],
@@ -561,6 +567,22 @@ export interface GoogleAssetSettings {
     accountId?: string;
     requestManageUsers?: boolean;
   };
+}
+
+// ============================================================
+// PINTEREST ASSET TYPES
+// ============================================================
+
+/**
+ * Pinterest connection metadata
+ * Business ID is optional - Pinterest API works without it, but it's useful for:
+ * - Identifying which business the connection represents
+ * - Future business-specific operations (audience sharing, partnerships)
+ * - Better metadata and reporting
+ */
+export interface PinterestConnectionMetadata {
+  businessId?: string;  // Pinterest Business ID from Business Manager
+  businessName?: string; // Optional: Business name for display
 }
 
 // ============================================================
