@@ -10,9 +10,10 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/agency-platforms/:platform/manual-connect', async (request, reply) => {
     const { platform } = request.params as { platform: string };
-    const { agencyId, invitationEmail } = request.body as {
+    const { agencyId, invitationEmail, businessId } = request.body as {
       agencyId?: string;
       invitationEmail?: string;
+      businessId?: string;
     };
 
     if (!MANUAL_PLATFORMS.includes(platform as any)) {
@@ -35,25 +36,53 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       });
     }
 
-    if (!invitationEmail) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'invitationEmail is required',
-        },
-      });
-    }
+    // Pinterest requires businessId, other platforms require invitationEmail
+    const isPinterest = platform === 'pinterest';
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(invitationEmail)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'INVALID_EMAIL',
-          message: 'Invalid email format',
-        },
-      });
+    if (isPinterest) {
+      // Validate Business ID for Pinterest (numeric, 1-20 digits)
+      if (!businessId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'businessId is required for Pinterest',
+          },
+        });
+      }
+
+      const businessIdRegex = /^\d{1,20}$/;
+      if (!businessIdRegex.test(businessId)) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'INVALID_BUSINESS_ID',
+            message: 'Pinterest Business ID must be 1-20 digits',
+          },
+        });
+      }
+    } else {
+      // Validate email for other manual platforms
+      if (!invitationEmail) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'invitationEmail is required',
+          },
+        });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(invitationEmail)) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'INVALID_EMAIL',
+            message: 'Invalid email format',
+          },
+        });
+      }
     }
 
     const { agencyResolutionService } = await import('../../services/agency-resolution.service.js');
@@ -96,14 +125,17 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         agencyId: actualAgencyId,
         platform,
         connectionMode: 'manual_invitation',
-        agencyEmail: invitationEmail.toLowerCase(),
+        agencyEmail: isPinterest ? null : invitationEmail!.toLowerCase(),
         secretId: null,
         status: 'active',
         verificationStatus: 'pending',
         connectedBy: 'agency',
         metadata: {
-          authMethod: 'manual_team_invitation',
-          invitationEmail: invitationEmail.toLowerCase(),
+          authMethod: isPinterest ? 'manual_partnership' : 'manual_team_invitation',
+          ...(isPinterest
+            ? { businessId }
+            : { invitationEmail: invitationEmail!.toLowerCase() }
+          ),
           invitationSentAt: new Date().toISOString(),
         },
       },
@@ -118,7 +150,10 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         metadata: {
           platform,
           connectionMode: 'manual_invitation',
-          invitationEmail: invitationEmail.toLowerCase(),
+          ...(isPinterest
+            ? { businessId }
+            : { invitationEmail: invitationEmail!.toLowerCase() }
+          ),
         },
         ipAddress: '0.0.0.0',
         userAgent: 'unknown',
@@ -130,6 +165,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         connectionId: connection.id,
         platform: connection.platform,
         agencyEmail: connection.agencyEmail,
+        businessId: isPinterest ? businessId : undefined,
         status: connection.status,
         connectedAt: connection.connectedAt,
       },
@@ -143,9 +179,10 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
    */
   fastify.patch('/agency-platforms/:platform/manual-invitation', async (request, reply) => {
     const { platform } = request.params as { platform: string };
-    const { agencyId, invitationEmail } = request.body as {
+    const { agencyId, invitationEmail, businessId } = request.body as {
       agencyId?: string;
       invitationEmail?: string;
+      businessId?: string;
     };
 
     if (!MANUAL_PLATFORMS.includes(platform as any)) {
@@ -168,25 +205,51 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       });
     }
 
-    if (!invitationEmail) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'invitationEmail is required',
-        },
-      });
-    }
+    // Pinterest requires businessId, other platforms require invitationEmail
+    const isPinterest = platform === 'pinterest';
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(invitationEmail)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'INVALID_EMAIL',
-          message: 'Invalid email format',
-        },
-      });
+    if (isPinterest) {
+      if (!businessId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'businessId is required for Pinterest',
+          },
+        });
+      }
+
+      const businessIdRegex = /^\d{1,20}$/;
+      if (!businessIdRegex.test(businessId)) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'INVALID_BUSINESS_ID',
+            message: 'Pinterest Business ID must be 1-20 digits',
+          },
+        });
+      }
+    } else {
+      if (!invitationEmail) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'invitationEmail is required',
+          },
+        });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(invitationEmail)) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'INVALID_EMAIL',
+            message: 'Invalid email format',
+          },
+        });
+      }
     }
 
     const { agencyResolutionService } = await import('../../services/agency-resolution.service.js');
@@ -226,11 +289,13 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     const updatedConnection = await prisma.agencyPlatformConnection.update({
       where: { id: existingConnection.id },
       data: {
-        agencyEmail: invitationEmail.toLowerCase(),
+        agencyEmail: isPinterest ? null : invitationEmail!.toLowerCase(),
         metadata: {
           ...((existingConnection.metadata as any) || {}),
-          invitationEmail: invitationEmail.toLowerCase(),
-          invitationEmailUpdatedAt: new Date().toISOString(),
+          ...(isPinterest
+            ? { businessId, businessIdUpdatedAt: new Date().toISOString() }
+            : { invitationEmail: invitationEmail!.toLowerCase(), invitationEmailUpdatedAt: new Date().toISOString() }
+          ),
         },
       },
     });
@@ -244,7 +309,14 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         metadata: {
           platform,
           previousEmail: existingConnection.agencyEmail,
-          newEmail: invitationEmail.toLowerCase(),
+          newEmail: isPinterest ? null : invitationEmail!.toLowerCase(),
+          ...(isPinterest
+            ? {
+                previousBusinessId: (existingConnection.metadata as any)?.businessId,
+                newBusinessId: businessId,
+              }
+            : {}
+          ),
         },
         ipAddress: '0.0.0.0',
         userAgent: 'unknown',
@@ -256,6 +328,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         connectionId: updatedConnection.id,
         platform: updatedConnection.platform,
         agencyEmail: updatedConnection.agencyEmail,
+        businessId: isPinterest ? businessId : undefined,
         status: updatedConnection.status,
         connectedAt: updatedConnection.connectedAt,
       },

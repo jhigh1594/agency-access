@@ -6,7 +6,8 @@ import { LinkedInConnector } from '@/services/connectors/linkedin';
 import { BeehiivConnector } from '@/services/connectors/beehiiv';
 import { TikTokConnector } from '@/services/connectors/tiktok';
 import { MailchimpConnector } from '@/services/connectors/mailchimp';
-import { PinterestConnector } from '@/services/connectors/pinterest';
+// Pinterest uses manual invitation flow (team partnership), not OAuth
+// import { PinterestConnector } from '@/services/connectors/pinterest';
 import { KlaviyoConnector } from '@/services/connectors/klaviyo';
 import { ShopifyConnector } from '@/services/connectors/shopify';
 import type { Platform } from '@agency-platform/shared';
@@ -51,7 +52,7 @@ export const SUPPORTED_PLATFORMS = [
 ] as const;
 export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
-export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'] as const;
+export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest'] as const;
 
 export const PLATFORM_CONNECTORS = {
   google: GoogleConnector,
@@ -62,7 +63,8 @@ export const PLATFORM_CONNECTORS = {
   beehiiv: BeehiivConnector,
   tiktok: TikTokConnector,
   mailchimp: MailchimpConnector,
-  pinterest: PinterestConnector,
+  // Pinterest uses manual invitation flow (team partnership), not OAuth
+  // pinterest: PinterestConnector,
   klaviyo: KlaviyoConnector,
   shopify: ShopifyConnector,
 } as const;

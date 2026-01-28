@@ -301,15 +301,16 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
   // ========================================================================
   // PINTEREST PLATFORMS
   // ========================================================================
+  // Note: Pinterest uses manual partnership flow (team invitation), not OAuth
+  // This config is for type compatibility only
 
   pinterest: {
     name: 'Pinterest',
-    authUrl: 'https://www.pinterest.com/oauth/',
-    tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
+    authUrl: '', // Pinterest uses manual partnership flow, not OAuth
+    tokenUrl: '',
     scopeSeparator: ',',
-    userInfoUrl: 'https://api.pinterest.com/v5/user_account',
-    supportsRefreshTokens: true, // Continuous refresh tokens (don't expire)
-    defaultScopes: ['ads:read', 'ads:write', 'user_accounts:read'],
+    supportsRefreshTokens: false,
+    defaultScopes: [], // Pinterest uses manual partnership, not OAuth scopes
   },
 
   // ========================================================================

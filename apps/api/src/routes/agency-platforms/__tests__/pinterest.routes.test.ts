@@ -9,24 +9,21 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import { pinterestRoutes } from '../pinterest.routes.js';
 
-// Mock prisma decorator
-const mockPrisma = {
-  agencyPlatformConnection: {
-    findFirst: vi.fn(),
-    update: vi.fn(),
-  },
-  auditLog: {
-    create: vi.fn(),
-  },
-  agency: {
-    create: vi.fn(),
-    delete: vi.fn(),
-  },
-};
-
+// Mock prisma import
 vi.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
+  prisma: {
+    agencyPlatformConnection: {
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
+    auditLog: {
+      create: vi.fn(),
+    },
+  },
 }));
+
+// Import prisma mock after it's defined
+import { prisma as mockPrisma } from '@/lib/prisma';
 
 describe('Pinterest Agency Platform Routes', () => {
   let app: FastifyInstance;
@@ -34,9 +31,8 @@ describe('Pinterest Agency Platform Routes', () => {
   let testConnection: any;
 
   beforeEach(async () => {
-    // Setup Fastify app with prisma decorator
+    // Setup Fastify app
     app = Fastify();
-    app.decorate('prisma', mockPrisma);
 
     // Register Pinterest routes with prefix (same as in index.ts)
     await app.register(pinterestRoutes, { prefix: '/agency-platforms/pinterest' });
@@ -109,10 +105,10 @@ describe('Pinterest Agency Platform Routes', () => {
         data: expect.objectContaining({
           agencyId: testAgency.id,
           action: 'AGENCY_CONNECTED',
-          platform: 'pinterest',
+          agencyConnectionId: testConnection.id,
           metadata: expect.objectContaining({
+            platform: 'pinterest',
             businessId: '664351519939856629',
-            connectionId: testConnection.id,
           }),
         }),
       });
