@@ -190,7 +190,8 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     scopeSeparator: ' ',
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
     supportsRefreshTokens: true,
-    defaultScopes: ['rw_ads', 'r_ads_reporting'],
+    // OIDC scopes (openid, profile, email) required for /v2/userinfo endpoint
+    defaultScopes: ['openid', 'profile', 'email', 'rw_ads', 'r_ads_reporting'],
   },
 
   linkedin_ads: {
@@ -200,7 +201,8 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     scopeSeparator: ' ',
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
     supportsRefreshTokens: true,
-    defaultScopes: ['rw_ads', 'r_ads_reporting'],
+    // OIDC scopes (openid, profile, email) required for /v2/userinfo endpoint
+    defaultScopes: ['openid', 'profile', 'email', 'rw_ads', 'r_ads_reporting'],
   },
 
   // ========================================================================
