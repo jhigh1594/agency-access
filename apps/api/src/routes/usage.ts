@@ -6,8 +6,8 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { prisma } from '@/lib/prisma';
-import { clerkMetadataService } from '@/services/clerk-metadata.service';
+import { prisma } from '@/lib/prisma.js';
+import { clerkMetadataService } from '@/services/clerk-metadata.service.js';
 import { UsageSnapshot, MetricUsage } from '@agency-platform/shared';
 
 export async function usageRoutes(fastify: FastifyInstance) {

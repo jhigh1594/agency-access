@@ -11,10 +11,9 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { subscriptionService } from '../services/subscription.service';
-import { tierLimitsService } from '../services/tier-limits.service';
-import { webhookService } from '../services/webhook.service';
-import { sendError, sendSuccess, sendValidationError, sendNotFound } from '../lib/response';
+import { subscriptionService } from '../services/subscription.service.js';
+import { tierLimitsService } from '../services/tier-limits.service.js';
+import { sendError, sendSuccess, sendValidationError, sendNotFound } from '../lib/response.js';
 import { SubscriptionTier } from '@agency-platform/shared';
 
 export async function subscriptionRoutes(fastify: FastifyInstance) {
@@ -244,47 +243,4 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // ============================================================
-  // WEBHOOKS (no authentication required, signature verified)
-  // ============================================================
-
-  /**
-   * POST /api/webhooks/creem
-   * Handle webhook events from Creem
-   * Signature verification is required for security
-   */
-  fastify.post('/webhooks/creem', async (request, reply) => {
-    try {
-      const signature = request.headers['creem-signature'] as string;
-
-      if (!signature) {
-        return sendValidationError(reply, 'Missing Creem signature header');
-      }
-
-      // Get raw body for signature verification
-      const rawBody = request.raw as unknown as Buffer;
-      const payload = rawBody.toString('utf8');
-
-      // Verify signature
-      const isValid = webhookService.verifyWebhookSignature(payload, signature);
-
-      if (!isValid) {
-        fastify.log.warn({ signature }, 'POST /webhooks/creem: Invalid signature');
-        return sendError(reply, 'INVALID_SIGNATURE', 'Invalid webhook signature', 401);
-      }
-
-      // Parse and handle event
-      const event = JSON.parse(payload);
-      fastify.log.info({ eventType: event.type, eventId: event.id }, 'POST /webhooks/creem');
-
-      const result = await webhookService.handleWebhookEvent(event);
-
-      // Always return success to prevent retries
-      return reply.code(200).send({ received: true });
-    } catch (error) {
-      fastify.log.error({ error }, 'Error in POST /webhooks/creem');
-      // Always return success for webhooks to prevent retries
-      return reply.code(200).send({ received: true });
-    }
-  });
 }

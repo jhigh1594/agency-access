@@ -6,8 +6,8 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '@/lib/prisma';
-import { clerkMetadataService } from '@/services/clerk-metadata.service';
+import { prisma } from '@/lib/prisma.js';
+import { clerkMetadataService } from '@/services/clerk-metadata.service.js';
 import { MetricType, QuotaCheckResult, TIER_LIMITS, SubscriptionTier } from '@agency-platform/shared';
 
 export interface QuotaCheckOptions {
