@@ -45,7 +45,7 @@ export class GoogleAdsConnector {
   constructor() {
     this.clientId = env.GOOGLE_CLIENT_ID || '';
     this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    this.redirectUri = `${env.API_URL}/api/oauth/google-ads/callback`;
+    this.redirectUri = `${env.API_URL}/agency-platforms/google_ads/callback`;
   }
 
   /**

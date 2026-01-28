@@ -1,5 +1,6 @@
 import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
+import { LinkedInConnector } from '@/services/connectors/linkedin';
 // Kit now uses team invitation flow (manual), not OAuth
 // import { KitConnector } from '@/services/connectors/kit';
 import { BeehiivConnector } from '@/services/connectors/beehiiv';
@@ -55,7 +56,7 @@ export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'] as co
 export const PLATFORM_CONNECTORS = {
   google: GoogleConnector,
   meta: MetaConnector,
-  linkedin: MetaConnector, // LinkedIn not implemented yet, placeholder
+  linkedin: LinkedInConnector,
   // Kit uses team invitation flow (manual), not OAuth - no connector needed
   // kit: KitConnector,
   beehiiv: BeehiivConnector,

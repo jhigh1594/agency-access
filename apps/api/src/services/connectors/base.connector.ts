@@ -556,11 +556,11 @@ export abstract class BaseConnector {
    * Get OAuth redirect URI
    *
    * Constructs the callback URL for OAuth flow.
-   * Pattern: `{API_URL}/api/oauth/{platform}/callback`
+   * Pattern: `{API_URL}/agency-platforms/{platform}/callback`
    *
    * Override this for platforms with non-standard callback paths.
    */
   protected getRedirectUri(): string {
-    return `${env.API_URL}/api/oauth/${this.platform}/callback`;
+    return `${env.API_URL}/agency-platforms/${this.platform}/callback`;
   }
 }

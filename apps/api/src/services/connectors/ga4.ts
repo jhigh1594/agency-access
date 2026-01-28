@@ -39,7 +39,7 @@ export class GA4Connector {
     // Use unified Google OAuth credentials (shared across all Google products)
     this.clientId = env.GOOGLE_CLIENT_ID || '';
     this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    this.redirectUri = `${env.API_URL}/api/oauth/ga4/callback`;
+    this.redirectUri = `${env.API_URL}/agency-platforms/ga4/callback`;
   }
 
   /**
