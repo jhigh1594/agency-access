@@ -89,6 +89,7 @@ const SUPPORTED_PLATFORMS = [
   { id: 'google', name: 'Google', description: 'Google Ads, Analytics, Business, Tag Manager, Search Console, Merchant Center', type: 'oauth' },
   { id: 'meta', name: 'Meta', description: 'Facebook & Instagram Ads', type: 'oauth' },
   { id: 'linkedin', name: 'LinkedIn Ads', description: 'LinkedIn Ads', type: 'oauth' },
+  { id: 'pinterest', name: 'Pinterest', description: 'Pinterest Ads - manual partnership', type: 'manual' },
   { id: 'kit', name: 'Kit', description: 'Email marketing - team invitation', type: 'manual' },
   { id: 'mailchimp', name: 'Mailchimp', description: 'Email marketing - team invitation', type: 'manual' },
   { id: 'beehiiv', name: 'Beehiiv', description: 'Newsletter platform - team invitation', type: 'manual' },
@@ -208,7 +209,7 @@ export default function PlatformsPage() {
     setError(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest'];
     if (manualPlatforms.includes(platform)) {
       // Open manual invitation modal
       setManualInvitationPlatform(platform);

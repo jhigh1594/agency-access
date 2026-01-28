@@ -2,17 +2,18 @@
  * ManualInvitationModal Component
  *
  * Modal for connecting agency platforms that use team invitation flow
- * instead of OAuth. Agencies provide the email address that will receive
- * team invitations from clients.
+ * instead of OAuth. Agencies provide either:
+ * - Email address (for Kit, Mailchimp, Beehiiv, Klaviyo)
+ * - Business ID (for Pinterest)
  *
- * Used for: Kit, Mailchimp, Beehiiv, Klaviyo
+ * Used for: Kit, Mailchimp, Beehiiv, Klaviyo, Pinterest
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Mail, Info } from 'lucide-react';
+import { X, Loader2, Mail, Info, Building2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 
 // Platform display names
@@ -21,16 +22,20 @@ const PLATFORM_NAMES: Record<string, string> = {
   mailchimp: 'Mailchimp',
   beehiiv: 'Beehiiv',
   klaviyo: 'Klaviyo',
+  pinterest: 'Pinterest',
 };
+
+// Platforms that use Business ID instead of email
+const BUSINESS_ID_PLATFORMS = ['pinterest'];
 
 interface ManualInvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  platform: string; // 'kit' | 'mailchimp' | 'beehiiv' | 'klaviyo'
+  platform: string; // 'kit' | 'mailchimp' | 'beehiiv' | 'klaviyo' | 'pinterest'
   agencyId: string;
   onSuccess?: () => void;
-  mode?: 'create' | 'edit'; // 'create' for new connection, 'edit' to update email
-  currentEmail?: string; // Pre-filled email for edit mode
+  mode?: 'create' | 'edit'; // 'create' for new connection, 'edit' to update email/businessId
+  currentValue?: string; // Pre-filled value for edit mode
 }
 
 export function ManualInvitationModal({
@@ -40,42 +45,46 @@ export function ManualInvitationModal({
   agencyId,
   onSuccess,
   mode = 'create',
-  currentEmail = '',
+  currentValue = '',
 }: ManualInvitationModalProps) {
-  const [email, setEmail] = useState(currentEmail || '');
+  const [value, setValue] = useState(currentValue || '');
   const [error, setError] = useState<string | null>(null);
+
+  const isBusinessIdPlatform = BUSINESS_ID_PLATFORMS.includes(platform);
+  const platformName = PLATFORM_NAMES[platform] || platform;
 
   // Reset form when modal opens
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setEmail('');
+      setValue('');
       setError(null);
     }
   };
 
-  // Update email when currentEmail prop changes (for edit mode)
+  // Update value when currentValue prop changes (for edit mode)
   useEffect(() => {
-    if (mode === 'edit' && currentEmail) {
-      setEmail(currentEmail);
+    if (mode === 'edit' && currentValue) {
+      setValue(currentValue);
     }
-  }, [mode, currentEmail]);
+  }, [mode, currentValue]);
 
   // Connect mutation
   const { mutate: connectPlatform, isPending } = useMutation({
-    mutationFn: async (emailAddress: string) => {
+    mutationFn: async (inputValue: string) => {
       const endpoint = mode === 'edit'
         ? `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/manual-invitation`
         : `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/manual-connect`;
 
       const method = mode === 'edit' ? 'PATCH' : 'POST';
 
+      const body = isBusinessIdPlatform
+        ? { agencyId, businessId: inputValue }
+        : { agencyId, invitationEmail: inputValue };
+
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agencyId,
-          invitationEmail: emailAddress,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -97,17 +106,24 @@ export function ManualInvitationModal({
   const handleSubmit = () => {
     setError(null);
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      return;
+    if (isBusinessIdPlatform) {
+      // Validate Business ID (numeric, 1-20 digits)
+      const businessIdRegex = /^\d{1,20}$/;
+      if (!value || !businessIdRegex.test(value)) {
+        setError('Please enter a valid Business ID (1-20 digits)');
+        return;
+      }
+    } else {
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value || !emailRegex.test(value)) {
+        setError('Please enter a valid email address');
+        return;
+      }
     }
 
-    connectPlatform(email);
+    connectPlatform(value);
   };
-
-  const platformName = PLATFORM_NAMES[platform] || platform;
 
   if (!isOpen) return null;
 
@@ -137,14 +153,18 @@ export function ManualInvitationModal({
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-white">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-indigo-600" />
+                {isBusinessIdPlatform ? (
+                  <Building2 className="h-5 w-5 text-indigo-600" />
+                ) : (
+                  <Mail className="h-5 w-5 text-indigo-600" />
+                )}
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
                   {mode === 'edit' ? `Update ${platformName}` : `Connect ${platformName}`}
                 </h2>
                 <p className="text-xs text-slate-600">
-                  {mode === 'edit' ? 'Update invitation email' : 'Team invitation setup'}
+                  {isBusinessIdPlatform ? 'Business partnership setup' : mode === 'edit' ? 'Update invitation email' : 'Team invitation setup'}
                 </p>
               </div>
             </div>
@@ -167,10 +187,16 @@ export function ManualInvitationModal({
                 <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-900">
                   <p className="font-medium mb-1">How this works</p>
-                  <p className="text-blue-800">
-                    When requesting {platformName} account access, your client will invite{' '}
-                    <span className="font-medium">this email address</span> to their {platformName} account.
-                  </p>
+                  {isBusinessIdPlatform ? (
+                    <p className="text-blue-800">
+                      Your clients will use this Business ID to add your agency as a partner in their {platformName} Business Manager.
+                    </p>
+                  ) : (
+                    <p className="text-blue-800">
+                      When requesting {platformName} account access, your client will invite{' '}
+                      <span className="font-medium">this email address</span> to their {platformName} account.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -189,21 +215,25 @@ export function ManualInvitationModal({
             {/* Content */}
             <div>
               <div className="mb-5">
-                <label htmlFor="invitation-email" className="block text-sm font-medium text-slate-900 mb-2">
-                  Email to receive invitations
+                <label htmlFor={isBusinessIdPlatform ? 'business-id' : 'invitation-email'} className="block text-sm font-medium text-slate-900 mb-2">
+                  {isBusinessIdPlatform ? 'Pinterest Business ID' : 'Email to receive invitations'}
                 </label>
                 <input
-                  id="invitation-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your-agency@example.com"
+                  id={isBusinessIdPlatform ? 'business-id' : 'invitation-email'}
+                  type={isBusinessIdPlatform ? 'text' : 'email'}
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder={isBusinessIdPlatform ? '1234567890' : 'your-agency@example.com'}
+                  pattern={isBusinessIdPlatform ? '\\d{1,20}' : undefined}
+                  maxLength={isBusinessIdPlatform ? 20 : undefined}
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-colors"
                   disabled={isPending}
                   autoFocus
                 />
                 <p className="mt-2 text-xs text-slate-600">
-                  This email will receive team invitations from your clients
+                  {isBusinessIdPlatform
+                    ? 'Your Pinterest Business ID (1-20 digits, found in Business Manager)'
+                    : 'This email will receive team invitations from your clients'}
                 </p>
               </div>
 
@@ -223,7 +253,7 @@ export function ManualInvitationModal({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isPending || !email}
+                  disabled={isPending || !value}
                   className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isPending ? (
@@ -242,7 +272,9 @@ export function ManualInvitationModal({
           {/* Footer note */}
           <div className="px-6 py-3 bg-slate-50 border-t border-slate-200">
             <p className="text-xs text-slate-600 text-center">
-              You can change this email address later from your settings
+              {isBusinessIdPlatform
+                ? 'You can change this Business ID later from your settings'
+                : 'You can change this email address later from your settings'}
             </p>
           </div>
         </div>
