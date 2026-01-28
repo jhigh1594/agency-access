@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Mail, Info } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 
@@ -114,7 +114,7 @@ export function ManualInvitationModal({
   return (
     <AnimatePresence onExitComplete={() => handleOpenChange(false)}>
       {/* Backdrop */}
-      <motion.div
+      <m.div
         key="manual-invitation-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -124,7 +124,7 @@ export function ManualInvitationModal({
       />
 
       {/* Modal */}
-      <motion.div
+      <m.div
         key="manual-invitation-content"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -177,13 +177,13 @@ export function ManualInvitationModal({
 
             {/* Error message */}
             {error && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800"
               >
                 {error}
-              </motion.div>
+              </m.div>
             )}
 
             {/* Content */}
@@ -246,7 +246,7 @@ export function ManualInvitationModal({
             </p>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }
