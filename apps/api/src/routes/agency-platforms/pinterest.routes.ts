@@ -1,36 +1,28 @@
 import { FastifyInstance } from 'fastify';
-import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Pinterest agency platform routes
  * Handles Pinterest-specific platform connection operations
  */
 
-// Request schema for saving Business ID
-const SaveBusinessIdSchema = z.object({
-  agencyId: z.string().uuid(),
-  businessId: z.string().regex(/^\d{1,20}$/, 'Business ID must be 1-20 digits'),
-});
-
-// Convert Zod schema to JSON schema for Fastify validation
-const saveBusinessIdJsonSchema = {
-  type: 'object',
-  required: ['agencyId', 'businessId'],
-  properties: {
-    agencyId: {
-      type: 'string',
-      format: 'uuid',
-      description: 'Agency ID',
-    },
-    businessId: {
-      type: 'string',
-      pattern: '^\\d{1,20}$',
-      description: 'Pinterest Business ID (1-20 digits)',
-    },
-  },
-};
-
 export async function pinterestRoutes(fastify: FastifyInstance) {
+  // Set error handler for this plugin (encapsulated)
+  fastify.setErrorHandler((error: any, request: any, reply: any) => {
+    // Transform Fastify validation errors to match API error format
+    if (error.code === 'FST_ERR_VALIDATION') {
+      return reply.code(400).send({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: error.message || 'Invalid request data',
+        },
+      });
+    }
+
+    // For other errors, use default handling
+    reply.send(error);
+  });
+
   /**
    * PATCH /business-id
    * Save Pinterest Business ID to connection metadata
@@ -41,16 +33,31 @@ export async function pinterestRoutes(fastify: FastifyInstance) {
    */
   fastify.patch('/business-id', {
     schema: {
-      body: saveBusinessIdJsonSchema,
+      body: {
+        type: 'object',
+        required: ['agencyId', 'businessId'],
+        properties: {
+          agencyId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Agency ID',
+          },
+          businessId: {
+            type: 'string',
+            pattern: '^\\d{1,20}$',
+            minLength: 1,
+            maxLength: 20,
+            description: 'Pinterest Business ID (1-20 digits)',
+          },
+        },
+        additionalProperties: false,
+      },
     },
-  }, async (request, reply) => {
+  }, async (request: any, reply: any) => {
     const { agencyId, businessId } = request.body as {
       agencyId: string;
       businessId: string;
     };
-
-    // Use fastify.prisma instead of imported prisma
-    const prisma = fastify.prisma;
 
     // Get existing connection
     const connection = await prisma.agencyPlatformConnection.findFirst({
@@ -70,7 +77,7 @@ export async function pinterestRoutes(fastify: FastifyInstance) {
     }
 
     // Merge with existing metadata
-    const existingMetadata = (connection.metadata as any) || {};
+    const existingMetadata = (connection.metadata as Record<string, unknown> | null) || {};
     const updatedMetadata = {
       ...existingMetadata,
       businessId,
@@ -89,10 +96,12 @@ export async function pinterestRoutes(fastify: FastifyInstance) {
       data: {
         agencyId,
         action: 'AGENCY_CONNECTED',
-        platform: 'pinterest',
+        agencyConnectionId: connection.id,
+        ipAddress: request.ip || request.headers['x-forwarded-for'] || null,
+        userAgent: request.headers['user-agent'] || null,
         metadata: {
+          platform: 'pinterest',
           businessId,
-          connectionId: connection.id,
         },
       },
     });
