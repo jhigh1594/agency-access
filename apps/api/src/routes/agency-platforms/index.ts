@@ -5,6 +5,7 @@ import { registerConnectionRoutes } from './connection.routes.js';
 import { registerIdentityRoutes } from './identity.routes.js';
 import { registerManualRoutes } from './manual.routes.js';
 import { registerAssetRoutes } from './assets.routes.js';
+import { registerPinterestRoutes } from './pinterest.routes.js';
 
 export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
   /**
@@ -44,4 +45,5 @@ export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
   await registerIdentityRoutes(fastify);
   await registerManualRoutes(fastify);
   await registerAssetRoutes(fastify);
+  await registerPinterestRoutes(fastify);
 }
