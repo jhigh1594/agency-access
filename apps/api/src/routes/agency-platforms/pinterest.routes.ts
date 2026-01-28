@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
 
 /**
  * Pinterest agency platform routes
@@ -13,28 +12,45 @@ const SaveBusinessIdSchema = z.object({
   businessId: z.string().regex(/^\d{1,20}$/, 'Business ID must be 1-20 digits'),
 });
 
-export async function registerPinterestRoutes(fastify: FastifyInstance) {
+// Convert Zod schema to JSON schema for Fastify validation
+const saveBusinessIdJsonSchema = {
+  type: 'object',
+  required: ['agencyId', 'businessId'],
+  properties: {
+    agencyId: {
+      type: 'string',
+      format: 'uuid',
+      description: 'Agency ID',
+    },
+    businessId: {
+      type: 'string',
+      pattern: '^\\d{1,20}$',
+      description: 'Pinterest Business ID (1-20 digits)',
+    },
+  },
+};
+
+export async function pinterestRoutes(fastify: FastifyInstance) {
   /**
-   * PATCH /agency-platforms/pinterest/business-id
+   * PATCH /business-id
    * Save Pinterest Business ID to connection metadata
    *
    * This endpoint is called after successful Pinterest OAuth connection
    * to optionally store the Business ID for better organization and
    * future business-specific operations.
    */
-  fastify.patch('/agency-platforms/pinterest/business-id', async (request, reply) => {
-    const result = SaveBusinessIdSchema.safeParse(request.body);
+  fastify.patch('/business-id', {
+    schema: {
+      body: saveBusinessIdJsonSchema,
+    },
+  }, async (request, reply) => {
+    const { agencyId, businessId } = request.body as {
+      agencyId: string;
+      businessId: string;
+    };
 
-    if (!result.success) {
-      return reply.code(400).send({
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: result.error.errors[0]?.message || 'Invalid request data',
-        },
-      });
-    }
-
-    const { agencyId, businessId } = result.data;
+    // Use fastify.prisma instead of imported prisma
+    const prisma = fastify.prisma;
 
     // Get existing connection
     const connection = await prisma.agencyPlatformConnection.findFirst({

@@ -7,24 +7,25 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { registerPinterestRoutes } from '../pinterest.routes.js';
-import { prisma } from '@/lib/prisma';
+import { pinterestRoutes } from '../pinterest.routes.js';
 
-// Mock prisma
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    agencyPlatformConnection: {
-      findFirst: vi.fn(),
-      update: vi.fn(),
-    },
-    auditLog: {
-      create: vi.fn(),
-    },
-    agency: {
-      create: vi.fn(),
-      delete: vi.fn(),
-    },
+// Mock prisma decorator
+const mockPrisma = {
+  agencyPlatformConnection: {
+    findFirst: vi.fn(),
+    update: vi.fn(),
   },
+  auditLog: {
+    create: vi.fn(),
+  },
+  agency: {
+    create: vi.fn(),
+    delete: vi.fn(),
+  },
+};
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: mockPrisma,
 }));
 
 describe('Pinterest Agency Platform Routes', () => {
@@ -33,9 +34,12 @@ describe('Pinterest Agency Platform Routes', () => {
   let testConnection: any;
 
   beforeEach(async () => {
-    // Setup Fastify app
+    // Setup Fastify app with prisma decorator
     app = Fastify();
-    await registerPinterestRoutes(app);
+    app.decorate('prisma', mockPrisma);
+
+    // Register Pinterest routes with prefix (same as in index.ts)
+    await app.register(pinterestRoutes, { prefix: '/agency-platforms/pinterest' });
 
     // Create mock test data with valid UUIDs
     testAgency = {
@@ -63,12 +67,12 @@ describe('Pinterest Agency Platform Routes', () => {
   describe('PATCH /agency-platforms/pinterest/business-id', () => {
     it('should save Pinterest Business ID to connection metadata', async () => {
       // Mock prisma calls
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(testConnection);
-      vi.mocked(prisma.agencyPlatformConnection.update).mockResolvedValue({
+      vi.mocked(mockPrisma.agencyPlatformConnection.findFirst).mockResolvedValue(testConnection);
+      vi.mocked(mockPrisma.agencyPlatformConnection.update).mockResolvedValue({
         ...testConnection,
         metadata: { businessId: '664351519939856629' },
       });
-      vi.mocked(prisma.auditLog.create).mockResolvedValue({} as any);
+      vi.mocked(mockPrisma.auditLog.create).mockResolvedValue({} as any);
 
       const response = await app.inject({
         method: 'PATCH',
@@ -85,14 +89,14 @@ describe('Pinterest Agency Platform Routes', () => {
       expect(json.data.metadata.businessId).toBe('664351519939856629');
 
       // Verify prisma calls
-      expect(prisma.agencyPlatformConnection.findFirst).toHaveBeenCalledWith({
+      expect(mockPrisma.agencyPlatformConnection.findFirst).toHaveBeenCalledWith({
         where: {
           agencyId: testAgency.id,
           platform: 'pinterest',
         },
       });
 
-      expect(prisma.agencyPlatformConnection.update).toHaveBeenCalledWith({
+      expect(mockPrisma.agencyPlatformConnection.update).toHaveBeenCalledWith({
         where: { id: testConnection.id },
         data: {
           metadata: expect.objectContaining({
@@ -101,7 +105,7 @@ describe('Pinterest Agency Platform Routes', () => {
         },
       });
 
-      expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           agencyId: testAgency.id,
           action: 'AGENCY_CONNECTED',
@@ -164,7 +168,7 @@ describe('Pinterest Agency Platform Routes', () => {
 
     it('should return 404 if connection does not exist', async () => {
       // Mock no connection found
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(null);
+      vi.mocked(mockPrisma.agencyPlatformConnection.findFirst).mockResolvedValue(null);
 
       const response = await app.inject({
         method: 'PATCH',
@@ -191,10 +195,10 @@ describe('Pinterest Agency Platform Routes', () => {
         },
       };
 
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(
+      vi.mocked(mockPrisma.agencyPlatformConnection.findFirst).mockResolvedValue(
         connectionWithExistingMetadata
       );
-      vi.mocked(prisma.agencyPlatformConnection.update).mockResolvedValue({
+      vi.mocked(mockPrisma.agencyPlatformConnection.update).mockResolvedValue({
         ...connectionWithExistingMetadata,
         metadata: {
           existingField: 'existing-value',
@@ -202,7 +206,7 @@ describe('Pinterest Agency Platform Routes', () => {
           businessId: '664351519939856629',
         },
       });
-      vi.mocked(prisma.auditLog.create).mockResolvedValue({} as any);
+      vi.mocked(mockPrisma.auditLog.create).mockResolvedValue({} as any);
 
       const response = await app.inject({
         method: 'PATCH',
@@ -216,7 +220,7 @@ describe('Pinterest Agency Platform Routes', () => {
       expect(response.statusCode).toBe(200);
 
       // Verify update preserves existing metadata
-      expect(prisma.agencyPlatformConnection.update).toHaveBeenCalledWith({
+      expect(mockPrisma.agencyPlatformConnection.update).toHaveBeenCalledWith({
         where: { id: testConnection.id },
         data: {
           metadata: {
