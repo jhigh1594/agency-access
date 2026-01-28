@@ -1,0 +1,174 @@
+{
+  "project": "Agency Access Platform",
+  "branchName": "ralph/agency-access-platform",
+  "description": "OAuth aggregation platform for marketing agencies to collect client access credentials across multiple advertising platforms",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Setup project foundation",
+      "description": "Ensure database schema, shared types, and core infrastructure are in place",
+      "acceptanceCriteria": [
+        "Prisma schema has all required models",
+        "Shared types are defined and exported",
+        "Infisical integration is working",
+        "Clerk authentication is configured",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Foundation must be solid before building features"
+    },
+    {
+      "id": "US-002",
+      "title": "Implement OAuth connector for Meta",
+      "description": "Create MetaConnector class with OAuth flow, token exchange, and refresh",
+      "acceptanceCriteria": [
+        "getAuthUrl() generates correct OAuth URL",
+        "exchangeCode() successfully exchanges authorization code for tokens",
+        "refreshToken() refreshes expired tokens",
+        "Tokens are stored in Infisical, only secretId in database",
+        "Tests pass for all connector methods",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Meta is the most common platform, start here"
+    },
+    {
+      "id": "US-003",
+      "title": "Create access request API endpoints",
+      "description": "Build API routes for creating and retrieving access requests",
+      "acceptanceCriteria": [
+        "POST /api/access-requests creates new request",
+        "GET /api/access-requests/:token retrieves request for client view",
+        "Input validation with Zod",
+        "Returns { data, error } response shape",
+        "Tests pass for all endpoints",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Core API functionality"
+    },
+    {
+      "id": "US-004",
+      "title": "Build client authorization page",
+      "description": "Create frontend page for clients to complete OAuth authorization",
+      "acceptanceCriteria": [
+        "Page displays branded authorization UI",
+        "Intake form renders custom fields",
+        "OAuth buttons redirect to platform consent screens",
+        "OAuth callback stores tokens in Infisical",
+        "Success confirmation page displays",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Client-facing UI is critical"
+    },
+    {
+      "id": "US-005",
+      "title": "Add additional platform connectors",
+      "description": "Implement OAuth connectors for Google, TikTok, LinkedIn, Snapchat",
+      "acceptanceCriteria": [
+        "GoogleConnector implemented and tested",
+        "TikTokConnector implemented and tested",
+        "LinkedInConnector implemented and tested",
+        "SnapchatConnector implemented and tested",
+        "All tokens stored in Infisical",
+        "All tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Expand platform coverage"
+    },
+    {
+      "id": "US-006",
+      "title": "Build token health dashboard",
+      "description": "Create dashboard showing token status and expiration for all connections",
+      "acceptanceCriteria": [
+        "Dashboard displays all client connections",
+        "Status badges show health (green/yellow/red/gray)",
+        "Expiration countdown displays correctly",
+        "Refresh Now button triggers manual refresh",
+        "Filters and sorting work correctly",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Agency visibility into token health"
+    },
+    {
+      "id": "US-007",
+      "title": "Implement automated token refresh job",
+      "description": "Create BullMQ job that automatically refreshes expiring tokens",
+      "acceptanceCriteria": [
+        "Job runs every 6 hours",
+        "Identifies tokens expiring within 7 days",
+        "Successfully refreshes tokens",
+        "Updates database and Infisical",
+        "Logs refresh events in AuditLog",
+        "Handles failures with retry logic",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Automated maintenance"
+    },
+    {
+      "id": "US-008",
+      "title": "Add white-label branding",
+      "description": "Implement custom logo, colors, and subdomain support",
+      "acceptanceCriteria": [
+        "Logo upload with validation",
+        "Color picker for primary color",
+        "Subdomain uniqueness validation",
+        "Branded pages apply customization",
+        "Email notifications use branding",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Enterprise feature"
+    },
+    {
+      "id": "US-009",
+      "title": "Handle edge cases and errors",
+      "description": "Implement comprehensive error handling for all failure scenarios",
+      "acceptanceCriteria": [
+        "Invalid/expired links show friendly errors",
+        "OAuth denials handled gracefully",
+        "Token refresh failures alert agencies",
+        "All error messages are clear and actionable",
+        "Edge cases from PRD are covered",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Production readiness"
+    },
+    {
+      "id": "US-010",
+      "title": "Final polish and verification",
+      "description": "Verify all requirements met, fix any remaining issues",
+      "acceptanceCriteria": [
+        "All tests passing",
+        "No TypeScript errors",
+        "All PRD acceptance criteria met",
+        "Code follows CLAUDE.md patterns",
+        "Documentation updated",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Final verification before completion"
+    }
+  ]
+}

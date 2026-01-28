@@ -1,0 +1,7 @@
+# Ralph Progress Log
+Started: $(date)
+
+## Codebase Patterns
+(Add reusable patterns here as they're discovered)
+
+---
