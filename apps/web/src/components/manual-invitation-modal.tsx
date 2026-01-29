@@ -13,7 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Mail, Info, Building2 } from 'lucide-react';
+import { X, Loader2, Mail, Info, Building2, ExternalLink } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 
 // Platform display names
@@ -232,10 +232,41 @@ export function ManualInvitationModal({
                 />
                 <p className="mt-2 text-xs text-slate-600">
                   {isBusinessIdPlatform
-                    ? 'Your Pinterest Business ID (1-20 digits, found in Business Manager)'
+                    ? 'Your Pinterest Business ID (1-20 digits)'
                     : 'This email will receive team invitations from your clients'}
                 </p>
               </div>
+
+              {/* Find your Business ID helper - Pinterest only */}
+              {isBusinessIdPlatform && (
+                <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-slate-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-slate-900 mb-1">Find your Business ID</p>
+                      <p className="text-slate-600 mb-2">
+                        You can find your Pinterest Business ID in{' '}
+                        <a
+                          href={
+                            value && /^\d{1,20}$/.test(value)
+                              ? `https://www.pinterest.com/business/business-manager/${value}/settings/`
+                              : 'https://www.pinterest.com/business/business-manager/'
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+                        >
+                          Pinterest Business Manager
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </p>
+                      <p className="text-slate-500 text-xs">
+                        Go to Dashboard → Business settings to find your ID
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-3">

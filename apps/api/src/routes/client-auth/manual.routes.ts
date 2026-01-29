@@ -192,10 +192,9 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       });
     }
   });
-}
 
-// Pinterest manual connection endpoint (partnership flow)
-fastify.post('/client/:token/pinterest/manual-connect', async (request, reply) => {
+  // Pinterest manual connection endpoint (partnership flow)
+  fastify.post('/client/:token/pinterest/manual-connect', async (request, reply) => {
   const { token } = request.params as { token: string };
 
   const manualConnectSchema = z.object({

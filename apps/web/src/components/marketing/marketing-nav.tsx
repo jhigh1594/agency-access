@@ -140,6 +140,7 @@ export function MarketingNav() {
           <Link href="#trusted-by-agencies" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Features</Link>
           <Link href="#how-it-works" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">How It Works</Link>
           <Link href="/pricing" className="px-4 py-2 text-sm font-bold text-coral border-2 border-black rounded-none hover:bg-coral hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Pricing</Link>
+          <Link href="/blog" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-teal border-2 border-black rounded-none hover:bg-teal hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Blog</Link>
         </div>
 
         {/* Desktop Actions - Brutalist buttons */}
@@ -224,6 +225,13 @@ export function MarketingNav() {
                       className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-coral bg-coral/5 text-coral hover:bg-coral hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
                     >
                       Pricing
+                    </Link>
+                    <Link
+                      href="/blog"
+                      onClick={handleLinkClick}
+                      className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-teal bg-teal/5 text-teal hover:bg-teal hover:text-white hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
+                    >
+                      Blog
                     </Link>
                   </div>
 

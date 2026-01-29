@@ -208,7 +208,7 @@ function ConnectionsPageContent() {
     setErrorMessage(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest'];
     if (manualPlatforms.includes(platform)) {
       // Open manual invitation modal in create mode
       setManualInvitationPlatform(platform);

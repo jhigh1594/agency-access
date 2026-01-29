@@ -76,6 +76,7 @@ export function MarketingFooter() {
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
                 <li><Link href="#trusted-by-agencies" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
                 <li><Link href="#how-it-works" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
+                <li><Link href="/blog" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Blog</Link></li>
               </ul>
             </div>
             <div>

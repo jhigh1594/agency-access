@@ -11,11 +11,14 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 const isPublicRoute = createRouteMatcher([
   '/',
   '/pricing',
+  '/blog',
+  '/blog/(.*)',
+  '/compare',
+  '/compare/(.*)',
   '/authorize/(.*)',
   '/invite/(.*)',
   '/platforms/callback',
   '/onboarding/(.*)',
-  // Marketing routes are public (handled by route group)
 ])
 
 export default clerkMiddleware(async (auth, request) => {
