@@ -13,8 +13,8 @@ interface BlogPageProps {
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const selectedCategory = resolvedSearchParams.category as BlogCategory | undefined;
+  const { category } = await searchParams;
+  const selectedCategory = category as BlogCategory | undefined;
 
   // Filter posts by category if selected
   const posts = selectedCategory

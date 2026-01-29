@@ -19,16 +19,9 @@ export function BlogContent({ post }: BlogContentProps) {
   // Simple markdown-like parser (in production, use a proper markdown library)
   const renderContent = (content: string) => {
     return content.split("\n").map((line, index) => {
-      // Headers
+      // Skip h1 headers (#) since the title is already shown in the article header
       if (line.startsWith("# ")) {
-        return (
-          <h1
-            key={index}
-            className="font-dela text-4xl md:text-5xl text-ink mt-12 mb-6"
-          >
-            {line.replace("# ", "")}
-          </h1>
-        );
+        return null;
       }
       if (line.startsWith("## ")) {
         return (

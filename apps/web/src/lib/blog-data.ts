@@ -187,8 +187,8 @@ As your agency grows from 10 to 100 clients, manual access management becomes a 
     publishedAt: "2024-01-15",
     readTime: 8,
     author: {
-      name: "Sarah Chen",
-      role: "Head of Partnerships",
+      name: "Jon High",
+      role: "Founder",
     },
     tags: ["Meta Ads", "Facebook Ads", "Instagram Ads", "client onboarding"],
     metaTitle: "How to Get Meta Ads Access From Clients: 2024 Guide",
@@ -436,8 +436,8 @@ As you grow from 10 to 100 clients, consider:
     publishedAt: "2024-01-16",
     readTime: 10,
     author: {
-      name: "Marcus Johnson",
-      role: "PPC Specialist",
+      name: "Jon High",
+      role: "Founder",
     },
     tags: ["Google Ads", "MCC", "manager account", "permissions"],
     metaTitle: "Google Ads Access Guide: Agency Permissions 2024",
@@ -700,8 +700,8 @@ As you grow from 10 to 100 clients:
     publishedAt: "2024-01-17",
     readTime: 9,
     author: {
-      name: "Marcus Johnson",
-      role: "Analytics Lead",
+      name: "Jon High",
+      role: "Founder",
     },
     tags: ["GA4", "Google Analytics", "analytics", "property access"],
     metaTitle: "GA4 Access for Agencies: Step-by-Step Guide 2024",
@@ -961,8 +961,8 @@ All three platforms allow you to:
     publishedAt: "2024-01-18",
     readTime: 12,
     author: {
-      name: "Sarah Chen",
-      role: "Head of Partnerships",
+      name: "Jon High",
+      role: "Founder",
     },
     tags: [
       "Leadsie",
