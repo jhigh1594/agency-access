@@ -479,7 +479,7 @@ function ConnectionsPageContent() {
           agencyId={agencyId}
           onSuccess={handleManualSuccess}
           mode={isEditingEmail ? 'edit' : 'create'}
-          currentEmail={currentEmail}
+          currentValue={currentEmail}
         />
       )}
     </div>

@@ -408,7 +408,7 @@ export function HierarchicalPlatformSelector({
           agencyId={agencyId}
           onSuccess={handleManualSuccess}
           mode="edit"
-          currentEmail={editingEmail}
+          currentValue={editingEmail}
         />
       )}
     </div>
