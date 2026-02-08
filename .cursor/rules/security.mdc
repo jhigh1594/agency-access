@@ -1,0 +1,49 @@
+---
+description: Security and compliance requirements
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+# Security Rules
+
+## Token Storage (NON-NEGOTIABLE)
+- NEVER store OAuth tokens directly in PostgreSQL
+- ALWAYS use Infisical for token storage
+- Store only `secretId` references in database fields:
+  - `PlatformAuthorization.secretId`
+  - `AgencyPlatformConnection.secretId`
+
+## Audit Logging
+- Log ALL token access in AuditLog table
+- Required fields: user email, IP address, timestamp, action
+- Actions: token_viewed, access_granted, access_revoked, AGENCY_CONNECTED, AGENCY_DISCONNECTED, AGENCY_TOKEN_REFRESHED
+- Include metadata, ipAddress, userAgent where applicable
+
+## Authentication
+- Verify Clerk JWT on every API request
+- Use middleware for auth verification
+- Never trust client-provided user IDs
+
+## Authorization
+- Enforce agency member roles (admin/member/viewer)
+- Check permissions before data access
+- Scope queries to user's agency
+
+## OAuth Security
+- Use Redis-backed CSRF tokens for all OAuth flows
+- Validate state parameter on callback
+- Exchange codes immediately, don't store
+- Rotate Infisical Machine Identity credentials quarterly
+
+## Data Protection
+- Never commit .env files
+- Never log tokens or secrets
+- Sanitize error messages (don't leak internal details)
+- Access requests expire after 7 days by default
+
+## Code Review Checklist
+- [ ] No tokens stored in database
+- [ ] Audit log entries for sensitive operations
+- [ ] Auth middleware on protected routes
+- [ ] Role checks for privileged operations
+- [ ] Input validation with Zod

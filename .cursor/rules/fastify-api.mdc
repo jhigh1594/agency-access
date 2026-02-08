@@ -1,0 +1,44 @@
+---
+description: Fastify backend patterns for the API
+globs: ["apps/api/**/*.ts"]
+alwaysApply: true
+---
+
+# Fastify API Rules
+
+## Route Structure
+- Group routes by domain (auth, connections, platforms)
+- Use Fastify plugins for route registration
+- Validate all inputs with Zod schemas
+
+## Response Format
+- Success: `{ data: T }`
+- Error: `{ error: { code: string, message: string, details?: any } }`
+- Use consistent HTTP status codes (200, 201, 400, 401, 403, 404, 500)
+
+## Error Handling
+- Catch known errors, return typed error responses
+- Let unexpected errors bubble to Fastify error handler
+- Log errors with Pino (structured logging)
+
+## Security (CRITICAL)
+- NEVER store OAuth tokens in PostgreSQL
+- Store tokens in Infisical, only store `secretId` in database
+- Log all token access in AuditLog table
+- Verify Clerk JWT on every request
+- Use Redis-backed OAuth state for CSRF protection
+
+## Database
+- Use Prisma for all database operations
+- Respect unique constraints (see CLAUDE.md for model relationships)
+- Use transactions for multi-step operations
+
+## Services
+- Keep route handlers thin - delegate to services
+- Services handle business logic, connectors handle external APIs
+- Use dependency injection for testability
+
+## Connectors
+- Extend BaseConnector for OAuth flows
+- Store platform metadata in PlatformAuthorization.metadata as JSON
+- Implement required methods: getAuthUrl, exchangeCode, verifyToken, getUserInfo

@@ -1,0 +1,55 @@
+---
+description: UI/UX and accessibility standards
+globs: ["apps/web/**/*.tsx", "**/*.css"]
+alwaysApply: true
+---
+
+# UI/UX Rules
+
+## Design System
+- Use shadcn/ui components from `components/ui/`
+- Follow Tailwind design tokens for consistency
+- Use 8px grid system for spacing (xs: 8px, sm: 12px, md: 16px, lg: 24px, xl: 32px)
+
+## Accessibility (WCAG 2.1 AA)
+- Minimum contrast: 4.5:1 for normal text, 3:1 for large text
+- All interactive elements must be keyboard accessible
+- Use semantic HTML elements (main, article, section, nav)
+- Include proper ARIA labels for screen readers
+- Respect `prefers-reduced-motion` for animations
+
+## Component Patterns
+```tsx
+// Always include ARIA attributes
+<button
+  aria-label="Close modal"
+  aria-expanded={isOpen}
+  aria-controls="modal-content"
+  onClick={onClose}
+>
+  <X aria-hidden="true" />
+</button>
+```
+
+## Loading & Error States
+- Show loading indicators for async operations
+- Provide meaningful error messages
+- Include empty states with clear next actions
+- Use skeleton loaders for content placeholders
+
+## Forms
+- Label all inputs (visible or aria-label)
+- Show validation errors inline
+- Disable submit during processing
+- Provide success feedback
+
+## Responsive Design
+- Mobile-first approach
+- Test on common breakpoints (sm: 640px, md: 768px, lg: 1024px, xl: 1280px)
+- Touch targets minimum 44x44px on mobile
+
+## Performance
+- LCP < 2.5s, FID < 100ms, CLS < 0.1
+- Lazy load below-fold content
+- Optimize images with next/image
+- Use CSS transforms for animations (not layout properties)

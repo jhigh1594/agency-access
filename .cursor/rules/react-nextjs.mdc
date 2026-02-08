@@ -1,0 +1,40 @@
+---
+description: React and Next.js patterns for the web app
+globs: ["apps/web/**/*.tsx", "apps/web/**/*.ts"]
+alwaysApply: true
+---
+
+# React & Next.js Rules
+
+## Component Architecture
+- Use Server Components by default, Client Components only when needed (interactivity, hooks, browser APIs)
+- Colocate components with their routes when route-specific
+- Extract reusable components to `components/ui/` (shadcn) or `components/feature/`
+
+## State Management
+- Server state: TanStack Query (useQuery, useMutation)
+- Client state: useState/useReducer for local, Zustand for global
+- Form state: React Hook Form + Zod validation
+- URL state: useSearchParams for shareable state
+
+## Performance
+- Use `loading.tsx` and Suspense boundaries for async data
+- Lazy load heavy components with `dynamic()`
+- Optimize images with next/image (priority for above-fold)
+- Avoid layout shifts - reserve space for dynamic content
+
+## Patterns
+- Prefer composition over prop drilling
+- Use custom hooks to encapsulate logic (useAccessRequest, useConnection)
+- Keep components focused - extract logic to hooks, utilities to lib/
+
+## Styling
+- Tailwind CSS utilities first
+- Use shadcn/ui components from `components/ui/`
+- Follow design tokens for colors, spacing, typography
+- Mobile-first responsive design
+
+## Data Fetching
+- Fetch in Server Components when possible
+- Use TanStack Query for client-side fetching with proper staleTime/cacheTime
+- Handle loading, error, and empty states explicitly

@@ -1,0 +1,35 @@
+---
+description: TypeScript best practices for this monorepo
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+# TypeScript Rules
+
+## Strict Type Safety
+- Enable strict mode in all tsconfig files
+- Avoid `any` - use `unknown` with type guards when type is truly unknown
+- Prefer explicit return types on exported functions
+- Use Zod schemas for runtime validation of external data (API responses, env vars)
+
+## Import Organization
+- Group imports: external libs → workspace aliases (@/...) → relative paths
+- Use workspace aliases: `@agency-platform/shared` for shared types
+- Avoid circular imports between packages
+
+## Type Patterns
+- Use discriminated unions over optional properties for state
+- Prefer `interface` for object shapes, `type` for unions/intersections
+- Export types alongside their implementations
+- Use `as const` for literal types
+
+## Error Handling
+- Use typed error objects with `code` and `message` properties
+- Throw errors early, catch at boundaries
+- Preserve error codes: INVALID_TOKEN, VALIDATION_ERROR, NOT_FOUND, UNAUTHORIZED, FORBIDDEN, PLATFORM_ERROR
+
+## Naming
+- camelCase for variables/functions
+- PascalCase for types/interfaces/classes/components
+- UPPER_SNAKE_CASE for constants
+- Prefix interfaces with context, not "I" (e.g., `AccessRequest` not `IAccessRequest`)

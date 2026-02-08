@@ -1,0 +1,52 @@
+---
+description: Test-driven development requirements
+globs: ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"]
+alwaysApply: true
+---
+
+# Testing & TDD Rules
+
+## TDD Cycle (MUST FOLLOW)
+1. **Red**: Write a failing test for desired behavior
+2. **Green**: Write MINIMUM code to make test pass
+3. **Refactor**: Improve code while keeping tests green
+4. **Repeat** for each small piece of functionality
+
+## Test Structure
+- Backend: `__tests__/` directories next to source files
+- Frontend: `__tests__/` directories next to components
+- Use Vitest for all tests
+- Use Testing Library for React components
+
+## Test Naming
+- Describe behavior, not implementation
+- Good: `should revoke OAuth token and log audit entry`
+- Bad: `should call infisical.delete() and prisma.auditLog.create()`
+
+## Coverage Targets
+- Backend: 80% minimum, 90% for critical paths (OAuth, token storage)
+- Frontend: 70% for components, 90% for utilities/hooks
+- Shared: 95%+ (types and schemas are critical)
+
+## What to Test
+- Services: business logic, error handling, edge cases
+- Components: rendering, user interactions, state changes
+- Hooks: state transitions, side effects
+- API routes: input validation, response format, auth
+
+## What NOT to Test
+- Config files (tsconfig, vite.config)
+- Type definitions (without runtime validation)
+- Styling/CSS (use visual regression instead)
+
+## Mocking
+- Mock external services (Infisical, platform APIs)
+- Mock database with in-memory or test database
+- Don't mock what you're testing
+
+## Running Tests
+```bash
+npm run test                    # All tests
+npm test -- --watch            # Watch mode
+npm test -- --coverage         # With coverage
+```
