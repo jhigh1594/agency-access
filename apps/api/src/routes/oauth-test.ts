@@ -2,15 +2,35 @@ import { FastifyInstance } from 'fastify';
 import { metaConnector } from '../services/connectors/meta.js';
 import { infisical } from '../lib/infisical.js';
 import { oauthStateService } from '../services/oauth-state.service.js';
+import { env } from '../lib/env.js';
+import { authenticate } from '../middleware/auth.js';
 
 /**
  * Test routes for Meta OAuth flow
  *
  * IMPORTANT: These are temporary test routes for MLP validation
  * In production, these will be replaced with proper access request flows
+ *
+ * SECURITY: These routes are disabled in production and require authentication
  */
 
 export async function oauthTestRoutes(fastify: FastifyInstance) {
+  // Disable test routes in production
+  if (env.NODE_ENV === 'production') {
+    fastify.get('/api/oauth/meta/test', async (request, reply) => {
+      return reply.code(404).send({ error: 'Not found' });
+    });
+    fastify.get('/api/oauth/meta/callback', async (request, reply) => {
+      return reply.code(404).send({ error: 'Not found' });
+    });
+    fastify.get('/api/oauth/meta/verify/:secretName', async (request, reply) => {
+      return reply.code(404).send({ error: 'Not found' });
+    });
+    return;
+  }
+
+  // Require authentication for test routes in non-production environments
+  fastify.addHook('onRequest', authenticate());
   /**
    * Step 1: Initiate OAuth flow
    * GET /api/oauth/meta/test
@@ -35,7 +55,7 @@ export async function oauthTestRoutes(fastify: FastifyInstance) {
       });
     }
 
-    fastify.log.info({ state }, 'Generated OAuth state token');
+    fastify.log.info({ state: state ? state.substring(0, 8) + '...' : 'null' }, 'Generated OAuth state token');
 
     // Generate Meta authorization URL with only public_profile (always available)
     // Note: Even 'email' requires enabling "Email" permission in app settings
@@ -91,7 +111,7 @@ export async function oauthTestRoutes(fastify: FastifyInstance) {
       }
 
       fastify.log.info(
-        { state, agencyId: stateData.agencyId, platform: stateData.platform },
+        { state: state ? state.substring(0, 8) + '...' : 'null', agencyId: stateData.agencyId, platform: stateData.platform },
         'OAuth state validated successfully'
       );
 
@@ -151,15 +171,6 @@ export async function oauthTestRoutes(fastify: FastifyInstance) {
               .details h3 {
                 margin-top: 0;
               }
-              .token {
-                font-family: monospace;
-                font-size: 12px;
-                word-break: break-all;
-                background: #fff;
-                padding: 10px;
-                border-radius: 4px;
-                margin: 10px 0;
-              }
             </style>
           </head>
           <body>
@@ -172,17 +183,13 @@ export async function oauthTestRoutes(fastify: FastifyInstance) {
               <p><strong>User:</strong> ${userInfo.name} (Marketing API - email not available)</p>
               <p><strong>Meta ID:</strong> ${userInfo.id}</p>
               <p><strong>Token Expires:</strong> ${longLivedToken.expiresAt?.toLocaleString()}</p>
-              <p><strong>Infisical Secret:</strong> <code>${secretName}</code></p>
-
-              <h3>Access Token (preview)</h3>
-              <div class="token">
-                ${longLivedToken.accessToken.substring(0, 50)}...
-              </div>
+              <p><strong>Infisical Secret:</strong> <code>${secretName.substring(0, 20)}...</code></p>
 
               <p style="margin-top: 20px; color: #666; font-size: 14px;">
                 ✅ Token is securely stored in Infisical<br>
                 ✅ Never stored in database<br>
-                ✅ Valid for ~60 days
+                ✅ Valid for ~60 days<br>
+                ✅ Access token not exposed for security
               </p>
             </div>
           </body>
@@ -216,10 +223,10 @@ export async function oauthTestRoutes(fastify: FastifyInstance) {
 
       return {
         success: true,
-        secretName,
+        secretName: secretName.substring(0, 20) + '...',
         isValid,
         expiresAt: tokens.expiresAt,
-        tokenPreview: tokens.accessToken.substring(0, 20) + '...',
+        tokenLength: tokens.accessToken.length,
       };
     } catch (error) {
       fastify.log.error(error, 'Token verification error');
