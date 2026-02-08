@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import { randomBytes } from 'crypto';
 
 dotenv.config();
 
@@ -74,6 +75,17 @@ const envSchema = z.object({
   CREEM_API_URL: z.string().url().default('https://api.creem.io/v1'),
 
   LOG_LEVEL: z.string().default('info'),
+
+  // Rate Limiting
+  RATE_LIMIT_ENABLED: z.boolean().default(true),
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
+  RATE_LIMIT_TIME_WINDOW_SECONDS: z.coerce.number().default(60),
+  RATE_LIMIT_SKIP_AUTHENTICATED: z.boolean().default(true),
+
+  // OAuth State Security
+  OAUTH_STATE_HMAC_SECRET: z.string().default(() => {
+    return randomBytes(32).toString('hex');
+  }),
 });
 
 const parsedEnv = envSchema.parse(process.env);

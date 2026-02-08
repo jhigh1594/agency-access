@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma.js';
 import { env } from '../../lib/env.js';
 import type { Platform } from '@agency-platform/shared';
 import { oauthExchangeSchema } from './schemas.js';
+import { sanitizeOAuthError } from '../../lib/errors.js';
 
 export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
   // Exchange OAuth code for temporary session (token in path)
@@ -148,12 +149,11 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
+      const sanitized = sanitizeOAuthError(error);
+      fastify.log.error({ error, sanitized }, 'OAuth exchange failed');
       return reply.code(500).send({
         data: null,
-        error: {
-          code: 'OAUTH_ERROR',
-          message: `Failed to exchange OAuth code: ${error}`,
-        },
+        error: sanitized,
       });
     }
   });
@@ -304,12 +304,11 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
+      const sanitized = sanitizeOAuthError(error);
+      fastify.log.error({ error, sanitized }, 'OAuth exchange failed');
       return reply.code(500).send({
         data: null,
-        error: {
-          code: 'OAUTH_ERROR',
-          message: `Failed to exchange OAuth code: ${error}`,
-        },
+        error: sanitized,
       });
     }
   });

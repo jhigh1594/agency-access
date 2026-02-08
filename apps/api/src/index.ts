@@ -2,8 +2,12 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import compress from '@fastify/compress';
+import rateLimit from '@fastify/rate-limit';
+import helmet from '@fastify/helmet';
 import { env } from './lib/env.js';
 import { getCorsOptions } from './lib/cors.js';
+import { authenticate } from './middleware/auth.js';
+import { extractClientIp } from './lib/ip.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
 import { accessRequestRoutes } from './routes/access-requests.js';
@@ -40,6 +44,61 @@ await fastify.register(cors, getCorsOptions(env.FRONTEND_URL));
 await fastify.register(compress, {
   encodings: ['gzip', 'deflate', 'br'],
   threshold: 1024, // Only compress responses larger than 1KB
+});
+
+// Register rate limiting middleware (prevents DoS/brute force attacks)
+if (env.RATE_LIMIT_ENABLED) {
+  await fastify.register(rateLimit, {
+    global: true,
+    max: env.RATE_LIMIT_MAX_REQUESTS,
+    timeWindow: env.RATE_LIMIT_TIME_WINDOW_SECONDS * 1000,
+    skipOnError: true,
+    allowList: async (request) => {
+      // Skip rate limiting for authenticated users if configured
+      if (env.RATE_LIMIT_SKIP_AUTHENTICATED) {
+        try {
+          await request.jwtVerify();
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    },
+    keyGenerator: (request) => {
+      // Use IP address as rate limit key
+      return extractClientIp(request);
+    },
+    errorResponseBuilder: (request, context) => ({
+      data: null,
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests. Please try again later.',
+        details: {
+          limit: context.max,
+          reset: new Date(Date.now() + context.ttl).toISOString(),
+        },
+      },
+    }),
+  });
+}
+
+// Register security headers middleware
+await fastify.register(helmet, {
+  contentSecurityPolicy: false, // Disabled for OAuth compatibility
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+  frameguard: {
+    action: 'deny',
+  },
+  xssFilter: true,
+  noSniff: true,
+  referrerPolicy: {
+    policy: 'strict-origin-when-cross-origin',
+  },
 });
 
 // Register performance monitoring middleware
@@ -80,8 +139,10 @@ fastify.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-// Performance monitoring endpoint
-fastify.get('/performance-stats', async () => {
+// Performance monitoring endpoint (requires authentication)
+fastify.get('/performance-stats', {
+  onRequest: [authenticate()],
+}, async () => {
   const { getPerformanceStats } = await import('./middleware/performance.js');
   return getPerformanceStats();
 });

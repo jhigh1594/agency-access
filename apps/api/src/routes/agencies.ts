@@ -8,8 +8,11 @@
 import { FastifyInstance } from 'fastify';
 import { agencyService } from '../services/agency.service.js';
 import { sendError, sendValidationError } from '../lib/response.js';
+import { authenticate } from '../middleware/auth.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
+  // Add authentication middleware to all agency routes
+  fastify.addHook('onRequest', authenticate());
   // List agencies with optional filters
   fastify.get('/agencies', async (request, reply) => {
     try {

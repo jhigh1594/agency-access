@@ -7,6 +7,8 @@
 
 import { prisma } from '@/lib/prisma';
 import type { Platform } from '@agency-platform/shared';
+import type { FastifyRequest } from 'fastify';
+import { extractClientIp, extractUserAgent } from '@/lib/ip.js';
 
 /**
  * Log token access event
@@ -226,8 +228,13 @@ export async function createAuditLog(input: {
   ipAddress?: string;
   userAgent?: string;
   details?: Record<string, any>;
+  request?: FastifyRequest;
 }) {
   try {
+    // Extract IP and user agent from request if provided
+    const ipAddress = input.ipAddress || (input.request ? extractClientIp(input.request) : '0.0.0.0');
+    const userAgent = input.userAgent || (input.request ? extractUserAgent(input.request) : 'unknown');
+
     const auditLog = await prisma.auditLog.create({
       data: {
         agencyId: input.agencyId,
@@ -237,8 +244,8 @@ export async function createAuditLog(input: {
         resourceId: input.resourceId,
         agencyConnectionId: input.agencyConnectionId,
         metadata: input.details || input.metadata || {},
-        ipAddress: input.ipAddress,
-        userAgent: input.userAgent,
+        ipAddress,
+        userAgent,
       },
     });
 
