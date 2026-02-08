@@ -1,0 +1,209 @@
+# AIPMOS Workspace Configuration
+# This file configures the AI Product Management Operating System for your workspace.
+
+version: "1.0.0"
+
+# Workspace identification
+workspace:
+  name: "Agency Access Platform"
+  type: "product-development"
+
+# Path configuration (relative to workspace root)
+paths:
+  memory_bank: "memory-bank"
+  tasks_output: "tasks"
+  scripts: "scripts/automation"
+  product_content: "docs"
+  daily_plans: "memory-bank/daily-plans"
+  meeting_notes: "memory-bank/meetings"
+  specstory_history: ".specstory/history"
+
+# Context information for AI agents
+context:
+  company_name: "Agency Access Platform"
+  primary_product: "Agency Access Platform"
+  portfolio_products: ["Agency Access Platform", "Permission Management", "Client Onboarding"]
+  target_customers: "Agencies and their clients"
+
+# Integration settings
+integrations:
+  slack:
+    enabled: false
+    # Webhook URLs loaded from environment file
+
+  notion:
+    enabled: false
+    # API key loaded from environment file for security
+    # Default parent page/database (optional)
+    default_parent_page: null
+    default_database: null
+
+# Usage Analytics (AIPMOS Learning Loop)
+analytics:
+  enabled: true
+  storage_path: ".aipmos/analytics"
+  retention_days: 90
+  pattern_detection:
+    sequence_threshold: 5
+    combination_threshold: 0.5
+    frequency_window: 30
+
+# Memory Bank Maintenance
+memory_maintenance:
+  enabled: true
+  archive:
+    threshold_days: 90
+    archive_path: "memory-bank/archive"
+
+  # Bloat Prevention Settings
+  bloat_prevention:
+    max_lines: 150           # Maximum lines for memory.md
+    max_size_kb: 10         # Maximum file size in KB
+    keep_recent_sessions: 10 # Number of sessions to keep active
+    summarize_threshold: 50  # Sessions in archive before summarization
+
+  update_frequencies:
+    high: 7    # activeContext.md, progress.md
+    medium: 30 # systemPatterns.md, techContext.md
+    low: 90    # projectbrief.md, productContext.md
+
+  contradiction_detection:
+    enabled: true
+    confidence_threshold: 0.7
+
+# Session Tracking (Hybrid Memory Capture System)
+session_tracking:
+  enabled: true
+  storage_path: ".aipmos/sessions"
+  retention_days: 30
+
+  # Session Intent Capture - captures "why" behind work
+  intent_capture:
+    enabled: true
+    intent_file: ".aipmos/session-intent.json"
+    archive_path: ".aipmos/sessions-archive"
+
+  context_loading:
+    max_tokens: 3000
+    load_smart_summary: true
+    load_active_context: true
+    active_context_max_words: 1500
+
+  health_checks:
+    max_file_age_days:
+      high: 14
+      medium: 45
+      low: 120
+    max_file_size_words: 10000
+
+  suggestions:
+    enabled: true
+    min_commits_for_suggestion: 3
+    staleness_check_enabled: true
+
+# Events Database (Phase 1 Memory System - Passive Event Capture)
+events_db:
+  enabled: true
+  path: ".aipmos/events.db"
+  ttl_days: 7
+  vacuum_on_cleanup: true
+
+  observers:
+    command_usage:
+      enabled: true
+      capture_args: true
+
+    file_clusters:
+      enabled: true
+      cluster_timeout_seconds: 300
+
+    time_patterns:
+      enabled: true
+      track_idle_periods: true
+
+    success_signals:
+      enabled: true
+      signal_weights:
+        git_commit: 0.8
+        task_complete: 1.0
+        pr_merge: 0.9
+
+  summaries:
+    enabled: true
+    storage_path: ".aipmos/analytics/event_summaries.jsonl"
+
+# Pattern Detection & Learning (Phase 2)
+pattern_analysis:
+  enabled: true
+  analysis_interval_hours: 6
+
+  command_sequences:
+    enabled: true
+    min_occurrences: 3
+    sequence_length: 3
+
+  file_clusters:
+    enabled: true
+    similarity_threshold: 0.3
+    cluster_min_size: 2
+
+  time_patterns:
+    enabled: true
+    peak_window_hours: 2
+    min_sessions: 5
+
+  success_correlation:
+    enabled: true
+    correlation_window_minutes: 30
+    min_correlation: 0.5
+
+  insights:
+    enabled: true
+    max_insights: 10
+    claude_code_assist: true  # Trigger Claude Code for deeper analysis
+
+  memory_integration:
+    enabled: true
+    max_insights_display: 7
+    archive_after_days: 30
+
+  pattern_storage:
+    path: ".aipmos/patterns.db"
+    retention_days: 90
+
+# Predictive Suggestions (Phase 3)
+prediction:
+  enabled: true
+
+  # Model settings
+  min_confidence: 0.4        # Minimum confidence to show
+  max_suggestions: 5         # Max suggestions per session
+  suggestion_retention_days: 30
+
+  # Context building
+  context_window_minutes: 120
+  recent_commands_count: 10
+  active_file_clusters: 3
+
+  # Session start suggestions
+  session_start_enabled: true
+  max_session_suggestions: 7
+
+  # Timing suggestions
+  timing_suggestions_enabled: true
+
+  # Learning from feedback
+  feedback_enabled: true
+  track_user_actions: true
+  min_samples_for_learning: 5
+
+  # AI Enhancement
+  claude_code_enhanced: true   # Use Claude for deeper predictions
+  fallback_to_statistical: true # Graceful degradation
+
+  suggestion_types:
+    command_next: true
+    file_related: true
+    workflow_completion: true
+    optimal_timing: true
+    session_start: true

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sumologic": {
+      "command": "/Library/Frameworks/Python.framework/Versions/3.12/bin/sumologic-mcp-server",
+      "args": [],
+      "env": {
+        "SUMOLOGIC_ACCESS_ID": "sufMYD5w93YsIx",
+        "SUMOLOGIC_ACCESS_KEY": "1OoM3htAXv1v3c82OHt2Ku9waaQUut5U12ciy4nyIwg2OKkZ961uI2x45ct7XHHs",
+        "SUMOLOGIC_ENDPOINT": "https://api.sumologic.com"
+      }
+    }
+  }
+}
