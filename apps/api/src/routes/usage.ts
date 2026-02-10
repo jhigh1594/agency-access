@@ -9,6 +9,7 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service.js';
 import { UsageSnapshot, MetricUsage } from '@agency-platform/shared';
+import { authenticate } from '@/middleware/auth.js';
 
 export async function usageRoutes(fastify: FastifyInstance) {
   /**
@@ -25,10 +26,8 @@ export async function usageRoutes(fastify: FastifyInstance) {
    * - currentPeriodStart: Start date of current billing period
    * - currentPeriodEnd: End date of current billing period
    */
-  const authenticate = (fastify as any).authenticate ?? (fastify as any).verifyUser;
-
   fastify.get('/usage', {
-    onRequest: [authenticate],
+    onRequest: [authenticate()],
   }, async (request, reply) => {
     const userId = (request as any).user?.sub;
     if (!userId) {
