@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import jwt from '@fastify/jwt';
 import compress from '@fastify/compress';
 import rateLimit from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
@@ -105,19 +104,8 @@ await fastify.register(helmet, {
 // Register performance monitoring middleware
 fastify.addHook('onRequest', performanceMiddleware);
 
-// Register JWT for Clerk verification
-await fastify.register(jwt, {
-  secret: env.CLERK_SECRET_KEY,
-});
-
-// Clerk JWT verification decorator
-fastify.decorate('verifyUser', async (request: any, reply: any) => {
-  try {
-    await request.jwtVerify();
-  } catch (err) {
-    reply.send({ data: null, error: { code: 'UNAUTHORIZED', message: 'Invalid token' } });
-  }
-});
+// Note: JWT verification is now handled in the authenticate() middleware
+// using Clerk's backend SDK which properly handles RS256 tokens
 
 // Register routes
 await fastify.register(oauthTestRoutes);

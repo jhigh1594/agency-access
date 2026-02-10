@@ -2,19 +2,53 @@
  * Authentication Middleware
  *
  * Provides JWT verification middleware for protected routes.
- * Uses Clerk JWT tokens for authentication.
+ * Uses Clerk JWT tokens for authentication with RS256 support.
  */
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { authenticateRequest } from '@clerk/backend/fastify';
 
 /**
  * Authentication middleware factory
- * Returns a middleware function that verifies JWT tokens
+ * Returns a middleware function that verifies JWT tokens using Clerk's verification
  */
 export function authenticate() {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      await request.jwtVerify();
+      // Extract Authorization header
+      const authHeader = request.headers.authorization;
+
+      if (!authHeader?.startsWith('Bearer ')) {
+        return reply.code(401).send({
+          data: null,
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'Missing or invalid Authorization header',
+          },
+        });
+      }
+
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+      // Verify the token using Clerk's backend SDK
+      // This handles RS256 verification with JWKS automatically
+      const { verifyToken } = await import('@clerk/backend');
+      const verified = await verifyToken(token, {
+        jwtKey: process.env.CLERK_SECRET_KEY,
+      });
+
+      if (!verified) {
+        return reply.code(401).send({
+          data: null,
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'Invalid or expired authentication token',
+          },
+        });
+      }
+
+      // Attach verified user data to request
+      (request as any).user = verified.payload;
     } catch (err) {
       return reply.code(401).send({
         data: null,
@@ -35,7 +69,19 @@ export function authenticate() {
 export function optionalAuthenticate() {
   return async (request: FastifyRequest) => {
     try {
-      await request.jwtVerify();
+      const authHeader = request.headers.authorization;
+
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        const { verifyToken } = await import('@clerk/backend');
+        const verified = await verifyToken(token, {
+          jwtKey: process.env.CLERK_SECRET_KEY,
+        });
+
+        if (verified) {
+          (request as any).user = verified.payload;
+        }
+      }
     } catch {
       // Continue without authentication
       // The route can check if request.user is defined
