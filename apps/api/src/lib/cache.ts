@@ -139,6 +139,7 @@ export const CacheKeys = {
   // Agency data
   agency: (agencyIdOrClerkId: string) => `agency:${agencyIdOrClerkId}`,
   agencyByClerkId: (clerkUserId: string) => `agency:clerk:${clerkUserId}`,
+  agencyByEmail: (email: string) => `agency:email:${email}`,
   agencyMembers: (agencyId: string) => `agency:${agencyId}:members`,
 
   // Access requests

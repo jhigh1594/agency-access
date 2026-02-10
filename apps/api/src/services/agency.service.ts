@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 
 // Validation schemas
 const createAgencySchema = z.object({
@@ -126,8 +127,13 @@ export async function createAgency(input: CreateAgencyInput) {
 
 /**
  * List agencies with optional filters
+ * @param filters - Email or clerkUserId to filter by
+ * @param includeMembers - Whether to include members relationship (default: true for backward compatibility)
  */
-export async function listAgencies(filters: { email?: string; clerkUserId?: string } = {}) {
+export async function listAgencies(
+  filters: { email?: string; clerkUserId?: string } = {},
+  includeMembers: boolean = true
+) {
   try {
     const { email, clerkUserId } = filters;
 
@@ -143,9 +149,7 @@ export async function listAgencies(filters: { email?: string; clerkUserId?: stri
 
     const agencies = await prisma.agency.findMany({
       where,
-      include: {
-        members: true,
-      },
+      include: includeMembers ? { members: true } : undefined,
     });
 
     return { data: agencies, error: null };
@@ -158,6 +162,44 @@ export async function listAgencies(filters: { email?: string; clerkUserId?: stri
       },
     };
   }
+}
+
+/**
+ * Get agency by email with caching
+ *
+ * Lightweight lookup that returns only the agency record (no members).
+ * Uses extended cache TTL (30 minutes) since agency data rarely changes.
+ *
+ * @param email - Agency email address
+ * @returns Agency record or null
+ */
+export async function getAgencyByEmail(email: string) {
+  const cacheKey = CacheKeys.agencyByEmail(email);
+
+  const result = await getCached<{
+    id: string;
+    name: string;
+    email: string;
+    clerkUserId: string | null;
+  }>({
+    key: cacheKey,
+    ttl: CacheTTL.EXTENDED, // 30 minutes
+    fetch: async () => {
+      const agency = await prisma.agency.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          clerkUserId: true,
+        },
+      });
+
+      return { data: agency, error: null };
+    },
+  });
+
+  return result;
 }
 
 /**
@@ -599,6 +641,7 @@ export async function bulkInviteMembers(
  */
 export const agencyService = {
   listAgencies,
+  getAgencyByEmail,
   createAgency,
   getAgency,
   updateAgency,

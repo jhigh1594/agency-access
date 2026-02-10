@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import type { Platform } from '@agency-platform/shared';
 import { PLATFORM_NAMES, getPlatformCategory } from './constants.js';
+import { createHash } from 'crypto';
+import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 
 export async function registerListRoutes(fastify: FastifyInstance) {
   /**
@@ -60,6 +62,11 @@ export async function registerListRoutes(fastify: FastifyInstance) {
   /**
    * GET /agency-platforms/available
    * List all platforms with connection status (for UI)
+   *
+   * OPTIMIZATION: Skip agency resolution when agencyId is a valid UUID.
+   * The caller already resolved the agency, so we can use the ID directly.
+   *
+   * CACHING: Uses server-side caching (2 min TTL) and ETag for conditional requests.
    */
   fastify.get('/agency-platforms/available', async (request, reply) => {
     const { agencyId } = request.query as { agencyId?: string };
@@ -74,30 +81,46 @@ export async function registerListRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { agencyResolutionService } = await import('../../services/agency-resolution.service.js');
-    const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
-      createIfMissing: false,
+    // If agencyId is a valid UUID (not a Clerk ID), use it directly
+    // This skips the duplicate agency resolution call
+    let actualAgencyId = agencyId;
+
+    // Only resolve if it's a Clerk ID (starts with user_ or org_)
+    if (agencyId.startsWith('user_') || agencyId.startsWith('org_')) {
+      const { agencyResolutionService } = await import('../../services/agency-resolution.service.js');
+      const agencyResult = await agencyResolutionService.resolveAgency(agencyId, {
+        createIfMissing: false,
+      });
+
+      if (agencyResult.error) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: agencyResult.error.code,
+            message: agencyResult.error.message,
+          },
+        });
+      }
+
+      actualAgencyId = agencyResult.data!.agencyId;
+    }
+
+    // Use caching layer for platform connections
+    const cacheKey = CacheKeys.agencyConnections(actualAgencyId);
+    const cachedResult = await getCached<any[]>({
+      key: cacheKey,
+      ttl: CacheTTL.MEDIUM, // 5 minutes
+      fetch: async () => {
+        const result = await agencyPlatformService.getConnections(actualAgencyId);
+        return result;
+      },
     });
 
-    if (agencyResult.error) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: agencyResult.error.code,
-          message: agencyResult.error.message,
-        },
-      });
+    if (cachedResult.error) {
+      return reply.code(500).send(cachedResult);
     }
 
-    const actualAgencyId = agencyResult.data!.agencyId;
-
-    const result = await agencyPlatformService.getConnections(actualAgencyId);
-
-    if (result.error) {
-      return reply.code(500).send(result);
-    }
-
-    const connections = result.data || [];
+    const connections = cachedResult.data || [];
 
     const allPlatforms: Platform[] = [
       'google',
@@ -141,6 +164,26 @@ export async function registerListRoutes(fastify: FastifyInstance) {
         metadata: connection?.metadata,
       };
     });
+
+    // Generate ETag for conditional requests (based on data hash)
+    const etag = createHash('md5')
+      .update(JSON.stringify(availablePlatforms))
+      .digest('hex');
+
+    // Check for conditional request (If-None-Match header)
+    const ifNoneMatch = request.headers['if-none-match'];
+    if (ifNoneMatch === `"${etag}"` || ifNoneMatch === etag) {
+      return reply.code(304).send(); // Not Modified - no body sent
+    }
+
+    // Add cache status header for monitoring
+    reply.header('X-Cache', cachedResult.cached ? 'HIT' : 'MISS');
+
+    // Add ETag for conditional requests
+    reply.header('ETag', `"${etag}"`);
+
+    // Add Cache-Control header for browser-level stale-while-revalidate
+    reply.header('Cache-Control', 'private, max-age=120, stale-while-revalidate=300');
 
     return reply.send({
       data: availablePlatforms,

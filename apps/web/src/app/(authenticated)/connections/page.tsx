@@ -41,21 +41,35 @@ function ConnectionsPageContent() {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [currentEmail, setCurrentEmail] = useState<string>('');
 
-  // Fetch user's agency by email
+  // Fetch user's agency by email (lightweight endpoint, cached)
+  // Get the token function from Clerk for authenticated requests
+  const { getToken } = useAuth();
+
   const { data: agencyData } = useQuery({
     queryKey: ['user-agency', user?.primaryEmailAddress?.emailAddress],
     queryFn: async () => {
       const email = user?.primaryEmailAddress?.emailAddress;
       if (!email) return null;
 
+      // Get Clerk session token for authenticated request
+      const token = await getToken();
+
+      // Use lightweight by-email endpoint (cached, no members included)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?email=${encodeURIComponent(email)}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/by-email?email=${encodeURIComponent(email)}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch agency');
       const result = await response.json();
-      return result.data?.[0] || null;
+      return result.data || null;
     },
     enabled: !!user?.primaryEmailAddress?.emailAddress,
+    staleTime: 30 * 60 * 1000, // 30 minutes - agency data rarely changes
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour (garbage collection time)
   });
 
   // IMPORTANT: React Query v5 removed the `onSuccess` callback option.
@@ -107,7 +121,7 @@ function ConnectionsPageContent() {
     }
   }, [searchParams, queryClient, agencyId, router]);
 
-  // Fetch all platforms with connection status
+  // Fetch all platforms with connection status (with ETag caching)
   const {
     data: platforms = [],
     isLoading,
@@ -116,14 +130,51 @@ function ConnectionsPageContent() {
     queryKey: ['available-platforms', agencyId],
     queryFn: async () => {
       if (!agencyId) return [];
+
+      // Get Clerk session token for authenticated request
+      const token = await getToken();
+
+      // Get stored ETag from previous request
+      const etagKey = `etag-available-platforms-${agencyId}`;
+      const storedEtag = localStorage.getItem(etagKey);
+
+      const headers: Record<string, string> = {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+      if (storedEtag) {
+        headers['If-None-Match'] = storedEtag;
+      }
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`,
+        { headers }
       );
+
+      // Store new ETag for future requests
+      const newEtag = response.headers.get('ETag')?.replace(/"/g, '');
+      if (newEtag) {
+        localStorage.setItem(etagKey, newEtag);
+      }
+
+      // 304 Not Modified - return cached data
+      if (response.status === 304) {
+        const cached = localStorage.getItem(`cached-platforms-${agencyId}`);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+        return [];
+      }
+
       if (!response.ok) throw new Error('Failed to fetch platforms');
       const result = await response.json();
+
+      // Cache the response for 304 handling
+      localStorage.setItem(`cached-platforms-${agencyId}`, JSON.stringify(result.data || []));
+
       return result.data || [];
     },
     enabled: !!agencyId,
+    staleTime: 2 * 60 * 1000, // 2 minutes - matches server Cache-Control
   });
 
 
@@ -145,12 +196,16 @@ function ConnectionsPageContent() {
       setConnectingPlatform(platform);
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
+      const token = await getToken();
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/initiate`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           body: JSON.stringify({
             agencyId,
             userEmail,
@@ -182,12 +237,16 @@ function ConnectionsPageContent() {
       setDisconnectingPlatform(platform);
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
+      const token = await getToken();
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           body: JSON.stringify({
             agencyId,
             revokedBy: userEmail,

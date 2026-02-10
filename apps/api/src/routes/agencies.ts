@@ -13,15 +13,48 @@ import { authenticate } from '../middleware/auth.js';
 export async function agencyRoutes(fastify: FastifyInstance) {
   // Add authentication middleware to all agency routes
   fastify.addHook('onRequest', authenticate());
+
+  /**
+   * GET /agencies/by-email
+   * Lightweight agency lookup by email (no members included)
+   * Cached for 30 minutes - use this for performance-critical lookups
+   */
+  fastify.get('/agencies/by-email', async (request, reply) => {
+    try {
+      const { email } = request.query as { email?: string };
+
+      if (!email) {
+        fastify.log.warn('GET /agencies/by-email: No email provided');
+        return sendValidationError(reply, 'Email query parameter is required');
+      }
+
+      fastify.log.info({ email }, 'GET /agencies/by-email');
+
+      const result = await agencyService.getAgencyByEmail(email);
+
+      if (result.error) {
+        fastify.log.error({ error: result.error }, 'GET /agencies/by-email: Service error');
+        return sendError(reply, result.error.code, result.error.message, 500);
+      }
+
+      fastify.log.info({ found: !!result.data }, 'GET /agencies/by-email: Success');
+      return reply.send({ data: result.data, error: null });
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in GET /agencies/by-email');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve agency', 500);
+    }
+  });
+
   // List agencies with optional filters
   fastify.get('/agencies', async (request, reply) => {
     try {
-      const { email, clerkUserId } = request.query as {
+      const { email, clerkUserId, fields } = request.query as {
         email?: string;
         clerkUserId?: string;
+        fields?: string; // Comma-separated list of fields to include: 'id,name,email,clerkUserId,members'
       };
 
-      fastify.log.info({ email, clerkUserId }, 'GET /agencies');
+      fastify.log.info({ email, clerkUserId, fields }, 'GET /agencies');
 
       // Validate that at least one filter is provided
       if (!email && !clerkUserId) {
@@ -29,7 +62,10 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         return sendValidationError(reply, 'Either email or clerkUserId query parameter is required');
       }
 
-      const result = await agencyService.listAgencies({ email, clerkUserId });
+      // Parse fields parameter to determine what to include
+      const includeMembers = !fields || fields.includes('members');
+
+      const result = await agencyService.listAgencies({ email, clerkUserId }, includeMembers);
 
       if (result.error) {
         fastify.log.error({ error: result.error }, 'GET /agencies: Service error');
@@ -41,7 +77,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         data: result.data || [],
         error: null,
       };
-      
+
       fastify.log.info({ count: response.data.length }, 'GET /agencies: Success');
       return reply.send(response);
     } catch (error) {
