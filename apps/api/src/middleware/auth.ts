@@ -47,7 +47,7 @@ export function authenticate() {
       }
 
       // Attach verified user data to request
-      (request as any).user = verified.payload;
+      (request as any).user = verified;
     } catch (err) {
       return reply.code(401).send({
         data: null,
@@ -78,7 +78,7 @@ export function optionalAuthenticate() {
         });
 
         if (verified) {
-          (request as any).user = verified.payload;
+          (request as any).user = verified;
         }
       }
     } catch {

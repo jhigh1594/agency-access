@@ -42,7 +42,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
             const verified = await verifyToken(token, {
               jwtKey: process.env.CLERK_SECRET_KEY,
             });
-            clerkUserId = verified.payload?.sub;
+            clerkUserId = verified?.sub;
           } catch (verifyError) {
             // Verification failed - try unverified decode for development
             try {
