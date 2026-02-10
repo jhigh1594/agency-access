@@ -57,8 +57,15 @@ if (env.RATE_LIMIT_ENABLED) {
       // Skip rate limiting for authenticated users if configured
       if (env.RATE_LIMIT_SKIP_AUTHENTICATED) {
         try {
-          await request.jwtVerify();
-          return true;
+          const authHeader = request.headers.authorization;
+          if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            const { verifyToken } = await import('@clerk/backend');
+            const verified = await verifyToken(token, {
+              jwtKey: process.env.CLERK_SECRET_KEY,
+            });
+            return !!verified;
+          }
         } catch {
           return false;
         }

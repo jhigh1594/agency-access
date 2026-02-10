@@ -37,9 +37,12 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         // Check if it looks like a JWT (has 3 parts separated by dots)
         if (token.split('.').length === 3) {
           try {
-            // Try verified decode first (only works if CLERK_SECRET_KEY is set correctly for RS256)
-            const decoded = fastify.jwt.verify(token);
-            clerkUserId = (decoded as any).sub;
+            // Try verified decode using Clerk's verification
+            const { verifyToken } = await import('@clerk/backend');
+            const verified = await verifyToken(token, {
+              jwtKey: process.env.CLERK_SECRET_KEY,
+            });
+            clerkUserId = verified.payload?.sub;
           } catch (verifyError) {
             // Verification failed - try unverified decode for development
             try {

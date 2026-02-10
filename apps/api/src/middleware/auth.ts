@@ -6,7 +6,6 @@
  */
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { authenticateRequest } from '@clerk/backend/fastify';
 
 /**
  * Authentication middleware factory
