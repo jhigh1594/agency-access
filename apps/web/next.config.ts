@@ -7,19 +7,6 @@ const nextConfig: NextConfig = {
   },
   typedRoutes: true,
 
-  // Optimize package imports for smaller bundles (now stable in Next.js 16)
-  optimizePackageImports: [
-    '@radix-ui/react-icons',
-    'lucide-react',
-    'framer-motion',
-    'recharts',
-  ],
-
-  // Fix workspace root warning
-  turbopack: {
-    root: '/Users/jhigh/agency-access-platform',
-  },
-
   images: {
     remotePatterns: [
       {
