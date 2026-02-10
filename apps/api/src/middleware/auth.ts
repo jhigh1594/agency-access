@@ -33,7 +33,7 @@ export function authenticate() {
       // This handles RS256 verification with JWKS automatically
       const { verifyToken } = await import('@clerk/backend');
       const verified = await verifyToken(token, {
-        jwtKey: process.env.CLERK_SECRET_KEY,
+        secretKey: process.env.CLERK_SECRET_KEY,
       });
 
       if (!verified) {
@@ -74,7 +74,7 @@ export function optionalAuthenticate() {
         const token = authHeader.substring(7);
         const { verifyToken } = await import('@clerk/backend');
         const verified = await verifyToken(token, {
-          jwtKey: process.env.CLERK_SECRET_KEY,
+          secretKey: process.env.CLERK_SECRET_KEY,
         });
 
         if (verified) {
