@@ -4,7 +4,7 @@ import { SignInButton, SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 
@@ -38,10 +38,27 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
+/** Scroll to a section by ID, accounting for the fixed header height. */
+function scrollToSection(targetId: string) {
+  const targetElement = document.getElementById(targetId);
+  if (targetElement) {
+    const headerHeight = 80; // h-20 = 80px
+    const elementTop = targetElement.getBoundingClientRect().top;
+    const elementPosition = elementTop + window.pageYOffset;
+    const offsetPosition = elementPosition - headerHeight;
+
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth',
+    });
+  }
+}
+
 export function MarketingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -50,6 +67,16 @@ export function MarketingNav() {
   // Close menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // After navigating to homepage, scroll to the hash target once the page renders
+  useEffect(() => {
+    if (pathname === '/' && window.location.hash) {
+      const targetId = window.location.hash.substring(1);
+      // Wait for the page content to mount before scrolling
+      const timer = setTimeout(() => scrollToSection(targetId), 300);
+      return () => clearTimeout(timer);
+    }
   }, [pathname]);
 
   // Prevent body scroll when menu is open
@@ -77,51 +104,23 @@ export function MarketingNav() {
       
       // Close mobile menu first
       setMobileMenuOpen(false);
+
+      // If we're NOT on the homepage, navigate there first with the hash
+      if (pathname !== '/') {
+        router.push(`/${href}`);
+        return;
+      }
       
-      // Use requestAnimationFrame to ensure DOM is ready, then scroll
-      requestAnimationFrame(() => {
-        const scrollToElement = () => {
-          const targetElement = document.getElementById(targetId);
-          
-          if (targetElement) {
-            const headerHeight = 80; // h-20 = 80px
-            const elementTop = targetElement.getBoundingClientRect().top;
-            const elementPosition = elementTop + window.pageYOffset;
-            const offsetPosition = elementPosition - headerHeight;
-            
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: 'smooth',
-            });
-          } else {
-            // Retry once after a short delay if element not found
-            setTimeout(() => {
-              const retryElement = document.getElementById(targetId);
-              if (retryElement) {
-                const headerHeight = 80;
-                const elementTop = retryElement.getBoundingClientRect().top;
-                const elementPosition = elementTop + window.pageYOffset;
-                const offsetPosition = elementPosition - headerHeight;
-                
-                window.scrollTo({
-                  top: offsetPosition,
-                  behavior: 'smooth',
-                });
-              }
-            }, 100);
-          }
-        };
-        
-        // Small delay to ensure mobile menu animation completes if it was open
-        setTimeout(scrollToElement, wasMenuOpen ? 300 : 0);
-      });
+      // On the homepage — scroll directly to the section
+      const delay = wasMenuOpen ? 300 : 0;
+      setTimeout(() => scrollToSection(targetId), delay);
     } else {
       setMobileMenuOpen(false);
     }
   };
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b-2 border-black bg-white/80 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 w-full border-b-2 border-black bg-white">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo - Brutalist box */}
         <Link href="/" className="flex items-center space-x-3 group" onClick={handleLinkClick}>
