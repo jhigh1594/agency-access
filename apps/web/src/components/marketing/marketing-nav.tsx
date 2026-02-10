@@ -107,7 +107,7 @@ export function MarketingNav() {
 
       // If we're NOT on the homepage, navigate there first with the hash
       if (pathname !== '/') {
-        router.push(`/${href}`);
+        router.push(`/${href}` as any);
         return;
       }
       
