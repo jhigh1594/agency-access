@@ -11,7 +11,8 @@ import { extractClientIp } from './lib/ip.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
 import { accessRequestRoutes } from './routes/access-requests.js';
-import { tokenHealthRoutes } from './routes/token-health.js';
+// TODO: Re-enable when Token Health page is restored
+// import { tokenHealthRoutes } from './routes/token-health.js';
 import { clientAuthRoutes } from './routes/client-auth.js';
 import { templateRoutes } from './routes/templates.js';
 import { platformAuthorizationRoutes } from './routes/platform-authorization.js';
@@ -122,7 +123,8 @@ fastify.decorate('verifyUser', async (request: any, reply: any) => {
 await fastify.register(oauthTestRoutes);
 await fastify.register(agencyRoutes, { prefix: '/api' });
 await fastify.register(accessRequestRoutes, { prefix: '/api' });
-await fastify.register(tokenHealthRoutes, { prefix: '/api' });
+// TODO: Token Health routes commented out until future state is determined
+// await fastify.register(tokenHealthRoutes, { prefix: '/api' });
 await fastify.register(clientAuthRoutes, { prefix: '/api' });
 await fastify.register(templateRoutes, { prefix: '/api' });
 await fastify.register(platformAuthorizationRoutes, { prefix: '/api' });

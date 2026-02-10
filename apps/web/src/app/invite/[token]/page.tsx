@@ -18,6 +18,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Check, X, Loader2, ChevronRight, Shield, Lock } from 'lucide-react';
+import posthog from 'posthog-js';
 import { PlatformIcon } from '@/components/ui';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
@@ -84,7 +85,21 @@ export default function ClientAuthorizationPage() {
         }
 
         setData(result.data);
-        
+
+        // Track client authorization started (only on initial load, not OAuth return)
+        if (!urlStep) {
+          posthog.capture('client_authorization_started', {
+            access_request_token: token,
+            agency_name: result.data.agencyName,
+            client_name: result.data.clientName,
+            client_email: result.data.clientEmail,
+            platform_count: result.data.platforms?.length || 0,
+            platforms: result.data.platforms?.map((p: { platformGroup: Platform }) => p.platformGroup) || [],
+            has_intake_fields: result.data.intakeFields?.length > 0,
+            has_custom_branding: !!result.data.branding?.logoUrl,
+          });
+        }
+
         // Check if returning from OAuth callback (step=2 in URL)
         if (urlStep === '2' && urlConnectionId && urlPlatform) {
           // Store connection info for the wizard
@@ -112,6 +127,15 @@ export default function ClientAuthorizationPage() {
   };
 
   const handlePlatformComplete = (platform: Platform) => {
+    // Track individual platform authorization
+    posthog.capture('client_platform_authorized', {
+      access_request_token: token,
+      platform: platform,
+      platform_name: PLATFORM_NAMES[platform],
+      total_completed: completedPlatforms.size + 1,
+      total_platforms: data?.platforms?.length || 0,
+    });
+
     setCompletedPlatforms(new Set([...completedPlatforms, platform]));
   };
 
@@ -123,6 +147,15 @@ export default function ClientAuthorizationPage() {
   // Show complete screen if all platforms processed
   useEffect(() => {
     if (step === 'platforms' && isComplete()) {
+      // Track client authorization completed
+      posthog.capture('client_authorization_completed', {
+        access_request_token: token,
+        agency_name: data?.agencyName,
+        client_name: data?.clientName,
+        platforms_completed: Array.from(completedPlatforms),
+        total_platforms: data?.platforms?.length || 0,
+      });
+
       setTimeout(() => setStep('complete'), 500);
     }
   }, [step, completedPlatforms, data]);

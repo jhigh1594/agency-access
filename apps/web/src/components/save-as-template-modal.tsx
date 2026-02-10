@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import posthog from 'posthog-js';
 import { useAccessRequest } from '@/contexts/access-request-context';
 import { createTemplate } from '@/lib/api/templates';
 
@@ -61,6 +62,23 @@ export function SaveAsTemplateModal({
         setSaving(false);
         return;
       }
+
+      // Track template save in PostHog
+      const platformCount = Object.values(state.selectedPlatforms).reduce(
+        (sum, products) => sum + products.length,
+        0
+      );
+      posthog.capture('template_saved', {
+        template_id: result.data?.id,
+        agency_id: agencyId,
+        template_name: name.trim(),
+        is_default: isDefault,
+        platform_count: platformCount,
+        platforms: Object.keys(state.selectedPlatforms),
+        access_level: state.globalAccessLevel,
+        intake_fields_count: state.intakeFields.length,
+        has_custom_branding: !!state.branding.logoUrl || state.branding.primaryColor !== '#6366f1',
+      });
 
       setSaving(false);
       onSave();

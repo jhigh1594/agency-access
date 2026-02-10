@@ -3,9 +3,11 @@
  *
  * Centralized service for resolving and creating agencies.
  * Ensures consistent agency resolution across the application and prevents duplicates.
+ * Includes caching layer for performance optimization.
  */
 
 import { prisma } from '@/lib/prisma';
+import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 
 export interface ResolveAgencyResult {
   data: {
@@ -48,6 +50,45 @@ export async function resolveAgency(
     userEmail?: string;
     agencyName?: string;
   } = {}
+): Promise<ResolveAgencyResult> {
+  const { createIfMissing = false, userEmail, agencyName = 'My Agency' } = options;
+
+  // Check if identifier is a Clerk ID
+  const isClerkId = identifier.startsWith('user_') || identifier.startsWith('org_');
+
+  // For Clerk ID lookups that don't need creation, try cache first
+  if (isClerkId && !createIfMissing) {
+    const cacheKey = CacheKeys.agencyByClerkId(identifier); // Cache by clerkUserId
+    const cachedResult = await getCached<ResolveAgencyResult['data']>({
+      key: cacheKey,
+      ttl: CacheTTL.EXTENDED, // 30 minutes - agency data rarely changes
+      fetch: async () => {
+        const result = await resolveAgencyFromDb(identifier, { createIfMissing: false, userEmail, agencyName });
+        return { data: result.data, error: result.error };
+      },
+    });
+
+    if (cachedResult.data) {
+      return { data: cachedResult.data, error: null };
+    }
+    // Fall through to DB if cache fails
+  }
+
+  // For UUID lookups or when creating, go directly to DB
+  return resolveAgencyFromDb(identifier, options);
+}
+
+/**
+ * Internal database resolution (not cached)
+ * Separated to allow caching wrapper to handle cache logic
+ */
+async function resolveAgencyFromDb(
+  identifier: string,
+  options: {
+    createIfMissing?: boolean;
+    userEmail?: string;
+    agencyName?: string;
+  }
 ): Promise<ResolveAgencyResult> {
   const { createIfMissing = false, userEmail, agencyName = 'My Agency' } = options;
 
@@ -201,5 +242,19 @@ export async function getOrCreateAgency(
 export const agencyResolutionService = {
   resolveAgency,
   getOrCreateAgency,
+  invalidateAgencyCache,
 };
+
+/**
+ * Invalidate agency cache for a specific clerk user
+ * Call this when agency data is updated
+ */
+export async function invalidateAgencyCache(clerkUserId: string): Promise<void> {
+  const { invalidateCache } = await import('@/lib/cache.js');
+  // Invalidate both cache key patterns
+  await Promise.all([
+    invalidateCache(`agency:clerk:${clerkUserId}`),
+    invalidateCache(`agency:${clerkUserId}`),
+  ]);
+}
 

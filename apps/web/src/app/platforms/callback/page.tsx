@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import posthog from 'posthog-js';
 import { MetaBusinessPortfolioSelector } from '@/components/meta-business-portfolio-selector';
 
 // Error message mapping
@@ -81,13 +82,40 @@ function CallbackPageContent() {
   });
 
   const handlePortfolioSelect = (businessId: string, businessName: string) => {
+    // Track Meta business portfolio selection in PostHog
+    posthog.capture('meta_business_portfolio_selected', {
+      agency_id: agencyIdParam || orgId,
+      connection_id: connectionId,
+      platform: 'meta',
+      business_id: businessId,
+      business_name: businessName,
+    });
     completeMetaOauth({ businessId, businessName });
   };
+
+  // Track OAuth callback results in PostHog
+  useEffect(() => {
+    if (success) {
+      posthog.capture('oauth_callback_success', {
+        agency_id: agencyIdParam || orgId,
+        connection_id: connectionId,
+        platform: platform,
+        requires_business_selection: requireBusinessSelection || platform === 'meta',
+      });
+    } else if (errorCode) {
+      posthog.capture('oauth_callback_error', {
+        agency_id: agencyIdParam || orgId,
+        platform: platform,
+        error_code: errorCode,
+        error_message: errorMessage,
+      });
+    }
+  }, [success, errorCode, platform, agencyIdParam, orgId, connectionId, requireBusinessSelection, errorMessage]);
 
   // Auto-redirect on success (except for Meta which needs portfolio selection)
   useEffect(() => {
     if (!success) return;
-    
+
     // For Meta, we ALWAYS show the portfolio selector as a required step
     if (platform === 'meta' || requireBusinessSelection) {
       setShowPortfolioSelector(true);

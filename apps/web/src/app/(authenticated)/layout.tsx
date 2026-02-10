@@ -6,7 +6,7 @@ import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
   Network,
-  Heart,
+  // Heart, // TODO: Re-enable when Token Health page is restored
   Users,
   Settings,
 } from 'lucide-react';
@@ -112,13 +112,14 @@ export default function AuthenticatedLayout({
         <Network className="text-neutral-700 h-6 w-6 flex-shrink-0" />
       ),
     },
-    {
-      label: 'Token Health',
-      href: '/token-health',
-      icon: (
-        <Heart className="text-neutral-700 h-6 w-6 flex-shrink-0" />
-      ),
-    },
+    // TODO: Token Health page commented out until future state is determined
+    // {
+    //   label: 'Token Health',
+    //   href: '/token-health',
+    //   icon: (
+    //     <Heart className="text-neutral-700 h-6 w-6 flex-shrink-0" />
+    //   ),
+    // },
     {
       label: 'Clients',
       href: '/clients',

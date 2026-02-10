@@ -344,6 +344,43 @@ export async function getAgencyConnections(agencyId: string) {
 }
 
 /**
+ * Get lightweight connection summaries for dashboard
+ * Returns only essential data (platform badges) without full authorization details
+ * This reduces payload size significantly for agencies with many connections
+ */
+export async function getAgencyConnectionSummaries(agencyId: string) {
+  try {
+    const connections = await prisma.clientConnection.findMany({
+      where: { agencyId },
+      select: {
+        id: true,
+        clientEmail: true,
+        status: true,
+        createdAt: true,
+        // Only select platform from authorizations, not full details
+        authorizations: {
+          select: {
+            platform: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { data: connections, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to get agency connection summaries',
+      },
+    };
+  }
+}
+
+/**
  * Refresh a platform authorization
  */
 export async function refreshPlatformAuthorization(
@@ -479,6 +516,7 @@ export const connectionService = {
   revokeConnection,
   getTokenHealth,
   getAgencyConnections,
+  getAgencyConnectionSummaries,
   refreshPlatformAuthorization,
   revokePlatformAuthorization,
 };

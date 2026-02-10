@@ -15,7 +15,8 @@
  * - Sticky footer with Continue button
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import posthog from 'posthog-js';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { MultiSelectCombobox, type MultiSelectOption } from '@/components/ui/multi-select-combobox';
 import { AssetSelectorLoading, AssetSelectorError } from './AssetSelectorStates';
@@ -72,6 +73,9 @@ export function MetaAssetSelector({
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [selectedInstagram, setSelectedInstagram] = useState<Set<string>>(new Set());
 
+  // Track if we've already captured the event (to avoid duplicates)
+  const hasTrackedSelection = useRef(false);
+
   // Fetch assets from backend
   const fetchAssets = async () => {
     try {
@@ -121,6 +125,27 @@ export function MetaAssetSelector({
       const account = assets?.instagramAccounts.find((a) => a.id === id);
       return account ? { id: account.id, name: account.username || account.name || id } : { id, name: id };
     });
+
+    // Track meta_assets_selected when selection changes (debounced)
+    const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
+    if (totalSelected > 0 && !hasTrackedSelection.current) {
+      // Debounce the tracking to avoid spamming events
+      const timeoutId = setTimeout(() => {
+        posthog.capture('meta_assets_selected', {
+          session_id: sessionId,
+          ad_accounts_selected: selectedAdAccounts.size,
+          pages_selected: selectedPages.size,
+          instagram_accounts_selected: selectedInstagram.size,
+          total_selected: totalSelected,
+          available_ad_accounts: assets?.adAccounts?.length || 0,
+          available_pages: assets?.pages?.length || 0,
+          available_instagram: assets?.instagramAccounts?.length || 0,
+        });
+        hasTrackedSelection.current = true;
+      }, 2000); // Wait 2 seconds after last selection change
+
+      return () => clearTimeout(timeoutId);
+    }
 
     onSelectionChange({
       adAccounts: Array.from(selectedAdAccounts),

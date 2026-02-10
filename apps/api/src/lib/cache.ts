@@ -137,7 +137,8 @@ export const CacheKeys = {
   connections: (agencyId: string) => `dashboard:${agencyId}:connections`,
 
   // Agency data
-  agency: (agencyId: string) => `agency:${agencyId}`,
+  agency: (agencyIdOrClerkId: string) => `agency:${agencyIdOrClerkId}`,
+  agencyByClerkId: (clerkUserId: string) => `agency:clerk:${clerkUserId}`,
   agencyMembers: (agencyId: string) => `agency:${agencyId}:members`,
 
   // Access requests

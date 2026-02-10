@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Check, Loader2, Mail, Building2, Users, Sparkles, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import posthog from 'posthog-js';
 
 // Types
 interface TeamMember {
@@ -156,6 +157,22 @@ export default function AgencyOnboardingPage() {
       setCreatedAgencyId(result.data.id);
       setLoading(false);
 
+      // Track agency creation in PostHog
+      posthog.capture('agency_created', {
+        agency_id: result.data.id,
+        agency_name: agencyProfile.name.trim(),
+        industry: agencyProfile.industry || 'not_specified',
+        timezone: agencyProfile.timezone,
+        has_logo: !!agencyProfile.logoUrl.trim(),
+      });
+
+      // Identify the user with their agency info
+      posthog.identify(userId!, {
+        email: userEmail,
+        agency_id: result.data.id,
+        agency_name: agencyProfile.name.trim(),
+      });
+
       // Prefetch dashboard data for instant load when user navigates there
       const authToken = await getToken();
       if (authToken) {
@@ -209,6 +226,17 @@ export default function AgencyOnboardingPage() {
         const data = await response.json();
         throw new Error(data.error?.message || 'Failed to invite team members');
       }
+
+      // Track team member invites in PostHog
+      posthog.capture('team_member_invited', {
+        agency_id: createdAgencyId,
+        total_invited: validMembers.length,
+        roles_invited: validMembers.reduce((acc, m) => {
+          acc[m.role] = (acc[m.role] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        source: 'onboarding',
+      });
 
       setLoading(false);
       setCurrentStep(3);

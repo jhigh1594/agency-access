@@ -26,7 +26,7 @@ export async function sendEmail(options: SendEmailOptions) {
   }
 
   try {
-    const { to, subject, html, from = 'Agency Access Platform <notifications@agencyaccessplatform.com>' } = options;
+    const { to, subject, html, from = 'AuthHub <notifications@notifications.authhub.co>' } = options;
     
     // In development/test, we might want to log instead of sending if a real key isn't provided
     if (env.NODE_ENV !== 'production' && env.RESEND_API_KEY === 're_123456789') {
@@ -93,7 +93,7 @@ export async function sendClientAuthorizationEmail(options: {
       
       <hr style="margin: 32px 0; border: 0; border-top: 1px solid #e2e8f0;" />
       <p style="font-size: 12px; color: #64748b;">
-        This is an automated notification from Agency Access Platform.
+        This is an automated notification from AuthHub.
       </p>
     </div>
   `;

@@ -60,6 +60,39 @@ export type CreateAccessRequestInput = z.infer<typeof createAccessRequestSchema>
 export type UpdateAccessRequestInput = z.infer<typeof updateAccessRequestSchema>;
 
 /**
+ * Platform group mapping - defined once at module load time
+ * Maps platform products to their parent groups
+ */
+const PLATFORM_GROUP_MAP: Record<string, string> = {
+  // Google products
+  'google_ads': 'google',
+  'ga4': 'google',
+  'google_tag_manager': 'google',
+  'google_merchant_center': 'google',
+  'google_search_console': 'google',
+  'youtube_studio': 'google',
+  'google_business_profile': 'google',
+  'display_video_360': 'google',
+  // Meta products
+  'meta_ads': 'meta',
+  'instagram': 'meta',
+  'whatsapp_business': 'meta',
+  // Other platforms (standalone)
+  'linkedin': 'linkedin',
+  'tiktok': 'tiktok',
+  'snapchat': 'snapchat',
+};
+
+/**
+ * Access level mapping - defined once at module load time
+ * Maps backend access levels to frontend access levels
+ */
+const ACCESS_LEVEL_MAP: Record<string, 'admin' | 'standard' | 'read_only' | 'email_only'> = {
+  'manage': 'admin',
+  'view_only': 'read_only',
+};
+
+/**
  * Generate a unique 12-character token for access requests
  * Uses crypto.randomBytes for secure random generation
  */
@@ -203,49 +236,24 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
  * Transform flat platforms array to hierarchical format for frontend
  * Flat: [{ platform: 'google_ads', accessLevel: 'manage' }]
  * Hierarchical: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin' }] }]
+ *
+ * OPTIMIZED: Uses module-level constants instead of creating objects on every call
  */
 function transformPlatformsToHierarchical(platforms: any[]): any[] {
-  // Map platform products to their groups
-  const platformGroupMap: Record<string, string> = {
-    // Google products
-    'google_ads': 'google',
-    'ga4': 'google',
-    'google_tag_manager': 'google',
-    'google_merchant_center': 'google',
-    'google_search_console': 'google',
-    'youtube_studio': 'google',
-    'google_business_profile': 'google',
-    'display_video_360': 'google',
-    // Meta products
-    'meta_ads': 'meta',
-    'instagram': 'meta',
-    'whatsapp_business': 'meta',
-    // Other platforms (standalone)
-    'linkedin': 'linkedin',
-    'tiktok': 'tiktok',
-    'snapchat': 'snapchat',
-  };
-
-  // Map backend access levels back to frontend access levels
-  const accessLevelMap: Record<string, 'admin' | 'standard' | 'read_only' | 'email_only'> = {
-    'manage': 'admin',
-    'view_only': 'read_only',
-  };
-
   // Group platforms by platformGroup
   const grouped = platforms.reduce((acc, platform) => {
-    const platformGroup = platformGroupMap[platform.platform] || platform.platform;
-    
+    const platformGroup = PLATFORM_GROUP_MAP[platform.platform] || platform.platform;
+
     if (!acc[platformGroup]) {
       acc[platformGroup] = [];
     }
-    
+
     acc[platformGroup].push({
       product: platform.platform,
-      accessLevel: accessLevelMap[platform.accessLevel] || 'admin',
+      accessLevel: ACCESS_LEVEL_MAP[platform.accessLevel] || 'admin',
       accounts: [], // Empty for client_authorization flow
     });
-    
+
     return acc;
   }, {} as Record<string, any[]>);
 

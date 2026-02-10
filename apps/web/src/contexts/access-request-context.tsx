@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { QueryClient } from '@tanstack/react-query';
 import { Client, AccessLevel, AccessRequestTemplate, AuthModel } from '@agency-platform/shared';
 import type { CreateAccessRequestPayload } from '@/lib/api/access-requests';
+import posthog from 'posthog-js';
 
 // ============================================================
 // TYPES
@@ -320,6 +321,24 @@ export function AccessRequestProvider({ children, agencyId, queryClient }: Acces
 
       // Success! Navigate to success page
       if (result.data) {
+        // Track access request creation in PostHog
+        const platformCount = Object.values(state.selectedPlatforms).reduce(
+          (sum, products) => sum + products.length,
+          0
+        );
+        posthog.capture('access_request_created', {
+          access_request_id: result.data.id,
+          agency_id: agencyId,
+          client_id: state.client?.id,
+          auth_model: state.authModel,
+          platform_count: platformCount,
+          platforms: Object.keys(state.selectedPlatforms),
+          access_level: state.globalAccessLevel,
+          intake_fields_count: state.intakeFields.length,
+          has_custom_branding: !!state.branding.logoUrl || state.branding.primaryColor !== '#6366f1',
+          used_template: !!state.selectedTemplate,
+        });
+
         // Invalidate dashboard cache so it shows fresh data when user returns
         // We use the wildcard pattern to invalidate all dashboard queries
         queryClient?.invalidateQueries({ queryKey: ['dashboard'] });

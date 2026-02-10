@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, AlertCircle, Loader2, Unlink, X } from 'lucide-react';
+import posthog from 'posthog-js';
 import { PlatformCard } from '@/components/ui/platform-card';
 import { Platform, PlatformInfo } from '@agency-platform/shared';
 import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
@@ -81,6 +82,13 @@ function ConnectionsPageContent() {
     const platform = searchParams.get('platform');
 
     if (success === 'true' && platform) {
+      // Track platform connected in PostHog
+      posthog.capture('platform_connected', {
+        agency_id: agencyId,
+        platform: platform,
+        connection_source: 'oauth_callback',
+      });
+
       setSuccessMessage(`Successfully connected ${platform}!`);
       if (agencyId) {
         queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
@@ -191,6 +199,12 @@ function ConnectionsPageContent() {
       return response.json();
     },
     onSuccess: (_, platform) => {
+      // Track platform disconnected in PostHog
+      posthog.capture('platform_disconnected', {
+        agency_id: agencyId,
+        platform: platform,
+      });
+
       setSuccessMessage(`Successfully disconnected ${platform}!`);
       setDisconnectingPlatform(null);
       // Invalidate queries to refresh platform list

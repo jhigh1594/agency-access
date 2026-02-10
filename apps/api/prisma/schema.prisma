@@ -160,6 +160,7 @@ model AccessRequest {
   connection   ClientConnection?
 
   @@index([agencyId, status])
+  @@index([agencyId, createdAt])
   @@map("access_requests")
 }
 
@@ -183,6 +184,7 @@ model ClientConnection {
   authorizations  PlatformAuthorization[]
 
   @@index([agencyId, status])
+  @@index([agencyId, createdAt])
   @@map("client_connections")
 }
 

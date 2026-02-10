@@ -11,6 +11,7 @@ import { agencyResolutionService } from '../services/agency-resolution.service.j
 import { accessRequestService } from '../services/access-request.service.js';
 import { connectionService } from '../services/connection.service.js';
 import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
+import { createHash } from 'crypto';
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
   /**
@@ -96,7 +97,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         const [statsResult, requestsResult, connectionsResult] = await Promise.all([
           getDashboardStats(agencyId),
           accessRequestService.getAgencyAccessRequests(agencyId, { limit: 10 }),
-          connectionService.getAgencyConnections(agencyId),
+          connectionService.getAgencyConnectionSummaries(agencyId), // Use lightweight summaries
         ]);
 
         // Check for errors in any of the parallel requests
@@ -140,13 +141,27 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
       });
     }
 
+    // Generate ETag for conditional requests (based on data hash)
+    const etag = createHash('md5')
+      .update(JSON.stringify(cachedResult.data))
+      .digest('hex');
+
+    // Check for conditional request (If-None-Match header)
+    const ifNoneMatch = request.headers['if-none-match'];
+    if (ifNoneMatch === `"${etag}"` || ifNoneMatch === etag) {
+      return reply.code(304).send(); // Not Modified - no body sent
+    }
+
     // Add cache status header for monitoring
     reply.header('X-Cache', cachedResult.cached ? 'HIT' : 'MISS');
+
+    // Add ETag for conditional requests
+    reply.header('ETag', `"${etag}"`);
 
     // Add Cache-Control header for browser-level stale-while-revalidate
     // - 5 minutes max age (browser can cache for 5 min)
     // - 10 minutes stale-while-revalidate (can serve stale while refreshing in background)
-    // - private: Never cache by shared caches (CDNs, proxies)
+    // - private: Never cache by shared caches (CDNs, proxies) - contains user-specific data
     reply.header('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
 
     // Return consolidated dashboard data

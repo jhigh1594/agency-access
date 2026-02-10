@@ -5,19 +5,25 @@
  *
  * Main dashboard for agencies to view access requests and client connections.
  * Optimized to use a single unified API endpoint for better performance.
+ * Includes ETag support for conditional requests to save bandwidth.
  */
 
 import { Plus, Users, Key, Activity, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
+import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+
+// Simple in-memory ETag cache for conditional requests
+const etagCache = new Map<string, string>();
 
 export default function DashboardPage() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const hasTrackedView = useRef(false);
 
   // Get Clerk token for API authentication
   useEffect(() => {
@@ -35,17 +41,46 @@ export default function DashboardPage() {
     queryFn: async () => {
       if (!authToken) throw new Error('No auth token');
 
+      const cacheKey = `dashboard-${user?.id}`;
+      const etag = etagCache.get(cacheKey);
+
+      const headers: Record<string, string> = {
+        'x-agency-id': authToken,
+      };
+
+      // Add ETag for conditional request
+      if (etag) {
+        headers['If-None-Match'] = etag;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
-        headers: {
-          'x-agency-id': authToken,
-        },
+        headers,
       });
+
+      // Handle 304 Not Modified - return cached data
+      if (response.status === 304) {
+        // Return the cached data with a flag indicating it was not modified
+        const cached = etagCache.get(`${cacheKey}-data`);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+        // If no cached data, fall through to fetch
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
 
-      return response.json();
+      const data = await response.json();
+
+      // Cache ETag for next request
+      const responseEtag = response.headers.get('ETag')?.replace(/"/g, '');
+      if (responseEtag) {
+        etagCache.set(cacheKey, responseEtag);
+        etagCache.set(`${cacheKey}-data`, JSON.stringify(data));
+      }
+
+      return data;
     },
     enabled: !!authToken,
     staleTime: 5 * 60 * 1000, // 5 minutes - consider data fresh for 5 minutes
@@ -64,6 +99,21 @@ export default function DashboardPage() {
   };
   const requests = dashboardData?.data?.requests || [];
   const connections = dashboardData?.data?.connections || [];
+
+  // Track dashboard view in PostHog (only once per mount)
+  useEffect(() => {
+    if (agency && !hasTrackedView.current) {
+      posthog.capture('dashboard_viewed', {
+        agency_id: agency.id,
+        agency_name: agency.name,
+        total_requests: stats.totalRequests,
+        pending_requests: stats.pendingRequests,
+        active_connections: stats.activeConnections,
+        total_platforms: stats.totalPlatforms,
+      });
+      hasTrackedView.current = true;
+    }
+  }, [agency, stats]);
 
   // Show loading state only on first load
   if (isLoading && !dashboardData) {
