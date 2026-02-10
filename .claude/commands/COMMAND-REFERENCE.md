@@ -402,6 +402,30 @@ This guide helps AI assistants understand when to suggest specific AIPMOS comman
 
 ---
 
+### /commit
+**User intent**: Create well-structured git commits with documentation review
+
+**When to suggest**:
+- "Commit these changes"
+- "Create a commit for..."
+- "Stage and commit..."
+- "Help me write a commit message"
+- "Commit with a good message"
+- After completing a logical change and user wants to checkpoint
+
+**What it does**:
+- Stages files (or prompts to stage)
+- Reviews staged diff
+- Prompts to update memory-bank, READMEs, CLAUDE.md, .cursor/rules if needed
+- Crafts message following GitHub guidelines (imperative, 72-char subject, optional body)
+- Ensures atomic commits, then commits and pushes
+
+**NOT for**:
+- Just viewing git status (use terminal or git directly)
+- Amending/reverting (use git directly)
+
+---
+
 ## Quick Reference Table
 
 | User Says... | Suggest Command |
@@ -432,6 +456,7 @@ This guide helps AI assistants understand when to suggest specific AIPMOS comman
 | "Report a bug" | /bug-report |
 | "Critique this design" | /critique |
 | "Pricing research" | /price-intel |
+| "Commit these changes" / "Write a commit message" | /commit |
 
 **Dual-Mode Commands**: Some capabilities have both a quick command and a deep skill variant:
 - **/prioritize** (quick) vs **prioritization-craft skill** (deep): Quick scoring vs. comprehensive prioritization with triage, deduplication, and stakeholder communication
