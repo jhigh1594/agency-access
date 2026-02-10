@@ -3,12 +3,12 @@ import posthog from 'posthog-js';
 /**
  * Deferred PostHog Initialization
  *
- * PostHog is initialized using requestIdleCallback to defer loading until
- * after the page has finished its critical rendering path. This significantly
- * improves First Contentful Paint (FCP) by preventing analytics scripts
- * from blocking the initial render.
+ * Follows the official JS library setup: https://posthog.com/docs/libraries/js
  *
- * Falls back to setTimeout if requestIdleCallback is not available.
+ * - Initialization is deferred via requestIdleCallback to avoid blocking FCP.
+ * - In development, events are not sent unless NEXT_PUBLIC_POSTHOG_SEND_IN_DEV=true
+ *   (avoids polluting production analytics with local test data).
+ * - Uses /ingest proxy (see next.config.ts) to reduce ad-blocker impact.
  */
 function initPosthog() {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -20,20 +20,26 @@ function initPosthog() {
     }
     return;
   }
+
+  const host = typeof window !== 'undefined' ? window.location?.host ?? '' : '';
+  const isLocalhost =
+    host.includes('127.0.0.1') || host.includes('localhost');
+  const sendInDev = process.env.NEXT_PUBLIC_POSTHOG_SEND_IN_DEV === 'true';
+  if (process.env.NODE_ENV === 'development' && isLocalhost && !sendInDev) {
+    console.info(
+      '[PostHog] Skipping init on localhost. Set NEXT_PUBLIC_POSTHOG_SEND_IN_DEV=true to send events in development.'
+    );
+    return;
+  }
+
   try {
     posthog.init(key, {
       api_host: '/ingest',
       ui_host: 'https://us.posthog.com',
-      // Include the defaults option as required by PostHog
-      defaults: '2025-11-30',
-      // Enables capturing unhandled exceptions via Error Tracking
-      capture_exceptions: true,
-      // Turn on debug in development mode
+      persistence: 'localStorage',
+      capture_pageview: true,
+      capture_pageleave: true,
       debug: process.env.NODE_ENV === 'development',
-      // Reduce batch size to send events sooner
-      batch_size: 10,
-      // Flush after 5 seconds instead of 30 to not lose events on short sessions
-      flush_interval: 5000,
     });
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {
