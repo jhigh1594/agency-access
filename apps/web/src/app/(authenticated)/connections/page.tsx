@@ -214,15 +214,19 @@ function ConnectionsPageContent() {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to initiate OAuth');
-      return response.json();
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = result?.error?.message ?? 'Failed to initiate OAuth';
+        throw new Error(message);
+      }
+      return result;
     },
     onSuccess: (data) => {
       // Redirect to OAuth provider
       window.location.href = data.data.authUrl;
     },
-    onError: () => {
-      setErrorMessage('Failed to connect platform. Please try again.');
+    onError: (error) => {
+      setErrorMessage((error as Error).message);
       setConnectingPlatform(null);
     },
   });
@@ -281,7 +285,7 @@ function ConnectionsPageContent() {
     setErrorMessage(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest'];
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'zapier'];
     if (manualPlatforms.includes(platform)) {
       // Open manual invitation modal in create mode
       setManualInvitationPlatform(platform);

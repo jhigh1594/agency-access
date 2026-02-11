@@ -23,6 +23,7 @@ const PLATFORM_NAMES: Record<string, string> = {
   beehiiv: 'Beehiiv',
   klaviyo: 'Klaviyo',
   pinterest: 'Pinterest',
+  zapier: 'Zapier',
 };
 
 // Platforms that use Business ID instead of email

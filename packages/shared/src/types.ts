@@ -22,6 +22,7 @@ export const PlatformSchema = z.enum([
   'pinterest', // Pinterest Ads - OAuth 2.0
   'klaviyo', // Klaviyo - OAuth 2.0 with PKCE
   'shopify', // Shopify - OAuth 2.0 with shop context
+  'zapier', // Zapier - OAuth 2.0
 ]);
 export type Platform = z.infer<typeof PlatformSchema>;
 
@@ -76,6 +77,7 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   pinterest: 'Pinterest',
   klaviyo: 'Klaviyo',
   shopify: 'Shopify',
+  zapier: 'Zapier',
 };
 
 // Platform domains for Brandfetch Logo API
@@ -101,6 +103,7 @@ export const PLATFORM_DOMAINS: Record<Platform, string> = {
   pinterest: 'pinterest.com',
   klaviyo: 'klaviyo.com',
   shopify: 'shopify.com',
+  zapier: 'zapier.com',
 };
 
 // Platform OAuth scopes
@@ -196,6 +199,10 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     'read_customers',
     'read_marketing_events',
   ],
+  zapier: [
+    'read',
+    'write',
+  ],
 };
 
 // Platform categorization for UI display
@@ -203,7 +210,7 @@ export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
   recommended: ['google', 'meta', 'linkedin', 'pinterest'] as const,
   // Product-level platforms (legacy, still supported)
-  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify'] as const,
+  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify', 'zapier'] as const,
 } as const;
 
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
@@ -380,6 +387,14 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
     description: 'Newsletter Platform',
     products: [
       { id: 'beehiiv', name: 'Beehiiv', icon: 'BeehiivIcon', description: 'Newsletter publishing and growth' },
+    ],
+  },
+  zapier: {
+    name: 'Zapier',
+    icon: 'ZapierIcon',
+    description: 'Automation Platform',
+    products: [
+      { id: 'zapier', name: 'Zapier', icon: 'ZapierIcon', description: 'Workflow automation and integration' },
     ],
   },
 };

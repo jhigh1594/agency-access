@@ -1,8 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
 import { agencyPlatformService } from '@/services/agency-platform.service';
-import type { Platform } from '@agency-platform/shared';
-import { PLATFORM_NAMES, getPlatformCategory } from './constants.js';
+import { PLATFORM_NAMES, getPlatformCategory, SUPPORTED_PLATFORMS } from './constants.js';
 import { createHash } from 'crypto';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 
@@ -122,20 +121,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
 
     const connections = cachedResult.data || [];
 
-    const allPlatforms: Platform[] = [
-      'google',
-      'meta',
-      'linkedin',
-      'kit',
-      'beehiiv',
-      'tiktok',
-      'mailchimp',
-      'pinterest',
-      'klaviyo',
-      'shopify',
-    ];
-
-    const availablePlatforms = allPlatforms.map((platform) => {
+    const availablePlatforms = [...SUPPORTED_PLATFORMS].map((platform) => {
       const connection = connections.find((c: any) => c.platform === platform);
 
       let connectedEmail: string | undefined;

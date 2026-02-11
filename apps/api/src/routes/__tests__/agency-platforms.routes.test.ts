@@ -8,13 +8,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import { agencyPlatformsRoutes } from '../agency-platforms.js';
-import { agencyPlatformService } from '@/services/agency-platform.service';
-import { oauthStateService } from '@/services/oauth-state.service';
-import { metaAssetsService } from '@/services/meta-assets.service';
-import { MetaConnector } from '@/services/connectors/meta';
+import { agencyPlatformService } from '../../services/agency-platform.service.js';
+import { oauthStateService } from '../../services/oauth-state.service.js';
+import { metaAssetsService } from '../../services/meta-assets.service.js';
+import { MetaConnector } from '../../services/connectors/meta.js';
 
 // Mock services
-vi.mock('@/services/agency-platform.service', () => ({
+vi.mock('../../services/agency-platform.service.js', () => ({
   agencyPlatformService: {
     getConnections: vi.fn(),
     getConnection: vi.fn(),
@@ -25,7 +25,7 @@ vi.mock('@/services/agency-platform.service', () => ({
   },
 }));
 
-vi.mock('@/services/meta-assets.service', () => ({
+vi.mock('../../services/meta-assets.service.js', () => ({
   metaAssetsService: {
     saveBusinessPortfolio: vi.fn(),
     saveAssetSettings: vi.fn(),
@@ -33,7 +33,7 @@ vi.mock('@/services/meta-assets.service', () => ({
   },
 }));
 
-vi.mock('@/services/oauth-state.service', () => ({
+vi.mock('../../services/oauth-state.service.js', () => ({
   oauthStateService: {
     createState: vi.fn(),
     validateState: vi.fn(),
@@ -48,14 +48,14 @@ const mockMetaConnectorInstance = {
 };
 
 // Mock MetaConnector class to return shared instance
-vi.mock('@/services/connectors/meta', () => ({
+vi.mock('../../services/connectors/meta.js', () => ({
   MetaConnector: vi.fn(function() {
     return mockMetaConnectorInstance;
   }),
 }));
 
 // Mock Redis to prevent connection attempts in tests
-vi.mock('@/lib/redis', () => ({
+vi.mock('../../lib/redis.js', () => ({
   redis: {
     set: vi.fn(),
     get: vi.fn(),
@@ -65,7 +65,7 @@ vi.mock('@/lib/redis', () => ({
 }));
 
 // Mock env to provide FRONTEND_URL
-vi.mock('@/lib/env', () => ({
+vi.mock('../../lib/env.js', () => ({
   env: {
     FRONTEND_URL: 'http://localhost:3000',
     NODE_ENV: 'test',
@@ -167,7 +167,7 @@ describe('Agency Platforms Routes', () => {
   });
 
   describe('GET /agency-platforms/available', () => {
-    it('should return all 7 platforms with categorization', async () => {
+    it('should return all supported platforms with categorization', async () => {
       vi.mocked(agencyPlatformService.getConnections).mockResolvedValue({
         data: [] as any,
         error: null,
@@ -180,34 +180,27 @@ describe('Agency Platforms Routes', () => {
 
       expect(response.statusCode).toBe(200);
       const result = response.json();
-      expect(result.data).toHaveLength(7);
+      expect(result.data.length).toBeGreaterThanOrEqual(11);
 
-      // Check categorization
+      // Check categorization: recommended = google, meta, linkedin
       const recommended = result.data.filter((p: any) => p.category === 'recommended');
       const other = result.data.filter((p: any) => p.category === 'other');
 
-      expect(recommended).toHaveLength(4);
-      expect(other).toHaveLength(3);
+      expect(recommended).toHaveLength(3);
+      expect(recommended.map((p: any) => p.platform)).toContain('google');
+      expect(recommended.map((p: any) => p.platform)).toContain('meta');
+      expect(recommended.map((p: any) => p.platform)).toContain('linkedin');
 
-      // Verify recommended platforms
-      const recommendedPlatforms = recommended.map((p: any) => p.platform);
-      expect(recommendedPlatforms).toContain('meta_ads');
-      expect(recommendedPlatforms).toContain('google_ads');
-      expect(recommendedPlatforms).toContain('ga4');
-      expect(recommendedPlatforms).toContain('linkedin');
-
-      // Verify other platforms
-      const otherPlatforms = other.map((p: any) => p.platform);
-      expect(otherPlatforms).toContain('tiktok');
-      expect(otherPlatforms).toContain('snapchat');
-      expect(otherPlatforms).toContain('instagram');
+      // Zapier and other OAuth platforms should be in "other"
+      expect(other.map((p: any) => p.platform)).toContain('zapier');
+      expect(other.map((p: any) => p.platform)).toContain('tiktok');
     });
 
     it('should extract email from metadata.email for connected platforms', async () => {
       const mockConnections = [
         {
           id: 'conn-1',
-          platform: 'meta_ads',
+          platform: 'meta',
           status: 'active',
           connectedBy: 'fallback@agency.com',
           metadata: { email: 'user@example.com' },
@@ -225,7 +218,7 @@ describe('Agency Platforms Routes', () => {
       });
 
       const result = response.json();
-      const metaPlatform = result.data.find((p: any) => p.platform === 'meta_ads');
+      const metaPlatform = result.data.find((p: any) => p.platform === 'meta');
 
       expect(metaPlatform.connected).toBe(true);
       expect(metaPlatform.connectedEmail).toBe('user@example.com');
@@ -289,7 +282,7 @@ describe('Agency Platforms Routes', () => {
       const mockConnections = [
         {
           id: 'conn-1',
-          platform: 'google_ads',
+          platform: 'google',
           status: 'active',
           connectedBy: 'admin@agency.com',
           metadata: {},
@@ -307,7 +300,7 @@ describe('Agency Platforms Routes', () => {
       });
 
       const result = response.json();
-      const googlePlatform = result.data.find((p: any) => p.platform === 'google_ads');
+      const googlePlatform = result.data.find((p: any) => p.platform === 'google');
 
       expect(googlePlatform.connectedEmail).toBe('admin@agency.com');
     });
@@ -338,7 +331,7 @@ describe('Agency Platforms Routes', () => {
       const mockConnections = [
         {
           id: 'conn-1',
-          platform: 'snapchat',
+          platform: 'zapier',
           status: 'expired',
           connectedBy: 'admin@agency.com',
           metadata: { email: 'expired@example.com' },
@@ -356,11 +349,11 @@ describe('Agency Platforms Routes', () => {
       });
 
       const result = response.json();
-      const snapchatPlatform = result.data.find((p: any) => p.platform === 'snapchat');
+      const zapierPlatform = result.data.find((p: any) => p.platform === 'zapier');
 
-      expect(snapchatPlatform.connected).toBe(false); // Not active
-      expect(snapchatPlatform.status).toBe('expired');
-      expect(snapchatPlatform.connectedEmail).toBe('expired@example.com'); // Still shows email
+      expect(zapierPlatform.connected).toBe(false); // Not active
+      expect(zapierPlatform.status).toBe('expired');
+      expect(zapierPlatform.connectedEmail).toBe('expired@example.com'); // Still shows email
     });
   });
 

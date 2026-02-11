@@ -5,6 +5,7 @@ import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
 import type { GoogleAccountsResponse } from '@/services/connectors/google';
 import type { PlatformConnector } from '@/services/connectors/factory';
+import { ConnectorError } from '@/services/connectors/base.connector.js';
 import { env } from '@/lib/env';
 import { PLATFORM_CONNECTORS, SUPPORTED_PLATFORMS, MANUAL_PLATFORMS } from './constants.js';
 
@@ -26,10 +27,12 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/agency-platforms/:platform/initiate', async (request, reply) => {
     const { platform } = request.params as { platform: string };
-    const { agencyId, userEmail, redirectUrl } = request.body as {
+    const { agencyId, userEmail, redirectUrl, ...extraParams } = request.body as {
       agencyId?: string;
       userEmail?: string;
       redirectUrl?: string;
+      shop?: string; // For Shopify OAuth
+      [key: string]: any; // Allow other platform-specific params
     };
 
     if (!SUPPORTED_PLATFORMS.includes(platform as any)) {
@@ -58,6 +61,7 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
       userEmail,
       redirectUrl,
       timestamp: Date.now(),
+      ...extraParams, // Include extra params (e.g., shop for Shopify)
     });
 
     if (stateResult.error) {
@@ -86,15 +90,42 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     }
 
     const connector = new ConnectorClass() as PlatformConnector;
-    const authUrl = connector.getAuthUrl(stateResult.data!);
 
-    return reply.send({
-      data: {
-        authUrl,
-        state: stateResult.data,
-      },
-      error: null,
-    });
+    try {
+      // Handle platform-specific parameters (e.g., shop for Shopify)
+      let authUrl: string;
+      if (platform === 'shopify' && extraParams.shop) {
+        authUrl = (connector as any).getAuthUrl(
+          stateResult.data!,
+          undefined, // scopes
+          undefined, // redirectUri
+          extraParams.shop // shop parameter for Shopify
+        );
+      } else {
+        authUrl = connector.getAuthUrl(stateResult.data!);
+      }
+
+      return reply.send({
+        data: {
+          authUrl,
+          state: stateResult.data,
+        },
+        error: null,
+      });
+    } catch (err) {
+      if (err instanceof ConnectorError) {
+        if (err.code === 'MISSING_CLIENT_ID' || err.code === 'MISSING_CLIENT_SECRET') {
+          return reply.code(503).send({
+            data: null,
+            error: {
+              code: err.code,
+              message: `${platform} integration is not configured. Add the required environment variables (e.g. ${platform.toUpperCase()}_CLIENT_ID, ${platform.toUpperCase()}_CLIENT_SECRET) to your .env file.`,
+            },
+          });
+        }
+      }
+      throw err;
+    }
   });
 
   /**
@@ -150,7 +181,13 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
 
       let tokens;
       try {
-        tokens = await connector.exchangeCode(code || '');
+        // Handle platform-specific parameters (e.g., shop for Shopify)
+        const shop = stateData.shop as string | undefined;
+        if (platform === 'shopify' && shop) {
+          tokens = await (connector as any).exchangeCode(code || '', undefined, shop);
+        } else {
+          tokens = await connector.exchangeCode(code || '');
+        }
 
         if (platform === 'meta' && 'getLongLivedToken' in connector) {
           tokens = await (connector as any).getLongLivedToken(tokens.accessToken);

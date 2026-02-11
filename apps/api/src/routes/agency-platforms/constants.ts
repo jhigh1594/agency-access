@@ -10,6 +10,7 @@ import { MailchimpConnector } from '@/services/connectors/mailchimp';
 // import { PinterestConnector } from '@/services/connectors/pinterest';
 import { KlaviyoConnector } from '@/services/connectors/klaviyo';
 import { ShopifyConnector } from '@/services/connectors/shopify';
+// Zapier uses manual invitation flow (like Beehiiv/Kit), not OAuth
 import type { Platform } from '@agency-platform/shared';
 
 export const PLATFORM_NAMES: Record<Platform, string> = {
@@ -31,6 +32,7 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   pinterest: 'Pinterest',
   klaviyo: 'Klaviyo',
   shopify: 'Shopify',
+  zapier: 'Zapier',
 };
 
 export function getPlatformCategory(platform: Platform): 'recommended' | 'other' {
@@ -49,10 +51,11 @@ export const SUPPORTED_PLATFORMS = [
   'pinterest',
   'klaviyo',
   'shopify',
+  'zapier',
 ] as const;
 export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
-export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest'] as const;
+export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'zapier'] as const;
 
 export const PLATFORM_CONNECTORS = {
   google: GoogleConnector,
@@ -67,6 +70,7 @@ export const PLATFORM_CONNECTORS = {
   // pinterest: PinterestConnector,
   klaviyo: KlaviyoConnector,
   shopify: ShopifyConnector,
+  // zapier: uses manual invitation flow, not OAuth
 } as const;
 
 export function getPlatformDisplayName(platform: string): string {

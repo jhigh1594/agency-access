@@ -62,6 +62,10 @@ const envSchema = z.object({
   SHOPIFY_API_KEY: z.string().optional(),
   SHOPIFY_API_SECRET_KEY: z.string().optional(),
 
+  // Zapier OAuth
+  ZAPIER_CLIENT_ID: z.string().optional(),
+  ZAPIER_CLIENT_SECRET: z.string().optional(),
+
   // LinkedIn OAuth
   LINKEDIN_CLIENT_ID: z.string().optional(),
   LINKEDIN_CLIENT_SECRET: z.string().optional(),

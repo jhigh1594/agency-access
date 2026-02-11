@@ -11,6 +11,7 @@ import { pinterestConnector } from './pinterest.js';
 import { klaviyoConnector } from './klaviyo.js';
 import { shopifyConnector } from './shopify.js';
 import { tiktokConnector } from './tiktok.js';
+// Zapier uses manual invitation flow (like Beehiiv/Kit), not OAuth
 
 // Export new hybrid architecture components
 export { BaseConnector, ConnectorError } from './base.connector.js';
@@ -137,6 +138,7 @@ const connectors: Partial<Record<Platform, PlatformConnector>> = {
   pinterest: pinterestConnector,
   klaviyo: klaviyoConnector,
   shopify: shopifyConnector,
+  // zapier: uses manual invitation flow, not OAuth
 };
 
 /**

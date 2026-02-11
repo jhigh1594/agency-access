@@ -346,6 +346,20 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     requiresShopContext: true,
     defaultScopes: ['read_products', 'read_orders', 'read_customers', 'read_marketing_events'],
   },
+
+  // ========================================================================
+  // ZAPIER PLATFORMS
+  // ========================================================================
+
+  zapier: {
+    name: 'Zapier',
+    authUrl: 'https://zapier.com/oauth/authorize',
+    tokenUrl: 'https://zapier.com/oauth/token',
+    scopeSeparator: ',',
+    userInfoUrl: 'https://api.zapier.com/v2/user',
+    supportsRefreshTokens: true,
+    defaultScopes: ['read', 'write'],
+  },
 };
 
 /**

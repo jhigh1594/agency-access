@@ -32,7 +32,7 @@ export function PlatformCard({
   onEditEmail,
 }: PlatformCardProps) {
   const platformName = PLATFORM_NAMES[platform];
-  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo'];
+  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'zapier'];
   const isManualPlatform = manualPlatforms.includes(platform);
 
   // Featured variant has larger padding and icon size
