@@ -182,7 +182,7 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
       let tokens;
       try {
         // Handle platform-specific parameters (e.g., shop for Shopify)
-        const shop = stateData['shop'] as string | undefined;
+        const shop = (stateData as Record<string, unknown>).shop as string | undefined;
         if (platform === 'shopify' && shop) {
           tokens = await (connector as any).exchangeCode(code || '', undefined, shop);
         } else {
