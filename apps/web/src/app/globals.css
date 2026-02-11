@@ -83,11 +83,11 @@
      BRUTALIST UTILITIES
      ======================================== */
 
-  /* Brutalist Card - Hard borders and shadows */
+  /* Brutalist Card - Hard borders and shadows (subtle hover) */
   .brutalist-card {
     @apply border-2 border-black rounded-none shadow-[4px_4px_0px_#000];
-    @apply hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px];
-    @apply transition-all duration-200;
+    @apply hover:shadow-[5px_5px_0px_#000] hover:translate-x-[-1px] hover:translate-y-[-1px];
+    @apply transition-all duration-150;
   }
 
   /* Brutalist Button */
@@ -229,13 +229,13 @@
       radial-gradient(circle at 100% 100%, rgb(var(--secondary) / 0.05) 0%, transparent 40%);
   }
 
-  /* Clean Card Style */
+  /* Clean Card Style (subtle hover) */
   .clean-card {
-    @apply bg-card border border-border/60 shadow-[0_2px_4px_rgba(0,0,0,0.02),0_8px_16px_rgba(0,0,0,0.02)] transition-all duration-500;
+    @apply bg-card border border-border/60 shadow-[0_2px_4px_rgba(0,0,0,0.02),0_8px_16px_rgba(0,0,0,0.02)] transition-all duration-200;
   }
   
   .clean-card:hover {
-    @apply shadow-[0_4px_8px_rgba(0,0,0,0.04),0_16px_32px_rgba(0,0,0,0.04)] -translate-y-1 border-primary/20;
+    @apply shadow-[0_3px_6px_rgba(0,0,0,0.03),0_12px_24px_rgba(0,0,0,0.03)] -translate-y-px border-primary/15;
   }
 
   /* Animation keyframes for combined featured section */
@@ -470,14 +470,14 @@
   box-shadow: 16px 16px 0px rgb(var(--border-hard));
 }
 
-/* Hover lift effect - brutalist style */
+/* Hover lift effect - brutalist style (subtle) */
 .hover-lift-brutalist {
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .hover-lift-brutalist:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px rgb(var(--border-hard));
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px rgb(var(--border-hard));
 }
 
 /* ========================================
