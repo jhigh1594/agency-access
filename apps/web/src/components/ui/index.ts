@@ -26,6 +26,8 @@ export type { HealthStatus } from './health-badge';
 
 export { formatRelativeTime, formatCountdown } from './format-relative-time';
 
+export { PlatformCard } from './platform-card';
+
 export { SearchInput } from './search-input';
 
 export { FilterDropdown } from './filter-dropdown';

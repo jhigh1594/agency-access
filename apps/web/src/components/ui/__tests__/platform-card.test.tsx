@@ -96,7 +96,7 @@ describe('PlatformCard', () => {
       />
     );
 
-    expect(screen.getByText(/connecting/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
   });
@@ -112,7 +112,7 @@ describe('PlatformCard', () => {
       />
     );
 
-    expect(screen.getByText('expired')).toBeInTheDocument();
+    expect(screen.getByText('Expired')).toBeInTheDocument();
     expect(screen.getByText('expired@example.com')).toBeInTheDocument();
   });
 
@@ -127,7 +127,7 @@ describe('PlatformCard', () => {
       />
     );
 
-    expect(screen.getByText('invalid')).toBeInTheDocument();
+    expect(screen.getByText('Invalid')).toBeInTheDocument();
   });
 
   it('should not display status badge for active connections', () => {
