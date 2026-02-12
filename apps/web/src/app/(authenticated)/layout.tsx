@@ -13,20 +13,19 @@ import {
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { m } from 'framer-motion';
+import { useAuthOrBypass, getDevBypassAgencyData, DEV_USER_ID } from '@/lib/dev-auth';
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId, isLoaded, orgId } = useAuth();
+  const clerkAuth = useAuth();
+  const { userId, isLoaded, orgId, isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
   const [open, setOpen] = useState(true);
   const [checkingAgency, setCheckingAgency] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
-
-  // Development bypass for testing
-  const isDevelopmentBypass = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
 
   // Redirect unauthenticated users (skip in bypass mode)
   if (!isDevelopmentBypass && isLoaded && !userId) {
@@ -36,8 +35,14 @@ export default function AuthenticatedLayout({
   // Check if user has an agency and redirect to onboarding if needed
   useEffect(() => {
     const checkAgencyAndRedirect = async () => {
-      // Skip if bypassing auth or if already on onboarding page
-      if (isDevelopmentBypass || pathname?.startsWith('/onboarding')) {
+      // Skip if already on onboarding page
+      if (pathname?.startsWith('/onboarding')) {
+        setCheckingAgency(false);
+        return;
+      }
+
+      // In bypass mode, skip agency check (we have a mock agency)
+      if (isDevelopmentBypass) {
         setCheckingAgency(false);
         return;
       }
@@ -189,7 +194,19 @@ export default function AuthenticatedLayout({
           {/* User Profile at Bottom */}
           <div className="border-t border-neutral-200 pt-4">
             <div className="flex items-center gap-2">
-              <UserButton afterSignOutUrl="/" />
+              {isDevelopmentBypass ? (
+                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md">
+                  <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold">
+                    D
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-amber-900">Dev Mode</span>
+                    <span className="text-xs text-amber-700">{DEV_USER_ID.slice(0, 12)}...</span>
+                  </div>
+                </div>
+              ) : (
+                <UserButton afterSignOutUrl="/" />
+              )}
               <m.div
                 animate={{
                   display: open ? 'inline-block' : 'none',

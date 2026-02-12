@@ -118,10 +118,10 @@ export default function DashboardPage() {
   // Show loading state only on first load
   if (isLoading && !dashboardData) {
     return (
-      <div className="flex-1 bg-slate-50 p-8 flex items-center justify-center">
+      <div className="flex-1 bg-paper p-8 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto" />
-          <p className="mt-4 text-slate-600">Loading dashboard...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-coral mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -130,17 +130,17 @@ export default function DashboardPage() {
   // Show error state
   if (error) {
     return (
-      <div className="flex-1 bg-slate-50 p-8">
+      <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <AlertCircle className="h-8 w-8 text-red-600 mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-red-900 mb-2">Failed to Load Dashboard</h2>
-            <p className="text-red-800 mb-4">
+          <div className="bg-coral/10 border border-coral rounded-lg p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-coral mb-2">Failed to Load Dashboard</h2>
+            <p className="text-coral/90 mb-4">
               {error instanceof Error ? error.message : 'An error occurred while loading the dashboard.'}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
             >
               Retry
             </button>
@@ -153,17 +153,17 @@ export default function DashboardPage() {
   // Show onboarding prompt if no agency found
   if (!agency && !isLoading) {
     return (
-      <div className="flex-1 bg-slate-50 p-8">
+      <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-yellow-900 mb-2">Agency Setup Required</h2>
-            <p className="text-yellow-800 mb-4">
+          <div className="bg-acid/10 border border-acid rounded-lg p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-acid mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-acid mb-2">Agency Setup Required</h2>
+            <p className="text-acid/90 mb-4">
               We couldn't find an agency associated with your account. Let's set one up.
             </p>
             <Link
               href="/onboarding/agency"
-              className="inline-flex px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+              className="inline-flex px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
             >
               Complete Onboarding
             </Link>
@@ -174,20 +174,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 bg-slate-50 p-8">
+    <div className="flex-1 bg-paper p-8">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-            <p className="text-sm text-slate-600 mt-1">Manage client access requests</p>
+            <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
           <Link
             href="/access-requests/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
           >
             <Plus className="h-4 w-4" />
-            New Request
+            Create Request
           </Link>
         </div>
 
@@ -216,11 +216,15 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Access Requests */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Access Requests</h2>
-            <Link href="/access-requests/new" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-              Create New
+        <div className="bg-white rounded-lg shadow-brutalist border border-black/10">
+          <div className="px-6 py-4 border-b border-black/10 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-ink">Recent Access Requests</h2>
+            <Link
+              href="/access-requests/new"
+              className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
+            >
+              <Plus className="h-4 w-4" />
+              Create Request
             </Link>
           </div>
 
@@ -228,27 +232,25 @@ export default function DashboardPage() {
             <EmptyState
               title="No access requests yet"
               description="Create your first access request to start onboarding clients."
-              actionLabel="Create Request"
-              actionHref="/access-requests/new"
             />
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-black/10">
               {requests.map((request: any) => (
-                <div key={request.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div key={request.id} className="px-6 py-4 flex items-center justify-between hover:bg-muted transition-colors">
                   <div>
-                    <h3 className="font-medium text-slate-900">{request.clientName}</h3>
-                    <p className="text-sm text-slate-600">{request.clientEmail}</p>
+                    <h3 className="font-medium text-ink">{request.clientName}</h3>
+                    <p className="text-sm text-muted-foreground">{request.clientEmail}</p>
                     <div className="mt-1 flex gap-2">
                       {request.platforms?.google?.length > 0 && (
-                        <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100 uppercase font-medium">Google</span>
+                        <span className="text-[10px] bg-teal/10 text-teal-90 px-1.5 py-0.5 rounded border border-teal uppercase font-medium">Google</span>
                       )}
                       {request.platforms?.meta?.length > 0 && (
-                        <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100 uppercase font-medium">Meta</span>
+                        <span className="text-[10px] bg-coral/10 text-coral-90 px-1.5 py-0.5 rounded border border-coral uppercase font-medium">Meta</span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-gray-500">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </span>
                     <StatusBadge status={request.status} />
@@ -260,10 +262,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Client Connections */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 mt-6">
-          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Active Connections</h2>
-            <Link href="/clients" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+        <div className="bg-white rounded-lg shadow-brutalist border border-black/10 mt-6">
+          <div className="px-6 py-4 border-b border-black/10 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-ink">Active Connections</h2>
+            <Link href="/clients" className="text-sm text-coral hover:text-coral/90 font-semibold">
               Manage Clients
             </Link>
           </div>
@@ -274,12 +276,12 @@ export default function DashboardPage() {
               description="Connections will appear here after clients authorize access."
             />
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-black/10">
               {connections.map((connection: any) => (
-                <div key={connection.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div key={connection.id} className="px-6 py-4 flex items-center justify-between hover:bg-muted transition-colors">
                   <div>
-                    <h3 className="font-medium text-slate-900">{connection.clientEmail}</h3>
-                    <p className="text-xs text-slate-500">
+                    <h3 className="font-medium text-ink">{connection.clientEmail}</h3>
+                    <p className="text-xs text-muted">
                       Connected on {new Date(connection.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -301,7 +303,7 @@ export default function DashboardPage() {
                     </div>
                     <Link
                       href={`/clients?email=${encodeURIComponent(connection.clientEmail)}`}
-                      className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                      className="text-coral hover:text-coral/90 text-sm font-semibold"
                     >
                       View Details
                     </Link>
