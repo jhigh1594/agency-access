@@ -151,11 +151,11 @@ export default function DesignSystemPage() {
             <div>
               <h3 className="font-sans text-sm font-medium text-muted-foreground mb-4">Status Badges</h3>
               <div className="flex flex-wrap gap-3">
-                <StatusBadge type="connected">Connected</StatusBadge>
-                <StatusBadge type="pending">Pending</StatusBadge>
-                <StatusBadge type="error">Error</StatusBadge>
-                <StatusBadge type="warning">Warning</StatusBadge>
-                <StatusBadge type="info">Info</StatusBadge>
+                <StatusBadge badgeVariant="success">Connected</StatusBadge>
+                <StatusBadge status="pending" />
+                <StatusBadge status="invalid" />
+                <StatusBadge badgeVariant="warning">Warning</StatusBadge>
+                <StatusBadge badgeVariant="default">Info</StatusBadge>
               </div>
             </div>
 
