@@ -867,6 +867,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, {
 };
 
 // Detailed tier information for UI display
+// Aligns with marketing site pricing at https://www.authhub.co/pricing
 export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
   title: string;
   description: string;
@@ -875,41 +876,53 @@ export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
 }> = {
   STARTER: {
     title: 'Starter',
-    description: 'Perfect for small agencies getting started',
+    description: 'For growing agencies getting started',
     price: { monthly: 40, yearly: 480 },
     features: [
-      'Up to 10 access requests',
-      'Up to 5 clients',
-      'Up to 2 team members',
+      '36 client onboards/year',
+      '120 platform audits',
       'All platform integrations',
       'Email support',
+      'White-label branding',
+      'Custom domain/subdomain',
+      'Team access',
+      'Webhooks & API',
+      'Priority support',
     ],
   },
   AGENCY: {
     title: 'Agency',
     description: 'For established agencies scaling fast',
-    price: { monthly: 93, yearly: 1120 },
+    price: { monthly: 93.33, yearly: 1120 },
     features: [
-      'Up to 50 access requests',
-      'Up to 25 clients',
-      'Up to 5 team members',
-      'All platform integrations',
+      '120 client onboards/year',
+      '600 platform audits',
       'White-label branding',
+      'Custom domain/subdomain',
+      'Team access (5 seats)',
+      'Webhooks & API',
       'Priority support',
+      'Multi-brand accounts',
+      'Custom integrations',
+      'SLA guarantee',
     ],
   },
   PRO: {
     title: 'Pro',
-    description: 'For growing agencies with more clients',
-    price: { monthly: 187, yearly: 2240 },
+    description: 'For large agencies with multi-brand needs',
+    price: { monthly: 186.67, yearly: 2240 },
     features: [
-      'Up to 100 access requests',
-      'Up to 50 clients',
-      'Up to 10 team members',
-      'All platform integrations',
-      'Priority support',
-      'Custom branding',
+      '600 client onboards/year',
+      '3,000 platform audits',
+      'White-label branding',
+      'Custom domain/subdomain',
+      'Unlimited team seats',
+      'Webhooks & API',
+      'Multi-brand accounts (3)',
       'API access',
+      'Custom integrations',
+      'Priority support (dedicated)',
+      'SLA guarantee',
     ],
   },
   ENTERPRISE: {
@@ -917,14 +930,17 @@ export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
     description: 'Unlimited everything for large agencies',
     price: { monthly: 299, yearly: 2990 },
     features: [
-      'Unlimited access requests',
-      'Unlimited clients',
-      'Unlimited team members',
-      'All platform integrations',
+      'Unlimited client onboards',
+      'Unlimited platform audits',
       'Dedicated support',
-      'White-label options',
-      'SSO integration',
-      'Custom contracts',
+      'Custom integrations',
+      'Unlimited client onboarding',
+      'White-label branding',
+      'Custom domain/subdomain',
+      'SLA guarantee',
+      'Multi-brand accounts (unlimited)',
+      'Unlimited team seats',
+      'Webhooks & API access',
     ],
   },
 };
