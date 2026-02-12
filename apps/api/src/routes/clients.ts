@@ -20,6 +20,7 @@ import {
 } from '@/services/client.service';
 import type { ClientLanguage } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
+import { quotaMiddleware } from '@/middleware/quota.middleware';
 
 // Validation schemas
 const createClientSchema = z.object({
@@ -92,7 +93,12 @@ export async function clientRoutes(fastify: FastifyInstance) {
    * POST /api/clients
    * Create a new client
    */
-  fastify.post('/clients', async (request, reply) => {
+  fastify.register(
+    quotaMiddleware({
+      metric: 'clients',
+      getAgencyId: (request) => (request as any).agencyId,
+    }),
+    async (request, reply) => {
     const agencyId = (request as any).agencyId;
 
     // Validate request body
@@ -125,7 +131,8 @@ export async function clientRoutes(fastify: FastifyInstance) {
       // For unexpected errors, let Fastify handle them (will result in 500)
       throw error;
     }
-  });
+    },
+  );
 
   /**
    * GET /api/clients
@@ -243,7 +250,8 @@ export async function clientRoutes(fastify: FastifyInstance) {
       // For unexpected errors, let Fastify handle them (will result in 500)
       throw error;
     }
-  });
+    },
+  );
 
   /**
    * DELETE /api/clients/:id

@@ -9,6 +9,7 @@ import { FastifyInstance } from 'fastify';
 import { agencyService } from '../services/agency.service.js';
 import { sendError, sendValidationError } from '../lib/response.js';
 import { authenticate } from '../middleware/auth.js';
+import { quotaMiddleware } from '../middleware/quota.middleware.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
   // Add authentication middleware to all agency routes
@@ -174,7 +175,12 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   });
 
   // Invite member
-  fastify.post('/agencies/:id/members', async (request, reply) => {
+  fastify.register(
+    quotaMiddleware({
+      metric: 'team_seats',
+      getAgencyId: (request) => request.params as any).id,
+    }),
+    async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const body = request.body as { email: string; role: 'admin' | 'member' | 'viewer' };
@@ -186,10 +192,17 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send(result);
-  });
+    },
+  );
 
   // Bulk invite members (for onboarding)
-  fastify.post('/agencies/:id/members/bulk', async (request, reply) => {
+  fastify.register(
+    quotaMiddleware({
+      metric: 'team_seats',
+      getAgencyId: (request) => request.params as any).id,
+      requestedAmount: (request) => (request.body as any)?.members?.length || 1,
+    }),
+    async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const result = await agencyService.bulkInviteMembers(id, request.body as any);
@@ -200,7 +213,8 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send(result);
-  });
+    },
+  );
 
   // Get onboarding status
   fastify.get('/agencies/:id/onboarding-status', async (request, reply) => {

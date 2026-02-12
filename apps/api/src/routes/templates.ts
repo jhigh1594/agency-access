@@ -7,6 +7,7 @@
 
 import { FastifyInstance } from 'fastify';
 import { templateService } from '../services/template.service.js';
+import { quotaMiddleware } from '../middleware/quota.middleware.js';
 
 export async function templateRoutes(fastify: FastifyInstance) {
   // Get all templates for an agency
@@ -43,7 +44,12 @@ export async function templateRoutes(fastify: FastifyInstance) {
   });
 
   // Create a new template
-  fastify.post('/agencies/:agencyId/templates', async (request, reply) => {
+  fastify.register(
+    quotaMiddleware({
+      metric: 'templates',
+      getAgencyId: (request) => (request.params as any).agencyId,
+    }),
+    async (request, reply) => {
     const { agencyId } = request.params as { agencyId: string };
     const input = { ...(request.body as any), agencyId };
 
@@ -58,7 +64,8 @@ export async function templateRoutes(fastify: FastifyInstance) {
     }
 
     return reply.code(201).send(result);
-  });
+    },
+  );
 
   // Update a template
   fastify.patch('/templates/:id', async (request, reply) => {

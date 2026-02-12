@@ -9,10 +9,16 @@ import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../services/access-request.service.js';
 import { agencyPlatformService } from '../services/agency-platform.service.js';
 import { prisma } from '../lib/prisma.js';
+import { quotaMiddleware } from '../middleware/quota.middleware.js';
 
 export async function accessRequestRoutes(fastify: FastifyInstance) {
   // Create access request
-  fastify.post('/access-requests', async (request, reply) => {
+  fastify.register(
+    quotaMiddleware({
+      metric: 'access_requests',
+      getAgencyId: (request) => (request as any).agencyId,
+    }),
+    async (request, reply) => {
     const requestBody = request.body as any;
     let { agencyId, authModel = 'client_authorization', platforms = [] } = requestBody;
 
@@ -191,7 +197,8 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
     }
 
     return reply.code(201).send(result);
-  });
+    },
+  );
 
   // Get access request by unique token (for client authorization flow - no auth required)
   fastify.get('/client/:token', async (request, reply) => {
