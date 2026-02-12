@@ -40,6 +40,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Get dynamic afterSignUpUrl based on localStorage tier selection
+  const getAfterSignUpUrl = () => {
+    if (typeof window !== 'undefined') {
+      const storedTier = localStorage.getItem('selectedSubscriptionTier');
+      if (storedTier && storedTier !== 'STARTER') {
+        return `/onboarding/agency?tier=${storedTier}`;
+      }
+    }
+    return '/onboarding/agency';
+  };
+
   return (
     <LazyMotion features={domAnimation} strict>
       <ClerkProvider
@@ -88,8 +99,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           dividerText: 'color: rgb(var(--muted-foreground)); font-size: 0.9rem;',
         },
       }}
-      // Redirect to onboarding after signup (new users only)
-      afterSignUpUrl="/onboarding/agency"
+      // Redirect to onboarding after signup (new users only) - dynamic based on tier selection
+      afterSignUpUrl={getAfterSignUpUrl()}
       // Redirect existing users to dashboard (they'll be redirected to onboarding if needed)
       afterSignInUrl="/dashboard"
     >

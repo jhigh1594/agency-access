@@ -121,7 +121,6 @@ export function PricingTiers() {
           {/* Free Tier */}
           <div className="md:col-span-1">
             <PricingTierCard
-              tier="STARTER"
               name="Free"
               description="For agencies just getting started"
               yearlyPrice={0}

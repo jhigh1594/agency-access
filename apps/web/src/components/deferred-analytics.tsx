@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 /**
@@ -10,21 +11,26 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
  * This improves First Contentful Paint (FCP) by preventing analytics scripts
  * from blocking the initial render.
  *
- * SpeedInsights is loaded in a separate requestAnimationFrame to ensure
- * the main content has already been painted.
+ * Both Analytics and SpeedInsights are loaded in a separate requestAnimationFrame
+ * to ensure the main content has already been painted.
  */
 export function DeferredAnalytics() {
   useEffect(() => {
-    // Defer SpeedInsights loading until after first paint
+    // Defer analytics loading until after first paint
     const rafId = requestAnimationFrame(() => {
       // Use setTimeout to push to next task after paint
       setTimeout(() => {
-        // SpeedInsights will initialize automatically
+        // Analytics and SpeedInsights will initialize automatically
       }, 0);
     });
 
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  return <SpeedInsights />;
+  return (
+    <>
+      <Analytics />
+      <SpeedInsights />
+    </>
+  );
 }

@@ -339,6 +339,7 @@ export const PLATFORM_CATEGORIES = {
 - Google Ads requires a `developer-token` header for all API calls
 - Kit uses JSON request body for token exchange (not form-encoded)
 - Beehiiv uses API key authentication (team invitation workflow, not OAuth)
+- Zapier uses manual invitation flow (like Beehiiv/Kit) - no OAuth, agencies provide email for client invitations
 - Store all metadata (user IDs, business IDs, ad accounts) in `PlatformAuthorization.metadata` as JSON
 - OAuth state is managed by `OAuthStateService` using Redis for CSRF protection
 - **NEVER store tokens in database** - always use Infisical and store only `secretId`
@@ -525,6 +526,86 @@ await myQueue.add('job-name', { data }, {
   delay: 1000 * 60 * 5, // 5 minutes
   attempts: 3
 });
+```
+
+## Frontend Development & Design System
+
+### Design System Reference
+
+**Complete documentation**: `apps/web/DESIGN_SYSTEM.md`
+**Visual token showcase**: Run dev server → visit `http://localhost:3000/design-system`
+
+### "Acid Brutalism" Aesthetic
+
+Our design system combines shadcn/ui patterns with a bold brutalist aesthetic:
+
+**Core Philosophy**: Be bold, be memorable, be intentional. One brutalist element per view.
+
+#### Color Palette (CSS Variables)
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--ink` | #09090B | Backgrounds |
+| `--paper` | #FAFAFA | Surfaces |
+| `--coral` | #FF6B35 | Primary CTAs (10% usage) |
+| `--teal` | #00A896 | Success states (5% usage) |
+| `--acid` | #CCFF00 | Kinetic elements (2% only!) |
+| `--electric` | #8B5CF6 | Hover states |
+
+#### Typography
+- **dela** → Hero headlines (`font-dela`)
+- **display** (Geist) → Section headings (`font-display`)
+- **sans** → Body text, UI elements
+- **mono** → Code, data, technical content
+
+#### Hard Shadows (Brutalist Signature)
+```css
+/* Defined in globals.css */
+.shadow-brutalist     → 4px 4px 0px #000
+.shadow-brutalist-lg  → 6px 6px 0px #000
+.shadow-brutalist-xl  → 8px 8px 0px #000
+```
+
+#### Component Patterns
+
+**Button Variants** (see `components/ui/button.tsx`):
+- `primary`, `secondary`, `success`, `danger`, `ghost` — Standard flows
+- `brutalist` — Hero CTAs, use **once per page**
+- `brutalist-ghost` — Outlined brutalist
+- `brutalist-rounded` — Softer brutalist for cards
+
+**Card Styles**:
+- `Card` (shadcn) — Standard refined card
+- `.brutalist-card` — Hard borders, hard shadows
+- `.clean-card` — Subtle shadow with hover lift
+
+**Animation Utilities**:
+```tsx
+// Reveal animations
+<div className="reveal-element reveal-up">Content</div>
+<div className="reveal-element reveal-down stagger-1">Delayed</div>
+
+// Brutalist hover
+<div className="hover-lift-brutalist">Card</div>
+```
+
+### Frontend Development Guidelines
+
+1. **Use shadcn/ui patterns** — `cn()` utility, forwardRef, proper types
+2. **Reference design tokens** — Use CSS variables, not hard-coded values
+3. **One brutalist element per view** — Restraint creates impact
+4. **Touch targets minimum 44×44px** — iOS HIG compliance
+5. **Mobile-first responsive** — `md:`, `lg:` breakpoints for larger screens
+6. **Respect motion preferences** — All animations respect `prefers-reduced-motion`
+
+### Component Library Structure
+```
+apps/web/src/components/ui/
+├── button.tsx           # Extended with brutalist variants
+├── card.tsx             # shadcn/ui base
+├── status-badge.tsx     # Custom status indicators
+├── platform-icon.tsx    # Platform logos
+├── empty-state.tsx      # Empty state patterns
+└── [components]         # Custom components
 ```
 
 ## Test-Driven Development (TDD) (MUST FOLLOW)

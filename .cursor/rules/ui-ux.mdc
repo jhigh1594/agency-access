@@ -7,9 +7,33 @@ alwaysApply: true
 # UI/UX Rules
 
 ## Design System
-- Use shadcn/ui components from `components/ui/`
-- Follow Tailwind design tokens for consistency
-- Use 8px grid system for spacing (xs: 8px, sm: 12px, md: 16px, lg: 24px, xl: 32px)
+- **Reference**: `apps/web/DESIGN_SYSTEM.md` — Complete design system documentation
+- **Visual Preview**: `/design-system` route — Interactive token showcase
+- Use shadcn/ui components from `components/ui/` as foundation
+- Follow "Acid Brutalism" aesthetic: hard shadows, bold borders, kinetic accents
+- Design tokens defined in `globals.css` and `tailwind.config.ts`
+
+### Color Usage (Acid Brutalism)
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--coral` | #FF6B35 | Primary CTAs (10% usage) |
+| `--teal` | #00A896 | Success states (5% usage) |
+| `--acid` | #CCFF00 | Kinetic elements (2% usage only) |
+| `--electric` | #8B5CF6 | Hover states |
+| `--ink` | #09090B | Backgrounds |
+| `--paper` | #FAFAFA | Surfaces |
+
+### Typography
+- **dela** → Hero headlines (`font-dela`)
+- **display** (Geist) → Section headings (`font-display`)
+- **sans** → Body text, UI elements
+- **mono** → Code, technical content
+
+### Component Patterns
+- **One brutalist element per view** — Let it stand out
+- Use `cn()` utility for className merging
+- Extend shadcn patterns with custom variants
+- See `components/ui/button.tsx` for variant examples
 
 ## Accessibility (WCAG 2.1 AA)
 - Minimum contrast: 4.5:1 for normal text, 3:1 for large text
