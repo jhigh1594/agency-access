@@ -162,10 +162,10 @@ export default function DesignSystemPage() {
             <div>
               <h3 className="font-sans text-sm font-medium text-muted-foreground mb-4">Health Badges</h3>
               <div className="flex flex-wrap gap-3">
-                <HealthBadge status="healthy" />
-                <HealthBadge status="expiring" />
-                <HealthBadge status="expired" />
-                <HealthBadge status="unknown" />
+                <HealthBadge health="healthy" />
+                <HealthBadge health="expiring" />
+                <HealthBadge health="expired" />
+                <HealthBadge health="unknown" />
               </div>
             </div>
           </div>
