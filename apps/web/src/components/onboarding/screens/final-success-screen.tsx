@@ -89,7 +89,7 @@ export function FinalSuccessScreen({
         variants={staggerItem}
       >
         <motion.div
-          className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full shadow-2xl mb-6"
+          className="inline-flex items-center justify-center w-24 h-24 bg-teal border-2 border-teal rounded-full shadow-brutalist mb-6"
           variants={pulseVariants}
           animate="animate"
           transition={pulseTransition}
@@ -110,17 +110,17 @@ export function FinalSuccessScreen({
         className="max-w-2xl mx-auto mb-8"
         variants={staggerItem}
       >
-        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
-          <h3 className="font-semibold text-green-900 mb-4">What you've accomplished:</h3>
+        <div className="bg-teal/10 border-2 border-teal rounded-lg p-6">
+          <h3 className="font-semibold text-teal-90 mb-4">What you've accomplished:</h3>
           <div className="space-y-3">
             {ACCOMPLISHMENTS.map((item, index) => (
-              <div key={index} className="flex items-center gap-3 text-green-800">
+              <div key={index} className="flex items-center gap-3 text-teal800">
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 <span>{item.text}</span>
               </div>
             ))}
             {teamInvitesSent > 0 && (
-              <div className="flex items-center gap-3 text-green-800">
+              <div className="flex items-center gap-3 text-teal800">
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                 <span>{teamInvitesSent} team invite{teamInvitesSent > 1 ? 's' : ''} sent</span>
               </div>
@@ -141,11 +141,11 @@ export function FinalSuccessScreen({
           {DASHBOARD_FEATURES.map((feature, index) => (
             <motion.div
               key={feature.title}
-              className="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-all"
+              className="p-4 bg-paper border-2 border-black rounded-lg hover:border-teal hover:bg-teal/5 transition-all"
               variants={staggerItem}
               whileHover={{ scale: 1.02 }}
             >
-              <feature.icon className="w-6 h-6 text-indigo-600 mb-2" />
+              <feature.icon className="w-6 h-6 text-coral mb-2" />
               <h4 className="font-semibold text-gray-900 mb-1">{feature.title}</h4>
               <p className="text-sm text-gray-600">{feature.description}</p>
             </motion.div>
@@ -159,14 +159,14 @@ export function FinalSuccessScreen({
           className="max-w-2xl mx-auto mb-8"
           variants={staggerItem}
         >
-          <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-6 text-center">
-            <div className="text-sm text-indigo-600 font-semibold uppercase tracking-wide mb-2">
+          <div className="bg-paper border-2 border-black rounded-lg p-6 text-center">
+            <div className="text-sm text-coral600 font-semibold uppercase tracking-wide mb-2">
               ⚡ Lightning Fast
             </div>
-            <div className="text-3xl font-bold text-indigo-900 mb-1">
+            <div className="text-3xl font-bold text-coral900 mb-1">
               Under 60 seconds
             </div>
-            <div className="text-sm text-indigo-700">
+            <div className="text-sm text-coral700">
               That's how long it took you to create your first access request
             </div>
           </div>
@@ -180,7 +180,7 @@ export function FinalSuccessScreen({
       >
         <motion.button
           onClick={onComplete}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-coral hover:bg-coral/90 text-white font-bold text-lg rounded-lg shadow-brutalist hover:shadow-brutalist-lg transition-all border-2 border-black"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >

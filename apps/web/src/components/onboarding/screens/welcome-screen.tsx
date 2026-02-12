@@ -49,7 +49,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
       <div className="text-center space-y-6">
         {/* Logo/Icon */}
         <motion.div
-          className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl mb-4"
+          className="inline-flex items-center justify-center w-20 h-20 bg-acid/20 border-2 border-acid rounded-lg shadow-brutalist mb-4"
           animate={{
             rotate: [0, 5, -5, 0],
           }}
@@ -81,7 +81,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
 
         {/* Value Proposition */}
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full text-indigo-700 font-semibold text-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal/10 border border-teal rounded-full text-teal-90 font-semibold text-sm">
             <span className="text-2xl">🎯</span>
             <span>Get client access in 60 seconds</span>
           </div>
@@ -98,7 +98,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.2 }}
         >
-          <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center cursor-pointer group">
+          <div className="aspect-video bg-ink border-2 border-black rounded-lg shadow-brutalist-lg overflow-hidden flex items-center justify-center cursor-pointer group">
             {/* Video Thumbnail Placeholder */}
             <div className="absolute inset-0 bg-[url('/placeholder-video-thumbnail.jpg')] bg-cover bg-center opacity-40" />
 
@@ -108,10 +108,10 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
                 // TODO: Implement video modal/player
                 console.log('Play demo video');
               }}
-              className="relative z-10 flex items-center justify-center w-20 h-20 bg-white/90 hover:bg-white rounded-full shadow-xl transition-all group-hover:scale-110"
+              className="relative z-10 flex items-center justify-center w-20 h-20 bg-white hover:bg-white/90 rounded-full shadow-brutalist transition-all group-hover:scale-110"
               aria-label="Watch demo video"
             >
-              <Play className="w-8 h-8 text-indigo-600 ml-1" fill="currentColor" />
+              <Play className="w-8 h-8 text-teal ml-1" fill="currentColor" />
             </button>
 
             {/* Video Label */}
@@ -142,7 +142,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
           ].map((benefit, index) => (
             <motion.div
               key={benefit.title}
-              className="p-4 bg-gray-50 rounded-xl text-left"
+              className="p-4 bg-paper border-2 border-black rounded-lg text-left"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 + 0.3 }}
@@ -157,15 +157,15 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
         {/* Personalization (if agency name is available) */}
         {agencyName && (
           <motion.div
-            className="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg max-w-2xl mx-auto"
+            className="mt-6 p-4 bg-paper border-2 border-black rounded-lg max-w-2xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <p className="text-indigo-900 text-sm">
+            <p className="text-ink text-sm">
               <span className="font-semibold">We've pre-filled your agency name:</span>{' '}
               <span className="font-mono bg-white px-2 py-0.5 rounded">{agencyName}</span>
-              <span className="text-indigo-700 ml-2">(you can change this next)</span>
+              <span className="text-gray-700 ml-2">(you can change this next)</span>
             </p>
           </motion.div>
         )}
@@ -173,7 +173,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
         {/* Single CTA */}
         <motion.button
           onClick={onNext}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all mt-8"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-coral hover:bg-coral/90 text-white font-bold text-lg rounded-lg shadow-brutalist hover:shadow-brutalist-lg transition-all mt-8 border-2 border-black"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -184,7 +184,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
         {/* Trust Indicators */}
         <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-500">
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 text-teal" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -194,7 +194,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
             <span>No credit card required</span>
           </div>
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 text-teal" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"

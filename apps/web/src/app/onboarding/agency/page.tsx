@@ -63,6 +63,23 @@ export default function AgencyOnboardingPage() {
   const [checkingAgency, setCheckingAgency] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createdAgencyId, setCreatedAgencyId] = useState<string | null>(null);
+  const [selectedTier, setSelectedTier] = useState<'STARTER' | 'AGENCY' | null>(null);
+
+  // Read selected tier from URL params or localStorage on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tierParam = urlParams.get('tier')?.toUpperCase();
+
+    const storedTier = typeof window !== 'undefined'
+      ? localStorage.getItem('selectedSubscriptionTier')
+      : null;
+
+    // Prefer URL param, fallback to localStorage, default to STARTER
+    const tier = (tierParam || storedTier) as 'STARTER' | 'AGENCY' | null;
+    if (tier && (tier === 'STARTER' || tier === 'AGENCY')) {
+      setSelectedTier(tier);
+    }
+  }, []);
 
   // Step 1: Agency Profile
   const [agencyProfile, setAgencyProfile] = useState<AgencyProfile>({
@@ -140,6 +157,7 @@ export default function AgencyOnboardingPage() {
           clerkUserId: userId,
           name: agencyProfile.name.trim(),
           email: userEmail,
+          subscriptionTier: selectedTier || 'STARTER',
           settings: {
             logoUrl: agencyProfile.logoUrl.trim() || null,
             industry: agencyProfile.industry,
@@ -157,10 +175,17 @@ export default function AgencyOnboardingPage() {
       setCreatedAgencyId(result.data.id);
       setLoading(false);
 
+      // Clean up localStorage after successful agency creation
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('selectedSubscriptionTier');
+        localStorage.removeItem('selectedBillingInterval');
+      }
+
       // Track agency creation in PostHog
       posthog.capture('agency_created', {
         agency_id: result.data.id,
         agency_name: agencyProfile.name.trim(),
+        subscription_tier: selectedTier || 'STARTER',
         industry: agencyProfile.industry || 'not_specified',
         timezone: agencyProfile.timezone,
         has_logo: !!agencyProfile.logoUrl.trim(),

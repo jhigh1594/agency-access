@@ -161,7 +161,7 @@ export function UnifiedWizard({
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col"
+      className="min-h-screen bg-ink flex flex-col"
     >
       {/* Progress Bar */}
       <div className="w-full bg-white/10 backdrop-blur-sm border-b border-white/20">
@@ -241,7 +241,7 @@ export function UnifiedWizard({
               }}
             >
               {/* Content Card */}
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+              <div className="bg-white rounded-lg shadow-brutalist-lg overflow-hidden border-2 border-black">
                 {/* Close Button (only after value delivered) */}
                 {showClose && onClose && (
                   <button
@@ -294,12 +294,12 @@ export function UnifiedWizard({
             <button
               onClick={handleNext}
               disabled={!canGoNext || loading}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white hover:bg-gray-50 text-indigo-600 font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-coral hover:bg-coral/90 text-white font-bold shadow-brutalist transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
               aria-label={currentStep === totalSteps - 1 ? 'Complete onboarding' : 'Continue to next step'}
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Processing...
                 </>
               ) : currentStep === totalSteps - 1 ? (
