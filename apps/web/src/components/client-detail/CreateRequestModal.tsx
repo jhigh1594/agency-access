@@ -14,6 +14,8 @@ import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type Platform } from '@agency-platform/shared';
 import { PlatformIcon } from '@/components/ui';
+import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
+import { UpgradeModal } from '@/components/upgrade-modal';
 
 interface CreateRequestModalProps {
   client: {
@@ -37,6 +39,7 @@ const MAJOR_PLATFORMS = ['google', 'meta', 'linkedin'];
 export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequestModalProps) {
   const { orgId } = useAuth();
   const queryClient = useQueryClient();
+  const checkQuota = useQuotaCheck();
 
   const [globalAccessLevel, setGlobalAccessLevel] = useState<AccessLevel>('standard');
   const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
@@ -44,6 +47,8 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [createdRequest, setCreatedRequest] = useState<{ id: string; uniqueToken: string } | null>(null);
+  const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Toggle platform group expansion
   const toggleGroup = (groupKey: string) => {
@@ -163,7 +168,39 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleQuotaCheck = async () => {
+    try {
+      const result = await checkQuota({ metric: 'access_requests' });
+      if (!result.allowed) {
+        setQuotaError(
+          new QuotaExceededError({
+            code: 'QUOTA_EXCEEDED',
+            message: `You've reached your Access Requests limit`,
+            metric: 'access_requests',
+            limit: result.limit,
+            used: result.used,
+            remaining: result.remaining,
+            currentTier: result.currentTier,
+            suggestedTier: result.suggestedTier,
+            upgradeUrl: result.upgradeUrl || '',
+          })
+        );
+        setShowUpgradeModal(true);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        setQuotaError(error);
+        setShowUpgradeModal(true);
+        return false;
+      }
+      // Other errors - allow creation to proceed (will be caught by mutation)
+      return true;
+    }
+  };
+
+  const handleSubmitWithQuotaCheck = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -171,6 +208,10 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
       setErrorMessage('Please select at least one platform');
       return;
     }
+
+    // Check quota first
+    const quotaOk = await handleQuotaCheck();
+    if (!quotaOk) return;
 
     createMutation.mutate();
   };
@@ -201,7 +242,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8"
+          className="bg-card rounded-lg shadow-xl max-w-2xl w-full my-8"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
@@ -211,7 +252,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Create Access Request</h2>
-                <p className="text-xs text-slate-500">for {client.name}</p>
+                <p className="text-sm text-slate-500">for {client.name}</p>
               </div>
             </div>
             <button
@@ -230,39 +271,35 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                   <CheckCircle2 className="h-8 w-8 text-green-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">Access Request Created!</h3>
-                <p className="text-slate-600 mb-6">
-                  Send this link to {client.name} to request platform access
-                </p>
+                <p className="text-slate-600">Send this link to {client.name} to request platform access</p>
+              </div>
 
-                {/* Invite link */}
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Client Authorization Link
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={inviteLink || ''}
-                      className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={copyLinkToClipboard}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
-                    >
-                      Copy Link
-                    </button>
-                  </div>
+              {/* Invite link */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Client Authorization Link
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={inviteLink || ''}
+                    className="flex-1 px-3 py-2 bg-card border border-slate-300 rounded-lg text-sm text-slate-700 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={copyLinkToClipboard}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
+                  >
+                    Copy Link
+                  </button>
                 </div>
-
-                <p className="text-sm text-slate-500">Closing automatically in 3 seconds...</p>
               </div>
             </div>
           ) : (
             <>
               {/* Form */}
-              <form onSubmit={handleSubmit} className="max-h-[60vh] overflow-y-auto">
+              <form onSubmit={handleSubmitWithQuotaCheck} className="max-h-[60vh] overflow-y-auto">
                 {/* Client info (read-only) */}
                 <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -274,7 +311,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                       <span className="text-slate-500">Email:</span>
                       <span className="ml-2 font-medium text-slate-900">{client.email}</span>
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <span className="text-slate-500">Company:</span>
                       <span className="ml-2 font-medium text-slate-900">{client.company}</span>
                     </div>
@@ -298,21 +335,9 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                           <button
                             type="button"
                             onClick={() => toggleGroup(groupKey)}
-                            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-slate-50 transition-colors"
                           >
                             <div className="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                checked={isGroupFullySelected(groupKey, products)}
-                                ref={(input) => {
-                                  if (input) {
-                                    input.indeterminate = isGroupPartiallySelected(groupKey, products);
-                                  }
-                                }}
-                                onChange={() => toggleGroupProducts(groupKey, products)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                              />
                               <PlatformIcon platform={groupKey as Platform} size="sm" />
                               <span className="font-medium text-slate-900">{group.name}</span>
                               <span className="text-xs text-slate-500">({products.length} products)</span>
@@ -330,7 +355,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                               {products.map((product) => (
                                 <label
                                   key={product.id}
-                                  className="flex items-center gap-3 cursor-pointer hover:bg-white rounded px-2 py-1 transition-colors"
+                                  className="flex items-center gap-3 cursor-pointer hover:bg-card rounded px-2 py-1 transition-colors"
                                 >
                                   <input
                                     type="checkbox"
@@ -338,7 +363,9 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                                     onChange={() => toggleProduct(groupKey, product.id)}
                                     className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
                                   />
+                                  <PlatformIcon platform={product.product as Platform} size="sm" />
                                   <span className="text-sm text-slate-700">{product.name}</span>
+                                  <span className="text-xs text-slate-500">({products.length} products)</span>
                                 </label>
                               ))}
                             </div>
@@ -348,6 +375,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                     })}
                   </div>
 
+                  {/* Selected count */}
                   {totalSelected > 0 && (
                     <p className="mt-3 text-sm text-slate-600">
                       {totalSelected} platform{totalSelected !== 1 ? 's' : ''} selected
@@ -356,7 +384,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                 </div>
 
                 {/* Step 2: Access Level */}
-                <div className="px-6 py-4">
+                <div className="px-6 py-4 border-b border-slate-200">
                   <h3 className="text-sm font-semibold text-slate-900 mb-4">
                     2. Select Access Level <span className="text-red-500">*</span>
                   </h3>
@@ -384,63 +412,67 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                           <div className="flex-1">
                             <div className="font-medium text-slate-900">{info.title}</div>
                             <div className="text-sm text-slate-600 mt-1">{info.description}</div>
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {info.permissions.map((permission) => (
-                                <span
-                                  key={permission}
-                                  className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded"
-                                >
-                                  {permission}
-                                </span>
-                              ))}
-                            </div>
                           </div>
                         </label>
                       );
                     })}
                   </div>
                 </div>
-              </form>
 
-              {/* Error message */}
-              {errorMessage && (
-                <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{errorMessage}</p>
+                {/* Error message */}
+                {errorMessage && (
+                  <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{errorMessage}</p>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={createMutation.isPending}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createMutation.isPending || totalSelected === 0}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {createMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="h-4 w-4" />
+                        Create & Send Link
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={createMutation.isPending}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={createMutation.isPending || totalSelected === 0}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {createMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="h-4 w-4" />
-                      Create & Send Link
-                    </>
-                  )}
-                </button>
-              </div>
+              </form>
             </>
           )}
         </m.div>
       </m.div>
     </AnimatePresence>
+
+    {/* Upgrade Modal */}
+    {showUpgradeModal && quotaError && (
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => {
+          setShowUpgradeModal(false);
+          setQuotaError(null);
+        }}
+        quotaError={quotaError}
+        currentTier={quotaError.currentTier}
+      />
+    )}
+    </>
   );
 }
