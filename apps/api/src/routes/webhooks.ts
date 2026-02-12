@@ -9,6 +9,7 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
 import { SubscriptionTier } from '@agency-platform/shared';
+import { getTierFromProductId } from '@/config/creem.config';
 
 type CreemEvent = {
   id: string;
@@ -24,15 +25,6 @@ type CreemEvent = {
       trial_end?: string;
     };
   };
-};
-
-const PRICE_ID_TO_TIER: Record<string, SubscriptionTier> = {
-  'price_starter_monthly': 'STARTER',
-  'price_starter_yearly': 'STARTER',
-  'price_agency_monthly': 'AGENCY',
-  'price_agency_yearly': 'AGENCY',
-  'price_pro_monthly': 'PRO',
-  'price_pro_yearly': 'PRO',
 };
 
 export async function webhookRoutes(fastify: FastifyInstance) {
@@ -76,21 +68,31 @@ export async function webhookRoutes(fastify: FastifyInstance) {
           payload.type === 'subscription.canceled') {
 
         const { subscription } = payload.data;
-        const tier = PRICE_ID_TO_TIER[subscription.price_id];
 
-        if (!tier) {
-          return reply.code(400).send({ error: 'Unknown price ID' });
-        }
+      // Use Creem config utility to map product ID to tier
+      let tier: SubscriptionTier;
+      try {
+        tier = getTierFromProductId(subscription.price_id);
+      } catch (err: any) {
+        // Unknown product ID - log and skip
+        fastify.log.warn({ priceId: subscription.price_id, error: err?.message || String(err) }, 'Unknown Creem product ID in webhook');
+        return reply.code(400).send({ error: 'Unknown product ID' });
+      }
 
-        // Find agency by Creem customer ID
-        const agency = await prisma.agency.findFirst({
-          where: {
-            settings: {
-              path: ['creemCustomerId'],
-              equals: subscription.customer_id,
-            },
+      // Find agency by Creem customer ID
+      // Look up via Subscription model which has the creemCustomerId field
+      const agencyWithSubscription = await prisma.agency.findFirst({
+        where: {
+          subscription: {
+            creemCustomerId: subscription.customer_id,
           },
-        });
+        },
+        include: {
+          subscription: true,
+        },
+      });
+
+      const agency = agencyWithSubscription;
 
         if (agency?.clerkUserId) {
           // Update Clerk metadata with new tier
@@ -111,6 +113,22 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             where: { id: agency.id },
             data: { subscriptionTier: tier },
           });
+
+          // Also update subscription record if it exists
+          if (agency.subscription) {
+            await prisma.subscription.update({
+              where: { id: agency.subscription.id },
+              data: {
+                tier,
+                status: subscription.status,
+                currentPeriodStart: new Date(subscription.current_period_start),
+                currentPeriodEnd: new Date(subscription.current_period_end),
+                trialStart: subscription.trial_end ? null : new Date(),
+                trialEnd: subscription.trial_end ? new Date(subscription.trial_end) : null,
+                creemData: subscription as any,
+              },
+            });
+          }
         }
       }
 

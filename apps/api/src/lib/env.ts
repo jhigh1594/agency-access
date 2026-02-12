@@ -76,7 +76,7 @@ const envSchema = z.object({
   // Creem Payments
   CREEM_API_KEY: z.string(),
   CREEM_WEBHOOK_SECRET: z.string(),
-  CREEM_API_URL: z.string().url().default('https://api.creem.io/v1'),
+  CREEM_API_URL: z.string().url().default('https://api.creem.io'),
 
   LOG_LEVEL: z.string().default('info'),
 

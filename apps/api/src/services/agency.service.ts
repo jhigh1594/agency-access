@@ -8,12 +8,15 @@
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
+import { creem } from '@/lib/creem.js';
+import { getProductId } from '@/config/creem.config';
 
 // Validation schemas
 const createAgencySchema = z.object({
   name: z.string().min(1, 'Agency name is required'),
   email: z.string().email('Invalid email address'),
   clerkUserId: z.string().optional(),
+  subscriptionTier: z.enum(['STARTER', 'AGENCY']).optional(),
   settings: z.record(z.any()).optional(),
 });
 
@@ -87,7 +90,7 @@ export async function createAgency(input: CreateAgencyInput) {
           email: validated.email,
           clerkUserId: validated.clerkUserId || null,
           settings: validated.settings || null,
-          subscriptionTier: 'STARTER',
+          subscriptionTier: validated.subscriptionTier || 'STARTER',
         },
       });
 
@@ -120,6 +123,164 @@ export async function createAgency(input: CreateAgencyInput) {
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to create agency',
+      },
+    };
+  }
+}
+
+/**
+ * Create a new agency with Creem checkout session
+ * Creates agency, admin member, and checkout URL atomically in a single transaction
+ */
+export interface CreateAgencyWithCheckoutInput {
+  clerkUserId: string;
+  name: string;
+  email: string;
+  selectedTier: 'STARTER' | 'AGENCY';
+  billingInterval: 'monthly' | 'yearly';
+  settings?: Record<string, any>;
+}
+
+export async function createAgencyWithCheckout(input: CreateAgencyWithCheckoutInput) {
+  try {
+    // Validate input
+    const schema = z.object({
+      clerkUserId: z.string().min(1, 'Clerk user ID is required'),
+      name: z.string().min(1, 'Agency name is required'),
+      email: z.string().email('Invalid email address'),
+      selectedTier: z.enum(['STARTER', 'AGENCY']),
+      billingInterval: z.enum(['monthly', 'yearly']),
+      settings: z.record(z.any()).optional(),
+    });
+
+    const validated = schema.parse(input);
+
+    // Check if agency with this clerkUserId already exists
+    if (validated.clerkUserId) {
+      const existingByClerk = await prisma.agency.findUnique({
+        where: { clerkUserId: validated.clerkUserId },
+      });
+
+      if (existingByClerk) {
+        return {
+          data: null,
+          error: {
+            code: 'AGENCY_EXISTS',
+            message: 'An agency already exists for this user',
+          },
+        };
+      }
+    }
+
+    // Check if agency with this email already exists
+    const existingByEmail = await prisma.agency.findUnique({
+      where: { email: validated.email },
+    });
+
+    if (existingByEmail) {
+      return {
+        data: null,
+        error: {
+          code: 'AGENCY_EXISTS',
+          message: 'An agency with this email already exists',
+        },
+      };
+    }
+
+    // Check if agency with this name already exists
+    const existingByName = await prisma.agency.findFirst({
+      where: { name: validated.name },
+    });
+
+    if (existingByName) {
+      return {
+        data: null,
+        error: {
+          code: 'AGENCY_EXISTS',
+          message: 'An agency with this name already exists',
+        },
+      };
+    }
+
+    // Use transaction to create agency and admin member atomically
+    const result = await prisma.$transaction(async (tx: any) => {
+      // 1. Create agency with selected tier
+      const agency = await tx.agency.create({
+        data: {
+          name: validated.name,
+          email: validated.email,
+          clerkUserId: validated.clerkUserId || null,
+          subscriptionTier: validated.selectedTier,
+          settings: validated.settings || null,
+        },
+      });
+
+      // 2. Create admin member
+      await tx.agencyMember.create({
+        data: {
+          agencyId: agency.id,
+          email: validated.email,
+          role: 'admin',
+        },
+      });
+
+      return { agency };
+    });
+
+    // 3. Create Creem checkout session (outside transaction - agency is already created)
+    const productId = getProductId(validated.selectedTier, validated.billingInterval);
+
+    const checkout = await creem.createCheckoutSession({
+      customer: result.agency.email,
+      customerEmail: result.agency.email,
+      productId,
+      successUrl: `${process.env.FRONTEND_URL}/checkout/success?agency=${result.agency.id}`,
+      cancelUrl: `${process.env.FRONTEND_URL}/checkout/cancel?agency=${result.agency.id}`,
+      metadata: {
+        agencyId: result.agency.id,
+        tier: validated.selectedTier,
+        billingInterval: validated.billingInterval,
+      },
+    });
+
+    if (checkout.error) {
+      // Agency was created but checkout failed - log and return error
+      console.error('Failed to create Creem checkout:', checkout.error);
+      return {
+        data: { agency: result.agency, checkoutUrl: null },
+        error: {
+          code: 'CREEM_CHECKOUT_FAILED',
+          message: 'Agency created but checkout session failed. Please try again from settings.',
+          details: checkout.error,
+        },
+      };
+    }
+
+    return {
+      data: {
+        agency: result.agency,
+        checkoutUrl: checkout.data?.url || null,
+      },
+      error: null,
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid input data',
+          details: error.errors,
+        },
+      };
+    }
+
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to create agency with checkout',
+        details: error instanceof Error ? error.message : String(error),
       },
     };
   }
@@ -643,6 +804,7 @@ export const agencyService = {
   listAgencies,
   getAgencyByEmail,
   createAgency,
+  createAgencyWithCheckout,
   getAgency,
   updateAgency,
   getAgencyMembers,

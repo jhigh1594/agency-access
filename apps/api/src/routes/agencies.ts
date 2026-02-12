@@ -111,6 +111,41 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     return reply.send(result);
   });
 
+  /**
+   * POST /api/agencies/signup-checkout
+   *
+   * Create agency and Creem checkout session in one atomic operation.
+   * Used during signup flow to redirect user to payment immediately.
+   */
+  fastify.post('/agencies/signup-checkout', async (request, reply) => {
+    try {
+      const body = request.body as {
+        clerkUserId: string;
+        name: string;
+        email: string;
+        selectedTier: 'STARTER' | 'AGENCY';
+        billingInterval: 'monthly' | 'yearly';
+        settings?: Record<string, any>;
+      };
+
+      fastify.log.info({ email: body.email, tier: body.selectedTier }, 'POST /agencies/signup-checkout');
+
+      const result = await agencyService.createAgencyWithCheckout(body);
+
+      if (result.error) {
+        fastify.log.error({ error: result.error }, 'POST /agencies/signup-checkout: Service error');
+        const statusCode = result.error.code === 'AGENCY_EXISTS' ? 409 : 400;
+        return sendError(reply, result.error.code, result.error.message, statusCode);
+      }
+
+      fastify.log.info({ agencyId: result.data.agency.id }, 'POST /agencies/signup-checkout: Success');
+      return reply.send(result);
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in POST /agencies/signup-checkout');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to create agency with checkout', 500);
+    }
+  });
+
   // Update agency
   fastify.patch('/agencies/:id', async (request, reply) => {
     const { id } = request.params as { id: string };

@@ -24,6 +24,9 @@ export interface OAuthState {
   accessRequestId?: string;
   accessRequestToken?: string; // Unique token for the access request link
   clientEmail?: string;
+  // For platform-specific parameters (e.g., Shopify shop name)
+  shop?: string;
+  [key: string]: any; // Allow other platform-specific params
 }
 
 const STATE_EXPIRY_SECONDS = 600; // 10 minutes

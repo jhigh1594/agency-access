@@ -42,6 +42,23 @@ interface SyncSubscriptionParams {
   cancelAtPeriodEnd?: boolean;
 }
 
+interface UpgradeSubscriptionParams {
+  agencyId: string;
+  newTier: SubscriptionTier;
+  updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
+}
+
+interface CancelSubscriptionParams {
+  agencyId: string;
+  cancelAtPeriodEnd?: boolean;
+}
+
+interface UpdateSeatCountParams {
+  agencyId: string;
+  seatCount: number;
+  updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
+}
+
 interface ServiceResult<T> {
   data: T | null;
   error: { code: string; message: string } | null;
@@ -276,6 +293,281 @@ class SubscriptionService {
           invoiceDate: inv.invoiceDate!,
           invoiceUrl: inv.invoiceUrl || undefined,
         })),
+      },
+      error: null,
+    };
+  }
+
+  /**
+   * Upgrade or downgrade a subscription to a different tier
+   * Uses Creem's dedicated upgrade endpoint with proration options
+   */
+  async upgradeSubscription(params: UpgradeSubscriptionParams): Promise<
+    ServiceResult<{
+      tier: SubscriptionTier;
+      status: string;
+      effectiveDate?: Date;
+    }>
+  > {
+    const { agencyId, newTier, updateBehavior = 'proration-charge' } = params;
+
+    // Get subscription with Creem subscription ID
+    const subscription = await prisma.subscription.findUnique({
+      where: { agencyId },
+      select: {
+        id: true,
+        tier: true,
+        creemSubscriptionId: true,
+        creemCustomerId: true,
+      },
+    });
+
+    if (!subscription || !subscription.creemSubscriptionId) {
+      return {
+        data: null,
+        error: {
+          code: 'NO_SUBSCRIPTION',
+          message: 'No active subscription found for this agency',
+        },
+      };
+    }
+
+    // Get the new product ID
+    let productId: string;
+    try {
+      productId = getProductId(newTier);
+    } catch {
+      return {
+        data: null,
+        error: { code: 'INVALID_TIER', message: 'Invalid subscription tier' },
+      };
+    }
+
+    // Validate tier transition (can't upgrade to same tier)
+    if (subscription.tier === newTier) {
+      return {
+        data: null,
+        error: {
+          code: 'SAME_TIER',
+          message: 'New tier must be different from current tier',
+        },
+      };
+    }
+
+    // Call Creem upgrade API
+    const upgradeResult = await creem.upgradeSubscription(
+      subscription.creemSubscriptionId,
+      {
+        productId,
+        updateBehavior,
+      }
+    );
+
+    if (upgradeResult.error || !upgradeResult.data) {
+      return {
+        data: null,
+        error: {
+          code: upgradeResult.error?.code || 'UPGRADE_ERROR',
+          message: upgradeResult.error?.message || 'Failed to upgrade subscription',
+        },
+      };
+    }
+
+    // Update local subscription record
+    const updated = await prisma.subscription.update({
+      where: { agencyId },
+      data: {
+        tier: newTier,
+      },
+      select: {
+        tier: true,
+        status: true,
+        currentPeriodEnd: true,
+      },
+    });
+
+    // Determine effective date based on update behavior
+    let effectiveDate: Date | undefined;
+    if (updateBehavior === 'proration-charge-immediately') {
+      effectiveDate = new Date();
+    } else if (updated.currentPeriodEnd) {
+      effectiveDate = updated.currentPeriodEnd;
+    }
+
+    return {
+      data: {
+        tier: updated.tier as SubscriptionTier,
+        status: updated.status,
+        effectiveDate,
+      },
+      error: null,
+    };
+  }
+
+  /**
+   * Cancel a subscription
+   * Can cancel immediately or at the end of the current billing period
+   */
+  async cancelSubscription(params: CancelSubscriptionParams): Promise<
+    ServiceResult<{
+      status: string;
+      cancelAtPeriodEnd: boolean;
+      effectiveDate?: Date;
+    }>
+  > {
+    const { agencyId, cancelAtPeriodEnd = true } = params;
+
+    // Get subscription with Creem subscription ID
+    const subscription = await prisma.subscription.findUnique({
+      where: { agencyId },
+      select: {
+        id: true,
+        creemSubscriptionId: true,
+        currentPeriodEnd: true,
+      },
+    });
+
+    if (!subscription || !subscription.creemSubscriptionId) {
+      return {
+        data: null,
+        error: {
+          code: 'NO_SUBSCRIPTION',
+          message: 'No active subscription found for this agency',
+        },
+      };
+    }
+
+    // Call Creem cancel API
+    const cancelResult = await creem.cancelSubscription(
+      subscription.creemSubscriptionId,
+      { cancelAtPeriodEnd }
+    );
+
+    if (cancelResult.error || !cancelResult.data) {
+      return {
+        data: null,
+        error: {
+          code: cancelResult.error?.code || 'CANCEL_ERROR',
+          message: cancelResult.error?.message || 'Failed to cancel subscription',
+        },
+      };
+    }
+
+    // Update local subscription record
+    const updated = await prisma.subscription.update({
+      where: { agencyId },
+      data: {
+        cancelAtPeriodEnd,
+        status: cancelAtPeriodEnd ? 'active' : 'canceled',
+      },
+      select: {
+        status: true,
+        cancelAtPeriodEnd: true,
+        currentPeriodEnd: true,
+      },
+    });
+
+    // Determine effective date
+    let effectiveDate: Date | undefined;
+    if (cancelAtPeriodEnd && updated.currentPeriodEnd) {
+      effectiveDate = updated.currentPeriodEnd;
+    } else if (!cancelAtPeriodEnd) {
+      effectiveDate = new Date();
+    }
+
+    return {
+      data: {
+        status: updated.status,
+        cancelAtPeriodEnd: updated.cancelAtPeriodEnd,
+        effectiveDate,
+      },
+      error: null,
+    };
+  }
+
+  /**
+   * Update seat count for seat-based subscriptions (future-ready)
+   * This method is prepared for future seat-based billing implementation
+   */
+  async updateSeatCount(params: UpdateSeatCountParams): Promise<
+    ServiceResult<{
+      seatCount: number;
+      proratedAmount?: number;
+    }>
+  > {
+    const { agencyId, seatCount, updateBehavior = 'proration-charge' } = params;
+
+    // Get subscription
+    const subscription = await prisma.subscription.findUnique({
+      where: { agencyId },
+      select: {
+        id: true,
+        creemSubscriptionId: true,
+      },
+    });
+
+    if (!subscription || !subscription.creemSubscriptionId) {
+      return {
+        data: null,
+        error: {
+          code: 'NO_SUBSCRIPTION',
+          message: 'No active subscription found for this agency',
+        },
+      };
+    }
+
+    // First, get the subscription from Creem to retrieve the item ID
+    const subResult = await creem.retrieveSubscription(subscription.creemSubscriptionId);
+
+    if (subResult.error || !subResult.data) {
+      return {
+        data: null,
+        error: {
+          code: 'FETCH_ERROR',
+          message: 'Failed to retrieve subscription details',
+        },
+      };
+    }
+
+    // Check if subscription has items
+    if (!subResult.data.items || subResult.data.items.length === 0) {
+      return {
+        data: null,
+        error: {
+          code: 'NO_ITEMS',
+          message: 'Subscription does not support seat-based billing',
+        },
+      };
+    }
+
+    // Update the seat count using the first item
+    const updateResult = await creem.updateSubscriptionItems(
+      subscription.creemSubscriptionId,
+      {
+        items: [
+          {
+            id: subResult.data.items[0].id,
+            units: seatCount,
+          },
+        ],
+        updateBehavior,
+      }
+    );
+
+    if (updateResult.error || !updateResult.data) {
+      return {
+        data: null,
+        error: {
+          code: updateResult.error?.code || 'UPDATE_ERROR',
+          message: updateResult.error?.message || 'Failed to update seat count',
+        },
+      };
+    }
+
+    return {
+      data: {
+        seatCount,
+        proratedAmount: updateResult.data.proratedAmount,
       },
       error: null,
     };

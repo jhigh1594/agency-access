@@ -243,4 +243,139 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // ============================================================
+  // SUBSCRIPTION MANAGEMENT
+  // ============================================================
+
+  /**
+   * POST /api/subscriptions/:agencyId/upgrade
+   * Upgrade or downgrade a subscription to a different tier
+   */
+  fastify.post('/subscriptions/:agencyId/upgrade', async (request, reply) => {
+    try {
+      const { agencyId } = request.params as { agencyId: string };
+      const body = request.body as {
+        newTier: SubscriptionTier;
+        updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
+      };
+
+      // Validate required fields
+      if (!body.newTier) {
+        return sendValidationError(reply, 'newTier is required');
+      }
+
+      // Validate tier
+      const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
+      if (!validTiers.includes(body.newTier)) {
+        return sendValidationError(reply, 'Invalid subscription tier');
+      }
+
+      // Validate update behavior
+      const validBehaviors = ['proration-charge-immediately', 'proration-charge', 'proration-none'] as const;
+      if (body.updateBehavior && !validBehaviors.includes(body.updateBehavior)) {
+        return sendValidationError(reply, 'Invalid update behavior');
+      }
+
+      fastify.log.info({ agencyId, newTier: body.newTier, updateBehavior: body.updateBehavior }, 'POST /subscriptions/:agencyId/upgrade');
+
+      const result = await subscriptionService.upgradeSubscription({
+        agencyId,
+        newTier: body.newTier,
+        updateBehavior: body.updateBehavior || 'proration-charge',
+      });
+
+      if (result.error) {
+        fastify.log.error({ error: result.error }, 'POST /subscriptions/:agencyId/upgrade: Service error');
+        return sendError(
+          reply,
+          result.error.code,
+          result.error.message,
+          result.error.code === 'NO_SUBSCRIPTION' ? 404 : 400
+        );
+      }
+
+      return sendSuccess(reply, result.data);
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in POST /subscriptions/:agencyId/upgrade');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to upgrade subscription', 500);
+    }
+  });
+
+  /**
+   * POST /api/subscriptions/:agencyId/cancel
+   * Cancel a subscription
+   */
+  fastify.post('/subscriptions/:agencyId/cancel', async (request, reply) => {
+    try {
+      const { agencyId } = request.params as { agencyId: string };
+      const body = request.body as {
+        cancelAtPeriodEnd?: boolean;
+      };
+
+      fastify.log.info({ agencyId, cancelAtPeriodEnd: body.cancelAtPeriodEnd }, 'POST /subscriptions/:agencyId/cancel');
+
+      const result = await subscriptionService.cancelSubscription({
+        agencyId,
+        cancelAtPeriodEnd: body.cancelAtPeriodEnd ?? true,
+      });
+
+      if (result.error) {
+        fastify.log.error({ error: result.error }, 'POST /subscriptions/:agencyId/cancel: Service error');
+        return sendError(
+          reply,
+          result.error.code,
+          result.error.message,
+          result.error.code === 'NO_SUBSCRIPTION' ? 404 : 500
+        );
+      }
+
+      return sendSuccess(reply, result.data);
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in POST /subscriptions/:agencyId/cancel');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to cancel subscription', 500);
+    }
+  });
+
+  /**
+   * POST /api/subscriptions/:agencyId/update-seats
+   * Update seat count for seat-based subscriptions (future-ready)
+   */
+  fastify.post('/subscriptions/:agencyId/update-seats', async (request, reply) => {
+    try {
+      const { agencyId } = request.params as { agencyId: string };
+      const body = request.body as {
+        seatCount: number;
+        updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
+      };
+
+      // Validate required fields
+      if (typeof body.seatCount !== 'number' || body.seatCount < 1) {
+        return sendValidationError(reply, 'seatCount must be a positive number');
+      }
+
+      fastify.log.info({ agencyId, seatCount: body.seatCount }, 'POST /subscriptions/:agencyId/update-seats');
+
+      const result = await subscriptionService.updateSeatCount({
+        agencyId,
+        seatCount: body.seatCount,
+        updateBehavior: body.updateBehavior || 'proration-charge',
+      });
+
+      if (result.error) {
+        fastify.log.error({ error: result.error }, 'POST /subscriptions/:agencyId/update-seats: Service error');
+        return sendError(
+          reply,
+          result.error.code,
+          result.error.message,
+          result.error.code === 'NO_SUBSCRIPTION' ? 404 : 400
+        );
+      }
+
+      return sendSuccess(reply, result.data);
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in POST /subscriptions/:agencyId/update-seats');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to update seat count', 500);
+    }
+  });
+
 }

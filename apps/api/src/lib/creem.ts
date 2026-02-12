@@ -151,7 +151,67 @@ class CreemClient {
   }
 
   /**
-   * Update a subscription (for upgrades/downgrades)
+   * Upgrade or downgrade a subscription to a different product
+   * Uses Creem's dedicated upgrade endpoint with proration options
+   *
+   * @param subscriptionId - The subscription to upgrade
+   * @param params - Upgrade parameters
+   * @param params.productId - The new product ID to upgrade/downgrade to
+   * @param params.updateBehavior - How to handle proration:
+   *   - "proration-charge-immediately": Charge difference immediately, new cycle starts
+   *   - "proration-charge": Credit applied to next invoice, keeps current cycle
+   *   - "proration-none": No proration, change takes effect next cycle
+   */
+  async upgradeSubscription(
+    subscriptionId: string,
+    params: {
+      productId: string;
+      updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
+    }
+  ): Promise<CreemResponse<any>> {
+    return this.request(`/subscriptions/${subscriptionId}/upgrade`, {
+      method: 'POST',
+      body: JSON.stringify({
+        product_id: params.productId,
+        update_behavior: params.updateBehavior || 'proration-charge',
+      }),
+    });
+  }
+
+  /**
+   * Update subscription items (for seat-based billing)
+   * Use this to modify the quantity/units of subscription items
+   *
+   * @param subscriptionId - The subscription to update
+   * @param params - Update parameters
+   * @param params.items - Array of items with updated units
+   * @param params.updateBehavior - Proration behavior (same as upgrade)
+   */
+  async updateSubscriptionItems(
+    subscriptionId: string,
+    params: {
+      items: Array<{
+        id: string; // Item ID from subscription
+        units: number; // New quantity/seat count
+      }>;
+      updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
+    }
+  ): Promise<CreemResponse<any>> {
+    return this.request(`/subscriptions/${subscriptionId}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        items: params.items.map(item => ({
+          id: item.id,
+          units: item.units,
+        })),
+        update_behavior: params.updateBehavior || 'proration-charge',
+      }),
+    });
+  }
+
+  /**
+   * Update subscription metadata
+   * @deprecated Use upgradeSubscription for tier changes
    */
   async updateSubscription(
     subscriptionId: string,
@@ -169,6 +229,10 @@ class CreemClient {
 
   /**
    * Cancel a subscription
+   *
+   * @param subscriptionId - The subscription to cancel
+   * @param params - Cancellation parameters
+   * @param params.cancelAtPeriodEnd - If true, cancels at period end. If false, cancels immediately.
    */
   async cancelSubscription(
     subscriptionId: string,
@@ -178,7 +242,9 @@ class CreemClient {
   ): Promise<CreemResponse<any>> {
     return this.request(`/subscriptions/${subscriptionId}`, {
       method: 'DELETE',
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        cancel_at_period_end: params.cancelAtPeriodEnd ?? true,
+      }),
     });
   }
 
