@@ -364,7 +364,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                                     onChange={() => toggleProduct(groupKey, product.id)}
                                     className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
                                   />
-                                  <PlatformIcon platform={product.product as Platform} size="sm" />
+                                  <PlatformIcon platform={product.id as Platform} size="sm" />
                                   <span className="text-sm text-slate-700">{product.name}</span>
                                   <span className="text-xs text-slate-500">({products.length} products)</span>
                                 </label>
