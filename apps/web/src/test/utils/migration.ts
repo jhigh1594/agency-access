@@ -13,7 +13,7 @@ import {
   hasSoftShadow,
   usesGenericColor,
   hasOverRoundedRadius
-} from '../design-system';
+} from './design-system';
 
 /**
  * Migration test case configuration
