@@ -229,13 +229,9 @@
       radial-gradient(circle at 100% 100%, rgb(var(--secondary) / 0.05) 0%, transparent 40%);
   }
 
-  /* Clean Card Style (subtle hover) */
+  /* Clean Card Style (no hover - settings cards remain static) */
   .clean-card {
     @apply bg-card border border-border/60 shadow-[0_2px_4px_rgba(0,0,0,0.02),0_8px_16px_rgba(0,0,0,0.02)] transition-all duration-200;
-  }
-  
-  .clean-card:hover {
-    @apply shadow-[0_3px_6px_rgba(0,0,0,0.03),0_12px_24px_rgba(0,0,0,0.03)] -translate-y-px border-primary/15;
   }
 
   /* Animation keyframes for combined featured section */
@@ -761,3 +757,35 @@ html.animations-ready .animate-float-pillar {
   flex-direction: column !important;
   border-radius: 0.75rem !important;
 }
+
+/* ========================================
+   MIGRATION HELPERS (Temporary)
+   These help migrate components incrementally
+   TODO: Remove after migration complete
+   ======================================== */
+
+/* Generic color to brand color mappings */
+.text-success { @apply text-teal; }
+.bg-success-light { @apply bg-teal/10; }
+.border-success { @apply border-teal; }
+
+.text-warning { @apply text-acid; }
+.bg-warning-light { @apply bg-acid/10; }
+.border-warning { @apply border-acid; }
+
+.text-danger { @apply text-coral; }
+.bg-danger-light { @apply bg-coral/10; }
+.border-danger { @apply border-coral; }
+
+.text-muted { @apply text-gray-600; }
+.bg-muted { @apply bg-paper; }
+.border-muted { @apply border-black/10; }
+
+/* Soft shadow to brutalist shadow mappings */
+.modal-shadow { @apply shadow-brutalist-lg; }
+.card-shadow { @apply shadow-brutalist; }
+.dropdown-shadow { @apply shadow-brutalist-sm; }
+
+/* Border radius mappings */
+.brutalist-rounded { @apply rounded-lg; }
+.brutalist-soft { @apply rounded-xl; }

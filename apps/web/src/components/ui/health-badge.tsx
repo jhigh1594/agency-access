@@ -20,22 +20,22 @@ const HEALTH_CONFIG: Record<
 > = {
   healthy: {
     label: 'Healthy',
-    className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    className: 'bg-teal/10 text-teal border-teal/30',
     icon: <CheckCircle2 className="h-4 w-4" />,
   },
   expiring: {
     label: 'Expiring Soon',
-    className: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    className: 'bg-acid/10 text-acid border-acid/30',
     icon: <AlertCircle className="h-4 w-4" />,
   },
   expired: {
     label: 'Expired',
-    className: 'bg-red-100 text-red-700 border-red-200',
+    className: 'bg-coral/10 text-coral border-coral/30',
     icon: <XCircle className="h-4 w-4" />,
   },
   unknown: {
     label: 'Unknown',
-    className: 'bg-gray-100 text-gray-700 border-gray-200',
+    className: 'bg-muted/10 text-muted-foreground border-border',
     icon: <Clock className="h-4 w-4" />,
   },
 };
@@ -80,21 +80,21 @@ export function ExpirationCountdown({
   const isUrgent = daysUntilExpiry <= 2;
 
   if (daysUntilExpiry < 0) {
-    return <span className="text-sm text-red-600 font-medium">Expired</span>;
+    return <span className="text-sm text-coral font-medium">Expired</span>;
   }
 
   if (daysUntilExpiry === 0) {
-    return <span className="text-sm text-red-600 font-medium">Today</span>;
+    return <span className="text-sm text-coral font-medium">Today</span>;
   }
 
   if (daysUntilExpiry === 1) {
-    return <span className="text-sm text-yellow-700 font-medium">Tomorrow</span>;
+    return <span className="text-sm text-acid font-medium">Tomorrow</span>;
   }
 
   return (
     <span
       className={`text-sm ${
-        isUrgent ? 'text-yellow-700 font-medium' : 'text-slate-600'
+        isUrgent ? 'text-acid font-medium' : 'text-muted-foreground'
       }`}
     >
       {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'}

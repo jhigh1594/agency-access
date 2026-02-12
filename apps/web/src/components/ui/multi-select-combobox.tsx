@@ -204,14 +204,14 @@ export function MultiSelectCombobox({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {label && (
-        <label className="block text-sm font-semibold text-slate-700 mb-2">{label}</label>
+        <label className="block text-sm font-semibold text-ink mb-2">{label}</label>
       )}
 
       {/* Select All Button (Outside Dropdown) */}
       {showSelectAll && options.length > 1 && (
         <button
           onClick={handleSelectAll}
-          className="flex items-center gap-2 px-4 py-2 border-2 border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mb-2 w-full text-left"
+          className="flex items-center gap-2 px-4 py-2 border-2 border-coral rounded-lg hover:bg-coral/10 transition-colors mb-2 w-full text-left"
           type="button"
         >
           <div
@@ -219,22 +219,22 @@ export function MultiSelectCombobox({
               w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
               ${
                 isAllSelected
-                  ? 'bg-indigo-600 border-indigo-600'
+                  ? 'bg-coral border-coral'
                   : isPartiallySelected
-                  ? 'bg-indigo-200 border-indigo-400'
-                  : 'border-indigo-300 bg-white'
+                  ? 'bg-coral/20 border-coral/40'
+                  : 'border-2 border-black bg-white'
               }
             `}
           >
             {isAllSelected && <Check className="w-3 h-3 text-white" />}
             {isPartiallySelected && (
-              <div className="w-2 h-0.5 bg-indigo-600 rounded" />
+              <div className="w-2 h-0.5 bg-coral rounded" />
             )}
           </div>
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-gray-700">
             {isAllSelected ? 'Deselect All' : 'Select All'}
           </span>
-          <span className="text-xs text-slate-500 ml-auto">
+          <span className="text-xs text-gray-500 ml-auto">
             {selectedOptions.length} of {options.length}
           </span>
         </button>
@@ -254,7 +254,7 @@ export function MultiSelectCombobox({
         className={`
           min-h-[60px] w-full px-3 py-2 border-2 rounded-lg cursor-pointer
           transition-all duration-200 relative
-          ${isOpen ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-slate-200 hover:border-slate-300'}
+          ${isOpen ? 'border-coral ring-2 ring-coral/20' : 'border-black/10 hover:border-black'}
         `}
         role="combobox"
         aria-expanded={isOpen}
@@ -262,7 +262,7 @@ export function MultiSelectCombobox({
       >
         <div className="flex flex-wrap gap-2 items-center pr-8">
           {selectedOptions.length === 0 ? (
-            <span className="text-slate-400 text-sm py-1 flex items-center gap-2">
+            <span className="text-gray-500 text-sm py-1 flex items-center gap-2">
               <Search className="w-4 h-4" />
               {placeholder}
             </span>
@@ -271,12 +271,12 @@ export function MultiSelectCombobox({
               {visibleSelected.map((option) => (
                 <span
                   key={option.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-md text-sm text-indigo-900"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-coral/10 border border-coral rounded-md text-sm text-coral-90"
                 >
                   <span className="font-medium">{option.name}</span>
                   <button
                     onClick={(e) => removeItem(option.id, e)}
-                    className="hover:bg-indigo-200 rounded p-0.5 transition-colors"
+                    className="hover:bg-coral/20 rounded p-0.5 transition-colors"
                     aria-label={`Remove ${option.name}`}
                     type="button"
                   >
@@ -285,7 +285,7 @@ export function MultiSelectCombobox({
                 </span>
               ))}
               {hiddenCount > 0 && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md text-sm text-slate-600">
+                <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 border border-black/10 rounded-md text-sm text-gray-600">
                   +{hiddenCount} more
                 </span>
               )}
@@ -295,14 +295,14 @@ export function MultiSelectCombobox({
 
         {/* Chevron indicator */}
         <ChevronDown
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 transition-transform ${
+          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
 
         {/* Helper text below selected items */}
         {selectedOptions.length > 0 && (
-          <div className="text-xs text-slate-500 mt-1">
+          <div className="text-xs text-gray-500 mt-1">
             Start typing to search or click to see options
           </div>
         )}
@@ -312,7 +312,7 @@ export function MultiSelectCombobox({
       {showClearAll && selectedOptions.length > 0 && (
         <button
           onClick={handleClearAll}
-          className="text-xs text-red-600 hover:text-red-700 font-medium mt-2 flex items-center gap-1"
+          className="text-xs text-coral hover:text-coral/90 font-medium mt-2 flex items-center gap-1"
           type="button"
         >
           <X className="w-3 h-3" />
@@ -324,7 +324,7 @@ export function MultiSelectCombobox({
       {isOpen && typeof window !== 'undefined' && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] bg-white border-2 border-slate-200 rounded-lg shadow-xl overflow-auto"
+          className="fixed z-[9999] bg-white border-2 border-black/10 rounded-lg shadow-brutalist overflow-auto"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -334,9 +334,9 @@ export function MultiSelectCombobox({
           role="listbox"
         >
           {/* Search Input */}
-          <div className="sticky top-0 bg-white border-b border-slate-200 p-2">
+          <div className="sticky top-0 bg-white border-b border-black/10 p-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -346,7 +346,7 @@ export function MultiSelectCombobox({
                   setFocusedIndex(-1);
                 }}
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full pl-9 pr-3 py-2 border-2 border-black/10 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-coral focus:border-coral"
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
               />
@@ -356,15 +356,15 @@ export function MultiSelectCombobox({
           {/* Options List */}
           <div className="p-2" role="presentation">
             {filteredOptions.length === 0 ? (
-              <div className="py-8 text-center text-slate-500 text-sm">
+              <div className="py-8 text-center text-gray-500 text-sm">
                 {searchQuery ? (
                   <>
-                    <p className="font-medium text-slate-700 mb-2">
+                    <p className="font-medium text-gray-700 mb-2">
                       No accounts match "{searchQuery}"
                     </p>
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="text-coral hover:text-coral/90 font-medium"
                       type="button"
                     >
                       Clear search
@@ -387,8 +387,8 @@ export function MultiSelectCombobox({
                     className={`
                       flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer
                       transition-colors
-                      ${isSelected ? 'bg-indigo-50 hover:bg-indigo-100' : 'hover:bg-slate-50'}
-                      ${isFocused ? 'ring-2 ring-indigo-300 ring-inset' : ''}
+                      ${isSelected ? 'bg-coral/10 hover:bg-coral/20' : 'hover:bg-gray-50'}
+                      ${isFocused ? 'ring-2 ring-coral/20 ring-inset' : ''}
                     `}
                     role="option"
                     aria-selected={isSelected}
@@ -396,15 +396,15 @@ export function MultiSelectCombobox({
                     <div
                       className={`
                         w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0
-                        ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}
+                        ${isSelected ? 'bg-coral border-coral' : 'border-2 border-black'}
                       `}
                     >
                       {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-slate-900 text-sm truncate">{option.name}</div>
+                      <div className="font-medium text-ink text-sm truncate">{option.name}</div>
                       {option.description && (
-                        <div className="text-xs text-slate-500 mt-0.5 truncate">{option.description}</div>
+                        <div className="text-xs text-gray-500 mt-0.5 truncate">{option.description}</div>
                       )}
                     </div>
                   </div>
