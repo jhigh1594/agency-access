@@ -111,7 +111,7 @@ export function AssetGroup({
                   ${
                     allSelected || someSelected
                       ? 'bg-indigo-600 border-indigo-600'
-                      : 'bg-white border-slate-300 group-hover:border-indigo-400'
+                      : 'bg-card border-slate-300 group-hover:border-indigo-400'
                   }
                 `}
               >

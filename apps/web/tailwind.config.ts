@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: 'class', // Enable class-based dark mode strategy
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -48,6 +49,8 @@ const config: Config = {
         teal: "rgb(var(--teal) / <alpha-value>)",
         acid: "rgb(var(--acid) / <alpha-value>)",
         electric: "rgb(var(--electric) / <alpha-value>)",
+        /* Dark mode hover surface */
+        "hover-surface-dark": "rgb(var(--hover-surface) / <alpha-value>)",
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -4,13 +4,13 @@
 
 export default function Loading() {
   return (
-    <div className="flex-1 bg-slate-50 p-8">
+    <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb skeleton */}
         <div className="h-5 w-20 bg-slate-200 rounded animate-pulse mb-6" />
 
         {/* Header skeleton */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-4">
               <div className="h-16 w-16 bg-slate-200 rounded-full animate-pulse" />
@@ -29,7 +29,7 @@ export default function Loading() {
         {/* Stats skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <div key={i} className="bg-card rounded-lg shadow-sm border border-border p-6">
               <div className="h-4 w-24 bg-slate-200 rounded animate-pulse mb-2" />
               <div className="h-8 w-12 bg-slate-200 rounded animate-pulse" />
             </div>
@@ -37,8 +37,8 @@ export default function Loading() {
         </div>
 
         {/* Tabs skeleton */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-          <div className="border-b border-slate-200 px-6 py-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
+          <div className="border-b border-border px-6 py-4">
             <div className="flex gap-4">
               <div className="h-6 w-20 bg-slate-200 rounded animate-pulse" />
               <div className="h-6 w-16 bg-slate-200 rounded animate-pulse" />

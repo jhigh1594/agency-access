@@ -119,7 +119,7 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="relative bg-white rounded-lg shadow-brutalist-lg w-full max-w-6xl max-h-[90vh] flex flex-col pointer-events-auto border-2 border-black"
+              className="relative bg-card rounded-lg shadow-brutalist-lg w-full max-w-6xl max-h-[90vh] flex flex-col pointer-events-auto border-2 border-black"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

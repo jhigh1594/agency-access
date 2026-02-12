@@ -85,7 +85,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
   if (error || !accessRequest) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div className="max-w-md w-full bg-card rounded-2xl shadow-xl p-8 text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">❌</span>
           </div>
@@ -160,7 +160,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="bg-white rounded-2xl shadow-xl p-8 mb-8"
+          className="bg-card rounded-2xl shadow-xl p-8 mb-8"
         >
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Authorization Link
@@ -209,7 +209,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
-          className="bg-white rounded-xl shadow-md p-6 mb-8"
+          className="bg-card rounded-xl shadow-md p-6 mb-8"
         >
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Request Details

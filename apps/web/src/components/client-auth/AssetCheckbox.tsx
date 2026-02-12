@@ -43,7 +43,7 @@ export function AssetCheckbox({
         ${
           checked
             ? 'bg-indigo-50 border-indigo-500 shadow-md'
-            : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md'
+            : 'bg-card border-slate-200 hover:border-slate-300 hover:shadow-md'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
@@ -105,7 +105,7 @@ export function AssetCheckbox({
             ${
               checked
                 ? 'bg-indigo-600 border-indigo-600'
-                : 'bg-white border-slate-300'
+                : 'bg-card border-slate-300'
             }
           `}
           animate={{

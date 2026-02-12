@@ -147,15 +147,15 @@ export function MetaPagePermissionsModal({
         className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       >
         <div
-          className="relative bg-white rounded-lg shadow-brutalist-lg w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto"
+          className="relative bg-card rounded-lg shadow-brutalist-lg w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 bg-white">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 bg-card">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className={`h-6 w-11 rounded-full transition-colors ${allSelected ? 'bg-teal' : 'bg-gray-300'}`}>
-                  <div className={`h-5 w-5 rounded-full bg-white mt-0.5 ml-0.5 transition-transform ${allSelected ? 'translate-x-5' : 'translate-x-0'}`} />
+                  <div className={`h-5 w-5 rounded-full bg-card mt-0.5 ml-0.5 transition-transform ${allSelected ? 'translate-x-5' : 'translate-x-0'}`} />
                 </div>
                 <Facebook className="h-5 w-5 text-coral" />
                 <span className="text-lg font-semibold text-ink">
@@ -198,7 +198,7 @@ export function MetaPagePermissionsModal({
                     className={`p-4 rounded-lg border transition-all ${
                       isChecked
                         ? 'bg-coral/10 border-coral'
-                        : 'bg-white border-black/10 hover:border-black'
+                        : 'bg-card border-black/10 hover:border-black'
                     }`}
                   >
                     <label className="flex items-start gap-3 cursor-pointer">

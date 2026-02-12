@@ -35,8 +35,8 @@ export async function quotaRoutes(fastify: FastifyInstance) {
         jwtKey: process.env.CLERK_SECRET_KEY,
       });
 
-      const orgId = verified.orgId;
-      if (!orgId) {
+      const orgId = verified.orgId as string | undefined;
+      if (!orgId || typeof orgId !== 'string') {
         return reply.code(400).send({
           error: {
             code: 'INVALID_REQUEST',
@@ -92,8 +92,8 @@ export async function quotaRoutes(fastify: FastifyInstance) {
         jwtKey: process.env.CLERK_SECRET_KEY,
       });
 
-      const orgId = verified.orgId;
-      if (!orgId) {
+      const orgId = verified.orgId as string | undefined;
+      if (!orgId || typeof orgId !== 'string') {
         return reply.code(400).send({
           error: {
             code: 'INVALID_REQUEST',

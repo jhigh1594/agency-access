@@ -150,11 +150,11 @@ export function ManualInvitationModal({
         transition={{ type: 'spring', duration: 0.3 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       >
-        <div className="relative bg-white rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-md overflow-hidden pointer-events-auto">
+        <div className="relative bg-card rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-md overflow-hidden pointer-events-auto">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-paper">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-white border border-border flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-card border border-border flex items-center justify-center">
                 {isBusinessIdPlatform ? (
                   <Building2 className="h-5 w-5 text-coral" />
                 ) : (

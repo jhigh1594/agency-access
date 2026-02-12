@@ -295,7 +295,7 @@ export class QuotaService {
 
       const user = await this.clerkClient.users.getUser(agency.clerkUserId);
       const metadata = user.privateMetadata as Record<string, any>;
-      const quotaLimits = { ...metadata.quotaLimits } || {};
+      const quotaLimits = { ...metadata.quotaLimits };
 
       // Get current usage and increment
       const currentUsed = quotaLimits[metric]?.used || 0;

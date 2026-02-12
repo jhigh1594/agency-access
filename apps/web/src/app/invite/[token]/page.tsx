@@ -163,7 +163,7 @@ export default function ClientAuthorizationPage() {
   // Loading state
   if (step === 'loading' || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
           <p className="text-slate-600">Loading...</p>
@@ -175,9 +175,9 @@ export default function ClientAuthorizationPage() {
   // Error state (expired/invalid token)
   if (step === 'platforms' && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <X className="h-8 w-8 text-red-600" />
             </div>
@@ -197,9 +197,9 @@ export default function ClientAuthorizationPage() {
   const primaryColor = branding.primaryColor || '#6366f1';
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
@@ -247,8 +247,8 @@ export default function ClientAuthorizationPage() {
 
           {/* Intake Form Step */}
           {step === 'intake' && (
-            <form onSubmit={handleIntakeSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-8 py-6 border-b border-slate-200">
+            <form onSubmit={handleIntakeSubmit} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+              <div className="px-8 py-6 border-b border-border">
                 <h2 className="text-xl font-semibold text-slate-900">Quick Setup</h2>
                 <p className="text-slate-600 mt-1">
                   Share a few details about your business
@@ -271,7 +271,7 @@ export default function ClientAuthorizationPage() {
                         }
                         required={field.required}
                         rows={3}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+                        className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                       />
                     ) : field.type === 'dropdown' ? (
                       <select
@@ -280,7 +280,7 @@ export default function ClientAuthorizationPage() {
                           setIntakeResponses({ ...intakeResponses, [field.id]: e.target.value })
                         }
                         required={field.required}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white"
+                        className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-card"
                       >
                         <option value="">Select an option</option>
                         {field.options?.map((opt) => (
@@ -297,7 +297,7 @@ export default function ClientAuthorizationPage() {
                           setIntakeResponses({ ...intakeResponses, [field.id]: e.target.value })
                         }
                         required={field.required}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                       />
                     )}
                   </div>
@@ -316,7 +316,7 @@ export default function ClientAuthorizationPage() {
               </div>
 
               {/* Security Notice */}
-              <div className="px-8 py-4 bg-slate-50 flex items-start gap-3">
+              <div className="px-8 py-4 bg-background flex items-start gap-3">
                 <Lock className="h-5 w-5 text-slate-500 mt-0.5" />
                 <div className="text-sm text-slate-600">
                   <strong>Secure:</strong> Official OAuth only. We never see or store your passwords.
@@ -373,7 +373,7 @@ export default function ClientAuthorizationPage() {
 
           {/* Complete Step */}
           {step === 'complete' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden text-center">
+            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden text-center">
               <div className="p-12">
                 {/* Success Animation */}
                 <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
@@ -388,7 +388,7 @@ export default function ClientAuthorizationPage() {
                 </p>
 
                 {/* Summary */}
-                <div className="bg-slate-50 rounded-xl p-6 text-left">
+                <div className="bg-background rounded-xl p-6 text-left">
                   <h3 className="font-semibold text-slate-900 mb-4">Connected</h3>
                   <div className="space-y-2">
                     {completedPlatforms.size > 0 ? (

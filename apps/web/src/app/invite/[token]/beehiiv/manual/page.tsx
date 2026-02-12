@@ -73,7 +73,7 @@ export default function BeehiivManualPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
           <p className="text-slate-600">Loading...</p>
@@ -85,9 +85,9 @@ export default function BeehiivManualPage() {
   // Error state
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-8 text-center">
             <h1 className="text-xl font-semibold text-slate-900 mb-2">Unable to Load</h1>
             <p className="text-slate-600 mb-6">{error || 'Invalid or expired authorization link'}</p>
             <Link
@@ -114,9 +114,9 @@ export default function BeehiivManualPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       {/* Top Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -176,7 +176,7 @@ export default function BeehiivManualPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12">
+      <footer className="bg-card border-t border-border mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-6 text-sm text-slate-600">

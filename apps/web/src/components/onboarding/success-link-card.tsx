@@ -191,7 +191,7 @@ export function SuccessLinkCard({
         </div>
 
         {/* Link Display */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-6 shadow-inner">
+        <div className="bg-card rounded-xl border-2 border-gray-200 p-6 mb-6 shadow-inner">
           <div className="flex items-center justify-between gap-4">
             {/* Link */}
             <div className="flex-1 min-w-0">
@@ -244,7 +244,7 @@ export function SuccessLinkCard({
           {/* Email Option */}
           <motion.button
             onClick={handleEmail}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-gray-200 hover:border-gray-300 rounded-lg font-semibold text-gray-700 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-card border-2 border-gray-200 hover:border-gray-300 rounded-lg font-semibold text-gray-700 transition-all"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -267,7 +267,7 @@ export function SuccessLinkCard({
                   console.log('Share cancelled or failed:', err);
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-gray-200 hover:border-gray-300 rounded-lg font-semibold text-gray-700 transition-all"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-card border-2 border-gray-200 hover:border-gray-300 rounded-lg font-semibold text-gray-700 transition-all"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -284,7 +284,7 @@ export function SuccessLinkCard({
               <div className="text-sm font-semibold text-gray-700 mb-3">
                 Or scan this QR code
               </div>
-              <div className="inline-flex p-4 bg-white rounded-lg shadow-inner">
+              <div className="inline-flex p-4 bg-card rounded-lg shadow-inner">
                 {/* QR code would be generated here using a library like qrcode.react */}
                 <div className="w-32 h-32 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
                   QR Code Placeholder

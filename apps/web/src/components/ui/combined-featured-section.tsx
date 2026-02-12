@@ -113,7 +113,7 @@ export default function CombinedFeaturedSection() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.3 }}
-                className="flex items-center gap-3 p-3 border-2 border-black bg-white rounded-[0.5rem] shadow-[2px_2px_0px_#000]"
+                className="flex items-center gap-3 p-3 border-2 border-black bg-card rounded-[0.5rem] shadow-[2px_2px_0px_#000]"
               >
                 <span className="text-xl">{item.icon}</span>
                 <div className="flex-1 min-w-0">

@@ -67,7 +67,7 @@ export function SavingsCalculator() {
   }, [selectedVolume, hoursPerClient, selectedPlatforms]);
 
   return (
-    <section id="savings-calculator" className="py-16 sm:py-20 md:py-24 bg-white relative">
+    <section id="savings-calculator" className="py-16 sm:py-20 md:py-24 bg-card relative">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           {/* Section Header */}
@@ -111,7 +111,7 @@ export function SavingsCalculator() {
                       className={`p-3 border-2 font-mono text-xs font-bold uppercase tracking-wider transition-all ${
                         selectedVolume === option.id
                           ? 'border-coral bg-coral/10 text-ink shadow-[2px_2px_0px_#000]'
-                          : 'border-black bg-white text-gray-700 hover:bg-gray-50'
+                          : 'border-black bg-card text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       {option.label}
@@ -164,7 +164,7 @@ export function SavingsCalculator() {
                       className={`p-3 border-2 text-center transition-all ${
                         selectedPlatforms.includes(platform.id)
                           ? 'border-coral bg-coral/10 shadow-[2px_2px_0px_#000]'
-                          : 'border-black bg-white hover:bg-gray-50'
+                          : 'border-black bg-card hover:bg-gray-50'
                       }`}
                     >
                       <div className="text-2xl mb-1">{platform.icon}</div>
@@ -186,7 +186,7 @@ export function SavingsCalculator() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist-lg sticky top-8">
+              <div className="border-2 border-black bg-card p-6 sm:p-8 shadow-brutalist-lg sticky top-8">
                 {/* Main Savings Display */}
                 <div className="text-center mb-8 pb-6 border-b-2 border-black">
                   <div className="flex items-center justify-center gap-2 mb-2">
@@ -202,7 +202,7 @@ export function SavingsCalculator() {
                         <InfoIcon size={14} />
                       </button>
                       {showTooltip && (
-                        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-white border-2 border-black shadow-brutalist-lg p-4 z-50">
+                        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-card border-2 border-black shadow-brutalist-lg p-4 z-50">
                           <div className="font-mono text-xs text-left">
                             <p className="font-bold text-ink mb-2">How We Calculate:</p>
                             <ul className="space-y-1.5 text-gray-700">

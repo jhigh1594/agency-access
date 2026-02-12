@@ -111,7 +111,7 @@ export function AgencyMetaAssetSelector({
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[80vh] bg-white">
+    <div className="flex flex-col h-full max-h-[80vh] bg-card">
       {/* Header & Search */}
       <div className="p-4 border-b border-slate-200 space-y-4">
         <div className="flex items-center justify-between">
@@ -131,7 +131,7 @@ export function AgencyMetaAssetSelector({
             />
           </div>
           <select 
-            className="px-3 py-2 border border-slate-200 rounded-sm text-sm bg-white focus:outline-none"
+            className="px-3 py-2 border border-slate-200 rounded-sm text-sm bg-card focus:outline-none"
             value={assetTypeFilter}
             onChange={(e) => setAssetTypeFilter(e.target.value as any)}
           >
@@ -241,7 +241,7 @@ function AssetSection({
           const isSelected = !!selection;
           
           return (
-            <div key={asset.id} className={`relative flex items-center justify-between p-3 transition-colors ${isSelected ? 'bg-slate-50' : 'bg-white hover:bg-slate-50/50'}`}>
+            <div key={asset.id} className={`relative flex items-center justify-between p-3 transition-colors ${isSelected ? 'bg-slate-50' : 'bg-card hover:bg-slate-50/50'}`}>
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"

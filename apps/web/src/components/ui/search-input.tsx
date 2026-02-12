@@ -54,7 +54,7 @@ export function SearchInput({
           w-full pl-10 pr-10 py-2
           border border-slate-300 rounded-lg
           text-sm text-slate-900 placeholder:text-slate-400
-          bg-white
+          bg-card
           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
           transition-colors
           ${focused ? 'border-indigo-500' : ''}

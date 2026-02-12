@@ -23,7 +23,7 @@ export function ClientTabs({ accessRequests, activity }: ClientTabsProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('overview');
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div className="bg-card rounded-lg shadow-sm border border-slate-200">
       {/* Tab Navigation */}
       <div className="border-b border-slate-200 px-6">
         <nav className="flex gap-8">

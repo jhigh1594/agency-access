@@ -214,7 +214,7 @@ export function HierarchicalPlatformSelector({
           getGroupSelectAllState(groupKey, group.products.length);
 
         return (
-          <div key={groupKey} className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+          <div key={groupKey} className="border border-slate-200 rounded-lg overflow-hidden bg-card">
             {/* Platform Header with Toggle */}
             <div className="flex items-center gap-3 px-4 py-3">
               {/* Toggle Switch */}
@@ -241,7 +241,7 @@ export function HierarchicalPlatformSelector({
                     ? 'bg-amber-400 peer-focus:ring-4 peer-focus:ring-amber-300'
                     : 'bg-slate-300 peer-focus:ring-4 peer-focus:ring-slate-300'
                 }`}>
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full transition-transform duration-200 ${
                     platformChecked ? 'translate-x-5' : platformIndeterminate ? 'translate-x-2.5' : ''
                   }`}>
                     {platformChecked && (
@@ -289,7 +289,7 @@ export function HierarchicalPlatformSelector({
                 // Email Configuration UI for manual invitation platforms
                 return (
                   <div className="border-t border-slate-200 p-4 bg-slate-50/50">
-                    <div className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg">
+                    <div className="flex items-start gap-3 p-4 bg-card border border-slate-200 rounded-lg">
                       <div className="flex-shrink-0">
                         <div className="h-10 w-10 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center">
                           <Mail className="h-5 w-5 text-indigo-600" />

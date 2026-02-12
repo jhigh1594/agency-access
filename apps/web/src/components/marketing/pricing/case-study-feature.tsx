@@ -6,7 +6,7 @@ import { Reveal } from '../reveal';
 
 export function CaseStudyFeature() {
   return (
-    <section className="py-16 sm:py-20 md:py-24 bg-white relative overflow-hidden">
+    <section className="py-16 sm:py-20 md:py-24 bg-card relative overflow-hidden">
       {/* Background Accent */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-coral/5 -z-0 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal/5 -z-0 rounded-full blur-3xl" />
@@ -21,7 +21,7 @@ export function CaseStudyFeature() {
             className="max-w-5xl mx-auto"
           >
             {/* Case Study Card */}
-            <div className="border-2 border-coral bg-white p-8 sm:p-12 shadow-brutalist-lg relative">
+            <div className="border-2 border-coral bg-card p-8 sm:p-12 shadow-brutalist-lg relative">
               {/* Badge */}
               <div className="absolute -top-3 -left-3 bg-coral text-white border-2 border-black px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider shadow-brutalist-sm">
                 Case Study

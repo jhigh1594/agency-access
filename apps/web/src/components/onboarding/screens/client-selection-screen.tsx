@@ -143,7 +143,7 @@ export function ClientSelectionScreen({
                     w-full p-4 rounded-lg border-2 text-left transition-all
                     ${selectedClientId === client.id
                       ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      : 'border-gray-200 hover:border-gray-300 bg-card'
                     }
                   `}
                   whileHover={{ scale: 1.01 }}

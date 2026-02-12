@@ -17,7 +17,7 @@ const features: Array<{
     mockup: (
       <div className="w-full h-full bg-gray-100 rounded-none p-2 space-y-2 border-2 border-black shadow-[4px_4px_0px_#000]">
         <div className="h-2 w-3/4 bg-coral/20 rounded-none" />
-        <div className="h-8 w-full bg-white rounded-none border-2 border-black flex items-center px-2">
+        <div className="h-8 w-full bg-card rounded-none border-2 border-black flex items-center px-2">
           <div className="h-1 w-full bg-gray-200 rounded-none" />
         </div>
         <div className="h-6 w-full bg-coral rounded-none" />
@@ -32,8 +32,8 @@ const features: Array<{
       <div className="w-full h-full bg-gray-100 rounded-none p-3 flex flex-col justify-center gap-2 border-2 border-black shadow-[4px_4px_0px_#000]">
         {[1, 2, 3].map(i => (
           <div key={i} className="flex gap-2 items-center">
-            <div className={`w-4 h-4 rounded-none border-2 border-black ${i === 1 ? 'bg-teal' : 'bg-white'} flex items-center justify-center`}>
-              <div className="w-1.5 h-1.5 bg-white rounded-none" />
+            <div className={`w-4 h-4 rounded-none border-2 border-black ${i === 1 ? 'bg-teal' : 'bg-card'} flex items-center justify-center`}>
+              <div className="w-1.5 h-1.5 bg-card rounded-none" />
             </div>
             <div className="h-1.5 w-full bg-gray-200 rounded-none" />
           </div>
@@ -66,7 +66,7 @@ const features: Array<{
     mockup: (
       <div className="w-full h-full bg-gray-100 rounded-none p-2 grid grid-cols-2 gap-2 border-2 border-black shadow-[4px_4px_0px_#000]">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-full bg-white rounded-none border-2 border-black flex items-center justify-center p-1">
+          <div key={i} className="h-full bg-card rounded-none border-2 border-black flex items-center justify-center p-1">
             <div className="w-full h-1 bg-gray-200 rounded-none" />
           </div>
         ))}
@@ -99,12 +99,12 @@ export function FeaturesSection() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               className={`p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-8 group ${
-                i % 2 === 0 ? 'bg-white' : 'bg-coral'
+                i % 2 === 0 ? 'bg-card' : 'bg-coral'
               }`}
             >
               <div className="flex-1">
                 {/* Icon in brutalist bordered box */}
-                <div className="mb-4 sm:mb-6 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border-2 border-black bg-white shadow-[4px_4px_0px_#000] group-hover:shadow-[6px_6px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all duration-200 flex-shrink-0">
+                <div className="mb-4 sm:mb-6 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border-2 border-black bg-card shadow-[4px_4px_0px_#000] group-hover:shadow-[6px_6px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all duration-200 flex-shrink-0">
                   <feature.icon size={24} className="sm:hidden text-ink" strokeWidth={2.5} />
                   <feature.icon size={28} className="hidden sm:block text-ink" strokeWidth={2.5} />
                 </div>

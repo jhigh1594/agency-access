@@ -252,7 +252,7 @@ function AccessRequestWizardContent() {
             className="space-y-6"
             >
             {/* Main Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <div className="bg-card rounded-lg shadow-sm border border-border p-6">
               <h2 className="text-xl font-semibold text-slate-900 mb-1">Fundamentals</h2>
               <p className="text-base text-slate-600 mb-6">
                 Set up the basics for your access request
@@ -348,7 +348,7 @@ function AccessRequestWizardContent() {
 
             {/* Platform Quick Actions - only shown for delegated_access */}
             {state.authModel === 'delegated_access' && (
-              <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+              <div className="mt-4 p-4 bg-background border border-border rounded-lg flex items-center justify-between">
                 <div>
                   <p className="text-base font-medium text-slate-900">Need to connect platforms?</p>
                   <p className="text-sm text-slate-600">Connect your agency's platform accounts to use delegated access</p>
@@ -397,7 +397,7 @@ function AccessRequestWizardContent() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            className="bg-card rounded-lg shadow-sm border border-border p-6"
             >
             <h2 className="text-lg font-semibold text-slate-900 mb-1">Platforms & Access</h2>
             <p className="text-sm text-slate-600 mb-6">
@@ -483,7 +483,7 @@ function AccessRequestWizardContent() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-sm border border-slate-200 p-6"
+            className="bg-card rounded-lg shadow-sm border border-border p-6"
             >
             <h2 className="text-lg font-semibold text-slate-900 mb-1">Customize</h2>
             <p className="text-sm text-slate-600 mb-6">
@@ -492,7 +492,7 @@ function AccessRequestWizardContent() {
 
             {/* Simple Tabs - Form Fields | Branding */}
             <div className="mb-6">
-              <div className="flex gap-4 border-b border-slate-200">
+              <div className="flex gap-4 border-b border-border">
                 <button
                   type="button"
                   onClick={() => setCustomizeTab('fields')}
@@ -529,7 +529,7 @@ function AccessRequestWizardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
-                className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+                className="flex items-start gap-3 p-4 border border-border rounded-lg hover:border-border transition-colors"
                 >
                 <div className="flex-1 space-y-3">
                   <input
@@ -537,7 +537,7 @@ function AccessRequestWizardContent() {
                 value={field.label}
                 onChange={(e) => updateIntakeField(field.id, { label: e.target.value })}
                 placeholder="Field label (e.g., Company Website)"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <div className="flex items-center gap-3">
                 <select
@@ -545,7 +545,7 @@ function AccessRequestWizardContent() {
                   onChange={(e) =>
                     updateIntakeField(field.id, { type: e.target.value as any })
                   }
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="text">Text</option>
                   <option value="email">Email</option>
@@ -560,7 +560,7 @@ function AccessRequestWizardContent() {
                     onChange={(e) =>
               updateIntakeField(field.id, { required: e.target.checked })
                     }
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-border text-indigo-600 focus:ring-indigo-500"
                   />
                   Required
                 </label>
@@ -580,7 +580,7 @@ function AccessRequestWizardContent() {
               <button
                 type="button"
                 onClick={addIntakeField}
-                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
               >
                 <Plus className="h-4 w-4" />
                 Add Field
@@ -600,7 +600,7 @@ function AccessRequestWizardContent() {
                     id="logoUrl"
                     value={state.branding.logoUrl}
                     onChange={(e) => updateBranding({ logoUrl: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="https://your-agency.com/logo.png"
                   />
                 </div>
@@ -615,13 +615,13 @@ function AccessRequestWizardContent() {
                       id="primaryColor"
                       value={state.branding.primaryColor}
                       onChange={(e) => updateBranding({ primaryColor: e.target.value })}
-                      className="h-11 w-20 rounded-lg cursor-pointer border border-slate-300"
+                      className="h-11 w-20 rounded-lg cursor-pointer border border-border"
                     />
                     <input
                       type="text"
                       value={state.branding.primaryColor}
                       onChange={(e) => updateBranding({ primaryColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
                       placeholder="#6366f1"
                     />
                   </div>
@@ -637,11 +637,11 @@ function AccessRequestWizardContent() {
                       id="subdomain"
                       value={state.branding.subdomain}
                       onChange={(e) => updateBranding({ subdomain: e.target.value.toLowerCase() })}
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="flex-1 px-3 py-2 border border-border rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="my-agency"
                       pattern="[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?"
                     />
-                    <span className="px-4 py-2 bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg text-slate-600 text-sm">
+                    <span className="px-4 py-2 bg-slate-100 border border-l-0 border-border rounded-r-lg text-slate-600 text-sm">
                       .agencyplatform.com
                     </span>
                   </div>
@@ -652,7 +652,7 @@ function AccessRequestWizardContent() {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="p-4 border border-slate-200 rounded-lg overflow-hidden"
+                    className="p-4 border border-border rounded-lg overflow-hidden"
                   >
                     <p className="text-sm font-medium text-slate-700 mb-3">Preview</p>
                     <div
@@ -732,7 +732,7 @@ function AccessRequestWizardContent() {
                 </div>
 
                 {/* Summary Card */}
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 divide-y divide-slate-200">
+                <div className="bg-card rounded-lg shadow-sm border border-border divide-y divide-slate-200">
                   {/* Client Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">

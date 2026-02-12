@@ -108,7 +108,7 @@ export default function TokenHealthPage() {
   };
 
   return (
-    <div className="flex-1 bg-slate-50 p-8">
+    <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
@@ -154,7 +154,7 @@ export default function TokenHealthPage() {
         <div className="flex items-center justify-between mb-6">
           {/* Filter Dropdown */}
           <div className="relative">
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+            <button className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg hover:bg-background transition-colors">
               <Filter className="h-4 w-4" />
               <span>
                 {filter === 'all'
@@ -169,7 +169,7 @@ export default function TokenHealthPage() {
             </button>
 
             {/* Dropdown Menu */}
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden z-10">
+            <div className="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-sm overflow-hidden z-10">
               {[
                 { value: 'all', label: 'All Tokens' },
                 { value: 'healthy', label: 'Healthy' },
@@ -179,7 +179,7 @@ export default function TokenHealthPage() {
                 <button
                   key={f.value}
                   onClick={() => setFilter(f.value as HealthFilter)}
-                  className={`w-full text-left px-4 py-2 hover:bg-slate-50 transition-colors ${
+                  className={`w-full text-left px-4 py-2 hover:bg-background transition-colors ${
                     filter === f.value ? 'bg-slate-100 font-medium' : ''
                   }`}
                 >
@@ -203,14 +203,14 @@ export default function TokenHealthPage() {
 
         {/* Token List */}
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-12 text-center">
             <div className="inline-flex items-center gap-3">
               <RefreshCw className="h-6 w-6 animate-spin text-indigo-600" />
               <span className="text-slate-600">Loading token health...</span>
             </div>
           </div>
         ) : filteredTokens.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-12 text-center">
             <Clock className="h-12 w-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
               {filter === 'all'
@@ -224,8 +224,8 @@ export default function TokenHealthPage() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200 text-sm font-medium text-slate-700">
+          <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-background border-b border-border text-sm font-medium text-slate-700">
               <div className="col-span-3">Client / Platform</div>
               <div className="col-span-3">Status</div>
               <div className="col-span-3">Expires In</div>
@@ -240,7 +240,7 @@ export default function TokenHealthPage() {
                 return (
                   <div
                     key={token.id}
-                    className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors"
+                    className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-background transition-colors"
                   >
                     {/* Client & Platform */}
                     <div className="col-span-3">

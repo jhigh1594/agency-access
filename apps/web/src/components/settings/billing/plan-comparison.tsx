@@ -109,7 +109,7 @@ export function PlanComparison() {
   const tierIndex = DISPLAY_TIERS.indexOf(currentTier as typeof DISPLAY_TIERS[number]);
 
   return (
-    <section className="border-2 border-border rounded-lg shadow-brutalist p-6 bg-white">
+    <section className="border-2 border-border rounded-lg shadow-brutalist p-6 bg-card">
       {/* Section Header */}
       <div className="mb-6">
         <div className="inline-block mb-3">
@@ -127,13 +127,13 @@ export function PlanComparison() {
 
       {/* Monthly/Yearly Toggle */}
       <div className="flex flex-col items-center gap-3 mb-8">
-        <div className="relative inline-flex items-center gap-2 bg-white border-2 border-black p-1 shadow-brutalist-sm">
+        <div className="relative inline-flex items-center gap-2 bg-card border-2 border-border-hard dark:border-white p-1 shadow-brutalist-sm">
           <button
             onClick={() => setIsYearly(false)}
             className={`relative px-6 py-3 min-h-[44px] font-bold uppercase tracking-wider text-xs transition-all ${
               !isYearly
-                ? 'bg-ink text-white shadow-[2px_2px_0px_#000]'
-                : 'text-gray-600 hover:text-ink'
+                ? 'bg-coral text-black shadow-[2px_2px_0px_var(--shadow-hard)]'
+                : 'text-gray-600 dark:text-gray-400 hover:text-ink dark:hover:text-white'
             }`}
           >
             Monthly
@@ -142,19 +142,19 @@ export function PlanComparison() {
             onClick={() => setIsYearly(true)}
             className={`relative px-6 py-3 min-h-[44px] font-bold uppercase tracking-wider text-xs transition-all ${
               isYearly
-                ? 'bg-ink text-white shadow-[2px_2px_0px_#000]'
-                : 'text-gray-600 hover:text-ink'
+                ? 'bg-coral text-black shadow-[2px_2px_0px_var(--shadow-hard)]'
+                : 'text-gray-600 dark:text-gray-400 hover:text-ink dark:hover:text-white'
             }`}
           >
             <span className="inline-flex items-center gap-2">
               Yearly
-              <span className="rounded-full border border-coral/40 bg-coral/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral">
+              <span className="rounded-full border border-black/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral">
                 Save 25%
               </span>
             </span>
           </button>
         </div>
-        <p className="text-sm text-gray-500 font-mono">
+        <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
           {isYearly
             ? 'Save 25% with annual billing. Cancel anytime.'
             : 'Billed monthly. Switch to yearly for 25% off.'}
@@ -204,10 +204,10 @@ export function PlanComparison() {
                 isCurrentTier
                   ? 'border-indigo-500 bg-indigo-50/50 shadow-brutalist-sm'
                   : isRecommended
-                  ? 'border-coral bg-white shadow-brutalist hover:shadow-brutalist-lg hover:-translate-x-0.5 hover:-translate-y-0.5'
+                  ? 'border-coral bg-card shadow-brutalist hover:shadow-brutalist-lg hover:-translate-x-0.5 hover:-translate-y-0.5'
                   : isFree
-                  ? 'border-coral/30 bg-gradient-to-br from-coral/5 to-coral/10'
-                  : 'border-slate-300 bg-white hover:shadow-brutalist-sm'
+                  ? '!bg-white !border-black dark:!bg-card'
+                  : 'border-slate-300 bg-card hover:shadow-brutalist-sm'
               }`}
             >
               {/* Recommended Badge */}
@@ -254,13 +254,13 @@ export function PlanComparison() {
                           color="rgb(var(--coral))"
                         />
                       ) : (
-                        <X size={14} className="mt-0.5 flex-shrink-0 text-muted-foreground" />
+                        <X size={14} className="mt-0.5 flex-shrink-0 text-muted-foreground dark:text-white/50" />
                       )}
                       <span
                         className={
                           feature.included
-                            ? 'text-foreground'
-                            : 'line-through text-muted-foreground'
+                            ? 'text-foreground dark:text-white'
+                            : 'line-through text-muted-foreground dark:text-white/50'
                         }
                       >
                         {feature.name}
@@ -302,7 +302,7 @@ export function PlanComparison() {
 
       {/* Mobile Message */}
       <div className="md:hidden text-center py-8">
-        <div className="border-2 border-slate-300 bg-white p-6 shadow-brutalist-sm max-w-md mx-auto">
+        <div className="border-2 border-slate-300 bg-card p-6 shadow-brutalist-sm max-w-md mx-auto">
           <h3 className="font-display text-lg text-ink mb-2">
             View pricing on desktop
           </h3>

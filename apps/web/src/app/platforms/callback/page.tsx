@@ -184,7 +184,7 @@ function CallbackPageContent() {
     // Standard success message for other platforms
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+        <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-8">
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
             <div
@@ -241,7 +241,7 @@ function CallbackPageContent() {
   // Error state
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+      <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-8">
         {/* Error Icon */}
         <div className="flex justify-center mb-6">
           <div

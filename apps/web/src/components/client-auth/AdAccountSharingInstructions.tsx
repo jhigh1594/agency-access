@@ -138,7 +138,7 @@ export function AdAccountSharingInstructions({
           href="https://business.facebook.com/settings"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 px-6 py-3 bg-white border-2 border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-6 py-3 bg-card border-2 border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
         >
           <ExternalLink className="w-5 h-5" />
           {content.openBusinessManager}

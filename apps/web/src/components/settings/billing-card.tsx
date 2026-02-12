@@ -169,7 +169,7 @@ export function BillingSettingsCard() {
   // Loading state
   if (isLoadingSubscription || isLoadingTierDetails) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <section className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-emerald-100 rounded-lg">
             <CreditCard className="h-5 w-5 text-emerald-600" />
@@ -263,7 +263,7 @@ export function BillingSettingsCard() {
   };
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <section className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-emerald-100 rounded-lg">
           <CreditCard className="h-5 w-5 text-emerald-600" />

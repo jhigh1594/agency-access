@@ -416,7 +416,7 @@ export function PlatformAuthWizard({
 
                         {/* Unified Batch Save Button - only show if assets haven't been saved yet */}
                         {!assetsSaved && !isProcessing && hasGroupSelections() && (
-            <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t-2 border-slate-200 p-8 -mx-8 -mb-8 mt-12 flex justify-center">
+            <div className="sticky bottom-0 bg-card/80 backdrop-blur-sm border-t-2 border-slate-200 p-8 -mx-8 -mb-8 mt-12 flex justify-center">
               <Button
                 onClick={handleBatchSave}
                 disabled={!hasGroupSelections()}
@@ -450,7 +450,7 @@ export function PlatformAuthWizard({
                   <div className="w-full border-t-2 border-slate-200" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-sm text-slate-500 font-semibold">then</span>
+                  <span className="bg-card px-4 text-sm text-slate-500 font-semibold">then</span>
                 </div>
               </div>
             );

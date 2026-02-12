@@ -13,11 +13,14 @@ import { quotaMiddleware } from '../middleware/quota.middleware.js';
 
 export async function accessRequestRoutes(fastify: FastifyInstance) {
   // Create access request
-  fastify.register(
-    quotaMiddleware({
-      metric: 'access_requests',
-      getAgencyId: (request) => (request as any).agencyId,
-    }),
+  fastify.post(
+    '/access-requests',
+    {
+      onRequest: [quotaMiddleware({
+        metric: 'access_requests',
+        getAgencyId: (request) => (request as any).agencyId,
+      })],
+    },
     async (request, reply) => {
     const requestBody = request.body as any;
     let { agencyId, authModel = 'client_authorization', platforms = [] } = requestBody;

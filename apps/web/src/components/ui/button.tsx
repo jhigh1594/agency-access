@@ -48,18 +48,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Variant styles (use NonNullable to exclude undefined from Record key type)
     const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
-      primary: 'bg-coral text-white hover:bg-coral/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
-      secondary: 'bg-white text-foreground border-2 border-border hover:bg-accent/20 hover:border-accent active:scale-95',
-      success: 'bg-teal text-white hover:bg-teal/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
-      warning: 'bg-acid text-ink hover:bg-acid/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
-      danger: 'bg-coral text-white hover:bg-coral/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
+      secondary: 'bg-card text-foreground border-2 border-border hover:bg-accent/20 hover:border-accent active:scale-95',
+      success: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
+      warning: 'bg-acid text-foreground hover:bg-acid/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
+      danger: 'bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       ghost: 'bg-transparent text-muted-foreground hover:bg-muted/10 active:scale-95',
       // Brutalist variants - Hard shadows, no rounded corners, uppercase
-      brutalist: 'bg-coral text-white border-2 border-black rounded-none shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
-      'brutalist-ghost': 'bg-transparent text-ink border-2 border-black rounded-none hover:bg-black hover:text-paper hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      brutalist: 'bg-primary text-primary-foreground border-2 border-hard rounded-none shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      'brutalist-ghost': 'bg-transparent text-foreground border-2 border-hard rounded-none hover:bg-foreground hover:text-background hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
       // Rounded brutalist variants - Same styling but with rounded corners
-      'brutalist-rounded': 'bg-coral text-white border-2 border-black rounded-[0.75rem] shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
-      'brutalist-ghost-rounded': 'bg-transparent text-ink border-2 border-black rounded-[0.75rem] hover:bg-black hover:text-paper hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      'brutalist-rounded': 'bg-primary text-primary-foreground border-2 border-hard rounded-[0.75rem] shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      'brutalist-ghost-rounded': 'bg-transparent text-foreground border-2 border-hard rounded-[0.75rem] hover:bg-foreground hover:text-background hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
     };
 
     // Size styles (use NonNullable to exclude undefined from Record key type)

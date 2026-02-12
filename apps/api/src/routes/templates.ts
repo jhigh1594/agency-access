@@ -44,11 +44,14 @@ export async function templateRoutes(fastify: FastifyInstance) {
   });
 
   // Create a new template
-  fastify.register(
-    quotaMiddleware({
-      metric: 'templates',
-      getAgencyId: (request) => (request.params as any).agencyId,
-    }),
+  fastify.post(
+    '/agencies/:agencyId/templates',
+    {
+      onRequest: [quotaMiddleware({
+        metric: 'templates',
+        getAgencyId: (request) => (request.params as any).agencyId,
+      })],
+    },
     async (request, reply) => {
     const { agencyId } = request.params as { agencyId: string };
     const input = { ...(request.body as any), agencyId };

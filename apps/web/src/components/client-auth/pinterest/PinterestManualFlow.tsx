@@ -107,7 +107,7 @@ export function PinterestManualFlow({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-5 border-b border-red-100">
         <div className="flex items-center gap-3 mb-2">
@@ -130,7 +130,7 @@ export function PinterestManualFlow({
           </div>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-card border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
             {copied ? (
               <>

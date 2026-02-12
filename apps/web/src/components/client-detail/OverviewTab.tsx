@@ -78,7 +78,7 @@ export function OverviewTab({ accessRequests }: OverviewTabProps) {
           </button>
 
           {showFilterDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-card border border-slate-200 rounded-lg shadow-lg z-10">
               {statusFilterOptions.map((option) => (
                 <button
                   key={option.value}

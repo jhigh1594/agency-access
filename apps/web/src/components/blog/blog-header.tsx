@@ -62,7 +62,7 @@ export function BlogHeader({
                     ${
                       isSelected
                         ? "bg-ink text-white border-black shadow-brutalist-sm"
-                        : "bg-white text-ink border-black hover:bg-gray-100 hover:translate-x-[2px] hover:translate-y-[2px]"
+                        : "bg-card text-ink border-black hover:bg-gray-100 hover:translate-x-[2px] hover:translate-y-[2px]"
                     }
                   `}
                 >

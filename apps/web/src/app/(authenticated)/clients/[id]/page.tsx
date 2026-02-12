@@ -43,7 +43,7 @@ export default function ClientDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex-1 bg-slate-50 p-8">
+      <div className="flex-1 bg-background p-8">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
           <span className="ml-2 text-slate-600">Loading client details...</span>
@@ -55,7 +55,7 @@ export default function ClientDetailPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex-1 bg-slate-50 p-8">
+      <div className="flex-1 bg-background p-8">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/clients"
@@ -79,7 +79,7 @@ export default function ClientDetailPage() {
   // No data state
   if (!data?.data) {
     return (
-      <div className="flex-1 bg-slate-50 p-8">
+      <div className="flex-1 bg-background p-8">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/clients"
@@ -102,7 +102,7 @@ export default function ClientDetailPage() {
   const { client, stats, accessRequests, activity } = data.data;
 
   return (
-    <div className="flex-1 bg-slate-50 p-8">
+    <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb navigation */}
         <Link

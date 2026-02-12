@@ -329,7 +329,7 @@ export default function PlatformsPage() {
 
       {/* Google Accounts Section - shows when Google is connected */}
       {googleConnection?.connected && (
-        <div className="mb-8 border rounded-lg p-6 bg-white">
+        <div className="mb-8 border rounded-lg p-6 bg-card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Your Google Accounts</h2>
             <div className="flex gap-2">
@@ -498,7 +498,7 @@ export default function PlatformsPage() {
 
       {/* Meta Business Accounts Section - shows when Meta is connected */}
       {metaConnection?.connected && (
-        <div className="mb-8 border rounded-lg p-6 bg-white">
+        <div className="mb-8 border rounded-lg p-6 bg-card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Your Meta Business Manager Accounts</h2>
             <div className="flex gap-2">

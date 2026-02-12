@@ -77,7 +77,7 @@ function ClientOAuthCallbackContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full bg-white rounded-2xl shadow-xl border-2 border-red-200 p-8"
+          className="max-w-md w-full bg-card rounded-2xl shadow-xl border-2 border-red-200 p-8"
         >
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-6">
@@ -106,7 +106,7 @@ function ClientOAuthCallbackContent() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-8"
+        className="max-w-md w-full bg-card rounded-2xl shadow-xl border-2 border-border p-8"
       >
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-indigo-600 animate-spin mx-auto mb-6" />

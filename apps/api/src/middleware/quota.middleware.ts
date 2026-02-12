@@ -27,7 +27,7 @@ import { type MetricType } from '@agency-platform/shared';
 export interface QuotaMiddlewareOptions {
   metric: MetricType;
   getAgencyId: (request: FastifyRequest) => string | undefined;
-  requestedAmount?: number;
+  requestedAmount?: number | ((request: FastifyRequest) => number);
 }
 
 /**
@@ -39,11 +39,13 @@ export function quotaMiddleware(options: QuotaMiddlewareOptions) {
   return async function (
     request: FastifyRequest,
     reply: FastifyReply,
-    done: () => void,
   ) {
     try {
       // Extract agency ID from request
       const agencyId = getAgencyId(request);
+
+      // Calculate requested amount (handle function or static value)
+      const amount = typeof requestedAmount === 'function' ? requestedAmount(request) : requestedAmount;
 
       if (!agencyId) {
         return reply.code(401).send({
@@ -56,7 +58,7 @@ export function quotaMiddleware(options: QuotaMiddlewareOptions) {
 
       // For non-mutating actions (GET), skip quota check
       if (request.method === 'GET') {
-        return done();
+        return;
       }
 
       // Check quota for mutating actions (POST, PUT, PATCH, DELETE)
@@ -64,7 +66,7 @@ export function quotaMiddleware(options: QuotaMiddlewareOptions) {
         agencyId,
         metric,
         action: 'create',
-        requestedAmount,
+        requestedAmount: amount,
       });
 
       // Attach result to request for downstream use
@@ -79,8 +81,7 @@ export function quotaMiddleware(options: QuotaMiddlewareOptions) {
         return reply.code(429).send(error.toJSON());
       }
 
-      // Quota OK, proceed to route handler
-      done();
+      // Quota OK, proceed to route handler (no need to call anything, Fastify will continue)
     } catch (error) {
       // Log unexpected errors
       console.error('Quota middleware error:', error);

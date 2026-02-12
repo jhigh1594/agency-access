@@ -120,11 +120,11 @@ export function MarketingNav() {
   };
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b-2 border-black bg-white">
+    <nav className="sticky top-0 z-40 w-full border-b-2 border-black bg-card">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo - Brutalist box */}
         <Link href="/" className="flex items-center space-x-3 group" onClick={handleLinkClick}>
-          <div className="w-14 h-14 flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_#000] rounded-none bg-white group-hover:shadow-[6px_6px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all duration-200 relative">
+          <div className="w-14 h-14 flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_#000] rounded-none bg-card group-hover:shadow-[6px_6px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all duration-200 relative">
             <img
               src="/authhub.png"
               alt="AuthHub"
@@ -186,7 +186,7 @@ export function MarketingNav() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-sm bg-white md:hidden shadow-brutalist-xl border-l-2 border-black flex flex-col"
+                className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-sm bg-card md:hidden shadow-brutalist-xl border-l-2 border-black flex flex-col"
                 style={{ backgroundColor: 'white' }}
               >
               {/* Mobile Menu Header */}
@@ -202,7 +202,7 @@ export function MarketingNav() {
               </div>
 
               {/* Mobile Menu Content - Bento grid layout */}
-              <div className="flex-1 p-4 overflow-y-auto bg-white">
+              <div className="flex-1 p-4 overflow-y-auto bg-card">
                   {/* Navigation Links - Brutalist grid */}
                   <div className="grid grid-cols-1 gap-3 mb-6">
                     <Link

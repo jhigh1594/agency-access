@@ -5,7 +5,7 @@ import { ShieldCheckIcon, LockIcon, GlobeIcon } from '@/components/ui/ui-icons';
 
 export function TrustSection() {
   return (
-    <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white">
+    <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-card">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Testimonial - Brutalist card */}
         <div className="max-w-4xl mx-auto text-center mb-16 sm:mb-24 px-2">
@@ -13,7 +13,7 @@ export function TrustSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative p-6 sm:p-8 md:p-12 rounded-none border-2 border-black shadow-brutalist-xl bg-white"
+            className="relative p-6 sm:p-8 md:p-12 rounded-none border-2 border-black shadow-brutalist-xl bg-card"
           >
             <blockquote className="font-display text-xl sm:text-2xl md:text-3xl lg:text-5xl italic leading-tight text-ink relative z-10">
               &ldquo;AuthHub literally saved our onboarding process. We went from
@@ -47,7 +47,7 @@ export function TrustSection() {
               whileHover={{ y: -2, boxShadow: '6px 6px 0px #000', x: -2 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-6 sm:p-8 flex flex-col items-center text-center border-2 border-black bg-white shadow-[4px_4px_0px_#000] rounded-none hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
+              className="p-6 sm:p-8 flex flex-col items-center text-center border-2 border-black bg-card shadow-[4px_4px_0px_#000] rounded-none hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
             >
               <div className="mb-4 sm:mb-6">
                 <item.icon size={24} className="text-ink sm:hidden" />

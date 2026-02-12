@@ -69,7 +69,7 @@ export function MetaBusinessPortfolioSelector({
         <p className="text-red-700 text-sm mb-4">Please try refreshing the page or connecting again.</p>
         <button 
           onClick={() => refetch()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-700 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-red-200 text-red-700 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
         >
           <RefreshCw className="h-4 w-4" />
           Retry
@@ -113,7 +113,7 @@ export function MetaBusinessPortfolioSelector({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-6">
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-1">

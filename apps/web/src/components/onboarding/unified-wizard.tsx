@@ -164,7 +164,7 @@ export function UnifiedWizard({
       className="min-h-screen bg-ink flex flex-col"
     >
       {/* Progress Bar */}
-      <div className="w-full bg-white/10 backdrop-blur-sm border-b border-white/20">
+      <div className="w-full bg-card/10 backdrop-blur-sm border-b border-white/20">
         <div className="max-w-4xl mx-auto px-4 py-6">
           {/* Step Indicators */}
           <div className="flex items-center justify-between mb-3">
@@ -177,9 +177,9 @@ export function UnifiedWizard({
           </div>
 
           {/* Linear Progress Bar */}
-          <div className="relative h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-card/20 rounded-full overflow-hidden">
             <motion.div
-              className="absolute inset-y-0 left-0 bg-white rounded-full"
+              className="absolute inset-y-0 left-0 bg-card rounded-full"
               initial={{ width: `${((currentStep) / totalSteps) * 100}%` }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 0.5, ease: 'easeInOut' }}
@@ -209,7 +209,7 @@ export function UnifiedWizard({
                     {isCompleted ? '✓' : index + 1}
                   </div>
                   {index < totalSteps - 1 && (
-                    <div className="flex-1 h-px bg-white/30 mx-1" />
+                    <div className="flex-1 h-px bg-card/30 mx-1" />
                   )}
                 </div>
               );
@@ -241,7 +241,7 @@ export function UnifiedWizard({
               }}
             >
               {/* Content Card */}
-              <div className="bg-white rounded-lg shadow-brutalist-lg overflow-hidden border-2 border-black">
+              <div className="bg-card rounded-lg shadow-brutalist-lg overflow-hidden border-2 border-black">
                 {/* Close Button (only after value delivered) */}
                 {showClose && onClose && (
                   <button
@@ -261,7 +261,7 @@ export function UnifiedWizard({
       </div>
 
       {/* Navigation Footer */}
-      <div className="bg-white/10 backdrop-blur-sm border-t border-white/20">
+      <div className="bg-card/10 backdrop-blur-sm border-t border-white/20">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             {/* Back Button */}
@@ -269,7 +269,7 @@ export function UnifiedWizard({
               <button
                 onClick={handleBack}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/10 hover:bg-card/20 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Go back to previous step"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -284,7 +284,7 @@ export function UnifiedWizard({
               <button
                 onClick={handleSkip}
                 disabled={loading}
-                className="px-4 py-2 rounded-lg bg-transparent hover:bg-white/10 text-white/80 hover:text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg bg-transparent hover:bg-card/10 text-white/80 hover:text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Skip for now →
               </button>
@@ -318,9 +318,9 @@ export function UnifiedWizard({
 
           {/* Keyboard Shortcuts Hint */}
           <div className="mt-4 text-center text-xs text-white/60">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono">Enter</kbd> to continue
+            Press <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Enter</kbd> to continue
             {canSkip && ' • '}
-            {canSkip && <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono">Esc</kbd>}
+            {canSkip && <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Esc</kbd>}
             {' to skip'}
           </div>
         </div>

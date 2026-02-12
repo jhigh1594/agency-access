@@ -191,7 +191,7 @@ function ChatMessage({
       className={`p-4 border-2 border-black shadow-brutalist hover:shadow-brutalist-lg transition-all duration-200 rounded-lg ${
         isAgency
           ? 'bg-coral text-white max-w-[90%]'
-          : 'bg-white text-ink max-w-[90%] ml-auto'
+          : 'bg-card text-ink max-w-[90%] ml-auto'
       }`}
     >
       <p className="font-medium text-sm mb-3 leading-relaxed">

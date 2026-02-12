@@ -165,11 +165,11 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   };
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-lg border border-slate-200 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="bg-white rounded p-1 border border-slate-100">
+          <div className="bg-card rounded p-1 border border-slate-100">
             <PlatformIcon platform="google" size="sm" />
           </div>
           <span className="font-medium text-slate-900">Google {productSummary}</span>
@@ -321,7 +321,7 @@ function ProductCard({
   tooltip,
 }: ProductCardProps) {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${enabled ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+    <div className={`p-4 rounded-lg border transition-all ${enabled ? 'bg-card border-slate-200' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
       <div className="flex items-start gap-3">
         <input
           type="checkbox"
@@ -346,7 +346,7 @@ function ProductCard({
                       onAccountSelect(e.target.value, account.name || account.displayName || account.url);
                     }
                   }}
-                  className="w-full px-3 py-2 pr-10 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none"
+                  className="w-full px-3 py-2 pr-10 bg-card border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none"
                 >
                   <option value="">{placeholder}</option>
                   {accounts.map((account) => {

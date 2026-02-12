@@ -3,6 +3,7 @@
 import { useAuth, UserButton } from '@clerk/nextjs';
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   LayoutDashboard,
   Network,
@@ -93,10 +94,10 @@ export default function AuthenticatedLayout({
   // Show loading state while auth loads or while checking agency (skip in bypass mode)
   if (!isDevelopmentBypass && (!isLoaded || checkingAgency)) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
-          <p className="mt-4 text-sm text-slate-600">Loading...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -107,14 +108,14 @@ export default function AuthenticatedLayout({
       label: 'Dashboard',
       href: '/dashboard',
       icon: (
-        <LayoutDashboard className="text-neutral-700 h-6 w-6 flex-shrink-0" />
+        <LayoutDashboard className="text-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Connections',
       href: '/connections',
       icon: (
-        <Network className="text-neutral-700 h-6 w-6 flex-shrink-0" />
+        <Network className="text-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     // TODO: Token Health page commented out until future state is determined
@@ -122,21 +123,21 @@ export default function AuthenticatedLayout({
     //   label: 'Token Health',
     //   href: '/token-health',
     //   icon: (
-    //     <Heart className="text-neutral-700 h-6 w-6 flex-shrink-0" />
+    //     <Heart className="text-foreground h-6 w-6 flex-shrink-0" />
     //   ),
     // },
     {
       label: 'Clients',
       href: '/clients',
       icon: (
-        <Users className="text-neutral-700 h-6 w-6 flex-shrink-0" />
+        <Users className="text-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Settings',
       href: '/settings',
       icon: (
-        <Settings className="text-neutral-700 h-6 w-6 flex-shrink-0" />
+        <Settings className="text-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
   ];
@@ -144,7 +145,7 @@ export default function AuthenticatedLayout({
   return (
     <div
       className={cn(
-        'flex flex-col md:flex-row bg-gray-100 w-full flex-1 mx-auto border border-neutral-200 overflow-hidden',
+        'flex flex-col md:flex-row bg-muted w-full flex-1 mx-auto border border-border overflow-hidden',
         'h-screen'
       )}
     >
@@ -177,7 +178,7 @@ export default function AuthenticatedLayout({
                   opacity: open ? 1 : 0,
                   width: open ? 'auto' : 0,
                 }}
-                className="font-semibold text-xl text-neutral-700 whitespace-nowrap overflow-hidden"
+                className="font-semibold text-xl text-foreground whitespace-nowrap overflow-hidden"
               >
                 AuthHub
               </m.span>
@@ -192,7 +193,7 @@ export default function AuthenticatedLayout({
           </div>
 
           {/* User Profile at Bottom */}
-          <div className="border-t border-neutral-200 pt-4">
+          <div className="border-t border-border pt-4">
             <div className="flex items-center gap-2">
               {isDevelopmentBypass ? (
                 <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md">
@@ -205,24 +206,27 @@ export default function AuthenticatedLayout({
                   </div>
                 </div>
               ) : (
-                <UserButton afterSignOutUrl="/" />
+                <>
+                  <UserButton afterSignOutUrl="/" />
+                  <m.div
+                    animate={{
+                      display: open ? 'inline-block' : 'none',
+                      opacity: open ? 1 : 0,
+                    }}
+                    className="text-sm text-foreground"
+                  >
+                    Profile
+                  </m.div>
+                </>
               )}
-              <m.div
-                animate={{
-                  display: open ? 'inline-block' : 'none',
-                  opacity: open ? 1 : 0,
-                }}
-                className="text-sm text-neutral-700"
-              >
-                Profile
-              </m.div>
+              <ThemeToggle />
             </div>
           </div>
         </SidebarBody>
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-auto bg-white">
+      <div className="flex flex-1 flex-col overflow-auto bg-background">
         {children}
       </div>
     </div>

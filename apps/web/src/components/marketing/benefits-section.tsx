@@ -54,7 +54,7 @@ export function BenefitsSection() {
                 whileHover={{ y: -2, boxShadow: '6px 6px 0px #000', x: -2 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="flex gap-3 sm:gap-4 p-4 sm:p-6 rounded-none border-2 border-black bg-white shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
+                className="flex gap-3 sm:gap-4 p-4 sm:p-6 rounded-none border-2 border-black bg-card shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
               >
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-none border-2 border-black bg-coral/10 flex items-center justify-center">

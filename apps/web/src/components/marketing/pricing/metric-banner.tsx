@@ -72,7 +72,7 @@ export function MetricBanner() {
                 transition={{ delay: index * 0.1, duration: 0.5 }}
                 className="text-center"
               >
-                <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm p-6 sm:p-8">
+                <div className="border-2 border-white/20 bg-card/5 backdrop-blur-sm p-6 sm:p-8">
                   <div className="font-dela text-4xl sm:text-5xl lg:text-6xl text-acid mb-2">
                     {isVisible && (
                       <AnimatedCounter

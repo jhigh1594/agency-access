@@ -72,7 +72,7 @@ export function BeehiivConfirmation({ checked, onChange }: BeehiivConfirmationPr
 
         {/* Help Content (expandable) */}
         {showHelp && (
-          <div className="mt-3 p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600">
+          <div className="mt-3 p-3 bg-card border border-slate-200 rounded-lg text-sm text-slate-600">
             <p className="font-medium text-slate-900 mb-2">Common issues:</p>
             <ul className="space-y-1 list-disc list-inside">
               <li>Can't find the team invitation option in Beehiiv?</li>

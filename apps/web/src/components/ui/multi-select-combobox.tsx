@@ -222,7 +222,7 @@ export function MultiSelectCombobox({
                   ? 'bg-coral border-coral'
                   : isPartiallySelected
                   ? 'bg-coral/20 border-coral/40'
-                  : 'border-2 border-black bg-white'
+                  : 'border-2 border-black bg-card'
               }
             `}
           >
@@ -231,10 +231,10 @@ export function MultiSelectCombobox({
               <div className="w-2 h-0.5 bg-coral rounded" />
             )}
           </div>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-foreground">
             {isAllSelected ? 'Deselect All' : 'Select All'}
           </span>
-          <span className="text-xs text-gray-500 ml-auto">
+          <span className="text-xs text-muted-foreground ml-auto">
             {selectedOptions.length} of {options.length}
           </span>
         </button>
@@ -254,7 +254,7 @@ export function MultiSelectCombobox({
         className={`
           min-h-[60px] w-full px-3 py-2 border-2 rounded-lg cursor-pointer
           transition-all duration-200 relative
-          ${isOpen ? 'border-coral ring-2 ring-coral/20' : 'border-black/10 hover:border-black'}
+          ${isOpen ? 'border-coral ring-2 ring-coral/20' : 'border-border hover:border-black'}
         `}
         role="combobox"
         aria-expanded={isOpen}
@@ -262,7 +262,7 @@ export function MultiSelectCombobox({
       >
         <div className="flex flex-wrap gap-2 items-center pr-8">
           {selectedOptions.length === 0 ? (
-            <span className="text-gray-500 text-sm py-1 flex items-center gap-2">
+            <span className="text-muted-foreground text-sm py-1 flex items-center gap-2">
               <Search className="w-4 h-4" />
               {placeholder}
             </span>
@@ -285,7 +285,7 @@ export function MultiSelectCombobox({
                 </span>
               ))}
               {hiddenCount > 0 && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 border border-black/10 rounded-md text-sm text-gray-600">
+                <span className="inline-flex items-center px-2.5 py-1 bg-muted border border-border rounded-md text-sm text-foreground">
                   +{hiddenCount} more
                 </span>
               )}
@@ -295,14 +295,14 @@ export function MultiSelectCombobox({
 
         {/* Chevron indicator */}
         <ChevronDown
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 transition-transform ${
+          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
 
         {/* Helper text below selected items */}
         {selectedOptions.length > 0 && (
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-muted-foreground mt-1">
             Start typing to search or click to see options
           </div>
         )}
@@ -324,7 +324,7 @@ export function MultiSelectCombobox({
       {isOpen && typeof window !== 'undefined' && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] bg-white border-2 border-black/10 rounded-lg shadow-brutalist overflow-auto"
+          className="fixed z-[9999] bg-card border-2 border-border rounded-lg shadow-brutalist overflow-auto"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -334,9 +334,9 @@ export function MultiSelectCombobox({
           role="listbox"
         >
           {/* Search Input */}
-          <div className="sticky top-0 bg-white border-b border-black/10 p-2">
+          <div className="sticky top-0 bg-card border-b border-border p-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -346,7 +346,7 @@ export function MultiSelectCombobox({
                   setFocusedIndex(-1);
                 }}
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 border-2 border-black/10 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-coral focus:border-coral"
+                className="w-full pl-9 pr-3 py-2 border-2 border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-coral focus:border-coral"
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
               />
@@ -356,10 +356,10 @@ export function MultiSelectCombobox({
           {/* Options List */}
           <div className="p-2" role="presentation">
             {filteredOptions.length === 0 ? (
-              <div className="py-8 text-center text-gray-500 text-sm">
+              <div className="py-8 text-center text-muted-foreground text-sm">
                 {searchQuery ? (
                   <>
-                    <p className="font-medium text-gray-700 mb-2">
+                    <p className="font-medium text-foreground mb-2">
                       No accounts match "{searchQuery}"
                     </p>
                     <button
@@ -387,7 +387,7 @@ export function MultiSelectCombobox({
                     className={`
                       flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer
                       transition-colors
-                      ${isSelected ? 'bg-coral/10 hover:bg-coral/20' : 'hover:bg-gray-50'}
+                      ${isSelected ? 'bg-coral/10 hover:bg-coral/20' : 'hover:bg-card'}
                       ${isFocused ? 'ring-2 ring-coral/20 ring-inset' : ''}
                     `}
                     role="option"
@@ -404,7 +404,7 @@ export function MultiSelectCombobox({
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-ink text-sm truncate">{option.name}</div>
                       {option.description && (
-                        <div className="text-xs text-gray-500 mt-0.5 truncate">{option.description}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5 truncate">{option.description}</div>
                       )}
                     </div>
                   </div>

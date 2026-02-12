@@ -191,7 +191,7 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   };
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-lg border border-slate-200 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
@@ -249,7 +249,7 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
               <select
                 value={selectedBusinessId}
                 onChange={(e) => handleBusinessSelect(e.target.value)}
-                className="w-full px-4 py-3 pr-10 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none"
+                className="w-full px-4 py-3 pr-10 bg-card border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none"
               >
                 <option value="" disabled>Select a portfolio...</option>
                 {businesses.map((business) => (
@@ -434,7 +434,7 @@ function AssetCard({
   extraContent?: React.ReactNode;
 }) {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${enabled ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+    <div className={`p-4 rounded-lg border transition-all ${enabled ? 'bg-card border-slate-200' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1">
           <input

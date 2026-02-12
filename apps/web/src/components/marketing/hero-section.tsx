@@ -183,7 +183,7 @@ export function HeroSection() {
                 </div>
 
                 {/* OAuth Authorization Card */}
-                <div className="border-2 border-black bg-white rounded-none p-6 shadow-brutalist-sm">
+                <div className="border-2 border-black bg-card rounded-none p-6 shadow-brutalist-sm">
                   <div className="flex items-center justify-center mb-6">
                     <div className="w-16 h-16 border-2 border-black bg-coral flex items-center justify-center text-white shadow-brutalist relative">
                       <GlobeIcon size={32} />

@@ -24,7 +24,7 @@ export function BlogNavigation({
           {previousPost ? (
             <Link
               href={`/blog/${previousPost.slug}`}
-              className="group border-2 border-black bg-white p-6 rounded-none shadow-brutalist-sm hover:shadow-brutalist hover:-translate-x-1 hover:translate-y-1 transition-all"
+              className="group border-2 border-black bg-card p-6 rounded-none shadow-brutalist-sm hover:shadow-brutalist hover:-translate-x-1 hover:translate-y-1 transition-all"
             >
               <div className="flex items-center gap-2 text-sm font-bold text-coral mb-2">
                 <ChevronLeft size={16} />
@@ -52,7 +52,7 @@ export function BlogNavigation({
           {nextPost ? (
             <Link
               href={`/blog/${nextPost.slug}`}
-              className="group border-2 border-black bg-white p-6 rounded-none shadow-brutalist-sm hover:shadow-brutalist hover:translate-x-1 hover:translate-y-1 transition-all md:text-right"
+              className="group border-2 border-black bg-card p-6 rounded-none shadow-brutalist-sm hover:shadow-brutalist hover:translate-x-1 hover:translate-y-1 transition-all md:text-right"
             >
               <div className="flex items-center justify-end gap-2 text-sm font-bold text-coral mb-2 md:flex-row-reverse">
                 <span>NEXT</span>

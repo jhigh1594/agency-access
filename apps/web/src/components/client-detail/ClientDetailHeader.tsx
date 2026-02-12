@@ -56,7 +56,7 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="flex items-start justify-between">
           {/* Left side: Avatar and info */}
           <div className="flex items-start space-x-4 flex-1">

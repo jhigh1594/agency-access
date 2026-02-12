@@ -136,7 +136,7 @@ export function SuccessStoriesSection() {
               {/* Testimonial & Metrics */}
               <div className="order-1 md:order-2">
                 {/* Quote Card */}
-                <div className="bg-white border-2 border-black rounded-[0.75rem] p-6 sm:p-8 shadow-brutalist mb-6 relative hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+                <div className="bg-card border-2 border-black rounded-[0.75rem] p-6 sm:p-8 shadow-brutalist mb-6 relative hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
                   <div className="absolute top-4 sm:top-6 left-4 sm:left-8 text-coral/10 font-dela text-4xl sm:text-6xl leading-none select-none -z-0">
                     &ldquo;
                   </div>
@@ -172,7 +172,7 @@ export function SuccessStoriesSection() {
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -2, boxShadow: '6px 6px 0px #000', x: -2 }}
                         transition={{ delay: i * 0.1 }}
-                        className="bg-white border-2 border-black rounded-[0.5rem] p-4 sm:p-5 shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+                        className="bg-card border-2 border-black rounded-[0.5rem] p-4 sm:p-5 shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
                       >
                         <div className="flex items-center justify-between gap-3 sm:gap-4">
                           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -204,7 +204,7 @@ export function SuccessStoriesSection() {
           <div className="flex items-center justify-center gap-3 sm:gap-4 mt-8 sm:mt-12">
             <button
               onClick={handlePrev}
-              className="w-12 h-12 bg-white border-2 border-black rounded-[0.75rem] flex items-center justify-center shadow-[4px_4px_0px_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              className="w-12 h-12 bg-card border-2 border-black rounded-[0.75rem] flex items-center justify-center shadow-[4px_4px_0px_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               aria-label="Previous case study"
             >
               <ChevronLeft size={24} className="text-ink" strokeWidth={2.5} />
@@ -225,7 +225,7 @@ export function SuccessStoriesSection() {
 
             <button
               onClick={handleNext}
-              className="w-12 h-12 bg-white border-2 border-black rounded-[0.75rem] flex items-center justify-center shadow-[4px_4px_0px_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              className="w-12 h-12 bg-card border-2 border-black rounded-[0.75rem] flex items-center justify-center shadow-[4px_4px_0px_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               aria-label="Next case study"
             >
               <ChevronRight size={24} className="text-ink" strokeWidth={2.5} />

@@ -195,7 +195,7 @@ export function PlatformSelectorGrid({
                       {/* Selection Checkmark */}
                       {selected && (
                         <motion.div
-                          className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"
+                          className="absolute top-2 right-2 w-5 h-5 bg-card rounded-full flex items-center justify-center shadow-sm"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                         >

@@ -52,8 +52,8 @@ export function PlatformCard({
   const textClass = isFeatured ? 'text-lg' : 'text-base'; // Larger platform name for prominence
 
   const cardBaseClasses = isFeatured
-    ? 'brutalist-card bg-white'
-    : 'clean-card bg-white rounded-lg';
+    ? 'brutalist-card bg-card'
+    : 'clean-card bg-card rounded-lg';
 
   return (
     <div className={`${cardBaseClasses} ${paddingClass}`}>

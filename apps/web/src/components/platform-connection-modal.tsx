@@ -212,7 +212,7 @@ export function PlatformConnectionModal({
         transition={{ type: 'spring', duration: 0.3 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       >
-        <div className="relative bg-white rounded-lg shadow-brutalist-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto border-2 border-black"
+        <div className="relative bg-card rounded-lg shadow-brutalist-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto border-2 border-black"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black/10 bg-ink/5">
@@ -303,7 +303,7 @@ export function PlatformConnectionModal({
                 {connections.map((connection) => (
                   <div
                     key={connection.platform}
-                    className="p-4 border-2 border-black rounded-lg hover:border-acid transition-colors bg-white"
+                    className="p-4 border-2 border-black rounded-lg hover:border-acid transition-colors bg-card"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -392,7 +392,7 @@ export function PlatformConnectionModal({
               </p>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-white border-2 border-black rounded-lg hover:bg-acid/20 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-card border-2 border-black rounded-lg hover:bg-acid/20 transition-colors text-sm font-medium"
               >
                 Done
               </button>
@@ -407,7 +407,7 @@ export function PlatformConnectionModal({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white border-2 border-black rounded-lg shadow-brutalist-lg p-6 max-w-sm w-full"
+                  className="bg-card border-2 border-black rounded-lg shadow-brutalist-lg p-6 max-w-sm w-full"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-coral/20 rounded-lg">

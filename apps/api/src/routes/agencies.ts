@@ -175,33 +175,37 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   });
 
   // Invite member
-  fastify.register(
-    quotaMiddleware({
-      metric: 'team_seats',
-      getAgencyId: (request) => request.params as any).id,
-    }),
-    async (request, reply) => {
-    const { id } = request.params as { id: string };
-
-    const body = request.body as { email: string; role: 'admin' | 'member' | 'viewer' };
-    const result = await agencyService.inviteMember(id, body);
-
-    if (result.error) {
-      const statusCode = result.error.code === 'MEMBER_EXISTS' ? 409 : 400;
-      return sendError(reply, result.error.code, result.error.message, statusCode);
-    }
-
-    return reply.send(result);
+  fastify.post(
+    '/agencies/:id/members',
+    {
+      onRequest: [quotaMiddleware({
+        metric: 'team_seats',
+        getAgencyId: (request) => (request.params as any).id,
+      })],
     },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const body = request.body as { email: string; role: 'admin' | 'member' | 'viewer' };
+      const result = await agencyService.inviteMember(id, body);
+
+      if (result.error) {
+        const statusCode = result.error.code === 'MEMBER_EXISTS' ? 409 : 400;
+        return sendError(reply, result.error.code, result.error.message, statusCode);
+      }
+      return reply.send(result);
+    }
   );
 
   // Bulk invite members (for onboarding)
-  fastify.register(
-    quotaMiddleware({
-      metric: 'team_seats',
-      getAgencyId: (request) => request.params as any).id,
-      requestedAmount: (request) => (request.body as any)?.members?.length || 1,
-    }),
+  fastify.post(
+    '/agencies/:id/members/bulk',
+    {
+      onRequest: [quotaMiddleware({
+        metric: 'team_seats',
+        getAgencyId: (request) => (request.params as any).id,
+        requestedAmount: (request: any) => (request.body?.members?.length as number) || 1,
+      })],
+    },
     async (request, reply) => {
     const { id } = request.params as { id: string };
 

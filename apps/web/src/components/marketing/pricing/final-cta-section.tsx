@@ -8,7 +8,7 @@ import { Reveal } from '../reveal';
 
 export function FinalCTASection() {
   return (
-    <section className="py-16 sm:py-20 md:py-24 bg-white relative overflow-hidden">
+    <section className="py-16 sm:py-20 md:py-24 bg-card relative overflow-hidden">
       {/* Background Accents */}
       <div className="absolute top-0 left-0 w-full h-full opacity-5">
         <div

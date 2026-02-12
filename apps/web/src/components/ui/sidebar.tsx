@@ -206,8 +206,8 @@ export const SidebarLink = ({
         href={link.href as any}
         className={cn(
           "flex items-center group/sidebar rounded-lg transition-colors w-full",
-          "hover:bg-neutral-100",
-          isActive && "bg-neutral-100",
+          "hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60",
+          isActive && "bg-neutral-200 dark:bg-neutral-700",
           open ? "justify-start pl-3 py-2" : "justify-center px-4 py-3",
           className
         )}
@@ -250,7 +250,7 @@ export const SidebarLink = ({
           <span
             className={cn(
               "text-base font-sans group-hover/sidebar:translate-x-1 transition duration-150 whitespace-nowrap inline-block !p-0 !m-0",
-              isActive ? "text-neutral-900 font-medium" : "text-neutral-700"
+              isActive ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
             {link.label}

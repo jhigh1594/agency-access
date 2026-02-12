@@ -108,7 +108,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
                 // TODO: Implement video modal/player
                 console.log('Play demo video');
               }}
-              className="relative z-10 flex items-center justify-center w-20 h-20 bg-white hover:bg-white/90 rounded-full shadow-brutalist transition-all group-hover:scale-110"
+              className="relative z-10 flex items-center justify-center w-20 h-20 bg-card hover:bg-card/90 rounded-full shadow-brutalist transition-all group-hover:scale-110"
               aria-label="Watch demo video"
             >
               <Play className="w-8 h-8 text-teal ml-1" fill="currentColor" />
@@ -164,7 +164,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
           >
             <p className="text-ink text-sm">
               <span className="font-semibold">We've pre-filled your agency name:</span>{' '}
-              <span className="font-mono bg-white px-2 py-0.5 rounded">{agencyName}</span>
+              <span className="font-mono bg-card px-2 py-0.5 rounded">{agencyName}</span>
               <span className="text-gray-700 ml-2">(you can change this next)</span>
             </p>
           </motion.div>

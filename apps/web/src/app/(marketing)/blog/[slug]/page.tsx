@@ -98,13 +98,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/pricing"
-              className="px-8 py-4 bg-coral text-white font-bold uppercase tracking-wider border-2 border-white rounded-none hover:bg-white hover:text-ink transition-all"
+              className="px-8 py-4 bg-coral text-white font-bold uppercase tracking-wider border-2 border-white rounded-none hover:bg-card hover:text-ink transition-all"
             >
               Start Free Trial
             </a>
             <a
               href="#"
-              className="px-8 py-4 bg-transparent text-white font-bold uppercase tracking-wider border-2 border-white rounded-none hover:bg-white hover:text-ink transition-all"
+              className="px-8 py-4 bg-transparent text-white font-bold uppercase tracking-wider border-2 border-white rounded-none hover:bg-card hover:text-ink transition-all"
             >
               Schedule Demo
             </a>

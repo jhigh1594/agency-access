@@ -84,7 +84,7 @@ export function FAQSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3 }}
-                className="border-2 border-black bg-white shadow-brutalist-sm overflow-hidden"
+                className="border-2 border-black bg-card shadow-brutalist-sm overflow-hidden"
               >
                 {/* Question Button */}
                 <button
@@ -134,7 +134,7 @@ export function FAQSection() {
             viewport={{ once: true }}
             className="mt-12 text-center"
           >
-            <div className="inline-block border-2 border-black bg-white p-6 shadow-brutalist-sm">
+            <div className="inline-block border-2 border-black bg-card p-6 shadow-brutalist-sm">
               <p className="font-mono text-sm text-gray-700 mb-4">
                 Still have questions?
               </p>

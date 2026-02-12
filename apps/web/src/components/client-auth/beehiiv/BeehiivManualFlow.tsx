@@ -89,12 +89,12 @@ export function BeehiivManualFlow({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Card Header */}
       <div className="border-b border-slate-200 p-6 bg-gradient-to-br from-slate-50 to-white">
         <div className="flex items-center gap-4 mb-4">
           {/* Beehiiv Logo/Icon */}
-          <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+          <div className="h-12 w-12 rounded-lg bg-card border border-slate-200 flex items-center justify-center">
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#FFB800" />
               <path d="M2 7L12 12V22L2 7Z" fill="#FFA000" />

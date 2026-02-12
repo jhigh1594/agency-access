@@ -39,7 +39,7 @@ export function BeehiivCopyButton({
 
   const buttonClasses = [
     'inline-flex items-center gap-2 px-4 py-2',
-    'bg-white border border-slate-300 rounded-lg',
+    'bg-card border border-slate-300 rounded-lg',
     'text-slate-700 font-medium text-sm',
     'hover:bg-slate-50 hover:border-slate-400',
     'active:bg-slate-100',

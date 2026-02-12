@@ -42,7 +42,7 @@ export function PinterestBusinessSettings({
 
   if (isEditing) {
     return (
-      <div className="bg-white rounded-lg border border-slate-200 p-4">
+      <div className="bg-card rounded-lg border border-slate-200 p-4">
         <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
           Pinterest Business ID
         </label>
@@ -81,7 +81,7 @@ export function PinterestBusinessSettings({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4">
+    <div className="bg-card rounded-lg border border-slate-200 p-4">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">

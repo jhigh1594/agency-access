@@ -129,7 +129,7 @@ export function PinterestManualWizard({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+    <div className="bg-card rounded-xl shadow-lg overflow-hidden border border-slate-200">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-5 border-b border-red-100">
         <div className="flex items-center gap-3">

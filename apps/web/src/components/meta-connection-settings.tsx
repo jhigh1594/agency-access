@@ -297,7 +297,7 @@ function AssetRow({
   children?: React.ReactNode;
 }) {
   return (
-    <div className={`p-4 rounded-xl border transition-all ${enabled ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+    <div className={`p-4 rounded-xl border transition-all ${enabled ? 'bg-card border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className={`p-2 rounded-lg ${enabled ? 'bg-slate-100' : 'bg-slate-200'}`}>

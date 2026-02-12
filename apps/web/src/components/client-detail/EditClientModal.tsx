@@ -114,7 +114,7 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-lg shadow-brutalist max-w-md w-full"
+          className="bg-card rounded-lg shadow-brutalist max-w-md w-full"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">

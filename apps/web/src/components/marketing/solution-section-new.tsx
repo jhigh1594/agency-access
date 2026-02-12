@@ -54,24 +54,24 @@ function BeforeState() {
             }}
           >
             <Mail className="w-4 h-4 text-white flex-shrink-0" strokeWidth={3} />
-            <div className="w-full h-0.5 bg-white/30" />
-            <div className="w-full h-1 bg-white/20 rounded" />
-            <div className="w-3/4 h-1 bg-white/20 rounded" />
+            <div className="w-full h-0.5 bg-card/30" />
+            <div className="w-full h-1 bg-card/20 rounded" />
+            <div className="w-3/4 h-1 bg-card/20 rounded" />
           </m.div>
         ))}
       </div>
 
       {/* Stats */}
       <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
-        <div className="bg-white/90 border-2 border-black rounded-lg p-2 text-center">
+        <div className="bg-card/90 border-2 border-black rounded-lg p-2 text-center">
           <div className="font-dela text-xl sm:text-2xl text-[#FF6B35]">47</div>
           <div className="font-mono text-[10px] text-gray-600 uppercase">Emails</div>
         </div>
-        <div className="bg-white/90 border-2 border-black rounded-lg p-2 text-center">
+        <div className="bg-card/90 border-2 border-black rounded-lg p-2 text-center">
           <div className="font-dela text-xl sm:text-2xl text-[#FF6B35]">3</div>
           <div className="font-mono text-[10px] text-gray-600 uppercase">Days</div>
         </div>
-        <div className="bg-white/90 border-2 border-black rounded-lg p-2 text-center">
+        <div className="bg-card/90 border-2 border-black rounded-lg p-2 text-center">
           <div className="font-dela text-xl sm:text-2xl text-[#FF6B35]">$600</div>
           <div className="font-mono text-[10px] text-gray-600 uppercase">Wasted</div>
         </div>
@@ -118,7 +118,7 @@ function AfterState() {
         >
           {/* Link icon */}
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center border-3 border-black/30">
+            <div className="w-16 h-16 bg-card/20 rounded-2xl flex items-center justify-center border-3 border-black/30">
               <Link2 className="w-8 h-8 text-white" strokeWidth={3} />
             </div>
           </div>
@@ -135,25 +135,25 @@ function AfterState() {
 
           {/* Success stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/10 border-2 border-white/30 rounded-lg p-3">
+            <div className="bg-card/10 border-2 border-white/30 rounded-lg p-3">
               <div className="font-mono text-[10px] text-white/70 uppercase mb-1">
                 Setup time
               </div>
               <div className="text-white text-xl font-dela">5 min</div>
             </div>
-            <div className="bg-white/10 border-2 border-white/30 rounded-lg p-3">
+            <div className="bg-card/10 border-2 border-white/30 rounded-lg p-3">
               <div className="font-mono text-[10px] text-white/70 uppercase mb-1">
                 Cost saved
               </div>
               <div className="text-white text-xl font-dela">$0</div>
             </div>
-            <div className="bg-white/10 border-2 border-white/30 rounded-lg p-3">
+            <div className="bg-card/10 border-2 border-white/30 rounded-lg p-3">
               <div className="font-mono text-[10px] text-white/70 uppercase mb-1">
                 Success rate
               </div>
               <div className="text-white text-xl font-dela">99.9%</div>
             </div>
-            <div className="bg-white/10 border-2 border-white/30 rounded-lg p-3">
+            <div className="bg-card/10 border-2 border-white/30 rounded-lg p-3">
               <div className="font-mono text-[10px] text-white/70 uppercase mb-1">
                 Platforms
               </div>
@@ -165,7 +165,7 @@ function AfterState() {
 
       {/* Bottom stats */}
       <div className="absolute bottom-4 left-4 right-4">
-        <div className="bg-white/90 border-2 border-black rounded-lg p-3 text-center">
+        <div className="bg-card/90 border-2 border-black rounded-lg p-3 text-center">
           <div className="font-mono text-xs text-gray-700">
             <span className="font-bold text-[#00A896]">94% faster</span> onboarding
           </div>
@@ -239,8 +239,8 @@ export function SolutionSectionNew() {
                 </ImageComparisonImage>
 
                 {/* Custom slider handle */}
-                <ImageComparisonSlider className="w-2 bg-white/80 shadow-2xl">
-                  <div className="absolute left-1/2 top-1/2 h-12 w-10 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white border-4 border-black shadow-brutalist flex items-center justify-center">
+                <ImageComparisonSlider className="w-2 bg-card/80 shadow-2xl">
+                  <div className="absolute left-1/2 top-1/2 h-12 w-10 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-card border-4 border-black shadow-brutalist flex items-center justify-center">
                     <div className="flex gap-0.5">
                       <div className="w-0.5 h-6 bg-gray-400 rounded-full" />
                       <div className="w-0.5 h-6 bg-gray-400 rounded-full" />

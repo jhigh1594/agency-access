@@ -107,7 +107,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
                           ? 'bg-emerald-500 border-emerald-500'
                           : isCurrent
                           ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-200'
-                          : 'bg-white border-slate-300'
+                          : 'bg-card border-slate-300'
                       }
                     `}
                     animate={{

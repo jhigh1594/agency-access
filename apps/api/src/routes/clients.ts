@@ -93,11 +93,14 @@ export async function clientRoutes(fastify: FastifyInstance) {
    * POST /api/clients
    * Create a new client
    */
-  fastify.register(
-    quotaMiddleware({
-      metric: 'clients',
-      getAgencyId: (request) => (request as any).agencyId,
-    }),
+  fastify.post(
+    '/clients',
+    {
+      onRequest: [quotaMiddleware({
+        metric: 'clients',
+        getAgencyId: (request) => (request as any).agencyId,
+      })],
+    },
     async (request, reply) => {
     const agencyId = (request as any).agencyId;
 

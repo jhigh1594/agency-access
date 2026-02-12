@@ -84,7 +84,7 @@ export default function PinterestManualPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
@@ -92,8 +92,8 @@ export default function PinterestManualPage() {
 
   if (error && !accessRequest) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="bg-card p-8 rounded-lg shadow-lg max-w-md">
           <h1 className="text-xl font-semibold text-red-600 mb-2">Error</h1>
           <p className="text-slate-700">{error}</p>
         </div>
@@ -102,7 +102,7 @@ export default function PinterestManualPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
+    <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <PinterestManualWizard
           agencyName={accessRequest?.agencyName || 'Agency'}

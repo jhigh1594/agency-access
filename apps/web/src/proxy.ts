@@ -27,6 +27,11 @@ export default clerkMiddleware(async (auth, request) => {
     return
   }
 
+  // Skip auth check in development bypass mode
+  if (process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true' && process.env.NODE_ENV === 'development') {
+    return
+  }
+
   // Protect all other routes
   await auth.protect()
 })

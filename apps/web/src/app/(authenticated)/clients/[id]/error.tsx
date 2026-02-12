@@ -18,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex-1 bg-slate-50 p-8">
+    <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto">
         <a
           href="/clients"
@@ -57,7 +57,7 @@ export default function Error({
             </button>
             <a
               href="/clients"
-              className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 border border-border text-slate-700 rounded-lg hover:bg-background transition-colors"
             >
               Back to clients
             </a>

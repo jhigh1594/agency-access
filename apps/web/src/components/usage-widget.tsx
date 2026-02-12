@@ -29,7 +29,7 @@ export function UsageWidget() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
           <span className="ml-3 text-slate-600">Loading usage...</span>
@@ -41,7 +41,7 @@ export function UsageWidget() {
   // Show error state
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="flex items-center text-red-600">
           <AlertCircle className="h-5 w-5 mr-2" />
           <span>Failed to load usage data</span>
@@ -62,7 +62,7 @@ export function UsageWidget() {
     metrics.teamSeats.percentage >= 80;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-slate-900">Usage</h3>

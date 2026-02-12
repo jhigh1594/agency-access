@@ -40,7 +40,7 @@ export function BeehiivInstructionSteps({
             type="text"
             readOnly
             value={agencyEmail}
-            className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-mono text-sm"
+            className="flex-1 px-3 py-2 bg-card border border-slate-300 rounded-lg text-slate-900 font-mono text-sm"
           />
           <BeehiivCopyButton text={agencyEmail} />
         </div>
@@ -83,7 +83,7 @@ export function BeehiivInstructionSteps({
           href="https://app.beehiiv.com/settings/workspace/team"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors text-sm font-medium"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors text-sm font-medium"
         >
           <Settings className="h-4 w-4" />
           Open Team Settings
@@ -109,7 +109,7 @@ export function BeehiivInstructionSteps({
       </div>
 
       {/* Step 5: Invite Details */}
-      <div className="bg-white border border-slate-200 rounded-lg p-6">
+      <div className="bg-card border border-slate-200 rounded-lg p-6">
         <div className="flex items-start gap-3 mb-4">
           <div className="h-6 w-6 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-sm font-bold">5</span>

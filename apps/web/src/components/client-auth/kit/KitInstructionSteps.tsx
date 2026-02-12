@@ -41,7 +41,7 @@ export function KitInstructionSteps({
             type="text"
             readOnly
             value={agencyEmail}
-            className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-mono text-sm"
+            className="flex-1 px-3 py-2 bg-card border border-slate-300 rounded-lg text-slate-900 font-mono text-sm"
           />
           <KitCopyButton text={agencyEmail} />
         </div>

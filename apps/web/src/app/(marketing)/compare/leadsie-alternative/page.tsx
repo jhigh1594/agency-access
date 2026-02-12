@@ -58,7 +58,7 @@ export default function ComparisonPage() {
       </section>
 
       {/* Quick summary */}
-      <section className="border-b-2 border-black bg-white">
+      <section className="border-b-2 border-black bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
             Quick Comparison
@@ -168,7 +168,7 @@ export default function ComparisonPage() {
       </section>
 
       {/* Detailed feature comparison table */}
-      <section className="border-b-2 border-black bg-white">
+      <section className="border-b-2 border-black bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
             Feature Comparison
@@ -366,7 +366,7 @@ export default function ComparisonPage() {
       </section>
 
       {/* Why Agency Access Platform wins */}
-      <section className="border-b-2 border-black bg-white">
+      <section className="border-b-2 border-black bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-12 text-center">
             Why Agency Access Platform Wins
@@ -513,7 +513,7 @@ export default function ComparisonPage() {
                 className={`border-2 rounded-none p-4 flex items-center justify-between ${
                   platform.exclusive
                     ? "bg-teal/10 border-teal"
-                    : "border-black bg-white"
+                    : "border-black bg-card"
                 }`}
               >
                 <div className="flex-1">
@@ -564,7 +564,7 @@ export default function ComparisonPage() {
       </section>
 
       {/* Security comparison */}
-      <section className="border-b-2 border-black bg-white">
+      <section className="border-b-2 border-black bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
             Security Matters: Database vs. Infisical
@@ -620,7 +620,7 @@ export default function ComparisonPage() {
       </section>
 
       {/* Use case recommendations */}
-      <section className="border-b-2 border-black bg-white">
+      <section className="border-b-2 border-black bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-12 text-center">
             Which Platform Is Right for You?

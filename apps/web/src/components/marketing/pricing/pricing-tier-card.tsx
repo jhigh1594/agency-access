@@ -61,8 +61,8 @@ export function PricingTierCard({
     isPro
       ? 'bg-ink border-teal text-paper'
       : isFree
-      ? 'bg-gradient-to-br from-coral/5 to-coral/10 border-coral/30'
-      : 'bg-white border-black hover:shadow-brutalist-lg hover:translate-x-[-2px] hover:translate-y-[-2px]'
+      ? '!bg-white !border-black dark:!bg-card'
+      : 'bg-card border-black hover:shadow-brutalist-lg hover:translate-x-[-2px] hover:translate-y-[-2px]'
   }`;
 
   const textColorClass = isPro ? 'text-paper' : 'text-ink';

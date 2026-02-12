@@ -278,7 +278,7 @@ export function OpinionatedInput({
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+            className="absolute z-10 w-full mt-1 bg-card rounded-lg shadow-lg border border-gray-200 overflow-hidden"
           >
             {filteredSuggestions.map((suggestion, index) => (
               <button

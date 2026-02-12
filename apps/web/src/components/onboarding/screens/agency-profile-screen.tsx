@@ -122,7 +122,7 @@ export function AgencyProfileScreen({
             <div className="flex-1">
               <div className="font-semibold text-green-900 mb-1">Timezone detected</div>
               <div className="text-sm text-green-700">
-                Your timezone is set to <span className="font-mono bg-white px-1.5 py-0.5 rounded">{localTimezone}</span>
+                Your timezone is set to <span className="font-mono bg-card px-1.5 py-0.5 rounded">{localTimezone}</span>
               </div>
               <div className="text-xs text-green-600 mt-1">
                 You can customize this in Settings later
@@ -140,7 +140,7 @@ export function AgencyProfileScreen({
             <select
               value={localIndustry}
               onChange={(e) => setLocalIndustry(e.target.value)}
-              className="w-full px-4 py-3 pr-10 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all appearance-none bg-white"
+              className="w-full px-4 py-3 pr-10 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all appearance-none bg-card"
             >
               {COMMON_INDUSTRIES.map((ind) => (
                 <option key={ind} value={ind.toLowerCase().replace(/\s+/g, '_')}>

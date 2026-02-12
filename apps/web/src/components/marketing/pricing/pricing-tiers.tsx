@@ -97,7 +97,7 @@ export function PricingTiers() {
 
         {/* Mobile Message */}
         <div className="md:hidden text-center py-12">
-          <div className="border-2 border-black bg-white p-6 shadow-brutalist-sm max-w-md mx-auto">
+          <div className="border-2 border-black bg-card p-6 shadow-brutalist-sm max-w-md mx-auto">
             <h3 className="font-dela text-2xl text-ink mb-4">
               View pricing on desktop
             </h3>
@@ -199,7 +199,7 @@ export function PricingTiers() {
             transition={{ duration: 0.5 }}
             className="mt-12 sm:mt-16 text-center"
           >
-            <div className="inline-block border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist-sm max-w-2xl mx-auto">
+            <div className="inline-block border-2 border-black bg-card p-6 sm:p-8 shadow-brutalist-sm max-w-2xl mx-auto">
               <p className="font-mono text-sm text-gray-600 mb-3">
                 Need unlimited everything or a custom solution?
               </p>

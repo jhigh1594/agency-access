@@ -42,7 +42,7 @@ export function PinterestBusinessIdInput({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-6">
         {/* Header */}
         <div className="mb-6">
@@ -86,7 +86,7 @@ export function PinterestBusinessIdInput({
               <p className="text-sm text-indigo-700">
                 4. Your Business ID is displayed in the overview section
               </p>
-              <div className="mt-3 p-2 bg-white rounded border border-indigo-200">
+              <div className="mt-3 p-2 bg-card rounded border border-indigo-200">
                 <p className="text-xs text-indigo-600 font-mono">
                   Example: 664351519939856629
                 </p>

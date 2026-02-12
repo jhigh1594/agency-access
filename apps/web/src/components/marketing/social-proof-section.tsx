@@ -28,7 +28,7 @@ export function SocialProofSection() {
             {agencies.map((name, i) => (
               <div
                 key={`${name}-${i}`}
-                className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-black bg-white shadow-[4px_4px_0px_#000] rounded-none hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 cursor-default touch-feedback"
+                className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-black bg-card shadow-[4px_4px_0px_#000] rounded-none hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 cursor-default touch-feedback"
               >
                 {/* Monogram icon */}
                 <div className="w-8 h-8 border-2 border-black bg-coral flex items-center justify-center font-black text-base text-white rounded-none flex-shrink-0">
@@ -56,7 +56,7 @@ export function SocialProofSection() {
             {marqueeAgencies.map((name, i) => (
               <div
                 key={`${name}-${i}`}
-                className="flex items-center justify-center gap-3 px-6 py-4 border-2 border-black bg-white shadow-[4px_4px_0px_#000] rounded-none hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 cursor-default touch-feedback flex-shrink-0"
+                className="flex items-center justify-center gap-3 px-6 py-4 border-2 border-black bg-card shadow-[4px_4px_0px_#000] rounded-none hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 cursor-default touch-feedback flex-shrink-0"
               >
                 {/* Monogram icon */}
                 <div className="w-10 h-10 border-2 border-black bg-coral flex items-center justify-center font-black text-xl text-white rounded-none flex-shrink-0">

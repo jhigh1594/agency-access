@@ -316,7 +316,7 @@ export default function AgencyOnboardingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 shadow-sm">
+      <header className="bg-card border-b border-border shadow-sm">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-slate-900">Welcome to Agency Access Platform</h1>
@@ -389,7 +389,7 @@ export default function AgencyOnboardingPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-8"
+              className="bg-card rounded-lg shadow-sm border border-border p-8"
             >
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -412,7 +412,7 @@ export default function AgencyOnboardingPage() {
                     value={agencyProfile.name}
                     onChange={(e) => setAgencyProfile({ ...agencyProfile, name: e.target.value })}
                     placeholder="e.g., Acme Digital Marketing"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 
@@ -426,7 +426,7 @@ export default function AgencyOnboardingPage() {
                     value={agencyProfile.logoUrl}
                     onChange={(e) => setAgencyProfile({ ...agencyProfile, logoUrl: e.target.value })}
                     placeholder="https://your-agency.com/logo.png"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
 
@@ -438,7 +438,7 @@ export default function AgencyOnboardingPage() {
                     id="industry"
                     value={agencyProfile.industry}
                     onChange={(e) => setAgencyProfile({ ...agencyProfile, industry: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Select an industry</option>
                     {INDUSTRIES.map((industry) => (
@@ -457,7 +457,7 @@ export default function AgencyOnboardingPage() {
                     id="timezone"
                     value={agencyProfile.timezone}
                     onChange={(e) => setAgencyProfile({ ...agencyProfile, timezone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     {TIMEZONES.map((tz) => (
                       <option key={tz} value={tz}>
@@ -510,7 +510,7 @@ export default function AgencyOnboardingPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-8"
+              className="bg-card rounded-lg shadow-sm border border-border p-8"
             >
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -528,7 +528,7 @@ export default function AgencyOnboardingPage() {
                     key={index}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg"
+                    className="flex items-center gap-3 p-4 border border-border rounded-lg"
                   >
                     <Mail className="h-5 w-5 text-slate-400 flex-shrink-0" />
                     <input
@@ -536,12 +536,12 @@ export default function AgencyOnboardingPage() {
                       value={member.email}
                       onChange={(e) => updateTeamMember(index, { email: e.target.value })}
                       placeholder="colleague@example.com"
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                     <select
                       value={member.role}
                       onChange={(e) => updateTeamMember(index, { role: e.target.value as any })}
-                      className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="admin">Admin</option>
                       <option value="member">Member</option>
@@ -562,7 +562,7 @@ export default function AgencyOnboardingPage() {
                 <button
                   type="button"
                   onClick={addTeamMember}
-                  className="w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all flex items-center justify-center gap-2"
+                  className="w-full p-4 border-2 border-dashed border-border rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all flex items-center justify-center gap-2"
                 >
                   <Users className="h-4 w-4" />
                   Add Another Team Member
@@ -583,7 +583,7 @@ export default function AgencyOnboardingPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="flex-1 px-6 py-3 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                    className="flex-1 px-6 py-3 text-slate-700 hover:text-slate-900 border border-border rounded-lg hover:bg-background transition-colors"
                     disabled={loading}
                   >
                     Back
@@ -619,7 +619,7 @@ export default function AgencyOnboardingPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-8"
+              className="bg-card rounded-lg shadow-sm border border-border p-8"
             >
               <div className="text-center">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

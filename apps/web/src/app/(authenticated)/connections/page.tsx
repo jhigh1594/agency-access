@@ -479,7 +479,7 @@ function ConnectionsPageContent() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative bg-white rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="relative bg-card rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               <div className="flex items-center justify-between p-6 border-b border-border bg-paper">
                 <h2 className="text-xl font-bold text-ink font-display">Meta Connection Settings</h2>
@@ -522,7 +522,7 @@ function ConnectionsPageContent() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative bg-white rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="relative bg-card rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               <div className="flex items-center justify-between p-6 border-b border-border bg-paper">
                 <h2 className="text-xl font-bold text-ink font-display">Google Connection Settings</h2>

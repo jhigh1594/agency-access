@@ -88,12 +88,12 @@ export function KitManualFlow({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Card Header */}
       <div className="border-b border-slate-200 p-6 bg-gradient-to-br from-slate-50 to-white">
         <div className="flex items-center gap-4 mb-4">
           {/* Kit Logo/Icon */}
-          <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+          <div className="h-12 w-12 rounded-lg bg-card border border-slate-200 flex items-center justify-center">
             <span className="text-2xl font-bold text-indigo-600">K</span>
           </div>
 

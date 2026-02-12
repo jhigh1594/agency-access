@@ -21,7 +21,7 @@ export function ClientStats({ stats }: ClientStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Total Requests */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
             Total Requests
@@ -34,7 +34,7 @@ export function ClientStats({ stats }: ClientStatsProps) {
       </div>
 
       {/* Active Connections */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
             Active Connections
@@ -47,7 +47,7 @@ export function ClientStats({ stats }: ClientStatsProps) {
       </div>
 
       {/* Pending */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
             Pending
@@ -60,7 +60,7 @@ export function ClientStats({ stats }: ClientStatsProps) {
       </div>
 
       {/* Expired */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
             Expired

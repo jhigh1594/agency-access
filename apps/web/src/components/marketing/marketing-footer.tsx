@@ -50,12 +50,12 @@ export function MarketingFooter() {
   };
 
   return (
-    <footer className="bg-white py-16 sm:py-20 md:py-24 border-t-2 border-black">
+    <footer className="bg-card py-16 sm:py-20 md:py-24 border-t-2 border-black">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between gap-8 sm:gap-12">
           <div className="max-w-xs space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_#000] rounded-none bg-white">
+              <div className="w-10 h-10 flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_#000] rounded-none bg-card">
                 <img
                   src="/authhub.png"
                   alt="AuthHub"

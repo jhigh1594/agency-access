@@ -81,7 +81,7 @@ export function CancelSubscriptionModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-lg shadow-brutalist max-w-md w-full border-2 border-black"
+            className="bg-card rounded-lg shadow-brutalist max-w-md w-full border-2 border-black"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">

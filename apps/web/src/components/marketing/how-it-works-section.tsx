@@ -168,7 +168,7 @@ export function HowItWorksSection() {
                     {/* Step Number Indicator */}
                     <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 items-center justify-center z-20">
                       <m.div
-                        className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center shadow-brutalist font-dela text-lg font-black text-ink"
+                        className="w-12 h-12 border-2 border-black bg-card flex items-center justify-center shadow-brutalist font-dela text-lg font-black text-ink"
                         animate={{
                           backgroundColor: hoveredStep === step.number ? `rgb(var(--${step.color}))` : '#fff',
                           color: hoveredStep === step.number ? '#fff' : 'rgb(var(--ink))',
@@ -183,7 +183,7 @@ export function HowItWorksSection() {
                     {/* Content Card */}
                     <div className={`flex-1 w-full ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
                       <m.div
-                        className="bg-white border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
+                        className="bg-card border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
                         whileHover={{ y: -4, boxShadow: '8px 8px 0px #000' }}
                       >
                         {/* Time Badge */}
@@ -273,7 +273,7 @@ export function HowItWorksSection() {
                   whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
                   viewport={{ once: true, margin: '-50px' }}
                   transition={{ delay: 1.3 + i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="bg-white border-2 border-black p-4 sm:p-6 rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-y-1 transition-all duration-200 text-center group"
+                  className="bg-card border-2 border-black p-4 sm:p-6 rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-y-1 transition-all duration-200 text-center group"
                 >
                   <div className={`flex items-center justify-center mb-2`}>
                     <div
@@ -307,7 +307,7 @@ export function HowItWorksSection() {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="mt-12 sm:mt-16 md:mt-20 text-center"
             >
-              <div className="inline-block bg-white text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-xl relative overflow-hidden group">
+              <div className="inline-block bg-card text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-xl relative overflow-hidden group">
                 {/* Brutalist grid background */}
                 <div
                   className="absolute inset-0 opacity-10"

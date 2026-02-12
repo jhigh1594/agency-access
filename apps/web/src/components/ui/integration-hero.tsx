@@ -56,7 +56,7 @@ const repeatedIcons = (icons: IconItem[], repeat = 4): IconItem[] =>
 
 export default function IntegrationHero() {
   return (
-    <section className="relative py-32 overflow-hidden bg-white border-y-2 border-black">
+    <section className="relative py-32 overflow-hidden bg-card border-y-2 border-black">
       {/* Brutalist grid background */}
       <div className="absolute inset-0 opacity-10"
         style={{

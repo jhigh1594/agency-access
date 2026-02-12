@@ -80,7 +80,7 @@ export function TestimonialCards() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -4 }}
-                className="border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist hover:shadow-brutalist-lg transition-all duration-300"
+                className="border-2 border-black bg-card p-6 sm:p-8 shadow-brutalist hover:shadow-brutalist-lg transition-all duration-300"
               >
                 {/* Quote */}
                 <blockquote className="mb-6">
@@ -117,7 +117,7 @@ export function TestimonialCards() {
             transition={{ duration: 0.5 }}
             className="mt-12 sm:mt-16"
           >
-            <div className="border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist-sm max-w-4xl mx-auto">
+            <div className="border-2 border-black bg-card p-6 sm:p-8 shadow-brutalist-sm max-w-4xl mx-auto">
               {isMobile ? (
                 // Static grid for mobile
                 <div className="grid grid-cols-1 gap-4">

@@ -33,10 +33,10 @@ export function PlatformConnectionsTable({
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-          <span className="ml-2 text-slate-600">Loading connections...</span>
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-foreground">Loading connections...</span>
         </div>
       </div>
     );
@@ -45,7 +45,7 @@ export function PlatformConnectionsTable({
   // Empty state
   if (connections.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden p-12">
+      <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden p-12">
         <EmptyState
           icon={LinkIcon}
           title="No platforms connected"
@@ -60,9 +60,9 @@ export function PlatformConnectionsTable({
   return (
     <>
       {/* Desktop table view */}
-      <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <div className="hidden lg:block bg-card rounded-lg shadow-sm border border-border overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200 text-sm font-medium text-slate-700">
+        <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted border-b border-border text-sm font-medium text-foreground">
           <div className="col-span-4">Platform</div>
           <div className="col-span-3">Status</div>
           <div className="col-span-3">Connected</div>
@@ -70,7 +70,7 @@ export function PlatformConnectionsTable({
         </div>
 
         {/* Table rows */}
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-border">
           {connections.map((connection) => (
             <PlatformConnectionRow
               key={connection.id}
@@ -85,21 +85,21 @@ export function PlatformConnectionsTable({
       </div>
 
       {/* Tablet view - adjusted columns */}
-      <div className="hidden md:block lg:bg-white lg:rounded-lg lg:shadow-sm lg:border lg:border-slate-200 lg:overflow-hidden">
-        <div className="md:bg-white md:rounded-lg md:shadow-sm md:border md:border-slate-200 md:overflow-hidden">
+      <div className="hidden md:block lg:bg-card lg:rounded-lg lg:shadow-sm lg:border lg:border-border lg:overflow-hidden">
+        <div className="md:bg-card md:rounded-lg md:shadow-sm md:border md:border-border md:overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200 text-sm font-medium text-slate-700">
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted border-b border-border text-sm font-medium text-foreground">
             <div className="col-span-5">Platform</div>
             <div className="col-span-4">Status</div>
             <div className="col-span-3">Actions</div>
           </div>
 
           {/* Table rows */}
-          <div className="divide-y divide-slate-200">
+          <div className="divide-y divide-border">
             {connections.map((connection) => (
               <div
                 key={connection.id}
-                className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors"
+                className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-muted transition-colors"
               >
                 {/* Platform column (col-span-5) */}
                 <div className="col-span-5 flex items-center gap-3">
@@ -107,11 +107,11 @@ export function PlatformConnectionsTable({
                     {/* Use PlatformIcon but hide on very small screens */}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900 truncate">
+                    <p className="font-medium text-foreground truncate">
                       {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
                     </p>
                     {connection.connectedBy && (
-                      <p className="text-xs text-slate-500 truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {connection.connectedBy}
                       </p>
                     )}
@@ -138,7 +138,7 @@ export function PlatformConnectionsTable({
                   <button
                     onClick={() => onRefresh(connection.platform)}
                     disabled={refreshingPlatforms.has(connection.platform)}
-                    className="inline-flex items-center justify-center p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center justify-center p-2 text-foreground hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Refresh token"
                   >
                     {refreshingPlatforms.has(connection.platform) ? (
@@ -152,7 +152,7 @@ export function PlatformConnectionsTable({
                   <button
                     onClick={() => onDisconnect(connection.platform)}
                     disabled={isDisconnecting}
-                    className="inline-flex items-center justify-center p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center justify-center p-2 text-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Disconnect platform"
                   >
                     {isDisconnecting ? (
@@ -175,7 +175,7 @@ export function PlatformConnectionsTable({
         {connections.map((connection) => (
           <div
             key={connection.id}
-            className="bg-white rounded-lg shadow-sm border border-slate-200 p-4"
+            className="bg-card rounded-lg shadow-sm border border-border p-4"
           >
             {/* Platform header */}
             <div className="flex items-center justify-between mb-3">
@@ -186,10 +186,10 @@ export function PlatformConnectionsTable({
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-foreground">
                     {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
                   </p>
-                  <p className="text-xs text-slate-500">{connection.connectedBy}</p>
+                  <p className="text-xs text-muted-foreground">{connection.connectedBy}</p>
                 </div>
               </div>
               <span
@@ -206,7 +206,7 @@ export function PlatformConnectionsTable({
             </div>
 
             {/* Connection details */}
-            <div className="mb-4 text-sm text-slate-600 space-y-1">
+            <div className="mb-4 text-sm text-foreground space-y-1">
               <p className="text-xs">
                 Connected {new Date(connection.connectedAt).toLocaleDateString()}
               </p>

@@ -50,6 +50,57 @@
     --border-hard: 0 0 0;           /* #000000 - Pure black borders */
     --shadow-hard: 0 0 0;           /* Pure black for hard shadows */
   }
+
+  .dark {
+    /* Dark Mode - Deep midnight aesthetic with brutalist accents preserved */
+
+    /* PRIMARY SURFACES - Inverted for dark mode */
+    --background: 20 20 25;       /* #141419 - Deep midnight blue-black */
+    --card: 28 28 35;              /* #1C2323 - Slightly lighter surface */
+    --foreground: 163 163 170;      /* #A3A3AA - Light grey for better readability */
+    --muted: 161 161 170;           /* #A1A1AA - Muted gray */
+    --muted-foreground: 200 200 210; /* #C8C8D2 - Muted text */
+
+    /* PRIMARY - Coral stays vibrant but with white text for consistency */
+    --primary: 255 115 80;           /* #FF7350 - Slightly brighter coral for dark */
+    --primary-foreground: 255 255 255;  /* White text on primary buttons */
+
+    /* SECONDARY - Teal adjusted for contrast */
+    --secondary: 0 200 180;          /* #00C8B4 - Brighter teal */
+    --secondary-foreground: 255 255 255;  /* White text on secondary buttons */
+
+    /* ACCENT - Soft peach becomes warm amber */
+    --accent: 217 119 6;             /* #D97706 - Warm amber */
+    --accent-foreground: 250 250 250;
+
+    /* BORDER - Lighter for visibility on dark */
+    --border: 51 51 65;             /* #333341 - Medium gray border */
+    --input: 30 30 35;              /* #1E1E23 - Dark grey for input backgrounds */
+    --ring: 255 115 80;            /* Coral ring */
+
+    /* Dark mode hover - lighter grey, not white */
+    --hover-surface: 40 40 45;    /* #28282D - Light grey for hover states */
+
+    /* ========================================
+       ACID BRUTALISM - PRESERVED
+       ======================================== */
+
+    /* PRIMARY SURFACES - Inverted */
+    --ink: 250 250 250;             /* #FAFAFA - White surface (inverted) */
+    --paper: 20 20 25;              /* #141419 - Dark background (inverted) */
+
+    /* BRAND COLORS - Adjusted for contrast */
+    --coral: 255 115 80;            /* #FF7350 - Brighter for dark mode */
+    --teal: 0 200 180;              /* #00C8B4 - Brighter for dark mode */
+
+    /* BRUTALIST ACCENTS - UNCHANGED (high contrast works everywhere) */
+    --acid: 204 255 0;             /* #CCFF00 - Kinetic green preserved */
+    --electric: 139 92 246;          /* #8B5CF6 - Electric purple preserved */
+
+    /* BORDERS & SHADOWS - Inverted for visibility */
+    --border-hard: 255 255 255;     /* #FFFFFF - White borders on dark */
+    --shadow-hard: 255 255 255;     /* White shadows on dark */
+  }
 }
 
 @layer base {
@@ -62,6 +113,48 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans), system-ui, sans-serif;
+  }
+
+  /* Input fields with proper dark mode support */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    @apply bg-input text-foreground border-border rounded-md;
+    @apply placeholder:text-muted-foreground;
+    @apply focus:ring-2 focus:ring-ring focus:border-ring focus:outline-none;
+    @apply transition-colors duration-200;
+  }
+
+  /* Input text is white in dark mode for better readability */
+  .dark input[type="text"],
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark input[type="number"],
+  .dark input[type="tel"],
+  .dark input[type="url"],
+  .dark input[type="search"],
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark input[type="datetime-local"],
+  .dark textarea,
+  .dark select {
+    @apply text-white;
+  }
+
+  /* Input focus visible for better accessibility */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
@@ -85,15 +178,15 @@
 
   /* Brutalist Card - Hard borders and shadows (subtle hover) */
   .brutalist-card {
-    @apply border-2 border-black rounded-none shadow-[4px_4px_0px_#000];
-    @apply hover:shadow-[5px_5px_0px_#000] hover:translate-x-[-1px] hover:translate-y-[-1px];
+    @apply border-2 rounded-none shadow-brutalist;
+    @apply hover:shadow-brutalist-lg hover:translate-x-[-1px] hover:translate-y-[-1px];
     @apply transition-all duration-150;
   }
 
   /* Brutalist Button */
   .brutalist-btn {
-    @apply border-2 border-black rounded-none font-bold uppercase;
-    @apply shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000];
+    @apply border-2 rounded-none font-bold uppercase;
+    @apply shadow-brutalist hover:shadow-brutalist-lg;
     @apply hover:translate-x-[-2px] hover:translate-y-[-2px];
     @apply transition-all duration-200;
   }
@@ -269,8 +362,8 @@
 
   /* Hard shadow hover animation */
   @keyframes shadow-brutal {
-    0% { box-shadow: 4px 4px 0px #000; }
-    100% { box-shadow: 6px 6px 0px #000; transform: translate(-2px, -2px); }
+    0% { box-shadow: 4px 4px 0px var(--shadow-hard); }
+    100% { box-shadow: 6px 6px 0px var(--shadow-hard); transform: translate(-2px, -2px); }
   }
 
   .animate-brutal-hover:hover {
@@ -366,7 +459,7 @@
       background: rgb(var(--coral));
       border: 2px solid #000;
       cursor: pointer;
-      box-shadow: 2px 2px 0px #000;
+      box-shadow: 2px 2px 0px var(--shadow-hard);
     }
 
     input[type="range"]::-moz-range-thumb {
@@ -376,19 +469,24 @@
       background: rgb(var(--coral));
       border: 2px solid #000;
       cursor: pointer;
-      box-shadow: 2px 2px 0px #000;
+      box-shadow: 2px 2px 0px var(--shadow-hard);
     }
 
     /* Range slider thumb active state */
     input[type="range"]::-webkit-slider-thumb:active {
-      box-shadow: 3px 3px 0px #000;
+      box-shadow: 3px 3px 0px var(--shadow-hard);
       transform: scale(1.05);
     }
 
     input[type="range"]::-moz-range-thumb:active {
-      box-shadow: 3px 3px 0px #000;
+      box-shadow: 3px 3px 0px var(--shadow-hard);
       transform: scale(1.05);
     }
+  }
+
+  /* Dark Mode Hover - Lighter grey in dark mode only */
+  .dark .hover-surface-dark {
+    background-color: rgb(var(--hover-surface));
   }
 
   /* Respect User's Motion Preferences */

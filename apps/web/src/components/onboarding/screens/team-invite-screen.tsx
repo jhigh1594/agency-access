@@ -146,7 +146,7 @@ export function TeamInviteScreen({
                       p-3 rounded-lg border-2 text-left transition-all
                       ${newRole === role.value
                         ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        : 'border-gray-200 hover:border-gray-300 bg-card'
                       }
                     `}
                   >
@@ -179,7 +179,7 @@ export function TeamInviteScreen({
             {teamInvites.map((invite) => (
               <motion.div
                 key={invite.email}
-                className="flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-4 bg-card border-2 border-gray-200 rounded-lg"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
