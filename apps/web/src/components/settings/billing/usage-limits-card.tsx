@@ -8,6 +8,7 @@
 
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { useTierDetails, useCreateCheckout } from '@/lib/query/billing';
+import { Button } from '@/components/ui/button';
 
 export function UsageLimitsCard() {
   const { data: tierDetails, isLoading } = useTierDetails();
@@ -15,18 +16,18 @@ export function UsageLimitsCard() {
 
   if (isLoading) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <section className="clean-card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+          <div className="p-2 bg-coral/10 rounded-lg">
+            <TrendingUp className="h-5 w-5 text-coral" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Usage This Month</h2>
-            <p className="text-sm text-slate-600">Track your plan usage</p>
+            <h2 className="font-display text-lg font-semibold text-ink">Usage This Month</h2>
+            <p className="text-sm text-muted-foreground">Track your plan usage</p>
           </div>
         </div>
         <div className="py-8 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
         </div>
       </section>
     );
@@ -59,33 +60,33 @@ export function UsageLimitsCard() {
     return (
       <div key={label} className="space-y-1">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-700 capitalize">{label}</span>
+          <span className="text-foreground capitalize">{label}</span>
           <span
             className={`font-medium ${
               isAtLimit
-                ? 'text-red-600'
+                ? 'text-coral'
                 : isNearLimit
-                  ? 'text-yellow-600'
-                  : 'text-slate-900'
+                  ? 'text-acid'
+                  : 'text-ink'
             }`}
           >
             {isUnlimited ? 'Unlimited' : `${used} / ${numericLimit}`}
           </span>
         </div>
-        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${
               isAtLimit
-                ? 'bg-red-500'
+                ? 'bg-coral'
                 : isNearLimit
-                  ? 'bg-yellow-500'
-                  : 'bg-indigo-500'
+                  ? 'bg-acid'
+                  : 'bg-teal'
             }`}
             style={{ width: isUnlimited ? '0%' : `${percentage}%` }}
           />
         </div>
         {!isUnlimited && isNearLimit && (
-          <p className={`text-xs ${isAtLimit ? 'text-red-600' : 'text-yellow-600'}`}>
+          <p className={`text-xs ${isAtLimit ? 'text-coral' : 'text-acid'}`}>
             {isAtLimit
               ? 'Limit reached. Upgrade to continue.'
               : `${numericLimit - used} remaining. Consider upgrading soon.`}
@@ -104,14 +105,14 @@ export function UsageLimitsCard() {
         limits.clients.used / (limits.clients.limit as number) >= 0.8));
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <section className="clean-card p-6">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-blue-100 rounded-lg">
-          <TrendingUp className="h-5 w-5 text-blue-600" />
+        <div className="p-2 bg-coral/10 rounded-lg">
+          <TrendingUp className="h-5 w-5 text-coral" />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-slate-900">Usage This Month</h2>
-          <p className="text-sm text-slate-600">Track your plan usage</p>
+          <h2 className="font-display text-lg font-semibold text-ink">Usage This Month</h2>
+          <p className="text-sm text-muted-foreground">Track your plan usage</p>
         </div>
       </div>
 
@@ -129,24 +130,25 @@ export function UsageLimitsCard() {
       )}
 
       {showUpgradeNudge && (
-        <div className="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+        <div className="mt-4 p-3 bg-coral/10 border border-coral/20 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-indigo-900">
+              <p className="text-sm font-medium text-ink">
                 Running low on limits?
               </p>
-              <p className="text-xs text-indigo-700">
+              <p className="text-xs text-muted-foreground">
                 Upgrade to get more capacity and unlock premium features.
               </p>
             </div>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleUpgrade}
               disabled={createCheckout.isPending}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-400 transition-colors"
             >
               <TrendingUp className="h-3.5 w-3.5" />
               Upgrade
-            </button>
+            </Button>
           </div>
         </div>
       )}

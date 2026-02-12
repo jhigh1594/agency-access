@@ -10,7 +10,9 @@ import type { SubscriptionTier, TierLimits } from '@agency-platform/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-// Types
+// ============================================================
+// TYPES
+// ============================================================
 
 export interface SubscriptionData {
   id: string;
@@ -60,7 +62,32 @@ export interface BillingDetails {
   taxId?: string;
 }
 
-// Hooks
+export type UpdateBehavior = 'immediate' | 'next-cycle' | 'no-charge';
+
+export interface UpgradeParams {
+  newTier: SubscriptionTier;
+  updateBehavior?: UpdateBehavior;
+}
+
+export interface CancelParams {
+  cancelAtPeriodEnd?: boolean;
+}
+
+export interface UpgradeResponse {
+  tier: SubscriptionTier;
+  status: string;
+  effectiveDate?: string;
+}
+
+export interface CancelResponse {
+  status: string;
+  cancelAtPeriodEnd: boolean;
+  effectiveDate?: string;
+}
+
+// ============================================================
+// QUERY HOOKS
+// ============================================================
 
 export function useSubscription() {
   const { orgId, getToken } = useAuth();
@@ -192,6 +219,10 @@ export function useBillingDetails() {
   });
 }
 
+// ============================================================
+// MUTATION HOOKS
+// ============================================================
+
 export function useOpenPortal() {
   const { orgId, getToken } = useAuth();
 
@@ -285,6 +316,97 @@ export function useUpdateBillingDetails() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['billing-details', orgId] });
+    },
+  });
+}
+
+// ============================================================
+// SUBSCRIPTION MANAGEMENT MUTATIONS
+// ============================================================
+
+/**
+ * Upgrade or downgrade subscription tier
+ */
+export function useUpgradeSubscription() {
+  const { orgId, getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: UpgradeParams): Promise<UpgradeResponse> => {
+      if (!orgId) throw new Error('No organization ID');
+
+      const token = await getToken();
+
+      // Map frontend behavior names to Creem API values
+      const behaviorMap = {
+        immediate: 'proration-charge-immediately',
+        'next-cycle': 'proration-charge',
+        'no-charge': 'proration-none',
+      } as const;
+
+      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/upgrade`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          newTier: params.newTier,
+          updateBehavior: behaviorMap[params.updateBehavior || 'next-cycle'],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Failed to upgrade subscription');
+      }
+
+      const result = await response.json();
+      return result.data as UpgradeResponse;
+    },
+    onSuccess: () => {
+      // Invalidate subscription queries to refetch
+      queryClient.invalidateQueries({ queryKey: ['subscription', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['tier-details', orgId] });
+    },
+  });
+}
+
+/**
+ * Cancel subscription
+ */
+export function useCancelSubscription() {
+  const { orgId, getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: CancelParams = {}): Promise<CancelResponse> => {
+      if (!orgId) throw new Error('No organization ID');
+
+      const token = await getToken();
+      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          cancelAtPeriodEnd: params.cancelAtPeriodEnd ?? true,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Failed to cancel subscription');
+      }
+
+      const result = await response.json();
+      return result.data as CancelResponse;
+    },
+    onSuccess: () => {
+      // Invalidate subscription queries to refetch
+      queryClient.invalidateQueries({ queryKey: ['subscription', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['tier-details', orgId] });
     },
   });
 }

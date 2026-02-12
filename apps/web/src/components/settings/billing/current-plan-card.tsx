@@ -19,6 +19,8 @@ import {
   SUBSCRIPTION_TIER_NAMES,
   SUBSCRIPTION_TIER_DESCRIPTIONS,
 } from '@agency-platform/shared';
+import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 export function CurrentPlanCard() {
   const { data: subscription, isLoading } = useSubscription();
@@ -31,18 +33,18 @@ export function CurrentPlanCard() {
 
   if (isLoading) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+      <section className="clean-card p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <CreditCard className="h-5 w-5 text-emerald-600" />
+          <div className="p-2 bg-teal/10 rounded-lg">
+            <CreditCard className="h-5 w-5 text-teal" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Current Plan</h2>
-            <p className="text-sm text-slate-600">Your subscription details</p>
+            <h2 className="font-display text-lg font-semibold text-ink">Current Plan</h2>
+            <p className="text-sm text-muted-foreground">Your subscription details</p>
           </div>
         </div>
         <div className="py-8 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
         </div>
       </section>
     );
@@ -55,63 +57,49 @@ export function CurrentPlanCard() {
   const getStatusBadge = () => {
     if (!subscription) return null;
 
-    const badges = {
-      active: (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-          <Check className="h-3 w-3" /> Active
-        </span>
-      ),
-      past_due: (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-          <AlertCircle className="h-3 w-3" /> Past Due
-        </span>
-      ),
-      canceled: (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-800 rounded-full">
-          <X className="h-3 w-3" /> Canceled
-        </span>
-      ),
+    const badges: Record<string, React.ReactNode> = {
+      active: <StatusBadge status="active" />,
+      past_due: <StatusBadge status="past_due" />,
+      canceled: <StatusBadge status="cancelled" />,
     };
 
     return (
-      badges[subscription.status as keyof typeof badges] || (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-800 rounded-full">
-          {subscription.status}
-        </span>
+      badges[subscription.status] || (
+        <StatusBadge badgeVariant="default">{subscription.status}</StatusBadge>
       )
     );
   };
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <section className="clean-card p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-emerald-100 rounded-lg">
-          <CreditCard className="h-5 w-5 text-emerald-600" />
+        <div className="p-2 bg-teal/10 rounded-lg">
+          <CreditCard className="h-5 w-5 text-teal" />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-slate-900">Current Plan</h2>
-          <p className="text-sm text-slate-600">Your subscription details</p>
+          <h2 className="font-display text-lg font-semibold text-ink">Current Plan</h2>
+          <p className="text-sm text-muted-foreground">Your subscription details</p>
         </div>
         {getStatusBadge()}
       </div>
 
-      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+      <div className="p-4 bg-card rounded-lg border border-border">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">{tierName} Plan</h3>
-            <p className="text-sm text-slate-600">{tierInfo.description}</p>
+            <h3 className="text-lg font-semibold text-ink">{tierName} Plan</h3>
+            <p className="text-sm text-muted-foreground">{tierInfo.description}</p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-slate-900">
+            <p className="text-2xl font-bold text-ink">
               ${tierInfo.price.monthly}
             </p>
-            <p className="text-sm text-slate-600">/month</p>
+            <p className="text-sm text-muted-foreground">/month</p>
           </div>
         </div>
 
         {subscription?.cancelAtPeriodEnd && (
-          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-sm text-yellow-800">
+          <div className="mt-3 p-2 bg-acid/10 border border-acid/30 rounded">
+            <p className="text-sm text-acid">
               <AlertCircle className="h-4 w-4 inline mr-1" />
               Your subscription will cancel at the end of the current billing period.
             </p>
@@ -120,10 +108,10 @@ export function CurrentPlanCard() {
       </div>
 
       <div className="flex items-center justify-between mt-4">
-        <button
+        <Button
+          variant="ghost"
           onClick={handleManageSubscription}
           disabled={openPortal.isPending || !subscription}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
         >
           {openPortal.isPending ? (
             <>
@@ -136,10 +124,10 @@ export function CurrentPlanCard() {
               Manage Subscription
             </>
           )}
-        </button>
+        </Button>
 
         {subscription?.currentPeriodEnd && (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Next billing:{' '}
             {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
               month: 'long',

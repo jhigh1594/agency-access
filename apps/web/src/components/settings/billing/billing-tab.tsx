@@ -5,6 +5,7 @@
  *
  * Orchestrates all billing-related cards:
  * - Current plan with status
+ * - Manage subscription (upgrade/downgrade/cancel)
  * - Usage limits with progress bars
  * - Plan comparison for upgrades
  * - Payment methods
@@ -14,6 +15,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { CurrentPlanCard } from './current-plan-card';
+import { ManageSubscriptionCard } from './manage-subscription-card';
 import { UsageLimitsCard } from './usage-limits-card';
 import { PlanComparison } from './plan-comparison';
 import { PaymentMethodsCard } from './payment-methods-card';
@@ -31,6 +33,7 @@ export function BillingTab() {
 
       <div className="space-y-6">
         <CurrentPlanCard />
+        <ManageSubscriptionCard />
         <UsageLimitsCard />
         <PlanComparison />
         <PaymentMethodsCard />
