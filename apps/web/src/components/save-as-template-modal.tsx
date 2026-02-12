@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import posthog from 'posthog-js';
 import { useAccessRequest } from '@/contexts/access-request-context';
 import { createTemplate } from '@/lib/api/templates';
+import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
+import { UpgradeModal } from '@/components/upgrade-modal';
 
 interface SaveAsTemplateModalProps {
   agencyId: string;
@@ -29,11 +31,14 @@ export function SaveAsTemplateModal({
   onSave,
 }: SaveAsTemplateModalProps) {
   const { state } = useAccessRequest();
+  const checkQuota = useQuotaCheck();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -41,8 +46,38 @@ export function SaveAsTemplateModal({
       return;
     }
 
-    setSaving(true);
     setError(null);
+
+    // Check quota before saving template
+    try {
+      const result = await checkQuota.mutateAsync({ metric: 'templates' });
+      if (!result.allowed) {
+        setQuotaError(
+          new QuotaExceededError({
+            code: 'QUOTA_EXCEEDED',
+            message: `You've reached your Templates limit`,
+            metric: 'templates',
+            limit: result.limit,
+            used: result.used,
+            remaining: result.remaining,
+            currentTier: result.currentTier,
+            suggestedTier: result.suggestedTier,
+            upgradeUrl: result.upgradeUrl || '',
+          })
+        );
+        setShowUpgradeModal(true);
+        return;
+      }
+    } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        setQuotaError(error);
+        setShowUpgradeModal(true);
+        return;
+      }
+      // Other errors - allow save to proceed (will be caught by createTemplate)
+    }
+
+    setSaving(true);
 
     try {
       const result = await createTemplate({
@@ -93,6 +128,7 @@ export function SaveAsTemplateModal({
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -111,7 +147,7 @@ export function SaveAsTemplateModal({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-lg shadow-xl max-w-md w-full"
+              className="bg-card rounded-lg shadow-xl max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -202,5 +238,19 @@ export function SaveAsTemplateModal({
         </>
       )}
     </AnimatePresence>
+
+    {/* Upgrade Modal */}
+    {showUpgradeModal && quotaError && (
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => {
+          setShowUpgradeModal(false);
+          setQuotaError(null);
+        }}
+        quotaError={quotaError}
+        currentTier={quotaError.currentTier}
+      />
+    )}
+  </>
   );
 }

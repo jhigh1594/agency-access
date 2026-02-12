@@ -170,7 +170,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
   const handleQuotaCheck = async () => {
     try {
-      const result = await checkQuota({ metric: 'access_requests' });
+      const result = await checkQuota.mutateAsync({ metric: 'access_requests' });
       if (!result.allowed) {
         setQuotaError(
           new QuotaExceededError({
@@ -229,6 +229,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
     : null;
 
   return (
+    <>
     <AnimatePresence>
       <m.div
         initial={{ opacity: 0 }}
@@ -473,6 +474,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
         currentTier={quotaError.currentTier}
       />
     )}
-    </>
+  </>
   );
 }
