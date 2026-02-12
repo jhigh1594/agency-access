@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Mail, Info, Building2, ExternalLink } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
 
 // Platform display names
 const PLATFORM_NAMES: Record<string, string> = {
@@ -137,7 +138,7 @@ export function ManualInvitationModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm"
       />
 
       {/* Modal */}
@@ -149,22 +150,22 @@ export function ManualInvitationModal({
         transition={{ type: 'spring', duration: 0.3 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       >
-        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden pointer-events-auto">
+        <div className="relative bg-white rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-md overflow-hidden pointer-events-auto">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-white">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-paper">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-white border border-border flex items-center justify-center">
                 {isBusinessIdPlatform ? (
-                  <Building2 className="h-5 w-5 text-indigo-600" />
+                  <Building2 className="h-5 w-5 text-coral" />
                 ) : (
-                  <Mail className="h-5 w-5 text-indigo-600" />
+                  <Mail className="h-5 w-5 text-coral" />
                 )}
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-ink font-display">
                   {mode === 'edit' ? `Update ${platformName}` : `Connect ${platformName}`}
                 </h2>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted-foreground">
                   {isBusinessIdPlatform ? 'Business partnership setup' : mode === 'edit' ? 'Update invitation email' : 'Team invitation setup'}
                 </p>
               </div>
@@ -174,28 +175,29 @@ export function ManualInvitationModal({
                 onClose();
                 handleOpenChange(false);
               }}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Close modal"
+              className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <X className="h-5 w-5 text-slate-500" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Content */}
           <div className="px-6 py-5">
             {/* Info box */}
-            <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-5 p-4 bg-secondary/10 border border-secondary/30 rounded-lg">
               <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-900">
+                <Info className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-ink">
                   <p className="font-medium mb-1">How this works</p>
                   {isBusinessIdPlatform ? (
-                    <p className="text-blue-800">
+                    <p className="text-muted-foreground">
                       Your clients will use this Business ID to add your agency as a partner in their {platformName} Business Manager.
                     </p>
                   ) : (
-                    <p className="text-blue-800">
+                    <p className="text-muted-foreground">
                       When requesting {platformName} account access, your client will invite{' '}
-                      <span className="font-medium">this email address</span> to their {platformName} account.
+                      <span className="font-medium text-ink">this email address</span> to their {platformName} account.
                     </p>
                   )}
                 </div>
@@ -207,7 +209,7 @@ export function ManualInvitationModal({
               <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800"
+                className="mb-4 p-3 bg-coral/10 border border-coral/30 rounded-lg text-sm text-foreground"
               >
                 {error}
               </m.div>
@@ -216,7 +218,7 @@ export function ManualInvitationModal({
             {/* Content */}
             <div>
               <div className="mb-5">
-                <label htmlFor={isBusinessIdPlatform ? 'business-id' : 'invitation-email'} className="block text-sm font-medium text-slate-900 mb-2">
+                <label htmlFor={isBusinessIdPlatform ? 'business-id' : 'invitation-email'} className="block text-sm font-medium text-ink mb-2">
                   {isBusinessIdPlatform ? 'Pinterest Business ID' : 'Email to receive invitations'}
                 </label>
                 <input
@@ -227,11 +229,11 @@ export function ManualInvitationModal({
                   placeholder={isBusinessIdPlatform ? '1234567890' : 'your-agency@example.com'}
                   pattern={isBusinessIdPlatform ? '\\d{1,20}' : undefined}
                   maxLength={isBusinessIdPlatform ? 20 : undefined}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-colors"
+                  className="w-full px-4 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-primary transition-colors bg-background"
                   disabled={isPending}
                   autoFocus
                 />
-                <p className="mt-2 text-xs text-slate-600">
+                <p className="mt-2 text-xs text-muted-foreground">
                   {isBusinessIdPlatform
                     ? 'Your Pinterest Business ID (1-20 digits)'
                     : 'This email will receive team invitations from your clients'}
@@ -240,12 +242,12 @@ export function ManualInvitationModal({
 
               {/* Find your Business ID helper - Pinterest only */}
               {isBusinessIdPlatform && (
-                <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                <div className="mb-5 p-4 bg-muted/20 border border-border rounded-lg">
                   <div className="flex items-start gap-3">
-                    <Info className="h-5 w-5 text-slate-500 flex-shrink-0 mt-0.5" />
+                    <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-slate-900 mb-1">Find your Business ID</p>
-                      <p className="text-slate-600 mb-2">
+                      <p className="font-medium text-ink mb-1">Find your Business ID</p>
+                      <p className="text-muted-foreground mb-2">
                         You can find your Pinterest Business ID in{' '}
                         <a
                           href={
@@ -255,13 +257,13 @@ export function ManualInvitationModal({
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+                          className="text-coral hover:text-coral/90 font-medium inline-flex items-center gap-1"
                         >
                           Pinterest Business Manager
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       </p>
-                      <p className="text-slate-500 text-xs">
+                      <p className="text-muted-foreground text-xs">
                         Go to Dashboard → Business settings to find your ID
                       </p>
                     </div>
@@ -271,39 +273,35 @@ export function ManualInvitationModal({
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => {
                     onClose();
                     handleOpenChange(false);
                   }}
                   disabled={isPending}
-                  className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="primary"
                   onClick={handleSubmit}
                   disabled={isPending || !value}
-                  className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  isLoading={isPending}
+                  className="flex-1"
                 >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {mode === 'edit' ? 'Updating...' : 'Connecting...'}
-                    </>
-                  ) : (
-                    mode === 'edit' ? 'Update' : 'Connect'
-                  )}
-                </button>
+                  {mode === 'edit' ? 'Update' : 'Connect'}
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Footer note */}
-          <div className="px-6 py-3 bg-slate-50 border-t border-slate-200">
-            <p className="text-xs text-slate-600 text-center">
+          <div className="px-6 py-3 bg-paper border-t border-border">
+            <p className="text-xs text-muted-foreground text-center">
               {isBusinessIdPlatform
                 ? 'You can change this Business ID later from your settings'
                 : 'You can change this email address later from your settings'}

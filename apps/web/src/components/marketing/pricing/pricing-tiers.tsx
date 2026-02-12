@@ -7,6 +7,17 @@ import { PricingTierCard } from './pricing-tier-card';
 import { Reveal } from '../reveal';
 
 const tierFeatures = {
+  free: [
+    { name: '1 active client', included: true },
+    { name: 'Core platforms (Meta, Google, LinkedIn)', included: true },
+    { name: 'Basic branding (logo upload)', included: true },
+    { name: 'Email support', included: true },
+    { name: 'Team access', included: false },
+    { name: 'White-label branding', included: false },
+    { name: 'Custom domain/subdomain', included: false },
+    { name: 'Webhooks & API', included: false },
+    { name: 'Priority support', included: false },
+  ],
   starter: [
     { name: '36 client onboards/year', included: true },
     { name: '120 platform audits', included: true },
@@ -30,19 +41,20 @@ const tierFeatures = {
     { name: 'Custom integrations', included: false },
     { name: 'SLA guarantee', included: false },
   ],
-  pro: [
-    { name: '600 client onboards/year', included: true },
-    { name: '3,000 platform audits', included: true },
-    { name: 'White-label branding', included: true },
-    { name: 'Custom domain/subdomain', included: true },
-    { name: 'Unlimited team seats', included: true },
-    { name: 'Webhooks & API', included: true },
-    { name: 'Multi-brand accounts (3)', included: true },
-    { name: 'API access', included: true },
-    { name: 'Custom integrations', included: true },
-    { name: 'Priority support (dedicated)', included: true },
-    { name: 'SLA guarantee', included: true },
-  ],
+  // Temporarily commented out - will be reintroduced as Enterprise tier
+  // pro: [
+  //   { name: '600 client onboards/year', included: true },
+  //   { name: '3,000 platform audits', included: true },
+  //   { name: 'White-label branding', included: true },
+  //   { name: 'Custom domain/subdomain', included: true },
+  //   { name: 'Unlimited team seats', included: true },
+  //   { name: 'Webhooks & API', included: true },
+  //   { name: 'Multi-brand accounts (3)', included: true },
+  //   { name: 'API access', included: true },
+  //   { name: 'Custom integrations', included: true },
+  //   { name: 'Priority support (dedicated)', included: true },
+  //   { name: 'SLA guarantee', included: true },
+  // ],
 };
 
 export function PricingTiers() {
@@ -105,23 +117,26 @@ export function PricingTiers() {
         </div>
 
         {/* Bento Grid Layout - Hidden on mobile */}
-        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
-          {/* Starter Tier */}
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
+          {/* Free Tier */}
           <div className="md:col-span-1">
             <PricingTierCard
-              name="Starter"
-              description="For growing agencies getting started"
-              yearlyPrice={480}
-              monthlyPrice={40}
+              tier="STARTER"
+              name="Free"
+              description="For agencies just getting started"
+              yearlyPrice={0}
+              monthlyPrice={0}
               isYearly={isYearly}
-              features={tierFeatures.starter}
-              buttonText="Start Free Trial"
+              isFree={true}
+              features={tierFeatures.free}
+              buttonText="Get Started"
               buttonVariant="brutalist-ghost"
+              billingInterval={isYearly ? 'yearly' : 'monthly'}
             />
           </div>
 
-          {/* Agency Tier (Most Popular) */}
-          <div className="md:col-span-1 lg:col-span-1">
+          {/* Starter Tier (Most Popular) */}
+          <div className="md:col-span-1">
             <m.div
               initial={{ scale: 1 }}
               whileInView={{ scale: 1.02 }}
@@ -129,21 +144,39 @@ export function PricingTiers() {
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             >
               <PricingTierCard
-                name="Agency"
-                description="For established agencies scaling fast"
-                yearlyPrice={1120}
-                monthlyPrice={93.33}
+                tier="STARTER"
+                name="Starter"
+                description="For growing agencies getting started"
+                yearlyPrice={480}
+                monthlyPrice={40}
                 isYearly={isYearly}
                 isPopular={true}
-                features={tierFeatures.agency}
+                features={tierFeatures.starter}
                 buttonText="Start Free Trial"
                 buttonVariant="brutalist-rounded"
+                billingInterval={isYearly ? 'yearly' : 'monthly'}
               />
             </m.div>
           </div>
 
-          {/* Pro Tier */}
-          <div className="md:col-span-2 lg:col-span-1">
+          {/* Agency Tier */}
+          <div className="md:col-span-1">
+            <PricingTierCard
+              tier="AGENCY"
+              name="Agency"
+              description="For established agencies scaling fast"
+              yearlyPrice={1120}
+              monthlyPrice={93.33}
+              isYearly={isYearly}
+              features={tierFeatures.agency}
+              buttonText="Start Free Trial"
+              buttonVariant="brutalist-rounded"
+              billingInterval={isYearly ? 'yearly' : 'monthly'}
+            />
+          </div>
+
+          {/* Pro Tier - Temporarily commented out */}
+          {/* <div className="md:col-span-1">
             <PricingTierCard
               name="Pro"
               description="For large agencies with multi-brand needs"
@@ -155,7 +188,7 @@ export function PricingTiers() {
               buttonText="Start Free Trial"
               buttonVariant="brutalist-rounded"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Enterprise CTA */}

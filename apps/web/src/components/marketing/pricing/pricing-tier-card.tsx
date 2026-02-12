@@ -11,6 +11,7 @@ interface Feature {
 }
 
 interface PricingTierCardProps {
+  tier?: 'STARTER' | 'AGENCY'; // Used for tier selection
   name: string;
   description: string;
   yearlyPrice: number;
@@ -18,12 +19,15 @@ interface PricingTierCardProps {
   isYearly: boolean;
   isPopular?: boolean;
   isPro?: boolean;
+  isFree?: boolean;
   features: Feature[];
   buttonText: string;
   buttonVariant?: 'brutalist' | 'brutalist-rounded' | 'brutalist-ghost' | 'brutalist-ghost-rounded';
+  billingInterval?: 'monthly' | 'yearly'; // Pass through for checkout
 }
 
 export function PricingTierCard({
+  tier,
   name,
   description,
   yearlyPrice,
@@ -31,22 +35,33 @@ export function PricingTierCard({
   isYearly,
   isPopular = false,
   isPro = false,
+  isFree = false,
   features,
   buttonText,
   buttonVariant = 'brutalist',
+  billingInterval = 'monthly',
 }: PricingTierCardProps) {
+  // Store selected tier and billing interval when user clicks CTA
+  const handleTierSelect = () => {
+    if (tier) {
+      localStorage.setItem('selectedSubscriptionTier', tier);
+      localStorage.setItem('selectedBillingInterval', billingInterval);
+    }
+  };
   const yearlyDiscountedPrice = Math.round(yearlyPrice * 0.75);
   const monthlyDisplayPrice = Math.round(monthlyPrice);
   const yearlyMonthlyEquivalent = Math.round(yearlyDiscountedPrice / 12);
-  const displayPrice = isYearly ? yearlyMonthlyEquivalent : monthlyDisplayPrice;
-  const period = '/mo';
-  const alternatePrice = isYearly
-    ? `$${yearlyDiscountedPrice} billed yearly`
-    : 'billed monthly';
+  const displayPrice = isFree ? 0 : (isYearly ? yearlyMonthlyEquivalent : monthlyDisplayPrice);
+  const period = isFree ? '' : '/mo';
+  const alternatePrice = isFree
+    ? 'Free forever'
+    : (isYearly ? `$${yearlyDiscountedPrice} billed yearly` : 'billed monthly');
 
   const cardBaseClasses = `relative border-2 transition-all duration-200 ${
     isPro
       ? 'bg-ink border-teal text-paper'
+      : isFree
+      ? 'bg-gradient-to-br from-coral/5 to-coral/10 border-coral/30'
       : 'bg-white border-black hover:shadow-brutalist-lg hover:translate-x-[-2px] hover:translate-y-[-2px]'
   }`;
 
@@ -81,12 +96,22 @@ export function PricingTierCard({
       {/* Price */}
       <div className="mb-6">
         <div className="flex items-baseline gap-2">
-          <span className={`font-dela text-4xl sm:text-5xl ${textColorClass}`}>
-            ${displayPrice}
-          </span>
-          <span className={`font-mono text-sm ${textColorMutedClass}`}>
-            {period}
-          </span>
+          {isFree ? (
+            <>
+              <span className={`font-dela text-4xl sm:text-5xl ${textColorClass}`}>
+                Free
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={`font-dela text-4xl sm:text-5xl ${textColorClass}`}>
+                ${displayPrice}
+              </span>
+              <span className={`font-mono text-sm ${textColorMutedClass}`}>
+                {period}
+              </span>
+            </>
+          )}
         </div>
         <div className={`font-mono text-xs ${textColorMutedClass} mt-1`}>
           {alternatePrice}
@@ -101,6 +126,7 @@ export function PricingTierCard({
             size="lg"
             className="w-full"
             rightIcon={<ArrowRightIcon size={18} />}
+            onClick={handleTierSelect}
           >
             {buttonText}
           </Button>

@@ -167,13 +167,13 @@ export function PlatformConnectionModal({
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-teal/20 text-teal-90 border-2 border-teal';
       case 'expired':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-coral/20 text-coral-90 border-2 border-coral';
       case 'invalid':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-acid/20 text-acid-90 border-2 border-acid';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-200 text-gray-700 border-2 border-gray-400';
     }
   };
 
@@ -212,21 +212,21 @@ export function PlatformConnectionModal({
         transition={{ type: 'spring', duration: 0.3 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       >
-        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto"
+        <div className="relative bg-white rounded-lg shadow-brutalist-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto border-2 border-black"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black/10 bg-ink/5">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Platform Connections</h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <h2 className="text-xl font-semibold text-ink">Platform Connections</h2>
+              <p className="text-sm text-gray-600 mt-1">
                 Manage your agency's platform connections for delegated access
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-acid/20 rounded-lg transition-colors border border-transparent hover:border-acid"
             >
-              <X className="h-5 w-5 text-slate-500" />
+              <X className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
@@ -237,10 +237,10 @@ export function PlatformConnectionModal({
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+                className="mb-4 p-3 bg-teal/10 border-2 border-teal rounded-lg flex items-center gap-2"
               >
-                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                <p className="text-sm text-green-800">{successMessage}</p>
+                <CheckCircle2 className="h-4 w-4 text-teal flex-shrink-0" />
+                <p className="text-sm text-teal-90">{successMessage}</p>
               </motion.div>
             )}
 
@@ -248,29 +248,29 @@ export function PlatformConnectionModal({
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+                className="mb-4 p-3 bg-coral/10 border-2 border-coral rounded-lg flex items-center gap-2"
               >
-                <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
-                <p className="text-sm text-red-800">{errorMessage}</p>
+                <AlertCircle className="h-4 w-4 text-coral flex-shrink-0" />
+                <p className="text-sm text-coral-90">{errorMessage}</p>
               </motion.div>
             )}
 
             {/* Loading state */}
             {isLoading && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                <span className="ml-2 text-slate-600">Loading platforms...</span>
+                <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+                <span className="ml-2 text-gray-600">Loading platforms...</span>
               </div>
             )}
 
             {/* Error state */}
             {fetchError && !isLoading && (
               <div className="text-center py-12">
-                <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
-                <p className="text-red-600 mb-4">Failed to load platforms</p>
+                <AlertCircle className="h-12 w-12 text-coral mx-auto mb-3" />
+                <p className="text-coral mb-4">Failed to load platforms</p>
                 <button
                   onClick={() => refetch()}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors border border-black"
                 >
                   Retry
                 </button>
@@ -280,16 +280,16 @@ export function PlatformConnectionModal({
             {/* Empty state */}
             {!isLoading && !fetchError && connections.length === 0 && (
               <div className="text-center py-12">
-                <div className="inline-flex p-4 bg-slate-100 rounded-full mb-4">
-                  <Plus className="h-8 w-8 text-slate-400" />
+                <div className="inline-flex p-4 bg-paper rounded-full mb-4 border-2 border-black">
+                  <Plus className="h-8 w-8 text-gray-500" />
                 </div>
-                <p className="text-lg font-medium text-slate-900 mb-2">No platforms connected</p>
-                <p className="text-slate-600 mb-6">
+                <p className="text-lg font-medium text-ink mb-2">No platforms connected</p>
+                <p className="text-gray-600 mb-6">
                   Connect platforms to enable delegated access for your clients
                 </p>
                 <button
                   onClick={handleConnectPlatform}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors border border-black shadow-brutalist"
                 >
                   <Plus className="h-4 w-4" />
                   Connect Your First Platform
@@ -303,11 +303,11 @@ export function PlatformConnectionModal({
                 {connections.map((connection) => (
                   <div
                     key={connection.platform}
-                    className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+                    className="p-4 border-2 border-black rounded-lg hover:border-acid transition-colors bg-white"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-slate-900">
+                        <h3 className="font-semibold text-ink">
                           {connection.name || PLATFORM_NAMES[connection.platform] || connection.platform}
                         </h3>
                         <span
@@ -322,7 +322,7 @@ export function PlatformConnectionModal({
                     </div>
 
                     {/* Connection details */}
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-3">
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
                       {connection.connectedEmail && (
                         <div>
                           <span className="font-medium">Connected by:</span> {connection.connectedEmail}
@@ -347,7 +347,7 @@ export function PlatformConnectionModal({
                       <button
                         onClick={() => handleRefresh(connection.platform)}
                         disabled={isRefreshing}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-teal/10 text-teal rounded-lg hover:bg-teal/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm border border-transparent hover:border-teal"
                       >
                         {isRefreshing ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -359,7 +359,7 @@ export function PlatformConnectionModal({
                       <button
                         onClick={() => handleDisconnectClick(connection.platform)}
                         disabled={isDisconnecting}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-coral/10 text-coral rounded-lg hover:bg-coral/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm border border-transparent hover:border-coral"
                       >
                         {isDisconnecting ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -375,7 +375,7 @@ export function PlatformConnectionModal({
                 {/* Add new platform button */}
                 <button
                   onClick={handleConnectPlatform}
-                  className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                  className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-black/30 rounded-lg text-gray-700 hover:border-coral hover:text-coral hover:bg-coral/5 transition-all"
                 >
                   <Plus className="h-4 w-4" />
                   Connect Another Platform
@@ -385,14 +385,14 @@ export function PlatformConnectionModal({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-200 bg-slate-50">
+          <div className="px-6 py-4 border-t-2 border-black/10 bg-paper">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-gray-600">
                 Connected platforms are used for delegated access mode
               </p>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-white border-2 border-black rounded-lg hover:bg-acid/20 transition-colors text-sm font-medium"
               >
                 Done
               </button>
@@ -402,20 +402,20 @@ export function PlatformConnectionModal({
           {/* Disconnect confirmation dialog */}
           <AnimatePresence>
             {disconnectPlatform && (
-              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6 z-10 rounded-xl">
+              <div className="absolute inset-0 bg-ink/5/95 backdrop-blur-sm flex items-center justify-center p-6 z-10 rounded-lg border-2 border-black">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white border border-slate-200 rounded-xl shadow-lg p-6 max-w-sm w-full"
+                  className="bg-white border-2 border-black rounded-lg shadow-brutalist-lg p-6 max-w-sm w-full"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-red-100 rounded-lg">
-                      <Unlink className="h-5 w-5 text-red-600" />
+                    <div className="p-2 bg-coral/20 rounded-lg">
+                      <Unlink className="h-5 w-5 text-coral" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Confirm Disconnect</h3>
+                    <h3 className="text-lg font-semibold text-ink">Confirm Disconnect</h3>
                   </div>
-                  <p className="text-sm text-slate-600 mb-6">
+                  <p className="text-sm text-gray-600 mb-6">
                     Are you sure you want to disconnect{' '}
                     <strong>{PLATFORM_NAMES[disconnectPlatform] || disconnectPlatform}</strong>?
                     This will revoke all access to this platform for delegated access clients.
@@ -423,13 +423,13 @@ export function PlatformConnectionModal({
                   <div className="flex gap-3">
                     <button
                       onClick={handleDisconnectCancel}
-                      className="flex-1 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                      className="flex-1 px-4 py-2 border-2 border-black rounded-lg hover:bg-acid/20 transition-colors text-sm font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDisconnectConfirm}
-                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                      className="flex-1 px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors text-sm font-medium border border-black"
                     >
                       Disconnect
                     </button>

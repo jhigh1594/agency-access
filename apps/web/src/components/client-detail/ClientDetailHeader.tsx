@@ -9,11 +9,12 @@
  */
 
 import { useState } from 'react';
-import { User, Mail, Building2, Calendar, Edit, Trash2, Plus } from 'lucide-react';
+import { User, Mail, Building2, Calendar, Edit, Trash2, Plus, Link2 } from 'lucide-react';
 import { StatusBadge } from '@/components/ui';
 import type { Client, ClientLanguage } from '@agency-platform/shared';
 import { EditClientModal } from './EditClientModal';
 import { DeleteClientModal } from './DeleteClientModal';
+import { CreateRequestModal } from './CreateRequestModal';
 
 interface ClientDetailHeaderProps {
   client: {
@@ -31,6 +32,7 @@ interface ClientDetailHeaderProps {
 export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateRequestModal, setShowCreateRequestModal] = useState(false);
 
   // Get initials from name
   const initials = client.name
@@ -99,6 +101,14 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
           {/* Right side: Action buttons */}
           <div className="flex items-center gap-2 ml-4">
             <button
+              onClick={() => setShowCreateRequestModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
+            >
+              <Link2 className="h-4 w-4" />
+              Create Request
+            </button>
+
+            <button
               onClick={() => setShowEditModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
             >
@@ -118,6 +128,13 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
       </div>
 
       {/* Modals */}
+      {showCreateRequestModal && (
+        <CreateRequestModal
+          client={client}
+          onClose={() => setShowCreateRequestModal(false)}
+        />
+      )}
+
       {showEditModal && (
         <EditClientModal
           client={client}
