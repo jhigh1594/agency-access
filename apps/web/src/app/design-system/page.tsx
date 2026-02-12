@@ -191,19 +191,19 @@ export default function DesignSystemPage() {
 
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col items-center gap-2 p-4">
-              <PlatformIcon platform="meta" size={32} />
+              <PlatformIcon platform="meta" size="md" />
               <span className="text-xs text-muted-foreground">Meta</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-4">
-              <PlatformIcon platform="google" size={32} />
+              <PlatformIcon platform="google" size="md" />
               <span className="text-xs text-muted-foreground">Google</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-4">
-              <PlatformIcon platform="linkedin" size={32} />
+              <PlatformIcon platform="linkedin" size="md" />
               <span className="text-xs text-muted-foreground">LinkedIn</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-4">
-              <PlatformIcon platform="tiktok" size={32} />
+              <PlatformIcon platform="tiktok" size="md" />
               <span className="text-xs text-muted-foreground">TikTok</span>
             </div>
           </div>
