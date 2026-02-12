@@ -14,6 +14,8 @@ import { Users, Search, Filter, Loader2, AlertCircle, ExternalLink, Plus } from 
 import Link from 'next/link';
 import { StatusBadge, PlatformIcon, EmptyState } from '@/components/ui';
 import { CreateClientModal } from '@/components/client-detail/CreateClientModal';
+import { UpgradeModal } from '@/components/upgrade-modal';
+import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import type { Platform } from '@agency-platform/shared';
 import type { StatusType } from '@/components/ui/status-badge';
 import { useSearchParams } from 'next/navigation';
@@ -46,7 +48,12 @@ function ClientsPageContent() {
   const [searchQuery, setSearchQuery] = useState(initialEmail || '');
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
   const [agencyId, setAgencyId] = useState<string | null>(null);
+
+  // Quota check hook
+  const checkQuota = useQuotaCheck();
 
   // Fetch user's agency by email (same pattern as connections page)
   const { data: agencyData, isLoading: isLoadingAgency } = useQuery({
@@ -132,7 +139,40 @@ function ClientsPageContent() {
             </p>
           </div>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={async () => {
+              try {
+                const result = await checkQuota.mutateAsync({ metric: 'clients' });
+                if (!result.allowed) {
+                  // Quota exceeded - show upgrade modal
+                  setQuotaError(
+                    new QuotaExceededError({
+                      code: 'QUOTA_EXCEEDED',
+                      message: `You've reached your client limit`,
+                      metric: 'clients',
+                      limit: result.limit,
+                      used: result.used,
+                      remaining: result.remaining,
+                      upgradeUrl: result.upgradeUrl || '',
+                      currentTier: result.currentTier,
+                      suggestedTier: result.suggestedTier,
+                    })
+                  );
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                // Quota OK - show create modal
+                setShowCreateModal(true);
+              } catch (error) {
+                if (error instanceof QuotaExceededError) {
+                  setQuotaError(error);
+                  setShowUpgradeModal(true);
+                } else {
+                  console.error('Failed to check quota:', error);
+                  // Allow modal to open even if quota check fails
+                  setShowCreateModal(true);
+                }
+              }
+            }}
             className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
           >
             <Plus className="h-4 w-4" />
@@ -267,6 +307,19 @@ function ClientsPageContent() {
       {showCreateModal && (
         <CreateClientModal
           onClose={() => setShowCreateModal(false)}
+        />
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && quotaError && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => {
+            setShowUpgradeModal(false);
+            setQuotaError(null);
+          }}
+          quotaError={quotaError}
+          currentTier={quotaError.currentTier}
         />
       )}
     </div>

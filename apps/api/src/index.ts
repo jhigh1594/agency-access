@@ -22,6 +22,7 @@ import { usageRoutes } from './routes/usage.js';
 import { webhookRoutes } from './routes/webhooks.js';
 import { beehiivRoutes } from './routes/beehiiv.js';
 import { subscriptionRoutes } from './routes/subscriptions.js';
+import { quotaRoutes } from './routes/quota.routes';
 import { performanceMiddleware } from './middleware/performance.js';
 
 const fastify = Fastify({
@@ -130,6 +131,7 @@ await fastify.register(webhookRoutes, { prefix: '/api' });
 await fastify.register(agencyPlatformsRoutes);
 await fastify.register(beehiivRoutes);
 await fastify.register(subscriptionRoutes, { prefix: '/api' });
+await fastify.register(quotaRoutes, { prefix: '/api' });
 
 // Health check and root routes
 fastify.get('/health', async () => {
