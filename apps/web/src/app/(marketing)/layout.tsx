@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { ForceLightTheme } from "@/components/marketing/force-light-theme";
 
 export const metadata: Metadata = {
   title: "Agency Access Platform | Streamline Client OAuth Onboarding",
@@ -20,6 +21,7 @@ export default function MarketingLayout({
 }>) {
   return (
     <div className="flex min-h-screen flex-col">
+      <ForceLightTheme />
       <MarketingNav />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
