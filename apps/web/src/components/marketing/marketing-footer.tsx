@@ -89,8 +89,8 @@ export function MarketingFooter() {
             <div>
               <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Legal</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
-                <li><Link href={"/privacy" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy Policy</Link></li>
-                <li><Link href={"/terms" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms of Service</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
@@ -101,8 +101,8 @@ export function MarketingFooter() {
             © {new Date().getFullYear()} AuthHub. All rights reserved.
           </p>
           <div className="flex gap-6 sm:gap-8 text-xs sm:text-sm text-gray-600 font-mono">
-            <Link href={"/privacy" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy</Link>
-            <Link href={"/terms" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms</Link>
+            <Link href="/privacy-policy" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy</Link>
+            <Link href="/terms" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms</Link>
           </div>
         </div>
       </div>

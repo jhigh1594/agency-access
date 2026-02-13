@@ -15,6 +15,8 @@ const isPublicRoute = createRouteMatcher([
   '/blog/(.*)',
   '/compare',
   '/compare/(.*)',
+  '/privacy-policy',
+  '/terms',
   '/authorize/(.*)',
   '/invite/(.*)',
   '/platforms/callback',
