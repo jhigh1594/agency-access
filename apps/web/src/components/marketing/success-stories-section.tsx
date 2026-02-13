@@ -22,36 +22,36 @@ const CASE_STUDIES = [
       { label: 'Active Client Projects', before: '12', after: '38', icon: UsersIcon },
     ],
   },
-  {
-    company: 'Scale Media Agency',
-    industry: 'Paid Social',
-    location: 'New York, NY',
-    image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=800',
-    quote:
-      'We scaled from 15 to 45 clients without hiring more staff. The automated OAuth flow handles everything. No more password sharing, no more security risks.',
-    author: 'Marcus Chen',
-    role: 'CEO',
-    metrics: [
-      { label: 'Time Per Onboarding', before: '2+ hours', after: '5 min', icon: Clock },
-      { label: 'Client Satisfaction', before: '3.8/5', after: '4.9/5', icon: CheckCircle },
-      { label: 'Team Capacity', before: '15 clients', after: '45 clients', icon: UsersIcon },
-    ],
-  },
-  {
-    company: 'Apex Digital',
-    industry: 'Full-Service Agency',
-    location: 'San Francisco, CA',
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800',
-    quote:
-      'From chaos to organized in 1 week. Every OAuth token stored securely, every client connected in minutes. Our team can finally focus on strategy instead of admin.',
-    author: 'Emily Rodriguez',
-    role: 'Operations Director',
-    metrics: [
-      { label: 'Admin Hours/Week', before: '12 hrs', after: '2 hrs', icon: Clock },
-      { label: 'Token Security', before: 'Email sharing', after: 'Bank-level', icon: CheckCircle },
-      { label: 'New Client Ramp-up', before: '1 week', after: 'Same day', icon: TrendingUp },
-    ],
-  },
+  // {
+  //   company: 'Scale Media Agency',
+  //   industry: 'Paid Social',
+  //   location: 'New York, NY',
+  //   image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=800',
+  //   quote:
+  //     'We scaled from 15 to 45 clients without hiring more staff. The automated OAuth flow handles everything. No more password sharing, no more security risks.',
+  //   author: 'Marcus Chen',
+  //   role: 'CEO',
+  //   metrics: [
+  //     { label: 'Time Per Onboarding', before: '2+ hours', after: '5 min', icon: Clock },
+  //     { label: 'Client Satisfaction', before: '3.8/5', after: '4.9/5', icon: CheckCircle },
+  //     { label: 'Team Capacity', before: '15 clients', after: '45 clients', icon: UsersIcon },
+  //   ],
+  // },
+  // {
+  //   company: 'Apex Digital',
+  //   industry: 'Full-Service Agency',
+  //   location: 'San Francisco, CA',
+  //   image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800',
+  //   quote:
+  //     'From chaos to organized in 1 week. Every OAuth token stored securely, every client connected in minutes. Our team can finally focus on strategy instead of admin.',
+  //   author: 'Emily Rodriguez',
+  //   role: 'Operations Director',
+  //   metrics: [
+  //     { label: 'Admin Hours/Week', before: '12 hrs', after: '2 hrs', icon: Clock },
+  //     { label: 'Token Security', before: 'Email sharing', after: 'Bank-level', icon: CheckCircle },
+  //     { label: 'New Client Ramp-up', before: '1 week', after: 'Same day', icon: TrendingUp },
+  //   ],
+  // },
 ];
 
 // Simple reveal animation component

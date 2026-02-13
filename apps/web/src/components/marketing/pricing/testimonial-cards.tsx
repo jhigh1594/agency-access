@@ -13,27 +13,28 @@ interface Testimonial {
 }
 
 const testimonials: Testimonial[] = [
-  {
-    quote: "We went from 47 email threads to a single link. Our clients love it, and we save 20+ hours every week.",
-    author: 'Sarah Kim',
-    role: 'Founder',
-    company: 'GrowthFlow Agency',
-    outcome: '20+ hours saved per week',
-  },
-  {
-    quote: "ROI in the first 2 weeks. We on boarded 15 new clients in the time it used to take for 3.",
-    author: 'Mike Torres',
-    role: 'CEO',
-    company: 'ScaleUp Media',
-    outcome: '5x faster onboarding',
-  },
-  {
-    quote: "The white-label feature alone is worth 10x the price. Our clients think we built it ourselves.",
-    author: 'Jessica Chen',
-    role: 'Operations Lead',
-    company: 'Nexus Digital',
-    outcome: 'Enterprise-grade white-label',
-  },
+  // Pillar AI Agency is the only active testimonial (see success-stories-section).
+  // {
+  //   quote: "We went from 47 email threads to a single link. Our clients love it, and we save 20+ hours every week.",
+  //   author: 'Sarah Kim',
+  //   role: 'Founder',
+  //   company: 'GrowthFlow Agency',
+  //   outcome: '20+ hours saved per week',
+  // },
+  // {
+  //   quote: "ROI in the first 2 weeks. We on boarded 15 new clients in the time it used to take for 3.",
+  //   author: 'Mike Torres',
+  //   role: 'CEO',
+  //   company: 'ScaleUp Media',
+  //   outcome: '5x faster onboarding',
+  // },
+  // {
+  //   quote: "The white-label feature alone is worth 10x the price. Our clients think we built it ourselves.",
+  //   author: 'Jessica Chen',
+  //   role: 'Operations Lead',
+  //   company: 'Nexus Digital',
+  //   outcome: 'Enterprise-grade white-label',
+  // },
 ];
 
 export function TestimonialCards() {

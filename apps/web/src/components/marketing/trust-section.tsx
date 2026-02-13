@@ -7,8 +7,8 @@ export function TrustSection() {
   return (
     <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-card">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Testimonial - Brutalist card */}
-        <div className="max-w-4xl mx-auto text-center mb-16 sm:mb-24 px-2">
+        {/* Testimonial - Brutalist card (commented out; only Pillar AI Agency testimonial is active) */}
+        {/* <div className="max-w-4xl mx-auto text-center mb-16 sm:mb-24 px-2">
           <m.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -28,10 +28,9 @@ export function TrustSection() {
               </div>
             </div>
 
-            {/* Quote Mark - Brutalist */}
             <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-12 text-coral/10 font-dela text-6xl sm:text-8xl md:text-[12rem] leading-none select-none -z-0">&ldquo;</div>
           </m.div>
-        </div>
+        </div> */}
 
         {/* Security Grid - Brutalist cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
