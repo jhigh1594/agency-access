@@ -3,16 +3,20 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, useTheme } from '../theme-provider';
 import { act } from 'react-dom/test-utils';
 
+vi.mock('next/navigation', () => ({
+  usePathname: () => null, // Non-marketing path so theme follows storage/system
+}));
+
 describe('ThemeProvider', () => {
   beforeEach(() => {
     // Clear localStorage before each test
-    localStorage.clear();
+    if (typeof localStorage.clear === 'function') localStorage.clear();
     // Reset document classes
     document.documentElement.classList.remove('light', 'dark');
   });
 
   afterEach(() => {
-    localStorage.clear();
+    if (typeof localStorage.clear === 'function') localStorage.clear();
     document.documentElement.classList.remove('light', 'dark');
   });
 

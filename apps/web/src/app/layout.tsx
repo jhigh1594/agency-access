@@ -73,6 +73,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${outfit.variable} ${jetbrainsMono.variable} ${delaGothicOne.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var p=window.location.pathname;var m=p==='/'||p.startsWith('/pricing')||p.startsWith('/blog')||p.startsWith('/terms')||p.startsWith('/privacy-policy')||p.startsWith('/compare');if(m){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}})();`,
+          }}
+        />
         <Providers>{children}</Providers>
         <DeferredAnalytics />
       </body>

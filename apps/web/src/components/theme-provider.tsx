@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 type Theme = 'light' | 'dark';
 type ThemeContextType = {
@@ -12,6 +13,19 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_KEY = 'agency-theme';
 
+/** Paths that are part of the marketing site and always use light theme. */
+function isMarketingPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return (
+    pathname === '/' ||
+    pathname.startsWith('/pricing') ||
+    pathname.startsWith('/blog') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/privacy-policy') ||
+    pathname.startsWith('/compare')
+  );
+}
+
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) throw new Error('useTheme must be used within ThemeProvider');
@@ -19,40 +33,35 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    // Get theme from localStorage OR system preference
     const stored = localStorage.getItem(THEME_KEY) as Theme | null;
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = stored || (systemPrefersDark ? 'dark' : 'light');
+    const userTheme = stored || (systemPrefersDark ? 'dark' : 'light');
 
-    console.log('[ThemeProvider] Initializing theme:', initialTheme, { stored, systemPrefersDark });
+    // Marketing site always uses light; app uses stored/system preference
+    const appliedTheme = isMarketingPath(pathname) ? 'light' : userTheme;
 
-    setTheme(initialTheme);
+    setTheme(appliedTheme);
 
-    // Apply to document (prevents hydration mismatch - client-only)
     document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(initialTheme);
-
-    console.log('[ThemeProvider] Applied class to document:', document.documentElement.classList.toString());
-  }, []);
+    document.documentElement.classList.add(appliedTheme);
+  }, [pathname]);
 
   const toggleTheme = () => {
     const newTheme: Theme = theme === 'light' ? 'dark' : 'light';
-    console.log('[ThemeProvider] Toggling theme from', theme, 'to', newTheme);
-
     setTheme(newTheme);
     localStorage.setItem(THEME_KEY, newTheme);
 
-    // Apply to document
+    // On marketing paths always keep document light; otherwise apply new theme
+    const applied = isMarketingPath(pathname) ? 'light' : newTheme;
     document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(newTheme);
-
-    console.log('[ThemeProvider] Applied toggle class:', document.documentElement.classList.toString());
+    document.documentElement.classList.add(applied);
   };
 
   return (
