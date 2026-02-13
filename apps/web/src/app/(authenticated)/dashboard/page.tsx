@@ -11,6 +11,7 @@
 import { Plus, Users, Key, Activity, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
@@ -77,7 +78,9 @@ function UsageWidget() {
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const { getToken } = useAuth();
+  const clerkAuth = useAuth();
+  const { getToken } = clerkAuth;
+  const { isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const hasTrackedView = useRef(false);
 
@@ -232,6 +235,17 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 bg-paper p-8">
       <div className="max-w-7xl mx-auto">
+        {isDevelopmentBypass && (
+          <div className="mb-4 flex justify-end">
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-xs font-medium text-amber-900"
+              aria-label="Development mode active"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
+              Dev Mode · {DEV_USER_ID.slice(0, 12)}...
+            </span>
+          </div>
+        )}
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <div>

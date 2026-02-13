@@ -20,7 +20,7 @@ NEXT_PUBLIC_BYPASS_AUTH=true
 
 - Mocks Clerk authentication with a dev user
 - Bypasses all auth redirects and loading states
-- Shows a "Dev Mode" badge in the sidebar
+- Shows a "Dev Mode" badge at the top of the dashboard and a compact Dev Mode block with "Sign out" in the sidebar (sign out uses sessionStorage to end bypass for the session)
 - Works for all authenticated routes (`/dashboard`, `/connections`, etc.)
 
 ### Mock User Details

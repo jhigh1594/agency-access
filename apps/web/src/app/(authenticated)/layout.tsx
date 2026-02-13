@@ -14,7 +14,7 @@ import {
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { m } from 'framer-motion';
-import { useAuthOrBypass, getDevBypassAgencyData, DEV_USER_ID } from '@/lib/dev-auth';
+import { useAuthOrBypass, getDevBypassAgencyData, signOutDevBypass } from '@/lib/dev-auth';
 
 export default function AuthenticatedLayout({
   children,
@@ -54,9 +54,19 @@ export default function AuthenticatedLayout({
       }
 
       try {
+        const token = await clerkAuth.getToken();
+        if (!token) {
+          setCheckingAgency(false);
+          return;
+        }
         // Check if user has an agency by clerkUserId
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         
         if (!response.ok) {
@@ -89,7 +99,7 @@ export default function AuthenticatedLayout({
     };
 
     checkAgencyAndRedirect();
-  }, [userId, isLoaded, pathname, isDevelopmentBypass, router]);
+  }, [userId, isLoaded, pathname, isDevelopmentBypass, router, clerkAuth]);
 
   // Show loading state while auth loads or while checking agency (skip in bypass mode)
   if (!isDevelopmentBypass && (!isLoaded || checkingAgency)) {
@@ -196,13 +206,22 @@ export default function AuthenticatedLayout({
           <div className="border-t border-border pt-4">
             <div className="flex items-center gap-2">
               {isDevelopmentBypass ? (
-                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md">
-                  <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold">
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-amber-50 border border-amber-200 min-w-0 flex-1">
+                  <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0" aria-hidden>
                     D
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-amber-900">Dev Mode</span>
-                    <span className="text-xs text-amber-700">{DEV_USER_ID.slice(0, 12)}...</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium text-amber-900 truncate">Dev Mode</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        signOutDevBypass();
+                        router.push('/');
+                      }}
+                      className="text-xs text-amber-700 hover:text-amber-900 hover:underline text-left"
+                    >
+                      Sign out
+                    </button>
                   </div>
                 </div>
               ) : (
