@@ -23,6 +23,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
+import { AlertCircle } from 'lucide-react';
 import { UnifiedWizard } from '@/components/onboarding/unified-wizard';
 import { UnifiedOnboardingProvider, useUnifiedOnboarding } from '@/contexts/unified-onboarding-context';
 import { WelcomeScreen } from '@/components/onboarding/screens/welcome-screen';
@@ -38,13 +39,27 @@ import { FinalSuccessScreen } from '@/components/onboarding/screens/final-succes
 // ============================================================
 
 function OnboardingFlow() {
-  const { state, nextStep, prevStep, canGoNext, canGoBack, canSkip, updateAgency, updateClient, updatePlatforms, loadExistingClients, createAgencyAndAccessRequest, addTeamInvite, removeTeamInvite, updateTeamInviteRole, completeOnboarding } = useUnifiedOnboarding();
+  const { state, nextStep, prevStep, canGoNext, canGoBack, canSkip, updateAgency, updateClient, updatePlatforms, loadExistingClients, createAgencyAndAccessRequest, addTeamInvite, removeTeamInvite, updateTeamInviteRole, sendTeamInvites, completeOnboarding } = useUnifiedOnboarding();
   const router = useRouter();
 
-  // Handle platform selection change between Screen 2A and 2B
-  const handleGenerateLink = async () => {
-    await createAgencyAndAccessRequest();
-    if (state.accessLink) {
+  const handleNext = async () => {
+    if (state.currentStep === 3) {
+      const createResult = await createAgencyAndAccessRequest();
+      if (createResult.ok) {
+        nextStep();
+      }
+      return;
+    }
+
+    if (state.currentStep === 5 && state.teamInvites.length > 0) {
+      const invitesSent = await sendTeamInvites();
+      if (invitesSent) {
+        nextStep();
+      }
+      return;
+    }
+
+    if (canGoNext()) {
       nextStep();
     }
   };
@@ -87,7 +102,7 @@ function OnboardingFlow() {
           <PlatformSelectionScreen
             selectedPlatforms={state.selectedPlatforms}
             onUpdate={updatePlatforms}
-            onGenerate={handleGenerateLink}
+            onGenerate={handleNext}
             loading={state.loading}
           />
         );
@@ -131,7 +146,7 @@ function OnboardingFlow() {
     <UnifiedWizard
       currentStep={state.currentStep}
       totalSteps={7}
-      onNext={state.currentStep === 3 ? handleGenerateLink : nextStep}
+      onNext={handleNext}
       onBack={prevStep}
       canGoNext={canGoNext()}
       canGoBack={canGoBack()}
@@ -141,6 +156,14 @@ function OnboardingFlow() {
       showClose={state.currentStep >= 4} // Can close after value is delivered
       onClose={() => router.push('/dashboard')}
     >
+      {state.error && (
+        <div className="mx-8 mt-8 mb-0 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>{state.error}</span>
+          </div>
+        </div>
+      )}
       {renderScreen()}
     </UnifiedWizard>
   );

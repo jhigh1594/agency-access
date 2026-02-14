@@ -16,6 +16,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Check, Loader2, Mail, Building2, Users, Sparkles, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import posthog from 'posthog-js';
+import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
+import { getApiBaseUrl } from '@/lib/api/api-env';
 
 // Types
 interface TeamMember {
@@ -103,16 +105,14 @@ export default function AgencyOnboardingPage() {
 
       try {
         // Check by clerkUserId (most reliable identifier)
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`
+        const result = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
+          `/api/agencies?clerkUserId=${encodeURIComponent(userId)}`,
+          { getToken }
         );
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && result.data.length > 0) {
-            // User already has an agency, skip onboarding
-            router.replace('/dashboard');
-            return;
-          }
+        if (result.data && result.data.length > 0) {
+          // User already has an agency, skip onboarding
+          router.replace('/dashboard');
+          return;
         }
       } catch (err) {
         console.error('Failed to check existing agency:', err);
@@ -122,7 +122,7 @@ export default function AgencyOnboardingPage() {
     };
 
     checkExistingAgency();
-  }, [userId, router]);
+  }, [getToken, userId, router]);
 
   // Step 2: Team Members
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
@@ -150,9 +150,9 @@ export default function AgencyOnboardingPage() {
 
     try {
       // Create new agency via API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agencies`, {
+      const result = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        getToken,
         body: JSON.stringify({
           clerkUserId: userId,
           name: agencyProfile.name.trim(),
@@ -165,13 +165,6 @@ export default function AgencyOnboardingPage() {
           },
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to create agency');
-      }
-
-      const result = await response.json();
       setCreatedAgencyId(result.data.id);
       setLoading(false);
 
@@ -204,7 +197,7 @@ export default function AgencyOnboardingPage() {
         queryClient.prefetchQuery({
           queryKey: ['dashboard', userId],
           queryFn: async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
+            const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
               headers: { Authorization: `Bearer ${authToken}` },
             });
             if (!response.ok) throw new Error('Failed to fetch dashboard');
@@ -236,9 +229,9 @@ export default function AgencyOnboardingPage() {
 
     try {
       // Bulk invite team members via API (use created agency ID)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agencies/${createdAgencyId}/members/bulk`, {
+      await authorizedApiFetch(`/api/agencies/${createdAgencyId}/members/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        getToken,
         body: JSON.stringify({
           members: validMembers.map((m) => ({
             email: m.email.trim(),
@@ -246,11 +239,6 @@ export default function AgencyOnboardingPage() {
           })),
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to invite team members');
-      }
 
       // Track team member invites in PostHog
       posthog.capture('team_member_invited', {

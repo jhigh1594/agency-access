@@ -10,11 +10,12 @@
  * Also supports manual invitation platforms (Kit, Mailchimp, Beehiiv, Klaviyo).
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
+import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
 
 // Google account types
 interface GoogleAdsAccount {
@@ -107,7 +108,8 @@ interface Platform {
 
 export default function PlatformsPage() {
   const router = useRouter();
-  const { orgId } = useAuth();
+  const { orgId, getToken } = useAuth();
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [showGoogleAccounts, setShowGoogleAccounts] = useState(false);
@@ -125,11 +127,10 @@ export default function PlatformsPage() {
   } = useQuery<Platform[]>({
     queryKey: ['agency-platforms', orgId],
     queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${orgId}`
+      const result = await authorizedApiFetch<{ data: Platform[]; error: null }>(
+        `/agency-platforms/available?agencyId=${orgId}`,
+        { getToken }
       );
-      if (!response.ok) throw new Error('Failed to fetch platforms');
-      const result = await response.json();
       return result.data || [];
     },
     enabled: !!orgId,
@@ -144,11 +145,10 @@ export default function PlatformsPage() {
   } = useQuery<GoogleAccountsResponse>({
     queryKey: ['google-accounts', orgId],
     queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${orgId}`
+      const result = await authorizedApiFetch<{ data: GoogleAccountsResponse; error: null }>(
+        `/agency-platforms/google/accounts?agencyId=${orgId}`,
+        { getToken }
       );
-      if (!response.ok) throw new Error('Failed to fetch Google accounts');
-      const result = await response.json();
       return result.data;
     },
     enabled: !!orgId && !!googleConnection?.connected && showGoogleAccounts,
@@ -163,11 +163,10 @@ export default function PlatformsPage() {
   } = useQuery<MetaBusinessAccountsResponse>({
     queryKey: ['meta-business-accounts', orgId],
     queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${orgId}`
+      const result = await authorizedApiFetch<{ data: MetaBusinessAccountsResponse; error: null }>(
+        `/agency-platforms/meta/business-accounts?agencyId=${orgId}`,
+        { getToken }
       );
-      if (!response.ok) throw new Error('Failed to fetch Meta business accounts');
-      const result = await response.json();
       return result.data;
     },
     enabled: !!orgId && !!metaConnection?.connected && showMetaBusinesses,
@@ -176,24 +175,23 @@ export default function PlatformsPage() {
   // OAuth initiation mutation
   const { mutate: initiatePlatform, isPending } = useMutation({
     mutationFn: async (platform: string) => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/initiate`,
+      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
+      if (!userEmail) {
+        throw new Error('Unable to resolve your account email.');
+      }
+
+      const result = await authorizedApiFetch<{ data: { authUrl: string }; error: null }>(
+        `/agency-platforms/${platform}/initiate`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          getToken,
           body: JSON.stringify({
             agencyId: orgId,
-            userEmail: 'admin@agency.com', // TODO: Get from Clerk user
+            userEmail,
             redirectUrl: `${window.location.origin}/platforms/callback`,
           }),
         }
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to initiate OAuth');
-      }
-
-      const result = await response.json();
       return result.data;
     },
     onSuccess: (data) => {

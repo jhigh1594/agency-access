@@ -25,6 +25,7 @@ import { createContext, useContext, useState, useCallback, ReactNode, useEffect 
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Client, Platform, AgencyRole } from '@agency-platform/shared';
+import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
 
 // ============================================================
 // TYPES
@@ -76,6 +77,7 @@ export interface OnboardingState {
   preSelectedPlatforms: Platform[]; // Google + Meta as smart defaults
 
   // Generated link (Screen 3 - The Aha! Moment)
+  agencyId?: string;
   accessLink?: string;
   accessRequestId?: string;
 
@@ -108,8 +110,8 @@ interface UnifiedOnboardingContextValue {
 
   // API actions
   loadExistingClients: () => Promise<void>;
-  createAgencyAndAccessRequest: () => Promise<void>;
-  sendTeamInvites: () => Promise<void>;
+  createAgencyAndAccessRequest: () => Promise<CreateAgencyAndAccessRequestResult>;
+  sendTeamInvites: () => Promise<boolean>;
 
   // Completion
   completeOnboarding: () => Promise<void>;
@@ -118,6 +120,14 @@ interface UnifiedOnboardingContextValue {
   // Error handling
   setError: (error: string | null) => void;
   clearError: () => void;
+}
+
+export interface CreateAgencyAndAccessRequestResult {
+  ok: boolean;
+  agencyId?: string;
+  accessRequestId?: string;
+  accessLink?: string;
+  error?: string;
 }
 
 // ============================================================
@@ -163,6 +173,7 @@ const initialState: OnboardingState = {
   preSelectedPlatforms: PRESELECTED_PLATFORMS,
 
   // Generated link
+  agencyId: undefined,
   accessLink: undefined,
   accessRequestId: undefined,
 
@@ -188,7 +199,7 @@ export function UnifiedOnboardingProvider({
   onComplete,
 }: UnifiedOnboardingProviderProps) {
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, orgId, getToken } = useAuth();
   const { user } = useUser();
 
   const [state, setState] = useState<OnboardingState>(initialState);
@@ -346,6 +357,10 @@ export function UnifiedOnboardingProvider({
     }));
   }, []);
 
+  const flattenSelectedPlatforms = useCallback((selection: PlatformSelection) => {
+    return Object.values(selection || {}).flat().filter(Boolean);
+  }, []);
+
   // ============================================================
   // API METHODS
   // ============================================================
@@ -354,13 +369,9 @@ export function UnifiedOnboardingProvider({
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const response = await fetch('/api/clients');
-      const json = await response.json();
-
-      if (json.error) {
-        setState((prev) => ({ ...prev, error: json.error.message, loading: false }));
-        return;
-      }
+      const json = await authorizedApiFetch<{ data: Client[]; error: null }>('/api/clients', {
+        getToken,
+      });
 
       setState((prev) => ({
         ...prev,
@@ -368,110 +379,108 @@ export function UnifiedOnboardingProvider({
         loading: false,
       }));
     } catch (err) {
+      const errorMessage = err instanceof AuthorizedApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : 'Failed to load clients';
+
       setState((prev) => ({
         ...prev,
-        error: err instanceof Error ? err.message : 'Failed to load clients',
+        error: errorMessage,
         loading: false,
       }));
     }
-  }, []);
+  }, [getToken]);
 
-  const createAgencyAndAccessRequest = useCallback(async () => {
+  const createAgencyAndAccessRequest = useCallback(async (): Promise<CreateAgencyAndAccessRequestResult> => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      // Step 1: Create agency (if not exists)
-      const agencyResponse = await fetch('/api/agencies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: state.agencyName,
-          timezone: state.agencySettings.timezone,
-          industry: state.agencySettings.industry,
-        }),
-      });
+      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0]?.emailAddress;
+      const principalClerkId = orgId || userId;
 
-      const agencyJson = await agencyResponse.json();
+      // Step 1: Resolve agency (existing first, then create)
+      let agencyId = state.agencyId;
+      if (!agencyId && principalClerkId) {
+        const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
+          `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+          { getToken }
+        );
 
-      if (agencyJson.error) {
-        setState((prev) => ({
-          ...prev,
-          error: agencyJson.error.message || 'Failed to create agency',
-          loading: false,
-        }));
-        return;
+        if (existingAgencyResponse.data.length > 0) {
+          agencyId = existingAgencyResponse.data[0].id;
+        }
       }
 
-      const agencyId = agencyJson.data.id;
+      if (!agencyId) {
+        if (!userEmail) {
+          throw new Error('Unable to resolve your account email from Clerk.');
+        }
+
+        const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
+          method: 'POST',
+          getToken,
+          body: JSON.stringify({
+            clerkUserId: principalClerkId || undefined,
+            name: state.agencyName,
+            email: userEmail,
+            settings: {
+              timezone: state.agencySettings.timezone,
+              industry: state.agencySettings.industry,
+              logoUrl: state.agencySettings.logoUrl || undefined,
+            },
+          }),
+        });
+        agencyId = agencyJson.data.id;
+      }
 
       // Step 2: Create or select client
       let clientId = state.clientId;
 
       if (!clientId) {
-        const clientResponse = await fetch('/api/clients', {
+        const clientJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/clients', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          getToken,
           body: JSON.stringify({
-            agencyId,
             name: state.clientName,
+            company: state.clientName,
             email: state.clientEmail,
             language: 'en',
           }),
         });
-
-        const clientJson = await clientResponse.json();
-
-        if (clientJson.error) {
-          setState((prev) => ({
-            ...prev,
-            error: clientJson.error.message || 'Failed to create client',
-            loading: false,
-          }));
-          return;
-        }
-
         clientId = clientJson.data.id;
       }
 
       // Step 3: Create access request
-      const accessRequestResponse = await fetch('/api/access-requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agencyId,
-          clientId,
-          clientName: state.clientName,
-          clientEmail: state.clientEmail,
-          authModel: 'client_authorization',
-          platforms: state.selectedPlatforms,
-        }),
-      });
-
-      const accessRequestJson = await accessRequestResponse.json();
-
-      if (accessRequestJson.error) {
-        setState((prev) => ({
-          ...prev,
-          error: accessRequestJson.error.message || 'Failed to create access request',
-          loading: false,
-        }));
-        return;
-      }
+      const accessRequestJson = await authorizedApiFetch<{ data: { id: string; uniqueToken: string; agencyId?: string }; error: null }>(
+        '/api/access-requests',
+        {
+          method: 'POST',
+          getToken,
+          body: JSON.stringify({
+            agencyId,
+            clientId,
+            clientName: state.clientName,
+            clientEmail: state.clientEmail,
+            authModel: 'client_authorization',
+            platforms: state.selectedPlatforms,
+          }),
+        }
+      );
 
       const accessRequest = accessRequestJson.data;
+      const resolvedAgencyId = accessRequest.agencyId || agencyId;
       const accessLink = `${window.location.origin}/authorize/${accessRequest.uniqueToken}`;
 
       // Track the aha moment!
       if (typeof window !== 'undefined' && (window as any).analytics) {
         const timeToValue = Date.now() - state.startedAt;
         (window as any).analytics.track('first_access_link_generated', {
-          agencyId,
+          agencyId: resolvedAgencyId,
           clientId,
           accessRequestId: accessRequest.id,
-          platformCount: Object.values(state.selectedPlatforms).reduce(
-            (sum, platforms) => sum + platforms.length,
-            0
-          ),
+          platformCount: flattenSelectedPlatforms(state.selectedPlatforms).length,
           timeToValueMs: timeToValue,
         });
       }
@@ -479,45 +488,72 @@ export function UnifiedOnboardingProvider({
       // Update state with generated link
       setState((prev) => ({
         ...prev,
+        agencyId: resolvedAgencyId,
         accessLink,
         accessRequestId: accessRequest.id,
         loading: false,
       }));
+
+      return {
+        ok: true,
+        agencyId: resolvedAgencyId,
+        accessRequestId: accessRequest.id,
+        accessLink,
+      };
     } catch (err) {
+      const errorMessage = err instanceof AuthorizedApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : 'Network error. Please try again.';
+
+      if (typeof window !== 'undefined' && (window as any).analytics) {
+        (window as any).analytics.track('onboarding_step_failed', {
+          step: state.currentStep,
+          message: errorMessage,
+          timestamp: Date.now(),
+        });
+      }
+
       setState((prev) => ({
         ...prev,
-        error: err instanceof Error ? err.message : 'Network error. Please try again.',
+        error: errorMessage,
         loading: false,
       }));
-    }
-  }, [state]);
 
-  const sendTeamInvites = useCallback(async () => {
+      return {
+        ok: false,
+        error: errorMessage,
+      };
+    }
+  }, [flattenSelectedPlatforms, getToken, orgId, state, user, userId]);
+
+  const sendTeamInvites = useCallback(async (): Promise<boolean> => {
     if (state.teamInvites.length === 0) {
-      return;
+      return true;
+    }
+
+    if (!state.agencyId) {
+      setState((prev) => ({
+        ...prev,
+        error: 'Agency is missing. Please regenerate your access link before inviting team members.',
+      }));
+      return false;
     }
 
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const response = await fetch('/api/team/invite', {
+      await authorizedApiFetch(`/api/agencies/${state.agencyId}/members/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        getToken,
         body: JSON.stringify({
-          invites: state.teamInvites,
+          members: state.teamInvites.map((invite) => ({
+            email: invite.email,
+            role: invite.role,
+          })),
         }),
       });
-
-      const json = await response.json();
-
-      if (json.error) {
-        setState((prev) => ({
-          ...prev,
-          error: json.error.message || 'Failed to send invites',
-          loading: false,
-        }));
-        return;
-      }
 
       // Track team invites sent
       if (typeof window !== 'undefined' && (window as any).analytics) {
@@ -528,14 +564,30 @@ export function UnifiedOnboardingProvider({
       }
 
       setState((prev) => ({ ...prev, loading: false }));
+      return true;
     } catch (err) {
+      const errorMessage = err instanceof AuthorizedApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : 'Network error. Please try again.';
+
+      if (typeof window !== 'undefined' && (window as any).analytics) {
+        (window as any).analytics.track('onboarding_step_failed', {
+          step: state.currentStep,
+          message: errorMessage,
+          timestamp: Date.now(),
+        });
+      }
+
       setState((prev) => ({
         ...prev,
-        error: err instanceof Error ? err.message : 'Network error. Please try again.',
+        error: errorMessage,
         loading: false,
       }));
+      return false;
     }
-  }, [state.teamInvites]);
+  }, [getToken, state.agencyId, state.currentStep, state.teamInvites]);
 
   // ============================================================
   // COMPLETION METHODS

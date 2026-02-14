@@ -75,6 +75,131 @@ describe('Access Requests Routes - Platform Connection Validation', () => {
   });
 
   describe('POST /access-requests - delegated access validation', () => {
+    it('should accept Record<string, string[]> platform payloads for client authorization', async () => {
+      vi.mocked(accessRequestService.createAccessRequest).mockResolvedValue({
+        data: { id: 'req-1', agencyId: 'agency-1' } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/access-requests',
+        payload: {
+          agencyId: 'agency-1',
+          authModel: 'client_authorization',
+          clientName: 'John Doe',
+          clientEmail: 'john@client.com',
+          platforms: {
+            google: ['google_ads', 'ga4'],
+            meta: ['meta_ads'],
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(accessRequestService.createAccessRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          platforms: expect.arrayContaining([
+            { platform: 'google_ads', accessLevel: 'manage' },
+            { platform: 'ga4', accessLevel: 'manage' },
+            { platform: 'meta_ads', accessLevel: 'manage' },
+          ]),
+        })
+      );
+    });
+
+    it('should accept flat platform payloads for client authorization', async () => {
+      vi.mocked(accessRequestService.createAccessRequest).mockResolvedValue({
+        data: { id: 'req-1', agencyId: 'agency-1' } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/access-requests',
+        payload: {
+          agencyId: 'agency-1',
+          authModel: 'client_authorization',
+          clientName: 'John Doe',
+          clientEmail: 'john@client.com',
+          platforms: [
+            { platform: 'google_ads', accessLevel: 'admin' },
+            { platform: 'meta_ads', accessLevel: 'read_only' },
+          ],
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(accessRequestService.createAccessRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          platforms: expect.arrayContaining([
+            { platform: 'google_ads', accessLevel: 'manage' },
+            { platform: 'meta_ads', accessLevel: 'view_only' },
+          ]),
+        })
+      );
+    });
+
+    it('should return 400 when normalized platforms are empty', async () => {
+      vi.mocked(accessRequestService.createAccessRequest).mockResolvedValue({
+        data: null as any,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'At least one platform must be selected',
+        } as any,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/access-requests',
+        payload: {
+          agencyId: 'agency-1',
+          authModel: 'client_authorization',
+          clientName: 'John Doe',
+          clientEmail: 'john@client.com',
+          platforms: {},
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should ignore empty groups in object payload for delegated access checks', async () => {
+      vi.mocked(agencyPlatformService.getConnections).mockResolvedValue({
+        data: [{ id: 'conn-1', platform: 'google', status: 'active' }] as any,
+        error: null,
+      });
+      vi.mocked(accessRequestService.createAccessRequest).mockResolvedValue({
+        data: { id: 'req-1', agencyId: 'agency-1' } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/access-requests',
+        payload: {
+          agencyId: 'agency-1',
+          authModel: 'delegated_access',
+          clientName: 'John Doe',
+          clientEmail: 'john@client.com',
+          platforms: {
+            google: ['google_ads'],
+            meta: [],
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(response.json().error).toBeNull();
+      expect(agencyPlatformService.getConnections).toHaveBeenCalledWith('agency-1');
+      expect(accessRequestService.createAccessRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
+        })
+      );
+    });
+
     it('should allow creating delegated access request when platforms are connected', async () => {
       const mockConnections = [
         { id: 'conn-1', platform: 'google', status: 'active' },

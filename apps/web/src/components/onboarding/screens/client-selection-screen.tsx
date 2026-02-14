@@ -33,7 +33,7 @@ interface ClientSelectionScreenProps {
   clientEmail: string;
   existingClients: Client[];
   loading: boolean;
-  onUpdate: (data: { name: string; email: string }) => void;
+  onUpdate: (data: { id?: string; name: string; email: string }) => void;
   onLoadClients: () => Promise<void>;
 }
 
@@ -65,6 +65,7 @@ export function ClientSelectionScreen({
     (client: Client) => {
       setSelectedClientId(client.id);
       onUpdate({
+        id: client.id,
         name: client.name,
         email: client.email,
       });

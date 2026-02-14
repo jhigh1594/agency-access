@@ -26,16 +26,27 @@ vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({
     userId: 'user-123',
     orgId: 'agency-1',
+    getToken: vi.fn(async () => 'mock-token'),
+  }),
+  useUser: () => ({
+    user: {
+      primaryEmailAddress: { emailAddress: 'owner@agency.com' },
+      emailAddresses: [{ emailAddress: 'owner@agency.com' }],
+    },
   }),
 }));
 
 // Mock React Query
 const mockUseQuery = vi.fn();
 const mockUseMutation = vi.fn();
+const mockInvalidateQueries = vi.fn();
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: (options: any) => mockUseQuery(options),
   useMutation: (options: any) => mockUseMutation(options),
+  useQueryClient: () => ({
+    invalidateQueries: mockInvalidateQueries,
+  }),
 }));
 
 describe('Onboarding Platforms Page', () => {
@@ -80,7 +91,7 @@ describe('Onboarding Platforms Page', () => {
       // Should show all supported platforms
       expect(screen.getByText('Meta')).toBeInTheDocument();
       expect(screen.getByText('Google')).toBeInTheDocument();
-      expect(screen.getByText('LinkedIn')).toBeInTheDocument();
+      expect(screen.getAllByText('LinkedIn Ads').length).toBeGreaterThan(0);
     });
   });
 
