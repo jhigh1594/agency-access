@@ -897,6 +897,13 @@ lsof -ti:3001 | xargs kill -9  # Backend
 - Set environment variables in Vercel dashboard
 - Automatic deployments from main branch
 
+**Vercel build checklist (avoid common failures)**:
+- All imported modules must be committed (no untracked files that the app imports).
+- Design-system/showcase pages: use actual component prop names and types (StatusBadge: `status`/`badgeVariant`; HealthBadge: `health`; PlatformIcon: `size` token, not number).
+- Shared types: use properties that exist (e.g. PlatformProduct has `id`, not `product`).
+- Test files excluded from Next build: `apps/web/tsconfig.json` excludes `src/test/**`, `**/__tests__/**`, `**/*.test.ts`, `**/*.test.tsx` so Vitest-only code is not type-checked during `next build`.
+- Pages that use `useSearchParams()`: wrap that usage in a Suspense boundary (inner component + `<Suspense>` in page) for static prerender.
+
 ### Backend (Railway)
 - Deployed from `apps/api/`
 - Set environment variables via Railway CLI or dashboard

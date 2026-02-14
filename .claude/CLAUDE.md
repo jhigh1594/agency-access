@@ -73,6 +73,10 @@ This workspace uses AIPMOS (AI Product Management Operating System) for:
 - Use existing patterns and conventions from the codebase
 - Test changes before committing
 - Document significant decisions in memory-bank/
+- **Frontend**: Follow design system in `apps/web/DESIGN_SYSTEM.md`
+  - shadcn/ui base + "Acid Brutalism" aesthetic
+  - One brutalist element per view (restraint = impact)
+  - Visual token reference at `/design-system` route
 
 ### Using AI Commands
 1. Use `/brainstorm` for tactical feature exploration

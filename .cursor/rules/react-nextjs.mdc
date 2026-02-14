@@ -38,3 +38,8 @@ alwaysApply: true
 - Fetch in Server Components when possible
 - Use TanStack Query for client-side fetching with proper staleTime/cacheTime
 - Handle loading, error, and empty states explicitly
+
+## Build and Deployment (Vercel)
+- **useSearchParams**: When a page uses `useSearchParams()`, wrap that usage in a Suspense boundary (e.g. inner component that calls useSearchParams, page exports `<Suspense><Inner /></Suspense>`). Required for static prerender.
+- **Design-system / token showcase**: Use real component props from source (StatusBadge: `status`/`badgeVariant`; HealthBadge: `health`; PlatformIcon: `size` as `'sm'|'md'|'lg'|'xl'`). Do not guess prop names (e.g. `type`) or pass numbers where a token is expected.
+- **New modules**: Ensure new components/modules are committed; untracked files cause Vercel "Module not found."

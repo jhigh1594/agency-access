@@ -103,6 +103,13 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Keep UI flows consistent with existing patterns (shadcn/ui components).
 - For UI testing, use the dev-browser skill for automated browser flows.
 
+## Vercel Build and Next.js
+- **Commit new modules before deploy**: Any file the app imports must be in the repo. Untracked files cause "Module not found" on Vercel.
+- **Design-system / showcase pages**: Use actual component prop names and types (e.g. StatusBadge `status`/`badgeVariant`, HealthBadge `health`, PlatformIcon `size` as token not number). Check component source when adding examples.
+- **Shared types**: Use properties that exist on the type (e.g. PlatformProduct has `id`, not `product`).
+- **Test files and tsconfig**: Exclude `src/test/**`, `**/__tests__/**`, `**/*.test.ts`, `**/*.test.tsx` from apps/web tsconfig so Next build does not type-check Vitest-only code (avoids missing globals/module errors).
+- **useSearchParams**: Wrap usage in a Suspense boundary when the page is statically generated. Extract the part that calls useSearchParams into an inner component and wrap it in `<Suspense>` in the page export.
+
 ## Workflow Expectations
 - Don’t edit or revert unrelated changes in a dirty worktree.
 - Keep refactors behavior-preserving unless explicitly requested.

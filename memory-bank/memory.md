@@ -1,6 +1,6 @@
 # Agency Access Platform - Memory Bank
 
-*Last Updated: February 10, 2026*
+*Last Updated: February 11, 2026*
 *Purpose: AI context persistence for Agency Access Platform workspace*
 
 ---
@@ -82,6 +82,26 @@ const verified = await verifyToken(token, {
 7. Fixed authentication on all Connections page API calls
 
 **Impact**: ~60% latency reduction, eliminated duplicate agency queries on every page load.
+
+### Vercel / Next.js Build Fixes (Feb 2026)
+**Issue**: Repeated Vercel build failures (module not found, type errors, prerender errors).
+
+**Lessons**:
+
+1. **Untracked files break Vercel**  
+   New modules (e.g. CreateClientModal, CreateRequestModal, dev-auth) must be committed. Vercel clones the repo; untracked files do not exist in the build. If the app imports them, the build fails with "Module not found."
+
+2. **Design-system showcase must match component APIs**  
+   When building a design-system or token showcase page, use the actual component prop names and types: StatusBadge uses `status` / `badgeVariant` (not `type`); HealthBadge uses `health` (not `status`); PlatformIcon uses `size: 'sm' | 'md' | 'lg' | 'xl'` (not a number). Reference the component source or types when adding showcase examples.
+
+3. **Shared types: use the correct property**  
+   When wiring components to shared types (e.g. PlatformProduct), use the properties that exist on the type. PlatformProduct has `id`, `name`, `icon`, `description`—no `product` property. Using the wrong property causes type errors in the build.
+
+4. **Test utilities and Next.js build**  
+   Test files under `src/test/` and `**/__tests__/**` use Vitest globals (describe, it, expect) and may use relative imports (e.g. `./design-system`). If tsconfig includes them, `next build` type-checks them and fails (missing module or globals). Exclude from Next/tsconfig: `src/test/**`, `**/__tests__/**`, `**/*.test.ts`, `**/*.test.tsx`. Vitest uses its own config; tests still run with `npm test`.
+
+5. **useSearchParams and static prerender**  
+   Next.js requires `useSearchParams()` to be inside a Suspense boundary when the page is statically generated. Otherwise the build fails with "useSearchParams() should be wrapped in a suspense boundary." Fix: extract the part that uses `useSearchParams` into an inner client component and wrap it in `<Suspense fallback={...}>` in the page default export (e.g. checkout/success, checkout/cancel).
 
 ---
 
