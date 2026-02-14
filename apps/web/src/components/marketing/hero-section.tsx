@@ -87,7 +87,7 @@ export function HeroSection() {
             <div className="w-full px-2 sm:px-0">
               <Reveal delay={0.5}>
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 w-full mt-6 self-stretch">
-                  <SignUpButton mode="redirect">
+                  <SignUpButton mode="modal">
                     <Button
                       variant="brutalist-rounded"
                       size="xl"

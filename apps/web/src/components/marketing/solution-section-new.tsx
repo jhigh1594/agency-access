@@ -3,12 +3,18 @@
 import { m } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Mail, Link2, AlertCircle } from 'lucide-react';
+import { SignUpButton } from '@clerk/nextjs';
 import {
   ImageComparison,
   ImageComparisonImage,
   ImageComparisonSlider,
 } from '@/components/ui/image-comparison';
 import { Reveal } from './reveal';
+
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
 
 /**
  * BEFORE: Chaos State - 47 emails scattered everywhere
@@ -252,16 +258,22 @@ export function SolutionSectionNew() {
 
             {/* Bottom CTA */}
             <div className="mt-12 text-center">
-              <m.a
-                href="#pricing"
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.5 }}
-                className="inline-flex items-center justify-center gap-3 bg-teal text-white px-8 sm:px-10 py-5 rounded-2xl font-bold text-xl uppercase tracking-wide border-2 border-black shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200 min-h-[56px] touch-feedback"
               >
-                Start Free Trial
-                <ArrowRight className="w-5 h-5" />
-              </m.a>
+                <SignUpButton mode="modal">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center gap-3 bg-teal text-white px-8 sm:px-10 py-5 rounded-2xl font-bold text-xl uppercase tracking-wide border-2 border-black shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200 min-h-[56px] touch-feedback"
+                    onClick={handleTrialSignup}
+                  >
+                    Start Free Trial
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </SignUpButton>
+              </m.div>
             </div>
           </div>
         </Reveal>

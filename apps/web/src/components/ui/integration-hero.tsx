@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import {
   SiGoogle,
@@ -54,6 +55,11 @@ const ICONS_ROW2: IconItem[] = [
 const repeatedIcons = (icons: IconItem[], repeat = 4): IconItem[] =>
   Array.from({ length: repeat }).flatMap(() => icons);
 
+const handleTrialSignup = () => {
+  localStorage.setItem("selectedSubscriptionTier", "STARTER");
+  localStorage.setItem("selectedBillingInterval", "yearly");
+};
+
 export default function IntegrationHero() {
   return (
     <section className="relative py-32 overflow-hidden bg-card border-y-2 border-black">
@@ -78,9 +84,16 @@ export default function IntegrationHero() {
           AuthHub integrates effortlessly with your favorite tools, ensuring a smooth and automated workflow.
         </p>
         <div className="flex justify-center">
-          <Button variant="brutalist" size="lg" className="mt-8 min-w-[200px]">
-            Get started
-          </Button>
+          <SignUpButton mode="modal">
+            <Button
+              variant="brutalist"
+              size="lg"
+              className="mt-8 min-w-[200px]"
+              onClick={handleTrialSignup}
+            >
+              Get Started
+            </Button>
+          </SignUpButton>
         </div>
 
         {/* Carousel - Brutalist platform cards */}
