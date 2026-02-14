@@ -12,7 +12,8 @@ interface Feature {
 }
 
 interface PricingTierCardProps {
-  tier?: 'GROWTH' | 'SCALE'; // Used for tier selection
+  // Supports both display aliases and backend tiers during naming transition.
+  tier?: 'GROWTH' | 'SCALE' | 'STARTER' | 'AGENCY'; // Used for tier selection
   name: string;
   description: string;
   persona?: string; // Who this is for - e.g., "For small teams"
@@ -48,8 +49,8 @@ export function PricingTierCard({
   billingInterval = 'monthly',
   onUpgradeClick,
 }: PricingTierCardProps) {
-  // Map display tier to backend tier (GROWTH -> STARTER, SCALE -> AGENCY)
-  const DISPLAY_TO_BACKEND: Record<string, string> = {
+  // Normalize display aliases to backend tiers expected by onboarding/subscriptions.
+  const DISPLAY_TO_BACKEND: Record<'GROWTH' | 'SCALE', 'STARTER' | 'AGENCY'> = {
     GROWTH: 'STARTER',
     SCALE: 'AGENCY',
   };
@@ -57,7 +58,9 @@ export function PricingTierCard({
   // Store selected tier and billing interval when user clicks CTA
   const handleTierSelect = () => {
     if (tier) {
-      const backendTier = DISPLAY_TO_BACKEND[tier] || tier;
+      const backendTier = tier === 'GROWTH' || tier === 'SCALE'
+        ? DISPLAY_TO_BACKEND[tier]
+        : tier;
       localStorage.setItem('selectedSubscriptionTier', backendTier);
       localStorage.setItem('selectedBillingInterval', billingInterval);
     }

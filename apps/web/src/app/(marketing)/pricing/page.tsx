@@ -3,8 +3,7 @@ import { PricingHero } from '@/components/marketing/pricing/pricing-hero';
 import { SavingsCalculator } from '@/components/marketing/pricing/savings-calculator';
 import { PricingTiers } from '@/components/marketing/pricing/pricing-tiers';
 import { MetricBanner } from '@/components/marketing/pricing/metric-banner';
-import { TestimonialCards } from '@/components/marketing/pricing/testimonial-cards';
-import { CaseStudyFeature } from '@/components/marketing/pricing/case-study-feature';
+import { SuccessStoriesSection } from '@/components/marketing/success-stories-section';
 import { FAQSection } from '@/components/marketing/pricing/faq-section';
 import { FinalCTASection } from '@/components/marketing/pricing/final-cta-section';
 
@@ -25,8 +24,7 @@ export default async function PricingPage() {
       <SavingsCalculator />
       <PricingTiers />
       <MetricBanner />
-      <TestimonialCards />
-      <CaseStudyFeature />
+      <SuccessStoriesSection />
       <FAQSection />
       <FinalCTASection />
     </main>

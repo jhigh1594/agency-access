@@ -13,90 +13,100 @@ import { useSubscription, useCreateCheckout } from '@/lib/query/billing';
 import { type SubscriptionTier } from '@agency-platform/shared';
 import { Button } from '@/components/ui/button';
 
-// Display tiers (excludes PRO which is temporarily commented out)
-const DISPLAY_TIERS = ['FREE', 'STARTER', 'AGENCY'] as const;
+// Display tiers (maps to backend tiers: STARTER, AGENCY)
+const DISPLAY_TIERS = ['FREE', 'GROWTH', 'SCALE'] as const;
 
-// Tier display names
+// Tier display names - updated for clarity
 const TIER_NAMES: Record<string, string> = {
   FREE: 'Free',
-  STARTER: 'Starter',
-  AGENCY: 'Agency',
+  GROWTH: 'Growth',
+  SCALE: 'Scale',
+};
+
+// Persona labels - helps users self-select
+const TIER_PERSONAS: Record<string, string> = {
+  FREE: 'For individuals',
+  GROWTH: 'For small teams',
+  SCALE: 'For growing agencies',
+};
+
+// Tier descriptions
+const TIER_DESCRIPTIONS: Record<string, string> = {
+  FREE: 'Solo freelancers testing OAuth automation',
+  GROWTH: 'Growing agencies with 3-5 new clients/month',
+  SCALE: 'Established agencies onboarding 10+ clients/month',
+};
+
+// Map display tier to backend tier (null for FREE since it's not a paid tier)
+const DISPLAY_TO_BACKEND: Record<string, SubscriptionTier | null> = {
+  FREE: null,
+  GROWTH: 'STARTER',
+  SCALE: 'AGENCY',
+};
+
+// Map backend tier to display tier (undefined tier means FREE)
+const BACKEND_TO_DISPLAY: Record<string, string> = {
+  STARTER: 'GROWTH',
+  AGENCY: 'SCALE',
+  PRO: 'SCALE', // Map PRO to SCALE for now
+  ENTERPRISE: 'SCALE', // Map ENTERPRISE to SCALE for now
 };
 
 // Tier pricing configuration (yearly price, monthly price)
 const tierPricing: Record<string, { yearly: number; monthly: number }> = {
   FREE: { yearly: 0, monthly: 0 },
-  STARTER: { yearly: 480, monthly: 40 },
-  AGENCY: { yearly: 1120, monthly: 93.33 },
-  // PRO: { yearly: 2240, monthly: 186.67 }, // Temporarily commented out
+  GROWTH: { yearly: 480, monthly: 40 },
+  SCALE: { yearly: 1120, monthly: 93.33 },
 };
 
-// Feature inclusion matrix for each tier
-const tierFeatures: Record<string, { name: string; included: boolean }[]> = {
+// Feature inclusion matrix for each tier - ONE value metric (clients/month)
+const tierFeatures: Record<string, { name: string; included: boolean; value?: string }[]> = {
   FREE: [
-    { name: '1 active client', included: true },
-    { name: 'Core platforms (Meta, Google, LinkedIn)', included: true },
+    { name: '1 active client', included: true, value: 'Test the full flow' },
+    { name: 'Core platforms (Meta, Google, LinkedIn)', included: true, value: 'The essentials' },
     { name: 'Basic branding (logo upload)', included: true },
     { name: 'Email support', included: true },
     { name: 'Team access', included: false },
     { name: 'White-label branding', included: false },
-    { name: 'Custom domain/subdomain', included: false },
+    { name: 'Custom domain', included: false },
     { name: 'Webhooks & API', included: false },
     { name: 'Priority support', included: false },
   ],
-  STARTER: [
-    { name: '36 client onboards/year', included: true },
-    { name: '120 platform audits', included: true },
-    { name: 'All platform integrations', included: true },
+  GROWTH: [
+    { name: '5 clients/month', included: true, value: '60 onboards/year' },
+    { name: 'All platform integrations', included: true, value: 'Meta, Google, LinkedIn, TikTok, more' },
+    { name: 'White-label branding', included: true, value: 'Your brand, not ours' },
+    { name: 'Team access (3 seats)', included: true, value: 'Share the work' },
     { name: 'Email support', included: true },
-    { name: 'White-label branding', included: false },
-    { name: 'Custom domain/subdomain', included: false },
-    { name: 'Team access', included: false },
+    { name: 'Custom domain', included: false },
     { name: 'Webhooks & API', included: false },
     { name: 'Priority support', included: false },
   ],
-  AGENCY: [
-    { name: '120 client onboards/year', included: true },
-    { name: '600 platform audits', included: true },
+  SCALE: [
+    { name: '15 clients/month', included: true, value: '180 onboards/year' },
+    { name: 'All platform integrations', included: true },
     { name: 'White-label branding', included: true },
-    { name: 'Custom domain/subdomain', included: true },
-    { name: 'Team access (5 seats)', included: true },
-    { name: 'Webhooks & API', included: true },
-    { name: 'Priority support', included: true },
-    { name: 'Multi-brand accounts', included: false },
-    { name: 'Custom integrations', included: false },
-    { name: 'SLA guarantee', included: false },
+    { name: 'Custom domain', included: true, value: 'Your URL, your brand' },
+    { name: 'Team access (10 seats)', included: true, value: 'Full team collaboration' },
+    { name: 'Webhooks & API', included: true, value: 'Connect your stack' },
+    { name: 'Priority support', included: true, value: 'Faster response time' },
+    { name: 'Multi-brand accounts', included: true, value: 'Manage multiple brands' },
+    { name: 'Custom integrations', included: true, value: 'We build what you need' },
   ],
-  // PRO: [
-  //   { name: '600 client onboards/year', included: true },
-  //   { name: '3,000 platform audits', included: true },
-  //   { name: 'White-label branding', included: true },
-  //   { name: 'Custom domain/subdomain', included: true },
-  //   { name: 'Unlimited team seats', included: true },
-  //   { name: 'Webhooks & API', included: true },
-  //   { name: 'Multi-brand accounts (3)', included: true },
-  //   { name: 'API access', included: true },
-  //   { name: 'Custom integrations', included: true },
-  //   { name: 'Priority support (dedicated)', included: true },
-  //   { name: 'SLA guarantee', included: true },
-  // ],
 };
 
 export function PlanComparison() {
   const { data: subscription } = useSubscription();
   const createCheckout = useCreateCheckout();
-  // Map subscription tier to display tier (backend uses STARTER, we show it as paid)
-  const currentTier = subscription?.tier || 'FREE';
+
+  // Map backend tier to display tier (no tier means FREE)
+  const backendTier = subscription?.tier;
+  const currentTier = backendTier ? BACKEND_TO_DISPLAY[backendTier] || 'FREE' : 'FREE';
   const [isYearly, setIsYearly] = useState(true);
 
-  const handleUpgrade = async (tier: string) => {
-    // Map display tier back to subscription tier
-    const tierMap: Record<string, SubscriptionTier> = {
-      STARTER: 'STARTER',
-      AGENCY: 'AGENCY',
-    };
-    const subscriptionTier = tierMap[tier];
-    if (!subscriptionTier) return;
+  const handleUpgrade = async (displayTier: string) => {
+    const subscriptionTier = DISPLAY_TO_BACKEND[displayTier];
+    if (!subscriptionTier) return; // FREE tier has no checkout
 
     const result = await createCheckout.mutateAsync({
       tier: subscriptionTier,
@@ -162,30 +172,68 @@ export function PlanComparison() {
       </div>
 
       {/* Trust signals */}
-      <div className="flex items-center gap-4 mb-8 text-xs font-mono text-muted-foreground pb-6 border-b-2 border-border">
+      <div className="flex flex-wrap items-center gap-4 mb-8 text-xs font-mono text-muted-foreground pb-6 border-b-2 border-border">
         <span className="flex items-center gap-1.5">
           <Check size={14} color="rgb(var(--teal))" />
           Cancel anytime
         </span>
         <span className="flex items-center gap-1.5">
           <Check size={14} color="rgb(var(--teal))" />
-          14-day free trial
+          Growth plan has 14-day trial
         </span>
         <span className="flex items-center gap-1.5">
           <Check size={14} color="rgb(var(--teal))" />
-          No credit card required
+          No credit card for trial
+        </span>
+        <span className="flex items-center gap-1.5 ml-auto text-teal">
+          <Check size={14} color="rgb(var(--teal))" />
+          Pays for itself in 1 onboard
         </span>
       </div>
 
+      {/* Mobile-Friendly Tier Summary */}
+      <div className="md:hidden mb-8">
+        <div className="border-2 border-black bg-card p-4 shadow-brutalist-sm">
+          <div className="space-y-3 font-mono text-sm">
+            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+              <div>
+                <span className="font-bold text-ink">Free</span>
+                <span className="block text-xs text-gray-500">{TIER_PERSONAS.FREE}</span>
+              </div>
+              <span className="text-gray-600">1 client</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-coral/5 -mx-2 px-2 rounded">
+              <div>
+                <span className="font-bold text-coral">Growth</span>
+                <span className="text-xs text-coral/70 block">Most Popular</span>
+              </div>
+              <span className="text-gray-600">{isYearly ? '$30/mo' : '$40/mo'}</span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <div>
+                <span className="font-bold text-ink">Scale</span>
+                <span className="block text-xs text-gray-500">{TIER_PERSONAS.SCALE}</span>
+              </div>
+              <span className="text-gray-600">{isYearly ? '$70/mo' : '$93/mo'}</span>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-4 text-center font-mono">
+            Scroll right for full comparison →
+          </p>
+        </div>
+      </div>
+
       {/* Pricing Grid - Hidden on mobile, shown on md+ */}
-      <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-x-auto">
         {DISPLAY_TIERS.map((tier, index) => {
           const pricing = tierPricing[tier];
           const tierName = TIER_NAMES[tier];
+          const persona = TIER_PERSONAS[tier];
+          const description = TIER_DESCRIPTIONS[tier];
           const features = tierFeatures[tier];
           const isCurrentTier = tier === currentTier;
           const isFree = tier === 'FREE';
-          const isRecommended = tier === 'STARTER';
+          const isRecommended = tier === 'GROWTH';
           const canUpgrade = index > tierIndex;
 
           // Calculate display price based on billing period
@@ -200,7 +248,7 @@ export function PlanComparison() {
           return (
             <div
               key={tier}
-              className={`relative border-2 rounded-lg transition-all ${
+              className={`relative border-2 rounded-lg transition-all min-w-[280px] ${
                 isCurrentTier
                   ? 'border-indigo-500 bg-indigo-50/50 shadow-brutalist-sm'
                   : isRecommended
@@ -219,7 +267,16 @@ export function PlanComparison() {
 
               {/* Tier Header */}
               <div className="p-4 border-b-2 border-border">
-                <h3 className="font-dela text-lg text-ink mb-1">{tierName}</h3>
+                {/* Persona Label */}
+                <span className={`font-mono text-[10px] font-bold uppercase tracking-widest ${
+                  isRecommended ? 'text-coral' : 'text-gray-500'
+                }`}>
+                  {persona}
+                </span>
+                <h3 className="font-dela text-lg text-ink mt-1 mb-0.5">{tierName}</h3>
+                <p className="text-xs text-muted-foreground font-mono mb-3">
+                  {description}
+                </p>
                 {isFree ? (
                   <div className="flex items-baseline gap-1">
                     <span className="font-dela text-3xl text-ink">Free</span>
@@ -241,30 +298,38 @@ export function PlanComparison() {
 
               {/* Features List */}
               <div className="p-4">
-                <ul className="space-y-2 mb-4">
+                <ul className="space-y-1 mb-4">
                   {features.map((feature, featureIndex) => (
                     <li
                       key={featureIndex}
-                      className="flex items-start gap-2 py-1 text-sm"
+                      className="flex flex-col gap-0.5 py-0.5"
                     >
-                      {feature.included ? (
-                        <Check
-                          size={14}
-                          className="mt-0.5 flex-shrink-0"
-                          color="rgb(var(--coral))"
-                        />
-                      ) : (
-                        <X size={14} className="mt-0.5 flex-shrink-0 text-muted-foreground dark:text-white/50" />
+                      <div className="flex items-start gap-2 text-sm">
+                        {feature.included ? (
+                          <Check
+                            size={14}
+                            className="mt-0.5 flex-shrink-0"
+                            color="rgb(var(--coral))"
+                          />
+                        ) : (
+                          <X size={14} className="mt-0.5 flex-shrink-0 text-muted-foreground dark:text-white/50" />
+                        )}
+                        <span
+                          className={
+                            feature.included
+                              ? 'text-foreground dark:text-white'
+                              : 'line-through text-muted-foreground dark:text-white/50'
+                          }
+                        >
+                          {feature.name}
+                        </span>
+                      </div>
+                      {/* Value context */}
+                      {feature.included && feature.value && (
+                        <span className="text-xs font-mono text-gray-500 ml-6">
+                          {feature.value}
+                        </span>
                       )}
-                      <span
-                        className={
-                          feature.included
-                            ? 'text-foreground dark:text-white'
-                            : 'line-through text-muted-foreground dark:text-white/50'
-                        }
-                      >
-                        {feature.name}
-                      </span>
                     </li>
                   ))}
                 </ul>
@@ -287,7 +352,7 @@ export function PlanComparison() {
                     className="w-full"
                     rightIcon={<ArrowRight size={16} />}
                   >
-                    Upgrade
+                    {tier === 'GROWTH' ? 'Start Free Trial' : 'Get Started'}
                   </Button>
                 ) : (
                   <div className="text-center py-2 text-sm text-muted-foreground border border-border rounded-lg">
@@ -298,27 +363,6 @@ export function PlanComparison() {
             </div>
           );
         })}
-      </div>
-
-      {/* Mobile Message */}
-      <div className="md:hidden text-center py-8">
-        <div className="border-2 border-slate-300 bg-card p-6 shadow-brutalist-sm max-w-md mx-auto">
-          <h3 className="font-display text-lg text-ink mb-2">
-            View pricing on desktop
-          </h3>
-          <p className="text-sm text-muted-foreground font-mono mb-4">
-            Our pricing tiers are best viewed on a larger screen.
-          </p>
-          <a
-            href="https://cal.com/agency-access-platform/demo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="brutalist-ghost" size="sm" className="w-full">
-              Talk to Sales
-            </Button>
-          </a>
-        </div>
       </div>
     </section>
   );

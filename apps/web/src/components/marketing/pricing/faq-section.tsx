@@ -13,27 +13,35 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: "How does the 14-day free trial work?",
-    answer: "Start using Agency Access Platform immediately with full access to all features. No credit card required. After 14 days, choose the plan that fits your needs or continue with our free tier for limited access.",
+    answer: "The Growth plan includes a 14-day free trial with full access to all features—no credit card required. After the trial, you can subscribe to Growth, upgrade to Scale, or continue with our Free tier (1 active client).",
+  },
+  {
+    question: "What's the difference between Free, Growth, and Scale?",
+    answer: "Free is for solo freelancers testing the platform with 1 client and core platforms (Meta, Google, LinkedIn). Growth ($30/mo yearly) is for small teams with 5 clients/month, white-label branding, and 3 team seats. Scale ($70/mo yearly) is for established agencies with 15 clients/month, custom domain, API access, 10 team seats, and multi-brand support.",
   },
   {
     question: "Can I change plans later?",
-    answer: "Yes! You can upgrade or downgrade your plan at any time. When upgrading, you'll be prorated for the remainder of your billing cycle. When downgrading, you'll receive credit towards future billing.",
+    answer: "Yes! Upgrade or downgrade anytime. When upgrading, you'll be prorated for the remainder of your billing cycle. When downgrading, you'll receive credit towards future billing. Your existing clients continue working without interruption.",
   },
   {
-    question: "What happens when I hit my client limits?",
-    answer: "We'll notify you when you're approaching your limit. You can either upgrade to the next tier or purchase additional client onboarding packs. Your existing clients continue to work without interruption.",
+    question: "What happens when I hit my monthly client limit?",
+    answer: "We'll notify you when you're approaching your limit. You can upgrade to the next tier instantly—no data loss, no interruption. Existing client connections remain active regardless of your plan.",
   },
   {
     question: "Do you offer discounts for annual billing?",
-    answer: "Yes! Annual billing saves you 25% compared to monthly billing. Most agencies choose annual billing for the savings and convenience.",
+    answer: "Yes! Annual billing saves you ~25% compared to monthly. Growth drops from $40/mo to $30/mo, and Scale drops from $93/mo to $70/mo. Most agencies choose annual for the savings.",
   },
   {
     question: "How secure is my OAuth data?",
-    answer: "We use bank-level encryption (Infisical) to store all OAuth tokens. We're SOC 2 Type II compliant and GDPR ready. We never store tokens directly in our database—only secure references to encrypted vault storage.",
+    answer: "We use bank-level encryption via Infisical to store all OAuth tokens. We're SOC 2 Type II compliant and GDPR ready. We never store tokens directly in our database—only secure references to encrypted vault storage.",
   },
   {
     question: "Can I use my own domain with white-label?",
-    answer: "Yes! On the Agency plan and above, you can use a custom subdomain (e.g., access.youragency.com) or bring your own domain. Full white-label includes your logo, colors, and branding.",
+    answer: "Scale plan includes custom domain support (e.g., access.youragency.com). Both Growth and Scale include white-label branding with your logo, colors, and styling. Free tier has basic branding only.",
+  },
+  {
+    question: "What platforms do you support?",
+    answer: "Free tier includes core platforms: Meta, Google, and LinkedIn. Growth and Scale plans unlock all integrations including TikTok, Snapchat, Instagram, Beehiiv, Kit, and Zapier—plus custom integrations on Scale.",
   },
 ];
 
@@ -113,8 +121,8 @@ export function FAQSection() {
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-5 pt-0 border-t-2 border-black bg-gray-50">
-                        <p className="text-base text-gray-700 leading-relaxed font-mono">
+                      <div className="px-6 py-5 border-t-2 border-black bg-gray-50">
+                        <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-mono">
                           {faq.answer}
                         </p>
                       </div>

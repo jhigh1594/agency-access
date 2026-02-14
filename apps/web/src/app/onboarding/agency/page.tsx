@@ -205,7 +205,7 @@ export default function AgencyOnboardingPage() {
           queryKey: ['dashboard', userId],
           queryFn: async () => {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
-              headers: { 'x-agency-id': authToken },
+              headers: { Authorization: `Bearer ${authToken}` },
             });
             if (!response.ok) throw new Error('Failed to fetch dashboard');
             return response.json();
