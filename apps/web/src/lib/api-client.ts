@@ -79,7 +79,7 @@ export async function getDashboardStats(agencyId: string) {
 /**
  * Access Requests
  */
-export async function getAgencyAccessRequests(agencyId: string, limit = 10) {
+export async function getAccessRequests(agencyId: string, limit = 10) {
   return apiFetch<any[]>(`/api/agencies/${agencyId}/access-requests?limit=${limit}`);
 }
 
@@ -105,7 +105,7 @@ export const apiClient = {
   fetch: apiFetch,
   resolveAgencyByEmail,
   getDashboardStats,
-  getAgencyAccessRequests,
+  getAccessRequests,
   getAgencyConnections,
   getClientsWithConnections,
 };

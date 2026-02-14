@@ -90,7 +90,7 @@ The client clicks **Confirm**, and you'll receive a notification in your Meta Bu
 
 ## A Better Way: The Single-Link Solution
 
-What if you could skip all this back-and-forth? With **Agency Access Platform**, you simply:
+What if you could skip all this back-and-forth? With **AuthHub**, you simply:
 
 1. Create an access request with the platforms you need (Meta Ads, Google Ads, GA4, etc.)
 2. Send your client a single branded link
@@ -321,7 +321,7 @@ Google Ads has more granular permissions than most platforms:
 
 One of Google's unique features: **single OAuth for multiple products**.
 
-With Agency Access Platform, when a client authorizes Google, they can grant access to **8 products at once**:
+With AuthHub, when a client authorizes Google, they can grant access to **8 products at once**:
 
 1. Google Ads
 2. Google Analytics 4 (GA4)
@@ -355,7 +355,7 @@ This hierarchical access is impossible with other platforms—each requires sepa
 ✅ **Do**:
 - Link to agency MCC rather than granting direct login
 - Use Standard access unless Admin is necessary
-- Set up billing alerts when granting agency access
+- Set up billing alerts when granting account access
 - Review account access quarterly
 
 ❌ **Don't**:
@@ -579,7 +579,7 @@ If the client only wants you to see one property:
 
 ## The Google Ecosystem: One OAuth, Multiple Products
 
-When clients authorize Google through Agency Access Platform, they can simultaneously grant access to:
+When clients authorize Google through AuthHub, they can simultaneously grant access to:
 
 1. **Google Ads** (for campaign data)
 2. **Google Analytics 4** (for website analytics)
@@ -714,25 +714,25 @@ As you grow from 10 to 100 clients:
   },
   {
     id: "leadsie-alternatives-comparison",
-    slug: "leadsie-vs-agencyaccess-vs-agency-access-platform",
-    title: "Leadsie vs AgencyAccess vs Agency Access Platform: 2024 Comparison",
+    slug: "leadsie-vs-authhub-comparison",
+    title: "Leadsie vs Other Platforms vs AuthHub: 2024 Comparison",
     excerpt: "Comprehensive comparison of the three leading client access platforms. See how platform support, security, permissions, and pricing differ—and which one is right for your agency.",
     content: `
-# Leadsie vs AgencyAccess vs Agency Access Platform: 2024 Comparison
+# Leadsie vs Other Platforms vs AuthHub: 2024 Comparison
 
 ## The Client Access Platform Landscape
 
 Managing client platform access (Meta, Google, LinkedIn, etc.) went from "email a PDF of instructions" to a dedicated software category. Three platforms now dominate:
 
 - **Leadsie**: Early market leader, focused on simplicity
-- **AgencyAccess**: Platform-heavy approach with ~10 integrations
-- **Agency Access Platform**: Newest entrant with broader platform support and enterprise security
+- **Other Platforms**: Platform-heavy approach with ~10 integrations
+- **AuthHub**: Newest entrant with broader platform support and enterprise security
 
 This comparison breaks down features, pricing, and capabilities so you can choose the right platform for your agency.
 
 ## Quick Comparison Table
 
-| Feature | Leadsie | AgencyAccess | Agency Access Platform |
+| Feature | Leadsie | Other Platforms | AuthHub |
 |---------|---------|--------------|------------------------|
 | **Platform Count** | ~8 platforms | ~10 platforms | **15+ platforms** |
 | **Meta Platforms** | ✅ Facebook, Instagram | ✅ Facebook, Instagram | ✅ Facebook, Instagram, WhatsApp |
@@ -765,7 +765,7 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 
 **Missing**: Pinterest, Klaviyo, Shopify, Kit, Beehiiv, GA4-specific features, Google ecosystem products
 
-#### AgencyAccess (~10 platforms)
+#### Other Platforms (~10 platforms)
 - Meta Ads, Facebook Pages, Instagram
 - Google Ads, Google Analytics
 - LinkedIn Ads
@@ -774,34 +774,34 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 
 **Missing**: Full Pinterest support, Klaviyo, Shopify, Kit, Beehiiv, advanced Google products
 
-#### Agency Access Platform (15+ platforms)
+#### AuthHub (15+ platforms)
 - **Meta**: Ads, Pages, Instagram, WhatsApp
 - **Google**: Ads, Analytics (GA4), Tag Manager, Merchant Center, Search Console, YouTube Ads, Display & Video 360, Campaign Manager 360
 - **LinkedIn Ads**, **TikTok Ads**, **Snapchat Ads**
 - **Pinterest Ads** (full support)
 - **Klaviyo**, **Shopify**, **Kit**, **Beehiiv**
 
-**Winner**: Agency Access Platform—5+ more platforms than competitors, including emerging channels like Pinterest and Beehiiv.
+**Winner**: AuthHub—5+ more platforms than competitors, including emerging channels like Pinterest and Beehiiv.
 
 ### Unique Platform Advantages
 
-**Pinterest**: Growing rapidly for e-commerce agencies. Neither Leadsie nor AgencyAccess supports Pinterest Ads access.
+**Pinterest**: Growing rapidly for e-commerce agencies. Neither Leadsie nor Other Platforms supports Pinterest Ads access.
 
-**Klaviyo**: Essential for email marketing agencies. Only Agency Access Platform supports Klaviyo OAuth.
+**Klaviyo**: Essential for email marketing agencies. Only AuthHub supports Klaviyo OAuth.
 
-**Shopify**: Critical for e-commerce stacks. Only Agency Access Platform integrates Shopify store access.
+**Shopify**: Critical for e-commerce stacks. Only AuthHub integrates Shopify store access.
 
-**Google Ecosystem**: Agency Access Platform supports **8 Google products from a single OAuth**. Competitors require separate authorization for each.
+**Google Ecosystem**: AuthHub supports **8 Google products from a single OAuth**. Competitors require separate authorization for each.
 
 ## Security Comparison
 
 ### Token Storage: Database vs. Secrets Management
 
-**Leadsie & AgencyAccess**: Store OAuth tokens in their databases.
+**Leadsie & Other Platforms**: Store OAuth tokens in their databases.
 
 **Risk**: If the database is compromised, all client tokens are exposed. Tokens grant full access to client ad accounts, analytics data, and customer information.
 
-**Agency Access Platform**: Stores tokens in **Infisical**, a dedicated secrets management platform.
+**AuthHub**: Stores tokens in **Infisical**, a dedicated secrets management platform.
 
 - **Infrastructure-grade encryption**: AES-256 encryption at rest
 - **Zero-knowledge architecture**: Tokens encrypted before storage
@@ -809,22 +809,22 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 - **Rotation support**: Automatic token refresh without client intervention
 - **SOC2 compliance**: Built for enterprise security requirements
 
-**Winner**: Agency Access Platform—Infisical is the same security standard used by Fortune 500 companies.
+**Winner**: AuthHub—Infisical is the same security standard used by Fortune 500 companies.
 
 ### Audit Logging
 
 **Leadsie**: Basic logging (who created access request)
 
-**AgencyAccess**: Basic logging (who granted access)
+**Other Platforms**: Basic logging (who granted access)
 
-**Agency Access Platform**: Comprehensive audit logs including:
+**AuthHub**: Comprehensive audit logs including:
 - Token creation, access, refresh, revocation
 - User email, IP address, timestamp
 - Action taken (AGENCY_CONNECTED, AGENCY_DISCONNECTED, TOKEN_REFRESHED)
 - Metadata for compliance reporting
 - Exportable for SOC2, GDPR audits
 
-**Winner**: Agency Access Platform—audit logs are critical for enterprise clients and regulatory compliance.
+**Winner**: AuthHub—audit logs are critical for enterprise clients and regulatory compliance.
 
 ## Permission Levels Comparison
 
@@ -833,17 +833,17 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 - **Standard**: Create and edit
 - **View-only** (limited): Read-only
 
-### AgencyAccess (2 levels)
+### Other Platforms (2 levels)
 - **Admin**: Full control
 - **Standard**: Create and edit
 
-### Agency Access Platform (4 levels)
+### AuthHub (4 levels)
 - **Admin**: Full control (create, edit, delete, manage billing, add/remove users)
 - **Standard**: Create and edit (create campaigns, edit settings, view reports)
 - **Read-only**: View-only access (view campaigns, view reports, export data)
 - **Email-only**: Basic email access (receive email reports, view shared dashboards)
 
-**Winner**: Agency Access Platform—granular permissions mean:
+**Winner**: AuthHub—granular permissions mean:
 - Junior staff get read-only access (reduces accidental changes)
 - Freelancers get standard access (can work but can't break things)
 - Senior team gets admin access (full control)
@@ -852,7 +852,7 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 
 ### Onboarding Templates
 
-**Agency Access Platform** only: Create reusable templates with:
+**AuthHub** only: Create reusable templates with:
 - Pre-selected platforms (e.g., "E-commerce Client Template" = Meta + Google + Shopify + Klaviyo)
 - Custom intake fields (business name, monthly budget, target audience)
 - Saved branding (logo, colors, welcome message)
@@ -864,26 +864,26 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 
 **Leadsie**: No white-label options
 
-**AgencyAccess**: Limited branding (logo upload only)
+**Other Platforms**: Limited branding (logo upload only)
 
-**Agency Access Platform**: Full white-label customization
+**AuthHub**: Full white-label customization
 - Custom logo
 - Custom primary colors
 - Custom subdomain (e.g., clients.youragency.com)
 - Custom welcome messaging
-- Hide all Agency Access Platform branding
+- Hide all AuthHub branding
 
-**Winner**: Agency Access Platform—enterprise agencies can present a fully branded client experience.
+**Winner**: AuthHub—enterprise agencies can present a fully branded client experience.
 
 ### Multi-Language Support
 
-**Agency Access Platform** only: Client authorization flows in English, Spanish, and Dutch.
+**AuthHub** only: Client authorization flows in English, Spanish, and Dutch.
 
 **Use case**: International agencies or agencies with Spanish-speaking clients can provide native-language authorization flows.
 
 ### Hierarchical Platform Access
 
-**Agency Access Platform** only: Google's unique "one OAuth, eight products" capability.
+**AuthHub** only: Google's unique "one OAuth, eight products" capability.
 
 When a client authorizes Google, they simultaneously grant access to:
 1. Google Ads
@@ -899,14 +899,14 @@ When a client authorizes Google, they simultaneously grant access to:
 
 ## Pricing Comparison
 
-| Plan | Leadsie | AgencyAccess | Agency Access Platform |
+| Plan | Leadsie | Other Platforms | AuthHub |
 |------|---------|--------------|------------------------|
 | **Starter** | $97/mo | $149/mo | **$79/mo** |
 | **Pro** | $197/mo | $299/mo | **$149/mo** |
 | **Enterprise** | Custom | Custom | **Custom** |
 | **Free Trial** | 14 days | 7 days | **21 days** |
 
-**Winner**: Agency Access Platform—lowest price across all tiers with most features.
+**Winner**: AuthHub—lowest price across all tiers with most features.
 
 **ROI Calculation**: If your agency charges $150/hr and saves 8 hours/month on client onboarding, that's **$1,200/month in recovered billable time**. The platform pays for itself 15x over.
 
@@ -918,13 +918,13 @@ When a client authorizes Google, they simultaneously grant access to:
 - Don't need enterprise security features
 - Have < 20 clients
 
-### Choose AgencyAccess If You:
+### Choose Other Platforms If You:
 - Need broader platform coverage
 - Value platform count over features
 - Don't need granular permissions
 - Have < 50 clients
 
-### Choose Agency Access Platform If You:
+### Choose AuthHub If You:
 - Need **Pinterest, Klaviyo, Shopify, Kit, or Beehiiv** access
 - Require **enterprise-grade security** (Infisical tokens, audit logs)
 - Want **granular permissions** (4 levels)
@@ -944,11 +944,11 @@ All three platforms allow you to:
 
 ## Key Takeaways
 
-- **Platform count**: Agency Access Platform supports 15+ vs 8-10 for competitors
+- **Platform count**: AuthHub supports 15+ vs 8-10 for competitors
 - **Security**: Infisical token storage vs database storage (significant difference)
 - **Permissions**: 4 levels vs 2-3 levels (granular control)
-- **Templates**: Only Agency Access Platform has reusable onboarding templates
-- **Pricing**: Agency Access Platform is $18-70/mo less expensive
+- **Templates**: Only AuthHub has reusable onboarding templates
+- **Pricing**: AuthHub is $18-70/mo less expensive
 
 **Ready to make the switch?** [Start your 21-day free trial](/pricing)—the longest trial in the industry. See how 50+ agencies reduced onboarding time by 90%.
 
@@ -966,12 +966,12 @@ All three platforms allow you to:
     },
     tags: [
       "Leadsie",
-      "AgencyAccess",
+      "AuthHub",
       "comparison",
       "alternatives",
       "pricing",
     ],
-    metaTitle: "Leadsie vs AgencyAccess vs Agency Access Platform: 2024 Comparison",
+    metaTitle: "Leadsie vs Other Platforms vs AuthHub: 2024 Comparison",
     metaDescription: "Comprehensive comparison of client access platforms. See how platform support, security, permissions, and pricing differ.",
     relatedPosts: [
       "meta-ads-access-guide",

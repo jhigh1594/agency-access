@@ -1,5 +1,5 @@
 /**
- * Comparison page: Leadsie vs AgencyAccess vs Agency Access Platform
+ * Comparison page: Leadsie vs Other Platforms vs AuthHub
  * A dedicated route for bottom-of-funnel comparison content
  */
 
@@ -10,18 +10,18 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title:
-    "Leadsie vs AgencyAccess vs Agency Access Platform: 2024 Comparison",
+    "Leadsie vs Other Platforms vs AuthHub: 2024 Comparison",
   description:
     "Comprehensive comparison of the three leading client access platforms. See how platform support, security, permissions, and pricing differ.",
   keywords: [
     "Leadsie alternative",
-    "AgencyAccess alternative",
+    "client access alternatives",
     "client access platform",
     "agency tools comparison",
   ],
   openGraph: {
     title:
-      "Leadsie vs AgencyAccess vs Agency Access Platform: 2024 Comparison",
+      "Leadsie vs Other Platforms vs AuthHub: 2024 Comparison",
     description:
       "Comprehensive comparison of client access platforms for marketing agencies.",
     type: "website",
@@ -41,8 +41,8 @@ export default function ComparisonPage() {
               <span className="text-coral">1 Clear Winner.</span>
             </h1>
             <p className="font-mono text-lg md:text-xl text-gray-700 mb-8">
-              Comprehensive comparison of Leadsie, AgencyAccess, and Agency
-              Access Platform. See features, pricing, and capabilities
+              Comprehensive comparison of Leadsie, other platforms, and AuthHub.
+              See features, pricing, and capabilities
               side-by-side.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -95,11 +95,11 @@ export default function ComparisonPage() {
               </ul>
             </div>
 
-            {/* AgencyAccess */}
+            {/* Other Platforms */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <div className="text-center mb-6">
                 <h3 className="font-dela text-xl text-ink mb-2">
-                  AgencyAccess
+                  Other Platforms
                 </h3>
                 <p className="font-mono text-2xl font-bold text-ink">
                   $149
@@ -128,14 +128,14 @@ export default function ComparisonPage() {
               </ul>
             </div>
 
-            {/* Agency Access Platform - Winner */}
+            {/* AuthHub - Winner */}
             <div className="border-[3px] border-black p-6 rounded-none shadow-hard-xl bg-teal/10 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-coral text-white px-4 py-1 text-xs font-bold uppercase tracking-wider border-2 border-black">
                 Winner
               </div>
               <div className="text-center mb-6 mt-2">
                 <h3 className="font-dela text-xl text-ink mb-2">
-                  Agency Access Platform
+                  AuthHub
                 </h3>
                 <p className="font-mono text-2xl font-bold text-coral">
                   $79
@@ -184,10 +184,10 @@ export default function ComparisonPage() {
                     Leadsie
                   </th>
                   <th className="px-4 py-3 text-center font-bold border-r border-white">
-                    AgencyAccess
+                    Other Platforms
                   </th>
                   <th className="px-4 py-3 text-center font-bold">
-                    Agency Access Platform
+                    AuthHub
                   </th>
                 </tr>
               </thead>
@@ -365,11 +365,11 @@ export default function ComparisonPage() {
         </div>
       </section>
 
-      {/* Why Agency Access Platform wins */}
+      {/* Why AuthHub wins */}
       <section className="border-b-2 border-black bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-12 text-center">
-            Why Agency Access Platform Wins
+            Why AuthHub Wins
           </h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Platform Advantage */}
@@ -450,61 +450,61 @@ export default function ComparisonPage() {
               {
                 name: "Meta (Facebook, Instagram, WhatsApp)",
                 leadsie: true,
-                agencyAccess: true,
-                agencyAccessPlatform: true,
+                otherPlatforms: true,
+                authHub: true,
               },
               {
                 name: "Google (Ads, GA4, GTM, Merchant Center, Search Console)",
                 leadsie: true,
-                agencyAccess: true,
-                agencyAccessPlatform: true,
-                note: "Agency Access Platform: 8 products from 1 OAuth",
+                otherPlatforms: true,
+                authHub: true,
+                note: "AuthHub: 8 products from 1 OAuth",
               },
               {
                 name: "LinkedIn Ads",
                 leadsie: true,
-                agencyAccess: true,
-                agencyAccessPlatform: true,
+                otherPlatforms: true,
+                authHub: true,
               },
               {
                 name: "TikTok Ads",
                 leadsie: true,
-                agencyAccess: true,
-                agencyAccessPlatform: true,
+                otherPlatforms: true,
+                authHub: true,
               },
               {
                 name: "Pinterest Ads",
                 leadsie: false,
-                agencyAccess: false,
-                agencyAccessPlatform: true,
+                otherPlatforms: false,
+                authHub: true,
                 exclusive: true,
               },
               {
                 name: "Klaviyo",
                 leadsie: false,
-                agencyAccess: false,
-                agencyAccessPlatform: true,
+                otherPlatforms: false,
+                authHub: true,
                 exclusive: true,
               },
               {
                 name: "Shopify",
                 leadsie: false,
-                agencyAccess: false,
-                agencyAccessPlatform: true,
+                otherPlatforms: false,
+                authHub: true,
                 exclusive: true,
               },
               {
                 name: "Kit",
                 leadsie: false,
-                agencyAccess: false,
-                agencyAccessPlatform: true,
+                otherPlatforms: false,
+                authHub: true,
                 exclusive: true,
               },
               {
                 name: "Beehiiv",
                 leadsie: false,
-                agencyAccess: false,
-                agencyAccessPlatform: true,
+                otherPlatforms: false,
+                authHub: true,
                 exclusive: true,
               },
             ].map((platform) => (
@@ -527,7 +527,7 @@ export default function ComparisonPage() {
                   )}
                   {platform.exclusive && (
                     <span className="ml-2 px-2 py-0.5 bg-teal text-white text-xs font-bold uppercase rounded-sm">
-                      Only Agency Access Platform
+                      Only AuthHub
                     </span>
                   )}
                 </div>
@@ -541,16 +541,16 @@ export default function ComparisonPage() {
                     )}
                   </span>
                   <span className="font-mono text-sm text-gray-600">
-                    AgencyAccess:{" "}
-                    {platform.agencyAccess ? (
+                    Other Platforms:{" "}
+                    {platform.otherPlatforms ? (
                       <Check className="inline text-teal" size={16} />
                     ) : (
                       <X className="inline text-red" size={16} />
                     )}
                   </span>
                   <span className="font-mono text-sm font-bold text-ink">
-                    Here:{" "}
-                    {platform.agencyAccessPlatform ? (
+                    AuthHub:{" "}
+                    {platform.authHub ? (
                       <Check className="inline text-teal" size={16} />
                     ) : (
                       <X className="inline text-red" size={16} />
@@ -592,11 +592,11 @@ export default function ComparisonPage() {
               </ul>
             </div>
 
-            {/* Infisical (Agency Access Platform) */}
+            {/* Infisical (AuthHub) */}
             <div className="border-2 border-teal bg-teal/10 p-6 rounded-none">
               <h3 className="font-dela text-xl text-teal mb-4 flex items-center gap-2">
                 <Check size={20} />
-                Infisical Storage (Agency Access Platform)
+                Infisical Storage (AuthHub)
               </h3>
               <ul className="space-y-2 font-mono text-sm text-gray-700">
                 <li className="flex items-start gap-2">
@@ -637,10 +637,10 @@ export default function ComparisonPage() {
               </ul>
             </div>
 
-            {/* AgencyAccess */}
+            {/* Other Platforms */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <h3 className="font-dela text-xl text-ink mb-4">
-                Choose AgencyAccess If
+                Choose Other Platforms If
               </h3>
               <ul className="space-y-2 font-mono text-sm text-gray-700">
                 <li>• You need broader platform coverage</li>
@@ -650,10 +650,10 @@ export default function ComparisonPage() {
               </ul>
             </div>
 
-            {/* Agency Access Platform */}
+            {/* AuthHub */}
             <div className="border-[3px] border-coral p-6 rounded-none shadow-hard-xl bg-coral/5">
               <h3 className="font-dela text-xl text-coral mb-4">
-                Choose Agency Access Platform If
+                Choose AuthHub If
               </h3>
               <ul className="space-y-2 font-mono text-sm text-gray-700">
                 <li>• You need Pinterest, Klaviyo, or Shopify</li>

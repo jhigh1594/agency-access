@@ -6,7 +6,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blog | Agency Access Platform",
+  title: "Blog | AuthHub",
   description:
     "Expert guides, tutorials, and strategies for marketing agencies. Learn how to streamline client onboarding, manage platform access, and scale your agency.",
   keywords: [
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "agency growth",
   ],
   openGraph: {
-    title: "Blog | Agency Access Platform",
+    title: "Blog | AuthHub",
     description:
       "Expert guides, tutorials, and strategies for marketing agencies.",
     type: "website",

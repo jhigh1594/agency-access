@@ -99,7 +99,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-semibold">6. Client Responsibilities</h2>
             <p className="mt-4 text-muted-foreground leading-7">
               When your clients authorize platform access through AuthHub, they acknowledge
-              that they are granting your agency access to their advertising and analytics
+              that they are granting your team account access to their advertising and analytics
               accounts. You are responsible for clearly communicating to your clients what
               access you are requesting and how it will be used.
             </p>

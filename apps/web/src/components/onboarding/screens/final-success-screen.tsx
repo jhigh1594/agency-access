@@ -198,7 +198,7 @@ export function FinalSuccessScreen({
         className="mt-12 text-center text-sm text-gray-400"
         variants={staggerItem}
       >
-        <p>Thanks for choosing Agency Access Platform 🚀</p>
+        <p>Thanks for choosing AuthHub 🚀</p>
       </motion.div>
     </motion.div>
   );

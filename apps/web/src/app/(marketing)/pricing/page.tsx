@@ -8,10 +8,10 @@ import { FAQSection } from '@/components/marketing/pricing/faq-section';
 import { FinalCTASection } from '@/components/marketing/pricing/final-cta-section';
 
 export const metadata: Metadata = {
-  title: 'Pricing | Agency Access Platform',
+  title: 'Pricing | AuthHub',
   description: 'Simple, transparent pricing for marketing agencies. Choose the plan that fits your client volume and scale your onboarding process.',
   openGraph: {
-    title: 'Pricing | Agency Access Platform',
+    title: 'Pricing | AuthHub',
     description: 'Simple, transparent pricing for marketing agencies.',
     type: 'website',
   },

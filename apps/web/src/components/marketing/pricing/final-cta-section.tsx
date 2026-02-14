@@ -48,7 +48,7 @@ export function FinalCTASection() {
               </h2>
 
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-12 text-gray-600 leading-relaxed px-2 font-mono max-w-2xl mx-auto">
-                Join 50+ agencies already onboarding clients faster with Agency Access Platform.
+                Join 50+ agencies already onboarding clients faster with AuthHub.
                 <span className="block mt-2 text-ink font-sans">
                   Start your free trial today.
                 </span>
@@ -68,7 +68,7 @@ export function FinalCTASection() {
                   </Button>
                 </SignUpButton>
                 <a
-                  href="https://cal.com/agency-access-platform/demo"
+                  href="https://cal.com/pillar-ai/authhub-demo"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

@@ -147,7 +147,7 @@ export function FAQSection() {
                 Still have questions?
               </p>
               <a
-                href="mailto:support@agencyaccessplatform.com"
+                href="mailto:support@authhub.com"
                 className="inline-block font-bold uppercase tracking-wider text-xs px-6 py-3 border-2 border-black bg-coral text-white hover:bg-ink hover:shadow-brutalist transition-all duration-200"
               >
                 Contact Support

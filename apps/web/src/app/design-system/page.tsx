@@ -1,7 +1,7 @@
 /**
  * Design System Token Reference
  *
- * A visual showcase of all design tokens for the Agency Access Platform.
+ * A visual showcase of all design tokens for the AuthHub.
  * Access at /design-system during development.
  */
 
@@ -19,7 +19,7 @@ export default function DesignSystemPage() {
         <div className="container mx-auto px-4 max-w-7xl">
           <h1 className="font-dela text-5xl md:text-6xl mb-4">Design System</h1>
           <p className="text-xl text-muted-foreground max-w-2xl">
-            Visual reference for the Agency Access Platform design tokens and components.
+            Visual reference for the AuthHub design tokens and components.
           </p>
         </div>
       </section>

@@ -1,6 +1,6 @@
 /**
  * Blog content types and data structure
- * Following the Agency Access Platform brutalist design system
+ * Following the AuthHub brutalist design system
  */
 
 export type BlogCategory =

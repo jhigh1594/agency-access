@@ -76,7 +76,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
 
         {/* Headline */}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
-          Welcome to Agency Access Platform
+          Welcome to AuthHub
         </h1>
 
         {/* Value Proposition */}

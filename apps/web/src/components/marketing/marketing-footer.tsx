@@ -65,7 +65,7 @@ export function MarketingFooter() {
               <span className="font-dela text-2xl tracking-tight text-ink">AuthHub</span>
             </div>
             <p className="text-gray-600 leading-relaxed text-sm font-mono">
-              The easy button for agency access to client accounts.
+              The easy button for client account access.
               Replace weeks of back-and-forth with one link.
             </p>
           </div>

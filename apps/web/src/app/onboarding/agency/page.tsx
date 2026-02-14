@@ -319,7 +319,7 @@ export default function AgencyOnboardingPage() {
       <header className="bg-card border-b border-border shadow-sm">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-slate-900">Welcome to Agency Access Platform</h1>
+            <h1 className="text-xl font-semibold text-slate-900">Welcome to AuthHub</h1>
             <span className="text-sm text-slate-500">Step {currentStep} of 3</span>
           </div>
         </div>

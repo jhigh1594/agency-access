@@ -39,7 +39,7 @@ export function CaseStudyFeature() {
                   </h2>
                   <p className="text-base text-gray-700 mb-6 leading-relaxed">
                     GrowthFlow Agency was drowning in email threads and manual OAuth setup. With
-                    Agency Access Platform, they automated their entire client onboarding flow and
+                    AuthHub, they automated their entire client onboarding flow and
                     reclaimed 480+ hours per year.
                   </p>
 
