@@ -4,13 +4,14 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
  * Clerk Proxy (formerly Middleware)
  *
  * Protects routes and handles authentication redirects.
- * - Public routes: home page, authorize callback, invite flow, platform OAuth callback
+ * - Public routes: home, pricing, contact, blog, compare, terms, privacy, authorize callback, invite flow, platform OAuth callback
  * - Protected routes: dashboard, connections, clients, settings, access requests
  */
 
 const isPublicRoute = createRouteMatcher([
   '/',
   '/pricing',
+  '/contact',
   '/blog',
   '/blog/(.*)',
   '/compare',
