@@ -15,8 +15,26 @@ import { subscriptionService } from '../services/subscription.service.js';
 import { tierLimitsService } from '../services/tier-limits.service.js';
 import { sendError, sendSuccess, sendValidationError, sendNotFound } from '../lib/response.js';
 import { SubscriptionTier } from '@agency-platform/shared';
+import { authenticate } from '@/middleware/auth.js';
+import { resolvePrincipalAgency } from '@/lib/authorization.js';
 
 export async function subscriptionRoutes(fastify: FastifyInstance) {
+  fastify.addHook('onRequest', authenticate());
+  fastify.addHook('onRequest', async (request: any, reply) => {
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      return reply.code(statusCode).send({
+        data: null,
+        error: principalResult.error || {
+          code: 'FORBIDDEN',
+          message: 'Unable to resolve agency for authenticated user',
+        },
+      });
+    }
+    request.principalAgencyId = principalResult.data.agencyId;
+  });
+
   // ============================================================
   // CHECKOUT SESSIONS
   // ============================================================
@@ -41,6 +59,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
           'agencyId, tier, successUrl, and cancelUrl are required'
         );
       }
+      const agencyId = (request as any).principalAgencyId as string;
 
       // Validate tier
       const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
@@ -48,10 +67,10 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }
 
-      fastify.log.info({ agencyId: body.agencyId, tier: body.tier }, 'POST /subscriptions/checkout');
+      fastify.log.info({ agencyId, tier: body.tier }, 'POST /subscriptions/checkout');
 
       const result = await subscriptionService.createCheckoutSession({
-        agencyId: body.agencyId,
+        agencyId,
         tier: body.tier,
         successUrl: body.successUrl,
         cancelUrl: body.cancelUrl,
@@ -93,11 +112,12 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       if (!body.agencyId || !body.returnUrl) {
         return sendValidationError(reply, 'agencyId and returnUrl are required');
       }
+      const agencyId = (request as any).principalAgencyId as string;
 
-      fastify.log.info({ agencyId: body.agencyId }, 'POST /subscriptions/portal');
+      fastify.log.info({ agencyId }, 'POST /subscriptions/portal');
 
       const result = await subscriptionService.createPortalSession({
-        agencyId: body.agencyId,
+        agencyId,
         returnUrl: body.returnUrl,
       });
 
@@ -128,7 +148,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/subscriptions/:agencyId', async (request, reply) => {
     try {
-      const { agencyId } = request.params as { agencyId: string };
+      const agencyId = (request as any).principalAgencyId as string;
 
       fastify.log.info({ agencyId }, 'GET /subscriptions/:agencyId');
 
@@ -147,7 +167,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/subscriptions/:agencyId/tier', async (request, reply) => {
     try {
-      const { agencyId } = request.params as { agencyId: string };
+      const agencyId = (request as any).principalAgencyId as string;
 
       fastify.log.info({ agencyId }, 'GET /subscriptions/:agencyId/tier');
 
@@ -175,10 +195,11 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/subscriptions/:agencyId/limits/:resource', async (request, reply) => {
     try {
-      const { agencyId, resource } = request.params as {
+      const { resource } = request.params as {
         agencyId: string;
         resource: 'access_requests' | 'clients' | 'members' | 'templates';
       };
+      const agencyId = (request as any).principalAgencyId as string;
 
       // Validate resource type
       const validResources = ['access_requests', 'clients', 'members', 'templates'];
@@ -203,7 +224,8 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/subscriptions/:agencyId/features/:feature', async (request, reply) => {
     try {
-      const { agencyId, feature } = request.params as { agencyId: string; feature: string };
+      const { feature } = request.params as { agencyId: string; feature: string };
+      const agencyId = (request as any).principalAgencyId as string;
 
       fastify.log.info({ agencyId, feature }, 'GET /subscriptions/:agencyId/features/:feature');
 
@@ -226,7 +248,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/subscriptions/:agencyId/invoices', async (request, reply) => {
     try {
-      const { agencyId } = request.params as { agencyId: string };
+      const agencyId = (request as any).principalAgencyId as string;
       const { limit } = request.query as { limit?: string };
 
       fastify.log.info({ agencyId, limit }, 'GET /subscriptions/:agencyId/invoices');
@@ -253,7 +275,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/subscriptions/:agencyId/upgrade', async (request, reply) => {
     try {
-      const { agencyId } = request.params as { agencyId: string };
+      const agencyId = (request as any).principalAgencyId as string;
       const body = request.body as {
         newTier: SubscriptionTier;
         updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
@@ -307,7 +329,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/subscriptions/:agencyId/cancel', async (request, reply) => {
     try {
-      const { agencyId } = request.params as { agencyId: string };
+      const agencyId = (request as any).principalAgencyId as string;
       const body = request.body as {
         cancelAtPeriodEnd?: boolean;
       };
@@ -342,7 +364,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/subscriptions/:agencyId/update-seats', async (request, reply) => {
     try {
-      const { agencyId } = request.params as { agencyId: string };
+      const agencyId = (request as any).principalAgencyId as string;
       const body = request.body as {
         seatCount: number;
         updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';

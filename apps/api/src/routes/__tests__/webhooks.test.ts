@@ -7,6 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
+import fastifyRawBody from 'fastify-raw-body';
 import { webhookRoutes } from '../webhooks';
 
 // Mock dependencies
@@ -28,15 +29,39 @@ vi.mock('@/services/clerk-metadata.service', () => ({
     setSubscriptionTier: vi.fn(),
   },
 }));
+vi.mock('@/lib/creem', () => ({
+  creem: {
+    verifyWebhookSignature: vi.fn(() => true),
+  },
+}));
 
 import { prisma } from '@/lib/prisma';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
+import { creem } from '@/lib/creem';
 
 describe('Webhook Routes - TDD Tests', () => {
   let app: FastifyInstance;
+  const signedHeaders = {
+    'x-creem-signature': 't=1234567890,v1=test-signature',
+  };
+
+  const injectSigned = (options: Record<string, any>) =>
+    app.inject({
+      ...options,
+      headers: {
+        ...signedHeaders,
+        ...(options.headers || {}),
+      },
+    });
 
   beforeEach(async () => {
     app = Fastify();
+    await app.register(fastifyRawBody, {
+      field: 'rawBody',
+      global: false,
+      encoding: 'utf8',
+      runFirst: true,
+    });
     await app.register(webhookRoutes, { prefix: '/api' });
     vi.clearAllMocks();
 
@@ -52,6 +77,7 @@ describe('Webhook Routes - TDD Tests', () => {
       data: { tier: 'AGENCY' },
       error: null,
     });
+    (creem.verifyWebhookSignature as any).mockReturnValue(true);
   });
 
   afterEach(async () => {
@@ -67,7 +93,7 @@ describe('Webhook Routes - TDD Tests', () => {
           id: 'sub_123',
           status: 'active',
           customer_id: 'cus_123',
-          price_id: 'price_agency_monthly',
+          price_id: 'prod_11NeEMY6WtGEkdnvdd7obj',
           current_period_start: '2024-01-01T00:00:00.000Z',
           current_period_end: '2024-02-01T00:00:00.000Z',
         },
@@ -75,7 +101,7 @@ describe('Webhook Routes - TDD Tests', () => {
     };
 
     it('should handle subscription.created event', async () => {
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: validPayload,
@@ -87,13 +113,64 @@ describe('Webhook Routes - TDD Tests', () => {
       expect(payload.processed).toBe(true);
     });
 
+    it('should return 401 when signature header is missing', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: validPayload,
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return 401 when signature verification fails', async () => {
+      (creem.verifyWebhookSignature as any).mockReturnValue(false);
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: validPayload,
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should verify signature using raw request body bytes', async () => {
+      const rawPayload = `{
+  "id": "evt_123",
+  "type": "subscription.created",
+  "data": {
+    "subscription": {
+      "id": "sub_123",
+      "status": "active",
+      "customer_id": "cus_123",
+      "price_id": "prod_11NeEMY6WtGEkdnvdd7obj",
+      "current_period_start": "2024-01-01T00:00:00.000Z",
+      "current_period_end": "2024-02-01T00:00:00.000Z"
+    }
+  }
+}`;
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: rawPayload,
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(creem.verifyWebhookSignature).toHaveBeenCalledWith(rawPayload, expect.any(String));
+    });
+
     it('should handle subscription.updated event', async () => {
       const updatePayload = {
         ...validPayload,
         type: 'subscription.updated',
       };
 
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: updatePayload,
@@ -105,8 +182,8 @@ describe('Webhook Routes - TDD Tests', () => {
       expect(payload.processed).toBe(true);
     });
 
-    it('should map price_agency_monthly to AGENCY tier', async () => {
-      const response = await app.inject({
+    it('should map prod_11NeEMY6WtGEkdnvdd7obj to AGENCY tier', async () => {
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: validPayload,
@@ -122,18 +199,18 @@ describe('Webhook Routes - TDD Tests', () => {
       );
     });
 
-    it('should map price_pro_yearly to PRO tier', async () => {
+    it('should map prod_tbd to PRO tier', async () => {
       const proPayload = {
         ...validPayload,
         data: {
           subscription: {
             ...validPayload.data.subscription,
-            price_id: 'price_pro_yearly',
+            price_id: 'prod_tbd',
           },
         },
       };
 
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: proPayload,
@@ -149,7 +226,7 @@ describe('Webhook Routes - TDD Tests', () => {
     it('should return duplicate=true for idempotent requests', async () => {
       (prisma.auditLog.findFirst as any).mockResolvedValue({ id: 'existing-log' });
 
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: validPayload,
@@ -174,7 +251,7 @@ describe('Webhook Routes - TDD Tests', () => {
         },
       };
 
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: invalidPayload,
@@ -186,7 +263,7 @@ describe('Webhook Routes - TDD Tests', () => {
     });
 
     it('should log webhook to audit log', async () => {
-      await app.inject({
+      await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: validPayload,
@@ -202,7 +279,7 @@ describe('Webhook Routes - TDD Tests', () => {
     });
 
     it('should update agency subscriptionTier in database', async () => {
-      await app.inject({
+      await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: validPayload,
@@ -222,12 +299,12 @@ describe('Webhook Routes - TDD Tests', () => {
           subscription: {
             ...validPayload.data.subscription,
             status: 'canceled',
-            price_id: 'price_starter_monthly',
+            price_id: 'prod_4SUPfON3XwTo5SKOJzN2dH',
           },
         },
       };
 
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: cancelPayload,
@@ -246,7 +323,7 @@ describe('Webhook Routes - TDD Tests', () => {
     it('should handle agency not found gracefully', async () => {
       (prisma.agency.findFirst as any).mockResolvedValue(null);
 
-      const response = await app.inject({
+      const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: validPayload,
@@ -269,7 +346,7 @@ describe('Webhook Routes - TDD Tests', () => {
         },
       };
 
-      await app.inject({
+      await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
         payload: trialPayload,
@@ -294,7 +371,7 @@ describe('Webhook Routes - TDD Tests', () => {
           id: 'sub_123',
           status: 'active' as const,
           customer_id: 'cus_123',
-          price_id: 'price_agency_monthly',
+          price_id: 'prod_11NeEMY6WtGEkdnvdd7obj',
           current_period_start: '2024-01-01T00:00:00.000Z',
           current_period_end: '2024-02-01T00:00:00.000Z',
         },
@@ -302,7 +379,7 @@ describe('Webhook Routes - TDD Tests', () => {
     };
 
     it('should map all starter price IDs', async () => {
-      const starterPrices = ['price_starter_monthly', 'price_starter_yearly'];
+      const starterPrices = ['prod_4SUPfON3XwTo5SKOJzN2dH', 'prod_6Hyydvn6jh0numRxJecMol'];
 
       for (const priceId of starterPrices) {
         const payload = {
@@ -315,7 +392,7 @@ describe('Webhook Routes - TDD Tests', () => {
           },
         };
 
-        await app.inject({
+        await injectSigned({
           method: 'POST',
           url: '/api/webhooks/creem',
           payload,
@@ -330,7 +407,7 @@ describe('Webhook Routes - TDD Tests', () => {
     });
 
     it('should map all agency price IDs', async () => {
-      const agencyPrices = ['price_agency_monthly', 'price_agency_yearly'];
+      const agencyPrices = ['prod_11NeEMY6WtGEkdnvdd7obj', 'prod_4vNvJn99RTRwhkMeHgkBT7'];
 
       for (const priceId of agencyPrices) {
         vi.clearAllMocks();
@@ -344,7 +421,7 @@ describe('Webhook Routes - TDD Tests', () => {
           },
         };
 
-        await app.inject({
+        await injectSigned({
           method: 'POST',
           url: '/api/webhooks/creem',
           payload,
@@ -359,7 +436,7 @@ describe('Webhook Routes - TDD Tests', () => {
     });
 
     it('should map all pro price IDs', async () => {
-      const proPrices = ['price_pro_monthly', 'price_pro_yearly'];
+      const proPrices = ['prod_tbd', 'prod_tbd'];
 
       for (const priceId of proPrices) {
         vi.clearAllMocks();
@@ -373,7 +450,7 @@ describe('Webhook Routes - TDD Tests', () => {
           },
         };
 
-        await app.inject({
+        await injectSigned({
           method: 'POST',
           url: '/api/webhooks/creem',
           payload,

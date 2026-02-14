@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
 import { SubscriptionTier } from '@agency-platform/shared';
 import { getTierFromProductId } from '@/config/creem.config';
+import { creem } from '@/lib/creem';
 
 type CreemEvent = {
   id: string;
@@ -36,8 +37,19 @@ export async function webhookRoutes(fastify: FastifyInstance) {
    *
    * Idempotent: Duplicate events are detected via audit log and ignored.
    */
-  fastify.post('/webhooks/creem', async (request, reply) => {
+  fastify.post('/webhooks/creem', { config: { rawBody: true } }, async (request, reply) => {
     const payload = request.body as CreemEvent;
+    const signatureHeader =
+      (request.headers['x-creem-signature'] as string | undefined) ||
+      (request.headers['creem-signature'] as string | undefined);
+    const rawBody = (request as any).rawBody;
+    const payloadString = typeof rawBody === 'string' ? rawBody : JSON.stringify(payload ?? {});
+
+    if (!signatureHeader || !creem.verifyWebhookSignature(payloadString, signatureHeader)) {
+      return reply.code(401).send({
+        error: 'Invalid webhook signature',
+      });
+    }
 
     try {
       // Check for idempotency - prevent duplicate processing

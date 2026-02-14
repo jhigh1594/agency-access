@@ -7,13 +7,17 @@
 
 import { FastifyInstance } from 'fastify';
 import { getDashboardStats } from '../services/connection-aggregation.service.js';
-import { agencyResolutionService } from '../services/agency-resolution.service.js';
 import { accessRequestService } from '../services/access-request.service.js';
 import { connectionService } from '../services/connection.service.js';
 import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
 import { createHash } from 'crypto';
+import { authenticate } from '@/middleware/auth.js';
+import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { prisma } from '@/lib/prisma.js';
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
+  fastify.addHook('onRequest', authenticate());
+
   /**
    * GET /api/dashboard
    *
@@ -27,63 +31,32 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
    * - connections: Active client connections with authorizations
    */
   fastify.get('/dashboard', async (request, reply) => {
-    // Try to get clerkUserId from query param first (for backward compatibility)
-    let clerkUserId = (request.query as any).clerkUserId as string | undefined;
-
-    // If not in query, try decoding from x-agency-id header (JWT)
-    if (!clerkUserId) {
-      const token = request.headers['x-agency-id'] as string;
-      if (token) {
-        // Check if it looks like a JWT (has 3 parts separated by dots)
-        if (token.split('.').length === 3) {
-          try {
-            // Try verified decode using Clerk's verification
-            const { verifyToken } = await import('@clerk/backend');
-            const verified = await verifyToken(token, {
-              jwtKey: process.env.CLERK_SECRET_KEY,
-            });
-            clerkUserId = verified?.sub;
-          } catch (verifyError) {
-            // Verification failed - try unverified decode for development
-            try {
-              const parts = token.split('.');
-              const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-              clerkUserId = payload.sub;
-            } catch (decodeError) {
-              // Both attempts failed
-            }
-          }
-        } else {
-          // Not a JWT format, treat as raw user ID
-          clerkUserId = token;
-        }
-      }
-    }
-
-    if (!clerkUserId) {
-      return reply.code(401).send({
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      return reply.code(statusCode).send({
         data: null,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'clerkUserId is required (via query param or x-agency-id header)',
+        error: principalResult.error || {
+          code: 'FORBIDDEN',
+          message: 'Unable to resolve agency for authenticated user',
         },
       });
     }
 
-    // Resolve agency ONCE (prevents duplicate lookups)
-    const agencyResult = await agencyResolutionService.resolveAgency(clerkUserId);
-
-    if (agencyResult.error || !agencyResult.data) {
+    const agencyId = principalResult.data.agencyId;
+    const agency = await prisma.agency.findUnique({
+      where: { id: agencyId },
+      select: { id: true, name: true, email: true },
+    });
+    if (!agency) {
       return reply.code(404).send({
         data: null,
-        error: agencyResult.error || {
+        error: {
           code: 'AGENCY_NOT_FOUND',
           message: 'Agency not found',
         },
       });
     }
-
-    const { agencyId, agency } = agencyResult.data;
 
     // Use caching layer for dashboard data
     const cacheKey = CacheKeys.dashboard(agencyId);
@@ -120,9 +93,9 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         return {
           data: {
             agency: {
-              id: agency!.id,
-              name: agency!.name,
-              email: agency!.email,
+              id: agency.id,
+              name: agency.name,
+              email: agency.email,
             },
             stats: statsResult.data!,
             requests: requestsResult.data!,
@@ -182,27 +155,22 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/dashboard/stats', async (request, reply) => {
     const { agencyId: queryAgencyId } = request.query as { agencyId?: string };
-
-    // Fallback to agency ID from header if not in query
-    const clerkUserId = request.headers['x-agency-id'] as string;
-
-    let targetAgencyId = queryAgencyId;
-
-    if (!targetAgencyId && clerkUserId) {
-      const agencyResult = await agencyResolutionService.resolveAgency(clerkUserId);
-      if (!agencyResult.error && agencyResult.data) {
-        targetAgencyId = agencyResult.data.agencyId;
-      }
-    }
-
-    if (!targetAgencyId) {
-      return reply.code(400).send({
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      return reply.code(statusCode).send({
         data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required (via query param or x-agency-id header)',
+        error: principalResult.error || {
+          code: 'FORBIDDEN',
+          message: 'Unable to resolve agency for authenticated user',
         },
       });
+    }
+    const principalAgencyId = principalResult.data.agencyId;
+    const targetAgencyId = queryAgencyId || principalAgencyId;
+    const accessError = assertAgencyAccess(targetAgencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     const result = await getDashboardStats(targetAgencyId);

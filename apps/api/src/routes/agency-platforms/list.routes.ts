@@ -4,6 +4,7 @@ import { agencyPlatformService } from '@/services/agency-platform.service';
 import { PLATFORM_NAMES, getPlatformCategory, SUPPORTED_PLATFORMS } from './constants.js';
 import { createHash } from 'crypto';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 export async function registerListRoutes(fastify: FastifyInstance) {
   /**
@@ -17,6 +18,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
       clerkUserId?: string;
       status?: string;
     };
+    const principalAgencyId = (request as any).principalAgencyId as string;
 
     let actualAgencyId = agencyId;
 
@@ -38,18 +40,14 @@ export async function registerListRoutes(fastify: FastifyInstance) {
       actualAgencyId = agency.id;
     }
 
-    if (!actualAgencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId or clerkUserId is required',
-        },
-      });
+    const targetAgencyId = actualAgencyId || principalAgencyId;
+    const accessError = assertAgencyAccess(targetAgencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     const filters = status ? { status } : undefined;
-    const result = await agencyPlatformService.getConnections(actualAgencyId, filters);
+    const result = await agencyPlatformService.getConnections(targetAgencyId, filters);
 
     if (result.error) {
       return reply.code(500).send(result);
@@ -69,6 +67,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/agency-platforms/available', async (request, reply) => {
     const { agencyId } = request.query as { agencyId?: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
 
     if (!agencyId) {
       return reply.code(400).send({
@@ -102,6 +101,11 @@ export async function registerListRoutes(fastify: FastifyInstance) {
       }
 
       actualAgencyId = agencyResult.data!.agencyId;
+    }
+
+    const accessError = assertAgencyAccess(actualAgencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     // Use caching layer for platform connections

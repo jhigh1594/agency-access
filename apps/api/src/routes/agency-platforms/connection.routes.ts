@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { PLATFORM_CONNECTORS } from './constants.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 export async function registerConnectionRoutes(fastify: FastifyInstance) {
   /**
@@ -22,6 +23,12 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
           message: 'agencyId and revokedBy are required',
         },
       });
+    }
+
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     const result = await agencyPlatformService.revokeConnection(
@@ -54,6 +61,12 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
           message: 'agencyId is required',
         },
       });
+    }
+
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, platform);

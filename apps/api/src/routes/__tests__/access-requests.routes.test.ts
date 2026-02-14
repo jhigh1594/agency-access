@@ -10,10 +10,33 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { accessRequestRoutes } from '../access-requests.js';
 import * as accessRequestService from '@/services/access-request.service';
 import * as agencyPlatformService from '@/services/agency-platform.service';
+import * as authorization from '@/lib/authorization.js';
 
 // Mock services
 vi.mock('@/services/access-request.service');
 vi.mock('@/services/agency-platform.service');
+vi.mock('@/lib/authorization.js');
+vi.mock('@/services/quota.service', () => ({
+  quotaService: {
+    checkQuota: vi.fn().mockResolvedValue({
+      allowed: true,
+      current: 0,
+      limit: 100,
+      remaining: 100,
+      metric: 'access_requests',
+    }),
+  },
+  QuotaExceededError: class extends Error {
+    toJSON() {
+      return { error: { code: 'QUOTA_EXCEEDED', message: 'Quota exceeded' } };
+    }
+  },
+}));
+vi.mock('@/middleware/auth.js', () => ({
+  authenticate: () => async (request: any) => {
+    request.user = { sub: 'user_123' };
+  },
+}));
 
 // Mock Redis to prevent connection attempts in tests
 vi.mock('@/lib/redis', () => ({
@@ -32,6 +55,19 @@ describe('Access Requests Routes - Platform Connection Validation', () => {
     app = Fastify();
     await app.register(accessRequestRoutes);
     vi.clearAllMocks();
+    vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+      data: { agencyId: 'agency-1', principalId: 'user_123' },
+      error: null,
+    });
+    vi.mocked(authorization.assertAgencyAccess).mockImplementation((requested, principal) => {
+      if (requested !== principal) {
+        return {
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this agency resource',
+        };
+      }
+      return null;
+    });
   });
 
   afterEach(async () => {

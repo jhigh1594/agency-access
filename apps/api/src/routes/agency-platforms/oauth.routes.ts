@@ -8,6 +8,7 @@ import type { PlatformConnector } from '@/services/connectors/factory';
 import { ConnectorError } from '@/services/connectors/base.connector.js';
 import { env } from '@/lib/env';
 import { PLATFORM_CONNECTORS, SUPPORTED_PLATFORMS, MANUAL_PLATFORMS } from './constants.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 // Meta business accounts response type
 interface MetaBusinessAccountsResponse {
@@ -53,6 +54,12 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
           message: 'agencyId and userEmail are required',
         },
       });
+    }
+
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     const stateResult = await oauthStateService.createState({

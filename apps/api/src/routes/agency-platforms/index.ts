@@ -6,37 +6,34 @@ import { registerIdentityRoutes } from './identity.routes.js';
 import { registerManualRoutes } from './manual.routes.js';
 import { registerAssetRoutes } from './assets.routes.js';
 import { pinterestRoutes } from './pinterest.routes.js';
+import { authenticate } from '@/middleware/auth.js';
+import { resolvePrincipalAgency } from '@/lib/authorization.js';
 
 export async function agencyPlatformsRoutes(fastify: FastifyInstance) {
-  /**
-   * Middleware: Auto-provision agency if it doesn't exist
-   * This allows new users to connect platforms without manually creating an agency first
-   *
-   * NOTE: This middleware is deprecated in favor of using agencyResolutionService
-   * directly in route handlers. Keeping for backward compatibility but should be removed.
-   */
   fastify.addHook('onRequest', async (request, reply) => {
-    const { agencyId: queryAgencyId } = request.query as { agencyId?: string };
-    const body = request.body as { agencyId?: string } | undefined;
-    const bodyAgencyId = body?.agencyId;
-    const agencyId = queryAgencyId || bodyAgencyId;
-
-    if (!agencyId) {
+    // OAuth provider callbacks cannot include bearer auth, state token handles CSRF.
+    if (/^\/agency-platforms\/[^/]+\/callback(?:\?|$)/.test(request.raw.url || '')) {
       return;
     }
 
-    const { agencyResolutionService } = await import('../../services/agency-resolution.service.js');
-    const result = await agencyResolutionService.resolveAgency(agencyId, {
-      createIfMissing: true,
-    });
+    const authMiddleware = authenticate();
+    await authMiddleware(request, reply);
+    if (reply.sent) return;
 
-    if (result.error) {
-      fastify.log.warn({
-        msg: 'Agency resolution failed in middleware',
-        error: result.error,
-        agencyId,
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      return reply.code(statusCode).send({
+        data: null,
+        error: principalResult.error || {
+          code: 'FORBIDDEN',
+          message: 'Unable to resolve agency for authenticated user',
+        },
       });
     }
+
+    (request as any).principalAgencyId = principalResult.data.agencyId;
+    (request as any).agencyId = principalResult.data.agencyId;
   });
 
   await registerListRoutes(fastify);

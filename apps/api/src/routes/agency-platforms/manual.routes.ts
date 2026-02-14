@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
 import type { Platform } from '@agency-platform/shared';
 import { PLATFORM_NAMES, MANUAL_PLATFORMS } from './constants.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 export async function registerManualRoutes(fastify: FastifyInstance) {
   /**
@@ -34,6 +35,12 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
           message: 'agencyId is required',
         },
       });
+    }
+
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     // Pinterest requires businessId, other platforms require invitationEmail
@@ -203,6 +210,12 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
           message: 'agencyId is required',
         },
       });
+    }
+
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     // Pinterest requires businessId, other platforms require invitationEmail

@@ -12,6 +12,7 @@ import { agencyPlatformService } from '../../services/agency-platform.service.js
 import { oauthStateService } from '../../services/oauth-state.service.js';
 import { metaAssetsService } from '../../services/meta-assets.service.js';
 import { MetaConnector } from '../../services/connectors/meta.js';
+import * as authorization from '../../lib/authorization.js';
 
 // Mock services
 vi.mock('../../services/agency-platform.service.js', () => ({
@@ -37,6 +38,12 @@ vi.mock('../../services/oauth-state.service.js', () => ({
   oauthStateService: {
     createState: vi.fn(),
     validateState: vi.fn(),
+  },
+}));
+vi.mock('../../lib/authorization.js');
+vi.mock('../../middleware/auth.js', () => ({
+  authenticate: () => async (request: any) => {
+    request.user = { sub: 'user_123' };
   },
 }));
 
@@ -79,6 +86,19 @@ describe('Agency Platforms Routes', () => {
     app = Fastify();
     await app.register(agencyPlatformsRoutes);
     vi.clearAllMocks();
+    vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+      data: { agencyId: 'agency-1', principalId: 'user_123' },
+      error: null,
+    });
+    vi.mocked(authorization.assertAgencyAccess).mockImplementation((requested, principal) => {
+      if (requested !== principal) {
+        return {
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this agency resource',
+        };
+      }
+      return null;
+    });
   });
 
   afterEach(async () => {
@@ -138,14 +158,19 @@ describe('Agency Platforms Routes', () => {
       });
     });
 
-    it('should return 400 if agencyId is missing', async () => {
+    it('should fallback to principal agency when agencyId is missing', async () => {
+      vi.mocked(agencyPlatformService.getConnections).mockResolvedValue({
+        data: [] as any,
+        error: null,
+      });
+
       const response = await app.inject({
         method: 'GET',
         url: '/agency-platforms',
       });
 
-      expect(response.statusCode).toBe(400);
-      expect(response.json().error).toBeDefined();
+      expect(response.statusCode).toBe(200);
+      expect(agencyPlatformService.getConnections).toHaveBeenCalledWith('agency-1', undefined);
     });
 
     it('should handle service errors', async () => {
@@ -505,7 +530,7 @@ describe('Agency Platforms Routes', () => {
       }
 
       expect(response.statusCode).toBe(302); // Redirect
-      expect(response.headers.location).toContain('https://app.example.com/settings/platforms');
+      expect(response.headers.location).toContain('/platforms/callback?success=true&platform=meta');
 
       // Verify state was validated
       expect(oauthStateService.validateState).toHaveBeenCalledWith('state-token-123');

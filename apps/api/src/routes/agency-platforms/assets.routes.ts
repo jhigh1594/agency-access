@@ -6,6 +6,7 @@ import { googleAssetsService } from '@/services/google-assets.service';
 import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
 import type { GoogleAccountsResponse } from '@/services/connectors/google';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 interface MetaBusinessAccountsResponse {
   businesses: Array<{
@@ -18,6 +19,16 @@ interface MetaBusinessAccountsResponse {
 }
 
 export async function registerAssetRoutes(fastify: FastifyInstance) {
+  const ensureAgencyAccess = (request: any, reply: any, agencyId: string): boolean => {
+    const principalAgencyId = request.principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      reply.code(403).send({ data: null, error: accessError });
+      return false;
+    }
+    return true;
+  };
+
   /**
    * GET /agency-platforms/google/accounts
    * Fetch all Google accounts for an agency's Google connection
@@ -37,6 +48,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, 'google');
 
@@ -135,6 +147,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
 
@@ -230,6 +243,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     try {
       const result = await metaAssetsService.saveBusinessPortfolio(agencyId, businessId, businessName);
@@ -283,6 +297,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await metaAssetsService.saveBusinessPortfolio(agencyId, businessId, businessName);
 
@@ -312,6 +327,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await metaAssetsService.saveAssetSettings(agencyId, settings);
 
@@ -338,6 +354,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await metaAssetsService.getAssetSettings(agencyId);
 
@@ -362,6 +379,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await metaAssetsService.getAssetsForBusiness(agencyId, businessId);
 
@@ -385,6 +403,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
     if (connectionResult.error || !connectionResult.data) {
@@ -437,6 +456,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: { code: 'VALIDATION_ERROR', message: 'agencyId and selections are required' },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await metaAssetsService.saveAssetSelections(agencyId, selections);
 
@@ -463,6 +483,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await googleAssetsService.getAssetSettings(agencyId);
 
@@ -492,6 +513,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await googleAssetsService.saveAssetSettings(agencyId, settings);
 
@@ -523,6 +545,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const result = await googleAssetsService.saveAccountSelection(
       agencyId,

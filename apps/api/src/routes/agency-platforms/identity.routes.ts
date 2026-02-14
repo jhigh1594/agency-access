@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { identityVerificationService } from '@/services/identity-verification.service';
 import { SUPPORTED_PLATFORMS } from './constants.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 export async function registerIdentityRoutes(fastify: FastifyInstance) {
   /**
@@ -24,6 +25,12 @@ export async function registerIdentityRoutes(fastify: FastifyInstance) {
           message: 'agencyId, platform, and connectedBy are required',
         },
       });
+    }
+
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
     }
 
     if (!SUPPORTED_PLATFORMS.includes(platform as any)) {

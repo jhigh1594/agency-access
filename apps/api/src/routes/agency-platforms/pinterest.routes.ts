@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
+import { assertAgencyAccess } from '@/lib/authorization.js';
 
 /**
  * Pinterest agency platform routes
@@ -58,6 +59,11 @@ export async function pinterestRoutes(fastify: FastifyInstance) {
       agencyId: string;
       businessId: string;
     };
+    const principalAgencyId = request.principalAgencyId as string;
+    const accessError = assertAgencyAccess(agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
+    }
 
     // Get existing connection
     const connection = await prisma.agencyPlatformConnection.findFirst({

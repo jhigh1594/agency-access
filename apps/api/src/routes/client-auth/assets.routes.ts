@@ -8,10 +8,59 @@ import type { Platform } from '@agency-platform/shared';
 import { adAccountsSharedSchema, grantPagesAccessSchema, saveAssetsSchema } from './schemas.js';
 
 export async function registerAssetRoutes(fastify: FastifyInstance) {
+  async function resolveAuthorizedConnection(token: string, connectionId: string) {
+    const accessRequest = await accessRequestService.getAccessRequestByToken(token);
+    if (accessRequest.error || !accessRequest.data) {
+      return {
+        accessRequest: null,
+        connection: null,
+        error: {
+          code: 'ACCESS_REQUEST_NOT_FOUND',
+          message: 'Access request not found',
+        },
+      };
+    }
+
+    const connection = await prisma.clientConnection.findUnique({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      return {
+        accessRequest: accessRequest.data,
+        connection: null,
+        error: {
+          code: 'CONNECTION_NOT_FOUND',
+          message: 'Client connection not found',
+        },
+      };
+    }
+
+    const isAuthorizedConnection =
+      connection.accessRequestId === accessRequest.data.id &&
+      connection.agencyId === accessRequest.data.agencyId;
+
+    if (!isAuthorizedConnection) {
+      return {
+        accessRequest: accessRequest.data,
+        connection: null,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Connection does not belong to this access request',
+        },
+      };
+    }
+
+    return {
+      accessRequest: accessRequest.data,
+      connection,
+      error: null,
+    };
+  }
+
   // Save selected assets for a platform
   fastify.post('/client/:token/save-assets', async (request, reply) => {
     const { token } = request.params as { token: string };
-    void token;
 
     const validated = saveAssetsSchema.safeParse(request.body);
     if (!validated.success) {
@@ -28,16 +77,15 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { connectionId, platform, selectedAssets } = validated.data;
 
     try {
-      const connection = await prisma.clientConnection.findUnique({
-        where: { id: connectionId },
-      });
-
-      if (!connection) {
-        return reply.code(404).send({
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
           data: null,
-          error: { code: 'NOT_FOUND', message: 'Connection not found' },
+          error: authContext.error,
         });
       }
+      const connection = authContext.connection;
 
       const currentGrantedAssets = (connection.grantedAssets as any) || {};
       const updatedGrantedAssets = {
@@ -139,30 +187,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { connectionId, pageIds } = validated.data;
 
     try {
-      const accessRequest = await accessRequestService.getAccessRequestByToken(token);
-      if (accessRequest.error || !accessRequest.data) {
-        return reply.code(404).send({
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
           data: null,
-          error: {
-            code: 'ACCESS_REQUEST_NOT_FOUND',
-            message: 'Access request not found',
-          },
+          error: authContext.error,
         });
       }
-
-      const connection = await prisma.clientConnection.findUnique({
-        where: { id: connectionId },
-      });
-
-      if (!connection) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'CONNECTION_NOT_FOUND',
-            message: 'Client connection not found',
-          },
-        });
-      }
+      const connection = authContext.connection;
+      const accessRequest = authContext.accessRequest;
 
       const platformAuth = await prisma.platformAuthorization.findUnique({
         where: {
@@ -207,7 +241,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
         where: {
           agencyId_platform: {
-            agencyId: accessRequest.data.agencyId,
+            agencyId: accessRequest.agencyId,
             platform: 'meta',
           },
         },
@@ -311,7 +345,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       await auditService.createAuditLog({
-        agencyId: accessRequest.data.agencyId,
+        agencyId: accessRequest.agencyId,
         action: 'PAGES_ACCESS_GRANTED',
         userEmail: connection.clientEmail,
         resourceType: 'client_connection',
@@ -427,30 +461,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { connectionId, sharedAdAccountIds } = validated.data;
 
     try {
-      const accessRequest = await accessRequestService.getAccessRequestByToken(token);
-      if (accessRequest.error || !accessRequest.data) {
-        return reply.code(404).send({
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
           data: null,
-          error: {
-            code: 'ACCESS_REQUEST_NOT_FOUND',
-            message: 'Access request not found',
-          },
+          error: authContext.error,
         });
       }
-
-      const connection = await prisma.clientConnection.findUnique({
-        where: { id: connectionId },
-      });
-
-      if (!connection) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'CONNECTION_NOT_FOUND',
-            message: 'Client connection not found',
-          },
-        });
-      }
+      const connection = authContext.connection;
+      const accessRequest = authContext.accessRequest;
 
       const currentGrantedAssets = (connection.grantedAssets as any) || {};
       const updatedGrantedAssets = {
@@ -469,7 +489,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       await auditService.createAuditLog({
-        agencyId: accessRequest.data.agencyId,
+        agencyId: accessRequest.agencyId,
         action: 'AD_ACCOUNTS_SHARED_MANUALLY',
         userEmail: connection.clientEmail,
         resourceType: 'client_connection',
@@ -497,12 +517,29 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Fetch client assets using connection (for display purposes only)
-  fastify.get('/client-assets/:connectionId/:platform', async (request, reply) => {
-    const { connectionId, platform: platformParam } = request.params as {
-      connectionId: string;
+  // Fetch client assets using token-scoped connection authorization
+  fastify.get('/client/:token/assets/:platform', async (request, reply) => {
+    const { token, platform: platformParam } = request.params as {
+      token: string;
       platform: string;
     };
+    const { connectionId } = request.query as { connectionId?: string };
+
+    if (!connectionId) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'connectionId query parameter is required',
+        },
+      });
+    }
+
+    const authContext = await resolveAuthorizedConnection(token, connectionId);
+    if (authContext.error) {
+      const statusCode = authContext.error.code === 'FORBIDDEN' ? 403 : 404;
+      return reply.code(statusCode).send({ data: null, error: authContext.error });
+    }
 
     const platformMap: Record<string, Platform> = {
       google_ads: 'google',

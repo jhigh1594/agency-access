@@ -254,20 +254,21 @@ export async function getClientsWithConnections(
     ];
   }
 
-  // Get clients with their connections and authorizations
+  // Get clients with only their latest access request (list view needs status/platforms from latest only)
   const [clients, total] = await Promise.all([
     prisma.client.findMany({
       where,
       include: {
         accessRequests: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
           include: {
             connection: {
               include: {
-                authorizations: true,
+                authorizations: { select: { platform: true } },
               },
             },
           },
-          orderBy: { createdAt: 'desc' },
         },
       },
       take: limit,
@@ -277,7 +278,7 @@ export async function getClientsWithConnections(
     prisma.client.count({ where }),
   ]);
 
-  // Transform to enriched format
+  // Transform to enriched format (one request per client due to take: 1)
   const enrichedClients = clients.map((client) => {
     const requests = client.accessRequests || [];
     const latestRequest = requests[0];
@@ -303,7 +304,7 @@ export async function getClientsWithConnections(
       company: client.company,
       platforms: authorizations.map((auth) => auth.platform),
       status,
-      connectionCount: requests.filter(r => r.connection).length,
+      connectionCount: connection ? 1 : 0,
       lastActivityAt: latestRequest?.createdAt || client.createdAt,
       createdAt: client.createdAt,
     };

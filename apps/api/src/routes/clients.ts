@@ -21,6 +21,8 @@ import {
 import type { ClientLanguage } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
 import { quotaMiddleware } from '@/middleware/quota.middleware';
+import { authenticate } from '@/middleware/auth.js';
+import { resolvePrincipalAgency } from '@/lib/authorization.js';
 
 // Validation schemas
 const createClientSchema = z.object({
@@ -56,37 +58,22 @@ export async function clientRoutes(fastify: FastifyInstance) {
     });
   });
 
-  // Authentication hook - verifies x-agency-id header and auto-provisions agency
+  fastify.addHook('onRequest', authenticate());
+
+  // Resolve principal agency from verified auth context
   fastify.addHook('onRequest', async (request, reply) => {
-    const clerkUserId = request.headers['x-agency-id'] as string;
-
-    if (!clerkUserId) {
-      return reply.code(401).send({
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'x-agency-id header is required',
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      return reply.code(statusCode).send({
+        error: principalResult.error || {
+          code: 'FORBIDDEN',
+          message: 'Unable to resolve agency for authenticated user',
         },
       });
     }
 
-    // Resolve agency using centralized service (prevents duplicates)
-    const { agencyResolutionService } = await import('../services/agency-resolution.service.js');
-    const agencyResult = await agencyResolutionService.getOrCreateAgency(clerkUserId, {
-      userEmail: `${clerkUserId}@clerk.temp`, // Will be improved with actual Clerk user data
-      agencyName: 'My Agency',
-    });
-
-    if (agencyResult.error) {
-      return reply.code(400).send({
-        error: {
-          code: agencyResult.error.code,
-          message: agencyResult.error.message,
-        },
-      });
-    }
-
-    // Attach the actual agency UUID to request for use in route handlers
-    (request as any).agencyId = agencyResult.data!.agencyId;
+    (request as any).agencyId = principalResult.data.agencyId;
   });
 
   /**
