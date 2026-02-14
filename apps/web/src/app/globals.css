@@ -740,120 +740,181 @@ html.animations-ready .animate-float-pillar {
   background: rgb(var(--muted));
 }
 
-/* ========================================
-   Clerk Modal Styling - Larger and Centered
-   ======================================== */
+@layer clerk {
+  .clerk-hidden,
+  .cl-formFieldRow__firstName,
+  .cl-formFieldRow__lastName,
+  .cl-formField__firstName,
+  .cl-formField__lastName,
+  .cl-formField__first_name,
+  .cl-formField__last_name {
+    display: none !important;
+  }
 
-/* Modal backdrop - force full viewport and flex centering */
-.cl-modalBackdrop {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 2rem !important;
-}
+  .cl-formFieldRow:has(input[name="firstName"]),
+  .cl-formFieldRow:has(input[name="lastName"]),
+  .cl-formFieldRow:has(input[name="first_name"]),
+  .cl-formFieldRow:has(input[name="last_name"]),
+  .cl-formFieldRow:has(input[autocomplete="given-name"]),
+  .cl-formFieldRow:has(input[autocomplete="family-name"]) {
+    display: none !important;
+  }
 
-/* Modal content - ensure it centers within backdrop */
-.cl-modalContent {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  max-width: 600px !important;
-}
+  .clerk-social-button,
+  .cl-socialButtonsBlockButton {
+    min-height: 50px !important;
+    border: 2px solid rgb(var(--border-hard)) !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: rgb(var(--foreground)) !important;
+    font-weight: 700 !important;
+    padding: 0.75rem 1.125rem !important;
+    box-shadow: 2px 2px 0 rgb(var(--shadow-hard)) !important;
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background-color 180ms ease !important;
+  }
 
-/* Card box - contains the card */
-.cl-cardBox {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  max-width: 600px !important;
-}
+  .clerk-social-button:hover,
+  .cl-socialButtonsBlockButton:hover {
+    border-color: rgb(var(--primary)) !important;
+    background: rgb(var(--accent)) !important;
+    box-shadow: none !important;
+    transform: translateX(2px) translateY(2px) !important;
+  }
 
-/* The card itself */
-.cl-card {
-  width: 100% !important;
-  max-width: 600px !important;
-  margin: 0 auto !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-}
+  .clerk-social-button-text,
+  .cl-socialButtonsBlockButtonText {
+    font-size: 1.125rem !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.01em !important;
+  }
 
-/* Root box - ensure full width */
-.cl-rootBox {
-  width: 100% !important;
-  max-width: 600px !important;
-  margin: 0 auto !important;
-}
+  .clerk-modal-close-button,
+  .cl-modalCloseButton {
+    width: 2rem !important;
+    height: 2rem !important;
+    border: 2px solid rgb(var(--border-hard)) !important;
+    border-radius: 0.5rem !important;
+    background: #ffffff !important;
+    color: rgb(var(--foreground)) !important;
+    box-shadow: 2px 2px 0 rgb(var(--shadow-hard)) !important;
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease !important;
+  }
 
-/* Footer cleanup */
-.cl-footer {
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0 !important;
-  padding: 0.625rem 1.5rem !important;
-  margin: 0 !important;
-  border-top: 1px solid rgb(var(--border) / 0.5) !important;
-  background-color: #ffffff !important;
-  box-sizing: border-box !important;
-  border-radius: 0 0 0.75rem 0.75rem !important;
-}
+  .clerk-modal-close-button:hover,
+  .cl-modalCloseButton:hover {
+    border-color: rgb(var(--primary)) !important;
+    background: rgb(var(--accent)) !important;
+    box-shadow: none !important;
+    transform: translateX(2px) translateY(2px) !important;
+  }
 
-/* Footer action section */
-.cl-footerAction {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0.25rem !important;
-  font-size: 0.8125rem !important;
-}
+  .clerk-modal-close-button:active,
+  .cl-modalCloseButton:active {
+    transform: translateX(2px) translateY(2px) scale(0.96) !important;
+  }
 
-.cl-footerActionText {
-  color: rgb(var(--muted-foreground)) !important;
-  font-size: 0.8125rem !important;
-}
+  .clerk-modal-close-button svg,
+  .cl-modalCloseButton svg {
+    width: 0.9rem !important;
+    height: 0.9rem !important;
+    stroke-width: 2.25 !important;
+  }
 
-.cl-footerActionLink {
-  color: rgb(var(--primary)) !important;
-  font-weight: 600 !important;
-  font-size: 0.8125rem !important;
-  text-decoration: none !important;
-}
+  .clerk-divider-row,
+  .cl-dividerRow {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    margin: 0.9rem 0 !important;
+  }
 
-.cl-footerActionLink:hover {
-  text-decoration: underline !important;
-}
+  .clerk-divider-line,
+  .cl-dividerLine {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    height: 1px !important;
+    border: 0 !important;
+    margin: 0 !important;
+    background: rgb(var(--border)) !important;
+  }
 
-/* Hide Clerk branding, "Development mode" text, and powered by section */
-.cl-internal-1dauvpw,
-.cl-internal-1v0alra,
-.cl-internal-1scq7x4,
-.cl-internal-1scxde7,
-.cl-internal-1k7jtru,
-.cl-internal-11sq9g0,
-.cl-internal-y44tp9,
-.cl-internal-zye28q {
-  display: none !important;
-}
+  .clerk-divider-text,
+  .cl-dividerText {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 0.2rem !important;
+    color: rgb(var(--muted-foreground)) !important;
+    font-size: 0.9rem !important;
+    line-height: 1 !important;
+  }
 
-/* Ensure card has proper background and overflow */
-.cl-card {
-  width: 100% !important;
-  max-width: 600px !important;
-  margin: 0 auto !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-  background-color: #ffffff !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  border-radius: 0.75rem !important;
+  .clerk-header-subtitle,
+  .cl-headerSubtitle {
+    margin-top: 0.4rem !important;
+    padding: 0.55rem 0.7rem !important;
+    border-radius: 6px !important;
+    border: 1px solid rgb(var(--primary) / 0.2) !important;
+    background: rgb(var(--accent)) !important;
+    color: rgb(var(--foreground)) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+  }
+
+  .cl-socialButtonsProviderIcon,
+  .cl-providerIcon {
+    width: 1.375rem !important;
+    height: 1.375rem !important;
+  }
+
+  .clerk-input,
+  .cl-formFieldInput,
+  .cl-input {
+    background: #ffffff !important;
+    border: 1px solid rgb(var(--border)) !important;
+    border-radius: 3px !important;
+    padding: 0.85rem 0.9rem !important;
+    min-height: 48px !important;
+    line-height: 1.25 !important;
+    box-shadow: none !important;
+  }
+
+  .clerk-input:focus,
+  .cl-formFieldInput:focus,
+  .cl-input:focus {
+    border-color: rgb(var(--primary)) !important;
+    box-shadow: 0 0 0 3px rgb(var(--primary) / 0.15) !important;
+    outline: none !important;
+  }
+
+  .clerk-form-button-primary,
+  .cl-formButtonPrimary {
+    min-height: 48px !important;
+    border-radius: 0.75rem !important;
+    border: 2px solid rgb(var(--border-hard)) !important;
+    background: rgb(var(--primary)) !important;
+    background-image: none !important;
+    color: rgb(var(--primary-foreground)) !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    box-shadow: 4px 4px 0 rgb(var(--shadow-hard)) !important;
+    transition: transform 200ms ease, background-color 200ms ease !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+
+  .clerk-form-button-primary:hover,
+  .cl-formButtonPrimary:hover {
+    transform: translateX(2px) translateY(2px);
+    box-shadow: none !important;
+    background: rgb(var(--primary) / 0.9) !important;
+  }
+
+  .clerk-form-button-primary:active,
+  .cl-formButtonPrimary:active {
+    transform: translateX(2px) translateY(2px) scale(0.97);
+    box-shadow: none !important;
+  }
 }
 
 /* ========================================

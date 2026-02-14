@@ -8,43 +8,57 @@ import { m } from 'framer-motion';
 interface Feature {
   name: string;
   included: boolean;
+  value?: string; // Why this matters - optional context
 }
 
 interface PricingTierCardProps {
-  tier?: 'STARTER' | 'AGENCY'; // Used for tier selection
+  tier?: 'GROWTH' | 'SCALE'; // Used for tier selection
   name: string;
   description: string;
+  persona?: string; // Who this is for - e.g., "For small teams"
   yearlyPrice: number;
   monthlyPrice: number;
   isYearly: boolean;
   isPopular?: boolean;
   isPro?: boolean;
   isFree?: boolean;
+  hasTrial?: boolean; // Whether this tier has a free trial (default: true for paid tiers)
   features: Feature[];
   buttonText: string;
   buttonVariant?: 'brutalist' | 'brutalist-rounded' | 'brutalist-ghost' | 'brutalist-ghost-rounded';
   billingInterval?: 'monthly' | 'yearly'; // Pass through for checkout
+  onUpgradeClick?: () => void; // Optional click handler for upsell CTAs
 }
 
 export function PricingTierCard({
   tier,
   name,
   description,
+  persona,
   yearlyPrice,
   monthlyPrice,
   isYearly,
   isPopular = false,
   isPro = false,
   isFree = false,
+  hasTrial = true, // Default to true for paid tiers
   features,
   buttonText,
   buttonVariant = 'brutalist',
   billingInterval = 'monthly',
+  onUpgradeClick,
 }: PricingTierCardProps) {
+  // Map display tier to backend tier (GROWTH -> STARTER, SCALE -> AGENCY)
+  const DISPLAY_TO_BACKEND: Record<string, string> = {
+    GROWTH: 'STARTER',
+    SCALE: 'AGENCY',
+  };
+
   // Store selected tier and billing interval when user clicks CTA
   const handleTierSelect = () => {
     if (tier) {
-      localStorage.setItem('selectedSubscriptionTier', tier);
+      const backendTier = DISPLAY_TO_BACKEND[tier] || tier;
+      localStorage.setItem('selectedSubscriptionTier', backendTier);
       localStorage.setItem('selectedBillingInterval', billingInterval);
     }
   };
@@ -57,12 +71,12 @@ export function PricingTierCard({
     ? 'Free forever'
     : (isYearly ? `$${yearlyDiscountedPrice} billed yearly` : 'billed monthly');
 
-  const cardBaseClasses = `relative border-2 transition-all duration-200 ${
+  const cardBaseClasses = `relative border-2 ${
     isPro
       ? 'bg-ink border-teal text-paper'
       : isFree
       ? '!bg-white !border-black dark:!bg-card'
-      : 'bg-card border-black hover:shadow-brutalist-lg hover:translate-x-[-2px] hover:translate-y-[-2px]'
+      : 'bg-card border-black'
   }`;
 
   const textColorClass = isPro ? 'text-paper' : 'text-ink';
@@ -80,6 +94,17 @@ export function PricingTierCard({
       {isPopular && (
         <div className="absolute -top-3 -right-3 bg-coral text-white border-2 border-black px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-wider shadow-brutalist-sm rotate-3 z-10">
           Most Popular
+        </div>
+      )}
+
+      {/* Persona Label */}
+      {persona && (
+        <div className={`mb-3 inline-block`}>
+          <span className={`font-mono text-[10px] font-bold uppercase tracking-widest ${
+            isPopular ? 'text-coral' : 'text-gray-500'
+          }`}>
+            {persona}
+          </span>
         </div>
       )}
 
@@ -135,33 +160,48 @@ export function PricingTierCard({
 
       {/* Features List */}
       <div className="flex-1">
-        <ul className="space-y-3 sm:space-y-3.5">
+        <ul className="space-y-1 sm:space-y-1.5">
           {features.map((feature, index) => (
             <li
               key={index}
-              className={`flex items-start gap-3 py-2 sm:py-2 text-sm ${
-                isPro ? 'text-gray-300' : 'text-gray-700'
+              className={`flex flex-col gap-0.5 py-1 ${
+                feature.included ? '' : 'opacity-50'
               }`}
             >
-              {feature.included ? (
-                <CheckIcon
-                  size={16}
-                  className="mt-0.5 flex-shrink-0"
-                  color={isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))'}
-                />
-              ) : (
-                <XIcon size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
+              <div className="flex items-start gap-3">
+                {feature.included ? (
+                  <CheckIcon
+                    size={16}
+                    className="mt-0.5 flex-shrink-0"
+                    color={isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))'}
+                  />
+                ) : (
+                  <XIcon size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
+                )}
+                <span className={`text-sm ${
+                  feature.included
+                    ? (isPro ? 'text-gray-300' : 'text-gray-700')
+                    : 'line-through text-gray-400'
+                }`}>
+                  {feature.name}
+                </span>
+              </div>
+              {/* Value context - only show for included features with value */}
+              {feature.included && feature.value && (
+                <span className={`text-xs font-mono ml-7 ${
+                  isPro ? 'text-gray-500' : 'text-gray-500'
+                }`}>
+                  {feature.value}
+                </span>
               )}
-              <span className={feature.included ? '' : 'line-through text-gray-400'}>
-                {feature.name}
-              </span>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* Trust Badges */}
-      <div className={`mt-6 pt-6 border-t-2 ${isPro ? 'border-gray-700' : 'border-black'} space-y-2`}>
+      {/* Trust Badges - Only show for paid tiers with trial */}
+      {!isFree && hasTrial && (
+        <div className={`mt-6 pt-6 border-t-2 ${isPro ? 'border-gray-700' : 'border-black'} space-y-2`}>
         <div className={`flex items-center gap-2 text-xs font-mono ${textColorMutedClass}`}>
           <CheckIcon
             size={12}
@@ -184,6 +224,22 @@ export function PricingTierCard({
           <span>No credit card required</span>
         </div>
       </div>
+      )}
+
+      {/* Upsell CTA - Only show for Free tier */}
+      {isFree && onUpgradeClick && (
+        <div className="mt-6 pt-4 border-t-2 border-gray-200">
+          <button
+            onClick={onUpgradeClick}
+            className="w-full p-3 bg-coral/5 border-2 border-coral/20 hover:border-coral/40 hover:bg-coral/10 transition-all text-center group"
+          >
+            <p className="text-xs font-mono text-gray-600 group-hover:text-gray-700">
+              Need white-label or team access?{' '}
+              <span className="text-coral font-bold">Try Growth free →</span>
+            </p>
+          </button>
+        </div>
+      )}
     </m.div>
   );
 }

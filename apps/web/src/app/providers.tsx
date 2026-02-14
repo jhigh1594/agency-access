@@ -56,59 +56,40 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <LazyMotion features={domAnimation} strict>
       <ThemeProvider>
         <ClerkProvider
-        appearance={{
-        variables: {
-          // Increase base font size
-          fontSize: '16px',
-          // Spacing
-          spacing: '1.5rem',
-        },
-        layout: {
-          // Hide optional fields
-          showOptionalFields: false,
-          // Social buttons placement
-          socialButtonsPlacement: 'top',
-        },
-        elements: {
-          // Root box - centered
-          rootBox: 'mx-auto w-full',
-          // Modal box styling - centered with subtle shadow
-          modalBox: 'width: 100%; max-width: 600px; margin: auto; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);',
-          // Card styling
-          card: 'width: 100%; max-width: 600px;',
-          // Form container
-          form: 'padding: 1.5rem;',
-          // Header section
-          header: 'padding-bottom: 1.5rem;',
-          // Title text - larger
-          headerTitle: 'font-size: 1.75rem; font-weight: 600; color: rgb(var(--foreground));',
-          // Subtitle - larger
-          headerSubtitle: 'font-size: 1rem; color: rgb(var(--muted-foreground));',
-          // Form field labels - larger
-          formFieldLabel: 'font-size: 0.95rem; font-weight: 500; color: rgb(var(--foreground));',
-          // Input fields - larger text
-          input: 'border: 1px solid rgb(var(--border)); border-radius: 0.5rem; font-size: 1rem; padding: 0.75rem;',
-          // Primary button - larger text
-          formButtonPrimary: 'background-color: rgb(var(--primary)); border-radius: 0.5rem; font-weight: 500; font-size: 1rem; padding: 0.75rem 1.5rem;',
-          // Social buttons - larger text
-          socialButtonsBlockButton: 'border: 1px solid rgb(var(--border)); border-radius: 0.5rem; font-size: 1rem; padding: 0.75rem;',
-          // Footer section
-          footer: 'padding-top: 1.5rem; margin-top: 1.5rem;',
-          // Footer action link (Sign up link)
-          footerActionLink: 'color: rgb(var(--primary)); font-weight: 600; font-size: 0.95rem; text-decoration: none;',
-          footerActionText: 'color: rgb(var(--muted-foreground)); font-size: 0.95rem;',
-          // Divider - larger
-          dividerText: 'color: rgb(var(--muted-foreground)); font-size: 0.9rem;',
-        },
-      }}
-      // Redirect to onboarding after signup (new users only) - dynamic based on tier selection
-      afterSignUpUrl={getAfterSignUpUrl()}
-      // Redirect existing users to dashboard (they'll be redirected to onboarding if needed)
-      afterSignInUrl="/dashboard"
-    >
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </ClerkProvider>
-    </ThemeProvider>
+          appearance={{
+            cssLayerName: 'clerk',
+            elements: {
+              formButtonPrimary: 'clerk-form-button-primary',
+              socialButtonsBlockButton: 'clerk-social-button',
+              socialButtonsBlockButtonText: 'clerk-social-button-text',
+              formFieldInput: 'clerk-input',
+              modalCloseButton: 'clerk-modal-close-button',
+              dividerRow: 'clerk-divider-row',
+              dividerLine: 'clerk-divider-line',
+              dividerText: 'clerk-divider-text',
+              headerSubtitle: 'clerk-header-subtitle',
+              formFieldRow__firstName: { display: 'none' },
+              formFieldRow__lastName: { display: 'none' },
+              formField__firstName: { display: 'none' },
+              formField__lastName: { display: 'none' },
+            },
+          }}
+          // Sign-up modal: show 14-day Growth trial message (custom localization override)
+          localization={{
+            signUp: {
+              start: {
+                subtitle: "You're starting a 14-day free trial of the Growth plan.",
+              },
+            },
+          }}
+          // Redirect to onboarding after signup (new users only) - dynamic based on tier selection
+          afterSignUpUrl={getAfterSignUpUrl()}
+          // Redirect existing users to dashboard (they'll be redirected to onboarding if needed)
+          afterSignInUrl="/dashboard"
+        >
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </ClerkProvider>
+      </ThemeProvider>
     </LazyMotion>
   );
 }

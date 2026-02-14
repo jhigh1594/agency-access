@@ -10,6 +10,12 @@ import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
 import { useAnimationOrchestrator } from '@/hooks/use-animation-orchestrator';
 
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
+
 const steps = [
   {
     number: 1,
@@ -331,6 +337,7 @@ export function HowItWorksSection() {
                         size="lg"
                         className="bg-coral text-white border-2 border-black hover:bg-coral/90 hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-brutalist-sm"
                         rightIcon={<ZapIcon size={18} />}
+                        onClick={handleTrialSignup}
                       >
                         Start Free Trial
                       </Button>

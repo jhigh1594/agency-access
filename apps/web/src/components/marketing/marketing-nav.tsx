@@ -149,7 +149,19 @@ export function MarketingNav() {
             <Button variant="brutalist-ghost" size="sm" className="font-bold uppercase tracking-wider text-xs">Sign In</Button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <Button variant="brutalist" size="md" className="font-bold uppercase tracking-wider text-xs px-6">Get Started</Button>
+            <Button
+              variant="brutalist"
+              size="md"
+              className="font-bold uppercase tracking-wider text-xs px-6"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+                  localStorage.setItem('selectedBillingInterval', 'yearly');
+                }
+              }}
+            >
+              Get Started
+            </Button>
           </SignUpButton>
         </div>
 
@@ -249,7 +261,13 @@ export function MarketingNav() {
                       <Button
                         variant="brutalist"
                         className="w-full font-bold uppercase tracking-wider text-sm py-6"
-                        onClick={handleLinkClick}
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+                            localStorage.setItem('selectedBillingInterval', 'yearly');
+                          }
+                          setMobileMenuOpen(false);
+                        }}
                       >
                         Get Started
                       </Button>

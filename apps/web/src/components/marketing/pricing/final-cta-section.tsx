@@ -6,6 +6,12 @@ import { ArrowRightIcon, CheckIcon } from '@/components/ui/ui-icons';
 import { m } from 'framer-motion';
 import { Reveal } from '../reveal';
 
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
+
 export function FinalCTASection() {
   return (
     <section className="py-16 sm:py-20 md:py-24 bg-card relative overflow-hidden">
@@ -56,6 +62,7 @@ export function FinalCTASection() {
                     size="xl"
                     className="w-full sm:w-auto px-8 sm:px-12"
                     rightIcon={<ArrowRightIcon size={20} />}
+                    onClick={handleTrialSignup}
                   >
                     Start 14-Day Free Trial
                   </Button>

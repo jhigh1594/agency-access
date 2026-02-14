@@ -10,6 +10,12 @@ import { ScheduleDemoModal } from './schedule-demo-modal';
 import { useState } from 'react';
 import { useAnimationOrchestrator } from '@/hooks/use-animation-orchestrator';
 
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
+
 export function HeroSection() {
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const { shouldAnimate } = useAnimationOrchestrator();
@@ -81,8 +87,14 @@ export function HeroSection() {
             <div className="w-full px-2 sm:px-0">
               <Reveal delay={0.5}>
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 w-full mt-6 self-stretch">
-                  <SignUpButton mode="modal">
-                    <Button variant="brutalist-rounded" size="xl" className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10" rightIcon={<ZapIcon size={18} />}>
+                  <SignUpButton mode="redirect">
+                    <Button
+                      variant="brutalist-rounded"
+                      size="xl"
+                      className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
+                      rightIcon={<ZapIcon size={18} />}
+                      onClick={handleTrialSignup}
+                    >
                       Start Free Trial
                     </Button>
                   </SignUpButton>

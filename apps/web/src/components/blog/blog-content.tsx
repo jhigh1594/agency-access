@@ -8,6 +8,13 @@
 import { BlogPost, BLOG_CATEGORIES } from "@/lib/blog-types";
 import { Calendar, Clock, User, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SignUpButton } from "@clerk/nextjs";
+
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
 
 interface BlogContentProps {
   post: BlogPost;
@@ -230,9 +237,11 @@ export function BlogContent({ post }: BlogContentProps) {
             Join 50+ agencies saving hundreds of hours every month with Agency
             Access Platform.
           </p>
-          <Button variant="brutalist" size="lg">
-            Start Your Free Trial
-          </Button>
+          <SignUpButton mode="modal">
+            <Button variant="brutalist" size="lg" onClick={handleTrialSignup}>
+              Start Your Free Trial
+            </Button>
+          </SignUpButton>
         </div>
       </footer>
     </article>

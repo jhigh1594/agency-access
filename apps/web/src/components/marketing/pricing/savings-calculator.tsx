@@ -7,6 +7,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRightIcon, CheckIcon, InfoIcon } from '@/components/ui/ui-icons';
 import { Reveal } from '../reveal';
 
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
+
 interface Platform {
   id: string;
   name: string;
@@ -41,7 +47,7 @@ export function SavingsCalculator() {
     const platformsCount = selectedPlatforms.length;
 
     // Conservative estimates
-    const timeSavedPerClient = 3; // hours (conservative - only counts platform setup time)
+    const timeSavedPerClient = hoursPerClient; // hours - user-adjusted via slider
     const hourlyRate = 85; // conservative mid-tier agency rate
 
     const annualHoursSaved =
@@ -206,10 +212,10 @@ export function SavingsCalculator() {
                           <div className="font-mono text-xs text-left">
                             <p className="font-bold text-ink mb-2">How We Calculate:</p>
                             <ul className="space-y-1.5 text-gray-700">
-                              <li><strong>Base:</strong> 3 hours saved per client</li>
+                              <li><strong>Base:</strong> {hoursPerClient} hours saved per client (your input)</li>
                               <li><strong>Rate:</strong> $85/hour (mid-tier agency)</li>
                               <li><strong>Platform Bonus:</strong> +8% per additional platform</li>
-                              <li><strong>Formula:</strong> Clients × 12 × 3hrs × $85 × (1 + platforms × 0.08)</li>
+                              <li><strong>Formula:</strong> Clients × 12 × {hoursPerClient}hrs × $85 × (1 + platforms × 0.08)</li>
                             </ul>
                             <p className="mt-2 pt-2 border-t border-gray-200 text-gray-500 italic">
                               Conservative estimates only count setup time. Most agencies save more.
@@ -290,6 +296,7 @@ export function SavingsCalculator() {
                     size="lg"
                     className="w-full"
                     rightIcon={<ArrowRightIcon size={18} />}
+                    onClick={handleTrialSignup}
                   >
                     Start Free Trial
                   </Button>

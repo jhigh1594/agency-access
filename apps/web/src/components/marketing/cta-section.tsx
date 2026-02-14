@@ -7,6 +7,12 @@ import { m } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ScheduleDemoModal } from './schedule-demo-modal';
 
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
+
 export function CTASection() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
@@ -57,6 +63,7 @@ export function CTASection() {
                   size="xl"
                   className="w-full sm:w-auto px-8 sm:px-12"
                   rightIcon={<ArrowRightIcon size={20} />}
+                  onClick={handleTrialSignup}
                 >
                   Start 14-Day Free Trial
                 </Button>
@@ -109,6 +116,7 @@ export function CTASection() {
               size="lg"
               className="w-full touch-feedback-bounce"
               rightIcon={<ArrowRightIcon size={18} />}
+              onClick={handleTrialSignup}
             >
               Start Free Trial
             </Button>

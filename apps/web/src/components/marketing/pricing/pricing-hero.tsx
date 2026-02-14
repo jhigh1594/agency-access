@@ -6,9 +6,15 @@ import { ArrowRightIcon } from '@/components/ui/ui-icons';
 import { m } from 'framer-motion';
 import { SocialProofSection } from '../social-proof-section';
 
+// Helper to set Growth tier (STARTER in backend) for trial signup
+const handleTrialSignup = () => {
+  localStorage.setItem('selectedSubscriptionTier', 'STARTER');
+  localStorage.setItem('selectedBillingInterval', 'yearly');
+};
+
 export function PricingHero() {
   return (
-    <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-paper relative overflow-hidden">
+    <section className="pt-10 sm:pt-12 md:pt-16 lg:pt-20 pb-12 sm:pb-16 bg-paper relative overflow-hidden">
       {/* Background Pattern - Diagonal Lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div
@@ -66,6 +72,7 @@ export function PricingHero() {
                 size="xl"
                 className="w-full sm:w-auto px-8 sm:px-12"
                 rightIcon={<ArrowRightIcon size={20} />}
+                onClick={handleTrialSignup}
               >
                 Start 14-Day Free Trial
               </Button>
@@ -83,16 +90,18 @@ export function PricingHero() {
             </Button>
           </m.div>
 
-          {/* Social Proof */}
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-          >
-            <SocialProofSection />
-          </m.div>
         </m.div>
       </div>
+
+      {/* Social Proof - Full Width */}
+      <m.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.6 }}
+        className="w-full"
+      >
+        <SocialProofSection />
+      </m.div>
     </section>
   );
 }
