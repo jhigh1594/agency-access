@@ -104,7 +104,7 @@ export default function DashboardPage() {
       const etag = etagCache.get(cacheKey);
 
       const headers: Record<string, string> = {
-        'x-agency-id': authToken,
+        Authorization: `Bearer ${authToken}`,
       };
 
       // Add ETag for conditional request

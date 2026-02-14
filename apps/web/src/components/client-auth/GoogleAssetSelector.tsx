@@ -18,6 +18,7 @@ import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './
 
 interface GoogleAssetSelectorProps {
   sessionId: string; // connectionId
+  accessRequestToken: string;
   product: string; // e.g., 'google_ads', 'ga4', 'google_business_profile', etc.
   onSelectionChange: (selectedAssets: {
     adAccounts?: string[];
@@ -52,6 +53,7 @@ const PRODUCT_TO_ASSET_KEY: Record<string, string> = {
 
 export function GoogleAssetSelector({
   sessionId,
+  accessRequestToken,
   product,
   onSelectionChange,
   onError,
@@ -82,7 +84,9 @@ export function GoogleAssetSelector({
 
       const platform = PRODUCT_TO_PLATFORM[product] || product;
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/client-assets/${sessionId}/${platform}`);
+      const response = await fetch(
+        `${apiUrl}/api/client/${accessRequestToken}/assets/${platform}?connectionId=${encodeURIComponent(sessionId)}`
+      );
       const json = await response.json();
 
       if (json.error) {
@@ -106,7 +110,7 @@ export function GoogleAssetSelector({
     if (sessionId) {
       fetchAssets();
     }
-  }, [sessionId, product]);
+  }, [sessionId, product, accessRequestToken]);
 
   // Notify parent of changes
   useEffect(() => {
@@ -210,4 +214,3 @@ export function GoogleAssetSelector({
     </div>
   );
 }
-

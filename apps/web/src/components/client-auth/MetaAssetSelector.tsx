@@ -44,6 +44,7 @@ interface MetaAssets {
 
 interface MetaAssetSelectorProps {
   sessionId: string;
+  accessRequestToken: string;
   onSelectionChange: (selectedAssets: {
     adAccounts: string[];
     pages: string[];
@@ -61,6 +62,7 @@ interface MetaAssetSelectorProps {
 
 export function MetaAssetSelector({
   sessionId,
+  accessRequestToken,
   onSelectionChange,
   onError,
 }: MetaAssetSelectorProps) {
@@ -83,7 +85,9 @@ export function MetaAssetSelector({
       setError(null);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/client-assets/${sessionId}/meta_ads`);
+      const response = await fetch(
+        `${apiUrl}/api/client/${accessRequestToken}/assets/meta_ads?connectionId=${encodeURIComponent(sessionId)}`
+      );
       const json = await response.json();
 
       if (json.error) {
@@ -106,7 +110,7 @@ export function MetaAssetSelector({
     if (sessionId) {
       fetchAssets();
     }
-  }, [sessionId]);
+  }, [sessionId, accessRequestToken]);
 
   // Notify parent of changes
   useEffect(() => {

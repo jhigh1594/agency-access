@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Plus, X, Loader2, AlertCircle, Check, Globe } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
 import { Client, ClientLanguage } from '@agency-platform/shared';
 
 const SUPPORTED_LANGUAGES: Record<ClientLanguage, { name: string; flag: string }> = {
@@ -33,6 +34,7 @@ interface PaginatedClientsResponse {
 }
 
 export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProps) {
+  const { getToken } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +61,8 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
     setError(null);
 
     try {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
       params.set('limit', '50');
@@ -67,7 +71,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
         `${process.env.NEXT_PUBLIC_API_URL}/api/clients?${params.toString()}`,
         {
           headers: {
-            'x-agency-id': agencyId,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -109,10 +113,12 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
     setCreating(true);
 
     try {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`, {
         method: 'POST',
         headers: {
-          'x-agency-id': agencyId,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newClient),

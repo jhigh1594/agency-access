@@ -386,6 +386,7 @@ export function PlatformAuthWizard({
                         <div className="relative">
                           <MetaAssetSelector
                             sessionId={connectionId!}
+                            accessRequestToken={accessRequestToken}
                             onSelectionChange={(selectedAssets) => {
                               // Store both IDs and full asset objects for grant step
                               // selectedAssets now includes selectedPagesWithNames, etc. from MetaAssetSelector
@@ -402,6 +403,7 @@ export function PlatformAuthWizard({
                         <div className="relative">
                           <GoogleAssetSelector
                             sessionId={connectionId!}
+                            accessRequestToken={accessRequestToken}
                             product={p.product}
                             onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
                             onError={setError}

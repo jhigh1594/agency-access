@@ -17,6 +17,7 @@ interface GA4Assets {
 
 interface GA4AssetSelectorProps {
   sessionId: string;
+  accessRequestToken: string;
   onSelectionChange: (selectedAssets: {
     properties: string[];
   }) => void;
@@ -25,6 +26,7 @@ interface GA4AssetSelectorProps {
 
 export function GA4AssetSelector({
   sessionId,
+  accessRequestToken,
   onSelectionChange,
   onError,
 }: GA4AssetSelectorProps) {
@@ -42,7 +44,9 @@ export function GA4AssetSelector({
       setError(null);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/client-assets/${sessionId}/ga4`);
+      const response = await fetch(
+        `${apiUrl}/api/client/${accessRequestToken}/assets/ga4?connectionId=${encodeURIComponent(sessionId)}`
+      );
       const json = await response.json();
 
       if (json.error) {
@@ -65,7 +69,7 @@ export function GA4AssetSelector({
     if (sessionId) {
       fetchAssets();
     }
-  }, [sessionId]);
+  }, [sessionId, accessRequestToken]);
 
   // Notify parent of changes
   useEffect(() => {
@@ -150,4 +154,3 @@ export function GA4AssetSelector({
     </div>
   );
 }
-

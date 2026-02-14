@@ -16,6 +16,7 @@ interface GoogleAdsAccount {
 
 interface GoogleAdsAssetSelectorProps {
   sessionId: string; // connectionId
+  accessRequestToken: string;
   onSelectionChange: (selectedAssets: {
     adAccounts: string[];
   }) => void;
@@ -24,6 +25,7 @@ interface GoogleAdsAssetSelectorProps {
 
 export function GoogleAdsAssetSelector({
   sessionId,
+  accessRequestToken,
   onSelectionChange,
   onError,
 }: GoogleAdsAssetSelectorProps) {
@@ -41,7 +43,9 @@ export function GoogleAdsAssetSelector({
       setError(null);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/client-assets/${sessionId}/google_ads`);
+      const response = await fetch(
+        `${apiUrl}/api/client/${accessRequestToken}/assets/google_ads?connectionId=${encodeURIComponent(sessionId)}`
+      );
       const json = await response.json();
 
       if (json.error) {
@@ -64,7 +68,7 @@ export function GoogleAdsAssetSelector({
     if (sessionId) {
       fetchAssets();
     }
-  }, [sessionId]);
+  }, [sessionId, accessRequestToken]);
 
   // Notify parent of changes
   useEffect(() => {
@@ -149,4 +153,3 @@ export function GoogleAdsAssetSelector({
     </div>
   );
 }
-

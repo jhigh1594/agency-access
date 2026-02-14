@@ -7,8 +7,8 @@
  * Shows connection status, platforms, and quick actions.
  */
 
-import { useState, useEffect, Suspense } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useState, Suspense } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Search, Filter, Loader2, AlertCircle, ExternalLink, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -41,7 +41,7 @@ function mapClientStatusToStatusType(status: Client['status']): StatusType {
 }
 
 function ClientsPageContent() {
-  const { user } = useUser();
+  const { getToken } = useAuth();
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get('email');
   
@@ -50,33 +50,9 @@ function ClientsPageContent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
-  const [agencyId, setAgencyId] = useState<string | null>(null);
 
   // Quota check hook
   const checkQuota = useQuotaCheck();
-
-  // Fetch user's agency by email (same pattern as connections page)
-  const { data: agencyData, isLoading: isLoadingAgency } = useQuery({
-    queryKey: ['user-agency', user?.primaryEmailAddress?.emailAddress],
-    queryFn: async () => {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) return null;
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?email=${encodeURIComponent(email)}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch agency');
-      const result = await response.json();
-      return result.data?.[0] || null;
-    },
-    enabled: !!user?.primaryEmailAddress?.emailAddress,
-  });
-
-  useEffect(() => {
-    if (agencyData?.id) {
-      setAgencyId(agencyData.id);
-    }
-  }, [agencyData]);
 
   // Fetch clients with connection data
   const {
@@ -84,26 +60,28 @@ function ClientsPageContent() {
     isLoading: isLoadingClients,
     error: fetchError,
   } = useQuery({
-    queryKey: ['clients-with-connections', agencyId, searchQuery],
+    queryKey: ['clients-with-connections', searchQuery],
     queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`);
       if (searchQuery) url.searchParams.append('search', searchQuery);
       
       const response = await fetch(url.toString(), {
         headers: {
-          'x-agency-id': user?.id || '', // Still needed for middleware but UUID is used if available
+          Authorization: `Bearer ${token}`,
         }
       });
       if (!response.ok) throw new Error('Failed to fetch clients');
       return response.json();
     },
-    enabled: !!agencyId,
+    enabled: true,
   });
 
   const clients = clientsResponse?.data?.data || [];
   const pagination = clientsResponse?.data?.pagination || { total: 0 };
 
-  if (isLoadingAgency || (isLoadingClients && !clients.length)) {
+  if (isLoadingClients && !clients.length) {
     return (
       <div className="flex-1 bg-paper p-8">
         <div className="flex items-center justify-center py-12">

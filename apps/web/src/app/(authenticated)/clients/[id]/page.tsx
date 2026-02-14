@@ -13,22 +13,24 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { ClientDetailHeader, ClientStats, ClientTabs } from '@/components/client-detail';
 import type { ClientDetailResponse } from '@agency-platform/shared';
 
 export default function ClientDetailPage() {
   const params = useParams();
-  const user = useUser();
+  const { getToken } = useAuth();
   const clientId = params.id as string;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['client-detail', clientId],
     queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${clientId}/detail`, {
         headers: {
-          'x-agency-id': user.user?.id || '',
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) {
@@ -37,7 +39,7 @@ export default function ClientDetailPage() {
       }
       return response.json() as Promise<{ data: ClientDetailResponse }>;
     },
-    enabled: !!clientId && !!user.user?.id,
+    enabled: !!clientId,
   });
 
   // Loading state

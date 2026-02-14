@@ -37,7 +37,7 @@ interface SelectedPlatform {
 const MAJOR_PLATFORMS = ['google', 'meta', 'linkedin'];
 
 export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequestModalProps) {
-  const { orgId } = useAuth();
+  const { orgId, getToken } = useAuth();
   const queryClient = useQueryClient();
   const checkQuota = useQuotaCheck();
 
@@ -118,6 +118,8 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   // Create access request mutation
   const createMutation = useMutation({
     mutationFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const platforms = transformPlatformsForAPI();
 
       if (platforms.length === 0) {
@@ -128,7 +130,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-agency-id': orgId || '',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           agencyId: orgId,

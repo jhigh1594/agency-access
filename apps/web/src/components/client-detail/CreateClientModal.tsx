@@ -25,7 +25,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_REGEX = /^https?:\/\/.+/;
 
 export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps) {
-  const { orgId } = useAuth();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState('');
@@ -45,11 +45,13 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
       website?: string;
       language: ClientLanguage;
     }) => {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-agency-id': orgId || '',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });

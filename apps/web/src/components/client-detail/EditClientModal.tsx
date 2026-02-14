@@ -12,8 +12,7 @@ import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientLanguage, SUPPORTED_LANGUAGES } from '@agency-platform/shared';
 
 interface EditClientModalProps {
@@ -31,8 +30,7 @@ interface EditClientModalProps {
 }
 
 export function EditClientModal({ client, onClose }: EditClientModalProps) {
-  const { orgId } = useAuth();
-  const router = useRouter();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState(client.name);
@@ -45,11 +43,13 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
   // Update client mutation
   const updateMutation = useMutation({
     mutationFn: async (data: { name: string; company: string; website?: string; language: ClientLanguage }) => {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${client.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-agency-id': orgId || '',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });

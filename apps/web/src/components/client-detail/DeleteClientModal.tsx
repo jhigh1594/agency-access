@@ -25,7 +25,7 @@ interface DeleteClientModalProps {
 }
 
 export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
-  const { orgId } = useAuth();
+  const { getToken } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -36,10 +36,12 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
   // Delete client mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${client.id}`, {
         method: 'DELETE',
         headers: {
-          'x-agency-id': orgId || '',
+          Authorization: `Bearer ${token}`,
         },
       });
 
