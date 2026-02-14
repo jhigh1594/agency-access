@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import compress from '@fastify/compress';
 import rateLimit from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
+import fastifyRawBody from 'fastify-raw-body';
 import { env } from './lib/env.js';
 import { getCorsOptions } from './lib/cors.js';
 import { authenticate } from './middleware/auth.js';
@@ -23,6 +24,7 @@ import { webhookRoutes } from './routes/webhooks.js';
 import { beehiivRoutes } from './routes/beehiiv.js';
 import { subscriptionRoutes } from './routes/subscriptions.js';
 import { quotaRoutes } from './routes/quota.routes';
+import { contactRoutes } from './routes/contact.js';
 import { performanceMiddleware } from './middleware/performance.js';
 
 const fastify = Fastify({
@@ -40,6 +42,12 @@ const fastify = Fastify({
 
 // Register plugins
 await fastify.register(cors, getCorsOptions(env.FRONTEND_URL));
+await fastify.register(fastifyRawBody, {
+  field: 'rawBody',
+  global: false,
+  encoding: 'utf8',
+  runFirst: true,
+});
 
 // Register compression middleware
 await fastify.register(compress, {
@@ -132,6 +140,7 @@ await fastify.register(agencyPlatformsRoutes);
 await fastify.register(beehiivRoutes);
 await fastify.register(subscriptionRoutes, { prefix: '/api' });
 await fastify.register(quotaRoutes, { prefix: '/api' });
+await fastify.register(contactRoutes);
 
 // Health check and root routes
 fastify.get('/health', async () => {
