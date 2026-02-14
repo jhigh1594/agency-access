@@ -98,11 +98,7 @@ export async function getClientsWithConnections(agencyId: string, searchQuery?: 
     ? `/api/clients?search=${encodeURIComponent(searchQuery)}` 
     : '/api/clients';
     
-  return apiFetch<any>(endpoint, {
-    headers: {
-      'x-agency-id': agencyId, // Use agency ID as header for the client routes middleware
-    }
-  });
+  return apiFetch<any>(endpoint);
 }
 
 export const apiClient = {
@@ -113,4 +109,3 @@ export const apiClient = {
   getAgencyConnections,
   getClientsWithConnections,
 };
-
