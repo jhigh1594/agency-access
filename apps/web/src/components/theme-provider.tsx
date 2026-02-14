@@ -19,6 +19,7 @@ function isMarketingPath(pathname: string | null): boolean {
   return (
     pathname === '/' ||
     pathname.startsWith('/pricing') ||
+    pathname.startsWith('/contact') ||
     pathname.startsWith('/blog') ||
     pathname.startsWith('/terms') ||
     pathname.startsWith('/privacy-policy') ||
