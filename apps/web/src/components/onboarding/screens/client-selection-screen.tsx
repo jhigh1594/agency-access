@@ -37,6 +37,8 @@ interface ClientSelectionScreenProps {
   onLoadClients: () => Promise<void>;
 }
 
+type ClientSelectionMode = 'existing' | 'new';
+
 // ============================================================
 // COMPONENT
 // ============================================================
@@ -50,12 +52,22 @@ export function ClientSelectionScreen({
   onLoadClients,
 }: ClientSelectionScreenProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [mode, setMode] = useState<ClientSelectionMode>(
+    existingClients.length > 0 ? 'existing' : 'new'
+  );
+  const [hasUserSelectedMode, setHasUserSelectedMode] = useState(false);
 
   // Load existing clients on mount
   useEffect(() => {
     onLoadClients();
   }, [onLoadClients]);
+
+  // Auto-select the best mode only before the user has interacted.
+  useEffect(() => {
+    if (!hasUserSelectedMode) {
+      setMode(existingClients.length > 0 ? 'existing' : 'new');
+    }
+  }, [existingClients.length, hasUserSelectedMode]);
 
   // Get client suggestions for typeahead
   const clientSuggestions = existingClients.map((c) => c.name);
@@ -64,12 +76,13 @@ export function ClientSelectionScreen({
   const handleSelectClient = useCallback(
     (client: Client) => {
       setSelectedClientId(client.id);
+      setHasUserSelectedMode(true);
+      setMode('existing');
       onUpdate({
         id: client.id,
         name: client.name,
         email: client.email,
       });
-      setIsCreatingNew(false);
     },
     [onUpdate]
   );
@@ -77,17 +90,26 @@ export function ClientSelectionScreen({
   // Handle creating a new client
   const handleCreateNew = useCallback(() => {
     setSelectedClientId(null);
-    setIsCreatingNew(true);
+    setHasUserSelectedMode(true);
+    setMode('new');
   }, []);
 
-  // Validate client input
-  const isValidClient = useCallback(() => {
-    return (
-      clientName.trim().length >= 2 &&
-      clientEmail.trim().length > 0 &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)
-    );
-  }, [clientName, clientEmail]);
+  const handleSwitchToExisting = useCallback(() => {
+    setHasUserSelectedMode(true);
+    setMode('existing');
+  }, []);
+
+  const handleClientNameChange = useCallback((name: string) => {
+    setHasUserSelectedMode(true);
+    setMode('new');
+    onUpdate({ name, email: clientEmail });
+  }, [clientEmail, onUpdate]);
+
+  const handleClientEmailChange = useCallback((email: string) => {
+    setHasUserSelectedMode(true);
+    setMode('new');
+    onUpdate({ name: clientName, email });
+  }, [clientName, onUpdate]);
 
   // Filter existing clients by search
   const [searchQuery, setSearchQuery] = useState('');
@@ -115,8 +137,12 @@ export function ClientSelectionScreen({
       </div>
 
       <div className="space-y-6 max-w-2xl">
+        {loading && (
+          <p className="text-sm text-gray-500">Loading existing clients...</p>
+        )}
+
         {/* Existing Clients Section */}
-        {existingClients.length > 0 && !isCreatingNew && (
+        {existingClients.length > 0 && mode === 'existing' && (
           <div className="space-y-3">
             <label className="block text-sm font-semibold text-gray-700">
               Select an existing client
@@ -181,12 +207,12 @@ export function ClientSelectionScreen({
         )}
 
         {/* Create New Client Form */}
-        {(existingClients.length === 0 || isCreatingNew) && (
+        {(existingClients.length === 0 || mode === 'new') && (
           <div className="space-y-4">
             {existingClients.length > 0 && (
               <button
                 type="button"
-                onClick={() => setIsCreatingNew(false)}
+                onClick={handleSwitchToExisting}
                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
               >
                 ← Back to client list
@@ -196,7 +222,7 @@ export function ClientSelectionScreen({
             <OpinionatedInput
               label="Client Name"
               value={clientName}
-              onChange={(name) => onUpdate({ name, email: clientEmail })}
+              onChange={handleClientNameChange}
               placeholder="e.g., Acme Corp"
               type="text"
               required
@@ -209,7 +235,7 @@ export function ClientSelectionScreen({
             <OpinionatedInput
               label="Client Email"
               value={clientEmail}
-              onChange={(email) => onUpdate({ name: clientName, email })}
+              onChange={handleClientEmailChange}
               placeholder="client@acmecorp.com"
               type="email"
               required

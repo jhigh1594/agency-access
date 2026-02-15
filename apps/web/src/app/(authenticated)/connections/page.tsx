@@ -356,7 +356,7 @@ function ConnectionsPageContent() {
             </p>
             <Button
               variant="primary"
-              onClick={() => router.push('/onboarding/agency')}
+              onClick={() => router.push('/onboarding/unified')}
             >
               Complete Onboarding
             </Button>

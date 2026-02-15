@@ -205,4 +205,32 @@ describe('UnifiedOnboardingContext', () => {
       expect.objectContaining({ method: 'POST' })
     );
   });
+
+  it('allows back navigation through platform selection and locks after link generation', () => {
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    // Step 0 (welcome): cannot go back
+    expect(result.current.state.currentStep).toBe(0);
+    expect(result.current.canGoBack()).toBe(false);
+
+    // Step 1 (agency): can go back
+    act(() => result.current.nextStep());
+    expect(result.current.state.currentStep).toBe(1);
+    expect(result.current.canGoBack()).toBe(true);
+
+    // Step 2 (client): can go back
+    act(() => result.current.nextStep());
+    expect(result.current.state.currentStep).toBe(2);
+    expect(result.current.canGoBack()).toBe(true);
+
+    // Step 3 (platform selection): can still go back before link generation
+    act(() => result.current.nextStep());
+    expect(result.current.state.currentStep).toBe(3);
+    expect(result.current.canGoBack()).toBe(true);
+
+    // Step 4 (success link): locked
+    act(() => result.current.nextStep());
+    expect(result.current.state.currentStep).toBe(4);
+    expect(result.current.canGoBack()).toBe(false);
+  });
 });

@@ -17,7 +17,7 @@
 
 'use client';
 
-import { useEffect, useCallback, ReactNode, useRef } from 'react';
+import { useEffect, useCallback, ReactNode, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
@@ -61,6 +61,20 @@ const slideVariants = {
     scale: 0.95,
   }),
 };
+
+const INTERACTIVE_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON']);
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  return INTERACTIVE_TAG_NAMES.has(target.tagName);
+}
 
 // ============================================================
 // COMPONENT
@@ -110,14 +124,12 @@ export function UnifiedWizard({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isInteractive = isInteractiveTarget(e.target);
+
       // Enter: Continue to next step
-      if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
-        // Prevent if user is typing in an input field
-        const target = e.target as HTMLElement;
-        if (target.tagName !== 'TEXTAREA' && target.tagName !== 'INPUT') {
-          e.preventDefault();
-          handleNext();
-        }
+      if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !isInteractive) {
+        e.preventDefault();
+        handleNext();
       }
 
       // Escape: Skip (if allowed) or close (if allowed)
@@ -132,11 +144,11 @@ export function UnifiedWizard({
       }
 
       // Arrow keys: Navigate between steps
-      if (e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight' && !isInteractive) {
         e.preventDefault();
         handleNext();
       }
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowLeft' && !isInteractive) {
         e.preventDefault();
         handleBack();
       }
@@ -151,13 +163,6 @@ export function UnifiedWizard({
   // ============================================================
 
   const progressPercentage = Math.round(((currentStep + 1) / totalSteps) * 100);
-  const completedSteps = currentStep; // Steps before current are completed
-  const remainingSteps = totalSteps - currentStep - 1;
-
-  // ============================================================
-  // RENDER
-  // ============================================================
-
   return (
     <div
       ref={containerRef}
@@ -319,18 +324,15 @@ export function UnifiedWizard({
           {/* Keyboard Shortcuts Hint */}
           <div className="mt-4 text-center text-xs text-white/60">
             Press <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Enter</kbd> to continue
-            {canSkip && ' • '}
-            {canSkip && <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Esc</kbd>}
-            {' to skip'}
+            {canSkip && (
+              <>
+                {' • '}
+                <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Esc</kbd> to skip
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-// ============================================================
-// HELPER: useState hook for direction
-// ============================================================
-
-import { useState } from 'react';

@@ -46,10 +46,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       const storedTier = localStorage.getItem('selectedSubscriptionTier');
       if (storedTier && storedTier !== 'STARTER') {
-        return `/onboarding/agency?tier=${storedTier}`;
+        return `/onboarding/unified?tier=${storedTier}`;
       }
     }
-    return '/onboarding/agency';
+    return '/onboarding/unified';
   };
 
   return (

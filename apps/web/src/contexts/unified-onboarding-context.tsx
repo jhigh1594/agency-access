@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Client, Platform, AgencyRole } from '@agency-platform/shared';
 import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
+import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 
 // ============================================================
 // TYPES
@@ -209,14 +210,11 @@ export function UnifiedOnboardingProvider({
   // ============================================================
 
   useEffect(() => {
-    // Track when user starts onboarding
-    if (typeof window !== 'undefined' && (window as any).analytics) {
-      (window as any).analytics.track('onboarding_started', {
-        version: 'unified_v1',
-        timestamp: Date.now(),
-        userId,
-      });
-    }
+    trackOnboardingEvent('onboarding_started', {
+      version: 'unified_v1',
+      timestamp: Date.now(),
+      userId,
+    });
   }, [userId]);
 
   useEffect(() => {
@@ -228,15 +226,12 @@ export function UnifiedOnboardingProvider({
           const newCompleted = new Set(prev.completedSteps);
           newCompleted.add(prevStep);
 
-          // Track step completion
-          if (typeof window !== 'undefined' && (window as any).analytics) {
-            const duration = Date.now() - prev.startedAt;
-            (window as any).analytics.track('onboarding_step_completed', {
-              step: prevStep,
-              durationMs: duration,
-              timestamp: Date.now(),
-            });
-          }
+          const duration = Date.now() - prev.startedAt;
+          trackOnboardingEvent('onboarding_step_completed', {
+            step: prevStep,
+            durationMs: duration,
+            timestamp: Date.now(),
+          });
 
           return { ...prev, completedSteps: newCompleted };
         });
@@ -294,8 +289,8 @@ export function UnifiedOnboardingProvider({
 
   const canGoBack = useCallback(() => {
     // Can't go back from welcome screen
-    // Can't go back once access link is generated (Screen 3+)
-    return state.currentStep > 0 && state.currentStep < 3;
+    // Can't go back once access link is generated (Screen 4+)
+    return state.currentStep > 0 && state.currentStep < 4;
   }, [state.currentStep]);
 
   const canSkip = useCallback(() => {
@@ -473,17 +468,14 @@ export function UnifiedOnboardingProvider({
       const resolvedAgencyId = accessRequest.agencyId || agencyId;
       const accessLink = `${window.location.origin}/authorize/${accessRequest.uniqueToken}`;
 
-      // Track the aha moment!
-      if (typeof window !== 'undefined' && (window as any).analytics) {
-        const timeToValue = Date.now() - state.startedAt;
-        (window as any).analytics.track('first_access_link_generated', {
-          agencyId: resolvedAgencyId,
-          clientId,
-          accessRequestId: accessRequest.id,
-          platformCount: flattenSelectedPlatforms(state.selectedPlatforms).length,
-          timeToValueMs: timeToValue,
-        });
-      }
+      const timeToValue = Date.now() - state.startedAt;
+      trackOnboardingEvent('first_access_link_generated', {
+        agencyId: resolvedAgencyId,
+        clientId,
+        accessRequestId: accessRequest.id,
+        platformCount: flattenSelectedPlatforms(state.selectedPlatforms).length,
+        timeToValueMs: timeToValue,
+      });
 
       // Update state with generated link
       setState((prev) => ({
@@ -507,13 +499,11 @@ export function UnifiedOnboardingProvider({
           ? err.message
           : 'Network error. Please try again.';
 
-      if (typeof window !== 'undefined' && (window as any).analytics) {
-        (window as any).analytics.track('onboarding_step_failed', {
-          step: state.currentStep,
-          message: errorMessage,
-          timestamp: Date.now(),
-        });
-      }
+      trackOnboardingEvent('onboarding_step_failed', {
+        step: state.currentStep,
+        message: errorMessage,
+        timestamp: Date.now(),
+      });
 
       setState((prev) => ({
         ...prev,
@@ -555,13 +545,10 @@ export function UnifiedOnboardingProvider({
         }),
       });
 
-      // Track team invites sent
-      if (typeof window !== 'undefined' && (window as any).analytics) {
-        (window as any).analytics.track('team_invites_sent', {
-          count: state.teamInvites.length,
-          timestamp: Date.now(),
-        });
-      }
+      trackOnboardingEvent('team_invites_sent', {
+        count: state.teamInvites.length,
+        timestamp: Date.now(),
+      });
 
       setState((prev) => ({ ...prev, loading: false }));
       return true;
@@ -572,13 +559,11 @@ export function UnifiedOnboardingProvider({
           ? err.message
           : 'Network error. Please try again.';
 
-      if (typeof window !== 'undefined' && (window as any).analytics) {
-        (window as any).analytics.track('onboarding_step_failed', {
-          step: state.currentStep,
-          message: errorMessage,
-          timestamp: Date.now(),
-        });
-      }
+      trackOnboardingEvent('onboarding_step_failed', {
+        step: state.currentStep,
+        message: errorMessage,
+        timestamp: Date.now(),
+      });
 
       setState((prev) => ({
         ...prev,
@@ -594,16 +579,13 @@ export function UnifiedOnboardingProvider({
   // ============================================================
 
   const completeOnboarding = useCallback(async () => {
-    // Track completion
-    if (typeof window !== 'undefined' && (window as any).analytics) {
-      const totalTime = Date.now() - state.startedAt;
-      (window as any).analytics.track('onboarding_completed', {
-        version: 'unified_v1',
-        totalDurationMs: totalTime,
-        stepsSkipped: state.teamInvites.length === 0 ? ['team_invite'] : [],
-        accessRequestId: state.accessRequestId,
-      });
-    }
+    const totalTime = Date.now() - state.startedAt;
+    trackOnboardingEvent('onboarding_completed', {
+      version: 'unified_v1',
+      totalDurationMs: totalTime,
+      stepsSkipped: state.teamInvites.length === 0 ? ['team_invite'] : [],
+      accessRequestId: state.accessRequestId,
+    });
 
     // Call completion callback if provided
     if (onComplete) {
@@ -615,14 +597,11 @@ export function UnifiedOnboardingProvider({
   }, [state, router, onComplete]);
 
   const skipOnboarding = useCallback(() => {
-    // Track skip
-    if (typeof window !== 'undefined' && (window as any).analytics) {
-      (window as any).analytics.track('onboarding_skipped', {
-        version: 'unified_v1',
-        step: state.currentStep,
-        timestamp: Date.now(),
-      });
-    }
+    trackOnboardingEvent('onboarding_skipped', {
+      version: 'unified_v1',
+      step: state.currentStep,
+      timestamp: Date.now(),
+    });
 
     // Navigate to dashboard
     router.push('/dashboard');

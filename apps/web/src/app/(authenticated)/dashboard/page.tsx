@@ -221,7 +221,7 @@ export default function DashboardPage() {
               We couldn't find an agency associated with your account. Let's set one up.
             </p>
             <Link
-              href="/onboarding/agency"
+              href="/onboarding/unified"
               className="inline-flex px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
             >
               Complete Onboarding
