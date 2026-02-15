@@ -136,3 +136,26 @@ describe('ComparisonRow exclusive badge', () => {
     expect(screen.queryByText('Only AuthHub')).not.toBeInTheDocument();
   });
 });
+
+describe('ComparisonTable design tokens', () => {
+  it('should use design tokens, not hardcoded colors', () => {
+    const { container } = render(
+      <ComparisonTable>
+        <ComparisonHeader />
+        <tbody>
+          <ComparisonSection title="Test">
+            <ComparisonRow feature="Test" leadsie={true} authhub={true} />
+          </ComparisonSection>
+        </tbody>
+      </ComparisonTable>
+    );
+
+    // Check that header uses bg-ink, not hardcoded black
+    const header = container.querySelector('thead');
+    expect(header?.className).toContain('bg-ink');
+
+    // Check that section uses bg-muted, not bg-gray
+    const sectionRow = container.querySelector('.bg-muted\\/30, [class*="bg-muted"]');
+    expect(sectionRow).toBeTruthy();
+  });
+});
