@@ -66,3 +66,47 @@ describe('ComparisonRow', () => {
     expect(screen.getByText('Meta Ads')).toBeInTheDocument();
   });
 });
+
+describe('ComparisonRow value rendering', () => {
+  it('should show Check for true values', () => {
+    render(
+      <ComparisonTable>
+        <tbody>
+          <ComparisonRow feature="Test" leadsie={true} authhub={true} />
+        </tbody>
+      </ComparisonTable>
+    );
+
+    // Check icons should be present (they have the lucide class pattern)
+    const cells = screen.getAllByRole('cell');
+    expect(cells[1]).toBeInTheDocument(); // Leadsie cell
+    expect(cells[2]).toBeInTheDocument(); // AuthHub cell
+  });
+
+  it('should show X for false values', () => {
+    render(
+      <ComparisonTable>
+        <tbody>
+          <ComparisonRow feature="Test" leadsie={false} authhub={false} />
+        </tbody>
+      </ComparisonTable>
+    );
+
+    const cells = screen.getAllByRole('cell');
+    expect(cells[1]).toBeInTheDocument();
+    expect(cells[2]).toBeInTheDocument();
+  });
+
+  it('should show string values directly', () => {
+    render(
+      <ComparisonTable>
+        <tbody>
+          <ComparisonRow feature="Test" leadsie="2 products" authhub="8 products" />
+        </tbody>
+      </ComparisonTable>
+    );
+
+    expect(screen.getByText('2 products')).toBeInTheDocument();
+    expect(screen.getByText('8 products')).toBeInTheDocument();
+  });
+});
