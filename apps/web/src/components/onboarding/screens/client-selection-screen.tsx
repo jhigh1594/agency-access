@@ -226,10 +226,9 @@ export function ClientSelectionScreen({
                 onChange={handleClientNameChange}
                 placeholder="e.g., Acme Corp"
                 type="text"
-                required
-                helperText="The company or client name"
+                helperText="Optional: the company or client name"
                 validationMessage="Please enter a client name (at least 2 characters)"
-                isValid={clientName.trim().length >= 2}
+                isValid={clientName.trim().length === 0 || clientName.trim().length >= 2}
                 suggestions={clientSuggestions}
               />
 
@@ -239,10 +238,9 @@ export function ClientSelectionScreen({
                 onChange={handleClientEmailChange}
                 placeholder="client@acmecorp.com"
                 type="email"
-                required
-                helperText="We'll send the access link to this email"
+                helperText="Optional: we'll send the access link here if provided"
                 validationMessage="Please enter a valid email address"
-                isValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
+                isValid={clientEmail.trim().length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
               />
             </div>
           </div>

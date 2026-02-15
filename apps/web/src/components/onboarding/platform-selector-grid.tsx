@@ -40,30 +40,43 @@ export interface PlatformSelectorGridProps {
 // PLATFORM GROUPS
 // ============================================================
 
-const PLATFORM_GROUPS = [
+interface PlatformGroupConfig {
+  name: string;
+  platforms: Platform[];
+  color: string;
+  selectedColor: string;
+}
+
+const PRIMARY_PLATFORM_KEYS: Platform[] = ['google', 'meta', 'linkedin'];
+
+const PRIMARY_PLATFORM_GROUPS: PlatformGroupConfig[] = [
   {
     name: 'Google',
-    platforms: PLATFORM_CATEGORIES.recommended.filter((p) => p.startsWith('google')),
+    platforms: ['google'],
     color: 'bg-blue-50 hover:bg-blue-100 border-blue-200',
     selectedColor: 'bg-blue-100 border-blue-500',
   },
   {
     name: 'Meta',
-    platforms: PLATFORM_CATEGORIES.recommended.filter((p) => p.startsWith('meta')),
+    platforms: ['meta'],
     color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
     selectedColor: 'bg-purple-100 border-purple-500',
   },
   {
-    name: 'LinkedIn & TikTok',
-    platforms: PLATFORM_CATEGORIES.recommended.filter(
-      (p) => p.startsWith('linkedin') || p.startsWith('tiktok')
-    ),
+    name: 'LinkedIn',
+    platforms: ['linkedin'],
     color: 'bg-gray-50 hover:bg-gray-100 border-gray-200',
     selectedColor: 'bg-gray-100 border-gray-500',
   },
+];
+
+const SECONDARY_PLATFORM_GROUPS: PlatformGroupConfig[] = [
   {
     name: 'Other Platforms',
-    platforms: PLATFORM_CATEGORIES.other,
+    platforms: [
+      ...PLATFORM_CATEGORIES.recommended.filter((platform) => !PRIMARY_PLATFORM_KEYS.includes(platform)),
+      ...PLATFORM_CATEGORIES.other,
+    ] as Platform[],
     color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
     selectedColor: 'bg-orange-100 border-orange-500',
   },
@@ -81,6 +94,84 @@ export function PlatformSelectorGrid({
   disabled = false,
 }: PlatformSelectorGridProps) {
   const [hoveredPlatform, setHoveredPlatform] = useState<Platform | null>(null);
+
+  const renderGroup = useCallback((group: PlatformGroupConfig, platformGridClassName: string) => {
+    if (group.platforms.length === 0) {
+      return null;
+    }
+
+    return (
+      <div key={group.name} className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-700">{group.name}</h3>
+        <div className={platformGridClassName}>
+          {group.platforms.map((platform) => {
+            const selected = isSelected(platform);
+            const preSelected = isPreSelected(platform);
+
+            return (
+              <motion.button
+                key={platform}
+                type="button"
+                onClick={() => togglePlatform(platform)}
+                onMouseEnter={() => setHoveredPlatform(platform)}
+                onMouseLeave={() => setHoveredPlatform(null)}
+                disabled={disabled}
+                className={`
+                  relative p-4 rounded-lg border-2 transition-all text-left
+                  ${selected ? group.selectedColor : group.color}
+                  ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+                `}
+                variants={staggerItem}
+                whileHover={{ scale: disabled ? 1 : 1.02 }}
+                whileTap={{ scale: disabled ? 1 : 0.98 }}
+              >
+                {selected && (
+                  <motion.div
+                    className="absolute top-2 right-2 w-5 h-5 bg-card rounded-full flex items-center justify-center shadow-sm"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                  >
+                    <svg
+                      className="w-3 h-3 text-green-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </motion.div>
+                )}
+
+                {preSelected && !selected && (
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-indigo-500 text-white text-xs font-medium rounded-full">
+                    Popular
+                  </div>
+                )}
+
+                <div className="text-3xl mb-2">{getPlatformIcon(platform)}</div>
+                <div className="font-semibold text-gray-900 text-sm">
+                  {PLATFORM_NAMES[platform]}
+                </div>
+
+                {hoveredPlatform === platform && !selected && (
+                  <motion.div
+                    className="text-xs text-gray-500 mt-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    Click to select
+                  </motion.div>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }, [disabled, hoveredPlatform, isPreSelected, isSelected, togglePlatform, getPlatformIcon]);
 
   // Toggle platform selection
   const togglePlatform = useCallback(
@@ -159,92 +250,10 @@ export function PlatformSelectorGrid({
         initial="hidden"
         animate="visible"
       >
-        {PLATFORM_GROUPS.map((group) => {
-          const groupPlatforms = group.platforms as Platform[];
-
-          if (groupPlatforms.length === 0) return null;
-
-          return (
-            <div key={group.name} className="space-y-3">
-              {/* Group Label */}
-              <h3 className="text-sm font-semibold text-gray-700">{group.name}</h3>
-
-              {/* Platform Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {groupPlatforms.map((platform) => {
-                  const selected = isSelected(platform);
-                  const preSelected = isPreSelected(platform);
-
-                  return (
-                    <motion.button
-                      key={platform}
-                      type="button"
-                      onClick={() => togglePlatform(platform)}
-                      onMouseEnter={() => setHoveredPlatform(platform)}
-                      onMouseLeave={() => setHoveredPlatform(null)}
-                      disabled={disabled}
-                      className={`
-                        relative p-4 rounded-lg border-2 transition-all text-left
-                        ${selected ? group.selectedColor : group.color}
-                        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
-                      `}
-                      variants={staggerItem}
-                      whileHover={{ scale: disabled ? 1 : 1.02 }}
-                      whileTap={{ scale: disabled ? 1 : 0.98 }}
-                    >
-                      {/* Selection Checkmark */}
-                      {selected && (
-                        <motion.div
-                          className="absolute top-2 right-2 w-5 h-5 bg-card rounded-full flex items-center justify-center shadow-sm"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                        >
-                          <svg
-                            className="w-3 h-3 text-green-500"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </motion.div>
-                      )}
-
-                      {/* Pre-selected Badge */}
-                      {preSelected && !selected && (
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-indigo-500 text-white text-xs font-medium rounded-full">
-                          Popular
-                        </div>
-                      )}
-
-                      {/* Platform Icon */}
-                      <div className="text-3xl mb-2">{getPlatformIcon(platform)}</div>
-
-                      {/* Platform Name */}
-                      <div className="font-semibold text-gray-900 text-sm">
-                        {PLATFORM_NAMES[platform]}
-                      </div>
-
-                      {/* Hover Hint */}
-                      {hoveredPlatform === platform && !selected && (
-                        <motion.div
-                          className="text-xs text-gray-500 mt-1"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                        >
-                          Click to select
-                        </motion.div>
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        <div data-testid="primary-platform-groups" className="grid gap-4 md:grid-cols-3">
+          {PRIMARY_PLATFORM_GROUPS.map((group) => renderGroup(group, 'grid grid-cols-1 gap-3'))}
+        </div>
+        {SECONDARY_PLATFORM_GROUPS.map((group) => renderGroup(group, 'grid grid-cols-2 md:grid-cols-4 gap-3'))}
       </motion.div>
 
       {/* Selection Summary */}
