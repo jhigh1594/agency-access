@@ -184,7 +184,7 @@ export function ManageSubscriptionCard() {
                   setSelectedTier(null);
                   setErrorMessage(null);
                 }}
-                className="p-1 hover:bg-muted rounded"
+                className="p-1 hover:bg-electric/10 rounded"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>

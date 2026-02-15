@@ -172,8 +172,8 @@ function ClientsPageContent() {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-3 border border-black/10 rounded-lg hover:bg-muted transition-colors flex items-center gap-2 min-h-[44px] ${
-              showFilters ? 'bg-muted' : 'bg-background'
+            className={`px-4 py-3 border border-black/10 rounded-lg hover:bg-electric/10 transition-colors flex items-center gap-2 min-h-[44px] ${
+              showFilters ? 'bg-electric/10' : 'bg-background'
             }`}
           >
             <Filter className="h-5 w-5" />

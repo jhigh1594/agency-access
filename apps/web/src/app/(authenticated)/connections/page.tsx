@@ -486,7 +486,7 @@ function ConnectionsPageContent() {
                 <button
                   onClick={() => setManagingMetaAssets(false)}
                   aria-label="Close modal"
-                  className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="p-2 hover:bg-electric/10 rounded-full transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -529,7 +529,7 @@ function ConnectionsPageContent() {
                 <button
                   onClick={() => setManagingGoogleAssets(false)}
                   aria-label="Close modal"
-                  className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="p-2 hover:bg-electric/10 rounded-full transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                   <X className="h-5 w-5" />
                 </button>

@@ -250,7 +250,7 @@ export default function DashboardPage() {
           ) : (
             <div className="divide-y divide-black/10">
               {requests.map((request: any) => (
-                <div key={request.id} className="px-6 py-4 flex items-center justify-between hover:bg-muted transition-colors">
+                <div key={request.id} className="px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors">
                   <div>
                     <h3 className="font-medium text-ink">{request.clientName}</h3>
                     <p className="text-sm text-muted-foreground">{request.clientEmail}</p>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
           ) : (
             <div className="divide-y divide-black/10">
               {connections.map((connection: any) => (
-                <div key={connection.id} className="px-6 py-4 flex items-center justify-between hover:bg-muted transition-colors">
+                <div key={connection.id} className="px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors">
                   <div>
                     <h3 className="font-medium text-ink">{connection.clientEmail}</h3>
                     <p className="text-xs text-muted">

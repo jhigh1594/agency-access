@@ -99,7 +99,7 @@ export function PlatformConnectionsTable({
             {connections.map((connection) => (
               <div
                 key={connection.id}
-                className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-muted transition-colors"
+                className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-electric/10 transition-colors"
               >
                 {/* Platform column (col-span-5) */}
                 <div className="col-span-5 flex items-center gap-3">
