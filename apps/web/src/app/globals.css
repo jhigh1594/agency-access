@@ -21,7 +21,7 @@
     --accent-foreground: 10 10 10;
 
     --border: 231 231 231;          /* #E7E7E7 - light gray border */
-    --input: 231 231 231;
+    --input: 255 255 255;           /* #FFFFFF - white background for inputs */
     --ring: 255 107 53;
 
     --radius: 0.75rem;               /* Sleeker rounded corners */
