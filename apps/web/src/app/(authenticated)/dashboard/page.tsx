@@ -15,6 +15,7 @@ import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef } from 'react';
 
 // Simple in-memory ETag cache for conditional requests
@@ -249,8 +250,14 @@ export default function DashboardPage() {
             />
           ) : (
             <div className="divide-y divide-black/10">
-              {requests.map((request: any) => (
-                <div key={request.id} className="px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors">
+              {requests.map((request: any, index: number) => (
+                <div
+                  key={request.id}
+                  className={cn(
+                    'px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors',
+                    index === requests.length - 1 && 'rounded-b-lg'
+                  )}
+                >
                   <div>
                     <h3 className="font-medium text-ink">{request.clientName}</h3>
                     <p className="text-sm text-muted-foreground">{request.clientEmail}</p>
@@ -291,8 +298,14 @@ export default function DashboardPage() {
             />
           ) : (
             <div className="divide-y divide-black/10">
-              {connections.map((connection: any) => (
-                <div key={connection.id} className="px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors">
+              {connections.map((connection: any, index: number) => (
+                <div
+                  key={connection.id}
+                  className={cn(
+                    'px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors',
+                    index === connections.length - 1 && 'rounded-b-lg'
+                  )}
+                >
                   <div>
                     <h3 className="font-medium text-ink">{connection.clientEmail}</h3>
                     <p className="text-xs text-muted">
