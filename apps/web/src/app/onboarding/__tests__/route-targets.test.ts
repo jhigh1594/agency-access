@@ -34,4 +34,11 @@ describe('Onboarding route targets', () => {
 
     expect(legacyPageCode).toContain("redirect('/onboarding/unified')");
   });
+
+  it('resolves agency in authenticated layout using orgId before userId', () => {
+    const layoutCode = readFile('src/app/(authenticated)/layout.tsx');
+
+    expect(layoutCode).toContain('const principalClerkId = orgId || userId');
+    expect(layoutCode).toContain('clerkUserId=${encodeURIComponent(principalClerkId)}');
+  });
 });

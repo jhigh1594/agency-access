@@ -271,14 +271,10 @@ export function UnifiedOnboardingProvider({
         return true;
       case 1: // Agency profile - requires agency name
         return state.agencyName.trim().length > 0;
-      case 2: // Client selection - requires client name and email
-        return ((state.clientName ?? '').trim().length > 0) && ((state.clientEmail ?? '').trim().length > 0);
-      case 3: // Platform selection - requires at least one platform
-        const platformCount = Object.values(state.selectedPlatforms || {}).reduce(
-          (sum, platforms) => sum + (platforms?.length || 0),
-          0
-        );
-        return platformCount > 0;
+      case 2: // Client step is optional - defaults are applied if skipped
+        return true;
+      case 3: // Platform step is optional - defaults are applied if skipped
+        return true;
       case 4: // Success link display - always can proceed
         return true;
       case 5: // Team invite - optional, always can proceed
@@ -640,22 +636,80 @@ export function UnifiedOnboardingProvider({
   // ============================================================
 
   const completeOnboarding = useCallback(async () => {
-    const totalTime = Date.now() - state.startedAt;
-    trackOnboardingEvent('onboarding_completed', {
-      version: 'unified_v1',
-      totalDurationMs: totalTime,
-      stepsSkipped: state.teamInvites.length === 0 ? ['team_invite'] : [],
-      accessRequestId: state.accessRequestId,
-    });
+    try {
+      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0]?.emailAddress;
+      const principalClerkId = orgId || userId;
+      let resolvedAgencyId = state.agencyId;
 
-    // Call completion callback if provided
-    if (onComplete) {
-      onComplete();
+      if (!resolvedAgencyId && principalClerkId) {
+        const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
+          `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+          { getToken }
+        );
+
+        if (existingAgencyResponse.data.length > 0) {
+          resolvedAgencyId = existingAgencyResponse.data[0].id;
+        }
+      }
+
+      if (!resolvedAgencyId && principalClerkId && userEmail) {
+        const safeAgencyName = state.agencyName.trim().length > 0
+          ? state.agencyName.trim()
+          : `${user?.firstName?.trim() || 'My'} Agency`;
+
+        const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
+          method: 'POST',
+          getToken,
+          body: JSON.stringify({
+            clerkUserId: principalClerkId,
+            name: safeAgencyName,
+            email: userEmail,
+            settings: {
+              timezone: state.agencySettings.timezone,
+              industry: state.agencySettings.industry,
+              logoUrl: state.agencySettings.logoUrl || undefined,
+            },
+          }),
+        });
+
+        resolvedAgencyId = agencyJson.data.id;
+        setState((prev) => ({
+          ...prev,
+          agencyId: resolvedAgencyId,
+          agencyName: safeAgencyName,
+        }));
+      }
+
+      if (!resolvedAgencyId) {
+        throw new Error('Unable to complete onboarding because your agency could not be created.');
+      }
+
+      const totalTime = Date.now() - state.startedAt;
+      trackOnboardingEvent('onboarding_completed', {
+        version: 'unified_v1',
+        totalDurationMs: totalTime,
+        stepsSkipped: state.teamInvites.length === 0 ? ['team_invite'] : [],
+        accessRequestId: state.accessRequestId,
+      });
+
+      if (onComplete) {
+        onComplete();
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof AuthorizedApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : 'Unable to complete onboarding.';
+
+      setState((prev) => ({
+        ...prev,
+        error: errorMessage,
+      }));
     }
-
-    // Navigate to dashboard
-    router.push('/dashboard');
-  }, [state, router, onComplete]);
+  }, [getToken, onComplete, orgId, router, state, user, userId]);
 
   const skipOnboarding = useCallback(() => {
     trackOnboardingEvent('onboarding_skipped', {

@@ -54,14 +54,15 @@ export default function AuthenticatedLayout({
       }
 
       try {
+        const principalClerkId = orgId || userId;
         const token = await clerkAuth.getToken();
-        if (!token) {
+        if (!token || !principalClerkId) {
           setCheckingAgency(false);
           return;
         }
         // Check if user has an agency by clerkUserId
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(userId)}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -99,7 +100,7 @@ export default function AuthenticatedLayout({
     };
 
     checkAgencyAndRedirect();
-  }, [userId, isLoaded, pathname, isDevelopmentBypass, router, clerkAuth]);
+  }, [userId, orgId, isLoaded, pathname, isDevelopmentBypass, router, clerkAuth]);
 
   // Show loading state while auth loads or while checking agency (skip in bypass mode)
   if (!isDevelopmentBypass && (!isLoaded || checkingAgency)) {

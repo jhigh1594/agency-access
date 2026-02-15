@@ -362,4 +362,69 @@ describe('UnifiedOnboardingContext', () => {
     expect(createClientBody.name).toMatch(/\S/);
     expect(createClientBody.email).toMatch(/@/);
   });
+
+  it('ensures agency exists on completion so dashboard does not loop back to onboarding', async () => {
+    mockOrgId = 'org_123';
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { id: 'agency-org' }, error: null }),
+      });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    await act(async () => {
+      await result.current.completeOnboarding();
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'https://api.example.com/api/agencies?clerkUserId=org_123',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'https://api.example.com/api/agencies',
+      expect.objectContaining({ method: 'POST' })
+    );
+    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('allows continue on client and platform steps even when skipped', () => {
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    // Step 1 setup (agency step)
+    act(() => {
+      result.current.nextStep(); // move to step 1
+      result.current.updateAgency({
+        name: 'Acme Agency',
+        settings: {
+          timezone: 'America/New_York',
+          industry: 'digital_marketing',
+        },
+      });
+      result.current.nextStep(); // move to step 2
+      result.current.updateClient({
+        name: '',
+        email: '',
+      });
+    });
+    expect(result.current.state.currentStep).toBe(2);
+    expect(result.current.canGoNext()).toBe(true);
+
+    // Step 3 should allow continue even with no platform selection
+    act(() => {
+      result.current.nextStep(); // move to step 3
+      result.current.updatePlatforms({});
+    });
+    expect(result.current.state.currentStep).toBe(3);
+    expect(result.current.canGoNext()).toBe(true);
+  });
 });
