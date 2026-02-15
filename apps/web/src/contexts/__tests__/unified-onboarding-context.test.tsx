@@ -69,6 +69,59 @@ describe('UnifiedOnboardingContext', () => {
     });
   });
 
+  it('stores website URL in agency settings when creating agency from onboarding', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { id: 'agency-1' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ data: { id: 'client-1' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ data: { id: 'req-1', uniqueToken: 'abc123' }, error: null }),
+      });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    act(() => {
+      result.current.updateAgency({
+        name: 'Acme Agency',
+        settings: {
+          timezone: 'America/New_York',
+          industry: 'digital_marketing',
+          website: 'https://acmeagency.com',
+        },
+      });
+      result.current.updateClient({
+        name: 'Acme Client',
+        email: 'client@acme.com',
+      });
+    });
+
+    await act(async () => {
+      await result.current.createAgencyAndAccessRequest();
+    });
+
+    const createAgencyCall = fetchMock.mock.calls.find((call) =>
+      String(call[0]).includes('/api/agencies') && call[1]?.method === 'POST'
+    );
+
+    expect(createAgencyCall).toBeDefined();
+    const body = JSON.parse(createAgencyCall?.[1]?.body as string);
+    expect(body.settings.website).toBe('https://acmeagency.com');
+  });
+
   it('returns deterministic result and stores agency/access ids when creating onboarding request', async () => {
     fetchMock
       .mockResolvedValueOnce({
@@ -174,6 +227,11 @@ describe('UnifiedOnboardingContext', () => {
         ok: true,
         status: 200,
         json: async () => ({ data: [{ id: 'agency-org' }], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { id: 'agency-org' }, error: null }),
       })
       .mockResolvedValueOnce({
         ok: true,

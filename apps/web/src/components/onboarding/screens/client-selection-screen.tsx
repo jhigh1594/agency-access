@@ -31,9 +31,11 @@ import { fadeVariants, fadeTransition } from '@/lib/animations';
 interface ClientSelectionScreenProps {
   clientName: string;
   clientEmail: string;
+  websiteUrl: string;
   existingClients: Client[];
   loading: boolean;
   onUpdate: (data: { id?: string; name: string; email: string }) => void;
+  onWebsiteUrlChange: (website: string) => void;
   onLoadClients: () => Promise<void>;
 }
 
@@ -46,9 +48,11 @@ type ClientSelectionMode = 'existing' | 'new';
 export function ClientSelectionScreen({
   clientName,
   clientEmail,
+  websiteUrl,
   existingClients,
   loading,
   onUpdate,
+  onWebsiteUrlChange,
   onLoadClients,
 }: ClientSelectionScreenProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -110,6 +114,10 @@ export function ClientSelectionScreen({
     setMode('new');
     onUpdate({ name: clientName, email });
   }, [clientName, onUpdate]);
+
+  const handleWebsiteChange = useCallback((website: string) => {
+    onWebsiteUrlChange(website);
+  }, [onWebsiteUrlChange]);
 
   // Filter existing clients by search
   const [searchQuery, setSearchQuery] = useState('');
@@ -245,6 +253,19 @@ export function ClientSelectionScreen({
             </div>
           </div>
         )}
+
+        <div className="max-w-md">
+          <OpinionatedInput
+            label="Website URL"
+            value={websiteUrl}
+            onChange={handleWebsiteChange}
+            placeholder="https://youragency.com"
+            type="url"
+            helperText="Optional: this maps to Company Website in Settings"
+            validationMessage="Please enter a valid URL (including https://)"
+            isValid={websiteUrl.trim().length === 0 || /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(websiteUrl.trim())}
+          />
+        </div>
 
         {/* Insight Box */}
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">

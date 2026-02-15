@@ -90,9 +90,11 @@ function OnboardingFlow() {
           <ClientSelectionScreen
             clientName={state.clientName || ''}
             clientEmail={state.clientEmail || ''}
+            websiteUrl={state.agencySettings.website || ''}
             existingClients={state.existingClients}
             loading={state.loading}
             onUpdate={(data) => updateClient(data)}
+            onWebsiteUrlChange={(website) => updateAgency({ name: state.agencyName, settings: { website } })}
             onLoadClients={loadExistingClients}
           />
         );

@@ -11,15 +11,18 @@ describe('ClientSelectionScreen', () => {
       <ClientSelectionScreen
         clientName=""
         clientEmail=""
+        websiteUrl=""
         existingClients={[]}
         loading={false}
         onUpdate={onUpdate}
+        onWebsiteUrlChange={vi.fn()}
         onLoadClients={onLoadClients}
       />
     );
 
     expect(screen.getByText('Client Name').parentElement?.textContent).not.toContain('*');
     expect(screen.getByText('Client Email').parentElement?.textContent).not.toContain('*');
+    expect(screen.getByText('Website URL').parentElement?.textContent).not.toContain('*');
   });
 
   it('keeps create-new mode when existing clients load after user starts typing', () => {
@@ -30,9 +33,11 @@ describe('ClientSelectionScreen', () => {
       <ClientSelectionScreen
         clientName=""
         clientEmail=""
+        websiteUrl=""
         existingClients={[]}
         loading={false}
         onUpdate={onUpdate}
+        onWebsiteUrlChange={vi.fn()}
         onLoadClients={onLoadClients}
       />
     );
@@ -45,6 +50,7 @@ describe('ClientSelectionScreen', () => {
       <ClientSelectionScreen
         clientName="Acme Corp"
         clientEmail=""
+        websiteUrl=""
         existingClients={[
           {
             id: 'client_1',
@@ -54,6 +60,7 @@ describe('ClientSelectionScreen', () => {
         ]}
         loading={false}
         onUpdate={onUpdate}
+        onWebsiteUrlChange={vi.fn()}
         onLoadClients={onLoadClients}
       />
     );

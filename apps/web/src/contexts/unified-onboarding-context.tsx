@@ -36,6 +36,7 @@ export interface AgencySettings {
   timezone: string;
   industry: string;
   logoUrl?: string;
+  website?: string;
 }
 
 export interface AgencyData {
@@ -285,6 +286,7 @@ const initialState: OnboardingState = {
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     industry: 'digital_marketing', // Smart default
     logoUrl: '',
+    website: '',
   },
 
   // Client
@@ -558,6 +560,8 @@ export function UnifiedOnboardingProvider({
       const safeAgencyName = state.agencyName.trim().length > 0
         ? state.agencyName.trim()
         : (getAgencyNameFromEmail(userEmail) || 'My Agency');
+      const safeAgencyWebsite = state.agencySettings.website?.trim() || undefined;
+      const safeAgencyLogoUrl = state.agencySettings.logoUrl?.trim() || undefined;
       const safeClientName = state.clientName?.trim()
         ? state.clientName.trim()
         : `${safeAgencyName} Client`;
@@ -580,6 +584,7 @@ export function UnifiedOnboardingProvider({
 
       // Step 1: Resolve agency (existing first, then create)
       let agencyId = state.agencyId;
+      let agencyResolvedFromExisting = false;
       if (!agencyId && principalClerkId) {
         const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
           `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
@@ -588,6 +593,7 @@ export function UnifiedOnboardingProvider({
 
         if (existingAgencyResponse.data.length > 0) {
           agencyId = existingAgencyResponse.data[0].id;
+          agencyResolvedFromExisting = true;
         }
       }
 
@@ -606,11 +612,28 @@ export function UnifiedOnboardingProvider({
             settings: {
               timezone: state.agencySettings.timezone,
               industry: state.agencySettings.industry,
-              logoUrl: state.agencySettings.logoUrl || undefined,
+              logoUrl: safeAgencyLogoUrl,
+              website: safeAgencyWebsite,
             },
           }),
         });
         agencyId = agencyJson.data.id;
+      }
+
+      if (agencyId && agencyResolvedFromExisting) {
+        await authorizedApiFetch(`/api/agencies/${agencyId}`, {
+          method: 'PATCH',
+          getToken,
+          body: JSON.stringify({
+            name: safeAgencyName,
+            settings: {
+              timezone: state.agencySettings.timezone,
+              industry: state.agencySettings.industry,
+              logoUrl: safeAgencyLogoUrl || null,
+              website: safeAgencyWebsite || null,
+            },
+          }),
+        });
       }
 
       // Step 2: Create or select client
@@ -664,6 +687,11 @@ export function UnifiedOnboardingProvider({
       setState((prev) => ({
         ...prev,
         agencyName: safeAgencyName,
+        agencySettings: {
+          ...prev.agencySettings,
+          logoUrl: safeAgencyLogoUrl || '',
+          website: safeAgencyWebsite || '',
+        },
         clientName: safeClientName,
         clientEmail: safeClientEmail,
         selectedPlatforms: safeSelectedPlatforms,
@@ -786,6 +814,8 @@ export function UnifiedOnboardingProvider({
         const safeAgencyName = state.agencyName.trim().length > 0
           ? state.agencyName.trim()
           : (getAgencyNameFromEmail(userEmail) || 'My Agency');
+        const safeAgencyWebsite = state.agencySettings.website?.trim() || undefined;
+        const safeAgencyLogoUrl = state.agencySettings.logoUrl?.trim() || undefined;
 
         const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
           method: 'POST',
@@ -797,7 +827,8 @@ export function UnifiedOnboardingProvider({
             settings: {
               timezone: state.agencySettings.timezone,
               industry: state.agencySettings.industry,
-              logoUrl: state.agencySettings.logoUrl || undefined,
+              logoUrl: safeAgencyLogoUrl,
+              website: safeAgencyWebsite,
             },
           }),
         });
@@ -807,6 +838,11 @@ export function UnifiedOnboardingProvider({
           ...prev,
           agencyId: resolvedAgencyId,
           agencyName: safeAgencyName,
+          agencySettings: {
+            ...prev.agencySettings,
+            logoUrl: safeAgencyLogoUrl || '',
+            website: safeAgencyWebsite || '',
+          },
         }));
       }
 
