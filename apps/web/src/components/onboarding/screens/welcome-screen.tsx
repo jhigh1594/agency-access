@@ -7,7 +7,6 @@
  * Key Elements:
  * - Full-screen with gradient background (handled by UnifiedWizard)
  * - Clear "60-second" value prop
- * - Optional demo video (playable inline)
  * - Single CTA (no escape)
  * - Pre-fill agency name from Clerk user data (in context)
  *
@@ -20,7 +19,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { scaleVariants, scaleTransition } from '@/lib/animations';
 
@@ -49,17 +48,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
       {/* Content */}
       <div className="text-center space-y-6">
         {/* Logo/Icon */}
-        <motion.div
-          className="inline-flex items-center justify-center w-20 h-20 bg-acid/20 border-2 border-acid rounded-lg shadow-brutalist mb-4"
-          animate={{
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        >
+        <motion.div className="mb-4 flex justify-center">
           <Image
             src="/authhub_transparent_2.png"
             alt="AuthHub logo"
@@ -87,35 +76,6 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
             send it to clients, and get instant token access.
           </p>
         </div>
-
-        {/* Optional Demo Video */}
-        <motion.div
-          className="relative max-w-3xl mx-auto mt-8"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="aspect-video bg-ink border-2 border-black rounded-lg shadow-brutalist-lg overflow-hidden flex items-center justify-center cursor-pointer group">
-            {/* Video Thumbnail Placeholder */}
-            <div className="absolute inset-0 bg-[url('/placeholder-video-thumbnail.jpg')] bg-cover bg-center opacity-40" />
-
-            {/* Play Button */}
-            <button
-              onClick={() => {
-                // TODO: Implement video modal/player
-                console.log('Play demo video');
-              }}
-              className="relative z-10 flex items-center justify-center w-20 h-20 bg-card hover:bg-card/90 rounded-full shadow-brutalist transition-all group-hover:scale-110"
-              aria-label="Watch demo video"
-            >
-              <Play className="w-8 h-8 text-teal ml-1" fill="currentColor" />
-            </button>
-
-            {/* Video Label */}
-            <div className="absolute bottom-4 left-4 text-white text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg backdrop-blur-sm">
-              Watch 30-second demo
-            </div>
-          </div>
-        </motion.div>
 
         {/* Key Benefits */}
         <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto mt-8">

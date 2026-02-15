@@ -7,6 +7,20 @@
 import { describe, it, expect } from 'vitest';
 
 describe('Welcome Screen - Static Design Validation', () => {
+  describe('Welcome screen content', () => {
+    it('should not include demo video content', () => {
+      const fs = require('fs');
+      const componentCode = fs.readFileSync(
+        '/Users/jhigh/agency-access-platform/apps/web/src/components/onboarding/screens/welcome-screen.tsx',
+        'utf-8'
+      );
+
+      expect(componentCode).not.toContain('Watch 30-second demo');
+      expect(componentCode).not.toContain('placeholder-video-thumbnail.jpg');
+      expect(componentCode).not.toContain('Watch demo video');
+    });
+  });
+
   describe('Component has no hardcoded generic color classes', () => {
     it('should not contain indigo colors', () => {
       const fs = require('fs');
