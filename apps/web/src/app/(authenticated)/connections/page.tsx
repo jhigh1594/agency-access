@@ -24,7 +24,7 @@ import { m, AnimatePresence } from 'framer-motion';
 function ConnectionsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { userId } = useAuth();
+  const { userId, orgId, getToken } = useAuth();
   const { user } = useUser();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -41,22 +41,21 @@ function ConnectionsPageContent() {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [currentEmail, setCurrentEmail] = useState<string>('');
 
-  // Fetch user's agency by email (lightweight endpoint, cached)
-  // Get the token function from Clerk for authenticated requests
-  const { getToken } = useAuth();
+  const principalClerkId = orgId || userId;
 
   const { data: agencyData } = useQuery({
-    queryKey: ['user-agency', user?.primaryEmailAddress?.emailAddress],
+    queryKey: ['user-agency', principalClerkId],
     queryFn: async () => {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) return null;
+      if (!principalClerkId) {
+        return null;
+      }
 
       // Get Clerk session token for authenticated request
       const token = await getToken();
 
-      // Use lightweight by-email endpoint (cached, no members included)
+      // Resolve the active principal's agency by clerk user/org id.
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/by-email?email=${encodeURIComponent(email)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -65,9 +64,9 @@ function ConnectionsPageContent() {
       );
       if (!response.ok) throw new Error('Failed to fetch agency');
       const result = await response.json();
-      return result.data || null;
+      return result.data?.[0] || null;
     },
-    enabled: !!user?.primaryEmailAddress?.emailAddress,
+    enabled: !!principalClerkId,
     staleTime: 30 * 60 * 1000, // 30 minutes - agency data rarely changes
     gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour (garbage collection time)
   });

@@ -24,6 +24,8 @@ vi.mock('next/navigation', () => ({
 // Mock Clerk
 vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({
+    userId: 'user_123',
+    orgId: null,
     getToken: vi.fn().mockResolvedValue('test-token'),
   }),
   useUser: () => ({
@@ -91,7 +93,7 @@ describe('ConnectionsPage', () => {
 
   it('should categorize platforms correctly', async () => {
     (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: { id: 'test-agency-id' } }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
       .mockResolvedValueOnce(
         mockJsonResponse({
           data: [
@@ -125,9 +127,30 @@ describe('ConnectionsPage', () => {
     expect(screen.getByText('Instagram')).toBeInTheDocument();
   });
 
+  it('resolves agency using clerkUserId endpoint', async () => {
+    (global.fetch as any)
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          data: [
+            { platform: 'meta_ads', name: 'Meta Ads', category: 'recommended', connected: false },
+          ],
+        })
+      );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/agencies?clerkUserId=user_123'),
+        expect.anything()
+      );
+    });
+  });
+
   it('should display connected email for connected platforms', async () => {
     (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: { id: 'test-agency-id' } }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
       .mockResolvedValueOnce(
         mockJsonResponse({
           data: [
@@ -158,7 +181,7 @@ describe('ConnectionsPage', () => {
 
   it('should show Connect button for unconnected platforms', async () => {
     (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: { id: 'test-agency-id' } }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
       .mockResolvedValueOnce(
         mockJsonResponse({
           data: [
@@ -186,7 +209,7 @@ describe('ConnectionsPage', () => {
     mockSearchParams.set('platform', 'meta_ads');
 
     (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: { id: 'test-agency-id' } }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
       .mockResolvedValueOnce(
         mockJsonResponse({
           data: [
@@ -215,7 +238,7 @@ describe('ConnectionsPage', () => {
     mockSearchParams.set('error', 'TOKEN_EXCHANGE_FAILED');
 
     (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: { id: 'test-agency-id' } }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
       .mockResolvedValueOnce(
         mockJsonResponse({
           data: [
@@ -239,7 +262,7 @@ describe('ConnectionsPage', () => {
 
   it('should initiate OAuth flow on Connect click', async () => {
     (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: { id: 'test-agency-id' } }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
       .mockResolvedValueOnce(
         mockJsonResponse({
           data: [
@@ -283,7 +306,7 @@ describe('ConnectionsPage', () => {
   it.skip('should show loading indicator while platforms are fetching', async () => {
     (global.fetch as any).mockImplementation((url: string) => {
       if (url.includes('by-email')) {
-        return Promise.resolve(mockJsonResponse({ data: { id: 'test-agency-id' } }));
+        return Promise.resolve(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }));
       }
       if (url.includes('available')) {
         return new Promise(() => {}); // Never resolves
@@ -305,7 +328,7 @@ describe('ConnectionsPage', () => {
   it.skip('should display status badge for non-active connections', async () => {
     (global.fetch as any).mockImplementation((url: string) => {
       if (url.includes('by-email')) {
-        return Promise.resolve(mockJsonResponse({ data: { id: 'test-agency-id' } }));
+        return Promise.resolve(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }));
       }
       if (url.includes('available')) {
         return Promise.resolve(
