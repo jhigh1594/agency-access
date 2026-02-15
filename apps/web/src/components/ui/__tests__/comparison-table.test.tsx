@@ -110,3 +110,29 @@ describe('ComparisonRow value rendering', () => {
     expect(screen.getByText('8 products')).toBeInTheDocument();
   });
 });
+
+describe('ComparisonRow exclusive badge', () => {
+  it('should show badge when exclusive prop is true', () => {
+    render(
+      <ComparisonTable>
+        <tbody>
+          <ComparisonRow feature="Pinterest Ads" leadsie={false} authhub={true} exclusive />
+        </tbody>
+      </ComparisonTable>
+    );
+
+    expect(screen.getByText('Only AuthHub')).toBeInTheDocument();
+  });
+
+  it('should not show badge when exclusive prop is false', () => {
+    render(
+      <ComparisonTable>
+        <tbody>
+          <ComparisonRow feature="Meta Ads" leadsie={true} authhub={true} />
+        </tbody>
+      </ComparisonTable>
+    );
+
+    expect(screen.queryByText('Only AuthHub')).not.toBeInTheDocument();
+  });
+});
