@@ -166,25 +166,25 @@ export function UnifiedWizard({
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-ink flex flex-col"
+      className="min-h-screen bg-paper flex flex-col"
     >
       {/* Progress Bar */}
-      <div className="w-full bg-card/10 backdrop-blur-sm border-b border-white/20">
+      <div className="w-full bg-paper border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-6">
           {/* Step Indicators */}
           <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-white/90">
+            <div className="text-sm font-medium text-gray-700">
               Step {currentStep + 1} of {totalSteps}
             </div>
-            <div className="text-sm font-medium text-white/90">
+            <div className="text-sm font-medium text-gray-700">
               {progressPercentage}% Complete
             </div>
           </div>
 
           {/* Linear Progress Bar */}
-          <div className="relative h-2 bg-card/20 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
-              className="absolute inset-y-0 left-0 bg-card rounded-full"
+              className="absolute inset-y-0 left-0 bg-teal rounded-full"
               initial={{ width: `${((currentStep) / totalSteps) * 100}%` }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 0.5, ease: 'easeInOut' }}
@@ -204,17 +204,17 @@ export function UnifiedWizard({
                   className="flex-1 flex items-center"
                   style={{ opacity: isUpcoming ? 0.5 : 1 }}
                 >
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
-                    style={{
-                      backgroundColor: isCompleted ? 'white' : isCurrent ? 'white' : 'transparent',
-                      color: isCompleted || isCurrent ? '#6366f1' : 'white',
-                      border: isUpcoming ? '1px solid white/50' : 'none',
-                    }}
+                  <div
+                    className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold border ${
+                      isCompleted || isCurrent
+                        ? 'bg-ink text-white border-ink'
+                        : 'bg-transparent text-gray-700 border-gray-300'
+                    }`}
                   >
                     {isCompleted ? '✓' : index + 1}
                   </div>
                   {index < totalSteps - 1 && (
-                    <div className="flex-1 h-px bg-card/30 mx-1" />
+                    <div className="flex-1 h-px bg-gray-300 mx-1" />
                   )}
                 </div>
               );
@@ -266,7 +266,7 @@ export function UnifiedWizard({
       </div>
 
       {/* Navigation Footer */}
-      <div className="bg-card/10 backdrop-blur-sm border-t border-white/20">
+      <div className="bg-paper border-t border-border">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             {/* Back Button */}
@@ -274,7 +274,7 @@ export function UnifiedWizard({
               <button
                 onClick={handleBack}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/10 hover:bg-card/20 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card hover:bg-gray-100 text-gray-900 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200"
                 aria-label="Go back to previous step"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -289,7 +289,7 @@ export function UnifiedWizard({
               <button
                 onClick={handleSkip}
                 disabled={loading}
-                className="px-4 py-2 rounded-lg bg-transparent hover:bg-card/10 text-white/80 hover:text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg bg-transparent hover:bg-gray-100 text-gray-600 hover:text-gray-900 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Skip for now →
               </button>
@@ -322,12 +322,12 @@ export function UnifiedWizard({
           </div>
 
           {/* Keyboard Shortcuts Hint */}
-          <div className="mt-4 text-center text-xs text-white/60">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Enter</kbd> to continue
+          <div className="mt-4 text-center text-xs text-gray-500">
+            Press <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 font-mono text-gray-700">Enter</kbd> to continue
             {canSkip && (
               <>
                 {' • '}
-                <kbd className="px-1.5 py-0.5 rounded bg-card/10 font-mono">Esc</kbd> to skip
+                <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 font-mono text-gray-700">Esc</kbd> to skip
               </>
             )}
           </div>

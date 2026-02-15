@@ -3,16 +3,49 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider, useTheme } from '../theme-provider';
 import { act } from 'react-dom/test-utils';
 
+let mockPathname: string | null = null;
+
 vi.mock('next/navigation', () => ({
-  usePathname: () => null, // Non-marketing path so theme follows storage/system
+  usePathname: () => mockPathname,
 }));
 
 describe('ThemeProvider', () => {
   beforeEach(() => {
+    if (typeof localStorage.getItem !== 'function') {
+      const storage = new Map<string, string>();
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        value: {
+          getItem: (key: string) => storage.get(key) ?? null,
+          setItem: (key: string, value: string) => {
+            storage.set(key, String(value));
+          },
+          removeItem: (key: string) => {
+            storage.delete(key);
+          },
+          clear: () => {
+            storage.clear();
+          },
+        },
+      });
+    }
+
     // Clear localStorage before each test
     if (typeof localStorage.clear === 'function') localStorage.clear();
     // Reset document classes
     document.documentElement.classList.remove('light', 'dark');
+    mockPathname = null;
+
+    if (typeof window.matchMedia !== 'function') {
+      window.matchMedia = vi.fn().mockImplementation((query) => ({
+        matches: query === '(prefers-color-scheme: light)',
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+    }
   });
 
   afterEach(() => {
@@ -54,6 +87,28 @@ describe('ThemeProvider', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('theme')).toHaveTextContent('dark');
+    });
+  });
+
+  it('should force light theme on onboarding paths even when dark is saved', async () => {
+    mockPathname = '/onboarding/unified';
+    localStorage.setItem('agency-theme', 'dark');
+
+    const TestComponent = () => {
+      const { theme } = useTheme();
+      return <div data-testid="theme">{theme}</div>;
+    };
+
+    render(
+      <ThemeProvider>
+        <TestComponent />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme')).toHaveTextContent('light');
+      expect(document.documentElement.classList.contains('light')).toBe(true);
+      expect(document.documentElement.classList.contains('dark')).toBe(false);
     });
   });
 

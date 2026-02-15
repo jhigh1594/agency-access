@@ -8,8 +8,20 @@
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-import type { Platform, AccessRequestStatus } from '@agency-platform/shared';
+import { PlatformSchema, type Platform, type AccessRequestStatus } from '@agency-platform/shared';
 import { invalidateCache } from '@/lib/cache.js';
+
+const LegacyPlatformSchema = z.enum([
+  'whatsapp_business',
+  'google_tag_manager',
+  'google_merchant_center',
+  'google_search_console',
+  'youtube_studio',
+  'google_business_profile',
+  'display_video_360',
+]);
+
+const AccessRequestPlatformSchema = z.union([PlatformSchema, LegacyPlatformSchema]);
 
 // Validation schemas
 const createAccessRequestSchema = z.object({
@@ -20,16 +32,7 @@ const createAccessRequestSchema = z.object({
   authModel: z.enum(['client_authorization', 'delegated_access']).optional().default('client_authorization'),
   platforms: z.array(
     z.object({
-      platform: z.enum([
-        // Meta products
-        'meta_ads', 'instagram', 'whatsapp_business',
-        // Google products
-        'google_ads', 'ga4', 'google_tag_manager', 
-        'google_merchant_center', 'google_search_console', 'youtube_studio',
-        'google_business_profile', 'display_video_360',
-        // Other platforms
-        'linkedin', 'tiktok', 'snapchat',
-      ]),
+      platform: AccessRequestPlatformSchema,
       accessLevel: z.enum(['manage', 'view_only']),
     })
   ).min(1, 'At least one platform must be selected'),
@@ -79,8 +82,11 @@ const PLATFORM_GROUP_MAP: Record<string, string> = {
   'whatsapp_business': 'meta',
   // Other platforms (standalone)
   'linkedin': 'linkedin',
+  'linkedin_ads': 'linkedin',
   'tiktok': 'tiktok',
+  'tiktok_ads': 'tiktok',
   'snapchat': 'snapchat',
+  'snapchat_ads': 'snapchat',
 };
 
 /**

@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
 import * as accessRequestService from '@/services/access-request.service';
 
 // Mock crypto for token generation
-let cryptoCallCount = 0;
+var cryptoCallCount = 0;
 vi.mock('crypto', () => ({
   randomBytes: (size: number) => ({
     toString: (encoding: string) => {
@@ -146,6 +146,33 @@ describe('AccessRequestService', () => {
       expect(result.error).toBeNull();
       expect(result.data?.uniqueToken).toBeTruthy();
     });
+
+    it('should accept onboarding platform ids like linkedin_ads and kit', async () => {
+      const mockAgency = {
+        id: 'agency-1',
+        name: 'Test Agency',
+      };
+
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue(mockAgency as any);
+      vi.mocked(prisma.accessRequest.create).mockResolvedValue({
+        id: 'request-1',
+        uniqueToken: 'a1b2c3d4e5f6',
+      } as any);
+
+      const result = await accessRequestService.createAccessRequest({
+        agencyId: 'agency-1',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        platforms: [
+          { platform: 'linkedin_ads' as any, accessLevel: 'manage' },
+          { platform: 'kit' as any, accessLevel: 'view_only' },
+        ],
+        intakeFields: [],
+      });
+
+      expect(result.error).toBeNull();
+      expect(result.data).toBeDefined();
+    });
   });
 
   describe('getAccessRequestByToken', () => {
@@ -164,7 +191,14 @@ describe('AccessRequestService', () => {
       const result = await accessRequestService.getAccessRequestByToken('a1b2c3d4e5f6');
 
       expect(result.error).toBeNull();
-      expect(result.data).toEqual(mockRequest);
+      expect(result.data?.id).toBe(mockRequest.id);
+      expect(result.data?.uniqueToken).toBe(mockRequest.uniqueToken);
+      expect(result.data?.platforms).toEqual([
+        {
+          platformGroup: 'meta',
+          products: [{ product: 'meta_ads', accessLevel: 'admin', accounts: [] }],
+        },
+      ]);
     });
 
     it('should return error if request not found', async () => {

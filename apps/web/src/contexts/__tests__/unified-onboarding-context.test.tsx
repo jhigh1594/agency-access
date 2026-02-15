@@ -209,28 +209,157 @@ describe('UnifiedOnboardingContext', () => {
   it('allows back navigation through platform selection and locks after link generation', () => {
     const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
 
-    // Step 0 (welcome): cannot go back
+    // Step 0 (welcome): cannot go back, can skip
     expect(result.current.state.currentStep).toBe(0);
     expect(result.current.canGoBack()).toBe(false);
+    expect(result.current.canSkip()).toBe(true);
 
-    // Step 1 (agency): can go back
+    // Step 1 (agency): can go back, can skip
     act(() => result.current.nextStep());
     expect(result.current.state.currentStep).toBe(1);
     expect(result.current.canGoBack()).toBe(true);
+    expect(result.current.canSkip()).toBe(true);
 
-    // Step 2 (client): can go back
+    // Step 2 (client): can go back, can skip
     act(() => result.current.nextStep());
     expect(result.current.state.currentStep).toBe(2);
     expect(result.current.canGoBack()).toBe(true);
+    expect(result.current.canSkip()).toBe(true);
 
-    // Step 3 (platform selection): can still go back before link generation
+    // Step 3 (platform selection): can still go back before link generation, can skip
     act(() => result.current.nextStep());
     expect(result.current.state.currentStep).toBe(3);
     expect(result.current.canGoBack()).toBe(true);
+    expect(result.current.canSkip()).toBe(true);
 
-    // Step 4 (success link): locked
+    // Step 4 (success link): locked back navigation, can still skip
     act(() => result.current.nextStep());
     expect(result.current.state.currentStep).toBe(4);
     expect(result.current.canGoBack()).toBe(false);
+    expect(result.current.canSkip()).toBe(true);
+
+    // Step 5 (team): skippable
+    act(() => result.current.nextStep());
+    expect(result.current.state.currentStep).toBe(5);
+    expect(result.current.canSkip()).toBe(true);
+
+    // Step 6 (final): no skip
+    act(() => result.current.nextStep());
+    expect(result.current.state.currentStep).toBe(6);
+    expect(result.current.canSkip()).toBe(false);
+  });
+
+  it('skips /api/clients lookup when no agency exists yet', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], error: null }),
+    });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    await act(async () => {
+      await result.current.loadExistingClients();
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/api/agencies?clerkUserId=user_123',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(result.current.state.existingClients).toEqual([]);
+    expect(result.current.state.error).toBeNull();
+  });
+
+  it('loads clients only after agency lookup succeeds', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: [{ id: 'client-1', name: 'Acme', email: 'client@acme.com' }],
+          error: null,
+        }),
+      });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    await act(async () => {
+      await result.current.loadExistingClients();
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'https://api.example.com/api/agencies?clerkUserId=user_123',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'https://api.example.com/api/clients',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(result.current.state.existingClients).toEqual([
+      { id: 'client-1', name: 'Acme', email: 'client@acme.com' },
+    ]);
+  });
+
+  it('uses safe defaults for client data when creating access request from skipped steps', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { id: 'agency-1' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ data: { id: 'client-1' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ data: { id: 'req-1', uniqueToken: 'abc123' }, error: null }),
+      });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    act(() => {
+      result.current.updateAgency({
+        name: 'Acme Agency',
+        settings: {
+          timezone: 'America/New_York',
+          industry: 'digital_marketing',
+        },
+      });
+      result.current.updateClient({
+        name: '',
+        email: '',
+      });
+      result.current.updatePlatforms({
+        google: ['google_ads'],
+      });
+    });
+
+    await act(async () => {
+      await result.current.createAgencyAndAccessRequest();
+    });
+
+    const createClientCall = fetchMock.mock.calls.find((call) =>
+      String(call[0]).includes('/api/clients')
+    );
+    expect(createClientCall).toBeDefined();
+    const createClientBody = JSON.parse(createClientCall?.[1]?.body as string);
+    expect(createClientBody.name).toMatch(/\S/);
+    expect(createClientBody.email).toMatch(/@/);
   });
 });

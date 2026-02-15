@@ -102,4 +102,17 @@ describe('UnifiedWizard - Static Design Validation', () => {
       expect(componentCode).toMatch(/bg-coral/);
     });
   });
+
+  describe('Light onboarding shell', () => {
+    it('should avoid forcing a dark onboarding background', () => {
+      const fs = require('fs');
+      const componentCode = fs.readFileSync(
+        '/Users/jhigh/agency-access-platform/apps/web/src/components/onboarding/unified-wizard.tsx',
+        'utf-8'
+      );
+
+      expect(componentCode).not.toContain('min-h-screen bg-ink');
+      expect(componentCode).toContain('min-h-screen bg-paper');
+    });
+  });
 });

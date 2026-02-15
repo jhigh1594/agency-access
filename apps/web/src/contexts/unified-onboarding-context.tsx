@@ -144,6 +144,7 @@ const UnifiedOnboardingContext = createContext<UnifiedOnboardingContextValue | u
 const TOTAL_STEPS = 7; // 0-6 (7 screens total: Welcome, Agency, Client, Platform, Success, Team, Final)
 
 const PRESELECTED_PLATFORMS: Platform[] = ['google_ads', 'meta_ads']; // 80% of use cases
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const initialState: OnboardingState = {
   // Progress
@@ -294,8 +295,8 @@ export function UnifiedOnboardingProvider({
   }, [state.currentStep]);
 
   const canSkip = useCallback(() => {
-    // Only team invite (Screen 5) can be skipped
-    return state.currentStep === 5;
+    // Allow skipping every step except the final completion screen.
+    return state.currentStep < 6;
   }, [state.currentStep]);
 
   // ============================================================
@@ -364,6 +365,30 @@ export function UnifiedOnboardingProvider({
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
+      const principalClerkId = orgId || userId;
+      if (!principalClerkId) {
+        setState((prev) => ({
+          ...prev,
+          existingClients: [],
+          loading: false,
+        }));
+        return;
+      }
+
+      const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
+        `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+        { getToken }
+      );
+
+      if (!existingAgencyResponse.data?.length) {
+        setState((prev) => ({
+          ...prev,
+          existingClients: [],
+          loading: false,
+        }));
+        return;
+      }
+
       const json = await authorizedApiFetch<{ data: Client[]; error: null }>('/api/clients', {
         getToken,
       });
@@ -374,6 +399,16 @@ export function UnifiedOnboardingProvider({
         loading: false,
       }));
     } catch (err) {
+      if (err instanceof AuthorizedApiError && err.code === 'FORBIDDEN') {
+        setState((prev) => ({
+          ...prev,
+          existingClients: [],
+          loading: false,
+          error: null,
+        }));
+        return;
+      }
+
       const errorMessage = err instanceof AuthorizedApiError
         ? err.message
         : err instanceof Error
@@ -386,7 +421,7 @@ export function UnifiedOnboardingProvider({
         loading: false,
       }));
     }
-  }, [getToken]);
+  }, [getToken, orgId, userId]);
 
   const createAgencyAndAccessRequest = useCallback(async (): Promise<CreateAgencyAndAccessRequestResult> => {
     try {
@@ -394,6 +429,28 @@ export function UnifiedOnboardingProvider({
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0]?.emailAddress;
       const principalClerkId = orgId || userId;
+      const safeAgencyName = state.agencyName.trim().length > 0
+        ? state.agencyName.trim()
+        : `${user?.firstName?.trim() || 'My'} Agency`;
+      const safeClientName = state.clientName?.trim()
+        ? state.clientName.trim()
+        : `${safeAgencyName} Client`;
+      const safeClientEmail = state.clientEmail?.trim() && EMAIL_REGEX.test(state.clientEmail.trim())
+        ? state.clientEmail.trim()
+        : (userEmail ? userEmail.replace('@', '+client@') : 'client@example.com');
+      const selectedPlatforms = Object.entries(state.selectedPlatforms || {}).reduce<Record<string, string[]>>(
+        (acc, [group, platforms]) => {
+          const validPlatforms = (platforms || []).filter((platform) => typeof platform === 'string' && platform.trim().length > 0);
+          if (validPlatforms.length > 0) {
+            acc[group] = validPlatforms;
+          }
+          return acc;
+        },
+        {}
+      );
+      const safeSelectedPlatforms = Object.keys(selectedPlatforms).length > 0
+        ? selectedPlatforms
+        : { google: ['google_ads'] };
 
       // Step 1: Resolve agency (existing first, then create)
       let agencyId = state.agencyId;
@@ -418,7 +475,7 @@ export function UnifiedOnboardingProvider({
           getToken,
           body: JSON.stringify({
             clerkUserId: principalClerkId || undefined,
-            name: state.agencyName,
+            name: safeAgencyName,
             email: userEmail,
             settings: {
               timezone: state.agencySettings.timezone,
@@ -438,9 +495,9 @@ export function UnifiedOnboardingProvider({
           method: 'POST',
           getToken,
           body: JSON.stringify({
-            name: state.clientName,
-            company: state.clientName,
-            email: state.clientEmail,
+            name: safeClientName,
+            company: safeClientName,
+            email: safeClientEmail,
             language: 'en',
           }),
         });
@@ -456,10 +513,10 @@ export function UnifiedOnboardingProvider({
           body: JSON.stringify({
             agencyId,
             clientId,
-            clientName: state.clientName,
-            clientEmail: state.clientEmail,
+            clientName: safeClientName,
+            clientEmail: safeClientEmail,
             authModel: 'client_authorization',
-            platforms: state.selectedPlatforms,
+            platforms: safeSelectedPlatforms,
           }),
         }
       );
@@ -480,6 +537,10 @@ export function UnifiedOnboardingProvider({
       // Update state with generated link
       setState((prev) => ({
         ...prev,
+        agencyName: safeAgencyName,
+        clientName: safeClientName,
+        clientEmail: safeClientEmail,
+        selectedPlatforms: safeSelectedPlatforms,
         agencyId: resolvedAgencyId,
         accessLink,
         accessRequestId: accessRequest.id,

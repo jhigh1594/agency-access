@@ -14,7 +14,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_KEY = 'agency-theme';
 
 /** Paths that are part of the marketing site and always use light theme. */
-function isMarketingPath(pathname: string | null): boolean {
+function isAlwaysLightPath(pathname: string | null): boolean {
   if (!pathname) return false;
   return (
     pathname === '/' ||
@@ -23,7 +23,8 @@ function isMarketingPath(pathname: string | null): boolean {
     pathname.startsWith('/blog') ||
     pathname.startsWith('/terms') ||
     pathname.startsWith('/privacy-policy') ||
-    pathname.startsWith('/compare')
+    pathname.startsWith('/compare') ||
+    pathname.startsWith('/onboarding')
   );
 }
 
@@ -45,8 +46,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const userTheme = stored || (systemPrefersDark ? 'dark' : 'light');
 
-    // Marketing site always uses light; app uses stored/system preference
-    const appliedTheme = isMarketingPath(pathname) ? 'light' : userTheme;
+    // Marketing + onboarding always use light; app uses stored/system preference
+    const appliedTheme = isAlwaysLightPath(pathname) ? 'light' : userTheme;
 
     setTheme(appliedTheme);
 
@@ -59,8 +60,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme(newTheme);
     localStorage.setItem(THEME_KEY, newTheme);
 
-    // On marketing paths always keep document light; otherwise apply new theme
-    const applied = isMarketingPath(pathname) ? 'light' : newTheme;
+    // On always-light paths keep document light; otherwise apply new theme
+    const applied = isAlwaysLightPath(pathname) ? 'light' : newTheme;
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(applied);
   };
