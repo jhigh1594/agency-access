@@ -46,6 +46,9 @@
     --acid: 204 255 0;              /* #CCFF00 - Acid green for kinetic elements (2% usage) */
     --electric: 139 92 246;         /* #8B5CF6 - Electric purple for hover states */
 
+    /* SEMANTIC COLORS - Accessible status indicators */
+    --warning: 180 83 9;            /* #B45309 - Amber for warnings (5.2:1 contrast on white) */
+
     /* BORDERS & SHADOWS */
     --border-hard: 0 0 0;           /* #000000 - Pure black borders */
     --shadow-hard: 0 0 0;           /* Pure black for hard shadows */
@@ -96,6 +99,9 @@
     /* BRUTALIST ACCENTS - UNCHANGED (high contrast works everywhere) */
     --acid: 204 255 0;             /* #CCFF00 - Kinetic green preserved */
     --electric: 139 92 246;          /* #8B5CF6 - Electric purple preserved */
+
+    /* SEMANTIC COLORS - Accessible status indicators */
+    --warning: 251 191 36;           /* #FBBF24 - Brighter amber for dark mode (4.5:1 contrast) */
 
     /* BORDERS & SHADOWS - Inverted for visibility */
     --border-hard: 255 255 255;     /* #FFFFFF - White borders on dark */
@@ -231,6 +237,19 @@
 
   .text-acid {
     color: rgb(var(--acid));
+  }
+
+  /* Warning semantic color utilities */
+  .bg-warning {
+    background-color: rgb(var(--warning));
+  }
+
+  .text-warning {
+    color: rgb(var(--warning));
+  }
+
+  .border-warning {
+    border-color: rgb(var(--warning));
   }
 
   /* Reveal on Scroll */
@@ -928,9 +947,9 @@ html.animations-ready .animate-float-pillar {
 .bg-success-light { @apply bg-teal/10; }
 .border-success { @apply border-teal; }
 
-.text-warning { @apply text-acid; }
-.bg-warning-light { @apply bg-acid/10; }
-.border-warning { @apply border-acid; }
+.text-warning { color: rgb(var(--warning)); }
+.bg-warning-light { background-color: rgb(var(--warning) / 0.1); }
+.border-warning { border-color: rgb(var(--warning)); }
 
 .text-danger { @apply text-coral; }
 .bg-danger-light { @apply bg-coral/10; }

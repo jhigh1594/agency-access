@@ -25,7 +25,7 @@ const HEALTH_CONFIG: Record<
   },
   expiring: {
     label: 'Expiring Soon',
-    className: 'bg-acid/10 text-acid border-acid/30',
+    className: 'bg-warning/10 text-warning border-warning/30',
     icon: <AlertCircle className="h-4 w-4" />,
   },
   expired: {
@@ -88,13 +88,13 @@ export function ExpirationCountdown({
   }
 
   if (daysUntilExpiry === 1) {
-    return <span className="text-sm text-acid font-medium">Tomorrow</span>;
+    return <span className="text-sm text-warning font-medium">Tomorrow</span>;
   }
 
   return (
     <span
       className={`text-sm ${
-        isUrgent ? 'text-acid font-medium' : 'text-muted-foreground'
+        isUrgent ? 'text-warning font-medium' : 'text-muted-foreground'
       }`}
     >
       {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'}

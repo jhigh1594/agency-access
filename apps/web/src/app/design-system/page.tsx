@@ -51,9 +51,21 @@ export default function DesignSystemPage() {
           <div>
             <h3 className="font-sans text-lg font-medium mb-4 text-muted-foreground">Brutalist Accents</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <ColorSwatch name="Acid" varName="--acid" hex="#CCFF00" description="Kinetic elements (2%)" darkText />
+              <ColorSwatch name="Acid" varName="--acid" hex="#CCFF00" description="DECORATIVE ONLY (2%)" darkText />
               <ColorSwatch name="Electric" varName="--electric" hex="#8B5CF6" description="Hover states" darkText />
             </div>
+          </div>
+
+          {/* Semantic Colors */}
+          <div>
+            <h3 className="font-sans text-lg font-medium mb-4 text-muted-foreground">Semantic Colors (Accessible)</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <ColorSwatch name="Warning" varName="--warning" hex="#B45309" description="Warnings, pending (5.2:1 contrast)" />
+            </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              Semantic colors meet WCAG AA contrast requirements (4.5:1 minimum).
+              Use for status indicators, badges, and text.
+            </p>
           </div>
         </section>
 

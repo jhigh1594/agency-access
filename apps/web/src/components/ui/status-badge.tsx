@@ -36,7 +36,7 @@ const STATUS_CONFIG: Record<
 > = {
   pending: {
     label: 'Pending',
-    className: 'bg-acid/10 text-acid border border-acid/30',
+    className: 'bg-warning/10 text-warning border border-warning/30',
     icon: <Clock className="h-3 w-3" />,
   },
   authorized: {
@@ -51,7 +51,7 @@ const STATUS_CONFIG: Record<
   },
   past_due: {
     label: 'Past Due',
-    className: 'bg-acid/10 text-acid border border-acid/30',
+    className: 'bg-warning/10 text-warning border border-warning/30',
     icon: <AlertCircle className="h-3 w-3" />,
   },
   cancelled: {
@@ -81,7 +81,7 @@ const STATUS_CONFIG: Record<
   },
   expiring: {
     label: 'Expiring Soon',
-    className: 'bg-acid/10 text-acid border border-acid/30',
+    className: 'bg-warning/10 text-warning border border-warning/30',
     icon: <AlertCircle className="h-3 w-3" />,
   },
   unknown: {
@@ -98,7 +98,7 @@ const VARIANT_CONFIG: Record<StatusVariant, { label: string; className: string }
   },
   warning: {
     label: 'Warning',
-    className: 'bg-acid/10 text-acid border border-acid/30',
+    className: 'bg-warning/10 text-warning border border-warning/30',
   },
   default: {
     label: 'Default',

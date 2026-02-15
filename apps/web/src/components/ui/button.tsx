@@ -51,7 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary: 'border-2 border-black dark:border-white bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       secondary: 'bg-card text-foreground border-2 border-border hover:bg-accent/20 hover:border-accent active:scale-95',
       success: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
-      warning: 'bg-acid text-foreground hover:bg-acid/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
+      warning: 'bg-warning text-white hover:bg-warning/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       danger: 'bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       ghost: 'bg-transparent text-muted-foreground hover:bg-muted/10 active:scale-95',
       // Brutalist variants - Hard shadows, no rounded corners, uppercase (black border light / white dark)

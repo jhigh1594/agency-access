@@ -1,7 +1,7 @@
 # Agency Access Platform — Design System
 
-> **Version**: 1.2.1
-> **Last Updated**: February 11, 2026
+> **Version**: 1.3.0
+> **Last Updated**: February 15, 2026
 > **Aesthetic**: Acid Brutalism
 
 ---
@@ -43,9 +43,14 @@ Our color system uses CSS custom properties defined in `globals.css`. All colors
 │  --coral    #FF6B35  │ AuthHub Coral — primary accent (10% use)   │
 │  --teal     #00A896  │ AuthHub Teal — secondary accent (5% use)   │
 ├─────────────────────────────────────────────────────────────────────┤
+│                        SEMANTIC COLORS                              │
+├─────────────────────────────────────────────────────────────────────┤
+│  --warning  #B45309  │ Amber for warnings (5.2:1 contrast)        │
+│                       │ Light: #B45309 / Dark: #FBBF24             │
+├─────────────────────────────────────────────────────────────────────┤
 │                        BRUTALIST ACCENTS                            │
 ├─────────────────────────────────────────────────────────────────────┤
-│  --acid     #CCFF00  │ Acid green — kinetic elements (2% use)     │
+│  --acid     #CCFF00  │ Acid green — DECORATIVE ONLY (2% use)      │
 │  --electric  #8B5CF6  │ Electric purple — hover states             │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -58,7 +63,8 @@ Our color system uses CSS custom properties defined in `globals.css`. All colors
 | `--paper` | Cards, modals, content areas | Form containers, data tables |
 | `--coral` | Primary CTAs, key actions | "Create Access Request" button |
 | `--teal` | Success states, completion | "Connected successfully" badge |
-| `--acid` | Animation highlights, attention-grabbing elements | Loading spinners, reveal animations |
+| `--warning` | Warning states, pending items | "Pending" badge, expiration warnings |
+| `--acid` | **DECORATIVE ONLY** — Never for text/status | Loading spinners, reveal animations, marketing accents |
 | `--electric` | Hover states, interactive feedback | Button hover borders |
 
 #### Semantic Colors (Tailwind Integration)
@@ -321,8 +327,25 @@ Uses pure shadcn/ui Card composition:
 #### StatusBadge
 
 ```typescript
-type: 'connected' | 'pending' | 'error' | 'warning' | 'info'
+type StatusType =
+  | 'pending'     // Warning amber
+  | 'authorized'  // Teal (success)
+  | 'expired'     // Coral (danger)
+  | 'cancelled'   // Muted gray
+  | 'past_due'    // Warning amber
+  | 'healthy'     // Teal (success)
+  | 'expiring'    // Warning amber
+  | 'unknown'     // Muted gray
+  | 'active'      // Teal (success)
+  | 'revoked'     // Coral (danger)
+  | 'invalid';    // Coral (danger)
 ```
+
+**Color Mapping:**
+- **Teal** (`--teal`): Success states — `authorized`, `active`, `healthy`
+- **Warning** (`--warning`): Pending/attention states — `pending`, `past_due`, `expiring`
+- **Coral** (`--coral`): Error/destructive states — `expired`, `revoked`, `invalid`
+- **Muted**: Neutral states — `cancelled`, `unknown`
 
 #### HealthBadge
 
@@ -330,7 +353,29 @@ type: 'connected' | 'pending' | 'error' | 'warning' | 'info'
 status: 'healthy' | 'expiring' | 'expired' | 'unknown'
 ```
 
+**Color Mapping:**
+- **Teal** (`--teal`): `healthy`
+- **Warning** (`--warning`): `expiring`
+- **Coral** (`--coral`): `expired`
+- **Muted**: `unknown`
+
 **Usage**: Display connection status, token health, platform states.
+
+#### ⚠️ Color Accessibility Rules
+
+**NEVER use `--acid` for text or status indicators.** The acid color (`#CCFF00`) has a contrast ratio of ~1.4:1 on white, which fails WCAG AA requirements (4.5:1 minimum for text).
+
+```tsx
+// ❌ WRONG — Acid has poor contrast, fails accessibility
+<Badge className="bg-acid/10 text-acid">Pending</Badge>
+
+// ✅ CORRECT — Warning amber has 5.2:1 contrast
+<Badge className="bg-warning/10 text-warning">Pending</Badge>
+```
+
+**When to use each color:**
+- `--warning`: Status text, badges, alerts, form validation warnings
+- `--acid`: Decorative backgrounds, animation highlights, marketing accents (NEVER for text)
 
 ---
 
@@ -693,6 +738,14 @@ Dark mode uses CSS custom properties that swap values based on `class="dark"` on
 ---
 
 ## Changelog
+
+### v1.3.0 (February 15, 2026)
+- **Added `--warning` semantic color** — Accessible amber (#B45309, 5.2:1 contrast) for status indicators
+- **Restricted `--acid` to decorative-only** — Never use for text/status due to poor contrast (1.4:1)
+- **Updated all status badges** — Pending, expiring, past_due now use `--warning` instead of `--acid`
+- **Updated billing components** — Usage limits, plan cards use accessible warning color
+- **Updated button warning variant** — Uses `--warning` with white text for accessibility
+- **Added accessibility guidelines** — Documented color contrast requirements for status indicators
 
 ### v1.2.1 (February 11, 2026)
 - **Fixed button shadow behavior** — Shadow now always visible (`shadow-brutalist`)
