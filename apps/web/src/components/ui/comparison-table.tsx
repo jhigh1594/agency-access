@@ -32,3 +32,21 @@ export function ComparisonHeader() {
     </thead>
   );
 }
+
+interface ComparisonSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+export function ComparisonSection({ title, children }: ComparisonSectionProps) {
+  return (
+    <>
+      <tr className="bg-muted/30">
+        <td colSpan={3} className="px-4 py-2 font-bold text-foreground">
+          {title}
+        </td>
+      </tr>
+      {children}
+    </>
+  );
+}
