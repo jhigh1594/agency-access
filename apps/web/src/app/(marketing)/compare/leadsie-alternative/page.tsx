@@ -7,9 +7,9 @@
 import { Check, X, ArrowRight, Clock, DollarSign, Globe, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ComparisonTable, ComparisonHeader, ComparisonSection, ComparisonRow } from "@/components/ui/comparison-table";
+import { ComparisonCTA } from "@/components/marketing/comparison-cta";
 import Link from "next/link";
 import { Metadata } from "next";
-import type { Route } from "next";
 
 export const metadata: Metadata = {
   title: "Leadsie Alternative | Why Agencies Switch to AuthHub",
@@ -46,12 +46,9 @@ export default function LeadsieAlternativePage() {
               Stop juggling separate tools for access and intake. Get both in one professional link—at a predictable flat rate.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href={"/sign-up" as Route}>
-                <Button variant="brutalist" size="xl">
-                  Start Free Trial — 21 Days
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+              <ComparisonCTA>
+                Start 14 Day Free Trial
+              </ComparisonCTA>
               <Link href="#comparison">
                 <Button variant="brutalist-ghost" size="xl">
                   See Full Comparison
@@ -600,16 +597,13 @@ export default function LeadsieAlternativePage() {
             Ready to Streamline Your Onboarding?
           </h2>
           <p className="font-mono text-white/80 mb-8 max-w-xl mx-auto">
-            Start your 21-day free trial—the longest in the industry. No credit card required.
+            Start your 14-day free trial today. No credit card required.
             See why agencies switched from Leadsie to AuthHub.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href={"/sign-up" as Route}>
-              <Button variant="brutalist-rounded" size="xl">
-                Start Free Trial — 21 Days
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <ComparisonCTA variant="brutalist-rounded">
+              Start 14 Day Free Trial
+            </ComparisonCTA>
             <Link href="/pricing">
               <Button variant="brutalist-ghost-rounded" size="xl">
                 View Pricing
