@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { Check, X, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPARISON TABLE - Acid Brutalism Design System
@@ -129,7 +129,7 @@ export function ComparisonRow({
   const renderValue = (value: boolean | string, isAuthHub: boolean = false) => {
     if (typeof value === 'boolean') {
       return value ? (
-        <motion.div
+        <m.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className={cn(
@@ -140,9 +140,9 @@ export function ComparisonRow({
           )}
         >
           <Check size={16} strokeWidth={3} />
-        </motion.div>
+        </m.div>
       ) : (
-        <motion.div
+        <m.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className={cn(
@@ -153,7 +153,7 @@ export function ComparisonRow({
           )}
         >
           <X size={16} strokeWidth={3} />
-        </motion.div>
+        </m.div>
       );
     }
 
@@ -204,7 +204,7 @@ export function ComparisonRow({
 
           {/* Exclusive badge */}
           {exclusive && (
-            <motion.span
+            <m.span
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 500, damping: 25 }}
@@ -212,7 +212,7 @@ export function ComparisonRow({
             >
               <Sparkles size={10} />
               Only AuthHub
-            </motion.span>
+            </m.span>
           )}
         </div>
       </td>
