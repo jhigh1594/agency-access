@@ -111,4 +111,24 @@ describe('ManageSubscriptionCard', () => {
     expect(screen.getByRole('button', { name: /Growth.*Upgrade/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Growth.*Downgrade/i })).not.toBeInTheDocument();
   });
+
+  it('does not show action buttons until a tier is selected', () => {
+    mockUseSubscription.mockReturnValue({
+      data: {
+        id: 'sub_999',
+        tier: 'STARTER',
+        status: 'active',
+        cancelAtPeriodEnd: false,
+      },
+      isLoading: false,
+    });
+
+    render(<ManageSubscriptionCard />);
+
+    fireEvent.click(screen.getByRole('button', { name: /change plan/i }));
+
+    expect(screen.queryByRole('button', { name: /upgrade now/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /downgrade now/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^cancel$/i })).not.toBeInTheDocument();
+  });
 });

@@ -337,41 +337,43 @@ export function ManageSubscriptionCard() {
             )}
 
             {/* Actions */}
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setSelectedTier(null)}
-                disabled={upgradeMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant={isUpgrade ? 'success' : 'warning'}
-                onClick={handleTierChange}
-                disabled={upgradeMutation.isPending}
-              >
-                {upgradeMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    {isUpgrade ? (
-                      <>
-                        <ArrowUp className="h-4 w-4" />
-                        Upgrade Now
-                      </>
-                    ) : (
-                      <>
-                        <ArrowDown className="h-4 w-4" />
-                        Downgrade Now
-                      </>
-                    )}
-                  </>
-                )}
-              </Button>
-            </div>
+            {selectedTier && selectedTier !== currentTier && (
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectedTier(null)}
+                  disabled={upgradeMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant={isUpgrade ? 'success' : 'warning'}
+                  onClick={handleTierChange}
+                  disabled={upgradeMutation.isPending}
+                >
+                  {upgradeMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {isUpgrade ? (
+                        <>
+                          <ArrowUp className="h-4 w-4" />
+                          Upgrade Now
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDown className="h-4 w-4" />
+                          Downgrade Now
+                        </>
+                      )}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
