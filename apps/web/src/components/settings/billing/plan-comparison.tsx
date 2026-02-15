@@ -10,57 +10,33 @@
 import { useState } from 'react';
 import { ArrowRight, Check, X } from 'lucide-react';
 import { useSubscription, useCreateCheckout } from '@/lib/query/billing';
-import { type SubscriptionTier } from '@agency-platform/shared';
+import {
+  type PricingDisplayTier,
+  PRICING_DISPLAY_TIER_ORDER,
+  PRICING_DISPLAY_TIER_DETAILS,
+  PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER,
+  getPricingDisplayTierFromSubscriptionTier,
+} from '@agency-platform/shared';
 import { Button } from '@/components/ui/button';
 
-// Display tiers (maps to backend tiers: STARTER, AGENCY)
-const DISPLAY_TIERS = ['FREE', 'GROWTH', 'SCALE'] as const;
-
-// Tier display names - updated for clarity
-const TIER_NAMES: Record<string, string> = {
-  FREE: 'Free',
-  GROWTH: 'Growth',
-  SCALE: 'Scale',
-};
-
-// Persona labels - helps users self-select
-const TIER_PERSONAS: Record<string, string> = {
-  FREE: 'For individuals',
-  GROWTH: 'For small teams',
-  SCALE: 'For growing agencies',
-};
-
-// Tier descriptions
-const TIER_DESCRIPTIONS: Record<string, string> = {
-  FREE: 'Solo freelancers testing OAuth automation',
-  GROWTH: 'Growing agencies with 3-5 new clients/month',
-  SCALE: 'Established agencies onboarding 10+ clients/month',
-};
-
-// Map display tier to backend tier (null for FREE since it's not a paid tier)
-const DISPLAY_TO_BACKEND: Record<string, SubscriptionTier | null> = {
-  FREE: null,
-  GROWTH: 'STARTER',
-  SCALE: 'AGENCY',
-};
-
-// Map backend tier to display tier (undefined tier means FREE)
-const BACKEND_TO_DISPLAY: Record<string, string> = {
-  STARTER: 'GROWTH',
-  AGENCY: 'SCALE',
-  PRO: 'SCALE', // Map PRO to SCALE for now
-  ENTERPRISE: 'SCALE', // Map ENTERPRISE to SCALE for now
-};
-
 // Tier pricing configuration (yearly price, monthly price)
-const tierPricing: Record<string, { yearly: number; monthly: number }> = {
-  FREE: { yearly: 0, monthly: 0 },
-  GROWTH: { yearly: 480, monthly: 40 },
-  SCALE: { yearly: 1120, monthly: 93.33 },
+const tierPricing: Record<PricingDisplayTier, { yearly: number; monthly: number }> = {
+  FREE: {
+    yearly: PRICING_DISPLAY_TIER_DETAILS.FREE.yearlyPrice,
+    monthly: PRICING_DISPLAY_TIER_DETAILS.FREE.monthlyPrice,
+  },
+  GROWTH: {
+    yearly: PRICING_DISPLAY_TIER_DETAILS.GROWTH.yearlyPrice,
+    monthly: PRICING_DISPLAY_TIER_DETAILS.GROWTH.monthlyPrice,
+  },
+  SCALE: {
+    yearly: PRICING_DISPLAY_TIER_DETAILS.SCALE.yearlyPrice,
+    monthly: PRICING_DISPLAY_TIER_DETAILS.SCALE.monthlyPrice,
+  },
 };
 
 // Feature inclusion matrix for each tier - ONE value metric (clients/month)
-const tierFeatures: Record<string, { name: string; included: boolean; value?: string }[]> = {
+const tierFeatures: Record<PricingDisplayTier, { name: string; included: boolean; value?: string }[]> = {
   FREE: [
     { name: '1 active client', included: true, value: 'Test the full flow' },
     { name: 'Core platforms (Meta, Google, LinkedIn)', included: true, value: 'The essentials' },
@@ -99,13 +75,11 @@ export function PlanComparison() {
   const { data: subscription } = useSubscription();
   const createCheckout = useCreateCheckout();
 
-  // Map backend tier to display tier (no tier means FREE)
-  const backendTier = subscription?.tier;
-  const currentTier = backendTier ? BACKEND_TO_DISPLAY[backendTier] || 'FREE' : 'FREE';
+  const currentTier = getPricingDisplayTierFromSubscriptionTier(subscription?.tier);
   const [isYearly, setIsYearly] = useState(true);
 
-  const handleUpgrade = async (displayTier: string) => {
-    const subscriptionTier = DISPLAY_TO_BACKEND[displayTier];
+  const handleUpgrade = async (displayTier: PricingDisplayTier) => {
+    const subscriptionTier = PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER[displayTier];
     if (!subscriptionTier) return; // FREE tier has no checkout
 
     const result = await createCheckout.mutateAsync({
@@ -116,7 +90,7 @@ export function PlanComparison() {
     window.location.href = result.checkoutUrl;
   };
 
-  const tierIndex = DISPLAY_TIERS.indexOf(currentTier as typeof DISPLAY_TIERS[number]);
+  const tierIndex = PRICING_DISPLAY_TIER_ORDER.indexOf(currentTier);
 
   return (
     <section className="border-2 border-border rounded-lg shadow-brutalist p-6 bg-card">
@@ -198,7 +172,9 @@ export function PlanComparison() {
             <div className="flex justify-between items-center py-2 border-b border-gray-200">
               <div>
                 <span className="font-bold text-ink">Free</span>
-                <span className="block text-xs text-gray-500">{TIER_PERSONAS.FREE}</span>
+                <span className="block text-xs text-gray-500">
+                  {PRICING_DISPLAY_TIER_DETAILS.FREE.persona}
+                </span>
               </div>
               <span className="text-gray-600">1 client</span>
             </div>
@@ -212,7 +188,9 @@ export function PlanComparison() {
             <div className="flex justify-between items-center py-2">
               <div>
                 <span className="font-bold text-ink">Scale</span>
-                <span className="block text-xs text-gray-500">{TIER_PERSONAS.SCALE}</span>
+                <span className="block text-xs text-gray-500">
+                  {PRICING_DISPLAY_TIER_DETAILS.SCALE.persona}
+                </span>
               </div>
               <span className="text-gray-600">{isYearly ? '$70/mo' : '$93/mo'}</span>
             </div>
@@ -225,11 +203,11 @@ export function PlanComparison() {
 
       {/* Pricing Grid - Hidden on mobile, shown on md+ */}
       <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-x-auto">
-        {DISPLAY_TIERS.map((tier, index) => {
+        {PRICING_DISPLAY_TIER_ORDER.map((tier, index) => {
           const pricing = tierPricing[tier];
-          const tierName = TIER_NAMES[tier];
-          const persona = TIER_PERSONAS[tier];
-          const description = TIER_DESCRIPTIONS[tier];
+          const tierName = PRICING_DISPLAY_TIER_DETAILS[tier].name;
+          const persona = PRICING_DISPLAY_TIER_DETAILS[tier].persona;
+          const description = PRICING_DISPLAY_TIER_DETAILS[tier].description;
           const features = tierFeatures[tier];
           const isCurrentTier = tier === currentTier;
           const isFree = tier === 'FREE';

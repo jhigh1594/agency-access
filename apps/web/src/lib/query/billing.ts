@@ -10,6 +10,10 @@ import type { SubscriptionTier, TierLimits } from '@agency-platform/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+function resolvePrincipalId(orgId: string | null | undefined, userId: string | null | undefined): string | null {
+  return orgId ?? userId ?? null;
+}
+
 // ============================================================
 // TYPES
 // ============================================================
@@ -90,15 +94,16 @@ export interface CancelResponse {
 // ============================================================
 
 export function useSubscription() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useQuery({
-    queryKey: ['subscription', orgId],
+    queryKey: ['subscription', principalId],
     queryFn: async () => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,20 +116,21 @@ export function useSubscription() {
       const result = await response.json();
       return result.data as SubscriptionData | null;
     },
-    enabled: !!orgId,
+    enabled: !!principalId,
   });
 }
 
 export function useTierDetails() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useQuery({
-    queryKey: ['tier-details', orgId],
+    queryKey: ['tier-details', principalId],
     queryFn: async () => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/tier`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/tier`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -137,20 +143,21 @@ export function useTierDetails() {
       const result = await response.json();
       return result.data as TierDetailsData;
     },
-    enabled: !!orgId,
+    enabled: !!principalId,
   });
 }
 
 export function usePaymentMethods() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useQuery({
-    queryKey: ['payment-methods', orgId],
+    queryKey: ['payment-methods', principalId],
     queryFn: async () => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/payment-methods`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/payment-methods`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -163,20 +170,21 @@ export function usePaymentMethods() {
       const result = await response.json();
       return result.data as PaymentMethod[];
     },
-    enabled: !!orgId,
+    enabled: !!principalId,
   });
 }
 
 export function useInvoices() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useQuery({
-    queryKey: ['invoices', orgId],
+    queryKey: ['invoices', principalId],
     queryFn: async () => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/invoices`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/invoices`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -189,20 +197,21 @@ export function useInvoices() {
       const result = await response.json();
       return result.data as Invoice[];
     },
-    enabled: !!orgId,
+    enabled: !!principalId,
   });
 }
 
 export function useBillingDetails() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useQuery({
-    queryKey: ['billing-details', orgId],
+    queryKey: ['billing-details', principalId],
     queryFn: async () => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/billing-details`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/billing-details`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -215,7 +224,7 @@ export function useBillingDetails() {
       const result = await response.json();
       return result.data as BillingDetails;
     },
-    enabled: !!orgId,
+    enabled: !!principalId,
   });
 }
 
@@ -224,11 +233,12 @@ export function useBillingDetails() {
 // ============================================================
 
 export function useOpenPortal() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useMutation({
     mutationFn: async (returnUrl: string) => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
       const response = await fetch(`${API_URL}/api/subscriptions/portal`, {
@@ -238,7 +248,7 @@ export function useOpenPortal() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          agencyId: orgId,
+          agencyId: principalId,
           returnUrl,
         }),
       });
@@ -254,7 +264,8 @@ export function useOpenPortal() {
 }
 
 export function useCreateCheckout() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
 
   return useMutation({
     mutationFn: async (params: {
@@ -262,7 +273,7 @@ export function useCreateCheckout() {
       successUrl: string;
       cancelUrl: string;
     }) => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
       const response = await fetch(`${API_URL}/api/subscriptions/checkout`, {
@@ -272,7 +283,7 @@ export function useCreateCheckout() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          agencyId: orgId,
+          agencyId: principalId,
           tier: params.tier,
           successUrl: params.successUrl,
           cancelUrl: params.cancelUrl,
@@ -290,15 +301,16 @@ export function useCreateCheckout() {
 }
 
 export function useUpdateBillingDetails() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (details: BillingDetails) => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/billing-details`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/billing-details`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -315,7 +327,7 @@ export function useUpdateBillingDetails() {
       return result.data as BillingDetails;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['billing-details', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['billing-details', principalId] });
     },
   });
 }
@@ -328,12 +340,13 @@ export function useUpdateBillingDetails() {
  * Upgrade or downgrade subscription tier
  */
 export function useUpgradeSubscription() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (params: UpgradeParams): Promise<UpgradeResponse> => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
 
@@ -344,7 +357,7 @@ export function useUpgradeSubscription() {
         'no-charge': 'proration-none',
       } as const;
 
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/upgrade`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/upgrade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -366,8 +379,8 @@ export function useUpgradeSubscription() {
     },
     onSuccess: () => {
       // Invalidate subscription queries to refetch
-      queryClient.invalidateQueries({ queryKey: ['subscription', orgId] });
-      queryClient.invalidateQueries({ queryKey: ['tier-details', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', principalId] });
+      queryClient.invalidateQueries({ queryKey: ['tier-details', principalId] });
     },
   });
 }
@@ -376,15 +389,16 @@ export function useUpgradeSubscription() {
  * Cancel subscription
  */
 export function useCancelSubscription() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (params: CancelParams = {}): Promise<CancelResponse> => {
-      if (!orgId) throw new Error('No organization ID');
+      if (!principalId) throw new Error('No authenticated principal ID');
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/cancel`, {
+      const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -405,27 +419,28 @@ export function useCancelSubscription() {
     },
     onSuccess: () => {
       // Invalidate subscription queries to refetch
-      queryClient.invalidateQueries({ queryKey: ['subscription', orgId] });
-      queryClient.invalidateQueries({ queryKey: ['tier-details', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', principalId] });
+      queryClient.invalidateQueries({ queryKey: ['tier-details', principalId] });
     },
   });
 }
 
 export function usePrefetchBillingData() {
-  const { orgId, getToken } = useAuth();
+  const { orgId, userId, getToken } = useAuth();
+  const principalId = resolvePrincipalId(orgId, userId);
   const queryClient = useQueryClient();
 
   return async () => {
-    if (!orgId) return;
+    if (!principalId) return;
 
     const token = await getToken();
     if (!token) return;
 
     await Promise.all([
       queryClient.prefetchQuery({
-        queryKey: ['subscription', orgId],
+        queryKey: ['subscription', principalId],
         queryFn: async () => {
-          const response = await fetch(`${API_URL}/api/subscriptions/${orgId}`, {
+          const response = await fetch(`${API_URL}/api/subscriptions/${principalId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (!response.ok) throw new Error('Failed to fetch subscription');
@@ -434,9 +449,9 @@ export function usePrefetchBillingData() {
         },
       }),
       queryClient.prefetchQuery({
-        queryKey: ['tier-details', orgId],
+        queryKey: ['tier-details', principalId],
         queryFn: async () => {
-          const response = await fetch(`${API_URL}/api/subscriptions/${orgId}/tier`, {
+          const response = await fetch(`${API_URL}/api/subscriptions/${principalId}/tier`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (!response.ok) throw new Error('Failed to fetch tier details');

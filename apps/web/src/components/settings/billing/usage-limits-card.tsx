@@ -66,7 +66,7 @@ export function UsageLimitsCard() {
               isAtLimit
                 ? 'text-coral'
                 : isNearLimit
-                  ? 'text-acid'
+                  ? 'text-warning'
                   : 'text-ink'
             }`}
           >
@@ -79,14 +79,14 @@ export function UsageLimitsCard() {
               isAtLimit
                 ? 'bg-coral'
                 : isNearLimit
-                  ? 'bg-acid'
+                  ? 'bg-warning'
                   : 'bg-teal'
             }`}
             style={{ width: isUnlimited ? '0%' : `${percentage}%` }}
           />
         </div>
         {!isUnlimited && isNearLimit && (
-          <p className={`text-xs ${isAtLimit ? 'text-coral' : 'text-acid'}`}>
+          <p className={`text-xs ${isAtLimit ? 'text-coral' : 'text-warning'}`}>
             {isAtLimit
               ? 'Limit reached. Upgrade to continue.'
               : `${numericLimit - used} remaining. Consider upgrading soon.`}

@@ -211,7 +211,7 @@ export function ManageSubscriptionCard() {
                         : isSelected
                         ? isUpgradeOption
                         ? 'border-teal bg-teal/10 ring-2 ring-teal/20'
-                        : 'border-acid bg-acid/10 ring-2 ring-acid/20'
+                        : 'border-warning bg-warning/10 ring-2 ring-warning/20'
                         : 'border-border bg-card hover:border-coral/30 hover:bg-coral/5'
                     }`}
                   >
@@ -231,7 +231,7 @@ export function ManageSubscriptionCard() {
                             </span>
                           )}
                           {isDowngradeOption && !isCurrent && (
-                            <span className="text-xs px-2 py-0.5 bg-acid/10 text-acid rounded-full flex items-center gap-1">
+                            <span className="text-xs px-2 py-0.5 bg-warning/10 text-warning rounded-full flex items-center gap-1">
                               <ArrowDown className="h-3 w-3" />
                               Downgrade
                             </span>
@@ -241,10 +241,10 @@ export function ManageSubscriptionCard() {
                       </div>
                       {isSelected && (
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          isUpgradeOption ? 'border-teal' : 'border-acid'
+                          isUpgradeOption ? 'border-teal' : 'border-warning'
                         }`}>
                           <div className={`w-3 h-3 rounded-full ${
-                            isUpgradeOption ? 'bg-teal' : 'bg-acid'
+                            isUpgradeOption ? 'bg-teal' : 'bg-warning'
                           }`} />
                         </div>
                       )}
