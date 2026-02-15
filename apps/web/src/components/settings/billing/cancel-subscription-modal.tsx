@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, AlertTriangle, CheckCircle2, Calendar } from 'lucide-react';
 import { useCancelSubscription } from '@/lib/query/billing';
-import { SUBSCRIPTION_TIER_NAMES, type SubscriptionTier } from '@agency-platform/shared';
+import { getPricingTierNameFromSubscriptionTier, type SubscriptionTier } from '@agency-platform/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 
@@ -105,7 +105,7 @@ export function CancelSubscriptionModal({
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-ink">
-                        Cancel {SUBSCRIPTION_TIER_NAMES[currentTier]} Plan?
+                        Cancel {getPricingTierNameFromSubscriptionTier(currentTier)} Plan?
                       </h3>
                       <p className="text-sm text-gray-600">
                         This action will affect your access to platform features
@@ -116,13 +116,9 @@ export function CancelSubscriptionModal({
                   {/* Warning message */}
                   <div className="bg-coral/10 border-2 border-coral rounded-lg p-4 mb-6">
                     <p className="text-sm text-coral-90">
-                      <strong>Important:</strong> After cancellation, you will lose access to all
-                      {currentTier === 'STARTER'
-                        ? ' paid features'
-                        : currentTier === 'AGENCY'
-                        ? ' Pro tier features and will revert to Starter limits'
-                        : ' Agency tier features and will revert to Pro limits'}
-                      . Any remaining clients, team members, or access requests exceeding the new limits may be restricted.
+                      <strong>Important:</strong> After cancellation, you will lose access to paid plan features
+                      and will move to Free plan limits. Any remaining clients, team members, or access requests
+                      exceeding those limits may be restricted.
                     </p>
                   </div>
 

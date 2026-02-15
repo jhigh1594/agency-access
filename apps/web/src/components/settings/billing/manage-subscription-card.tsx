@@ -20,18 +20,33 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSubscription, useUpgradeSubscription } from '@/lib/query/billing';
-import { SUBSCRIPTION_TIER_NAMES, SUBSCRIPTION_TIER_DESCRIPTIONS, type SubscriptionTier } from '@agency-platform/shared';
+import {
+  SUBSCRIPTION_TIER_DESCRIPTIONS,
+  getPricingTierNameFromSubscriptionTier,
+  type SubscriptionTier,
+} from '@agency-platform/shared';
 import { CancelSubscriptionModal } from './cancel-subscription-modal';
 import { Button } from '@/components/ui/button';
 
-const TIERS: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
+type ManageableTier = 'STARTER' | 'AGENCY';
+
+const MANAGEABLE_TIERS: ManageableTier[] = ['STARTER', 'AGENCY'];
+const TIER_RANK: Record<ManageableTier, number> = {
+  STARTER: 0,
+  AGENCY: 1,
+};
+
+function normalizeCurrentTier(tier: SubscriptionTier | null | undefined): ManageableTier {
+  if (tier === 'STARTER') return 'STARTER';
+  return 'AGENCY';
+}
 
 export function ManageSubscriptionCard() {
   const { data: subscription, isLoading } = useSubscription();
   const upgradeMutation = useUpgradeSubscription();
 
   const [showTierSelector, setShowTierSelector] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
+  const [selectedTier, setSelectedTier] = useState<ManageableTier | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [updateBehavior, setUpdateBehavior] = useState<'immediate' | 'next-cycle'>('next-cycle');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -56,9 +71,10 @@ export function ManageSubscriptionCard() {
     );
   }
 
-  const currentTier = subscription?.tier || 'STARTER';
-  const isDowngrade = selectedTier && TIERS.indexOf(selectedTier) < TIERS.indexOf(currentTier);
-  const isUpgrade = selectedTier && TIERS.indexOf(selectedTier) > TIERS.indexOf(currentTier);
+  const currentTier = normalizeCurrentTier(subscription?.tier);
+  const currentTierRank = TIER_RANK[currentTier];
+  const isDowngrade = selectedTier ? TIER_RANK[selectedTier] < currentTierRank : false;
+  const isUpgrade = selectedTier ? TIER_RANK[selectedTier] > currentTierRank : false;
 
   const handleTierChange = async () => {
     if (!selectedTier || selectedTier === currentTier) return;
@@ -73,7 +89,7 @@ export function ManageSubscriptionCard() {
       });
 
       setSuccessMessage(
-        `Successfully ${isUpgrade ? 'upgraded' : 'downgraded'} to ${SUBSCRIPTION_TIER_NAMES[selectedTier]}`
+        `Successfully ${isUpgrade ? 'upgraded' : 'downgraded'} to ${getPricingTierNameFromSubscriptionTier(selectedTier)}`
       );
       setShowTierSelector(false);
       setSelectedTier(null);
@@ -192,13 +208,13 @@ export function ManageSubscriptionCard() {
 
             {/* Tier Options */}
             <div className="space-y-2 mb-4">
-              {TIERS.map((tier) => {
+              {MANAGEABLE_TIERS.map((tier) => {
                 const isSelected = selectedTier === tier;
                 const isCurrent = tier === currentTier;
-                const tierName = SUBSCRIPTION_TIER_NAMES[tier];
+                const tierName = getPricingTierNameFromSubscriptionTier(tier);
                 const tierInfo = SUBSCRIPTION_TIER_DESCRIPTIONS[tier];
-                const isUpgradeOption = TIERS.indexOf(tier) > TIERS.indexOf(currentTier);
-                const isDowngradeOption = TIERS.indexOf(tier) < TIERS.indexOf(currentTier);
+                const isUpgradeOption = TIER_RANK[tier] > currentTierRank;
+                const isDowngradeOption = TIER_RANK[tier] < currentTierRank;
 
                 return (
                   <button
@@ -305,7 +321,7 @@ export function ManageSubscriptionCard() {
                     <Info className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-coral">
                       <p className="font-semibold mb-1">
-                        {isUpgrade ? 'Upgrade' : 'Downgrade'} to {SUBSCRIPTION_TIER_NAMES[selectedTier]}
+                        {isUpgrade ? 'Upgrade' : 'Downgrade'} to {getPricingTierNameFromSubscriptionTier(selectedTier)}
                       </p>
                       <p>{getProrationExplanation()}</p>
                     </div>

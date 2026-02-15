@@ -196,13 +196,13 @@ export function PlanComparison() {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-4 text-center font-mono">
-            Scroll right for full comparison →
+            Full plan details available on larger screens
           </p>
         </div>
       </div>
 
       {/* Pricing Grid - Hidden on mobile, shown on md+ */}
-      <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-x-auto">
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 pt-2">
         {PRICING_DISPLAY_TIER_ORDER.map((tier, index) => {
           const pricing = tierPricing[tier];
           const tierName = PRICING_DISPLAY_TIER_DETAILS[tier].name;
@@ -226,7 +226,7 @@ export function PlanComparison() {
           return (
             <div
               key={tier}
-              className={`relative border-2 rounded-lg transition-all min-w-[280px] ${
+              className={`relative border-2 rounded-lg transition-all ${
                 isCurrentTier
                   ? 'border-indigo-500 bg-indigo-50/50 shadow-brutalist-sm'
                   : isRecommended
@@ -238,7 +238,7 @@ export function PlanComparison() {
             >
               {/* Recommended Badge */}
               {isRecommended && !isCurrentTier && (
-                <div className="absolute -top-3 -right-3 bg-coral text-white border-2 border-black px-2 py-1 font-mono text-xs font-bold uppercase tracking-wider shadow-brutalist-sm rotate-3 z-10">
+                <div className="absolute top-3 right-3 bg-coral text-white border-2 border-black px-2 py-1 font-mono text-xs font-bold uppercase tracking-wider shadow-brutalist-sm z-10">
                   Most Popular
                 </div>
               )}
