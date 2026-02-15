@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ComparisonTable, ComparisonHeader, ComparisonSection } from '../comparison-table';
+import { ComparisonTable, ComparisonHeader, ComparisonSection, ComparisonRow } from '../comparison-table';
 
 describe('ComparisonTable', () => {
   it('should render children', () => {
@@ -48,5 +48,21 @@ describe('ComparisonSection', () => {
     );
 
     expect(screen.getByText('Platform Support')).toBeInTheDocument();
+  });
+});
+
+describe('ComparisonRow', () => {
+  it('should render feature name', () => {
+    render(
+      <ComparisonTable>
+        <tbody>
+          <ComparisonSection title="Test Section">
+            <ComparisonRow feature="Meta Ads" leadsie={true} authhub={true} />
+          </ComparisonSection>
+        </tbody>
+      </ComparisonTable>
+    );
+
+    expect(screen.getByText('Meta Ads')).toBeInTheDocument();
   });
 });
