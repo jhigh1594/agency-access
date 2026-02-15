@@ -50,7 +50,7 @@ export function PlatformConnectionModal({
   onConnectionComplete,
   agencyId,
 }: PlatformConnectionModalProps) {
-  const { orgId: fallbackOrgId } = useAuth();
+  const { orgId: fallbackOrgId, getToken } = useAuth();
   const effectiveAgencyId = agencyId || fallbackOrgId;
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -67,8 +67,14 @@ export function PlatformConnectionModal({
   } = useQuery<PlatformConnection[]>({
     queryKey: ['available-platforms', effectiveAgencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${effectiveAgencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${effectiveAgencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch platforms');
       const result = await response.json();
@@ -81,11 +87,15 @@ export function PlatformConnectionModal({
   // Refresh token mutation
   const { mutate: refreshPlatform, isPending: isRefreshing } = useMutation({
     mutationFn: async (platform: string) => {
+      const token = await getToken();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/refresh`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           body: JSON.stringify({ agencyId: effectiveAgencyId }),
         }
       );
@@ -107,11 +117,15 @@ export function PlatformConnectionModal({
   // Disconnect mutation
   const { mutate: disconnectMutation, isPending: isDisconnecting } = useMutation({
     mutationFn: async (platform: string) => {
+      const token = await getToken();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           body: JSON.stringify({ agencyId: effectiveAgencyId }),
         }
       );

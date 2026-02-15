@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 import { 
   MetaAssetSelection, 
   MetaAllAssets, 
@@ -27,6 +28,7 @@ export function AgencyMetaAssetSelector({
   initialSelections = [],
   agencyId,
 }: AgencyMetaAssetSelectorProps) {
+  const { getToken } = useAuth();
   const [selections, setSelections] = useState<MetaAssetSelection[]>(initialSelections);
   const [searchQuery, setSearchQuery] = useState('');
   const [assetTypeFilter, setAssetTypeFilter] = useState<'all' | 'ad_account' | 'page' | 'instagram' | 'catalog'>('all');
@@ -38,7 +40,12 @@ export function AgencyMetaAssetSelector({
       const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/assets/${businessId}`);
       if (agencyId) url.searchParams.append('agencyId', agencyId);
       
-      const response = await fetch(url.toString());
+      const token = await getToken();
+      const response = await fetch(url.toString(), {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch assets');
       return response.json();
     },

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 import { 
   GoogleAssetSettings,
   GoogleAdsAccount,
@@ -36,6 +37,7 @@ interface GoogleUnifiedSettingsProps {
 
 export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedSettingsProps) {
   const queryClient = useQueryClient();
+  const { getToken } = useAuth();
   const [isExpanded, setIsExpanded] = useState(true);
   const [settings, setSettings] = useState<GoogleAssetSettings | null>(null);
 
@@ -43,8 +45,14 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   const { data: accountsData, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['google-accounts', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch Google accounts');
       const result = await response.json();
@@ -56,8 +64,14 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   const { data: initialSettings, isLoading: isLoadingSettings } = useQuery({
     queryKey: ['google-asset-settings', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch Google settings');
       const json = await response.json();
@@ -74,9 +88,13 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   // Save Settings Mutation
   const { mutate: saveSettings, isPending: isSavingSettings } = useMutation({
     mutationFn: async (newSettings: GoogleAssetSettings) => {
+      const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           agencyId,
           settings: newSettings,
@@ -93,9 +111,13 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   // Save Account Selection Mutation
   const { mutate: saveAccount } = useMutation({
     mutationFn: async ({ product, accountId, accountName }: { product: string; accountId: string; accountName: string }) => {
+      const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/account`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           agencyId,
           product,
@@ -393,4 +415,3 @@ function ProductCard({
     </div>
   );
 }
-

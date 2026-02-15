@@ -57,9 +57,13 @@ function CallbackPageContent() {
   // Complete Meta OAuth Mutation
   const { mutate: completeMetaOauth, isPending: isSaving } = useMutation({
     mutationFn: async ({ businessId, businessName }: { businessId: string; businessName: string }) => {
+      const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/complete-oauth`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           agencyId: agencyIdParam || orgId,
           connectionId,

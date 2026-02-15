@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 import { 
   MetaAssetSettings, 
   MetaPermissionLevel,
@@ -25,6 +26,7 @@ interface MetaConnectionSettingsProps {
 
 export function MetaConnectionSettings({ agencyId }: MetaConnectionSettingsProps) {
   const queryClient = useQueryClient();
+  const { getToken } = useAuth();
   const [settings, setSettings] = useState<MetaAssetSettings | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
@@ -33,8 +35,14 @@ export function MetaConnectionSettings({ agencyId }: MetaConnectionSettingsProps
   const { data: initialData, isLoading, error } = useQuery({
     queryKey: ['meta-asset-settings', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch settings');
       const json = await response.json();
@@ -51,9 +59,13 @@ export function MetaConnectionSettings({ agencyId }: MetaConnectionSettingsProps
   // Save Mutation
   const { mutate: saveSettings, isPending: isSaving } = useMutation({
     mutationFn: async (newSettings: MetaAssetSettings) => {
+      const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           agencyId,
           settings: newSettings,
@@ -330,4 +342,3 @@ function AssetRow({
     </div>
   );
 }
-

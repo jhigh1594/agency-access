@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 import { Loader2, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Business {
@@ -23,12 +24,19 @@ export function MetaBusinessPortfolioSelector({
   selectedBusinessId,
 }: MetaBusinessPortfolioSelectorProps) {
   const [selectedId, setSelectedId] = useState<string>(selectedBusinessId || '');
+  const { getToken } = useAuth();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['meta-businesses', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch businesses');
       const result = await response.json();
@@ -182,4 +190,3 @@ export function MetaBusinessPortfolioSelector({
     </div>
   );
 }
-

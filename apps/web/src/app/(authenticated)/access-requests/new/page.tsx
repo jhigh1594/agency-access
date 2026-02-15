@@ -40,7 +40,7 @@ import type { AccessRequestTemplate } from '@agency-platform/shared';
 // ============================================================
 
 function AccessRequestWizardContent() {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const { user } = useUser();
   const queryClient = useQueryClient();
   const {
@@ -97,8 +97,14 @@ function AccessRequestWizardContent() {
     queryKey: ['available-platforms', agencyId],
     queryFn: async () => {
       if (!agencyId) return [];
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch platforms');
       const result = await response.json();

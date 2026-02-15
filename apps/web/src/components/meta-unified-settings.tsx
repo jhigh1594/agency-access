@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 import { 
   MetaAssetSettings, 
   MetaPermissionLevel,
@@ -34,6 +35,7 @@ interface Business {
 
 export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSettingsProps) {
   const queryClient = useQueryClient();
+  const { getToken } = useAuth();
   const [isExpanded, setIsExpanded] = useState(true);
   const [settings, setSettings] = useState<MetaAssetSettings | null>(null);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
@@ -44,8 +46,14 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   const { data: businessesData, isLoading: isLoadingBusinesses } = useQuery({
     queryKey: ['meta-businesses', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch businesses');
       const result = await response.json();
@@ -57,8 +65,14 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   const { data: initialData, isLoading: isLoadingSettings } = useQuery({
     queryKey: ['meta-asset-settings', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch settings');
       const json = await response.json();
@@ -70,8 +84,14 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   const { data: connectionData } = useQuery({
     queryKey: ['platform-connections', agencyId],
     queryFn: async () => {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch connections');
       const result = await response.json();
@@ -97,9 +117,13 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   // Save Business Portfolio Mutation
   const { mutate: savePortfolio, isPending: isSavingPortfolio } = useMutation({
     mutationFn: async ({ businessId, businessName }: { businessId: string; businessName: string }) => {
+      const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           agencyId,
           businessId,
@@ -118,9 +142,13 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   // Save Settings Mutation
   const { mutate: saveSettings, isPending: isSavingSettings } = useMutation({
     mutationFn: async (newSettings: MetaAssetSettings) => {
+      const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           agencyId,
           settings: newSettings,
@@ -455,4 +483,3 @@ function AssetCard({
     </div>
   );
 }
-

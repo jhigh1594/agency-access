@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Mail, Info, Building2, ExternalLink } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 
 // Platform display names
@@ -51,6 +52,7 @@ export function ManualInvitationModal({
 }: ManualInvitationModalProps) {
   const [value, setValue] = useState(currentValue || '');
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const isBusinessIdPlatform = BUSINESS_ID_PLATFORMS.includes(platform);
   const platformName = PLATFORM_NAMES[platform] || platform;
@@ -73,6 +75,7 @@ export function ManualInvitationModal({
   // Connect mutation
   const { mutate: connectPlatform, isPending } = useMutation({
     mutationFn: async (inputValue: string) => {
+      const token = await getToken();
       const endpoint = mode === 'edit'
         ? `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/manual-invitation`
         : `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/manual-connect`;
@@ -85,7 +88,10 @@ export function ManualInvitationModal({
 
       const response = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify(body),
       });
 
