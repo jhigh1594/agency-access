@@ -25,8 +25,17 @@ const inviteMemberSchema = z.object({
   role: z.enum(['admin', 'member', 'viewer']),
 });
 
+const updateAgencySchema = z.object({
+  name: z.string().min(1, 'Agency name is required').optional(),
+  subscriptionTier: z.enum(['STARTER', 'AGENCY']).optional(),
+  settings: z.record(z.any()).nullable().optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'At least one field must be provided',
+});
+
 export type CreateAgencyInput = z.infer<typeof createAgencySchema>;
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
+export type UpdateAgencyInput = z.infer<typeof updateAgencySchema>;
 
 /**
  * Create a new agency with an admin member
@@ -397,8 +406,10 @@ export async function getAgency(agencyId: string) {
 /**
  * Update agency
  */
-export async function updateAgency(agencyId: string, input: Partial<{ name: string; subscriptionTier: string }>) {
+export async function updateAgency(agencyId: string, input: UpdateAgencyInput) {
   try {
+    const validated = updateAgencySchema.parse(input);
+
     // Verify agency exists
     const existing = await prisma.agency.findUnique({
       where: { id: agencyId },
@@ -415,9 +426,9 @@ export async function updateAgency(agencyId: string, input: Partial<{ name: stri
     }
 
     // If updating name, check for conflicts
-    if (input.name && input.name !== existing.name) {
+    if (validated.name && validated.name !== existing.name) {
       const nameConflict = await prisma.agency.findFirst({
-        where: { name: input.name },
+        where: { name: validated.name },
       });
 
       if (nameConflict) {
@@ -431,17 +442,42 @@ export async function updateAgency(agencyId: string, input: Partial<{ name: stri
       }
     }
 
+    const existingSettings = (
+      existing.settings &&
+      typeof existing.settings === 'object' &&
+      !Array.isArray(existing.settings)
+    ) ? existing.settings as Record<string, any> : {};
+
+    const mergedSettings = validated.settings === undefined
+      ? undefined
+      : {
+        ...existingSettings,
+        ...(validated.settings || {}),
+      };
+
     const agency = await prisma.agency.update({
       where: { id: agencyId },
       data: {
-        ...(input.name && { name: input.name }),
-        ...(input.subscriptionTier && { subscriptionTier: input.subscriptionTier as any }),
+        ...(validated.name && { name: validated.name }),
+        ...(validated.subscriptionTier && { subscriptionTier: validated.subscriptionTier as any }),
+        ...(mergedSettings !== undefined && { settings: mergedSettings }),
         updatedAt: new Date(),
       },
     });
 
     return { data: agency, error: null };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid input data',
+          details: error.errors,
+        },
+      };
+    }
+
     return {
       data: null,
       error: {
