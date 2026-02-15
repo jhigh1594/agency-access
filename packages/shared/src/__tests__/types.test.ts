@@ -18,6 +18,10 @@ import {
   SubscriptionTierSchema,
   TIER_LIMITS,
   SUBSCRIPTION_TIER_NAMES,
+  PRICING_DISPLAY_TIER_NAMES,
+  PRICING_DISPLAY_TIER_DETAILS,
+  getPricingDisplayTierFromSubscriptionTier,
+  getPricingTierNameFromSubscriptionTier,
   MetricTypeSchema,
 } from '../types';
 
@@ -341,6 +345,35 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
       expect(SUBSCRIPTION_TIER_NAMES.AGENCY).toBe('Agency');
       expect(SUBSCRIPTION_TIER_NAMES.PRO).toBe('Pro');
       expect(SUBSCRIPTION_TIER_NAMES.ENTERPRISE).toBe('Enterprise');
+    });
+  });
+
+  describe('Pricing Display Tier Mapping', () => {
+    it('should expose Free/Growth/Scale display tier labels', () => {
+      expect(PRICING_DISPLAY_TIER_NAMES).toEqual({
+        FREE: 'Free',
+        GROWTH: 'Growth',
+        SCALE: 'Scale',
+      });
+    });
+
+    it('should map subscription tiers to pricing display tiers', () => {
+      expect(getPricingDisplayTierFromSubscriptionTier('STARTER')).toBe('GROWTH');
+      expect(getPricingDisplayTierFromSubscriptionTier('AGENCY')).toBe('SCALE');
+      expect(getPricingDisplayTierFromSubscriptionTier('PRO')).toBe('SCALE');
+      expect(getPricingDisplayTierFromSubscriptionTier('ENTERPRISE')).toBe('SCALE');
+      expect(getPricingDisplayTierFromSubscriptionTier(undefined)).toBe('FREE');
+    });
+
+    it('should derive pricing tier name from subscription tier', () => {
+      expect(getPricingTierNameFromSubscriptionTier('STARTER')).toBe('Growth');
+      expect(getPricingTierNameFromSubscriptionTier('AGENCY')).toBe('Scale');
+      expect(getPricingTierNameFromSubscriptionTier('PRO')).toBe('Scale');
+    });
+
+    it('should expose pricing details for Growth and Scale', () => {
+      expect(PRICING_DISPLAY_TIER_DETAILS.GROWTH.monthlyPrice).toBe(40);
+      expect(PRICING_DISPLAY_TIER_DETAILS.SCALE.monthlyPrice).toBe(93.33);
     });
   });
 

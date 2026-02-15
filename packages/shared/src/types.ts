@@ -749,6 +749,73 @@ export const SUBSCRIPTION_TIER_NAMES: Record<SubscriptionTier, string> = {
   ENTERPRISE: 'Enterprise',
 };
 
+// Pricing display tiers shown in billing UIs and Clerk metadata
+export const PricingDisplayTierSchema = z.enum(['FREE', 'GROWTH', 'SCALE']);
+export type PricingDisplayTier = z.infer<typeof PricingDisplayTierSchema>;
+
+export const PRICING_DISPLAY_TIER_ORDER: PricingDisplayTier[] = ['FREE', 'GROWTH', 'SCALE'];
+
+export const PRICING_DISPLAY_TIER_NAMES: Record<PricingDisplayTier, string> = {
+  FREE: 'Free',
+  GROWTH: 'Growth',
+  SCALE: 'Scale',
+};
+
+export const PRICING_DISPLAY_TIER_DETAILS: Record<PricingDisplayTier, {
+  name: string;
+  persona: string;
+  description: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+}> = {
+  FREE: {
+    name: 'Free',
+    persona: 'For individuals',
+    description: 'Solo freelancers testing OAuth automation',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+  },
+  GROWTH: {
+    name: 'Growth',
+    persona: 'For small teams',
+    description: 'Growing agencies with 3-5 new clients/month',
+    monthlyPrice: 40,
+    yearlyPrice: 480,
+  },
+  SCALE: {
+    name: 'Scale',
+    persona: 'For growing agencies',
+    description: 'Established agencies onboarding 10+ clients/month',
+    monthlyPrice: 93.33,
+    yearlyPrice: 1120,
+  },
+};
+
+export const SUBSCRIPTION_TIER_TO_PRICING_DISPLAY_TIER: Record<SubscriptionTier, PricingDisplayTier> = {
+  STARTER: 'GROWTH',
+  AGENCY: 'SCALE',
+  PRO: 'SCALE',
+  ENTERPRISE: 'SCALE',
+};
+
+export const PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER: Record<PricingDisplayTier, SubscriptionTier | null> = {
+  FREE: null,
+  GROWTH: 'STARTER',
+  SCALE: 'AGENCY',
+};
+
+export function getPricingDisplayTierFromSubscriptionTier(
+  tier: SubscriptionTier | null | undefined
+): PricingDisplayTier {
+  if (!tier) return 'FREE';
+  return SUBSCRIPTION_TIER_TO_PRICING_DISPLAY_TIER[tier];
+}
+
+export function getPricingTierNameFromSubscriptionTier(tier: SubscriptionTier): string {
+  const displayTier = getPricingDisplayTierFromSubscriptionTier(tier);
+  return PRICING_DISPLAY_TIER_NAMES[displayTier];
+}
+
 // Subscription status types
 export const SubscriptionStatusSchema = z.enum([
   'active',
