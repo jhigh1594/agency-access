@@ -7,7 +7,13 @@
 
 import { ClerkClient, createClerkClient } from '@clerk/backend';
 import { env } from '@/lib/env';
-import { SubscriptionTier, ClerkPublicMetadata, ClerkPrivateMetadata, TIER_LIMITS, SUBSCRIPTION_TIER_NAMES } from '@agency-platform/shared';
+import {
+  SubscriptionTier,
+  ClerkPublicMetadata,
+  ClerkPrivateMetadata,
+  TIER_LIMITS,
+  getPricingTierNameFromSubscriptionTier,
+} from '@agency-platform/shared';
 
 let clerkClient: ClerkClient | null = null;
 
@@ -41,7 +47,7 @@ export async function setSubscriptionTier(
 
     const publicMetadata: ClerkPublicMetadata = {
       subscriptionTier: tier,
-      tierName: SUBSCRIPTION_TIER_NAMES[tier],
+      tierName: getPricingTierNameFromSubscriptionTier(tier),
       features: limits.features,
     };
 

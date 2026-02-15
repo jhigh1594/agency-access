@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TIER_LIMITS, SUBSCRIPTION_TIER_NAMES } from '@agency-platform/shared';
+import { TIER_LIMITS } from '@agency-platform/shared';
 
 // Mock @clerk/backend BEFORE importing the service
 vi.mock('@clerk/backend', () => ({
@@ -51,7 +51,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
     mockClerk.users.getUser.mockResolvedValue({
       publicMetadata: {
         subscriptionTier: 'STARTER',
-        tierName: 'Starter',
+        tierName: 'Growth',
         features: TIER_LIMITS.STARTER.features,
       },
       privateMetadata: {
@@ -79,7 +79,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
       expect(result.data?.tier).toBe('STARTER');
       expect(result.data?.publicMetadata).toEqual({
         subscriptionTier: 'STARTER',
-        tierName: 'Starter',
+        tierName: 'Growth',
         features: TIER_LIMITS.STARTER.features,
       });
       expect(mockClerk.users.updateUser).toHaveBeenCalledWith('user_123', {
@@ -99,6 +99,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
 
       expect(result.error).toBeNull();
       expect(result.data?.tier).toBe('AGENCY');
+      expect(result.data?.publicMetadata.tierName).toBe('Scale');
       expect(result.data?.privateMetadata.subscriptionStatus).toBe('trialing');
       expect(result.data?.privateMetadata.trialEndsAt).toBeDefined();
     });
@@ -138,7 +139,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
 
       expect(result.error).toBeNull();
       expect(result.data?.tier).toBe('STARTER');
-      expect(result.data?.publicMetadata.tierName).toBe('Starter');
+      expect(result.data?.publicMetadata.tierName).toBe('Growth');
       expect(result.data?.privateMetadata.quotaLimits).toBeDefined();
     });
 
