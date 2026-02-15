@@ -47,7 +47,7 @@ export function SuccessLinkScreen({
 }: SuccessLinkScreenProps) {
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={fadeVariants}
       initial="initial"
       animate="animate"
@@ -66,7 +66,7 @@ export function SuccessLinkScreen({
       </div>
 
       {/* Success Card with Confetti */}
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <SuccessLinkCard
           link={accessLink}
           clientName={clientName}
@@ -75,7 +75,7 @@ export function SuccessLinkScreen({
       </div>
 
       {/* Next Steps */}
-      <div className="mt-8 max-w-2xl mx-auto">
+      <div className="mt-8 max-w-4xl mx-auto">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
           <h3 className="font-semibold text-blue-900 mb-3">What's next?</h3>
           <div className="space-y-2 text-sm text-blue-800">
@@ -100,7 +100,7 @@ export function SuccessLinkScreen({
       </div>
 
       {/* Pro Tip */}
-      <div className="mt-6 max-w-2xl mx-auto">
+      <div className="mt-6 max-w-4xl mx-auto">
         <div className="text-center text-sm text-gray-600">
           <span className="font-semibold">💡 Pro tip:</span>{' '}
           You can create more access requests from your dashboard anytime.

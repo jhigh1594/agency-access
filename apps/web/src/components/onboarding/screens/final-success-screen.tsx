@@ -78,7 +78,7 @@ export function FinalSuccessScreen({
 }: FinalSuccessScreenProps) {
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -107,7 +107,7 @@ export function FinalSuccessScreen({
 
       {/* Accomplishments */}
       <motion.div
-        className="max-w-2xl mx-auto mb-8"
+        className="max-w-4xl mx-auto mb-8"
         variants={staggerItem}
       >
         <div className="bg-teal/10 border-2 border-teal rounded-lg p-6">
@@ -156,7 +156,7 @@ export function FinalSuccessScreen({
       {/* Time to Value Metric */}
       {accessRequestId && (
         <motion.div
-          className="max-w-2xl mx-auto mb-8"
+          className="max-w-4xl mx-auto mb-8"
           variants={staggerItem}
         >
           <div className="bg-paper border-2 border-black rounded-lg p-6 text-center">

@@ -92,7 +92,7 @@ export function PlatformSelectionScreen({
 
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={fadeVariants}
       initial="initial"
       animate="animate"
@@ -108,7 +108,7 @@ export function PlatformSelectionScreen({
         </p>
       </div>
 
-      <div className="max-w-4xl">
+      <div className="max-w-5xl">
         {/* Platform Selector Grid */}
         <PlatformSelectorGrid
           selectedPlatforms={flatPlatforms}

@@ -94,7 +94,7 @@ export function TeamInviteScreen({
 
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={fadeVariants}
       initial="initial"
       animate="animate"
@@ -110,7 +110,7 @@ export function TeamInviteScreen({
         </p>
       </div>
 
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-4xl space-y-6">
         {/* Add Team Member Input */}
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">

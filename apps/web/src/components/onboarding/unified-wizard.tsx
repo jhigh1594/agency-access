@@ -170,7 +170,7 @@ export function UnifiedWizard({
     >
       {/* Progress Bar */}
       <div className="w-full bg-paper border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-6xl mx-auto px-4 py-6 md:px-6">
           {/* Step Indicators */}
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-medium text-gray-700">
@@ -224,9 +224,9 @@ export function UnifiedWizard({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-start justify-center p-4 md:px-6 md:py-8">
         <motion.div
-          className="w-full max-w-2xl"
+          className="w-full max-w-6xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -267,7 +267,7 @@ export function UnifiedWizard({
 
       {/* Navigation Footer */}
       <div className="bg-paper border-t border-border">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-6xl mx-auto px-4 py-6 md:px-6">
           <div className="flex items-center justify-between">
             {/* Back Button */}
             {canGoBack ? (

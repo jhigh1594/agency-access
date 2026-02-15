@@ -417,7 +417,11 @@ export function UnifiedOnboardingProvider({
   }, [state.currentStep]);
 
   const canSkip = useCallback(() => {
-    // Allow skipping every step except the final completion screen.
+    // Agency name is required; all other non-final steps are skippable.
+    if (state.currentStep === 1) {
+      return false;
+    }
+
     return state.currentStep < 6;
   }, [state.currentStep]);
 

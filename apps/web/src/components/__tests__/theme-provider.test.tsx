@@ -127,7 +127,7 @@ describe('ThemeProvider', () => {
   });
 
   it('should prevent hydration mismatch with initial theme', async () => {
-    // No localStorage, should use system preference (light in test env)
+    // No localStorage, should default to light
     const TestComponent = () => {
       const { theme } = useTheme();
       return <div data-testid="theme">{theme}</div>;
@@ -195,35 +195,6 @@ describe('ThemeProvider', () => {
 
     await waitFor(() => {
       expect(localStorage.getItem('agency-theme')).toBe('dark');
-    });
-  });
-
-  it('should respect system preference on first visit', async () => {
-    // Mock system preference
-    const mockMatchMedia = vi.fn().mockImplementation((query) => ({
-      matches: query === '(prefers-color-scheme: dark)',
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
-
-    window.matchMedia = mockMatchMedia;
-
-    const TestComponent = () => {
-      const { theme } = useTheme();
-      return <div data-testid="theme">{theme}</div>;
-    };
-
-    render(
-      <ThemeProvider>
-        <TestComponent />
-      </ThemeProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('theme')).toHaveTextContent('dark');
     });
   });
 

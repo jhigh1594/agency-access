@@ -75,7 +75,7 @@ export function AgencyProfileScreen({
 
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={fadeVariants}
       initial="initial"
       animate="animate"
@@ -90,7 +90,7 @@ export function AgencyProfileScreen({
       </div>
 
       {/* Form */}
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6 max-w-4xl">
         {/* Agency Name */}
         <OpinionatedInput
           label="Agency Name"

@@ -238,11 +238,11 @@ describe('UnifiedOnboardingContext', () => {
     expect(result.current.canGoBack()).toBe(false);
     expect(result.current.canSkip()).toBe(true);
 
-    // Step 1 (agency): can go back, can skip
+    // Step 1 (agency): can go back, cannot skip
     act(() => result.current.nextStep());
     expect(result.current.state.currentStep).toBe(1);
     expect(result.current.canGoBack()).toBe(true);
-    expect(result.current.canSkip()).toBe(true);
+    expect(result.current.canSkip()).toBe(false);
 
     // Step 2 (client): can go back, can skip
     act(() => result.current.nextStep());

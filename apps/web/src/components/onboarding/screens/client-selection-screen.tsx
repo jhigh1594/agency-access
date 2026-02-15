@@ -120,7 +120,7 @@ export function ClientSelectionScreen({
 
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={fadeVariants}
       initial="initial"
       animate="animate"
@@ -136,7 +136,7 @@ export function ClientSelectionScreen({
         </p>
       </div>
 
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6 max-w-4xl">
         {loading && (
           <p className="text-sm text-gray-500">Loading existing clients...</p>
         )}
@@ -219,30 +219,32 @@ export function ClientSelectionScreen({
               </button>
             )}
 
-            <OpinionatedInput
-              label="Client Name"
-              value={clientName}
-              onChange={handleClientNameChange}
-              placeholder="e.g., Acme Corp"
-              type="text"
-              required
-              helperText="The company or client name"
-              validationMessage="Please enter a client name (at least 2 characters)"
-              isValid={clientName.trim().length >= 2}
-              suggestions={clientSuggestions}
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <OpinionatedInput
+                label="Client Name"
+                value={clientName}
+                onChange={handleClientNameChange}
+                placeholder="e.g., Acme Corp"
+                type="text"
+                required
+                helperText="The company or client name"
+                validationMessage="Please enter a client name (at least 2 characters)"
+                isValid={clientName.trim().length >= 2}
+                suggestions={clientSuggestions}
+              />
 
-            <OpinionatedInput
-              label="Client Email"
-              value={clientEmail}
-              onChange={handleClientEmailChange}
-              placeholder="client@acmecorp.com"
-              type="email"
-              required
-              helperText="We'll send the access link to this email"
-              validationMessage="Please enter a valid email address"
-              isValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
-            />
+              <OpinionatedInput
+                label="Client Email"
+                value={clientEmail}
+                onChange={handleClientEmailChange}
+                placeholder="client@acmecorp.com"
+                type="email"
+                required
+                helperText="We'll send the access link to this email"
+                validationMessage="Please enter a valid email address"
+                isValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
+              />
+            </div>
           </div>
         )}
 

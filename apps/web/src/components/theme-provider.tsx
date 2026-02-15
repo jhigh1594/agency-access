@@ -43,10 +43,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setMounted(true);
 
     const stored = localStorage.getItem(THEME_KEY) as Theme | null;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const userTheme = stored || (systemPrefersDark ? 'dark' : 'light');
+    // Default to light theme unless user has explicitly chosen dark
+    const userTheme = stored || 'light';
 
-    // Marketing + onboarding always use light; app uses stored/system preference
+    // Marketing + onboarding always use light; app uses stored preference
     const appliedTheme = isAlwaysLightPath(pathname) ? 'light' : userTheme;
 
     setTheme(appliedTheme);

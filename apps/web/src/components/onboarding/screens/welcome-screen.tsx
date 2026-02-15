@@ -39,7 +39,7 @@ interface WelcomeScreenProps {
 export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
   return (
     <motion.div
-      className="p-8 md:p-12"
+      className="p-6 md:p-10"
       variants={scaleVariants}
       initial="initial"
       animate="animate"
