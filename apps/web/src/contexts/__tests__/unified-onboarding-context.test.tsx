@@ -1,11 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { UnifiedOnboardingProvider, useUnifiedOnboarding } from '../unified-onboarding-context';
 
 const mockPush = vi.fn();
 const mockGetToken = vi.fn();
 let mockOrgId: string | null = null;
+let mockUser: {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  emailAddresses: Array<{ emailAddress: string }>;
+  primaryEmailAddress: { emailAddress: string } | null;
+} | null = null;
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -20,13 +27,7 @@ vi.mock('@clerk/nextjs', () => ({
     getToken: mockGetToken,
   }),
   useUser: () => ({
-    user: {
-      id: 'user_123',
-      firstName: 'Jane',
-      lastName: 'Doe',
-      emailAddresses: [{ emailAddress: 'jane@example.com' }],
-      primaryEmailAddress: { emailAddress: 'jane@example.com' },
-    },
+    user: mockUser,
   }),
 }));
 
@@ -36,6 +37,13 @@ describe('UnifiedOnboardingContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOrgId = null;
+    mockUser = {
+      id: 'user_123',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      emailAddresses: [{ emailAddress: 'jane@example.com' }],
+      primaryEmailAddress: { emailAddress: 'jane@example.com' },
+    };
     mockGetToken.mockResolvedValue('token-123');
     (global as any).fetch = fetchMock;
     process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
@@ -44,6 +52,22 @@ describe('UnifiedOnboardingContext', () => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <UnifiedOnboardingProvider>{children}</UnifiedOnboardingProvider>
   );
+
+  it('prefills agency name from email domain', async () => {
+    mockUser = {
+      id: 'user_123',
+      firstName: 'Jon',
+      lastName: 'Doe',
+      emailAddresses: [{ emailAddress: 'jon@pillaraiagency.com' }],
+      primaryEmailAddress: { emailAddress: 'jon@pillaraiagency.com' },
+    };
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.agencyName).toBe('Pillar AI Agency');
+    });
+  });
 
   it('returns deterministic result and stores agency/access ids when creating onboarding request', async () => {
     fetchMock

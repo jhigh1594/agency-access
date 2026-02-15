@@ -145,6 +145,132 @@ const TOTAL_STEPS = 7; // 0-6 (7 screens total: Welcome, Agency, Client, Platfor
 
 const PRESELECTED_PLATFORMS: Platform[] = ['google_ads', 'meta_ads']; // 80% of use cases
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SECOND_LEVEL_TLDS = new Set(['co', 'com', 'org', 'net', 'gov', 'edu', 'ac']);
+const ACRONYM_TOKENS = new Set(['ai', 'seo', 'ppc', 'crm', 'saas', 'b2b', 'b2c']);
+const TRAILING_NAME_TOKENS = [
+  'consulting',
+  'marketing',
+  'solutions',
+  'partners',
+  'digital',
+  'agency',
+  'studio',
+  'media',
+  'group',
+  'labs',
+  'co',
+  'company',
+  'inc',
+  'llc',
+  'ai',
+  'seo',
+  'ppc',
+  'crm',
+  'saas',
+  'b2b',
+  'b2c',
+];
+
+function extractAgencyDomainLabel(email: string): string | null {
+  const atIndex = email.lastIndexOf('@');
+  if (atIndex < 0) {
+    return null;
+  }
+
+  const domain = email.slice(atIndex + 1).trim().toLowerCase();
+  if (!domain) {
+    return null;
+  }
+
+  const hostname = domain.split(':')[0];
+  const parts = hostname.split('.').filter(Boolean);
+  if (parts.length === 0) {
+    return null;
+  }
+
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  const tld = parts[parts.length - 1];
+  const secondLevel = parts[parts.length - 2];
+  const usesCountrySecondLevel = tld.length === 2 && SECOND_LEVEL_TLDS.has(secondLevel);
+  const labelIndex = usesCountrySecondLevel && parts.length >= 3
+    ? parts.length - 3
+    : parts.length - 2;
+
+  return parts[labelIndex];
+}
+
+function splitTrailingNameTokens(segment: string): string[] {
+  if (!segment) {
+    return [];
+  }
+
+  const tokens: string[] = [];
+  let remaining = segment;
+
+  while (remaining.length > 0) {
+    const matchedToken = TRAILING_NAME_TOKENS.find(
+      (token) => remaining.length > token.length && remaining.endsWith(token)
+    );
+
+    if (!matchedToken) {
+      break;
+    }
+
+    tokens.unshift(matchedToken);
+    remaining = remaining.slice(0, -matchedToken.length);
+  }
+
+  if (remaining.length > 0) {
+    tokens.unshift(remaining);
+  }
+
+  return tokens;
+}
+
+function toDisplayAgencyToken(token: string): string {
+  if (ACRONYM_TOKENS.has(token)) {
+    return token.toUpperCase();
+  }
+
+  return token.charAt(0).toUpperCase() + token.slice(1);
+}
+
+function formatAgencyName(source: string): string | null {
+  const normalized = source.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const rawSegments = normalized.split(/\s+/).filter(Boolean);
+  const formattedTokens = rawSegments
+    .flatMap((segment) => splitTrailingNameTokens(segment))
+    .filter((segment) => segment.length > 0)
+    .map((segment) => toDisplayAgencyToken(segment));
+
+  if (formattedTokens.length === 0) {
+    return null;
+  }
+
+  return formattedTokens.join(' ');
+}
+
+function getAgencyNameFromEmail(email?: string): string | null {
+  if (!email) {
+    return null;
+  }
+
+  const domainLabel = extractAgencyDomainLabel(email);
+  const domainName = domainLabel ? formatAgencyName(domainLabel) : null;
+  if (domainName) {
+    return domainName;
+  }
+
+  const localPart = email.split('@')[0];
+  return localPart ? formatAgencyName(localPart) : null;
+}
 
 const initialState: OnboardingState = {
   // Progress
@@ -427,7 +553,7 @@ export function UnifiedOnboardingProvider({
       const principalClerkId = orgId || userId;
       const safeAgencyName = state.agencyName.trim().length > 0
         ? state.agencyName.trim()
-        : `${user?.firstName?.trim() || 'My'} Agency`;
+        : (getAgencyNameFromEmail(userEmail) || 'My Agency');
       const safeClientName = state.clientName?.trim()
         ? state.clientName.trim()
         : `${safeAgencyName} Client`;
@@ -655,7 +781,7 @@ export function UnifiedOnboardingProvider({
       if (!resolvedAgencyId && principalClerkId && userEmail) {
         const safeAgencyName = state.agencyName.trim().length > 0
           ? state.agencyName.trim()
-          : `${user?.firstName?.trim() || 'My'} Agency`;
+          : (getAgencyNameFromEmail(userEmail) || 'My Agency');
 
         const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
           method: 'POST',
@@ -739,21 +865,10 @@ export function UnifiedOnboardingProvider({
   // ============================================================
 
   useEffect(() => {
-    // Pre-fill agency name from user's organization or email
+    // Pre-fill agency name from the account email domain.
     if (user && !state.agencyName) {
-      const firstName = user.firstName;
-      const lastName = user.lastName;
-      const email = user.emailAddresses[0]?.emailAddress || '';
-
-      let suggestedName = '';
-
-      if (firstName && lastName) {
-        suggestedName = `${firstName} ${lastName}'s Agency`;
-      } else {
-        // Extract name from email (e.g., "john" from "john@company.com")
-        const emailName = email.split('@')[0];
-        suggestedName = `${emailName}'s Agency`;
-      }
+      const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress;
+      const suggestedName = getAgencyNameFromEmail(email) || 'My Agency';
 
       setState((prev) => ({
         ...prev,
