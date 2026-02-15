@@ -107,8 +107,8 @@ export default function LeadsieAlternativePage() {
             {/* Pain 1: Credit Anxiety */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-red-100 border-2 border-black rounded-none flex items-center justify-center">
-                  <DollarSign size={20} className="text-red-600" />
+                <div className="w-10 h-10 bg-destructive/10 border-2 border-black rounded-none flex items-center justify-center">
+                  <DollarSign size={20} className="text-destructive" />
                 </div>
                 <h3 className="font-dela text-lg text-ink">Credit Anxiety</h3>
               </div>
@@ -123,8 +123,8 @@ export default function LeadsieAlternativePage() {
             {/* Pain 2: Two-Step Onboarding */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-red-100 border-2 border-black rounded-none flex items-center justify-center">
-                  <ArrowRight size={20} className="text-red-600" />
+                <div className="w-10 h-10 bg-destructive/10 border-2 border-black rounded-none flex items-center justify-center">
+                  <ArrowRight size={20} className="text-destructive" />
                 </div>
                 <h3 className="font-dela text-lg text-ink">Two-Step Onboarding</h3>
               </div>
@@ -139,8 +139,8 @@ export default function LeadsieAlternativePage() {
             {/* Pain 3: UK Support Hours */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-red-100 border-2 border-black rounded-none flex items-center justify-center">
-                  <Clock size={20} className="text-red-600" />
+                <div className="w-10 h-10 bg-destructive/10 border-2 border-black rounded-none flex items-center justify-center">
+                  <Clock size={20} className="text-destructive" />
                 </div>
                 <h3 className="font-dela text-lg text-ink">UK Support Hours</h3>
               </div>
@@ -155,8 +155,8 @@ export default function LeadsieAlternativePage() {
             {/* Pain 4: Limited Platforms */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-red-100 border-2 border-black rounded-none flex items-center justify-center">
-                  <Globe size={20} className="text-red-600" />
+                <div className="w-10 h-10 bg-destructive/10 border-2 border-black rounded-none flex items-center justify-center">
+                  <Globe size={20} className="text-destructive" />
                 </div>
                 <h3 className="font-dela text-lg text-ink">Missing Platforms</h3>
               </div>
@@ -190,26 +190,26 @@ export default function LeadsieAlternativePage() {
             {/* Before/After Comparison */}
             <div className="grid md:grid-cols-2 gap-8">
               {/* Before: Leadsie */}
-              <div className="border-2 border-red-300 bg-red-50 p-6 rounded-none">
-                <h3 className="font-dela text-lg text-red-700 mb-4 flex items-center gap-2">
+              <div className="border-2 border-destructive/30 bg-destructive/5 p-6 rounded-none">
+                <h3 className="font-dela text-lg text-destructive mb-4 flex items-center gap-2">
                   <X size={20} />
                   With Leadsie: Two Steps
                 </h3>
                 <ol className="space-y-3 font-mono text-sm text-foreground">
                   <li className="flex gap-3">
-                    <span className="bg-red-200 text-red-800 w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">1</span>
+                    <span className="bg-destructive/20 text-destructive w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">1</span>
                     <span>Send Leadsie link for platform access</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="bg-red-200 text-red-800 w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">2</span>
+                    <span className="bg-destructive/20 text-destructive w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">2</span>
                     <span>Send Google Form/Typeform for intake</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="bg-red-200 text-red-800 w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">3</span>
+                    <span className="bg-destructive/20 text-destructive w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">3</span>
                     <span>Manually combine data from both sources</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="bg-red-200 text-red-800 w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">4</span>
+                    <span className="bg-destructive/20 text-destructive w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">4</span>
                     <span>Hope client completes both steps</span>
                   </li>
                 </ol>
