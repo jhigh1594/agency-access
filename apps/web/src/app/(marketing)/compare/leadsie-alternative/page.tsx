@@ -42,7 +42,7 @@ export default function LeadsieAlternativePage() {
             <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl text-ink mb-6 tracking-tight">
               Looking for a Leadsie Alternative?
             </h1>
-            <p className="font-mono text-lg md:text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+            <p className="font-mono text-lg md:text-xl text-foreground mb-8 max-w-2xl mx-auto">
               Stop juggling separate tools for access and intake. Get both in one professional link—at a predictable flat rate.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -72,19 +72,19 @@ export default function LeadsieAlternativePage() {
             <div className="grid md:grid-cols-3 gap-6 text-center">
               <div className="p-4">
                 <div className="text-coral font-bold text-lg mb-2">Access + Intake</div>
-                <p className="font-mono text-sm text-gray-300">
+                <p className="font-mono text-sm text-white/80">
                   One link handles OAuth <strong className="text-white">and</strong> collects client info—no separate forms needed.
                 </p>
               </div>
               <div className="p-4">
                 <div className="text-coral font-bold text-lg mb-2">Flat-Rate Pricing</div>
-                <p className="font-mono text-sm text-gray-300">
+                <p className="font-mono text-sm text-white/80">
                   $79/mo unlimited. No credits, no surprises. <strong className="text-white">$240/year savings</strong> vs Leadsie Agency.
                 </p>
               </div>
               <div className="p-4">
                 <div className="text-coral font-bold text-lg mb-2">US-Based Support</div>
-                <p className="font-mono text-sm text-gray-300">
+                <p className="font-mono text-sm text-white/80">
                   Same-day responses during US hours. No more 8-hour time zone delays.
                 </p>
               </div>
@@ -99,7 +99,7 @@ export default function LeadsieAlternativePage() {
           <h2 className="font-dela text-2xl md:text-3xl text-ink mb-4 text-center">
             Why Agencies Look for Leadsie Alternatives
           </h2>
-          <p className="font-mono text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+          <p className="font-mono text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
             Growing agencies hit these walls with Leadsie. Sound familiar?
           </p>
 
@@ -112,10 +112,10 @@ export default function LeadsieAlternativePage() {
                 </div>
                 <h3 className="font-dela text-lg text-ink">Credit Anxiety</h3>
               </div>
-              <p className="font-mono text-sm text-gray-700 mb-3">
+              <p className="font-mono text-sm text-foreground mb-3">
                 <em>&ldquo;I never know what my bill will be.&rdquo;</em>
               </p>
-              <p className="font-mono text-sm text-gray-600">
+              <p className="font-mono text-sm text-muted-foreground">
                 Usage-based pricing creates unpredictable costs. One busy month throws your budget. Growing agencies need predictable expenses.
               </p>
             </div>
@@ -128,10 +128,10 @@ export default function LeadsieAlternativePage() {
                 </div>
                 <h3 className="font-dela text-lg text-ink">Two-Step Onboarding</h3>
               </div>
-              <p className="font-mono text-sm text-gray-700 mb-3">
+              <p className="font-mono text-sm text-foreground mb-3">
                 <em>&ldquo;I look unprofessional sending multiple links.&rdquo;</em>
               </p>
-              <p className="font-mono text-sm text-gray-600">
+              <p className="font-mono text-sm text-muted-foreground">
                 Leadsie handles access. You still need Google Forms or Typeform for intake. Two links, two emails, two chances for clients to drop off.
               </p>
             </div>
@@ -144,10 +144,10 @@ export default function LeadsieAlternativePage() {
                 </div>
                 <h3 className="font-dela text-lg text-ink">UK Support Hours</h3>
               </div>
-              <p className="font-mono text-sm text-gray-700 mb-3">
+              <p className="font-mono text-sm text-foreground mb-3">
                 <em>&ldquo;They&apos;re in the UK, I&apos;m in the US.&rdquo;</em>
               </p>
-              <p className="font-mono text-sm text-gray-600">
+              <p className="font-mono text-sm text-muted-foreground">
                 8-hour time difference means next-day responses. When a client is locked out during your business hours, waiting isn&apos;t an option.
               </p>
             </div>
@@ -160,10 +160,10 @@ export default function LeadsieAlternativePage() {
                 </div>
                 <h3 className="font-dela text-lg text-ink">Missing Platforms</h3>
               </div>
-              <p className="font-mono text-sm text-gray-700 mb-3">
+              <p className="font-mono text-sm text-foreground mb-3">
                 <em>&ldquo;They don&apos;t support Pinterest, Klaviyo, Shopify.&rdquo;</em>
               </p>
-              <p className="font-mono text-sm text-gray-600">
+              <p className="font-mono text-sm text-muted-foreground">
                 E-commerce and email agencies need platforms beyond Meta and Google. Limited support means manual workarounds or turning away clients.
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function LeadsieAlternativePage() {
               <h2 className="font-dela text-2xl md:text-4xl text-ink mb-4">
                 Access + Intake in One Link
               </h2>
-              <p className="font-mono text-gray-600 max-w-2xl mx-auto">
+              <p className="font-mono text-muted-foreground max-w-2xl mx-auto">
                 The #1 reason agencies switch: one professional link handles everything Leadsie does <strong>plus</strong> collects client information.
               </p>
             </div>
@@ -195,7 +195,7 @@ export default function LeadsieAlternativePage() {
                   <X size={20} />
                   With Leadsie: Two Steps
                 </h3>
-                <ol className="space-y-3 font-mono text-sm text-gray-700">
+                <ol className="space-y-3 font-mono text-sm text-foreground">
                   <li className="flex gap-3">
                     <span className="bg-red-200 text-red-800 w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">1</span>
                     <span>Send Leadsie link for platform access</span>
@@ -221,7 +221,7 @@ export default function LeadsieAlternativePage() {
                   <Check size={20} />
                   With AuthHub: One Step
                 </h3>
-                <ol className="space-y-3 font-mono text-sm text-gray-700">
+                <ol className="space-y-3 font-mono text-sm text-foreground">
                   <li className="flex gap-3">
                     <span className="bg-teal text-white w-6 h-6 flex items-center justify-center rounded-sm flex-shrink-0 font-bold">1</span>
                     <span>Send AuthHub link</span>
@@ -262,13 +262,13 @@ export default function LeadsieAlternativePage() {
                 <div className="space-y-1">
                   <p className="font-mono text-2xl font-bold text-ink">
                     $99
-                    <span className="text-sm font-normal text-gray-600">/month</span>
+                    <span className="text-sm font-normal text-muted-foreground">/month</span>
                   </p>
-                  <p className="font-mono text-xs text-gray-500">
+                  <p className="font-mono text-xs text-muted-foreground">
                     $83/mo billed yearly ($990/yr)
                   </p>
                 </div>
-                <p className="font-mono text-xs text-gray-500 mt-2">Agency tier</p>
+                <p className="font-mono text-xs text-muted-foreground mt-2">Agency tier</p>
               </div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2 font-mono text-sm">
@@ -306,9 +306,9 @@ export default function LeadsieAlternativePage() {
                 <div className="space-y-1">
                   <p className="font-mono text-2xl font-bold text-coral">
                     $79
-                    <span className="text-sm font-normal text-gray-600">/month</span>
+                    <span className="text-sm font-normal text-muted-foreground">/month</span>
                   </p>
-                  <p className="font-mono text-xs text-gray-500">
+                  <p className="font-mono text-xs text-muted-foreground">
                     Flat-rate, unlimited clients
                   </p>
                 </div>
@@ -358,7 +358,7 @@ export default function LeadsieAlternativePage() {
                   Access + Intake in One Link
                 </h3>
               </div>
-              <p className="font-mono text-sm text-gray-700">
+              <p className="font-mono text-sm text-foreground">
                 <strong>The core differentiator.</strong> One professional link handles OAuth authorization AND collects client information. No juggling separate tools. No duplicate data entry. Your clients get a seamless experience, you get everything in one place.
               </p>
             </div>
@@ -373,7 +373,7 @@ export default function LeadsieAlternativePage() {
                   Flat-Rate Pricing
                 </h3>
               </div>
-              <p className="font-mono text-sm text-gray-700">
+              <p className="font-mono text-sm text-foreground">
                 <strong>$79/mo unlimited.</strong> No credits to track. No surprise bills when you onboard 5 clients in a month. Predictable costs mean predictable margins. Save $240/year compared to Leadsie&apos;s Agency tier at $99/mo.
               </p>
             </div>
@@ -388,7 +388,7 @@ export default function LeadsieAlternativePage() {
                   US-Based Support
                 </h3>
               </div>
-              <p className="font-mono text-sm text-gray-700">
+              <p className="font-mono text-sm text-foreground">
                 <strong>Same-day responses during US business hours.</strong> When a client is locked out at 2pm EST, you need help now—not tomorrow. No 8-hour time zone gap. Real people who understand agency workflows.
               </p>
             </div>
@@ -403,7 +403,7 @@ export default function LeadsieAlternativePage() {
                   API on All Tiers
                 </h3>
               </div>
-              <p className="font-mono text-sm text-gray-700">
+              <p className="font-mono text-sm text-foreground">
                 <strong>Build custom workflows without enterprise pricing.</strong> Connect AuthHub to your existing tools, automate client provisioning, or build internal dashboards. API access isn&apos;t locked behind a paywall.
               </p>
             </div>
@@ -515,7 +515,7 @@ export default function LeadsieAlternativePage() {
             {/* Stick with Leadsie */}
             <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
               <h3 className="font-dela text-xl text-ink mb-4">Stick with Leadsie If</h3>
-              <ul className="space-y-2 font-mono text-sm text-gray-700">
+              <ul className="space-y-2 font-mono text-sm text-foreground">
                 <li>• You only need Meta + Google access</li>
                 <li>• You&apos;re UK-based and don&apos;t need US support hours</li>
                 <li>• You have fewer than 20 clients</li>
@@ -529,7 +529,7 @@ export default function LeadsieAlternativePage() {
               <h3 className="font-dela text-xl text-coral mb-4">
                 Switch to AuthHub If
               </h3>
-              <ul className="space-y-2 font-mono text-sm text-gray-700">
+              <ul className="space-y-2 font-mono text-sm text-foreground">
                 <li>• You need Pinterest, Klaviyo, or Shopify access</li>
                 <li>• You&apos;re tired of sending multiple links for onboarding</li>
                 <li>• You&apos;re US-based and want same-day support</li>
@@ -544,13 +544,13 @@ export default function LeadsieAlternativePage() {
       </section>
 
       {/* Migration Support */}
-      <section className="border-b-2 border-black bg-gray-50">
+      <section className="border-b-2 border-black bg-muted/50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-dela text-2xl md:text-3xl text-ink mb-4">
               Switch in 15 Minutes
             </h2>
-            <p className="font-mono text-gray-600 mb-10">
+            <p className="font-mono text-muted-foreground mb-10">
               Moving from Leadsie is straightforward. Here&apos;s how agencies do it:
             </p>
 
@@ -560,7 +560,7 @@ export default function LeadsieAlternativePage() {
                   1
                 </div>
                 <h3 className="font-dela text-ink mb-2">Export from Leadsie</h3>
-                <p className="font-mono text-sm text-gray-600">
+                <p className="font-mono text-sm text-muted-foreground">
                   Download your existing connections and client data from Leadsie&apos;s dashboard.
                 </p>
               </div>
@@ -570,7 +570,7 @@ export default function LeadsieAlternativePage() {
                   2
                 </div>
                 <h3 className="font-dela text-ink mb-2">Create Your Templates</h3>
-                <p className="font-mono text-sm text-gray-600">
+                <p className="font-mono text-sm text-muted-foreground">
                   Set up reusable templates in AuthHub for your common client types (e-commerce, lead gen, etc.).
                 </p>
               </div>
@@ -580,13 +580,13 @@ export default function LeadsieAlternativePage() {
                   3
                 </div>
                 <h3 className="font-dela text-ink mb-2">Send New Links</h3>
-                <p className="font-mono text-sm text-gray-600">
+                <p className="font-mono text-sm text-muted-foreground">
                   Send AuthHub links to active clients. Existing connections stay live until they re-authorize.
                 </p>
               </div>
             </div>
 
-            <p className="font-mono text-sm text-gray-500 mt-8">
+            <p className="font-mono text-sm text-muted-foreground mt-8">
               Need help? Our support team walks you through migration during onboarding.
             </p>
           </div>
@@ -599,7 +599,7 @@ export default function LeadsieAlternativePage() {
           <h2 className="font-dela text-3xl md:text-4xl mb-4">
             Ready to Streamline Your Onboarding?
           </h2>
-          <p className="font-mono text-gray-300 mb-8 max-w-xl mx-auto">
+          <p className="font-mono text-white/80 mb-8 max-w-xl mx-auto">
             Start your 21-day free trial—the longest in the industry. No credit card required.
             See why agencies switched from Leadsie to AuthHub.
           </p>
@@ -616,7 +616,7 @@ export default function LeadsieAlternativePage() {
               </Button>
             </Link>
           </div>
-          <p className="font-mono text-xs text-gray-500 mt-6">
+          <p className="font-mono text-xs text-muted-foreground mt-6">
             ✓ Access + Intake in one link &nbsp; ✓ $79/mo flat rate &nbsp; ✓ US-based support
           </p>
         </div>
