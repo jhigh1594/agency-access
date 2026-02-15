@@ -95,4 +95,20 @@ describe('ManageSubscriptionCard', () => {
     expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Pro')).not.toBeInTheDocument();
   });
+
+  it('treats Free as below Growth so Growth is an upgrade (not downgrade)', () => {
+    mockUseSubscription.mockReturnValue({
+      data: null,
+      isLoading: false,
+    });
+
+    render(<ManageSubscriptionCard />);
+
+    expect(screen.queryByRole('button', { name: /cancel subscription/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /change plan/i }));
+
+    expect(screen.getByRole('button', { name: /Growth.*Upgrade/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Growth.*Downgrade/i })).not.toBeInTheDocument();
+  });
 });

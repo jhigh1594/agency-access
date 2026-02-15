@@ -29,14 +29,17 @@ import { CancelSubscriptionModal } from './cancel-subscription-modal';
 import { Button } from '@/components/ui/button';
 
 type ManageableTier = 'STARTER' | 'AGENCY';
+type CurrentTier = 'FREE' | ManageableTier;
 
 const MANAGEABLE_TIERS: ManageableTier[] = ['STARTER', 'AGENCY'];
-const TIER_RANK: Record<ManageableTier, number> = {
+const TIER_RANK: Record<CurrentTier, number> = {
+  FREE: -1,
   STARTER: 0,
   AGENCY: 1,
 };
 
-function normalizeCurrentTier(tier: SubscriptionTier | null | undefined): ManageableTier {
+function normalizeCurrentTier(tier: SubscriptionTier | null | undefined): CurrentTier {
+  if (!tier) return 'FREE';
   if (tier === 'STARTER') return 'STARTER';
   return 'AGENCY';
 }
@@ -75,6 +78,7 @@ export function ManageSubscriptionCard() {
   const currentTierRank = TIER_RANK[currentTier];
   const isDowngrade = selectedTier ? TIER_RANK[selectedTier] < currentTierRank : false;
   const isUpgrade = selectedTier ? TIER_RANK[selectedTier] > currentTierRank : false;
+  const canCancelSubscription = !!subscription;
 
   const handleTierChange = async () => {
     if (!selectedTier || selectedTier === currentTier) return;
@@ -180,12 +184,14 @@ export function ManageSubscriptionCard() {
                 <ArrowUp className="h-4 w-4" />
                 Change Plan
               </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setShowCancelModal(true)}
-              >
-                Cancel Subscription
-              </Button>
+              {canCancelSubscription && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowCancelModal(true)}
+                >
+                  Cancel Subscription
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -371,11 +377,13 @@ export function ManageSubscriptionCard() {
       )}
 
       {/* Cancel Subscription Modal */}
-      <CancelSubscriptionModal
-        isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        currentTier={currentTier}
-      />
+      {subscription && (
+        <CancelSubscriptionModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          currentTier={subscription.tier}
+        />
+      )}
     </section>
   );
 }
