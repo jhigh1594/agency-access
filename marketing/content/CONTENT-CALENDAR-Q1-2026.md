@@ -10,8 +10,8 @@
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /compare/leadsie-alternative | Comparison page | - | P0 - In Progress |
-| Wed | Social: LinkedIn post - "Why agencies switch from Leadsie" | Social | - | Planned |
+| Mon | /compare/leadsie-alternative | Comparison page | - | **Published** |
+| Wed | Social: LinkedIn post - "Why agencies switch from Leadsie" | Social | - | **Next** |
 | Fri | Email: Newsletter launch | Email | - | Planned |
 
 ### Week 2 (Feb 17-23)

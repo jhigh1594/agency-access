@@ -533,7 +533,7 @@ Each platform guide follows this structure:
 
 | URL | Title | Type | Pillar | Keyword | Status | Publish Date | Traffic |
 |-----|-------|------|--------|---------|--------|--------------|---------|
-| /compare/leadsie-alternative | Leadsie Alternative | Comparison | Competitive | leadsie alternative | In Progress | Feb 2026 | - |
+| /compare/leadsie-alternative | Leadsie Alternative | Comparison | Competitive | leadsie alternative | Published | Feb 2026 | - |
 | /guides/google-ads-access | How to Get Google Ads Access | Guide | Platform | google ads access | Planned | Feb 2026 | - |
 
 ---
