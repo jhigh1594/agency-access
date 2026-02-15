@@ -49,7 +49,7 @@ export interface ClientData {
   email: string;
 }
 
-export type PlatformSelection = Record<string, string[]>; // { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
+export type PlatformSelection = Record<string, string[]>; // { google: ['google'], meta: ['meta'], linkedin: ['linkedin'] }
 
 export interface TeamInvite {
   email: string;
@@ -143,7 +143,7 @@ const UnifiedOnboardingContext = createContext<UnifiedOnboardingContextValue | u
 
 const TOTAL_STEPS = 7; // 0-6 (7 screens total: Welcome, Agency, Client, Platform, Success, Team, Final)
 
-const PRESELECTED_PLATFORMS: Platform[] = ['google_ads', 'meta_ads']; // 80% of use cases
+const PRESELECTED_PLATFORMS: Platform[] = ['google', 'meta']; // 80% of use cases
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SECOND_LEVEL_TLDS = new Set(['co', 'com', 'org', 'net', 'gov', 'edu', 'ac']);
 const ACRONYM_TOKENS = new Set(['ai', 'seo', 'ppc', 'crm', 'saas', 'b2b', 'b2c']);
@@ -576,7 +576,7 @@ export function UnifiedOnboardingProvider({
       );
       const safeSelectedPlatforms = Object.keys(selectedPlatforms).length > 0
         ? selectedPlatforms
-        : { google: ['google_ads'] };
+        : { google: ['google'] };
 
       // Step 1: Resolve agency (existing first, then create)
       let agencyId = state.agencyId;

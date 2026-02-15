@@ -11,48 +11,20 @@ import { MailchimpConnector } from '@/services/connectors/mailchimp';
 import { KlaviyoConnector } from '@/services/connectors/klaviyo';
 import { ShopifyConnector } from '@/services/connectors/shopify';
 // Zapier uses manual invitation flow (like Beehiiv/Kit), not OAuth
-import type { Platform } from '@agency-platform/shared';
+import {
+  type Platform,
+  PLATFORM_NAMES,
+  RECOMMENDED_CONNECTION_PLATFORMS,
+  SUPPORTED_CONNECTION_PLATFORMS,
+} from '@agency-platform/shared';
 
-export const PLATFORM_NAMES: Record<Platform, string> = {
-  google: 'Google',
-  meta: 'Meta',
-  meta_ads: 'Meta Ads',
-  google_ads: 'Google Ads',
-  ga4: 'Google Analytics',
-  tiktok: 'TikTok Ads',
-  tiktok_ads: 'TikTok Ads',
-  linkedin: 'LinkedIn Ads',
-  linkedin_ads: 'LinkedIn Ads',
-  snapchat: 'Snapchat Ads',
-  snapchat_ads: 'Snapchat Ads',
-  instagram: 'Instagram',
-  kit: 'Kit',
-  beehiiv: 'Beehiiv',
-  mailchimp: 'Mailchimp',
-  pinterest: 'Pinterest',
-  klaviyo: 'Klaviyo',
-  shopify: 'Shopify',
-  zapier: 'Zapier',
-};
+export { PLATFORM_NAMES };
 
 export function getPlatformCategory(platform: Platform): 'recommended' | 'other' {
-  const recommended: Platform[] = ['google', 'meta', 'linkedin'];
-  return recommended.includes(platform) ? 'recommended' : 'other';
+  return RECOMMENDED_CONNECTION_PLATFORMS.includes(platform as any) ? 'recommended' : 'other';
 }
 
-export const SUPPORTED_PLATFORMS = [
-  'google',
-  'meta',
-  'linkedin',
-  'kit',
-  'beehiiv',
-  'tiktok',
-  'mailchimp',
-  'pinterest',
-  'klaviyo',
-  'shopify',
-  'zapier',
-] as const;
+export const SUPPORTED_PLATFORMS = SUPPORTED_CONNECTION_PLATFORMS;
 export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
 export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'zapier'] as const;

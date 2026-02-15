@@ -216,9 +216,34 @@ export const PLATFORM_CATEGORIES = {
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
 export type OtherPlatform = typeof PLATFORM_CATEGORIES.other[number];
 
+// Platforms supported on the in-app Connections page.
+export const SUPPORTED_CONNECTION_PLATFORMS = [
+  'google',
+  'meta',
+  'linkedin',
+  'kit',
+  'beehiiv',
+  'tiktok',
+  'mailchimp',
+  'pinterest',
+  'klaviyo',
+  'shopify',
+  'zapier',
+] as const satisfies readonly Platform[];
+
+export const RECOMMENDED_CONNECTION_PLATFORMS = ['google', 'meta', 'linkedin'] as const satisfies readonly Platform[];
+
 // Helper to get category for a platform
 export function getPlatformCategory(platform: Platform): 'recommended' | 'other' {
   if (PLATFORM_CATEGORIES.recommended.includes(platform as any)) {
+    return 'recommended';
+  }
+  return 'other';
+}
+
+// Helper for Connections page categorization.
+export function getConnectionPlatformCategory(platform: Platform): 'recommended' | 'other' {
+  if (RECOMMENDED_CONNECTION_PLATFORMS.includes(platform as any)) {
     return 'recommended';
   }
   return 'other';

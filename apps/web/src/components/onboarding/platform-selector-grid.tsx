@@ -22,7 +22,12 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
-import { Platform, PLATFORM_NAMES, PLATFORM_CATEGORIES } from '@agency-platform/shared';
+import {
+  Platform,
+  PLATFORM_NAMES,
+  RECOMMENDED_CONNECTION_PLATFORMS,
+  SUPPORTED_CONNECTION_PLATFORMS,
+} from '@agency-platform/shared';
 
 // ============================================================
 // TYPES
@@ -47,8 +52,6 @@ interface PlatformGroupConfig {
   selectedColor: string;
 }
 
-const PRIMARY_PLATFORM_KEYS: Platform[] = ['google', 'meta', 'linkedin'];
-
 const PRIMARY_PLATFORM_GROUPS: PlatformGroupConfig[] = [
   {
     name: 'Google',
@@ -70,17 +73,14 @@ const PRIMARY_PLATFORM_GROUPS: PlatformGroupConfig[] = [
   },
 ];
 
-const SECONDARY_PLATFORM_GROUPS: PlatformGroupConfig[] = [
-  {
-    name: 'Other Platforms',
-    platforms: [
-      ...PLATFORM_CATEGORIES.recommended.filter((platform) => !PRIMARY_PLATFORM_KEYS.includes(platform)),
-      ...PLATFORM_CATEGORIES.other,
-    ] as Platform[],
-    color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
-    selectedColor: 'bg-orange-100 border-orange-500',
-  },
-];
+const SECONDARY_PLATFORM_GROUP: PlatformGroupConfig = {
+  name: 'Other Platforms',
+  platforms: SUPPORTED_CONNECTION_PLATFORMS.filter(
+    (platform: Platform) => !RECOMMENDED_CONNECTION_PLATFORMS.includes(platform as any)
+  ) as Platform[],
+  color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
+  selectedColor: 'bg-orange-100 border-orange-500',
+};
 
 // ============================================================
 // COMPONENT
@@ -95,7 +95,63 @@ export function PlatformSelectorGrid({
 }: PlatformSelectorGridProps) {
   const [hoveredPlatform, setHoveredPlatform] = useState<Platform | null>(null);
 
-  const renderGroup = useCallback((group: PlatformGroupConfig, platformGridClassName: string) => {
+  // Toggle platform selection
+  const togglePlatform = useCallback(
+    (platform: Platform) => {
+      if (disabled) return;
+
+      const isSelected = selectedPlatforms.includes(platform);
+      let newSelection: Platform[];
+
+      if (isSelected) {
+        // Don't allow deselecting if it's the only platform
+        if (selectedPlatforms.length === 1) return;
+        newSelection = selectedPlatforms.filter((p) => p !== platform);
+      } else {
+        newSelection = [...selectedPlatforms, platform];
+      }
+
+      onSelectionChange(newSelection);
+    },
+    [selectedPlatforms, onSelectionChange, disabled]
+  );
+
+  // Check if platform is pre-selected
+  const isPreSelected = useCallback(
+    (platform: Platform) => preSelected.includes(platform),
+    [preSelected]
+  );
+
+  // Check if platform is currently selected
+  const isSelected = useCallback(
+    (platform: Platform) => selectedPlatforms.includes(platform),
+    [selectedPlatforms]
+  );
+
+  // Get platform icon (emoji or simplified representation)
+  const getPlatformIcon = useCallback((platform: Platform) => {
+    const iconMap: Record<string, string> = {
+      google: '🔍',
+      meta: '📱',
+      linkedin: '💼',
+      kit: '✉️',
+      beehiiv: '📰',
+      mailchimp: '🐵',
+      pinterest: '📌',
+      klaviyo: '📨',
+      shopify: '🛍️',
+      zapier: '⚡',
+      google_ads: '🔍',
+      ga4: '📊',
+      meta_ads: '📱',
+      instagram: '📸',
+      tiktok: '🎵',
+      snapchat: '👻',
+    };
+    return iconMap[platform] || '🔗';
+  }, []);
+
+  const renderGroup = (group: PlatformGroupConfig, platformGridClassName: string) => {
     if (group.platforms.length === 0) {
       return null;
     }
@@ -171,54 +227,7 @@ export function PlatformSelectorGrid({
         </div>
       </div>
     );
-  }, [disabled, hoveredPlatform, isPreSelected, isSelected, togglePlatform, getPlatformIcon]);
-
-  // Toggle platform selection
-  const togglePlatform = useCallback(
-    (platform: Platform) => {
-      if (disabled) return;
-
-      const isSelected = selectedPlatforms.includes(platform);
-      let newSelection: Platform[];
-
-      if (isSelected) {
-        // Don't allow deselecting if it's the only platform
-        if (selectedPlatforms.length === 1) return;
-        newSelection = selectedPlatforms.filter((p) => p !== platform);
-      } else {
-        newSelection = [...selectedPlatforms, platform];
-      }
-
-      onSelectionChange(newSelection);
-    },
-    [selectedPlatforms, onSelectionChange, disabled]
-  );
-
-  // Check if platform is pre-selected
-  const isPreSelected = useCallback(
-    (platform: Platform) => preSelected.includes(platform),
-    [preSelected]
-  );
-
-  // Check if platform is currently selected
-  const isSelected = useCallback(
-    (platform: Platform) => selectedPlatforms.includes(platform),
-    [selectedPlatforms]
-  );
-
-  // Get platform icon (emoji or simplified representation)
-  const getPlatformIcon = useCallback((platform: Platform) => {
-    const iconMap: Record<string, string> = {
-      google_ads: '🔍',
-      ga4: '📊',
-      meta_ads: '📱',
-      instagram: '📸',
-      linkedin: '💼',
-      tiktok: '🎵',
-      snapchat: '👻',
-    };
-    return iconMap[platform] || '🔗';
-  }, []);
+  };
 
   return (
     <div className="space-y-6">
@@ -233,7 +242,7 @@ export function PlatformSelectorGrid({
             <span className="text-2xl">💡</span>
             <div className="flex-1">
               <div className="font-semibold text-indigo-900 mb-1">
-                Most agencies start with Google Ads and Meta Ads
+                Most agencies start with Google and Meta
               </div>
               <div className="text-sm text-indigo-700">
                 We've pre-selected them for you (you can customize in the next step)
@@ -253,7 +262,7 @@ export function PlatformSelectorGrid({
         <div data-testid="primary-platform-groups" className="grid gap-4 md:grid-cols-3">
           {PRIMARY_PLATFORM_GROUPS.map((group) => renderGroup(group, 'grid grid-cols-1 gap-3'))}
         </div>
-        {SECONDARY_PLATFORM_GROUPS.map((group) => renderGroup(group, 'grid grid-cols-2 md:grid-cols-4 gap-3'))}
+        {renderGroup(SECONDARY_PLATFORM_GROUP, 'grid grid-cols-2 md:grid-cols-4 gap-3')}
       </motion.div>
 
       {/* Selection Summary */}

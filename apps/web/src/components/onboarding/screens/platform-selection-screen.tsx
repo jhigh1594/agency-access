@@ -55,7 +55,7 @@ function selectionToFlat(selection: PlatformSelection): Platform[] {
 function flatToSelection(platforms: Platform[]): PlatformSelection {
   const selection: PlatformSelection = {};
   for (const platform of platforms) {
-    const group = platform.split('_')[0]; // e.g., 'google' from 'google_ads'
+    const group = platform.split('_')[0]; // e.g., 'google' from 'google'
     if (!selection[group]) {
       selection[group] = [];
     }
@@ -77,8 +77,8 @@ export function PlatformSelectionScreen({
   // Convert to flat array for the grid component
   const flatPlatforms = useMemo(() => selectionToFlat(selectedPlatforms), [selectedPlatforms]);
 
-  // Pre-selected platforms (Google Ads + Meta Ads)
-  const preSelected: Platform[] = ['google_ads', 'meta_ads'];
+  // Pre-selected platforms (Google + Meta)
+  const preSelected: Platform[] = ['google', 'meta'];
 
   // Handle platform selection change
   const handleSelectionChange = useCallback(
