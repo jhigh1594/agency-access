@@ -73,7 +73,7 @@ export function ComparisonRow({ feature, leadsie, authhub, exclusive, isEven = f
   };
 
   return (
-    <tr className={`border-t border-black ${isEven ? 'bg-muted/50' : ''}`}>
+    <tr className={cn('border-t border-black', isEven && 'bg-muted/50')}>
       <td className="px-4 py-3 font-bold border-r border-black">
         {feature}
       </td>
