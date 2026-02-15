@@ -112,6 +112,18 @@ function CallbackPageContent() {
     }
   }, [success, errorCode, platform, agencyIdParam, orgId, connectionId, requireBusinessSelection, errorMessage]);
 
+  // For non-Meta platforms, invalidate caches immediately so the Connections UI updates right away.
+  useEffect(() => {
+    if (!success) return;
+    if (platform === 'meta' || requireBusinessSelection) return;
+
+    const targetAgencyId = agencyIdParam || orgId;
+    if (!targetAgencyId) return;
+
+    queryClient.invalidateQueries({ queryKey: ['platform-connections', targetAgencyId] });
+    queryClient.invalidateQueries({ queryKey: ['available-platforms', targetAgencyId] });
+  }, [success, platform, requireBusinessSelection, agencyIdParam, orgId, queryClient]);
+
   // Auto-redirect on success (except for Meta which needs portfolio selection)
   useEffect(() => {
     if (!success) return;
@@ -122,10 +134,13 @@ function CallbackPageContent() {
       return;
     }
 
+    const destination =
+      platform ? `/connections?success=true&platform=${encodeURIComponent(platform)}` : '/connections';
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          router.push('/connections');
+          router.push(destination);
           return 0;
         }
         return prev - 1;
@@ -133,7 +148,7 @@ function CallbackPageContent() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [success, platform, router, orgId]);
+  }, [success, platform, router, orgId, requireBusinessSelection]);
 
   if (isLoading) {
     return (
@@ -221,7 +236,11 @@ function CallbackPageContent() {
           {/* Action buttons */}
           <div className="space-y-3">
             <Link
-              href="/connections"
+              href={
+                platform
+                  ? `/connections?success=true&platform=${encodeURIComponent(platform)}`
+                  : '/connections'
+              }
               className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg hover:bg-blue-700 transition"
             >
               View Connections

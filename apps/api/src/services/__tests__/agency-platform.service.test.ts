@@ -9,6 +9,11 @@ import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import * as agencyPlatformService from '@/services/agency-platform.service';
 
+const { deleteCacheMock, invalidateCacheMock } = vi.hoisted(() => ({
+  deleteCacheMock: vi.fn(async () => true),
+  invalidateCacheMock: vi.fn(async () => ({ success: true, keysDeleted: 1 })),
+}));
+
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -27,6 +32,15 @@ vi.mock('@/lib/prisma', () => ({
       create: vi.fn(),
     },
   },
+}));
+
+// Mock cache layer (used by /agency-platforms/available)
+vi.mock('@/lib/cache', () => ({
+  CacheKeys: {
+    agencyConnections: (agencyId: string) => `agency:${agencyId}:connections`,
+  },
+  deleteCache: deleteCacheMock,
+  invalidateCache: invalidateCacheMock,
 }));
 
 // Mock Infisical
@@ -203,6 +217,9 @@ describe('AgencyPlatformService', () => {
 
       // Verify audit log created
       expect(prisma.auditLog.create).toHaveBeenCalled();
+
+      // Verify cache invalidated (so /agency-platforms/available updates immediately)
+      expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
     });
 
     it('should return error if agency not found', async () => {
@@ -284,6 +301,9 @@ describe('AgencyPlatformService', () => {
 
       // Verify audit log
       expect(prisma.auditLog.create).toHaveBeenCalled();
+
+      // Verify cache invalidated (so /agency-platforms/available updates immediately)
+      expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
     });
 
     it('should return error if connection not found', async () => {
@@ -361,6 +381,40 @@ describe('AgencyPlatformService', () => {
 
       // Verify audit log
       expect(prisma.auditLog.create).toHaveBeenCalled();
+
+      // Verify cache invalidated (expiresAt affects UI)
+      expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
+    });
+  });
+
+  describe('updateConnectionMetadata', () => {
+    it('should update metadata and invalidate connections cache', async () => {
+      const mockConnection = {
+        id: 'conn-1',
+        agencyId: 'agency-1',
+        platform: 'google',
+        status: 'active',
+        metadata: { existing: true },
+      };
+
+      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(mockConnection as any);
+      vi.mocked(prisma.agencyPlatformConnection.update).mockResolvedValue({
+        ...mockConnection,
+        metadata: { existing: true, newKey: 'newVal' },
+      } as any);
+
+      const result = await agencyPlatformService.updateConnectionMetadata('agency-1', 'google', {
+        newKey: 'newVal',
+      });
+
+      expect(result.error).toBeNull();
+      expect(prisma.agencyPlatformConnection.update).toHaveBeenCalledWith({
+        where: { id: 'conn-1' },
+        data: {
+          metadata: { existing: true, newKey: 'newVal' },
+        },
+      });
+      expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
     });
   });
 

@@ -265,7 +265,15 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
       }
 
       const redirectUrl = stateData.redirectUrl || env.FRONTEND_URL;
-      return reply.redirect(`${redirectUrl}?success=true&platform=${platform}`);
+      // Include identifiers so the frontend can invalidate caches and track events reliably.
+      const redirectTarget = new URL(redirectUrl, env.FRONTEND_URL);
+      redirectTarget.searchParams.set('success', 'true');
+      redirectTarget.searchParams.set('platform', platform);
+      if (connectionResult.data) {
+        redirectTarget.searchParams.set('connectionId', connectionResult.data.id);
+      }
+      redirectTarget.searchParams.set('agencyId', actualAgencyId);
+      return reply.redirect(redirectTarget.toString());
     } catch (error) {
       const redirectUrl = env.FRONTEND_URL;
       return reply.redirect(`${redirectUrl}?error=CALLBACK_FAILED`);

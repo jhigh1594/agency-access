@@ -8,6 +8,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
+import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache';
 import { getConnector } from '@/services/connectors/factory';
 import type { Platform } from '@agency-platform/shared';
 import { z } from 'zod';
@@ -189,6 +190,12 @@ export async function createConnection(input: CreateConnectionInput) {
       },
     });
 
+    // Invalidate caches that power the Connections UI and dashboard widgets.
+    await Promise.all([
+      deleteCache(CacheKeys.agencyConnections(validated.agencyId)),
+      invalidateCache(`dashboard:${validated.agencyId}:*`),
+    ]);
+
     return { data: connection, error: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -266,6 +273,11 @@ export async function revokeConnection(
       },
     });
 
+    await Promise.all([
+      deleteCache(CacheKeys.agencyConnections(agencyId)),
+      invalidateCache(`dashboard:${agencyId}:*`),
+    ]);
+
     return { data: updatedConnection, error: null };
   } catch (error) {
     return {
@@ -335,6 +347,11 @@ export async function refreshConnection(
         userAgent: 'unknown',
       },
     });
+
+    await Promise.all([
+      deleteCache(CacheKeys.agencyConnections(agencyId)),
+      invalidateCache(`dashboard:${agencyId}:*`),
+    ]);
 
     return { data: updatedConnection, error: null };
   } catch (error) {
@@ -511,6 +528,11 @@ export async function updateConnectionMetadata(
         metadata: updatedMetadata,
       },
     });
+
+    await Promise.all([
+      deleteCache(CacheKeys.agencyConnections(agencyId)),
+      invalidateCache(`dashboard:${agencyId}:*`),
+    ]);
 
     return { data: updatedConnection, error: null };
   } catch (error) {
