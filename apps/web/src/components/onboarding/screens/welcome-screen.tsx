@@ -21,6 +21,7 @@
 
 import { motion } from 'framer-motion';
 import { ArrowRight, Play } from 'lucide-react';
+import Image from 'next/image';
 import { scaleVariants, scaleTransition } from '@/lib/animations';
 
 // ============================================================
@@ -59,19 +60,14 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
             ease: 'easeInOut',
           }}
         >
-          <svg
-            className="w-10 h-10 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 10V3L4 14h7v7l9-11h-7z"
-            />
-          </svg>
+          <Image
+            src="/authhub_transparent_2.png"
+            alt="AuthHub logo"
+            width={24}
+            height={24}
+            className="h-6 w-6 object-contain"
+            priority
+          />
         </motion.div>
 
         {/* Headline */}
