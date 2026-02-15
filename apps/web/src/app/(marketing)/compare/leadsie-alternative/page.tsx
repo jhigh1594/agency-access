@@ -295,7 +295,7 @@ export default function LeadsieAlternativePage() {
             </div>
 
             {/* AuthHub - Winner */}
-            <div className="border-[3px] border-black p-6 rounded-none shadow-hard-xl bg-teal/10 relative">
+            <div className="border-[3px] border-black p-6 rounded-none shadow-brutalist-xl bg-teal/10 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-coral text-white px-4 py-1 text-xs font-bold uppercase tracking-wider border-2 border-black">
                 Better Value
               </div>
@@ -525,7 +525,7 @@ export default function LeadsieAlternativePage() {
             </div>
 
             {/* Switch to AuthHub */}
-            <div className="border-[3px] border-coral p-6 rounded-none shadow-hard-xl bg-coral/5">
+            <div className="border-[3px] border-coral p-6 rounded-none shadow-brutalist-xl bg-coral/5">
               <h3 className="font-dela text-xl text-coral mb-4">
                 Switch to AuthHub If
               </h3>
