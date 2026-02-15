@@ -314,7 +314,7 @@ export default function LeadsieAlternativePage() {
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-2 font-mono text-sm">
                   <Check size={16} className="text-teal mt-0.5 flex-shrink-0" />
-                  <span className="font-bold">15+ platforms (includes Pinterest, Klaviyo, Shopify)</span>
+                  <span className="font-bold">15+ platforms (Klaviyo, Kit, Beehiiv & more)</span>
                 </li>
                 <li className="flex items-start gap-2 font-mono text-sm">
                   <Check size={16} className="text-teal mt-0.5 flex-shrink-0" />
@@ -421,7 +421,7 @@ export default function LeadsieAlternativePage() {
               <ComparisonSection title="Platform Support">
                 <ComparisonRow
                   feature="Platform Count"
-                  leadsie="~8"
+                  leadsie="15+"
                   authhub="15+"
                 />
                 <ComparisonRow
@@ -431,14 +431,8 @@ export default function LeadsieAlternativePage() {
                 />
                 <ComparisonRow
                   feature="Google (Ads, GA4, GTM, etc.)"
-                  leadsie="2"
-                  authhub="8 products"
-                />
-                <ComparisonRow
-                  feature="Pinterest Ads"
-                  leadsie={false}
+                  leadsie={true}
                   authhub={true}
-                  exclusive
                 />
                 <ComparisonRow
                   feature="Klaviyo"
@@ -447,7 +441,13 @@ export default function LeadsieAlternativePage() {
                   exclusive
                 />
                 <ComparisonRow
-                  feature="Shopify"
+                  feature="Kit"
+                  leadsie={false}
+                  authhub={true}
+                  exclusive
+                />
+                <ComparisonRow
+                  feature="Beehiiv"
                   leadsie={false}
                   authhub={true}
                   exclusive
@@ -541,51 +541,59 @@ export default function LeadsieAlternativePage() {
       </section>
 
       {/* Migration Support */}
-      <section className="border-b-2 border-black bg-muted/50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="font-dela text-2xl md:text-3xl text-ink mb-4">
+      <section className="border-b-2 border-ink bg-teal/10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-dela text-3xl md:text-4xl text-ink mb-4">
               Switch in 15 Minutes
             </h2>
-            <p className="font-mono text-muted-foreground mb-10">
+            <p className="font-mono text-muted-foreground mb-12">
               Moving from Leadsie is straightforward. Here&apos;s how agencies do it:
             </p>
 
-            <div className="grid md:grid-cols-3 gap-6 text-left">
-              <div className="bg-card border-2 border-black p-5 rounded-none">
-                <div className="w-8 h-8 bg-coral text-white font-bold flex items-center justify-center rounded-sm mb-3">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8 text-left">
+              {/* Step 1 */}
+              <div className="bg-paper border-2 border-ink p-6 shadow-brutalist hover-lift-brutalist group">
+                <div className="w-12 h-12 bg-coral text-white font-display font-bold text-xl flex items-center justify-center shadow-brutalist-sm mb-4">
                   1
                 </div>
-                <h3 className="font-dela text-ink mb-2">Export from Leadsie</h3>
-                <p className="font-mono text-sm text-muted-foreground">
+                <h3 className="font-display font-semibold text-ink text-lg mb-2">Export from Leadsie</h3>
+                <p className="font-mono text-sm text-muted-foreground leading-relaxed">
                   Download your existing connections and client data from Leadsie&apos;s dashboard.
                 </p>
               </div>
 
-              <div className="bg-card border-2 border-black p-5 rounded-none">
-                <div className="w-8 h-8 bg-coral text-white font-bold flex items-center justify-center rounded-sm mb-3">
+              {/* Step 2 */}
+              <div className="bg-paper border-2 border-ink p-6 shadow-brutalist hover-lift-brutalist group">
+                <div className="w-12 h-12 bg-coral text-white font-display font-bold text-xl flex items-center justify-center shadow-brutalist-sm mb-4">
                   2
                 </div>
-                <h3 className="font-dela text-ink mb-2">Create Your Templates</h3>
-                <p className="font-mono text-sm text-muted-foreground">
+                <h3 className="font-display font-semibold text-ink text-lg mb-2">Create Your Templates</h3>
+                <p className="font-mono text-sm text-muted-foreground leading-relaxed">
                   Set up reusable templates in AuthHub for your common client types (e-commerce, lead gen, etc.).
                 </p>
               </div>
 
-              <div className="bg-card border-2 border-black p-5 rounded-none">
-                <div className="w-8 h-8 bg-coral text-white font-bold flex items-center justify-center rounded-sm mb-3">
+              {/* Step 3 */}
+              <div className="bg-paper border-2 border-ink p-6 shadow-brutalist hover-lift-brutalist group">
+                <div className="w-12 h-12 bg-coral text-white font-display font-bold text-xl flex items-center justify-center shadow-brutalist-sm mb-4">
                   3
                 </div>
-                <h3 className="font-dela text-ink mb-2">Send New Links</h3>
-                <p className="font-mono text-sm text-muted-foreground">
+                <h3 className="font-display font-semibold text-ink text-lg mb-2">Send New Links</h3>
+                <p className="font-mono text-sm text-muted-foreground leading-relaxed">
                   Send AuthHub links to active clients. Existing connections stay live until they re-authorize.
                 </p>
               </div>
             </div>
 
-            <p className="font-mono text-sm text-muted-foreground mt-8">
-              Need help? Our support team walks you through migration during onboarding.
-            </p>
+            <div className="mt-10 p-4 bg-ink/5 border border-ink/10 inline-flex items-center gap-3">
+              <div className="w-8 h-8 bg-teal/20 rounded-full flex items-center justify-center">
+                <Check size={16} className="text-teal" />
+              </div>
+              <p className="font-mono text-sm text-ink/80">
+                <span className="font-semibold">Free migration support:</span> Our team walks you through the switch during onboarding.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -605,7 +613,11 @@ export default function LeadsieAlternativePage() {
               Start 14 Day Free Trial
             </ComparisonCTA>
             <Link href="/pricing">
-              <Button variant="brutalist-ghost-rounded" size="xl">
+              <Button
+                variant="brutalist-ghost-rounded"
+                size="xl"
+                className="border-white text-white hover:bg-white hover:text-ink"
+              >
                 View Pricing
               </Button>
             </Link>

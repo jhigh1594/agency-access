@@ -70,13 +70,20 @@ export function MarketingFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-12 w-full md:w-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 md:gap-12 w-full md:w-auto">
             <div>
               <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Product</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
                 <li><Link href="#trusted-by-agencies" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
                 <li><Link href="#how-it-works" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
+                <li><Link href="/pricing" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Pricing</Link></li>
                 <li><Link href="/blog" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Blog</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Compare</h4>
+              <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
+                <li><Link href="/compare/leadsie-alternative" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Leadsie Alternative</Link></li>
               </ul>
             </div>
             <div>
