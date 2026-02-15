@@ -15,66 +15,10 @@ import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
-import { useQuota } from '@/lib/query/quota';
-import { UsageDisplayInline } from '@/components/usage-display';
 import { useEffect, useState, useRef } from 'react';
 
 // Simple in-memory ETag cache for conditional requests
 const etagCache = new Map<string, string>();
-
-// Usage Widget Component - Shows key quota metrics
-function UsageWidget() {
-  const { data: quota, isLoading } = useQuota();
-
-  if (isLoading || !quota) {
-    return (
-      <>
-        <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-        <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-        <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-      </>
-    );
-  }
-
-  const {
-    clients,
-    members,
-    accessRequests,
-    templates,
-    currentTier,
-  } = quota;
-
-  return (
-    <>
-      <UsageDisplayInline
-        metric="clients"
-        used={clients.used}
-        limit={clients.limit}
-        onClick={() => (window.location.href = '/settings/billing')}
-      />
-      <UsageDisplayInline
-        metric="members"
-        used={members.used}
-        limit={members.limit}
-        onClick={() => (window.location.href = '/settings/billing')}
-      />
-      <UsageDisplayInline
-        metric="access_requests"
-        used={accessRequests.used}
-        limit={accessRequests.limit}
-        onClick={() => (window.location.href = '/settings/billing')}
-      />
-      {templates.limit !== 'unlimited' && (
-        <UsageDisplayInline
-          metric="templates"
-          used={templates.used}
-          limit={templates.limit}
-          onClick={() => (window.location.href = '/settings/billing')}
-        />
-      )}
-    </>
-  );
-}
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -259,22 +203,6 @@ export default function DashboardPage() {
             <Plus className="h-4 w-4" />
             Create Request
           </Link>
-        </div>
-
-        {/* Usage Widget - Shows key quota metrics */}
-        <div className="bg-card rounded-lg shadow-brutalist border border-black/10 p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-ink">Usage Overview</h3>
-            <Link
-              href={"/settings/billing" as any}
-              className="text-xs text-coral hover:text-coral/90 font-medium"
-            >
-              View Details →
-            </Link>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <UsageWidget />
-          </div>
         </div>
 
         {/* Stats Grid */}

@@ -17,10 +17,12 @@ import {
   NotificationsCard,
 } from '@/components/settings/general';
 import { BillingTab } from '@/components/settings/billing';
+import { UsageOverviewCard } from '@/components/settings/usage-overview-card';
 
 function GeneralTabContent() {
   return (
     <>
+      <UsageOverviewCard />
       <AgencyProfileCard />
       <TeamMembersCard />
       <NotificationsCard />
