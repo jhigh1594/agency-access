@@ -52,9 +52,9 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
           <Image
             src="/authhub_transparent_2.png"
             alt="AuthHub logo"
-            width={24}
-            height={24}
-            className="h-6 w-6 object-contain"
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
             priority
           />
         </motion.div>
