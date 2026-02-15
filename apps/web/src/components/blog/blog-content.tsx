@@ -2,13 +2,16 @@
 
 /**
  * Blog content renderer for displaying blog post content
- * Converts markdown-style content to HTML with brutalist styling
+ * Uses react-markdown with remark-gfm for proper markdown, table, and rich text rendering
  */
 
-import { BlogPost, BLOG_CATEGORIES } from "@/lib/blog-types";
-import { Calendar, Clock, User, Share2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SignUpButton } from "@clerk/nextjs";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { BlogPost, BLOG_CATEGORIES } from '@/lib/blog-types';
+import { Calendar, Clock, User, Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { SignUpButton } from '@clerk/nextjs';
+import type { Components } from 'react-markdown';
 
 // Helper to set Growth tier (STARTER in backend) for trial signup
 const handleTrialSignup = () => {
@@ -20,135 +23,156 @@ interface BlogContentProps {
   post: BlogPost;
 }
 
+const markdownComponents: Components = {
+  // Skip h1 - title is shown in article header
+  h1: () => null,
+
+  h2: ({ children, ...props }) => (
+    <h2
+      {...props}
+      className="font-dela text-2xl md:text-3xl text-ink mt-10 mb-4 border-b-2 border-black pb-2"
+    >
+      {children}
+    </h2>
+  ),
+
+  h3: ({ children, ...props }) => (
+    <h3
+      {...props}
+      className="font-dela text-xl md:text-2xl text-ink mt-8 mb-3"
+    >
+      {children}
+    </h3>
+  ),
+
+  p: ({ children, ...props }) => (
+    <p {...props} className="mb-4 font-mono text-ink leading-relaxed">
+      {children}
+    </p>
+  ),
+
+  ul: ({ children, ...props }) => (
+    <ul {...props} className="mb-4 ml-6 list-disc space-y-2 font-mono text-ink">
+      {children}
+    </ul>
+  ),
+
+  ol: ({ children, ...props }) => (
+    <ol {...props} className="mb-4 ml-6 list-decimal space-y-2 font-mono text-ink">
+      {children}
+    </ol>
+  ),
+
+  li: ({ children, ...props }) => (
+    <li {...props} className="ml-2">
+      {children}
+    </li>
+  ),
+
+  strong: ({ children, ...props }) => (
+    <strong {...props} className="font-bold text-ink">
+      {children}
+    </strong>
+  ),
+
+  blockquote: ({ children, ...props }) => (
+    <blockquote
+      {...props}
+      className="border-l-4 border-coral pl-4 my-4 italic text-gray-700 font-mono"
+    >
+      {children}
+    </blockquote>
+  ),
+
+  code: ({ className, children, ...props }) => {
+    const isInline = !className;
+    if (isInline) {
+      return (
+        <code
+          {...props}
+          className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm border border-gray-300"
+        >
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code {...props} className={className}>
+        {children}
+      </code>
+    );
+  },
+
+  pre: ({ children, ...props }) => (
+    <div className="my-6 overflow-x-auto border-2 border-black bg-gray-50 p-4">
+      <pre {...props} className="font-mono text-sm text-ink">
+        {children}
+      </pre>
+    </div>
+  ),
+
+  // Tables - proper thead/tbody structure with brutalist styling
+  table: ({ children, ...props }) => (
+    <div className="my-6 overflow-x-auto border-2 border-black">
+      <table {...props} className="w-full border-collapse text-sm font-mono">
+        {children}
+      </table>
+    </div>
+  ),
+
+  thead: ({ children, ...props }) => (
+    <thead {...props} className="bg-gray-100 border-b-2 border-black">
+      {children}
+    </thead>
+  ),
+
+  tbody: ({ children, ...props }) => (
+    <tbody {...props} className="divide-y border-black">
+      {children}
+    </tbody>
+  ),
+
+  tr: ({ children, ...props }) => (
+    <tr {...props} className="border-b border-gray-300 last:border-b-0">
+      {children}
+    </tr>
+  ),
+
+  th: ({ children, ...props }) => (
+    <th
+      {...props}
+      className="px-4 py-3 text-left font-bold text-ink border-r border-black last:border-r-0"
+    >
+      {children}
+    </th>
+  ),
+
+  td: ({ children, ...props }) => (
+    <td
+      {...props}
+      className="px-4 py-3 text-ink border-r border-gray-300 last:border-r-0"
+    >
+      {children}
+    </td>
+  ),
+
+  a: ({ href, children, ...props }) => (
+    <a
+      {...props}
+      href={href}
+      className="font-mono text-coral font-bold underline hover:no-underline"
+      target={href?.startsWith('http') ? '_blank' : undefined}
+      rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+    >
+      {children}
+    </a>
+  ),
+
+  hr: () => <hr className="my-8 border-2 border-black border-dashed" />,
+};
+
 export function BlogContent({ post }: BlogContentProps) {
   const category = BLOG_CATEGORIES[post.category];
-
-  // Simple markdown-like parser (in production, use a proper markdown library)
-  const renderContent = (content: string) => {
-    return content.split("\n").map((line, index) => {
-      // Skip h1 headers (#) since the title is already shown in the article header
-      if (line.startsWith("# ")) {
-        return null;
-      }
-      if (line.startsWith("## ")) {
-        return (
-          <h2
-            key={index}
-            className="font-dela text-2xl md:text-3xl text-ink mt-10 mb-4 border-b-2 border-black pb-2"
-          >
-            {line.replace("## ", "")}
-          </h2>
-        );
-      }
-      if (line.startsWith("### ")) {
-        return (
-          <h3
-            key={index}
-            className="font-dela text-xl md:text-2xl text-ink mt-8 mb-3"
-          >
-            {line.replace("### ", "")}
-          </h3>
-        );
-      }
-
-      // Lists
-      if (line.match(/^\d+\./)) {
-        return (
-          <li key={index} className="ml-6 mb-2 font-mono text-ink">
-            {line.replace(/^\d+\.\s*/, "")}
-          </li>
-        );
-      }
-      if (line.startsWith("- ") || line.startsWith("* ")) {
-        return (
-          <li key={index} className="ml-6 mb-2 font-mono text-ink">
-            {line.replace(/^[-*]\s*/, "")}
-          </li>
-        );
-      }
-
-      // Bold text
-      if (line.includes("**")) {
-        const parts = line.split(/\*\*/g);
-        return (
-          <p key={index} className="mb-4 font-mono text-ink leading-relaxed">
-            {parts.map((part, i) =>
-              i % 2 === 1 ? (
-                <strong key={i} className="font-bold text-ink">
-                  {part}
-                </strong>
-              ) : (
-                part
-              )
-            )}
-          </p>
-        );
-      }
-
-      // Code blocks
-      if (line.startsWith("```")) {
-        return null; // Skip code block delimiters
-      }
-      if (line.startsWith("|")) {
-        return (
-          <div key={index} className="overflow-x-auto my-6 border-2 border-black">
-            <table className="w-full text-sm">
-              <tbody>
-                <tr className="border-b border-black bg-gray-100">
-                  {line.split("|").filter(Boolean).map((cell, i) => (
-                    <td
-                      key={i}
-                      className="px-4 py-2 font-bold text-left border-r border-black last:border-r-0"
-                    >
-                      {cell.trim()}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        );
-      }
-
-      // Horizontal rule
-      if (line.match(/^---+$/)) {
-        return (
-          <hr
-            key={index}
-            className="my-8 border-2 border-black border-dashed"
-          />
-        );
-      }
-
-      // Blockquote
-      if (line.startsWith("> ")) {
-        return (
-          <blockquote
-            key={index}
-            className="border-l-4 border-coral pl-4 my-4 italic text-gray-700"
-          >
-            {line.replace("> ", "")}
-          </blockquote>
-        );
-      }
-
-      // Empty line
-      if (!line.trim()) {
-        return <div key={index} className="h-4" />;
-      }
-
-      // Regular paragraph
-      if (line.trim()) {
-        return (
-          <p key={index} className="mb-4 font-mono text-ink leading-relaxed">
-            {line}
-          </p>
-        );
-      }
-
-      return null;
-    });
-  };
 
   return (
     <article className="max-w-4xl mx-auto">
@@ -178,10 +202,10 @@ export function BlogContent({ post }: BlogContentProps) {
           </span>
           <span className="flex items-center gap-2">
             <Calendar size={16} />
-            {new Date(post.publishedAt).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
+            {new Date(post.publishedAt).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
             })}
           </span>
           <span className="flex items-center gap-2">
@@ -222,9 +246,11 @@ export function BlogContent({ post }: BlogContentProps) {
         )}
       </header>
 
-      {/* Article content */}
-      <div className="prose prose-lg max-w-none">
-        {renderContent(post.content)}
+      {/* Article content - proper markdown rendering */}
+      <div className="prose prose-lg max-w-none [&>*:first-child]:mt-0">
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          {post.content}
+        </ReactMarkdown>
       </div>
 
       {/* Article footer */}
@@ -247,5 +273,3 @@ export function BlogContent({ post }: BlogContentProps) {
     </article>
   );
 }
-
-
