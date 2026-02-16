@@ -257,7 +257,7 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
           <div className="flex items-center justify-end gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setAllProductsEnabled(true)}
               disabled={isSavingSettings}
@@ -266,7 +266,7 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setAllProductsEnabled(false)}
               disabled={isSavingSettings}
