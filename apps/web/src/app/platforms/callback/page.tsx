@@ -35,7 +35,7 @@ const PLATFORM_NAMES: Record<string, string> = {
 function CallbackPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { orgId } = useAuth();
+  const { orgId, getToken } = useAuth();
   const queryClient = useQueryClient();
   const [countdown, setCountdown] = useState(5);
   const [showPortfolioSelector, setShowPortfolioSelector] = useState(false);
@@ -138,8 +138,11 @@ function CallbackPageContent() {
       return;
     }
 
-    const destination =
-      platform ? `/connections?success=true&platform=${encodeURIComponent(platform)}` : '/connections';
+    // Next.js typed routes: router.push expects a RouteImpl, so keep the string but
+    // type it to the router's push() parameter type.
+    const destination = (platform
+      ? `/connections?success=true&platform=${encodeURIComponent(platform)}`
+      : '/connections') as Parameters<typeof router.push>[0];
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
