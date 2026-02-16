@@ -554,12 +554,21 @@ export class GoogleConnector {
     accessToken: string
   ): Promise<{ properties: GoogleAnalyticsProperty[] }> {
     try {
-      const response = await fetch(
-        `https://analyticsadmin.googleapis.com/v1beta/accountSummaries?access_token=${accessToken}`,
-        { method: 'GET' }
-      );
+      // Use Authorization header (more reliable than access_token query param).
+      const response = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
       if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        console.warn('Google Analytics Admin API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText.substring(0, 300),
+        });
         return { properties: [] };
       }
 
@@ -593,7 +602,8 @@ export class GoogleConnector {
       }
 
       return { properties };
-    } catch {
+    } catch (error) {
+      console.error('Failed to fetch Google Analytics properties:', error);
       return { properties: [] };
     }
   }
