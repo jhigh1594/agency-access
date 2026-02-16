@@ -14,6 +14,7 @@ import {
   GoogleAccountsResponse
 } from '@agency-platform/shared';
 import { PlatformIcon } from './ui/platform-icon';
+import { Button } from './ui/button';
 import { 
   Loader2, 
   ChevronUp,
@@ -193,6 +194,21 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
     saveSettings(newSettings);
   };
 
+  const setAllProductsEnabled = (enabled: boolean) => {
+    if (!settings) return;
+    const newSettings: GoogleAssetSettings = {
+      ...settings,
+      googleAds: { ...settings.googleAds, enabled },
+      googleAnalytics: { ...settings.googleAnalytics, enabled },
+      googleBusinessProfile: { ...settings.googleBusinessProfile, enabled },
+      googleTagManager: { ...settings.googleTagManager, enabled },
+      googleSearchConsole: { ...settings.googleSearchConsole, enabled },
+      googleMerchantCenter: { ...settings.googleMerchantCenter, enabled },
+    };
+    setSettings(newSettings);
+    saveSettings(newSettings);
+  };
+
   const handleAccountSelect = (product: keyof GoogleAssetSettings, accountId: string, accountName: string) => {
     const idField = product === 'googleAnalytics' ? 'propertyId' : 
                     product === 'googleBusinessProfile' ? 'locationId' :
@@ -238,6 +254,27 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
       {/* Expanded Content */}
       {isExpanded && (
         <div className="p-6 space-y-6">
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setAllProductsEnabled(true)}
+              disabled={isSavingSettings}
+            >
+              Select all
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setAllProductsEnabled(false)}
+              disabled={isSavingSettings}
+            >
+              Deselect all
+            </Button>
+          </div>
+
           <div className="space-y-4">
             {/* Google Ads */}
             <ProductCard
@@ -346,6 +383,14 @@ interface ProductCardProps {
   tooltip?: string;
 }
 
+function getAccountDisplayName(account: any): string {
+  return account?.displayName || account?.name || account?.url || '';
+}
+
+function getAccountId(account: any): string {
+  return account?.id || account?.url || '';
+}
+
 function ProductCard({
   icon,
   label,
@@ -366,6 +411,7 @@ function ProductCard({
           type="checkbox"
           checked={enabled}
           onChange={(e) => onToggle(e.target.checked)}
+          aria-label={`Enable ${label}`}
           className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-0.5"
         />
         <div className="flex-1 space-y-3">
@@ -380,17 +426,17 @@ function ProductCard({
                 <select
                   value={selectedId || ''}
                   onChange={(e) => {
-                    const account = accounts.find(a => (a.id || a.url) === e.target.value);
+                    const account = accounts.find((a) => getAccountId(a) === e.target.value);
                     if (account) {
-                      onAccountSelect(e.target.value, account.name || account.displayName || account.url);
+                      onAccountSelect(e.target.value, getAccountDisplayName(account));
                     }
                   }}
                   className="w-full px-3 py-2 pr-10 bg-card border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none"
                 >
                   <option value="">{placeholder}</option>
                   {accounts.map((account) => {
-                    const id = account.id || account.url;
-                    const name = account.name || account.displayName || account.url;
+                    const id = getAccountId(account);
+                    const name = getAccountDisplayName(account);
                     return (
                       <option key={id} value={id}>
                         {name} ({id})
