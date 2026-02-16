@@ -38,6 +38,7 @@ describe('GoogleUnifiedSettings', () => {
       const url = String(input);
 
       if (url.includes('/agency-platforms/google/accounts')) {
+        expect(url).toContain('refresh=true');
         return {
           ok: true,
           json: async () => ({
@@ -102,4 +103,3 @@ describe('GoogleUnifiedSettings', () => {
     });
   });
 });
-

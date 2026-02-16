@@ -42,12 +42,17 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   const [settings, setSettings] = useState<GoogleAssetSettings | null>(null);
 
   // Fetch all Google accounts across products
-  const { data: accountsData, isLoading: isLoadingAccounts } = useQuery({
+  const {
+    data: accountsData,
+    isLoading: isLoadingAccounts,
+    error: accountsError,
+  } = useQuery({
     queryKey: ['google-accounts', agencyId],
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${agencyId}`,
+        // Always refresh from Google APIs when opening Manage Assets so we don't rely on cached metadata.
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${agencyId}&refresh=true`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -58,6 +63,9 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
       const result = await response.json();
       return result.data as GoogleAccountsResponse;
     },
+    // Avoid hammering Google APIs on focus/re-mount.
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch current asset settings
@@ -148,6 +156,15 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
       <div className="p-8 text-red-500 text-center">
         <AlertCircle className="h-6 w-6 mx-auto mb-2" />
         Failed to load Google settings
+      </div>
+    );
+  }
+
+  if (accountsError) {
+    return (
+      <div className="p-8 text-red-500 text-center">
+        <AlertCircle className="h-6 w-6 mx-auto mb-2" />
+        Failed to load Google accounts
       </div>
     );
   }
