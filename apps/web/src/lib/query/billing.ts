@@ -7,8 +7,9 @@
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SubscriptionTier, TierLimits } from '@agency-platform/shared';
+import { getApiBaseUrl } from '@/lib/api/api-env';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = getApiBaseUrl();
 
 function resolvePrincipalId(orgId: string | null | undefined, userId: string | null | undefined): string | null {
   return orgId ?? userId ?? null;

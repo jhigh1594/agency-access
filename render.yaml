@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     rootDir: .
-    buildCommand: npm install && npm run build --workspace=packages/shared && cd apps/api && npm run db:generate && npm run build
+    buildCommand: npm install --include=dev && npm run build --workspace=packages/shared && cd apps/api && npm run db:generate && npm run build
     startCommand: cd apps/api && npm start
     healthCheckPath: /health
     autoDeploy: true
@@ -30,7 +30,7 @@ services:
       - key: INFISICAL_PROJECT_ID
         sync: false
       - key: INFISICAL_ENVIRONMENT
-        value: production
+        value: prod
       - key: META_APP_ID
         sync: false
       - key: META_APP_SECRET

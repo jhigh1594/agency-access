@@ -89,7 +89,7 @@ await prisma.platformAuthorization.create({
 
 **Important:** Infisical configuration requires:
 - Machine Identity credentials (`INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`)
-- Project details (`INFISICAL_PROJECT_ID`, `INFISICAL_ENV`)
+- Project details (`INFISICAL_PROJECT_ID`, `INFISICAL_ENVIRONMENT`)
 - See `apps/api/src/lib/infisical.ts` for implementation
 
 ### Shared Types Usage
@@ -941,10 +941,11 @@ NODE_ENV=development
 PORT=3001
 DATABASE_URL=postgresql://...          # Neon PostgreSQL
 FRONTEND_URL=http://localhost:3000
+API_URL=http://localhost:3001
 
 # Authentication
-CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
+CLERK_PUBLISHABLE_KEY=pk_live_your_publishable_key_here
+CLERK_SECRET_KEY=sk_live_your_secret_key_here
 
 # Token Storage
 INFISICAL_CLIENT_ID=                   # Machine Identity
@@ -961,8 +962,8 @@ LOG_LEVEL=info                         # debug, info, warn, error
 
 ### Frontend (`apps/web/.env.local`)
 ```bash
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_your_publishable_key_here
+CLERK_SECRET_KEY=sk_live_your_secret_key_here
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 

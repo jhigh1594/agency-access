@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getApiBaseUrl } from '@/lib/api/api-env';
 
 interface FormData {
   name: string;
@@ -17,6 +18,8 @@ interface FormErrors {
   email?: string;
   message?: string;
 }
+
+const API_URL = getApiBaseUrl();
 
 export function ContactForm() {
   const [formData, setFormData] = useState<FormData>({
@@ -63,7 +66,7 @@ export function ContactForm() {
     setSubmitStatus('idle');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/contact`, {
+      const response = await fetch(`${API_URL}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

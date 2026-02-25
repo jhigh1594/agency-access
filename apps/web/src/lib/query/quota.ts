@@ -25,8 +25,9 @@
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SubscriptionTier, MetricType, TierLimits } from '@agency-platform/shared';
+import { getApiBaseUrl } from '@/lib/api/api-env';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = getApiBaseUrl();
 
 // ============================================================
 // TYPES

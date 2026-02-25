@@ -8,6 +8,7 @@
  */
 
 import { env } from './env.js';
+import { verifyCreemWebhookSignature } from './creem-signature.js';
 
 export interface CreemConfig {
   apiKey: string;
@@ -294,40 +295,7 @@ class CreemClient {
    * Creem uses HMAC SHA256 signatures
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
-    if (!signature) return false;
-
-    try {
-      // Creem sends signature as: t=timestamp,v1=signature
-      // Format: "t=1234567890,v1=abc123def456..."
-      const [timestampPart, signaturePart] = signature.split(',');
-
-      if (!timestampPart || !signaturePart) {
-        return false;
-      }
-
-      const timestamp = timestampPart.split('=')[1];
-      const v1Signature = signaturePart.split('=')[1];
-
-      if (!timestamp || !v1Signature) {
-        return false;
-      }
-
-      // Recreate the signed payload
-      const signedPayload = `${timestamp}.${payload}`;
-      const crypto = require('crypto');
-      const hmac = crypto.createHmac('sha256', env.CREEM_WEBHOOK_SECRET);
-      hmac.update(signedPayload);
-      const digest = hmac.digest('hex');
-
-      // Compare signatures using constant-time comparison
-      return crypto.timingSafeEqual(
-        Buffer.from(v1Signature),
-        Buffer.from(digest)
-      );
-    } catch (error) {
-      console.error('Webhook signature verification failed:', error);
-      return false;
-    }
+    return verifyCreemWebhookSignature(payload, signature, env.CREEM_WEBHOOK_SECRET);
   }
 }
 

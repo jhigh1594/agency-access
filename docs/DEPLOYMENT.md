@@ -30,7 +30,7 @@ The backend should be deployed first to obtain the API URL.
    - `DATABASE_URL` (PostgreSQL connection string)
    - `REDIS_URL` (Redis connection string)
    - `FRONTEND_URL` (Your Render frontend URL)
-   - `INFISICAL_CLIENT_ID` / `INFISICAL_CLIENT_SECRET` / `INFISICAL_PROJECT_ID` / `INFISICAL_ENV`
+   - `INFISICAL_CLIENT_ID` / `INFISICAL_CLIENT_SECRET` / `INFISICAL_PROJECT_ID` / `INFISICAL_ENVIRONMENT`
    - `CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`
    - Platform OAuth credentials (META_APP_ID, etc.)
 3. Render will automatically build and deploy using the commands in `render.yaml`.

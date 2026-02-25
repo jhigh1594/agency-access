@@ -4,13 +4,18 @@ import { randomBytes } from 'crypto';
 
 dotenv.config();
 
+function isLocalhostUrl(value: string): boolean {
+  const hostname = new URL(value).hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().url(),
-  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
-  // Backend API URL (for OAuth callbacks, defaults to localhost with PORT if not set)
-  API_URL: z.string().url().default(`http://localhost:${process.env.PORT || 3001}`),
+  FRONTEND_URL: z.string().url().optional(),
+  // Backend API URL (for OAuth callbacks)
+  API_URL: z.string().url().optional(),
 
   // Clerk Authentication
   CLERK_PUBLISHABLE_KEY: z.string(),
@@ -92,13 +97,41 @@ const envSchema = z.object({
   }),
 });
 
-const parsedEnv = envSchema.parse(process.env);
+const rawEnv = {
+  ...process.env,
+  INFISICAL_ENVIRONMENT: process.env.INFISICAL_ENVIRONMENT ?? process.env.INFISICAL_ENV,
+};
+
+const parsedEnv = envSchema.parse(rawEnv);
+
+if (parsedEnv.NODE_ENV === 'production') {
+  if (!parsedEnv.FRONTEND_URL) {
+    throw new Error('FRONTEND_URL is required in production');
+  }
+
+  if (!parsedEnv.API_URL) {
+    throw new Error('API_URL is required in production');
+  }
+
+  if (isLocalhostUrl(parsedEnv.FRONTEND_URL)) {
+    throw new Error('FRONTEND_URL cannot point to localhost in production');
+  }
+
+  if (isLocalhostUrl(parsedEnv.API_URL)) {
+    throw new Error('API_URL cannot point to localhost in production');
+  }
+}
+
+const FRONTEND_URL = parsedEnv.FRONTEND_URL ?? 'http://localhost:3000';
+const API_URL = parsedEnv.API_URL ?? `http://localhost:${parsedEnv.PORT}`;
 
 // Parse Redis URL into components for IORedis
 const redisUrl = new URL(parsedEnv.REDIS_URL);
 
 export const env = {
   ...parsedEnv,
+  FRONTEND_URL,
+  API_URL,
   REDIS_HOST: redisUrl.hostname,
   REDIS_PORT: parseInt(redisUrl.port || '6379', 10),
   REDIS_PASSWORD: redisUrl.password || undefined,

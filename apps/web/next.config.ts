@@ -27,8 +27,6 @@ const nextConfig: NextConfig = {
   // Proxy API requests to backend server (running on port 3001)
   // Only enabled in development. In production, NEXT_PUBLIC_API_URL should point to the deployed backend.
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001';
-
     // PostHog reverse proxy rewrites (always enabled to avoid ad blockers)
     const posthogRewrites = [
       {
@@ -45,6 +43,8 @@ const nextConfig: NextConfig = {
     if (process.env.NODE_ENV === 'production') {
       return posthogRewrites;
     }
+
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001';
 
     // In development, include both PostHog and API proxy rewrites
     return [
