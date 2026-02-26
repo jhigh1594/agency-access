@@ -29,6 +29,45 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     return true;
   };
 
+  const resolveTokenError = (
+    tokenError?: { code?: string; message?: string; details?: unknown } | null
+  ): { statusCode: number; error: { code: string; message: string; details?: unknown } } => {
+    const fallbackError = {
+      code: 'TOKEN_ERROR',
+      message: 'Failed to get valid access token',
+    };
+
+    if (!tokenError?.code || !tokenError?.message) {
+      return { statusCode: 500, error: fallbackError };
+    }
+
+    if (tokenError.code === 'INVALID_TOKEN' || tokenError.code === 'TOKEN_NOT_FOUND') {
+      return {
+        statusCode: 401,
+        error: tokenError as { code: string; message: string; details?: unknown },
+      };
+    }
+
+    if (tokenError.code === 'CONNECTION_NOT_FOUND') {
+      return {
+        statusCode: 404,
+        error: tokenError as { code: string; message: string; details?: unknown },
+      };
+    }
+
+    if (tokenError.code === 'CONNECTION_NOT_ACTIVE') {
+      return {
+        statusCode: 409,
+        error: tokenError as { code: string; message: string; details?: unknown },
+      };
+    }
+
+    return {
+      statusCode: 500,
+      error: tokenError as { code: string; message: string; details?: unknown },
+    };
+  };
+
   /**
    * GET /agency-platforms/google/accounts
    * Fetch all Google accounts for an agency's Google connection
@@ -69,12 +108,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'google');
 
         if (tokenResult.error || !tokenResult.data) {
-          return reply.code(500).send({
+          const { statusCode, error } = resolveTokenError(tokenResult.error);
+          return reply.code(statusCode).send({
             data: null,
-            error: {
-              code: 'TOKEN_ERROR',
-              message: 'Failed to get valid access token',
-            },
+            error,
           });
         }
 
@@ -168,12 +205,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'meta');
 
         if (tokenResult.error || !tokenResult.data) {
-          return reply.code(500).send({
+          const { statusCode, error } = resolveTokenError(tokenResult.error);
+          return reply.code(statusCode).send({
             data: null,
-            error: {
-              code: 'TOKEN_ERROR',
-              message: 'Failed to get valid access token',
-            },
+            error,
           });
         }
 

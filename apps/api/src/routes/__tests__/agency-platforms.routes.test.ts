@@ -382,6 +382,42 @@ describe('Agency Platforms Routes', () => {
     });
   });
 
+  describe('GET /agency-platforms/google/accounts', () => {
+    it('returns 401 when Google token is invalid during refresh', async () => {
+      vi.mocked(agencyPlatformService.getConnection).mockResolvedValue({
+        data: {
+          id: 'conn-1',
+          agencyId: 'agency-1',
+          platform: 'google',
+          status: 'active',
+          metadata: {},
+        } as any,
+        error: null,
+      });
+      vi.mocked(agencyPlatformService.getValidToken).mockResolvedValue({
+        data: null,
+        error: {
+          code: 'INVALID_TOKEN',
+          message: 'Google token is invalid. Please reconnect Google.',
+        },
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/agency-platforms/google/accounts?agencyId=agency-1&refresh=true',
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toEqual({
+        data: null,
+        error: {
+          code: 'INVALID_TOKEN',
+          message: 'Google token is invalid. Please reconnect Google.',
+        },
+      });
+    });
+  });
+
   describe('POST /agency-platforms/:platform/initiate', () => {
     it('should initiate OAuth flow and return auth URL', async () => {
       const mockStateToken = 'state-token-123';

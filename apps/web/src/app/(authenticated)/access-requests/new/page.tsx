@@ -40,7 +40,7 @@ import type { AccessRequestTemplate } from '@agency-platform/shared';
 // ============================================================
 
 function AccessRequestWizardContent() {
-  const { userId, getToken } = useAuth();
+  const { userId, orgId, getToken } = useAuth();
   const { user } = useUser();
   const queryClient = useQueryClient();
   const {
@@ -69,21 +69,28 @@ function AccessRequestWizardContent() {
   // Template expanded state (for Step 1: Collapsible template section)
   const [templateExpanded, setTemplateExpanded] = useState(false);
 
-  // Fetch agency by email - SAME approach as connections page
+  const principalClerkId = orgId || userId;
+
+  // Fetch agency by clerkUserId - matches connections page approach
   const { data: agencyData } = useQuery({
-    queryKey: ['user-agency', user?.primaryEmailAddress?.emailAddress],
+    queryKey: ['user-agency', principalClerkId],
     queryFn: async () => {
-      const email = user?.primaryEmailAddress?.emailAddress;
-      if (!email) return null;
+      if (!principalClerkId) return null;
+      const token = await getToken();
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?email=${encodeURIComponent(email)}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+        {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch agency');
       const result = await response.json();
       return result.data?.[0] || null;
     },
-    enabled: !!user?.primaryEmailAddress?.emailAddress,
+    enabled: !!principalClerkId,
   });
 
   // Use the agency's UUID id

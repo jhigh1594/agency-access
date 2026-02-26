@@ -407,11 +407,36 @@ export async function getValidToken(agencyId: string, platform: string) {
     }
     const tokens = await infisical.getOAuthTokens(connection.secretId);
 
+    if (!tokens.accessToken) {
+      return {
+        data: null,
+        error: {
+          code: 'TOKEN_NOT_FOUND',
+          message: 'Access token not found for this connection',
+        },
+      };
+    }
+
     // Check if token needs refresh (within 5 days of expiry)
+    const now = new Date();
     const fiveDaysFromNow = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
     const needsRefresh = tokens.expiresAt && tokens.expiresAt < fiveDaysFromNow;
+    const isExpired = tokens.expiresAt && tokens.expiresAt <= now;
 
-    if (needsRefresh && tokens.refreshToken) {
+    if (needsRefresh) {
+      if (!tokens.refreshToken) {
+        if (isExpired) {
+          return {
+            data: null,
+            error: {
+              code: 'INVALID_TOKEN',
+              message: 'Access token has expired and cannot be refreshed. Please reconnect the platform.',
+            },
+          };
+        }
+        return { data: tokens.accessToken, error: null };
+      }
+
       // Get platform connector and attempt refresh
       const connector = getConnector(connection.platform as Platform);
 
@@ -441,8 +466,25 @@ export async function getValidToken(agencyId: string, platform: string) {
           return { data: newTokens.accessToken, error: null };
         } catch (error) {
           console.error(`Token refresh failed for ${connection.platform}:`, error);
-          // Continue to return existing token on refresh failure
+          if (isExpired) {
+            return {
+              data: null,
+              error: {
+                code: 'INVALID_TOKEN',
+                message: 'Access token is expired and refresh failed. Please reconnect the platform.',
+              },
+            };
+          }
+          // Continue to return existing token on refresh failure when current token is still valid.
         }
+      } else if (isExpired) {
+        return {
+          data: null,
+          error: {
+            code: 'INVALID_TOKEN',
+            message: 'Access token has expired and this platform does not support refresh. Please reconnect.',
+          },
+        };
       }
     }
 

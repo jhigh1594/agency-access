@@ -9,9 +9,11 @@ import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import * as agencyPlatformService from '@/services/agency-platform.service';
 
-const { deleteCacheMock, invalidateCacheMock } = vi.hoisted(() => ({
+const { deleteCacheMock, invalidateCacheMock, getConnectorMock, refreshTokenMock } = vi.hoisted(() => ({
   deleteCacheMock: vi.fn(async () => true),
   invalidateCacheMock: vi.fn(async () => ({ success: true, keysDeleted: 1 })),
+  getConnectorMock: vi.fn(),
+  refreshTokenMock: vi.fn(),
 }));
 
 // Mock Prisma
@@ -43,6 +45,10 @@ vi.mock('@/lib/cache', () => ({
   invalidateCache: invalidateCacheMock,
 }));
 
+vi.mock('@/services/connectors/factory', () => ({
+  getConnector: getConnectorMock,
+}));
+
 // Mock Infisical
 vi.mock('@/lib/infisical', () => ({
   infisical: {
@@ -57,6 +63,9 @@ vi.mock('@/lib/infisical', () => ({
 describe('AgencyPlatformService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getConnectorMock.mockReturnValue({
+      refreshToken: refreshTokenMock,
+    });
   });
 
   describe('getConnections', () => {
@@ -471,6 +480,30 @@ describe('AgencyPlatformService', () => {
 
       expect(result.data).toBeNull();
       expect(result.error?.code).toBe('CONNECTION_NOT_ACTIVE');
+    });
+
+    it('should return INVALID_TOKEN when token is expired and refresh fails', async () => {
+      const expiredAt = new Date(Date.now() - 60 * 60 * 1000);
+      const mockConnection = {
+        id: 'conn-1',
+        agencyId: 'agency-1',
+        platform: 'google',
+        secretId: 'google_agency_agency-1',
+        status: 'active',
+      };
+
+      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(mockConnection as any);
+      vi.mocked(infisical.getOAuthTokens).mockResolvedValue({
+        accessToken: 'expired_access_token',
+        refreshToken: 'invalid_refresh_token',
+        expiresAt: expiredAt,
+      });
+      refreshTokenMock.mockRejectedValue(new Error('invalid_grant'));
+
+      const result = await agencyPlatformService.getValidToken('agency-1', 'google');
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('INVALID_TOKEN');
     });
   });
 
