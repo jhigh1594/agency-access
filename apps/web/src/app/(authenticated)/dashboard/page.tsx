@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 
 // Simple in-memory ETag cache for conditional requests
@@ -28,35 +28,26 @@ export default function DashboardPage() {
   const { getToken } = clerkAuth;
   const { isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
   const perfHarness = readPerfHarnessContext();
-  const [authToken, setAuthToken] = useState<string | null>(null);
   const hasTrackedView = useRef(false);
-
-  // Get Clerk token for API authentication
-  useEffect(() => {
-    async function fetchToken() {
-      const stopTimer = startPerfTimer('dashboard:token-fetch');
-      const token = await getToken();
-      setAuthToken(token || perfHarness?.token || null);
-      stopTimer?.();
-    }
-    fetchToken();
-  }, [getToken, perfHarness?.token]);
 
   // Single unified query that fetches all dashboard data at once
   // This replaces 4 separate API calls (agency, stats, requests, connections)
   const { data: dashboardData, isLoading, error, refetch } = useQuery({
     queryKey: ['dashboard', user?.id || perfHarness?.principalId || 'anonymous'],
     queryFn: async () => {
-      if (!authToken) throw new Error('No auth token');
-
       const cacheKey = `dashboard-${user?.id || perfHarness?.principalId || 'anonymous'}`;
+      const stopTokenTimer = startPerfTimer('dashboard:token-fetch');
+      const token = perfHarness?.token || await getToken();
+      stopTokenTimer?.();
+
+      if (!token) throw new Error('No auth token');
       const stopTimer = startPerfTimer('dashboard:data-fetch');
 
       try {
         const etag = etagCache.get(cacheKey);
 
         const headers: Record<string, string> = {
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
         };
 
         // Add ETag for conditional request
@@ -96,11 +87,10 @@ export default function DashboardPage() {
         stopTimer?.();
       }
     },
-    enabled: !!authToken,
     staleTime: 5 * 60 * 1000, // 5 minutes - consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
-    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     placeholderData: (previousData) => previousData, // Use stale data while refetching (stale-while-revalidate)
   });
 

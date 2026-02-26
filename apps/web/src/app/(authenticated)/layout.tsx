@@ -45,6 +45,12 @@ export default function AuthenticatedLayout({
         return;
       }
 
+      // Dashboard already handles missing agency state. Skip preflight check
+      // to avoid an extra blocking network round-trip on sign-in.
+      if (pathname === '/dashboard') {
+        return;
+      }
+
       // In bypass mode, skip agency check (we have a mock agency)
       if (isDevelopmentBypass && !runPerfAgencyCheck) {
         return;
