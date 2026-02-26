@@ -213,18 +213,18 @@ export function MetaAssetSelector({
 
   return (
     <div className="space-y-6">
-      {/* Selection Summary */}
-      <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4">
+      {/* Selection Summary - Brutalist Style */}
+      <div className="bg-[var(--coral)]/10 border-2 border-black dark:border-white p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-indigo-900">
+            <h3 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">
               Selected
             </h3>
-            <p className="text-xs text-indigo-700 mt-0.5">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
               Accounts you're sharing
             </p>
           </div>
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 text-white">
+          <div className="flex items-center justify-center w-12 h-12 border-2 border-black dark:border-white bg-[var(--coral)] text-white">
             <span className="text-xl font-bold">{totalSelected}</span>
           </div>
         </div>
@@ -235,12 +235,12 @@ export function MetaAssetSelector({
         {/* Ad Accounts - Multi-select Combobox */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-blue-500 flex items-center justify-center">
               <span className="text-white text-lg">💼</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Ad Accounts</h3>
-              <p className="text-sm text-slate-600 mt-0.5">
+              <h3 className="text-lg font-bold text-[var(--ink)] font-display">Ad Accounts</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
                 {selectedAdAccounts.size} of {adAccountAssets.length} selected
               </p>
             </div>
@@ -260,12 +260,12 @@ export function MetaAssetSelector({
         {/* Pages - Multi-select Combobox */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-indigo-500 flex items-center justify-center">
               <span className="text-white text-lg">📄</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Pages</h3>
-              <p className="text-sm text-slate-600 mt-0.5">
+              <h3 className="text-lg font-bold text-[var(--ink)] font-display">Pages</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
                 {selectedPages.size} of {pageAssets.length} selected
               </p>
             </div>
@@ -289,7 +289,7 @@ export function MetaAssetSelector({
           selectedIds={selectedInstagram}
           onSelectionChange={setSelectedInstagram}
           icon={
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-pink-500 flex items-center justify-center">
               <span className="text-white text-lg">📷</span>
             </div>
           }

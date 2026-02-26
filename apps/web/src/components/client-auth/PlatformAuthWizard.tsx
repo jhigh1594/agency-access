@@ -248,20 +248,23 @@ export function PlatformAuthWizard({
       case 1:
         return (
           <div className="text-center space-y-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mb-4">
-              <span className="text-4xl">🔗</span>
+            {/* Platform Icon with Brutalist Border */}
+            <div className="inline-flex items-center justify-center w-20 h-20 border-2 border-black dark:border-white bg-[var(--paper)] mb-4">
+              <PlatformIcon platform={platform} size="xl" />
             </div>
+
+            {/* Bold Typography */}
             <div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-3">
+              <h3 className="text-3xl font-bold text-[var(--ink)] mb-3 font-display">
                 Connect {platformName}
               </h3>
-              <p className="text-lg text-slate-600 max-w-md mx-auto">
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                 Sign in to {platformName} and approve access. You'll choose which accounts to share next.
               </p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700">
+              <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)]">
                 {error}
               </div>
             )}
@@ -270,6 +273,7 @@ export function PlatformAuthWizard({
               onClick={handleConnectClick}
               isLoading={isProcessing}
               size="xl"
+              variant="brutalist-rounded"
               rightIcon={!isProcessing ? <ExternalLink className="w-5 h-5" /> : undefined}
             >
               Connect {platformName}
@@ -293,20 +297,21 @@ export function PlatformAuthWizard({
         if (!connectionId) {
           return (
             <div className="text-center space-y-6 py-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-100 mb-4">
+              {/* Warning Icon with Brutalist Border */}
+              <div className="inline-flex items-center justify-center w-20 h-20 border-2 border-black dark:border-white bg-[var(--warning)]/10 mb-4">
                 <span className="text-4xl">🔐</span>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                <h3 className="text-2xl font-bold text-[var(--ink)] mb-3 font-display">
                   Please connect your account first
                 </h3>
-                <p className="text-lg text-slate-600 max-w-md mx-auto mb-6">
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">
                   You need to complete Step 1 before you can select accounts to share.
                 </p>
               </div>
               <Button
                 onClick={() => setCurrentStep(1)}
-                variant="primary"
+                variant="brutalist-rounded"
                 size="lg"
               >
                 Go to Step 1
@@ -317,25 +322,25 @@ export function PlatformAuthWizard({
 
         return (
           <div className="space-y-12">
-            {/* Choose Accounts Section - Collapsible */}
-            <div className="border-2 border-slate-200 rounded-xl overflow-hidden">
+            {/* Choose Accounts Section - Brutalist Card */}
+            <div className="border-2 border-black dark:border-white overflow-hidden">
               <button
                 onClick={() => setChooseAccountsExpanded(!chooseAccountsExpanded)}
-                className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <div className="text-left">
-                  <h3 className="text-2xl font-bold text-slate-900">
-                Choose accounts to share
-              </h3>
-                  <p className="text-sm text-slate-600 mt-1">
-                Select the specific accounts you want to share.
-              </p>
-            </div>
+                  <h3 className="text-xl font-bold text-[var(--ink)] font-display">
+                    Choose accounts to share
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    Select the specific accounts you want to share.
+                  </p>
+                </div>
                 <motion.div
                   animate={{ rotate: chooseAccountsExpanded ? 0 : -90 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown className="w-6 h-6 text-slate-600" />
+                  <ChevronDown className="w-6 h-6 text-slate-600 dark:text-slate-400" />
                 </motion.div>
               </button>
 
@@ -350,7 +355,7 @@ export function PlatformAuthWizard({
                   >
                     <div className="p-6 space-y-6">
             {error && (
-                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700">
+                        <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)]">
                 {error}
               </div>
             )}
@@ -374,12 +379,12 @@ export function PlatformAuthWizard({
                     'meta_ads': 'Meta Ads',
                   };
                   const productName = PLATFORM_NAMES[p.product as Platform] || productNameMap[p.product] || p.product;
-                  
+
                   return (
                     <div key={p.product} className="space-y-6">
-                      <div className="flex items-center gap-3 pb-2 border-b">
+                      <div className="flex items-center gap-3 pb-2 border-b-2 border-black dark:border-white">
                         <PlatformIcon platform={p.product as Platform} size="sm" />
-                        <h4 className="text-xl font-bold text-slate-800">{productName}</h4>
+                        <h4 className="text-lg font-bold text-[var(--ink)] font-display">{productName}</h4>
                       </div>
 
                       {p.product === 'meta_ads' && (
@@ -418,12 +423,13 @@ export function PlatformAuthWizard({
 
                         {/* Unified Batch Save Button - only show if assets haven't been saved yet */}
                         {!assetsSaved && !isProcessing && hasGroupSelections() && (
-            <div className="sticky bottom-0 bg-card/80 backdrop-blur-sm border-t-2 border-slate-200 p-8 -mx-8 -mb-8 mt-12 flex justify-center">
+            <div className="sticky bottom-0 bg-card border-t-2 border-black dark:border-white p-8 -mx-6 -mb-6 mt-12 flex justify-center">
               <Button
                 onClick={handleBatchSave}
                 disabled={!hasGroupSelections()}
                 isLoading={isProcessing}
                 size="xl"
+                variant="brutalist-rounded"
                 rightIcon={!isProcessing ? <CheckCircle2 className="w-6 h-6" /> : undefined}
               >
                 Confirm selection
@@ -449,19 +455,19 @@ export function PlatformAuthWizard({
             return (
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t-2 border-slate-200" />
+                  <div className="w-full border-t-2 border-black dark:border-white" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-card px-4 text-sm text-slate-500 font-semibold">then</span>
+                  <span className="bg-card px-4 text-sm text-slate-500 font-bold uppercase tracking-wider">then</span>
                 </div>
               </div>
             );
           })()}
 
-            {/* Grant Access Section (for Meta after assets are saved) - Collapsible */}
+            {/* Grant Access Section (for Meta after assets are saved) - Brutalist Card */}
             {platform === 'meta' && metaNeedsGrantStep && connectionId && assetsSaved && (() => {
           const metaAssets = groupAssets['meta_ads'] || {};
-          const selectedPages = metaAssets.selectedPagesWithNames || 
+          const selectedPages = metaAssets.selectedPagesWithNames ||
             (metaAssets.pages || []).map((id: string) => {
               const allPages = metaAssets.allPages || [];
               const page = allPages.find((p: any) => p.id === id);
@@ -482,16 +488,16 @@ export function PlatformAuthWizard({
               }
 
           return (
-                <div className="border-2 border-slate-200 rounded-xl overflow-hidden">
+                <div className="border-2 border-black dark:border-white overflow-hidden">
                   <button
                     onClick={() => setGrantAccessExpanded(!grantAccessExpanded)}
-                    className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                   >
                     <div className="text-left">
-                      <h3 className="text-2xl font-bold text-slate-900">
+                      <h3 className="text-xl font-bold text-[var(--ink)] font-display">
                         Grant access
                       </h3>
-                      <p className="text-sm text-slate-600 mt-1">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                         Complete the steps below to grant access to your selected accounts.
                       </p>
                     </div>
@@ -499,7 +505,7 @@ export function PlatformAuthWizard({
                       animate={{ rotate: grantAccessExpanded ? 0 : -90 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <ChevronDown className="w-6 h-6 text-slate-600" />
+                      <ChevronDown className="w-6 h-6 text-slate-600 dark:text-slate-400" />
                     </motion.div>
                   </button>
 
@@ -516,13 +522,13 @@ export function PlatformAuthWizard({
 
                   {/* Show error banner if Business Manager ID is missing */}
                   {businessIdError && (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700 mb-6">
+                    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)] mb-6">
                       <p className="font-semibold">{businessIdError}</p>
                     </div>
                   )}
-                  
+
               {error && (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700 mb-6">
+                    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)] mb-6">
                   {error}
                 </div>
               )}
@@ -565,23 +571,23 @@ export function PlatformAuthWizard({
               )}
 
               {hasAdAccounts && !businessId && (
-                    <div className={`border-2 rounded-xl p-6 ${
-                      businessIdError 
-                        ? 'bg-red-50 border-red-200' 
-                        : 'bg-amber-50 border-amber-200'
+                    <div className={`border-2 p-6 ${
+                      businessIdError
+                        ? 'border-[var(--coral)] bg-[var(--coral)]/10'
+                        : 'border-[var(--warning)] bg-[var(--warning)]/10'
                     }`}>
                       {businessIdLoading ? (
-                        <p className="text-amber-800 flex items-center gap-2">
+                        <p className="text-[var(--warning)] flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Loading Business Manager ID...
                         </p>
                       ) : businessIdError ? (
                         <div className="space-y-2">
-                          <p className="text-red-800 font-semibold">Error loading Business Manager ID</p>
-                          <p className="text-red-700 text-sm">{businessIdError}</p>
+                          <p className="text-[var(--coral)] font-semibold">Error loading Business Manager ID</p>
+                          <p className="text-[var(--coral)] text-sm">{businessIdError}</p>
                         </div>
                       ) : (
-                  <p className="text-amber-800">
+                  <p className="text-[var(--warning)]">
                     Loading Business Manager ID...
                   </p>
                       )}
@@ -594,7 +600,7 @@ export function PlatformAuthWizard({
                               <Button
                                 onClick={() => setCurrentStep(3)}
                                 size="xl"
-                                variant="primary"
+                                variant="brutalist-rounded"
                                 rightIcon={<CheckCircle2 className="w-6 h-6" />}
                               >
                                 Continue
@@ -614,13 +620,14 @@ export function PlatformAuthWizard({
       case 3:
         return (
           <div className="text-center space-y-6 py-8">
+            {/* Success Icon with Brutalist Border */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, type: 'spring' }}
-              className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-emerald-100 mb-4"
+              className="inline-flex items-center justify-center w-24 h-24 border-2 border-[var(--teal)] bg-[var(--teal)]/10 mb-4"
             >
-              <CheckCircle2 className="w-16 h-16 text-emerald-600" />
+              <CheckCircle2 className="w-16 h-16 text-[var(--teal)]" />
             </motion.div>
 
             <motion.div
@@ -628,14 +635,15 @@ export function PlatformAuthWizard({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h3 className="text-4xl font-bold text-slate-900 mb-3">
+              <h3 className="text-4xl font-bold text-[var(--ink)] mb-3 font-display">
                 Connected
               </h3>
-              <p className="text-lg text-slate-600 max-w-md mx-auto">
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                 Access granted to the accounts you selected.
               </p>
             </motion.div>
 
+            {/* Connected Assets - Brutalist Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {Object.entries(groupAssets).map(([product, assets]) => {
                 // Map product IDs to display names (some products aren't in PLATFORM_CONFIG)
@@ -649,31 +657,31 @@ export function PlatformAuthWizard({
                   'meta_ads': 'Meta Ads',
                 };
                 const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
-                
+
                 return (
                   <motion.div
                     key={product}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-6 text-left"
+                    className="border-2 border-[var(--teal)] bg-[var(--teal)]/5 p-6 text-left"
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <PlatformIcon platform={product as Platform} size="sm" />
-                      <h4 className="font-bold text-emerald-900">{productName}</h4>
+                      <h4 className="font-bold text-[var(--teal)] font-display">{productName}</h4>
                     </div>
                     <ul className="space-y-1 text-sm">
                       {assets.adAccounts?.length > 0 && (
-                        <li className="text-emerald-800">✓ {assets.adAccounts.length} Ad Accounts</li>
+                        <li className="text-[var(--teal)]">✓ {assets.adAccounts.length} Ad Accounts</li>
                       )}
                       {assets.pages?.length > 0 && (
-                        <li className="text-emerald-800">✓ {assets.pages.length} Pages</li>
+                        <li className="text-[var(--teal)]">✓ {assets.pages.length} Pages</li>
                       )}
                       {assets.instagramAccounts?.length > 0 && (
-                        <li className="text-emerald-800">✓ {assets.instagramAccounts.length} IG Accounts</li>
+                        <li className="text-[var(--teal)]">✓ {assets.instagramAccounts.length} IG Accounts</li>
                       )}
                       {assets.properties?.length > 0 && (
-                        <li className="text-emerald-800">✓ {assets.properties.length} Properties</li>
+                        <li className="text-[var(--teal)]">✓ {assets.properties.length} Properties</li>
                       )}
                     </ul>
                   </motion.div>
@@ -683,7 +691,7 @@ export function PlatformAuthWizard({
 
             <Button
               onClick={onComplete}
-              variant="success"
+              variant="brutalist-rounded"
               size="lg"
               className="mt-8"
             >

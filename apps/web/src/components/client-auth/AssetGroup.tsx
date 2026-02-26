@@ -3,7 +3,8 @@
 /**
  * AssetGroup - Collapsible group of assets with "Select All"
  *
- * Bold & Confident Design:
+ * Acid Brutalism Design:
+ * - Hard borders and brutalist styling
  * - Large header with count badge
  * - Indeterminate checkbox state for partial selection
  * - Smooth collapse/expand with Framer Motion
@@ -76,21 +77,21 @@ export function AssetGroup({
   };
 
   return (
-    <div className="border-t border-slate-200 pt-6 first:border-t-0 first:pt-0">
+    <div className="border-t-2 border-black dark:border-white pt-6 first:border-t-0 first:pt-0">
       {/* Header with Select All */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           {icon}
           <div>
-            <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-            <p className="text-sm text-slate-600 mt-0.5">
+            <h3 className="text-lg font-bold text-[var(--ink)] font-display">{title}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
               {selectedCount} of {assets.length} selected
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Select All Checkbox */}
+          {/* Select All Checkbox - Brutalist Style */}
           {assets.length > 0 && (
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
@@ -106,12 +107,12 @@ export function AssetGroup({
               />
               <div
                 className={`
-                  w-6 h-6 rounded-md border-2 flex items-center justify-center
+                  w-6 h-6 border-2 border-black dark:border-white flex items-center justify-center
                   transition-all duration-200
                   ${
                     allSelected || someSelected
-                      ? 'bg-indigo-600 border-indigo-600'
-                      : 'bg-card border-slate-300 group-hover:border-indigo-400'
+                      ? 'bg-[var(--coral)] border-[var(--coral)]'
+                      : 'bg-card group-hover:border-[var(--coral)]'
                   }
                 `}
               >
@@ -130,7 +131,7 @@ export function AssetGroup({
                   </svg>
                 )}
               </div>
-              <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-600">
+              <span className="text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--coral)]">
                 Select All
               </span>
             </label>
@@ -139,14 +140,14 @@ export function AssetGroup({
           {/* Expand/Collapse Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-2 border-2 border-black dark:border-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <motion.div
               animate={{ rotate: isExpanded ? 0 : -90 }}
               transition={{ duration: 0.2 }}
             >
-              <ChevronDown className="w-5 h-5 text-slate-600" />
+              <ChevronDown className="w-5 h-5 text-[var(--ink)]" />
             </motion.div>
           </button>
         </div>
@@ -184,13 +185,13 @@ export function AssetGroup({
         )}
       </AnimatePresence>
 
-      {/* Empty State */}
+      {/* Empty State - Brutalist Style */}
       {assets.length === 0 && isExpanded && (
         <div className="py-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 mb-3">
             <span className="text-2xl">📭</span>
           </div>
-          <p className="text-slate-600 font-medium">No {title.toLowerCase()} available</p>
+          <p className="text-[var(--ink)] font-bold font-display">No {title.toLowerCase()} available</p>
           <p className="text-sm text-slate-500 mt-1">
             This account has no {title.toLowerCase()} to share
           </p>

@@ -3,12 +3,15 @@
 /**
  * StepHelpText - Collapsible contextual help panel
  *
+ * Acid Brutalism Design:
+ * - Hard borders with brutalist styling
+ * - Brand colors (coral/teal) for accents
+ * - Clear typography hierarchy
+ *
  * Provides users with:
  * - Step-by-step explanation of what's happening
  * - "What you're granting" information
  * - Reassurance about the authorization process
- *
- * Uses Framer Motion for smooth expand/collapse animations
  */
 
 import { useState } from 'react';
@@ -33,23 +36,23 @@ export function StepHelpText({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mt-4">
+    <div className="bg-slate-50 dark:bg-slate-800/50 border-2 border-black dark:border-white p-4 mt-4">
       {/* Header - Clickable to Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 w-full text-left"
         aria-expanded={isOpen}
       >
-        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-          <Info className="w-4 h-4 text-indigo-600" />
+        <div className="w-8 h-8 border-2 border-black dark:border-white bg-[var(--paper)] flex items-center justify-center flex-shrink-0">
+          <Info className="w-4 h-4 text-[var(--coral)]" />
         </div>
-        <span className="font-semibold text-indigo-900 flex-1">{title}</span>
+        <span className="font-semibold text-[var(--ink)] flex-1">{title}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
           className="flex-shrink-0"
         >
-          <ChevronDown className="w-5 h-5 text-indigo-600" />
+          <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />
         </motion.div>
       </button>
 
@@ -63,25 +66,25 @@ export function StepHelpText({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 pt-4 border-t border-indigo-200">
+            <div className="mt-4 pt-4 border-t-2 border-black dark:border-white">
               {/* Description */}
               {description && (
-                <p className="text-sm text-indigo-800 mb-4">{description}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">{description}</p>
               )}
 
               {/* Steps List */}
               {steps.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-xs font-semibold text-indigo-900 uppercase tracking-wide mb-2">
+                  <p className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide mb-2">
                     What happens next:
                   </p>
                   <ol className="space-y-2">
                     {steps.map((step, index) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-sm text-indigo-800"
+                        className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
                       >
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                        <span className="flex-shrink-0 w-5 h-5 border border-black dark:border-white bg-[var(--coral)] text-white flex items-center justify-center text-xs font-bold">
                           {index + 1}
                         </span>
                         <span>{step}</span>
@@ -94,16 +97,16 @@ export function StepHelpText({
               {/* Granting Details */}
               {grantingDetails.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-indigo-900 uppercase tracking-wide mb-2">
+                  <p className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide mb-2">
                     What you're granting:
                   </p>
                   <ul className="space-y-1.5">
                     {grantingDetails.map((detail, index) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-sm text-indigo-800"
+                        className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
                       >
-                        <span className="text-indigo-500 mt-0.5">•</span>
+                        <span className="text-[var(--coral)] mt-0.5">•</span>
                         <span>{detail}</span>
                       </li>
                     ))}

@@ -165,8 +165,8 @@ export default function ClientAuthorizationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600">Loading...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--coral)] mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-slate-400">Loading...</p>
         </div>
       </div>
     );
@@ -177,14 +177,14 @@ export default function ClientAuthorizationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-              <X className="h-8 w-8 text-red-600" />
+          <div className="bg-card border-2 border-black dark:border-white shadow-brutalist p-8 text-center">
+            <div className="w-16 h-16 border-2 border-[var(--coral)] bg-[var(--coral)]/10 flex items-center justify-center mx-auto mb-4">
+              <X className="h-8 w-8 text-[var(--coral)]" />
             </div>
-            <h1 className="text-xl font-semibold text-slate-900 mb-2">
+            <h1 className="text-xl font-bold text-[var(--ink)] mb-2 font-display">
               Link expired
             </h1>
-            <p className="text-slate-600 mb-6">
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
               This link is no longer valid. Contact your agency for a new one.
             </p>
           </div>
@@ -198,15 +198,15 @@ export default function ClientAuthorizationPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
+      {/* Progress Bar - Brutalist Style */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b-2 border-black dark:border-white">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               {branding.logoUrl ? (
                 <img src={branding.logoUrl} alt="" className="h-6" />
               ) : (
-                <span className="font-semibold text-slate-900">{data.agencyName}</span>
+                <span className="font-bold text-[var(--ink)]">{data.agencyName}</span>
               )}
             </div>
             <div className="flex items-center gap-1">
@@ -216,22 +216,24 @@ export default function ClientAuthorizationPage() {
                 return (
                   <div key={label} className="flex items-center">
                     <span
-                      className={isActive ? 'text-indigo-600 font-medium' : 'text-slate-400'}
+                      className={`font-semibold uppercase text-xs tracking-wide ${
+                        isActive ? 'text-[var(--coral)]' : 'text-slate-400'
+                      }`}
                     >
                       {label}
                     </span>
                     {i < 2 && (
-                      <ChevronRight className={`h-4 w-4 mx-1 ${isActive ? 'text-indigo-600' : 'text-slate-300'}`} />
+                      <ChevronRight className={`h-4 w-4 mx-1 ${isActive ? 'text-[var(--coral)]' : 'text-slate-300'}`} />
                     )}
                   </div>
                 );
               })}
             </div>
           </div>
-          {/* Progress indicator */}
-          <div className="mt-3 h-1 bg-slate-100 rounded-full overflow-hidden">
+          {/* Progress indicator - Brutalist hard line */}
+          <div className="mt-3 h-1 bg-slate-200 dark:bg-slate-700 overflow-hidden">
             <div
-              className="h-full bg-indigo-600 transition-all duration-500"
+              className="h-full transition-all duration-500"
               style={{
                 width: step === 'intake' ? '33%' : step === 'platforms' ? '66%' : '100%',
                 backgroundColor: primaryColor,
@@ -245,12 +247,12 @@ export default function ClientAuthorizationPage() {
       <main className="pt-24 pb-12 px-4">
         <div className="max-w-3xl mx-auto">
 
-          {/* Intake Form Step */}
+          {/* Intake Form Step - Brutalist Card */}
           {step === 'intake' && (
-            <form onSubmit={handleIntakeSubmit} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-              <div className="px-8 py-6 border-b border-border">
-                <h2 className="text-xl font-semibold text-slate-900">Quick Setup</h2>
-                <p className="text-slate-600 mt-1">
+            <form onSubmit={handleIntakeSubmit} className="bg-card border-2 border-black dark:border-white shadow-brutalist overflow-hidden">
+              <div className="px-8 py-6 border-b-2 border-black dark:border-white">
+                <h2 className="text-xl font-bold text-[var(--ink)] font-display">Quick Setup</h2>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
                   Share a few details about your business
                 </p>
               </div>
@@ -258,9 +260,9 @@ export default function ClientAuthorizationPage() {
               <div className="p-8 space-y-6">
                 {data.intakeFields.map((field) => (
                   <div key={field.id}>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-[var(--ink)] mb-2">
                       {field.label}
-                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                      {field.required && <span className="text-[var(--coral)] ml-1">*</span>}
                     </label>
 
                     {field.type === 'textarea' ? (
@@ -271,7 +273,7 @@ export default function ClientAuthorizationPage() {
                         }
                         required={field.required}
                         rows={3}
-                        className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+                        className="w-full px-4 py-3 border-2 border-black dark:border-white bg-[var(--paper)] focus:ring-2 focus:ring-[var(--coral)] focus:border-[var(--coral)] transition-colors resize-none"
                       />
                     ) : field.type === 'dropdown' ? (
                       <select
@@ -280,7 +282,7 @@ export default function ClientAuthorizationPage() {
                           setIntakeResponses({ ...intakeResponses, [field.id]: e.target.value })
                         }
                         required={field.required}
-                        className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-card"
+                        className="w-full px-4 py-3 border-2 border-black dark:border-white bg-[var(--paper)] focus:ring-2 focus:ring-[var(--coral)] focus:border-[var(--coral)] transition-colors"
                       >
                         <option value="">Select an option</option>
                         {field.options?.map((opt) => (
@@ -297,7 +299,7 @@ export default function ClientAuthorizationPage() {
                           setIntakeResponses({ ...intakeResponses, [field.id]: e.target.value })
                         }
                         required={field.required}
-                        className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="w-full px-4 py-3 border-2 border-black dark:border-white bg-[var(--paper)] focus:ring-2 focus:ring-[var(--coral)] focus:border-[var(--coral)] transition-colors"
                       />
                     )}
                   </div>
@@ -307,7 +309,7 @@ export default function ClientAuthorizationPage() {
               <div className="px-8 pb-8">
                 <button
                   type="submit"
-                  className="w-full py-4 px-6 rounded-xl font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                  className="w-full py-4 px-6 font-bold text-white transition-all hover:translate-y-[-2px] active:scale-[0.98] border-2 border-black shadow-brutalist"
                   style={{ backgroundColor: primaryColor }}
                 >
                   Continue
@@ -315,11 +317,11 @@ export default function ClientAuthorizationPage() {
                 </button>
               </div>
 
-              {/* Security Notice */}
-              <div className="px-8 py-4 bg-background flex items-start gap-3">
+              {/* Security Notice - Brutalist Style */}
+              <div className="px-8 py-4 bg-slate-50 dark:bg-slate-800 border-t-2 border-black dark:border-white flex items-start gap-3">
                 <Lock className="h-5 w-5 text-slate-500 mt-0.5" />
-                <div className="text-sm text-slate-600">
-                  <strong>Secure:</strong> Official OAuth only. We never see or store your passwords.
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <strong className="text-[var(--ink)]">Secure:</strong> Official OAuth only. We never see or store your passwords.
                 </div>
               </div>
             </form>
@@ -328,15 +330,15 @@ export default function ClientAuthorizationPage() {
           {/* Platform Authorization Wizards */}
           {step === 'platforms' && (
             <div className="space-y-8">
-              {/* Header */}
+              {/* Header - Brutalist Typography */}
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                <h1 className="text-2xl font-bold text-[var(--ink)] mb-2 font-display">
                   {data.platforms.length - completedPlatforms.size === 0
                     ? 'All platforms connected'
                     : `Connect ${data.platforms.length - completedPlatforms.size} more platform${data.platforms.length - completedPlatforms.size !== 1 ? 's' : ''}`
                   }
                 </h1>
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-400">
                   {completedPlatforms.size === 0
                     ? 'Start by connecting your first platform'
                     : completedPlatforms.size === data.platforms.length
@@ -371,28 +373,28 @@ export default function ClientAuthorizationPage() {
             </div>
           )}
 
-          {/* Complete Step */}
+          {/* Complete Step - Brutalist Style */}
           {step === 'complete' && (
-            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden text-center">
+            <div className="bg-card border-2 border-black dark:border-white shadow-brutalist overflow-hidden text-center">
               <div className="p-12">
-                {/* Success Animation */}
-                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-                  <Check className="h-10 w-10 text-emerald-600" />
+                {/* Success Icon - Brutalist Square */}
+                <div className="w-20 h-20 border-2 border-[var(--teal)] bg-[var(--teal)]/10 flex items-center justify-center mx-auto mb-6">
+                  <Check className="h-10 w-10 text-[var(--teal)]" />
                 </div>
 
-                <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                <h1 className="text-2xl font-bold text-[var(--ink)] mb-2 font-display">
                   All set
                 </h1>
-                <p className="text-slate-600 mb-8">
+                <p className="text-slate-600 dark:text-slate-400 mb-8">
                   {data.agencyName} now has access to the accounts you selected. You can close this window.
                 </p>
 
-                {/* Summary */}
-                <div className="bg-background rounded-xl p-6 text-left">
-                  <h3 className="font-semibold text-slate-900 mb-4">Connected</h3>
+                {/* Summary - Brutalist Card */}
+                <div className="bg-[var(--paper)] border-2 border-black dark:border-white p-6 text-left">
+                  <h3 className="font-bold text-[var(--ink)] mb-4 font-display">Connected</h3>
                   <div className="space-y-2">
                     {completedPlatforms.size > 0 ? (
-                      <div className="flex items-center gap-2 text-emerald-700">
+                      <div className="flex items-center gap-2 text-[var(--teal)]">
                         <Check className="h-4 w-4" />
                         <span className="text-sm">
                           {Array.from(completedPlatforms)
@@ -401,7 +403,7 @@ export default function ClientAuthorizationPage() {
                         </span>
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-600">No platforms connected</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">No platforms connected</p>
                     )}
                   </div>
                 </div>

@@ -3,9 +3,11 @@
 /**
  * PlatformWizardCard - Container for platform-specific wizard
  *
- * Bold & Confident Design:
- * - Large card with deep shadow (shadow-xl)
- * - Platform icon/gradient header
+ * Acid Brutalism Design:
+ * - Hard borders (border-2 border-black)
+ * - Brutalist shadow (shadow-brutalist)
+ * - Minimal rounding (rounded-lg)
+ * - Platform icon header
  * - Animated step transitions
  * - Footer with navigation buttons
  */
@@ -34,18 +36,18 @@ export function PlatformWizardCard({
 }: PlatformWizardCardProps) {
   return (
     <motion.div
-      className="bg-card rounded-2xl shadow-xl border-2 border-slate-200 overflow-hidden"
+      className="bg-card rounded-lg shadow-brutalist border-2 border-black dark:border-white overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
       {/* Header: Platform branding + progress */}
-      <div className="border-b-2 border-slate-200 p-6 bg-gradient-to-br from-slate-50 to-white">
+      <div className="border-b-2 border-black dark:border-white p-6 bg-[var(--paper)]">
         <div className="flex items-center gap-4 mb-4">
           <PlatformIcon platform={platform} size="lg" />
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{platformName}</h2>
-            <p className="text-sm text-slate-600 mt-1">
+            <h2 className="text-2xl font-bold text-[var(--ink)] font-display">{platformName}</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Connect {platformName}
             </p>
           </div>
@@ -70,7 +72,7 @@ export function PlatformWizardCard({
 
       {/* Footer: Navigation (optional) */}
       {footer && (
-        <div className="border-t-2 border-slate-200 p-6 bg-slate-50">
+        <div className="border-t-2 border-black dark:border-white p-6 bg-slate-50 dark:bg-slate-800/50">
           {footer}
         </div>
       )}
