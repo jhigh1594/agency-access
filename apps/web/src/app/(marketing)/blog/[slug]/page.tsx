@@ -92,7 +92,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             Ready to Transform Your Client Onboarding?
           </h2>
           <p className="font-mono text-gray-300 mb-6 max-w-xl mx-auto">
-            Join 50+ agencies saving hundreds of hours every month. Replace
+            Teams use AuthHub to save hundreds of hours every month. Replace
             47-email onboarding with a single link.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

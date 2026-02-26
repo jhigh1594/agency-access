@@ -176,7 +176,7 @@ As your agency grows from 10 to 100 clients, manual access management becomes a 
 - Standard templates scale your onboarding process
 - Automation platforms eliminate manual access requests entirely
 
-**Ready to transform your client onboarding?** [Start your free trial](/pricing) and see how 50+ agencies have reduced onboarding time by 90%.
+**Ready to transform your client onboarding?** [Start your free trial](/pricing) and see how teams reduce onboarding time by up to 90%.
 
 ---
 
@@ -950,7 +950,7 @@ All three platforms allow you to:
 - **Templates**: Only AuthHub has reusable onboarding templates
 - **Pricing**: AuthHub is $18-70/mo less expensive
 
-**Ready to make the switch?** [Start your 21-day free trial](/pricing)—the longest trial in the industry. See how 50+ agencies reduced onboarding time by 90%.
+**Ready to make the switch?** [Start your 21-day free trial](/pricing)—the longest trial in the industry. See how teams reduce onboarding time by up to 90%.
 
 ---
 

@@ -260,8 +260,7 @@ export function BlogContent({ post }: BlogContentProps) {
             Ready to transform your client onboarding?
           </h3>
           <p className="font-mono text-gray-700 mb-4">
-            Join 50+ agencies saving hundreds of hours every month with Agency
-            Access Platform.
+            Teams save hundreds of hours every month with Agency Access Platform.
           </p>
           <SignUpButton mode="modal">
             <Button variant="brutalist" size="lg" onClick={handleTrialSignup}>

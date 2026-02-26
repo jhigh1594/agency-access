@@ -270,7 +270,7 @@ export function HowItWorksSection() {
               {[
                 { value: '99.9%', label: 'Success Rate', icon: CheckIcon, color: 'teal' },
                 { value: '8+', label: 'Platforms', icon: ZapIcon, color: 'acid' },
-                { value: '50+', label: 'Agencies', icon: Users, color: 'coral' },
+                { value: '1 Link', label: 'Per Client', icon: Users, color: 'coral' },
                 { value: '5 min', label: 'Avg Setup', icon: ClockIcon, color: 'electric' },
               ].map((stat, i) => (
                 <m.div
@@ -328,7 +328,7 @@ export function HowItWorksSection() {
                     Ready to Automate?
                   </h3>
                   <p className="font-mono text-sm sm:text-base mb-6 text-gray-600 max-w-md mx-auto">
-                    Join 50+ agencies saving hundreds of hours every month.
+                    Cut onboarding from days to minutes with one secure workflow.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <SignUpButton mode="modal">

@@ -78,7 +78,7 @@ export function HeroSection() {
             {/* Subheadline */}
             <Reveal delay={0.4}>
               <p className="font-mono text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 leading-tight opacity-90 mt-4 text-ink">
-                Join <span className="font-bold">50+ agencies</span> saving <span className="text-ink font-bold bg-teal/20 px-1 mx-1">hundreds of hours</span> every month.
+                Join teams saving <span className="text-ink font-bold bg-teal/20 px-1 mx-1">hundreds of hours</span> every month.
                 Replace <span className="font-bold">47-email onboarding</span> with a <span className="text-ink font-bold bg-acid/20 px-1 mx-1">single link</span>.
               </p>
             </Reveal>
@@ -110,29 +110,6 @@ export function HeroSection() {
               </Reveal>
             </div>
 
-            {/* Trust Badge with avatars */}
-            <Reveal delay={0.6}>
-              <div className="flex items-center gap-4 text-sm font-bold mt-8 border-l-4 border-acid pl-4 text-ink justify-center lg:justify-start">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-10 h-10 rounded-[0.75rem] border-2 border-paper bg-gray-300 overflow-hidden"
-                    >
-                      <div className="w-full h-full bg-teal flex items-center justify-center text-white text-xs font-bold">
-                        {String.fromCharCode(64 + i)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="leading-tight">
-                  Trusted by <br />
-                  <span className="underline decoration-coral decoration-2">
-                    50+ Marketing Agencies
-                  </span>
-                </p>
-              </div>
-            </Reveal>
           </div>
 
           {/* Right Column - Dashboard Mockup with Floating Cards - Hidden on mobile */}
