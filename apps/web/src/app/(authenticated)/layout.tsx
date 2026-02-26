@@ -11,10 +11,13 @@ import {
   Users,
   Settings,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { m } from 'framer-motion';
 import { useAuthOrBypass, getDevBypassAgencyData, signOutDevBypass } from '@/lib/dev-auth';
+import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
+
+const agencyCheckDedup = new Set<string>();
 
 export default function AuthenticatedLayout({
   children,
@@ -23,8 +26,9 @@ export default function AuthenticatedLayout({
 }) {
   const clerkAuth = useAuth();
   const { userId, isLoaded, orgId, isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
+  const perfHarness = useMemo(() => readPerfHarnessContext(), []);
+  const runPerfAgencyCheck = isDevelopmentBypass && !!perfHarness?.token;
   const [open, setOpen] = useState(true);
-  const [checkingAgency, setCheckingAgency] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -38,31 +42,37 @@ export default function AuthenticatedLayout({
     const checkAgencyAndRedirect = async () => {
       // Skip if already on onboarding page
       if (pathname?.startsWith('/onboarding')) {
-        setCheckingAgency(false);
         return;
       }
 
       // In bypass mode, skip agency check (we have a mock agency)
-      if (isDevelopmentBypass) {
-        setCheckingAgency(false);
+      if (isDevelopmentBypass && !runPerfAgencyCheck) {
         return;
       }
 
       if (!isLoaded || !userId) {
-        setCheckingAgency(false);
         return;
       }
 
+      let stopTimer: (() => void) | null = null;
       try {
-        const principalClerkId = orgId || userId;
-        const token = await clerkAuth.getToken();
-        if (!token || !principalClerkId) {
-          setCheckingAgency(false);
+        stopTimer = startPerfTimer('layout:agency-check');
+
+        const principalClerkId = (runPerfAgencyCheck ? perfHarness?.principalId : null) || orgId || userId;
+        const token = await clerkAuth.getToken() || perfHarness?.token;
+        if (!token || !principalClerkId || !pathname) {
           return;
         }
+
+        const checkKey = `${principalClerkId}:${pathname}`;
+        if (agencyCheckDedup.has(checkKey)) {
+          return;
+        }
+        agencyCheckDedup.add(checkKey);
+
         // Check if user has an agency by clerkUserId
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}&fields=id,name,email,clerkUserId`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -95,15 +105,16 @@ export default function AuthenticatedLayout({
         console.error('Failed to check agency for redirect:', err);
         // On error, don't block the user - let them through
       } finally {
-        setCheckingAgency(false);
+        stopTimer?.();
       }
     };
 
     checkAgencyAndRedirect();
-  }, [userId, orgId, isLoaded, pathname, isDevelopmentBypass, router, clerkAuth]);
+  }, [userId, orgId, isLoaded, pathname, isDevelopmentBypass, router, clerkAuth, runPerfAgencyCheck, perfHarness]);
 
-  // Show loading state while auth loads or while checking agency (skip in bypass mode)
-  if (!isDevelopmentBypass && (!isLoaded || checkingAgency)) {
+  // Show loading state while auth loads.
+  // Agency checks run in the background to avoid blocking initial route render.
+  if (!isDevelopmentBypass && !isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">

@@ -17,6 +17,7 @@ import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef } from 'react';
+import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 
 // Simple in-memory ETag cache for conditional requests
 const etagCache = new Map<string, string>();
@@ -26,65 +27,74 @@ export default function DashboardPage() {
   const clerkAuth = useAuth();
   const { getToken } = clerkAuth;
   const { isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
+  const perfHarness = readPerfHarnessContext();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const hasTrackedView = useRef(false);
 
   // Get Clerk token for API authentication
   useEffect(() => {
     async function fetchToken() {
+      const stopTimer = startPerfTimer('dashboard:token-fetch');
       const token = await getToken();
-      setAuthToken(token);
+      setAuthToken(token || perfHarness?.token || null);
+      stopTimer?.();
     }
     fetchToken();
-  }, [getToken]);
+  }, [getToken, perfHarness?.token]);
 
   // Single unified query that fetches all dashboard data at once
   // This replaces 4 separate API calls (agency, stats, requests, connections)
   const { data: dashboardData, isLoading, error, refetch } = useQuery({
-    queryKey: ['dashboard', user?.id],
+    queryKey: ['dashboard', user?.id || perfHarness?.principalId || 'anonymous'],
     queryFn: async () => {
       if (!authToken) throw new Error('No auth token');
 
-      const cacheKey = `dashboard-${user?.id}`;
-      const etag = etagCache.get(cacheKey);
+      const cacheKey = `dashboard-${user?.id || perfHarness?.principalId || 'anonymous'}`;
+      const stopTimer = startPerfTimer('dashboard:data-fetch');
 
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${authToken}`,
-      };
+      try {
+        const etag = etagCache.get(cacheKey);
 
-      // Add ETag for conditional request
-      if (etag) {
-        headers['If-None-Match'] = etag;
-      }
+        const headers: Record<string, string> = {
+          Authorization: `Bearer ${authToken}`,
+        };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
-        headers,
-      });
-
-      // Handle 304 Not Modified - return cached data
-      if (response.status === 304) {
-        // Return the cached data with a flag indicating it was not modified
-        const cached = etagCache.get(`${cacheKey}-data`);
-        if (cached) {
-          return JSON.parse(cached);
+        // Add ETag for conditional request
+        if (etag) {
+          headers['If-None-Match'] = etag;
         }
-        // If no cached data, fall through to fetch
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
+          headers,
+        });
+
+        // Handle 304 Not Modified - return cached data
+        if (response.status === 304) {
+          // Return the cached data with a flag indicating it was not modified
+          const cached = etagCache.get(`${cacheKey}-data`);
+          if (cached) {
+            return JSON.parse(cached);
+          }
+          // If no cached data, fall through to fetch
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+
+        const data = await response.json();
+
+        // Cache ETag for next request
+        const responseEtag = response.headers.get('ETag')?.replace(/"/g, '');
+        if (responseEtag) {
+          etagCache.set(cacheKey, responseEtag);
+          etagCache.set(`${cacheKey}-data`, JSON.stringify(data));
+        }
+
+        return data;
+      } finally {
+        stopTimer?.();
       }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-
-      const data = await response.json();
-
-      // Cache ETag for next request
-      const responseEtag = response.headers.get('ETag')?.replace(/"/g, '');
-      if (responseEtag) {
-        etagCache.set(cacheKey, responseEtag);
-        etagCache.set(`${cacheKey}-data`, JSON.stringify(data));
-      }
-
-      return data;
     },
     enabled: !!authToken,
     staleTime: 5 * 60 * 1000, // 5 minutes - consider data fresh for 5 minutes
