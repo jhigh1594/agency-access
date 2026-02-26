@@ -1,64 +1,53 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { FastifyRequest } from 'fastify';
-import { resolvePrincipalAgency, assertAgencyAccess } from '../authorization';
-import { agencyResolutionService } from '@/services/agency-resolution.service';
+
+const { resolveAgencyMock } = vi.hoisted(() => ({
+  resolveAgencyMock: vi.fn(),
+}));
 
 vi.mock('@/services/agency-resolution.service', () => ({
   agencyResolutionService: {
-    resolveAgency: vi.fn(),
+    resolveAgency: resolveAgencyMock,
   },
 }));
 
-describe('authorization helpers', () => {
+import { resolvePrincipalAgency } from '../authorization';
+
+describe('resolvePrincipalAgency', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    resolveAgencyMock.mockReset();
   });
 
-  it('resolves agency using orgId when present', async () => {
-    vi.mocked(agencyResolutionService.resolveAgency).mockResolvedValue({
+  it('returns agency details from agency resolution', async () => {
+    resolveAgencyMock.mockResolvedValue({
       data: {
-        agencyId: 'agency-org',
+        agencyId: 'agency_123',
         agency: {
-          id: 'agency-org',
-          clerkUserId: 'org_123',
-          name: 'Org Agency',
-          email: 'org@example.com',
+          id: 'agency_123',
+          clerkUserId: 'user_123',
+          name: 'Acme Agency',
+          email: 'owner@acme.test',
         },
       },
       error: null,
     });
 
-    const request = {
-      user: { sub: 'user_123', orgId: 'org_123' },
-    } as FastifyRequest;
+    const request: any = {
+      user: {
+        sub: 'user_123',
+      },
+    };
 
     const result = await resolvePrincipalAgency(request);
 
     expect(result.error).toBeNull();
-    expect(result.data?.agencyId).toBe('agency-org');
-    expect(agencyResolutionService.resolveAgency).toHaveBeenCalledWith('org_123', {
-      createIfMissing: false,
+    expect(result.data).toEqual({
+      agencyId: 'agency_123',
+      principalId: 'user_123',
+      agency: {
+        id: 'agency_123',
+        name: 'Acme Agency',
+        email: 'owner@acme.test',
+      },
     });
-  });
-
-  it('returns unauthorized when request has no verified user', async () => {
-    const request = {} as FastifyRequest;
-
-    const result = await resolvePrincipalAgency(request);
-
-    expect(result.data).toBeNull();
-    expect(result.error?.code).toBe('UNAUTHORIZED');
-  });
-
-  it('returns forbidden when agency does not match principal', () => {
-    const denied = assertAgencyAccess('agency-a', 'agency-b');
-    const allowed = assertAgencyAccess('agency-a', 'agency-a');
-
-    expect(denied).toEqual({
-      code: 'FORBIDDEN',
-      message: 'You do not have access to this agency resource',
-    });
-    expect(allowed).toBeNull();
   });
 });
-

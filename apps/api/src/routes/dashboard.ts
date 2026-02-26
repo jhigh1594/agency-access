@@ -13,7 +13,6 @@ import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
 import { createHash } from 'crypto';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
-import { prisma } from '@/lib/prisma.js';
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate());
@@ -44,19 +43,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
     }
 
     const agencyId = principalResult.data.agencyId;
-    const agency = await prisma.agency.findUnique({
-      where: { id: agencyId },
-      select: { id: true, name: true, email: true },
-    });
-    if (!agency) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'AGENCY_NOT_FOUND',
-          message: 'Agency not found',
-        },
-      });
-    }
+    const agency = principalResult.data.agency;
 
     // Use caching layer for dashboard data
     const cacheKey = CacheKeys.dashboard(agencyId);

@@ -9,6 +9,11 @@ export interface AuthorizationError {
 export interface PrincipalAgencyData {
   agencyId: string;
   principalId: string;
+  agency: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export async function resolvePrincipalAgency(
@@ -45,6 +50,11 @@ export async function resolvePrincipalAgency(
     data: {
       agencyId: agencyResult.data.agencyId,
       principalId,
+      agency: {
+        id: agencyResult.data.agency.id,
+        name: agencyResult.data.agency.name,
+        email: agencyResult.data.agency.email,
+      },
     },
     error: null,
   };
@@ -63,4 +73,3 @@ export function assertAgencyAccess(
 
   return null;
 }
-
