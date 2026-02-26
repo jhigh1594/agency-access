@@ -23,7 +23,8 @@
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "perf:api": "node scripts/perf/benchmark-api.mjs",
-    "perf:browser": "node scripts/perf/benchmark-browser.mjs"
+    "perf:browser": "node scripts/perf/benchmark-browser.mjs",
+    "perf:report": "node scripts/perf/generate-report.mjs"
   },
   "dependencies": {
     "@vercel/speed-insights": "^1.3.1",

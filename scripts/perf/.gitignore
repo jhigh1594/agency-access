@@ -1,0 +1,4 @@
+results/*
+traces/*
+!results/.gitkeep
+!traces/.gitkeep
