@@ -9,10 +9,10 @@ import { FinalCTASection } from '@/components/marketing/pricing/final-cta-sectio
 
 export const metadata: Metadata = {
   title: 'Pricing | AuthHub',
-  description: 'Simple, transparent pricing for marketing agencies. Choose the plan that fits your client volume and scale your onboarding process.',
+  description: 'Simple, transparent pricing for client onboarding teams. Choose the plan that fits your client volume and scale your onboarding process.',
   openGraph: {
     title: 'Pricing | AuthHub',
-    description: 'Simple, transparent pricing for marketing agencies.',
+    description: 'Simple, transparent pricing for client onboarding teams.',
     type: 'website',
   },
 };

@@ -17,7 +17,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "What's the difference between Free, Growth, and Scale?",
-    answer: "Free is for solo freelancers testing the platform with 1 client and core platforms (Meta, Google, LinkedIn). Growth ($30/mo yearly) is for small teams with 5 clients/month, white-label branding, and 3 team seats. Scale ($70/mo yearly) is for established agencies with 15 clients/month, custom domain, API access, 10 team seats, and multi-brand support.",
+    answer: "Free is for solo freelancers testing the platform with 1 client and core platforms (Meta, Google, LinkedIn). Growth ($30/mo yearly) is for small teams with 5 clients/month, white-label branding, and 3 team seats. Scale ($70/mo yearly) is for established teams with 15 clients/month, custom domain, API access, 10 team seats, and multi-brand support.",
   },
   {
     question: "Can I change plans later?",
@@ -29,7 +29,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Do you offer discounts for annual billing?",
-    answer: "Yes! Annual billing saves you ~25% compared to monthly. Growth drops from $40/mo to $30/mo, and Scale drops from $93/mo to $70/mo. Most agencies choose annual for the savings.",
+    answer: "Yes! Annual billing saves you ~25% compared to monthly. Growth drops from $40/mo to $30/mo, and Scale drops from $93/mo to $70/mo. Most teams choose annual for the savings.",
   },
   {
     question: "How secure is my OAuth data?",
@@ -37,7 +37,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Can I use my own domain with white-label?",
-    answer: "Scale plan includes custom domain support (e.g., access.youragency.com). Both Growth and Scale include white-label branding with your logo, colors, and styling. Free tier has basic branding only.",
+    answer: "Scale plan includes custom domain support (e.g., access.yourbrand.com). Both Growth and Scale include white-label branding with your logo, colors, and styling. Free tier has basic branding only.",
   },
   {
     question: "What platforms do you support?",

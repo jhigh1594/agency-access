@@ -8,7 +8,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { TIER_LIMITS, SubscriptionTier, TierLimitsDetails } from '@agency-platform/shared';
+import { TIER_LIMITS, SubscriptionTier, TierLimitsDetails, getTierLimitsConfig } from '@agency-platform/shared';
 
 // Resource type mapping for API endpoints
 type ResourceType = 'access_requests' | 'clients' | 'members' | 'templates';
@@ -41,7 +41,7 @@ export interface TierLimitCheckResult {
 export interface TierDetailsResult {
   error: { code: string; message: string } | null;
   data: {
-    tier: SubscriptionTier;
+    tier: SubscriptionTier | null;
     limits: TierLimitsDetails;
     features: string[];
   } | null;
@@ -68,15 +68,8 @@ class TierLimitsService {
       };
     }
 
-    const tier = agency.subscriptionTier as SubscriptionTier;
-    const tierConfig = TIER_LIMITS[tier];
-
-    if (!tierConfig) {
-      return {
-        allowed: false,
-        error: 'INVALID_TIER',
-      };
-    }
+    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tierConfig = getTierLimitsConfig(tier);
 
     const limitKey = RESOURCE_TO_TIER_KEY[resource];
     const limit = tierConfig[limitKey];
@@ -127,8 +120,8 @@ class TierLimitsService {
       return false;
     }
 
-    const tier = agency.subscriptionTier as SubscriptionTier;
-    const tierConfig = TIER_LIMITS[tier];
+    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tierConfig = getTierLimitsConfig(tier);
 
     // Enterprise has all features
     if (tier === 'ENTERPRISE') {
@@ -158,8 +151,8 @@ class TierLimitsService {
       };
     }
 
-    const tier = agency.subscriptionTier as SubscriptionTier;
-    const tierConfig = TIER_LIMITS[tier];
+    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tierConfig = getTierLimitsConfig(tier);
 
     // Get current usage for all resources
     const [accessRequestsCount, clientsCount, membersCount, templatesCount] =

@@ -30,7 +30,7 @@
  * ```
  */
 
-import { TIER_LIMITS, type SubscriptionTier, type MetricType, type TierLimits } from '@agency-platform/shared';
+import { TIER_LIMITS, type SubscriptionTier, type MetricType, type TierLimits, getTierLimitsConfig } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
 import { createClerkClient } from '@clerk/backend';
 
@@ -136,8 +136,8 @@ export class QuotaService {
       throw new Error('Agency not found');
     }
 
-    const tier = agency.subscriptionTier as SubscriptionTier;
-    const tierConfig = TIER_LIMITS[tier];
+    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tierConfig = getTierLimitsConfig(tier);
 
     // Map metric to tier config property
     const metricMap: Record<MetricType, keyof typeof tierConfig> = {
@@ -161,7 +161,7 @@ export class QuotaService {
         limit: 'unlimited',
         used: await this.getActualUsage(agencyId, metric),
         remaining: 'unlimited',
-        currentTier: tier,
+        currentTier: tier || ('FREE' as any),
         upgradeUrl: undefined,
       };
     }
@@ -175,10 +175,11 @@ export class QuotaService {
 
     // Calculate next tier for upgrade suggestion
     const tierOrder: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
-    const currentIndex = tierOrder.indexOf(tier);
-    const suggestedTier = currentIndex < tierOrder.length - 1
-      ? tierOrder[currentIndex + 1]
-      : undefined;
+    const suggestedTier = tier
+      ? (tierOrder.indexOf(tier) < tierOrder.length - 1
+          ? tierOrder[tierOrder.indexOf(tier) + 1]
+          : undefined)
+      : 'STARTER'; // Free users should upgrade to STARTER
 
     return {
       allowed,
@@ -186,7 +187,7 @@ export class QuotaService {
       limit: limit as number,
       used,
       remaining,
-      currentTier: tier,
+      currentTier: tier || ('FREE' as any),
       suggestedTier,
       upgradeUrl: `/checkout?tier=${suggestedTier}`,
     };
@@ -338,8 +339,8 @@ export class QuotaService {
         return null;
       }
 
-      const tier = agency.subscriptionTier as SubscriptionTier;
-      const tierConfig = TIER_LIMITS[tier];
+      const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+      const tierConfig = getTierLimitsConfig(tier);
 
       // Get usage for all metrics
       const metrics: MetricType[] = [
@@ -353,7 +354,7 @@ export class QuotaService {
       ];
 
       const usage: Partial<UsageSnapshot> = {
-        currentTier: tier,
+        currentTier: tier || ('FREE' as any),
         updatedAt: new Date(),
       };
 

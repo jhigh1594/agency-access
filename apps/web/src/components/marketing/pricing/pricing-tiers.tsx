@@ -75,7 +75,7 @@ export function PricingTiers() {
             </div>
             <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mb-4 sm:mb-6 text-ink">
               Choose the plan that{' '}
-              <span className="text-coral italic">fits your agency</span>
+              <span className="text-coral italic">fits your team</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
               Start free, upgrade when you're ready. Growth plan includes a 14-day free trial.
@@ -141,7 +141,7 @@ export function PricingTiers() {
             <PricingTierCard
               tier="GROWTH"
               name="Growth"
-              description="Growing agencies with 3-5 new clients/month"
+              description="Growing teams with 3-5 new clients/month"
               persona="For small teams"
               yearlyPrice={480}
               monthlyPrice={40}
@@ -160,8 +160,8 @@ export function PricingTiers() {
             <PricingTierCard
               tier="SCALE"
               name="Scale"
-              description="Established agencies onboarding 10+ clients/month"
-              persona="For growing agencies"
+              description="Established teams onboarding 10+ clients/month"
+              persona="For scaling teams"
               yearlyPrice={1120}
               monthlyPrice={93.33}
               isYearly={isYearly}
@@ -187,7 +187,7 @@ export function PricingTiers() {
               <span className="text-2xl">💡</span>
               <div className="text-left">
                 <p className="font-bold text-ink text-sm">Pays for itself in 1 client onboarding</p>
-                <p className="text-xs text-gray-600 font-mono">Most agencies save 3+ hours per client. At $85/hr, that's $255 saved per onboard.</p>
+                <p className="text-xs text-gray-600 font-mono">Most teams save 3+ hours per client. At $85/hr, that's $255 saved per onboard.</p>
               </div>
             </div>
           </m.div>

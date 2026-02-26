@@ -97,7 +97,7 @@ export function SuccessStoriesSection() {
               SUCCESS STORIES
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              See how agencies like yours transformed client onboarding with AuthHub.
+              See how teams like yours transformed client onboarding with AuthHub.
             </p>
           </div>
         </Reveal>

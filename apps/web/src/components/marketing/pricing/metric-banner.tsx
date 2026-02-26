@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Reveal } from '../reveal';
 
 interface Metric {
-  value: number;
+  value?: number;
+  displayValue?: string;
   prefix?: string;
   suffix?: string;
   decimals?: number;
@@ -13,9 +14,9 @@ interface Metric {
 }
 
 const metrics: Metric[] = [
-  { value: 50, suffix: '+', label: 'Agencies Onboarded' },
-  { value: 1.2, prefix: '$', suffix: 'M', decimals: 1, label: 'Saved for Clients' },
-  { value: 10, suffix: 'K+', label: 'Hours Reclaimed' },
+  { value: 99.9, suffix: '%', decimals: 1, label: 'OAuth Success Rate' },
+  { displayValue: '2-4', label: 'Estimated Hours Saved / Client' },
+  { displayValue: '15-30', label: 'Estimated Emails Reduced / Client' },
 ];
 
 interface CounterProps {
@@ -95,17 +96,21 @@ export function MetricBanner() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="text-center"
+                className="text-center h-full"
               >
-                <div className="border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist">
+                <div className="border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist h-full flex flex-col justify-center">
                   <div className="font-dela text-4xl sm:text-5xl lg:text-6xl text-coral mb-2">
-                    {isVisible && (
+                    {metric.displayValue ? (
+                      <span>{metric.displayValue}</span>
+                    ) : (
+                      isVisible && metric.value !== undefined && (
                       <AnimatedCounter
                         value={metric.value}
                         prefix={metric.prefix}
                         suffix={metric.suffix}
                         decimals={metric.decimals}
                       />
+                      )
                     )}
                   </div>
                   <div className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-600">
@@ -115,6 +120,9 @@ export function MetricBanner() {
               </m.div>
             ))}
           </div>
+          <p className="mt-4 text-center text-[10px] font-mono text-gray-500">
+            Estimated ranges are based on typical multi-platform onboarding workflows.
+          </p>
         </Reveal>
       </div>
     </section>

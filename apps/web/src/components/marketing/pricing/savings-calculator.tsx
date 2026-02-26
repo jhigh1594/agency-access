@@ -48,7 +48,7 @@ export function SavingsCalculator() {
 
     // Conservative estimates
     const timeSavedPerClient = hoursPerClient; // hours - user-adjusted via slider
-    const hourlyRate = 85; // conservative mid-tier agency rate
+    const hourlyRate = 85; // conservative mid-tier services-team rate
 
     const annualHoursSaved =
       clientsPerMonth * 12 * timeSavedPerClient * (1 + platformsCount * 0.08);
@@ -88,7 +88,7 @@ export function SavingsCalculator() {
               <span className="text-coral italic">annual savings</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
-              See how much time and money your agency could save by automating client OAuth onboarding.
+              See how much time and money your team could save by automating client OAuth onboarding.
             </p>
           </div>
         </Reveal>
@@ -213,12 +213,12 @@ export function SavingsCalculator() {
                             <p className="font-bold text-ink mb-2">How We Calculate:</p>
                             <ul className="space-y-1.5 text-gray-700">
                               <li><strong>Base:</strong> {hoursPerClient} hours saved per client (your input)</li>
-                              <li><strong>Rate:</strong> $85/hour (mid-tier agency)</li>
+                              <li><strong>Rate:</strong> $85/hour (mid-tier services team)</li>
                               <li><strong>Platform Bonus:</strong> +8% per additional platform</li>
                               <li><strong>Formula:</strong> Clients × 12 × {hoursPerClient}hrs × $85 × (1 + platforms × 0.08)</li>
                             </ul>
                             <p className="mt-2 pt-2 border-t border-gray-200 text-gray-500 italic">
-                              Conservative estimates only count setup time. Most agencies save more.
+                              Conservative estimates only count setup time. Most teams save more.
                             </p>
                           </div>
                         </div>

@@ -66,7 +66,7 @@ export function TestimonialCards() {
               <span className="text-coral italic">performance teams</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
-              See what marketing agencies are saying about their experience.
+              See what teams are saying about their experience.
             </p>
           </div>
         </Reveal>

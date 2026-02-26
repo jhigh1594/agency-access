@@ -186,9 +186,12 @@ export function BillingSettingsCard() {
     );
   }
 
-  const currentTier = subscription?.tier || 'STARTER';
-  const tierName = SUBSCRIPTION_TIER_NAMES[currentTier];
-  const tierInfo = SUBSCRIPTION_TIER_DESCRIPTIONS[currentTier];
+  const currentTier = subscription?.tier || null;
+  const isFree = !currentTier;
+  const tierName = isFree ? 'Free' : SUBSCRIPTION_TIER_NAMES[currentTier];
+  const tierInfo = isFree
+    ? { description: 'Solo freelancers testing OAuth automation', price: { monthly: 0, yearly: 0 } }
+    : SUBSCRIPTION_TIER_DESCRIPTIONS[currentTier];
   const limits = tierDetails?.limits;
 
   const getStatusBadge = () => {
@@ -343,12 +346,12 @@ export function BillingSettingsCard() {
         {currentTier !== 'ENTERPRISE' && (
           <button
             onClick={() =>
-              handleUpgrade(currentTier === 'STARTER' ? 'PRO' : 'ENTERPRISE')
+              handleUpgrade(isFree ? 'STARTER' : currentTier === 'STARTER' ? 'PRO' : 'ENTERPRISE')
             }
             className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
           >
             <TrendingUp className="h-4 w-4" />
-            Upgrade to {currentTier === 'STARTER' ? 'Pro' : 'Enterprise'}
+            Upgrade to {isFree ? 'Growth' : currentTier === 'STARTER' ? 'Pro' : 'Enterprise'}
           </button>
         )}
       </div>

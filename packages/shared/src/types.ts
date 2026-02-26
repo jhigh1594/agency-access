@@ -958,6 +958,43 @@ export const TIER_LIMITS: Record<SubscriptionTier, {
   },
 };
 
+// Free tier limits for users without a subscription
+// Aligns with marketing site: 1 active client, core platforms only
+export const FREE_TIER_LIMITS: {
+  accessRequests: number;
+  clients: number;
+  members: number;
+  templates: number;
+  clientOnboards: number;
+  platformAudits: number;
+  teamSeats: number;
+  features: string[];
+  priceMonthly: number;
+  priceYearly: number;
+  description: string;
+} = {
+  accessRequests: 3,
+  clients: 1,
+  members: 1,
+  templates: 1,
+  clientOnboards: 3,
+  platformAudits: 10,
+  teamSeats: 1,
+  features: ['core_platforms', 'email_support'],
+  priceMonthly: 0,
+  priceYearly: 0,
+  description: 'Solo freelancers testing OAuth automation',
+};
+
+/**
+ * Get tier limits config for a given subscription tier.
+ * Returns FREE_TIER_LIMITS when tier is null/undefined (no subscription).
+ */
+export function getTierLimitsConfig(tier: SubscriptionTier | null | undefined) {
+  if (!tier) return FREE_TIER_LIMITS;
+  return TIER_LIMITS[tier];
+}
+
 // Detailed tier information for UI display
 // Aligns with marketing site pricing at https://www.authhub.co/pricing
 export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
