@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 /**
  * Clerk Proxy (formerly Middleware)
@@ -24,8 +25,20 @@ const isPublicRoute = createRouteMatcher([
   '/onboarding/(.*)',
 ])
 
+/** Marketing pages that should redirect authenticated users to the dashboard. */
+const isMarketingRedirectRoute = createRouteMatcher(['/'])
+
 export default clerkMiddleware(async (auth, request) => {
-  // Skip auth check for public routes
+  // Redirect authenticated users away from marketing pages to dashboard
+  if (isMarketingRedirectRoute(request)) {
+    const { userId } = await auth()
+    if (userId) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    return
+  }
+
+  // Skip auth check for other public routes
   if (isPublicRoute(request)) {
     return
   }
