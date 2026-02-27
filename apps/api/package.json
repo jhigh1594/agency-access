@@ -12,6 +12,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "db:security:check": "node ./scripts/check-neon-security.mjs",
+    "bench:security": "node ./scripts/benchmark-security-endpoints.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",

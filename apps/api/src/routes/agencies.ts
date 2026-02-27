@@ -10,10 +10,40 @@ import { agencyService } from '../services/agency.service.js';
 import { sendError, sendValidationError } from '../lib/response.js';
 import { authenticate } from '../middleware/auth.js';
 import { quotaMiddleware } from '../middleware/quota.middleware.js';
+import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
   // Add authentication middleware to all agency routes
   fastify.addHook('onRequest', authenticate());
+
+  const getPrincipalId = (request: any): string | null => {
+    const user = request.user as { sub?: string; orgId?: string } | undefined;
+    return user?.orgId || user?.sub || null;
+  };
+
+  const requirePrincipalAgency = async (request: any, reply: any) => {
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      sendError(
+        reply,
+        principalResult.error?.code || 'FORBIDDEN',
+        principalResult.error?.message || 'Unable to resolve agency for authenticated user',
+        statusCode
+      );
+      return null;
+    }
+
+    return principalResult.data;
+  };
+
+  const forbidIfAgencyMismatch = (reply: any, requestedAgencyId: string, principalAgencyId: string): boolean => {
+    const accessError = assertAgencyAccess(requestedAgencyId, principalAgencyId);
+    if (!accessError) return false;
+
+    sendError(reply, accessError.code, accessError.message, 403);
+    return true;
+  };
 
   /**
    * GET /agencies/by-email
@@ -27,6 +57,13 @@ export async function agencyRoutes(fastify: FastifyInstance) {
       if (!email) {
         fastify.log.warn('GET /agencies/by-email: No email provided');
         return sendValidationError(reply, 'Email query parameter is required');
+      }
+
+      const principal = await requirePrincipalAgency(request, reply);
+      if (!principal) return;
+
+      if (email !== principal.agency.email) {
+        return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
       }
 
       fastify.log.info({ email }, 'GET /agencies/by-email');
@@ -63,10 +100,33 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         return sendValidationError(reply, 'Either email or clerkUserId query parameter is required');
       }
 
+      const principalId = getPrincipalId(request);
+      if (!principalId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Authenticated user context is required', 401);
+      }
+
+      if (clerkUserId && clerkUserId !== principalId) {
+        return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
+      }
+
+      if (email) {
+        const principal = await requirePrincipalAgency(request, reply);
+        if (!principal) return;
+
+        if (email !== principal.agency.email) {
+          return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
+        }
+      }
+
       // Parse fields parameter to determine what to include
       const includeMembers = !fields || fields.includes('members');
-
-      const result = await agencyService.listAgencies({ email, clerkUserId }, includeMembers);
+      const result = await agencyService.listAgencies(
+        {
+          email,
+          clerkUserId: clerkUserId || principalId,
+        },
+        includeMembers
+      );
 
       if (result.error) {
         fastify.log.error({ error: result.error }, 'GET /agencies: Service error');
@@ -90,6 +150,9 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   // Get agency by ID
   fastify.get('/agencies/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
+    if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
 
     const result = await agencyService.getAgency(id);
 
@@ -102,7 +165,20 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
   // Create agency
   fastify.post('/agencies', async (request, reply) => {
-    const result = await agencyService.createAgency(request.body as any);
+    const principalId = getPrincipalId(request);
+    if (!principalId) {
+      return sendError(reply, 'UNAUTHORIZED', 'Authenticated user context is required', 401);
+    }
+
+    const body = request.body as { clerkUserId?: string; [key: string]: any };
+    if (body.clerkUserId && body.clerkUserId !== principalId) {
+      return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
+    }
+
+    const result = await agencyService.createAgency({
+      ...body,
+      clerkUserId: principalId,
+    } as any);
 
     if (result.error) {
       const statusCode = result.error.code === 'AGENCY_EXISTS' ? 409 : 400;
@@ -120,6 +196,11 @@ export async function agencyRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/agencies/signup-checkout', async (request, reply) => {
     try {
+      const principalId = getPrincipalId(request);
+      if (!principalId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Authenticated user context is required', 401);
+      }
+
       const body = request.body as {
         clerkUserId: string;
         name: string;
@@ -129,9 +210,18 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         settings?: Record<string, any>;
       };
 
-      fastify.log.info({ email: body.email, tier: body.selectedTier }, 'POST /agencies/signup-checkout');
+      if (body.clerkUserId && body.clerkUserId !== principalId) {
+        return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
+      }
 
-      const result = await agencyService.createAgencyWithCheckout(body);
+      const payload = {
+        ...body,
+        clerkUserId: principalId,
+      };
+
+      fastify.log.info({ email: payload.email, tier: payload.selectedTier }, 'POST /agencies/signup-checkout');
+
+      const result = await agencyService.createAgencyWithCheckout(payload);
 
       if (result.error) {
         fastify.log.error({ error: result.error }, 'POST /agencies/signup-checkout: Service error');
@@ -150,6 +240,9 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   // Update agency
   fastify.patch('/agencies/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
+    if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
 
     const result = await agencyService.updateAgency(id, request.body as any);
 
@@ -164,6 +257,9 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   // Get agency members
   fastify.get('/agencies/:id/members', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
+    if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
 
     const result = await agencyService.getAgencyMembers(id);
 
@@ -185,6 +281,9 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
+      const principal = await requirePrincipalAgency(request, reply);
+      if (!principal) return;
+      if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
       const body = request.body as { email: string; role: 'admin' | 'member' | 'viewer' };
       const result = await agencyService.inviteMember(id, body);
 
@@ -208,6 +307,9 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
+    if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
 
     const result = await agencyService.bulkInviteMembers(id, request.body as any);
 
@@ -223,6 +325,9 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   // Get onboarding status
   fastify.get('/agencies/:id/onboarding-status', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
+    if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
 
     const result = await agencyService.getOnboardingStatus(id);
 
@@ -237,12 +342,19 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   // Update member role
   fastify.patch('/members/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
 
     const body = request.body as { role: 'admin' | 'member' | 'viewer' };
-    const result = await agencyService.updateMemberRole(id, body.role);
+    const result = await agencyService.updateMemberRoleForAgency(id, principal.agencyId, body.role);
 
     if (result.error) {
-      const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
+      const statusCode =
+        result.error.code === 'FORBIDDEN'
+          ? 403
+          : (result.error.code === 'NOT_FOUND' || result.error.code === 'MEMBER_NOT_FOUND')
+            ? 404
+            : 400;
       return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
@@ -252,11 +364,19 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   // Remove member
   fastify.delete('/members/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
 
-    const result = await agencyService.removeMember(id);
+    const result = await agencyService.removeMemberForAgency(id, principal.agencyId);
 
     if (result.error) {
-      return sendError(reply, result.error.code, result.error.message, result.error.code === 'NOT_FOUND' ? 404 : 500);
+      const statusCode =
+        result.error.code === 'FORBIDDEN'
+          ? 403
+          : (result.error.code === 'NOT_FOUND' || result.error.code === 'MEMBER_NOT_FOUND')
+            ? 404
+            : 500;
+      return sendError(reply, result.error.code, result.error.message, statusCode);
     }
 
     return reply.send({ data: { success: true }, error: null });

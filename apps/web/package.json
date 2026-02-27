@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "chrome:debug": "bash ./scripts/chrome-debug.sh",
-    "evidence:client-request-flow": "node ./scripts/capture-client-request-flow-evidence.mjs"
+    "evidence:client-request-flow": "node ./scripts/capture-client-request-flow-evidence.mjs",
+    "evidence:internal-admin": "node ./scripts/capture-internal-admin-evidence.mjs"
   },
   "dependencies": {
     "@agency-platform/shared": "^0.1.0",

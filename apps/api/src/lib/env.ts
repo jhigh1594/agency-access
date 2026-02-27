@@ -9,6 +9,31 @@ function isLocalhostUrl(value: string): boolean {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
 }
 
+function parseCsvList(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function parseUrlSafely(value: string): URL | null {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
+function isPostgresProtocol(protocol: string): boolean {
+  return protocol === 'postgres:' || protocol === 'postgresql:';
+}
+
+function hasRequiredSslMode(url: URL): boolean {
+  const sslMode = url.searchParams.get('sslmode');
+  return sslMode === 'require' || sslMode === 'verify-ca' || sslMode === 'verify-full';
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3001),
@@ -90,11 +115,17 @@ const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   RATE_LIMIT_TIME_WINDOW_SECONDS: z.coerce.number().default(60),
   RATE_LIMIT_SKIP_AUTHENTICATED: z.boolean().default(true),
+  TRUST_PROXY_IPS: z.string().optional(),
+  DB_ENFORCE_LEAST_PRIVILEGE: z.boolean().default(false),
 
   // OAuth State Security
   OAUTH_STATE_HMAC_SECRET: z.string().default(() => {
     return randomBytes(32).toString('hex');
   }),
+
+  // Internal Admin Access Control (comma-separated allowlists)
+  INTERNAL_ADMIN_USER_IDS: z.string().optional(),
+  INTERNAL_ADMIN_EMAILS: z.string().optional(),
 });
 
 const rawEnv = {
@@ -120,10 +151,30 @@ if (parsedEnv.NODE_ENV === 'production') {
   if (isLocalhostUrl(parsedEnv.API_URL)) {
     throw new Error('API_URL cannot point to localhost in production');
   }
+
+  const databaseUrl = parseUrlSafely(parsedEnv.DATABASE_URL);
+  if (!databaseUrl || !isPostgresProtocol(databaseUrl.protocol)) {
+    throw new Error('DATABASE_URL must use postgres:// or postgresql:// in production');
+  }
+
+  if (!hasRequiredSslMode(databaseUrl)) {
+    throw new Error('DATABASE_URL must set sslmode=require (or verify-ca/verify-full) in production');
+  }
+
+  if (parsedEnv.DB_ENFORCE_LEAST_PRIVILEGE) {
+    const dbUser = decodeURIComponent(databaseUrl.username || '').toLowerCase();
+    const disallowedElevatedUsers = new Set(['postgres', 'neondb_owner', 'root', 'admin']);
+    if (disallowedElevatedUsers.has(dbUser)) {
+      throw new Error('DATABASE_URL must use a least-privilege runtime DB role in production');
+    }
+  }
 }
 
 const FRONTEND_URL = parsedEnv.FRONTEND_URL ?? 'http://localhost:3000';
 const API_URL = parsedEnv.API_URL ?? `http://localhost:${parsedEnv.PORT}`;
+const INTERNAL_ADMIN_USER_IDS = parseCsvList(parsedEnv.INTERNAL_ADMIN_USER_IDS);
+const INTERNAL_ADMIN_EMAILS = parseCsvList(parsedEnv.INTERNAL_ADMIN_EMAILS);
+const TRUST_PROXY_IPS = parseCsvList(parsedEnv.TRUST_PROXY_IPS);
 
 // Parse Redis URL into components for IORedis
 const redisUrl = new URL(parsedEnv.REDIS_URL);
@@ -135,4 +186,7 @@ export const env = {
   REDIS_HOST: redisUrl.hostname,
   REDIS_PORT: parseInt(redisUrl.port || '6379', 10),
   REDIS_PASSWORD: redisUrl.password || undefined,
+  INTERNAL_ADMIN_USER_IDS,
+  INTERNAL_ADMIN_EMAILS,
+  TRUST_PROXY_IPS,
 };

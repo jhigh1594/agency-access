@@ -65,20 +65,18 @@ describe('AgencyService', () => {
 
       const result = await agencyService.createAgency({
         name: 'Test Agency',
-        adminEmail: 'admin@test.com',
+        email: 'admin@test.com',
+        clerkUserId: 'user_123',
       });
 
       expect(result.error).toBeNull();
-      expect(result.data).toEqual({
-        agency: mockAgency,
-        admin: mockMember,
-      });
+      expect(result.data).toEqual(mockAgency);
     });
 
     it('should return error for invalid input', async () => {
       const result = await agencyService.createAgency({
         name: '', // Invalid - empty name
-        adminEmail: 'invalid-email', // Invalid email
+        email: 'invalid-email', // Invalid email
       });
 
       expect(result.data).toBeNull();
@@ -87,14 +85,14 @@ describe('AgencyService', () => {
     });
 
     it('should return error if agency already exists', async () => {
-      vi.mocked(prisma.agency.findFirst).mockResolvedValue({
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
         id: 'existing-agency',
         name: 'Test Agency',
-      });
+      } as any);
 
       const result = await agencyService.createAgency({
         name: 'Test Agency',
-        adminEmail: 'admin@test.com',
+        email: 'admin@test.com',
       });
 
       expect(result.data).toBeNull();
@@ -261,6 +259,36 @@ describe('AgencyService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data).toEqual(mockMembers);
+    });
+  });
+
+  describe('scoped member mutation helpers', () => {
+    it('should reject role updates for members outside principal agency', async () => {
+      vi.mocked(prisma.agencyMember.findFirst).mockResolvedValue({
+        id: 'member-1',
+        agencyId: 'agency-other',
+        role: 'member',
+      } as any);
+
+      const result = await agencyService.updateMemberRoleForAgency('member-1', 'agency-owner', 'admin');
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('FORBIDDEN');
+      expect(prisma.agencyMember.update).not.toHaveBeenCalled();
+    });
+
+    it('should reject member removal for members outside principal agency', async () => {
+      vi.mocked(prisma.agencyMember.findFirst).mockResolvedValue({
+        id: 'member-1',
+        agencyId: 'agency-other',
+        role: 'member',
+      } as any);
+
+      const result = await agencyService.removeMemberForAgency('member-1', 'agency-owner');
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('FORBIDDEN');
+      expect(prisma.agencyMember.delete).not.toHaveBeenCalled();
     });
   });
 });

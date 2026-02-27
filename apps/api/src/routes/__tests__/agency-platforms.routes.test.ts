@@ -13,6 +13,7 @@ import { oauthStateService } from '../../services/oauth-state.service.js';
 import { metaAssetsService } from '../../services/meta-assets.service.js';
 import { MetaConnector } from '../../services/connectors/meta.js';
 import * as authorization from '../../lib/authorization.js';
+import { prisma } from '../../lib/prisma.js';
 
 // Mock services
 vi.mock('../../services/agency-platform.service.js', () => ({
@@ -33,11 +34,35 @@ vi.mock('../../services/meta-assets.service.js', () => ({
     getAssetSettings: vi.fn(),
   },
 }));
+vi.mock('../../lib/prisma.js', () => ({
+  prisma: {
+    agencyPlatformConnection: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
+  },
+}));
 
 vi.mock('../../services/oauth-state.service.js', () => ({
   oauthStateService: {
     createState: vi.fn(),
     validateState: vi.fn(),
+  },
+}));
+vi.mock('../../services/agency-resolution.service.js', () => ({
+  agencyResolutionService: {
+    getOrCreateAgency: vi.fn(async (identifier: string) => ({
+      data: {
+        agencyId: identifier,
+        agency: {
+          id: identifier,
+          name: 'Agency',
+          email: 'admin@agency.com',
+        },
+      },
+      error: null,
+    })),
+    resolveAgency: vi.fn(),
   },
 }));
 vi.mock('../../lib/authorization.js');
@@ -790,6 +815,45 @@ describe('Agency Platforms Routes', () => {
       });
 
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  describe('POST /agency-platforms/meta/complete-oauth', () => {
+    it('should return a sanitized connection payload without secretId', async () => {
+      vi.mocked(metaAssetsService.saveBusinessPortfolio).mockResolvedValue({
+        data: { success: true },
+        error: null,
+      } as any);
+
+      vi.mocked(prisma.agencyPlatformConnection.findUnique).mockResolvedValue({
+        id: 'conn-1',
+        agencyId: 'agency-1',
+        platform: 'meta',
+        status: 'active',
+        secretId: 'meta_secret_agency_1',
+      } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue({
+        id: 'conn-1',
+        agencyId: 'agency-1',
+        platform: 'meta',
+        status: 'active',
+        secretId: 'meta_secret_agency_1',
+      } as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/agency-platforms/meta/complete-oauth',
+        payload: {
+          agencyId: 'agency-1',
+          businessId: 'biz-123',
+          businessName: 'My Business',
+          connectionId: 'conn-1',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.id).toBe('conn-1');
+      expect(response.json().data.secretId).toBeUndefined();
     });
   });
 

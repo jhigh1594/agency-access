@@ -23,11 +23,15 @@ import { usageRoutes } from './routes/usage.js';
 import { webhookRoutes } from './routes/webhooks.js';
 import { beehiivRoutes } from './routes/beehiiv.js';
 import { subscriptionRoutes } from './routes/subscriptions.js';
+import { internalAdminRoutes } from './routes/internal-admin.routes.js';
 import { quotaRoutes } from './routes/quota.routes';
 import { contactRoutes } from './routes/contact.js';
 import { performanceMiddleware } from './middleware/performance.js';
 
+const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
+
 const fastify = Fastify({
+  trustProxy,
   logger: {
     level: env.LOG_LEVEL || 'info',
     transport: env.NODE_ENV === 'development' ? {
@@ -139,6 +143,7 @@ await fastify.register(webhookRoutes, { prefix: '/api' });
 await fastify.register(agencyPlatformsRoutes);
 await fastify.register(beehiivRoutes);
 await fastify.register(subscriptionRoutes, { prefix: '/api' });
+await fastify.register(internalAdminRoutes, { prefix: '/api' });
 await fastify.register(quotaRoutes, { prefix: '/api' });
 await fastify.register(contactRoutes);
 

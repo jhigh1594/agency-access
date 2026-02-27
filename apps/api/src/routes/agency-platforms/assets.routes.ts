@@ -287,12 +287,46 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
       }
 
-      const connection = await prisma.agencyPlatformConnection.findUnique({
-        where: { id: connectionId },
+      const connection = await prisma.agencyPlatformConnection.findFirst({
+        where: {
+          id: connectionId,
+          agencyId,
+          platform: 'meta',
+        },
       });
 
+      if (!connection) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'CONNECTION_NOT_FOUND',
+            message: 'Meta connection not found for this agency',
+          },
+        });
+      }
+
+      const safeConnection = {
+        id: connection.id,
+        agencyId: connection.agencyId,
+        platform: connection.platform,
+        connectionMode: connection.connectionMode,
+        status: connection.status,
+        expiresAt: connection.expiresAt,
+        lastRefreshedAt: connection.lastRefreshedAt,
+        scope: connection.scope,
+        agencyEmail: connection.agencyEmail,
+        businessId: connection.businessId,
+        verificationStatus: connection.verificationStatus,
+        lastVerifiedAt: connection.lastVerifiedAt,
+        metadata: connection.metadata,
+        connectedBy: connection.connectedBy,
+        connectedAt: connection.connectedAt,
+        revokedAt: connection.revokedAt,
+        revokedBy: connection.revokedBy,
+      };
+
       return reply.send({
-        data: connection,
+        data: safeConnection,
         error: null,
       });
     } catch (error) {

@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { identityVerificationService } from '@/services/identity-verification.service';
 import { SUPPORTED_PLATFORMS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
+import { prisma } from '@/lib/prisma';
 
 export async function registerIdentityRoutes(fastify: FastifyInstance) {
   /**
@@ -91,6 +92,27 @@ export async function registerIdentityRoutes(fastify: FastifyInstance) {
    */
   fastify.put('/agency-platforms/:id/verify', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+
+    const connection = await prisma.agencyPlatformConnection.findFirst({
+      where: { id },
+      select: { id: true, agencyId: true },
+    });
+
+    if (!connection) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'CONNECTION_NOT_FOUND',
+          message: 'Connection not found',
+        },
+      });
+    }
+
+    const accessError = assertAgencyAccess(connection.agencyId, principalAgencyId);
+    if (accessError) {
+      return reply.code(403).send({ data: null, error: accessError });
+    }
 
     const result = await identityVerificationService.updateVerificationStatus(
       id,

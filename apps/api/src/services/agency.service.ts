@@ -708,6 +708,77 @@ export async function removeMember(memberId: string) {
 }
 
 /**
+ * Update member role with explicit agency ownership enforcement.
+ */
+export async function updateMemberRoleForAgency(
+  memberId: string,
+  principalAgencyId: string,
+  role: 'admin' | 'member' | 'viewer'
+) {
+  const member = await prisma.agencyMember.findFirst({
+    where: { id: memberId },
+    select: { id: true, agencyId: true },
+  });
+
+  if (!member) {
+    return {
+      data: null,
+      error: {
+        code: 'MEMBER_NOT_FOUND',
+        message: 'Member not found',
+      },
+    };
+  }
+
+  if (member.agencyId !== principalAgencyId) {
+    return {
+      data: null,
+      error: {
+        code: 'FORBIDDEN',
+        message: 'You do not have access to this agency resource',
+      },
+    };
+  }
+
+  return updateMemberRole(memberId, role);
+}
+
+/**
+ * Remove member with explicit agency ownership enforcement.
+ */
+export async function removeMemberForAgency(
+  memberId: string,
+  principalAgencyId: string
+) {
+  const member = await prisma.agencyMember.findFirst({
+    where: { id: memberId },
+    select: { id: true, agencyId: true },
+  });
+
+  if (!member) {
+    return {
+      data: null,
+      error: {
+        code: 'MEMBER_NOT_FOUND',
+        message: 'Member not found',
+      },
+    };
+  }
+
+  if (member.agencyId !== principalAgencyId) {
+    return {
+      data: null,
+      error: {
+        code: 'FORBIDDEN',
+        message: 'You do not have access to this agency resource',
+      },
+    };
+  }
+
+  return removeMember(memberId);
+}
+
+/**
  * Get onboarding completion status for an agency
  * Checks if agency has completed initial setup (profile + team members)
  */
@@ -846,7 +917,9 @@ export const agencyService = {
   getAgencyMembers,
   inviteMember,
   updateMemberRole,
+  updateMemberRoleForAgency,
   removeMember,
+  removeMemberForAgency,
   getOnboardingStatus,
   bulkInviteMembers,
 };
