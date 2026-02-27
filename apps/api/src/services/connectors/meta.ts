@@ -546,6 +546,211 @@ export class MetaConnector {
       };
     }
   }
+
+  /**
+   * Create a new ad account within a Business Manager
+   *
+   * @param accessToken - Valid Meta access token with ads_management scope
+   * @param businessId - Business Manager ID to create the ad account under
+   * @param params - Ad account creation parameters
+   * @returns Created ad account details
+   */
+  async createAdAccount(
+    accessToken: string,
+    businessId: string,
+    params: {
+      name: string;
+      currency: string;
+      timezoneId: string;
+    }
+  ): Promise<{
+    id: string;
+    name: string;
+    currency: string;
+    timezoneId: string;
+    accountId: string;
+  }> {
+    const requestBody = new URLSearchParams({
+      access_token: accessToken,
+      name: params.name,
+      currency: params.currency,
+      timezone_id: params.timezoneId,
+    });
+
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}/adaccounts`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: requestBody.toString(),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(error);
+      } catch {
+        throw new Error(`Meta ad account creation failed: ${error}`);
+      }
+      throw new Error(
+        `Meta ad account creation failed: ${parsedError.error?.message || error}`
+      );
+    }
+
+    const data = (await response.json()) as {
+      id: string;
+      name: string;
+      currency: string;
+      timezone_id: string;
+      account_id: string;
+    };
+
+    return {
+      id: data.id,
+      name: data.name,
+      currency: data.currency,
+      timezoneId: data.timezone_id,
+      accountId: data.account_id,
+    };
+  }
+
+  /**
+   * Create a new product catalog within a Business Manager
+   *
+   * @param accessToken - Valid Meta access token with catalog_management scope
+   * @param businessId - Business Manager ID to create the catalog under
+   * @param name - Product catalog name
+   * @returns Created product catalog details
+   */
+  async createProductCatalog(
+    accessToken: string,
+    businessId: string,
+    name: string
+  ): Promise<{
+    id: string;
+    name: string;
+    catalogType: string;
+  }> {
+    const requestBody = new URLSearchParams({
+      access_token: accessToken,
+      name: name,
+    });
+
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${businessId}/product_catalogs`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: requestBody.toString(),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(error);
+      } catch {
+        throw new Error(`Meta product catalog creation failed: ${error}`);
+      }
+      throw new Error(
+        `Meta product catalog creation failed: ${parsedError.error?.message || error}`
+      );
+    }
+
+    const data = (await response.json()) as {
+      id: string;
+      name: string;
+      catalog_type: string;
+    };
+
+    return {
+      id: data.id,
+      name: data.name,
+      catalogType: data.catalog_type,
+    };
+  }
+
+  /**
+   * Get the URL for creating a new Facebook Page within a Business Manager
+   * This is a deep link to Meta's page creation flow
+   *
+   * @param businessId - Business Manager ID
+   * @returns URL for page creation
+   */
+  getPageCreationUrl(businessId: string): string {
+    return `https://business.facebook.com/pages/creation/?business_id=${businessId}`;
+  }
+
+  /**
+   * Get the URL for creating a new Meta Pixel within a Business Manager
+   * This is a deep link to Meta's Events Manager pixel creation flow
+   *
+   * @param businessId - Business Manager ID
+   * @returns URL for pixel creation
+   */
+  getPixelCreationUrl(businessId: string): string {
+    return `https://business.facebook.com/events_manager2/pixel/new/?business_id=${businessId}`;
+  }
+
+  /**
+   * Get supported currencies for ad account creation
+   * Common currencies used in Meta Ads
+   *
+   * @returns Array of supported currency codes
+   */
+  getSupportedCurrencies(): string[] {
+    return [
+      'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'NZD', 'CHF', 'SEK', 'NOK',
+      'DKK', 'MXN', 'BRL', 'ARS', 'CLP', 'COP', 'PEN', 'INR', 'SGD', 'HKD',
+      'TWD', 'KRW', 'THB', 'IDR', 'MYR', 'PHP', 'VND', 'PLN', 'TRY', 'ILS',
+      'AED', 'SAR', 'ZAR', 'NGN', 'EGP', 'KES', 'RUB', 'UAH', 'CZK', 'HUF',
+      'RON', 'BGN', 'HRK',
+    ];
+  }
+
+  /**
+   * Get supported timezone IDs for ad account creation
+   * Common timezone IDs used in Meta Ads
+   *
+   * @returns Array of supported timezone IDs with names
+   */
+  getSupportedTimezones(): Array<{ id: string; name: string; offset: string }> {
+    return [
+      { id: '1', name: 'Pacific/Midway', offset: 'UTC-11' },
+      { id: '5', name: 'Pacific/Honolulu', offset: 'UTC-10' },
+      { id: '9', name: 'America/Anchorage', offset: 'UTC-9' },
+      { id: '13', name: 'America/Los_Angeles', offset: 'UTC-8' },
+      { id: '17', name: 'America/Denver', offset: 'UTC-7' },
+      { id: '21', name: 'America/Chicago', offset: 'UTC-6' },
+      { id: '25', name: 'America/New_York', offset: 'UTC-5' },
+      { id: '29', name: 'America/Caracas', offset: 'UTC-4' },
+      { id: '33', name: 'America/Sao_Paulo', offset: 'UTC-3' },
+      { id: '37', name: 'Atlantic/South_Georgia', offset: 'UTC-2' },
+      { id: '41', name: 'Atlantic/Azores', offset: 'UTC-1' },
+      { id: '45', name: 'Europe/London', offset: 'UTC+0' },
+      { id: '49', name: 'Europe/Paris', offset: 'UTC+1' },
+      { id: '53', name: 'Europe/Berlin', offset: 'UTC+1' },
+      { id: '57', name: 'Africa/Cairo', offset: 'UTC+2' },
+      { id: '61', name: 'Europe/Moscow', offset: 'UTC+3' },
+      { id: '65', name: 'Asia/Dubai', offset: 'UTC+4' },
+      { id: '69', name: 'Asia/Karachi', offset: 'UTC+5' },
+      { id: '73', name: 'Asia/Kolkata', offset: 'UTC+5:30' },
+      { id: '77', name: 'Asia/Dhaka', offset: 'UTC+6' },
+      { id: '81', name: 'Asia/Bangkok', offset: 'UTC+7' },
+      { id: '85', name: 'Asia/Singapore', offset: 'UTC+8' },
+      { id: '89', name: 'Asia/Tokyo', offset: 'UTC+9' },
+      { id: '93', name: 'Australia/Sydney', offset: 'UTC+10' },
+      { id: '97', name: 'Pacific/Noumea', offset: 'UTC+11' },
+      { id: '101', name: 'Pacific/Auckland', offset: 'UTC+12' },
+    ];
+  }
 }
 
 // Export singleton instance

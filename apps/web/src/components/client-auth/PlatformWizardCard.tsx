@@ -12,7 +12,7 @@
  * - Footer with navigation buttons
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { PlatformStepProgress } from './PlatformStepProgress';
 import { PlatformIcon } from '@/components/ui/platform-icon';
 import type { Platform } from '@agency-platform/shared';
@@ -35,7 +35,7 @@ export function PlatformWizardCard({
   footer,
 }: PlatformWizardCardProps) {
   return (
-    <motion.div
+    <m.div
       className="bg-card rounded-lg shadow-brutalist border-2 border-black dark:border-white overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -58,7 +58,7 @@ export function PlatformWizardCard({
       {/* Content: Step-specific content with animation */}
       <div className="p-8">
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={currentStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -66,7 +66,7 @@ export function PlatformWizardCard({
             transition={{ duration: 0.3 }}
           >
             {children}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 
@@ -76,6 +76,6 @@ export function PlatformWizardCard({
           {footer}
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

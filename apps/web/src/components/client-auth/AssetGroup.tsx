@@ -12,7 +12,7 @@
  */
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { AssetCheckbox } from './AssetCheckbox';
 
@@ -143,12 +143,12 @@ export function AssetGroup({
             className="p-2 border-2 border-black dark:border-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <motion.div
+            <m.div
               animate={{ rotate: isExpanded ? 0 : -90 }}
               transition={{ duration: 0.2 }}
             >
               <ChevronDown className="w-5 h-5 text-[var(--ink)]" />
-            </motion.div>
+            </m.div>
           </button>
         </div>
       </div>
@@ -156,7 +156,7 @@ export function AssetGroup({
       {/* Asset List (Collapsible) */}
       <AnimatePresence initial={false}>
         {isExpanded && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -165,7 +165,7 @@ export function AssetGroup({
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
               {assets.map((asset, index) => (
-                <motion.div
+                <m.div
                   key={asset.id}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -178,10 +178,10 @@ export function AssetGroup({
                     checked={selectedIds.has(asset.id)}
                     onChange={(checked) => handleAssetToggle(asset.id, checked)}
                   />
-                </motion.div>
+                </m.div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

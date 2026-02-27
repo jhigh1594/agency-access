@@ -19,7 +19,10 @@ import { useState, useEffect, useRef } from 'react';
 import posthog from 'posthog-js';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { MultiSelectCombobox, type MultiSelectOption } from '@/components/ui/multi-select-combobox';
-import { AssetSelectorLoading, AssetSelectorError } from './AssetSelectorStates';
+import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
+import { MetaAssetCreator } from './MetaAssetCreator';
+import { GuidedRedirectCard } from './GuidedRedirectModal';
+import { Plus, ExternalLink } from 'lucide-react';
 
 interface MetaAssets {
   adAccounts: Array<{
@@ -45,6 +48,7 @@ interface MetaAssets {
 interface MetaAssetSelectorProps {
   sessionId: string;
   accessRequestToken: string;
+  businessId?: string; // Business Manager ID for creating assets
   onSelectionChange: (selectedAssets: {
     adAccounts: string[];
     pages: string[];
@@ -63,6 +67,7 @@ interface MetaAssetSelectorProps {
 export function MetaAssetSelector({
   sessionId,
   accessRequestToken,
+  businessId,
   onSelectionChange,
   onError,
 }: MetaAssetSelectorProps) {
@@ -75,10 +80,29 @@ export function MetaAssetSelector({
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [selectedInstagram, setSelectedInstagram] = useState<Set<string>>(new Set());
 
+  // Creation UI state
+  const [showAdAccountCreator, setShowAdAccountCreator] = useState(false);
+  const [showPageCreator, setShowPageCreator] = useState(false);
+
   // Track if we've already captured the event (to avoid duplicates)
   const hasTrackedSelection = useRef(false);
 
-  // Fetch assets from backend
+  // Handle successful ad account creation - auto-select and refresh
+  const handleAdAccountCreated = (newAccount: { id: string; name: string }) => {
+    // Refresh assets to get the updated list
+    fetchAssets().then(() => {
+      // Auto-select the newly created account
+      setSelectedAdAccounts(prev => new Set([...prev, newAccount.id]));
+      setShowAdAccountCreator(false);
+    });
+  };
+
+  // Handle page creation - refresh list
+  const handlePageCreated = () => {
+    fetchAssets().then(() => {
+      setShowPageCreator(false);
+    });
+  };
   const fetchAssets = async () => {
     try {
       setIsLoading(true);
@@ -232,7 +256,7 @@ export function MetaAssetSelector({
 
       {/* Asset Groups */}
       <div className="space-y-6">
-        {/* Ad Accounts - Multi-select Combobox */}
+        {/* Ad Accounts - Multi-select Combobox or Creator */}
         <div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 border-2 border-black dark:border-white bg-blue-500 flex items-center justify-center">
@@ -245,19 +269,73 @@ export function MetaAssetSelector({
               </p>
             </div>
           </div>
-          <MultiSelectCombobox
-            options={adAccountAssets.map((asset) => ({
-              id: asset.id,
-              name: asset.name,
-              description: asset.description,
-            }))}
-            selectedIds={selectedAdAccounts}
-            onSelectionChange={setSelectedAdAccounts}
-            placeholder="Select ad accounts..."
-          />
+
+          {/* Show creator if empty and user clicked "Create New" */}
+          {showAdAccountCreator && businessId ? (
+            <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/5 p-4 rounded-lg mb-3">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-[var(--ink)]">Create New Ad Account</h4>
+                <button
+                  onClick={() => setShowAdAccountCreator(false)}
+                  className="text-sm text-slate-500 hover:text-[var(--coral)] underline"
+                >
+                  Cancel
+                </button>
+              </div>
+              <MetaAssetCreator
+                connectionId={sessionId}
+                businessId={businessId}
+                accessRequestToken={accessRequestToken}
+                onSuccess={handleAdAccountCreated}
+                onError={onError}
+              />
+            </div>
+          ) : adAccountAssets.length > 0 ? (
+            <MultiSelectCombobox
+              options={adAccountAssets.map((asset) => ({
+                id: asset.id,
+                name: asset.name,
+                description: asset.description,
+              }))}
+              selectedIds={selectedAdAccounts}
+              onSelectionChange={setSelectedAdAccounts}
+              placeholder="Select ad accounts..."
+            />
+          ) : (
+            /* Empty state with create option */
+            <div className="py-8 text-center px-6">
+              {/* Empty state icon - Brutalist Square */}
+              <div className="w-20 h-20 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl" role="img" aria-label="Empty">
+                  📭
+                </span>
+              </div>
+
+              {/* Message */}
+              <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">No Ad Accounts Found</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 max-w-sm mx-auto">
+                You don't have any ad accounts in this Business Manager yet. Create one to get started.
+              </p>
+
+              {/* Create button */}
+              {businessId ? (
+                <button
+                  onClick={() => setShowAdAccountCreator(true)}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create Ad Account
+                </button>
+              ) : (
+                <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-sm text-[var(--warning)] max-w-sm mx-auto">
+                  Business Manager ID is required to create ad accounts. Please contact support.
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Pages - Multi-select Combobox */}
+        {/* Pages - Multi-select Combobox or Guided Redirect */}
         <div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 border-2 border-black dark:border-white bg-indigo-500 flex items-center justify-center">
@@ -270,16 +348,59 @@ export function MetaAssetSelector({
               </p>
             </div>
           </div>
-          <MultiSelectCombobox
-            options={pageAssets.map((asset) => ({
-              id: asset.id,
-              name: asset.name,
-              description: asset.description,
-            }))}
-            selectedIds={selectedPages}
-            onSelectionChange={setSelectedPages}
-            placeholder="Select pages..."
-          />
+
+          {/* Show guided redirect if empty */}
+          {pageAssets.length > 0 ? (
+            <MultiSelectCombobox
+              options={pageAssets.map((asset) => ({
+                id: asset.id,
+                name: asset.name,
+                description: asset.description,
+              }))}
+              selectedIds={selectedPages}
+              onSelectionChange={setSelectedPages}
+              placeholder="Select pages..."
+            />
+          ) : showPageCreator ? (
+            /* Guided redirect card */
+            <GuidedRedirectCard
+              title="Create a Facebook Page"
+              description="Pages must be created in Meta Business Manager. Follow these steps:"
+              businessManagerUrl={`https://business.facebook.com/settings/${businessId}/pages`}
+              instructions={[
+                { title: 'Click the button below to open Meta Business Manager', description: 'A new tab will open' },
+                { title: 'Click "Add a Page" or "Create a New Page"', description: 'Choose to create a new page or add an existing one' },
+                { title: 'Follow the prompts to set up your page', description: 'Add name, category, and description' },
+                { title: 'Return here and click "Refresh List"', description: 'Your new page will appear in the list' },
+              ]}
+              onRefresh={handlePageCreated}
+            />
+          ) : (
+            /* Empty state with create option */
+            <div className="py-8 text-center px-6">
+              {/* Empty state icon - Brutalist Square */}
+              <div className="w-20 h-20 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl" role="img" aria-label="Empty">
+                  📄
+                </span>
+              </div>
+
+              {/* Message */}
+              <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">No Pages Found</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 max-w-sm mx-auto">
+                You don't have any Facebook Pages in this Business Manager. Create one to get started.
+              </p>
+
+              {/* Create button */}
+              <button
+                onClick={() => setShowPageCreator(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
+              >
+                <Plus className="w-5 h-5" />
+                Create Page
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Instagram Accounts - Keep as AssetGroup for now */}

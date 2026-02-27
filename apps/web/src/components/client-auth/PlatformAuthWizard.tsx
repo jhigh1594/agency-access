@@ -17,7 +17,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, CheckCircle2, ChevronDown } from 'lucide-react';
 import { PlatformWizardCard } from './PlatformWizardCard';
 import { MetaAssetSelector } from './MetaAssetSelector';
@@ -94,6 +94,19 @@ export function PlatformAuthWizard({
   const [assetsSaved, setAssetsSaved] = useState(false);
   const [chooseAccountsExpanded, setChooseAccountsExpanded] = useState(true);
   const [grantAccessExpanded, setGrantAccessExpanded] = useState(true);
+
+  // Update state when initialStep or initialConnectionId props change (for test page)
+  useEffect(() => {
+    if (initialStep) {
+      setCurrentStep(initialStep > 3 ? 3 : initialStep as 1 | 2 | 3);
+    }
+  }, [initialStep]);
+
+  useEffect(() => {
+    if (initialConnectionId) {
+      setConnectionId(initialConnectionId);
+    }
+  }, [initialConnectionId]);
 
   // Step 1: Initiate OAuth
   const handleConnectClick = async () => {
@@ -336,17 +349,17 @@ export function PlatformAuthWizard({
                     Select the specific accounts you want to share.
                   </p>
                 </div>
-                <motion.div
+                <m.div
                   animate={{ rotate: chooseAccountsExpanded ? 0 : -90 }}
                   transition={{ duration: 0.2 }}
                 >
                   <ChevronDown className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                </motion.div>
+                </m.div>
               </button>
 
               <AnimatePresence initial={false}>
                 {chooseAccountsExpanded && (
-                  <motion.div
+                  <m.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
@@ -392,6 +405,7 @@ export function PlatformAuthWizard({
                           <MetaAssetSelector
                             sessionId={connectionId!}
                             accessRequestToken={accessRequestToken}
+                            businessId={businessId || undefined}
                             onSelectionChange={(selectedAssets) => {
                               // Store both IDs and full asset objects for grant step
                               // selectedAssets now includes selectedPagesWithNames, etc. from MetaAssetSelector
@@ -437,7 +451,7 @@ export function PlatformAuthWizard({
             </div>
                         )}
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
           </div>
@@ -501,17 +515,17 @@ export function PlatformAuthWizard({
                         Complete the steps below to grant access to your selected accounts.
                       </p>
                     </div>
-                    <motion.div
+                    <m.div
                       animate={{ rotate: grantAccessExpanded ? 0 : -90 }}
                       transition={{ duration: 0.2 }}
                     >
                       <ChevronDown className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                    </motion.div>
+                    </m.div>
                   </button>
 
                   <AnimatePresence initial={false}>
                     {grantAccessExpanded && (
-                      <motion.div
+                      <m.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -608,7 +622,7 @@ export function PlatformAuthWizard({
                 </div>
               )}
                         </div>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
                 </div>
@@ -621,16 +635,16 @@ export function PlatformAuthWizard({
         return (
           <div className="text-center space-y-6 py-8">
             {/* Success Icon with Brutalist Border */}
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, type: 'spring' }}
               className="inline-flex items-center justify-center w-24 h-24 border-2 border-[var(--teal)] bg-[var(--teal)]/10 mb-4"
             >
               <CheckCircle2 className="w-16 h-16 text-[var(--teal)]" />
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -641,7 +655,7 @@ export function PlatformAuthWizard({
               <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                 Access granted to the accounts you selected.
               </p>
-            </motion.div>
+            </m.div>
 
             {/* Connected Assets - Brutalist Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -659,7 +673,7 @@ export function PlatformAuthWizard({
                 const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
 
                 return (
-                  <motion.div
+                  <m.div
                     key={product}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -684,7 +698,7 @@ export function PlatformAuthWizard({
                         <li className="text-[var(--teal)]">✓ {assets.properties.length} Properties</li>
                       )}
                     </ul>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>

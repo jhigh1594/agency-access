@@ -10,7 +10,7 @@
  * - Selected state: indigo background with thick border
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Check } from 'lucide-react';
 
 interface AssetCheckboxProps {
@@ -35,7 +35,7 @@ export function AssetCheckbox({
   disabled = false,
 }: AssetCheckboxProps) {
   return (
-    <motion.label
+    <m.label
       htmlFor={id}
       className={`
         relative flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer
@@ -99,7 +99,7 @@ export function AssetCheckbox({
           disabled={disabled}
           className="sr-only"
         />
-        <motion.div
+        <m.div
           className={`
             w-7 h-7 rounded-lg border-2 flex items-center justify-center
             ${
@@ -114,16 +114,16 @@ export function AssetCheckbox({
           transition={{ duration: 0.2 }}
         >
           {checked && (
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.15, delay: 0.05 }}
             >
               <Check className="w-5 h-5 text-white" strokeWidth={3} />
-            </motion.div>
+            </m.div>
           )}
-        </motion.div>
+        </m.div>
       </div>
-    </motion.label>
+    </m.label>
   );
 }

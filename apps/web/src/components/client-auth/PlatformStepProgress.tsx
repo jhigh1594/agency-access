@@ -11,7 +11,7 @@
  * - Clear visual hierarchy
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Check } from 'lucide-react';
 
 interface PlatformStepProgressProps {
@@ -46,7 +46,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
           return (
             <div key={step.number} className="flex items-center">
               {/* Step Box */}
-              <motion.div
+              <m.div
                 className={`
                   w-10 h-10 flex items-center justify-center
                   border-2 font-bold text-sm
@@ -68,7 +68,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
                 ) : (
                   step.number
                 )}
-              </motion.div>
+              </m.div>
 
               {/* Connector Line */}
               {index < steps.length - 1 && (

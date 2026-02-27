@@ -15,7 +15,7 @@
  */
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Info, ChevronDown } from 'lucide-react';
 
 interface StepHelpTextProps {
@@ -47,19 +47,19 @@ export function StepHelpText({
           <Info className="w-4 h-4 text-[var(--coral)]" />
         </div>
         <span className="font-semibold text-[var(--ink)] flex-1">{title}</span>
-        <motion.div
+        <m.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
           className="flex-shrink-0"
         >
           <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-        </motion.div>
+        </m.div>
       </button>
 
       {/* Collapsible Content */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -114,7 +114,7 @@ export function StepHelpText({
                 </div>
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

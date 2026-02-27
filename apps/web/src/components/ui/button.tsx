@@ -55,10 +55,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       danger: 'bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       ghost: 'bg-transparent text-muted-foreground hover:bg-muted/10 active:scale-95',
       // Brutalist variants - Hard shadows, no rounded corners, uppercase (black border light / white dark)
-      brutalist: 'bg-primary text-primary-foreground border-2 border-black dark:border-white rounded-none shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      // Use coral background with white text for brutalist buttons
+      brutalist: 'bg-coral text-white border-2 border-black dark:border-white rounded-none shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
       'brutalist-ghost': 'bg-transparent text-foreground border-2 border-black dark:border-white rounded-none hover:bg-foreground hover:text-background hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
       // Rounded brutalist variants - Same styling but with rounded corners
-      'brutalist-rounded': 'bg-primary text-primary-foreground border-2 border-black dark:border-white rounded-[0.75rem] shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
+      'brutalist-rounded': 'bg-coral text-white border-2 border-black dark:border-white rounded-[0.75rem] shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
       'brutalist-ghost-rounded': 'bg-transparent text-foreground border-2 border-black dark:border-white rounded-[0.75rem] hover:bg-foreground hover:text-background hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] font-bold uppercase tracking-wide',
     };
 

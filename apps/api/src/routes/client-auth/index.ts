@@ -5,6 +5,7 @@ import { registerAssetRoutes } from './assets.routes.js';
 import { registerIntakeRoutes } from './intake.routes.js';
 import { registerCompletionRoutes } from './completion.routes.js';
 import { registerManualRoutes } from './manual.routes.js';
+import { registerAssetCreationRoutes } from './asset-creation.routes.js';
 
 export async function clientAuthRoutes(fastify: FastifyInstance) {
   await registerOAuthStateRoutes(fastify);
@@ -13,4 +14,5 @@ export async function clientAuthRoutes(fastify: FastifyInstance) {
   await registerIntakeRoutes(fastify);
   await registerCompletionRoutes(fastify);
   await registerManualRoutes(fastify);
+  await registerAssetCreationRoutes(fastify);
 }
