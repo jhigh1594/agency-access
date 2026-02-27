@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import type { Platform } from '@agency-platform/shared';
 import { PLATFORM_NAMES, MANUAL_PLATFORMS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
+import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache.js';
 
 export async function registerManualRoutes(fastify: FastifyInstance) {
   /**
@@ -166,6 +167,11 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         userAgent: 'unknown',
       },
     });
+
+    await Promise.all([
+      deleteCache(CacheKeys.agencyConnections(actualAgencyId)),
+      invalidateCache(`dashboard:${actualAgencyId}:*`),
+    ]);
 
     return reply.code(201).send({
       data: {
@@ -335,6 +341,11 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         userAgent: 'unknown',
       },
     });
+
+    await Promise.all([
+      deleteCache(CacheKeys.agencyConnections(actualAgencyId)),
+      invalidateCache(`dashboard:${actualAgencyId}:*`),
+    ]);
 
     return reply.send({
       data: {

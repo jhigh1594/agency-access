@@ -37,9 +37,13 @@ vi.mock('@/lib/prisma', () => ({
     agency: {
       findUnique: vi.fn(),
     },
+    agencyPlatformConnection: {
+      findMany: vi.fn(),
+    },
     clientConnection: {
       create: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     platformAuthorization: {
       create: vi.fn(),
@@ -181,12 +185,18 @@ describe('AccessRequestService', () => {
         id: 'request-1',
         uniqueToken: 'a1b2c3d4e5f6',
         clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
         platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
         intakeFields: [],
         branding: {},
       };
 
       vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([]);
 
       const result = await accessRequestService.getAccessRequestByToken('a1b2c3d4e5f6');
 
@@ -199,6 +209,47 @@ describe('AccessRequestService', () => {
           products: [{ product: 'meta_ads', accessLevel: 'admin', accounts: [] }],
         },
       ]);
+    });
+
+    it('should aggregate completed platforms across multiple client connections', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [
+          { platform: 'google_ads', accessLevel: 'manage' },
+          { platform: 'beehiiv', accessLevel: 'manage' },
+        ],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-oauth',
+          grantedAssets: null,
+          authorizations: [{ platform: 'google_ads', status: 'active' }],
+        },
+        {
+          id: 'conn-manual',
+          grantedAssets: { platform: 'beehiiv' },
+          authorizations: [],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken('token-123');
+
+      expect(result.error).toBeNull();
+      expect(result.data?.authorizationProgress.completedPlatforms).toEqual(
+        expect.arrayContaining(['google', 'beehiiv'])
+      );
+      expect(result.data?.authorizationProgress.isComplete).toBe(true);
     });
 
     it('should return error if request not found', async () => {

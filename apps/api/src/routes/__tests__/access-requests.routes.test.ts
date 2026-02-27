@@ -485,4 +485,81 @@ describe('Access Requests Routes - Platform Connection Validation', () => {
       expect(response.json().error).toBeDefined();
     });
   });
+
+  describe('GET /client/:token - public client payload', () => {
+    it('should return enriched client payload from service', async () => {
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'request-1',
+          agencyId: 'agency-1',
+          agencyName: 'Demo Agency',
+          clientName: 'Jane Client',
+          clientEmail: 'jane@client.com',
+          authModel: 'delegated_access',
+          status: 'pending',
+          uniqueToken: 'token-1',
+          expiresAt: new Date().toISOString(),
+          platforms: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin' }] }],
+          intakeFields: [],
+          branding: {},
+          manualInviteTargets: {
+            google: {
+              agencyEmail: 'ops@demoagency.com',
+            },
+          },
+          authorizationProgress: {
+            completedPlatforms: ['google'],
+            isComplete: true,
+          },
+        } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/client/token-1',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.agencyName).toBe('Demo Agency');
+      expect(response.json().data.manualInviteTargets.google.agencyEmail).toBe('ops@demoagency.com');
+      expect(response.json().data.authorizationProgress.completedPlatforms).toEqual(['google']);
+    });
+
+    it('should return 404 when request token does not exist', async () => {
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: null as any,
+        error: {
+          code: 'REQUEST_NOT_FOUND',
+          message: 'Access request not found',
+        } as any,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/client/missing-token',
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error.code).toBe('REQUEST_NOT_FOUND');
+    });
+
+    it('should return 404 when request token is expired', async () => {
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: null as any,
+        error: {
+          code: 'REQUEST_EXPIRED',
+          message: 'Access request has expired',
+        } as any,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/client/expired-token',
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error.code).toBe('REQUEST_EXPIRED');
+    });
+  });
 });

@@ -239,7 +239,12 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
     const result = await accessRequestService.getAccessRequestByToken(token);
 
     if (result.error) {
-      const statusCode = result.error.code === 'NOT_FOUND' || result.error.code === 'EXPIRED' ? 404 : 400;
+      const statusCode = (
+        result.error.code === 'NOT_FOUND' ||
+        result.error.code === 'EXPIRED' ||
+        result.error.code === 'REQUEST_NOT_FOUND' ||
+        result.error.code === 'REQUEST_EXPIRED'
+      ) ? 404 : 400;
       return reply.code(statusCode).send({
         data: null,
         error: result.error,

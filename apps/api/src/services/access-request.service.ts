@@ -270,6 +270,41 @@ function transformPlatformsToHierarchical(platforms: any[]): any[] {
   }));
 }
 
+function normalizePlatformGroup(platform: string): string {
+  if (PLATFORM_GROUP_MAP[platform]) {
+    return PLATFORM_GROUP_MAP[platform];
+  }
+
+  // Already a top-level group (e.g. google, meta, beehiiv, kit, pinterest).
+  return platform;
+}
+
+function getIdentityFromConnection(connection: {
+  agencyEmail: string | null;
+  businessId: string | null;
+  connectedBy: string;
+  metadata: unknown;
+}) {
+  const metadata = (connection.metadata as Record<string, unknown> | null) || null;
+
+  const metadataEmail =
+    typeof metadata?.email === 'string'
+      ? metadata.email
+      : typeof metadata?.userEmail === 'string'
+      ? metadata.userEmail
+      : typeof metadata?.businessEmail === 'string'
+      ? metadata.businessEmail
+      : undefined;
+
+  const metadataBusinessId =
+    typeof metadata?.businessId === 'string' ? metadata.businessId : undefined;
+
+  return {
+    agencyEmail: connection.agencyEmail || metadataEmail || connection.connectedBy,
+    businessId: connection.businessId || metadataBusinessId,
+  };
+}
+
 /**
  * Get access request by ID
  */
@@ -343,16 +378,92 @@ export async function getAccessRequestByToken(token: string) {
       };
     }
 
-    // Transform platforms from flat to hierarchical format for frontend
+    // Transform platforms from flat to hierarchical format for frontend.
     const platforms = accessRequest.platforms as any[];
     const hierarchicalPlatforms = Array.isArray(platforms) && platforms.length > 0 && platforms[0]?.platform
       ? transformPlatformsToHierarchical(platforms)
       : platforms; // Already in hierarchical format or empty
 
+    const requestedPlatformGroups = Array.isArray(hierarchicalPlatforms)
+      ? hierarchicalPlatforms
+          .map((group: any) => group?.platformGroup)
+          .filter((group: unknown): group is string => typeof group === 'string')
+      : [];
+
+    const [agency, platformConnections, clientConnections] = await Promise.all([
+      prisma.agency.findUnique({
+        where: { id: accessRequest.agencyId },
+        select: { name: true },
+      }),
+      requestedPlatformGroups.length > 0
+        ? prisma.agencyPlatformConnection.findMany({
+            where: {
+              agencyId: accessRequest.agencyId,
+              platform: { in: requestedPlatformGroups },
+              status: 'active',
+            },
+            select: {
+              platform: true,
+              agencyEmail: true,
+              businessId: true,
+              connectedBy: true,
+              metadata: true,
+            },
+          })
+        : Promise.resolve([]),
+      prisma.clientConnection.findMany({
+        where: { accessRequestId: accessRequest.id },
+        select: {
+          grantedAssets: true,
+          authorizations: {
+            select: {
+              platform: true,
+              status: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const manualInviteTargets = requestedPlatformGroups.reduce((acc, platform) => {
+      acc[platform] = {};
+      return acc;
+    }, {} as Record<string, { agencyEmail?: string; businessId?: string }>);
+
+    for (const connection of platformConnections) {
+      manualInviteTargets[connection.platform] = getIdentityFromConnection(connection);
+    }
+
+    const completedPlatformsSet = new Set<string>();
+
+    for (const connection of clientConnections) {
+      for (const authorization of connection.authorizations || []) {
+        if (authorization.status !== 'revoked') {
+          completedPlatformsSet.add(normalizePlatformGroup(authorization.platform));
+        }
+      }
+
+      const grantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || null;
+      if (grantedAssets && typeof grantedAssets.platform === 'string') {
+        completedPlatformsSet.add(normalizePlatformGroup(grantedAssets.platform));
+      }
+    }
+
+    const completedPlatforms = Array.from(completedPlatformsSet);
+    const isComplete =
+      requestedPlatformGroups.length > 0 &&
+      requestedPlatformGroups.every((platform) => completedPlatformsSet.has(platform));
+
     return {
       data: {
         ...accessRequest,
+        agencyName: agency?.name || 'Agency',
         platforms: hierarchicalPlatforms,
+        manualInviteTargets,
+        authorizationProgress: {
+          completedPlatforms,
+          isComplete,
+        },
       },
       error: null,
     };
