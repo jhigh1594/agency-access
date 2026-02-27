@@ -35,8 +35,8 @@ export function sendSuccess<T>(
   reply: any,
   data: T,
   statusCode: number = 200
-): void {
-  reply.code(statusCode).send({
+): any {
+  return reply.code(statusCode).send({
     data,
     error: null,
   });
@@ -51,8 +51,8 @@ export function sendError(
   message: string,
   statusCode: number = 500,
   details?: any
-): void {
-  reply.code(statusCode).send({
+): any {
+  return reply.code(statusCode).send({
     data: null,
     error: {
       code,

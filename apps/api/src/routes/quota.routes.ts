@@ -32,7 +32,7 @@ export async function quotaRoutes(fastify: FastifyInstance) {
       }
 
       const verified = await verifyToken(token, {
-        jwtKey: process.env.CLERK_SECRET_KEY,
+        secretKey: process.env.CLERK_SECRET_KEY,
       });
 
       const orgId = verified.orgId as string | undefined;
@@ -89,7 +89,7 @@ export async function quotaRoutes(fastify: FastifyInstance) {
       }
 
       const verified = await verifyToken(token, {
-        jwtKey: process.env.CLERK_SECRET_KEY,
+        secretKey: process.env.CLERK_SECRET_KEY,
       });
 
       const orgId = verified.orgId as string | undefined;

@@ -75,7 +75,7 @@ if (env.RATE_LIMIT_ENABLED) {
             const token = authHeader.substring(7);
             const { verifyToken } = await import('@clerk/backend');
             const verified = await verifyToken(token, {
-              jwtKey: process.env.CLERK_SECRET_KEY,
+              secretKey: process.env.CLERK_SECRET_KEY,
             });
             return !!verified;
           }

@@ -46,4 +46,14 @@ describe('PlatformIcon', () => {
     fireEvent.error(screen.getByAltText('Google logo'));
     expect(screen.getByText('G')).toBeInTheDocument();
   });
+
+  it('handles unknown platform ids without crashing', async () => {
+    delete process.env.NEXT_PUBLIC_BRANDFETCH_CLIENT_ID;
+    const PlatformIcon = await loadPlatformIcon();
+
+    render(<PlatformIcon platform={'google_tag_manager' as Platform} size="md" showLabel />);
+
+    expect(screen.getByText('G')).toBeInTheDocument();
+    expect(screen.getByText('Google Tag Manager')).toBeInTheDocument();
+  });
 });

@@ -73,3 +73,7 @@ services:
         value: https://api.creem.io/v1
       - key: LOG_LEVEL
         value: info
+      - key: INTERNAL_ADMIN_USER_IDS
+        sync: false
+      - key: INTERNAL_ADMIN_EMAILS
+        sync: false

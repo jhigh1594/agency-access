@@ -64,6 +64,14 @@ export async function internalAdminRoutes(
         return sendError(reply, result.error?.code || 'INTERNAL_ERROR', result.error?.message || 'Failed to fetch agencies', 500);
       }
 
+      fastify.log.info({
+        requestId: request.id,
+        page: result.data.page,
+        limit: result.data.limit,
+        total: result.data.total,
+        itemCount: result.data.items.length,
+      }, 'GET /internal-admin/agencies response');
+
       return sendSuccess(reply, result.data);
     } catch (error) {
       fastify.log.error({ error }, 'Error in GET /internal-admin/agencies');

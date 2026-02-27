@@ -15,7 +15,7 @@ import type { Platform } from '@agency-platform/shared';
 const BRANDFETCH_CLIENT_ID = process.env.NEXT_PUBLIC_BRANDFETCH_CLIENT_ID;
 
 interface PlatformIconProps {
-  platform: Platform;
+  platform: Platform | string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showLabel?: boolean;
 }
@@ -27,6 +27,14 @@ const SIZE_CONFIG = {
   xl: { width: 64, height: 64, textSize: 'text-lg' },
 } as const;
 
+function formatPlatformFallbackName(platform: string): string {
+  return platform
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ');
+}
+
 export function PlatformIcon({
   platform,
   size = 'md',
@@ -34,12 +42,12 @@ export function PlatformIcon({
 }: PlatformIconProps) {
   const [imageError, setImageError] = useState(false);
   const config = SIZE_CONFIG[size];
-  const domain = PLATFORM_DOMAINS[platform];
-  const platformName = PLATFORM_NAMES[platform];
+  const domain = PLATFORM_DOMAINS[platform as Platform];
+  const platformName = PLATFORM_NAMES[platform as Platform] ?? formatPlatformFallbackName(platform);
 
   // Fallback: show initial letter if image fails or domain missing
   if (!domain || !BRANDFETCH_CLIENT_ID || imageError) {
-    const initial = platformName.charAt(0).toUpperCase();
+    const initial = platformName.charAt(0).toUpperCase() || '?';
     return (
       <div className="inline-flex items-center gap-2">
         <div
@@ -84,4 +92,3 @@ export function PlatformIcon({
     </div>
   );
 }
-

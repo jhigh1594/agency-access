@@ -13,7 +13,6 @@ import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
-import posthog from 'posthog-js';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
@@ -129,14 +128,28 @@ export default function DashboardPage() {
   // Track dashboard view in PostHog (only once per mount)
   useEffect(() => {
     if (agency && !hasTrackedView.current) {
-      posthog.capture('dashboard_viewed', {
-        agency_id: agency.id,
-        agency_name: agency.name,
-        total_requests: stats.totalRequests,
-        pending_requests: stats.pendingRequests,
-        active_connections: stats.activeConnections,
-        total_platforms: stats.totalPlatforms,
-      });
+      const trackDashboardView = async () => {
+        const { default: posthog } = await import('posthog-js');
+        posthog.capture('dashboard_viewed', {
+          agency_id: agency.id,
+          agency_name: agency.name,
+          total_requests: stats.totalRequests,
+          pending_requests: stats.pendingRequests,
+          active_connections: stats.activeConnections,
+          total_platforms: stats.totalPlatforms,
+        });
+      };
+
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        window.requestIdleCallback(() => {
+          void trackDashboardView();
+        });
+      } else {
+        setTimeout(() => {
+          void trackDashboardView();
+        }, 0);
+      }
+
       hasTrackedView.current = true;
     }
   }, [agency, stats]);
