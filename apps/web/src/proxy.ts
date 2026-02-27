@@ -29,10 +29,11 @@ const isPublicRoute = createRouteMatcher([
 const isMarketingRedirectRoute = createRouteMatcher(['/'])
 
 export default clerkMiddleware(async (auth, request) => {
-  // Redirect authenticated users away from marketing pages to dashboard
+  // Redirect users with an existing session cookie away from "/" without
+  // triggering Clerk auth resolution on every home page request.
   if (isMarketingRedirectRoute(request)) {
-    const { userId } = await auth()
-    if (userId) {
+    const hasSessionCookie = Boolean(request.cookies.get('__session')?.value)
+    if (hasSessionCookie) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
     return

@@ -10,7 +10,7 @@
 
 import { Plus, Users, Key, Activity, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import posthog from 'posthog-js';
@@ -23,24 +23,27 @@ import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 const etagCache = new Map<string, string>();
 
 export default function DashboardPage() {
-  const { user } = useUser();
   const clerkAuth = useAuth();
   const { getToken } = clerkAuth;
-  const { isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
+  const { userId, orgId, isLoaded, isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
   const perfHarness = readPerfHarnessContext();
+  const principalId = perfHarness?.principalId || orgId || userId;
+  const canFetchDashboard = Boolean(perfHarness?.token) || (isLoaded && Boolean(principalId));
   const hasTrackedView = useRef(false);
 
   // Single unified query that fetches all dashboard data at once
   // This replaces 4 separate API calls (agency, stats, requests, connections)
   const { data: dashboardData, isLoading, error, refetch } = useQuery({
-    queryKey: ['dashboard', user?.id || perfHarness?.principalId || 'anonymous'],
+    queryKey: ['dashboard', principalId || 'anonymous'],
     queryFn: async () => {
-      const cacheKey = `dashboard-${user?.id || perfHarness?.principalId || 'anonymous'}`;
+      const cacheKey = `dashboard-${principalId || 'anonymous'}`;
       const stopTokenTimer = startPerfTimer('dashboard:token-fetch');
       const token = perfHarness?.token || await getToken();
       stopTokenTimer?.();
 
-      if (!token) throw new Error('No auth token');
+      if (!token) {
+        throw new Error('AUTH_TOKEN_UNAVAILABLE');
+      }
       const stopTimer = startPerfTimer('dashboard:data-fetch');
 
       try {
@@ -87,6 +90,14 @@ export default function DashboardPage() {
         stopTimer?.();
       }
     },
+    enabled: canFetchDashboard,
+    retry: (failureCount, queryError) => {
+      const message = queryError instanceof Error ? queryError.message : '';
+      if (message === 'AUTH_TOKEN_UNAVAILABLE' || message.includes('No auth token')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes - consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
     refetchOnWindowFocus: false,
@@ -103,6 +114,17 @@ export default function DashboardPage() {
   };
   const requests = dashboardData?.data?.requests || [];
   const connections = dashboardData?.data?.connections || [];
+
+  if (!canFetchDashboard && !dashboardData) {
+    return (
+      <div className="flex-1 bg-paper p-8 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-coral mx-auto" />
+          <p className="mt-4 text-muted-foreground">Initializing session...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Track dashboard view in PostHog (only once per mount)
   useEffect(() => {
@@ -133,17 +155,25 @@ export default function DashboardPage() {
 
   // Show error state
   if (error) {
+    const isAuthUnavailable = error instanceof Error && error.message === 'AUTH_TOKEN_UNAVAILABLE';
+
     return (
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-coral/10 border border-coral rounded-lg p-6 text-center">
             <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-coral mb-2">Failed to Load Dashboard</h2>
+            <h2 className="text-lg font-semibold text-coral mb-2">
+              {isAuthUnavailable ? 'Authenticating Session' : 'Failed to Load Dashboard'}
+            </h2>
             <p className="text-coral/90 mb-4">
-              {error instanceof Error ? error.message : 'An error occurred while loading the dashboard.'}
+              {isAuthUnavailable
+                ? 'We are still initializing your session. Please wait a moment and retry.'
+                : error instanceof Error
+                  ? error.message
+                  : 'An error occurred while loading the dashboard.'}
             </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => refetch()}
               className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
             >
               Retry

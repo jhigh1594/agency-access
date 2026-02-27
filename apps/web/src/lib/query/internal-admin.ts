@@ -14,11 +14,25 @@ async function fetchInternalAdmin<T>(path: string, token: string): Promise<T> {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
-  const payload = await response.json();
-  if (!response.ok || payload.error) {
-    throw new Error(payload.error?.message || 'Internal admin request failed');
+  const rawBody = await response.text();
+  let payload: any = null;
+  if (rawBody) {
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      throw new Error(`Invalid API response (${response.status})`);
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || `Internal admin request failed (${response.status})`);
+  }
+
+  if (!payload || payload.error) {
+    throw new Error(payload?.error?.message || 'Empty API response');
   }
 
   return payload.data as T;
@@ -230,11 +244,21 @@ export function useInternalAdminUpgradeSubscription() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ newTier, updateBehavior }),
+        cache: 'no-store',
       });
 
-      const payload = await response.json();
-      if (!response.ok || payload.error) {
-        throw new Error(payload.error?.message || 'Failed to upgrade subscription');
+      const rawBody = await response.text();
+      let payload: any = null;
+      if (rawBody) {
+        try {
+          payload = JSON.parse(rawBody);
+        } catch {
+          throw new Error(`Invalid API response (${response.status})`);
+        }
+      }
+
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error?.message || 'Failed to upgrade subscription');
       }
 
       return payload.data;
@@ -261,11 +285,21 @@ export function useInternalAdminCancelSubscription() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ cancelAtPeriodEnd }),
+        cache: 'no-store',
       });
 
-      const payload = await response.json();
-      if (!response.ok || payload.error) {
-        throw new Error(payload.error?.message || 'Failed to cancel subscription');
+      const rawBody = await response.text();
+      let payload: any = null;
+      if (rawBody) {
+        try {
+          payload = JSON.parse(rawBody);
+        } catch {
+          throw new Error(`Invalid API response (${response.status})`);
+        }
+      }
+
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error?.message || 'Failed to cancel subscription');
       }
 
       return payload.data;
