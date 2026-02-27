@@ -19,7 +19,7 @@ export function KitCopyButton({ text }: KitCopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center gap-2"
+      className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors text-sm font-medium flex items-center gap-2"
     >
       {copied ? (
         <>

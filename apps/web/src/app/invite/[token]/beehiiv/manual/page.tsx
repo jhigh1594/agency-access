@@ -1,26 +1,22 @@
-/**
- * Beehiiv Manual Invitation Flow
- *
- * A step-by-step guide for clients to grant Beehiiv workspace access
- * through team invitation (manual flow, no OAuth).
- *
- * Flow:
- * Step 1: Connect Beehiiv (this page) - Client follows instructions to invite agency
- * Step 2: Select Publications - Client selects which publications to share
- * Step 3: Connected - Confirmation screen
- *
- * This is the Leadsie-style manual invitation pattern, adapted for Beehiiv.
- */
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import { BeehiivManualFlow } from '@/components/client-auth/beehiiv/BeehiivManualFlow';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
+import posthog from 'posthog-js';
+import { BeehiivCopyButton } from '@/components/client-auth/beehiiv/BeehiivCopyButton';
+import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
+import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
+import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
+import {
+  ManualChecklistWizard,
+  type ManualStepConfig,
+} from '@/components/flow/manual-checklist-wizard';
+import { Button } from '@/components/ui';
+import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
+import type { ClientAccessRequestPayload } from '@agency-platform/shared';
 
-interface ClientData {
+interface ManualPageData {
   agencyName: string;
   agencyEmail: string;
   clientEmail?: string;
@@ -35,166 +31,273 @@ export default function BeehiivManualPage() {
   const router = useRouter();
   const token = params.token as string;
 
-  const [data, setData] = useState<ClientData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [completionConfirmed, setCompletionConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [railState, setRailState] = useState<{
+    stepIndex: number;
+    totalSteps: number;
+    label: string;
+    blockedReason?: string;
+  }>({
+    stepIndex: 0,
+    totalSteps: 4,
+    label: 'Continue',
+  });
 
-  // Fetch client data on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`);
-        const result = await res.json();
+  const parseManualData = useCallback((payload: ClientAccessRequestPayload): ManualPageData => {
+    return {
+      agencyName: payload.agencyName,
+      agencyEmail: payload.manualInviteTargets?.beehiiv?.agencyEmail || 'your agency contact email',
+      clientEmail: payload.clientEmail,
+      branding: payload.branding,
+    };
+  }, []);
 
-        if (result.error || !result.data) {
-          setError(result.error?.message || 'Failed to load data');
-          return;
+  const {
+    data,
+    error,
+    phase,
+    retry,
+  } = useInviteRequestLoader<ManualPageData>({
+    endpoint: `${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`,
+    source: 'manual-beehiiv',
+    parseData: parseManualData,
+  });
+
+  const submitManualConnection = async () => {
+    if (!data || submitting) return;
+
+    setSubmitting(true);
+    setSubmissionError(null);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}/beehiiv/manual-connect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agencyEmail: data.agencyEmail,
+          clientEmail: data.clientEmail,
+          platform: 'beehiiv',
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || result.error || !result.data?.connectionId) {
+        throw new Error(result.error?.message || 'Failed to create Beehiiv connection');
+      }
+
+      router.push(`/invite/${token}?step=2&platform=beehiiv&connectionId=${result.data.connectionId}`);
+    } catch (err) {
+      setSubmissionError(err instanceof Error ? err.message : 'Failed to create Beehiiv connection');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const steps = useMemo<ManualStepConfig[]>(() => {
+    if (!data) return [];
+
+    return [
+      {
+        id: 'copy-invite-email',
+        title: 'Copy invite email',
+        description: 'Use this email when adding your agency as a Beehiiv teammate.',
+        content: (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Invite email</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                readOnly
+                value={data.agencyEmail}
+                className="flex-1 rounded-lg border border-border bg-paper px-3 py-2 text-sm font-mono text-ink"
+              />
+              <BeehiivCopyButton text={data.agencyEmail} />
+            </div>
+          </div>
+        ),
+        primaryAction: { label: 'I copied this' },
+      },
+      {
+        id: 'open-team-settings',
+        title: 'Open Beehiiv team settings',
+        description: 'Sign in to Beehiiv and open your workspace team settings.',
+        content: (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="https://app.beehiiv.com/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/20"
+              >
+                Open Beehiiv Login
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <a
+                href="https://app.beehiiv.com/settings/workspace/team"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/20"
+              >
+                Open Team Settings
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        ),
+        primaryAction: { label: 'I opened settings' },
+      },
+      {
+        id: 'send-invite',
+        title: 'Invite your agency in Beehiiv',
+        description: 'Select Invite New User, paste the email, choose access, then send.',
+        content: (
+          <div className="rounded-lg border border-border bg-muted/10 px-4 py-3">
+            <ul className="space-y-2 text-sm text-foreground list-disc pl-5">
+              <li>Click Invite New User in the team screen.</li>
+              <li>Paste <span className="font-mono">{data.agencyEmail}</span>.</li>
+              <li>Choose workspace or publication access and assign role.</li>
+              <li>Send the email invite from Beehiiv.</li>
+            </ul>
+          </div>
+        ),
+        primaryAction: { label: 'I sent the invite' },
+      },
+      {
+        id: 'confirm-completion',
+        title: 'Confirm and continue',
+        description: 'Once confirmed, we will mark Beehiiv as completed for this request.',
+        content: submissionError ? (
+          <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+            {submissionError}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Confirm this invite is complete, then continue back to the request flow.
+          </p>
+        ),
+        completionGate: {
+          label: `I invited ${data.agencyEmail} to my Beehiiv workspace`,
+          checked: completionConfirmed,
+          onChange: (checked) => {
+            setCompletionConfirmed(checked);
+            if (checked) {
+              posthog.capture('client_manual_completion_confirmed', {
+                platform: 'beehiiv',
+              });
+            }
+          },
+          requiredMessage: 'Confirm completion before continuing.',
+        },
+        primaryAction: {
+          label: 'Continue',
+          loading: submitting,
+          loadingLabel: 'Connecting...',
+          onClick: submitManualConnection,
+        },
+      },
+    ];
+  }, [completionConfirmed, data, submissionError, submitting]);
+
+  const handleStepStateChange = useCallback(
+    ({
+      stepIndex,
+      totalSteps,
+      actionLabel,
+      blockedReason,
+    }: {
+      stepIndex: number;
+      totalSteps: number;
+      actionLabel: string;
+      blockedReason?: string;
+    }) => {
+      setRailState((previous) => {
+        if (
+          previous.stepIndex === stepIndex &&
+          previous.totalSteps === totalSteps &&
+          previous.label === actionLabel &&
+          previous.blockedReason === blockedReason
+        ) {
+          return previous;
         }
 
-        // Extract agency email from the response
-        // The API response should have agency info
-        setData({
-          agencyName: result.data.agencyName || 'AuthHub',
-          agencyEmail: result.data.agencyEmail || 'jon.highmu@gmail.com',
-          clientEmail: result.data.clientEmail,
-          branding: result.data.branding,
-        });
-      } catch (err) {
-        console.error('Failed to fetch client data:', err);
-        setError('Failed to load authorization data');
-      } finally {
-        setLoading(false);
-      }
-    };
+        return {
+          stepIndex,
+          totalSteps,
+          label: actionLabel,
+          blockedReason,
+        };
+      });
+    },
+    []
+  );
 
-    fetchData();
-  }, [token]);
-
-  // Loading state
-  if (loading) {
+  if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600">Loading...</p>
-        </div>
-      </div>
+      <InviteLoadStateCard
+        phase={phase === 'ready' ? 'loading' : phase}
+        message={
+          error ||
+          (phase === 'timeout'
+            ? 'Beehiiv setup took too long to load. Retry or contact support.'
+            : 'This request link is invalid or expired. Contact your agency for a new link.')
+        }
+        onRetry={retry}
+      />
     );
   }
-
-  // Error state
-  if (error || !data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="max-w-md w-full mx-4">
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-8 text-center">
-            <h1 className="text-xl font-semibold text-slate-900 mb-2">Unable to Load</h1>
-            <p className="text-slate-600 mb-6">{error || 'Invalid or expired authorization link'}</p>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Go to AuthHub
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle completion of manual flow
-  const handleComplete = (connectionId: string) => {
-    // Redirect to step 2 (Select Publications)
-    router.push(`/invite/${token}?step=2&platform=beehiiv&connectionId=${connectionId}`);
-  };
-
-  // Handle back button
-  const handleBack = () => {
-    router.back();
-  };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <nav className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              {data.branding?.logoUrl ? (
-                <img src={data.branding.logoUrl} alt="AuthHub" className="h-8 w-auto" />
-              ) : (
-                <span className="text-xl font-bold text-slate-900">AuthHub</span>
-              )}
-            </Link>
-
-            {/* Nav Links */}
-            <div className="flex items-center gap-6">
-              <Link href={"/dashboard" as any} className="text-sm text-slate-600 hover:text-slate-900">
-                Dashboard
-              </Link>
-              <Link href={"/settings" as any} className="text-sm text-slate-600 hover:text-slate-900">
-                Settings
-              </Link>
-              <Link href={"/logout" as any} className="text-sm text-slate-600 hover:text-slate-900">
-                Logout
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <button
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Go Back
-        </button>
-
-        {/* Status Line */}
-        <div className="text-center mb-6">
-          <p className="text-slate-600">
-            Great progress, 5 accounts connected to{' '}
-            <strong className="text-slate-900">{data.agencyEmail}</strong>
-          </p>
-        </div>
-
-        {/* Manual Flow Component */}
-        <BeehiivManualFlow
-          token={token}
-          agencyEmail={data.agencyEmail}
-          agencyName={data.agencyName}
-          clientEmail={data.clientEmail}
-          branding={data.branding}
-          onComplete={handleComplete}
-          onBack={handleBack}
+    <InviteFlowShell
+      title={data.agencyName}
+      description="Connect Beehiiv by completing each checklist step."
+      layoutMode="split"
+      showProgress={false}
+      rightSlot={
+        <Button variant="ghost" size="sm" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+          Back
+        </Button>
+      }
+      rail={
+        <InviteStickyRail
+          objective="Complete Beehiiv invite setup and return to your authorization request."
+          securityNote="Use only Beehiiv-native invite screens. Never share credentials."
+          identities={[{ label: 'Beehiiv invite email', value: data.agencyEmail }]}
+          completedCount={railState.stepIndex + 1}
+          totalCount={railState.totalSteps}
+          actionStatus={{
+            label: railState.label,
+            disabledReason: railState.blockedReason,
+          }}
         />
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-card border-t border-border mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-6 text-sm text-slate-600">
-              <Link href={"/privacy" as any} className="hover:text-slate-900">
-                Privacy Policy
-              </Link>
-              <Link href={"/terms" as any} className="hover:text-slate-900">
-                Terms & Conditions
-              </Link>
-              <Link href={"/cookies" as any} className="hover:text-slate-900">
-                Manage Cookies
-              </Link>
-            </div>
-            <p className="text-sm text-slate-500">English</p>
-            <p className="text-sm text-slate-500">© AuthHub 2026</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+      }
+    >
+      <ManualChecklistWizard
+        platformName="Beehiiv"
+        steps={steps}
+        onStepView={({ stepId, stepIndex, totalSteps }) => {
+          posthog.capture('client_manual_step_viewed', {
+            platform: 'beehiiv',
+            step_id: stepId,
+            step_index: stepIndex,
+            total_steps: totalSteps,
+          });
+        }}
+        onStepAdvanced={({ fromStepId, toStepId, fromStepIndex, toStepIndex, totalSteps }) => {
+          posthog.capture('client_manual_step_advanced', {
+            platform: 'beehiiv',
+            from_step_id: fromStepId,
+            to_step_id: toStepId,
+            from_step_index: fromStepIndex,
+            to_step_index: toStepIndex,
+            total_steps: totalSteps,
+          });
+        }}
+        onStepStateChange={handleStepStateChange}
+      />
+    </InviteFlowShell>
   );
 }

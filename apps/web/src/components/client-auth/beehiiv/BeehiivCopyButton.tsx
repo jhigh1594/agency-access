@@ -39,12 +39,12 @@ export function BeehiivCopyButton({
 
   const buttonClasses = [
     'inline-flex items-center gap-2 px-4 py-2',
-    'bg-card border border-slate-300 rounded-lg',
-    'text-slate-700 font-medium text-sm',
-    'hover:bg-slate-50 hover:border-slate-400',
-    'active:bg-slate-100',
+    'bg-card border border-border rounded-lg',
+    'text-foreground font-medium text-sm',
+    'hover:bg-muted/20 hover:border-border',
+    'active:bg-muted/30',
     'transition-all duration-200',
-    copied ? 'border-green-500 bg-green-50 text-green-700' : '',
+    copied ? 'border-teal bg-teal/10 text-teal-90' : '',
     className,
   ].filter(Boolean).join(' ');
 
@@ -70,7 +70,7 @@ export function BeehiivCopyButton({
       {/* Optional tooltip/subtle confirmation below button */}
       {copied && (
         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-          <span className="text-xs text-green-600 font-medium">
+          <span className="text-xs text-teal font-medium">
             Copied to clipboard!
           </span>
         </div>
