@@ -19,7 +19,7 @@
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
     "build:web": "npm run build --workspace=packages/shared && npm run build --workspace=apps/web",
     "build:design-os": "cd tools/design-os && npm run build",
-    "lint": "npm run lint --workspaces",
+    "lint": "npm run lint --workspace=apps/api && npm run lint --workspace=apps/web",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "perf:api": "node scripts/perf/benchmark-api.mjs",

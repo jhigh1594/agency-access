@@ -6,11 +6,12 @@
     "dev": "TURBOPACK_ROOT=. next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "chrome:debug": "bash ./scripts/chrome-debug.sh"
+    "chrome:debug": "bash ./scripts/chrome-debug.sh",
+    "evidence:client-request-flow": "node ./scripts/capture-client-request-flow-evidence.mjs"
   },
   "dependencies": {
     "@agency-platform/shared": "^0.1.0",
@@ -48,6 +49,7 @@
     "eslint": "^9.17.0",
     "eslint-config-next": "^16.1.1",
     "jsdom": "^27.3.0",
+    "playwright": "^1.58.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",

@@ -668,6 +668,46 @@ export interface BrandingConfig {
   subdomain: string;
 }
 
+// Additional agency identity details used for manual invite flows.
+export interface ManualInviteTarget {
+  agencyEmail?: string;
+  businessId?: string;
+}
+
+// Client-side completion progress for multi-platform authorization.
+export interface ClientAuthorizationProgress {
+  completedPlatforms: string[];
+  isComplete: boolean;
+}
+
+export interface ClientAccessRequestPlatformProduct {
+  product: string;
+  accessLevel: string;
+}
+
+export interface ClientAccessRequestPlatformGroup {
+  platformGroup: Platform;
+  products: ClientAccessRequestPlatformProduct[];
+}
+
+// Public payload returned by GET /api/client/:token.
+export interface ClientAccessRequestPayload {
+  id: string;
+  agencyId: string;
+  agencyName: string;
+  clientName: string;
+  clientEmail: string;
+  authModel: 'client_authorization' | 'delegated_access';
+  status: AccessRequestStatus;
+  uniqueToken: string;
+  expiresAt: string;
+  platforms: ClientAccessRequestPlatformGroup[];
+  intakeFields: IntakeField[];
+  branding: Partial<BrandingConfig>;
+  manualInviteTargets: Record<string, ManualInviteTarget>;
+  authorizationProgress: ClientAuthorizationProgress;
+}
+
 // Platform selection format for hierarchical platform organization
 // Used in access requests and templates
 // Format: { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
