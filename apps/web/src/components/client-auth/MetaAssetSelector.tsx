@@ -244,7 +244,7 @@ export function MetaAssetSelector({
             <h3 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">
               Selected
             </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
               Accounts you're sharing
             </p>
           </div>
@@ -259,12 +259,12 @@ export function MetaAssetSelector({
         {/* Ad Accounts - Multi-select Combobox or Creator */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-black dark:border-white bg-blue-500 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-coral flex items-center justify-center">
               <span className="text-white text-lg">💼</span>
             </div>
             <div>
               <h3 className="text-lg font-bold text-[var(--ink)] font-display">Ad Accounts</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
                 {selectedAdAccounts.size} of {adAccountAssets.length} selected
               </p>
             </div>
@@ -277,7 +277,7 @@ export function MetaAssetSelector({
                 <h4 className="font-bold text-[var(--ink)]">Create New Ad Account</h4>
                 <button
                   onClick={() => setShowAdAccountCreator(false)}
-                  className="text-sm text-slate-500 hover:text-[var(--coral)] underline"
+                  className="text-sm text-muted-foreground hover:text-[var(--coral)] underline"
                 >
                   Cancel
                 </button>
@@ -305,7 +305,7 @@ export function MetaAssetSelector({
             /* Empty state with create option */
             <div className="py-8 text-center px-6">
               {/* Empty state icon - Brutalist Square */}
-              <div className="w-20 h-20 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-4">
                 <span className="text-4xl" role="img" aria-label="Empty">
                   📭
                 </span>
@@ -313,7 +313,7 @@ export function MetaAssetSelector({
 
               {/* Message */}
               <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">No Ad Accounts Found</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 max-w-sm mx-auto">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4 max-w-sm mx-auto">
                 You don't have any ad accounts in this Business Manager yet. Create one to get started.
               </p>
 
@@ -338,12 +338,12 @@ export function MetaAssetSelector({
         {/* Pages - Multi-select Combobox or Guided Redirect */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-black dark:border-white bg-indigo-500 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-coral/100 flex items-center justify-center">
               <span className="text-white text-lg">📄</span>
             </div>
             <div>
               <h3 className="text-lg font-bold text-[var(--ink)] font-display">Pages</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
                 {selectedPages.size} of {pageAssets.length} selected
               </p>
             </div>
@@ -379,7 +379,7 @@ export function MetaAssetSelector({
             /* Empty state with create option */
             <div className="py-8 text-center px-6">
               {/* Empty state icon - Brutalist Square */}
-              <div className="w-20 h-20 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-4">
                 <span className="text-4xl" role="img" aria-label="Empty">
                   📄
                 </span>
@@ -387,7 +387,7 @@ export function MetaAssetSelector({
 
               {/* Message */}
               <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">No Pages Found</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 max-w-sm mx-auto">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4 max-w-sm mx-auto">
                 You don't have any Facebook Pages in this Business Manager. Create one to get started.
               </p>
 

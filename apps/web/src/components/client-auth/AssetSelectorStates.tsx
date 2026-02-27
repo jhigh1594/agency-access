@@ -26,13 +26,13 @@ export function AssetSelectorLoading({
     <div className="space-y-4 py-8">
       {/* Animated skeleton items - Brutalist Style */}
       <div className="space-y-3 animate-pulse">
-        <div className="h-4 bg-slate-200 dark:bg-slate-700 w-3/4" />
-        <div className="h-4 bg-slate-200 dark:bg-slate-700 w-1/2" />
-        <div className="h-4 bg-slate-200 dark:bg-slate-700 w-5/6" />
+        <div className="h-4 bg-muted/40 dark:bg-muted/50 w-3/4" />
+        <div className="h-4 bg-muted/40 dark:bg-muted/50 w-1/2" />
+        <div className="h-4 bg-muted/40 dark:bg-muted/50 w-5/6" />
       </div>
 
       {/* Loading message */}
-      <div className="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400">
+      <div className="flex items-center justify-center gap-2 text-muted-foreground dark:text-muted-foreground">
         <RefreshCw className="w-4 h-4 animate-spin text-[var(--coral)]" />
         <span className="text-sm font-medium">{message}</span>
       </div>
@@ -59,7 +59,7 @@ export function AssetSelectorEmpty({
   return (
     <div className="py-12 text-center px-6">
       {/* Empty state icon - Brutalist Square */}
-      <div className="w-20 h-20 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+      <div className="w-20 h-20 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-4">
         <span className="text-4xl" role="img" aria-label="Empty">
           📭
         </span>
@@ -67,7 +67,7 @@ export function AssetSelectorEmpty({
 
       {/* Message */}
       <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">{title}</h3>
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 max-w-sm mx-auto">{description}</p>
+      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4 max-w-sm mx-auto">{description}</p>
 
       {/* Optional action button */}
       {actionLabel && onAction && (
@@ -133,7 +133,7 @@ export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
   return (
     <div className="py-8 text-center px-6">
       {/* Search icon - Brutalist Square */}
-      <div className="w-16 h-16 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+      <div className="w-16 h-16 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-3">
         <span className="text-2xl" role="img" aria-label="Search">
           🔍
         </span>
@@ -143,7 +143,7 @@ export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
       <h3 className="text-base font-bold text-[var(--ink)] mb-1 font-display">
         No accounts match "{query}"
       </h3>
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Try adjusting your search terms</p>
+      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">Try adjusting your search terms</p>
 
       {/* Clear search button */}
       <button

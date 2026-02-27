@@ -69,16 +69,16 @@ export function GuidedRedirectModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="w-full max-w-lg border-2 border-black dark:border-white shadow-brutalist-xl bg-white dark:bg-slate-900">
+      <Card className="w-full max-w-lg border-2 border-black dark:border-white shadow-brutalist-xl bg-white dark:bg-ink">
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b-2 border-black dark:border-white">
           <div>
             <h3 className="text-xl font-bold text-[var(--ink)] font-display">{title}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{description}</p>
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">{description}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center border-2 border-black dark:border-white rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="w-8 h-8 flex items-center justify-center border-2 border-black dark:border-white rounded hover:bg-muted/30 dark:hover:bg-muted/60 transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -98,7 +98,7 @@ export function GuidedRedirectModal({
                 <div className="flex-1 pt-1">
                   <h4 className="font-semibold text-[var(--ink)]">{instruction.title}</h4>
                   {instruction.description && (
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                       {instruction.description}
                     </p>
                   )}
@@ -119,7 +119,7 @@ export function GuidedRedirectModal({
           </Button>
 
           {/* Confirmation Checkbox */}
-          <div className="flex items-start gap-3 p-4 border-2 border-black dark:border-white rounded-lg bg-slate-50 dark:bg-slate-800">
+          <div className="flex items-start gap-3 p-4 border-2 border-black dark:border-white rounded-lg bg-muted/20 dark:bg-muted/60">
             <input
               type="checkbox"
               id="confirmed-created"
@@ -137,7 +137,7 @@ export function GuidedRedirectModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-black dark:border-white bg-slate-50 dark:bg-slate-800">
+        <div className="p-6 border-t-2 border-black dark:border-white bg-muted/20 dark:bg-muted/60">
           <div className="flex gap-3">
             <Button
               variant="brutalist-ghost-rounded"
@@ -217,7 +217,7 @@ export function GuidedRedirectCard({
         </div>
         <div>
           <h3 className="text-lg font-bold text-[var(--ink)] font-display">{title}</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground">{description}</p>
         </div>
       </div>
 
@@ -232,7 +232,7 @@ export function GuidedRedirectCard({
             <div className="flex-1 pt-0.5">
               <p className="text-sm text-[var(--ink)]">{instruction.title}</p>
               {instruction.description && (
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
                   {instruction.description}
                 </p>
               )}
@@ -253,7 +253,7 @@ export function GuidedRedirectCard({
       </Button>
 
       {/* Confirmation Checkbox */}
-      <div className="flex items-start gap-3 p-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-slate-800 mb-3">
+      <div className="flex items-start gap-3 p-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-muted/60 mb-3">
         <input
           type="checkbox"
           id="confirmed-created-card"

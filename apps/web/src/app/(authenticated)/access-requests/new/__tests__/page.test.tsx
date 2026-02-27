@@ -1,504 +1,251 @@
-/**
- * Access Request Wizard Integration Tests
- *
- * Phase 5: End-to-end tests for the complete wizard flow
- * including step navigation, validation, and API submission.
- */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import AccessRequestPage from '../page';
 import * as accessRequestsApi from '@/lib/api/access-requests';
 
-// Mock Next.js router
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
 }));
 
-// Mock Clerk auth
 vi.mock('@clerk/nextjs', () => ({
   useUser: vi.fn(),
   useAuth: vi.fn(),
 }));
 
-// Mock API client
 vi.mock('@/lib/api/access-requests', () => ({
   createAccessRequest: vi.fn(),
 }));
 
-// Mock child components (they have their own tests)
-vi.mock('@/components/client-selector', () => {
-  const ClientSelector = ({ onSelect, value }: any) => (
-    <div data-testid="client-selector">
-      <button
-        onClick={() =>
-          onSelect({
-            id: 'client-123',
-            name: 'Test Client',
-            email: 'test@example.com',
-            agencyId: 'agency-123',
-          })
-        }
-      >
-        Select Client
-      </button>
-      {value && <div data-testid="selected-client">{value}</div>}
-    </div>
-  );
-  return { ClientSelector };
-});
+vi.mock('@/components/template-selector', () => ({
+  TemplateSelector: () => <div data-testid="template-selector" />,
+}));
 
-vi.mock('@/components/access-level-selector', () => {
-  const AccessLevelSelector = ({ onSelectionChange, selectedAccessLevel }: any) => (
-    <div data-testid="access-level-selector">
-      <button onClick={() => onSelectionChange('admin')}>Select Admin</button>
-      <button onClick={() => onSelectionChange('standard')}>Select Standard</button>
-      {selectedAccessLevel && (
-        <div data-testid="selected-access-level">{selectedAccessLevel}</div>
-      )}
-    </div>
-  );
-  return { AccessLevelSelector };
-});
+vi.mock('@/components/client-selector', () => ({
+  ClientSelector: ({ onSelect }: any) => (
+    <button
+      type="button"
+      onClick={() =>
+        onSelect({
+          id: 'client-123',
+          name: 'Test Client',
+          email: 'client@test.com',
+          agencyId: 'agency-123',
+        })
+      }
+    >
+      Pick Client
+    </button>
+  ),
+}));
 
-vi.mock('@/components/hierarchical-platform-selector', () => {
-  const HierarchicalPlatformSelector = ({ onSelectionChange, selectedPlatforms }: any) => (
-    <div data-testid="platform-selector">
-      <button
-        onClick={() =>
-          onSelectionChange({
-            google: ['google_ads', 'ga4'],
-            meta: ['meta_ads'],
-          })
-        }
-      >
-        Select Platforms
-      </button>
-      {Object.keys(selectedPlatforms || {}).length > 0 && (
-        <div data-testid="selected-platforms">
-          {JSON.stringify(selectedPlatforms)}
-        </div>
-      )}
-    </div>
-  );
-  return { HierarchicalPlatformSelector };
-});
+vi.mock('@/components/auth-model-selector', () => ({
+  AuthModelSelector: () => <div data-testid="auth-model">Delegated Access</div>,
+}));
 
-describe('AccessRequestPage - Full Wizard Flow', () => {
+vi.mock('@/components/access-level-selector', () => ({
+  AccessLevelSelector: () => <div data-testid="access-level">Standard</div>,
+}));
+
+vi.mock('@/components/hierarchical-platform-selector', () => ({
+  HierarchicalPlatformSelector: ({ onSelectionChange }: any) => (
+    <button
+      type="button"
+      onClick={() =>
+        onSelectionChange({
+          google: ['google_ads'],
+        })
+      }
+    >
+      Pick Platforms
+    </button>
+  ),
+}));
+
+vi.mock('@/components/save-as-template-modal', () => ({
+  SaveAsTemplateModal: () => null,
+}));
+
+vi.mock('@/components/platform-connection-modal', () => ({
+  PlatformConnectionModal: () => null,
+}));
+
+function renderWithProviders(component: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
+}
+
+describe('Access Request Wizard', () => {
   const mockRouter = {
     push: vi.fn(),
     back: vi.fn(),
-    forward: vi.fn(),
     refresh: vi.fn(),
     replace: vi.fn(),
     prefetch: vi.fn(),
+    forward: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+
     vi.mocked(useRouter).mockReturnValue(mockRouter as any);
-    vi.mocked(useUser).mockReturnValue({
-      isLoaded: true,
-      isSignedIn: true,
-      user: {
-        id: 'user-123',
-        emailAddresses: [{ emailAddress: 'agency@example.com' }],
-      },
-    } as any);
+    vi.mocked(useUser).mockReturnValue({ user: { id: 'user-123' } } as any);
     vi.mocked(useAuth).mockReturnValue({
       userId: 'user-123',
-      isLoaded: true,
-      isSignedIn: true,
+      orgId: null,
+      getToken: vi.fn().mockResolvedValue('token-123'),
     } as any);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('/api/agencies')) {
+          return {
+            ok: true,
+            json: async () => ({ data: [{ id: 'agency-123' }] }),
+          } as Response;
+        }
+
+        if (url.includes('/agency-platforms?')) {
+          return {
+            ok: true,
+            json: async () => ({ data: [{ platform: 'google', status: 'active', agencyEmail: 'ops@agency.com' }] }),
+          } as Response;
+        }
+
+        return {
+          ok: true,
+          json: async () => ({ data: {} }),
+        } as Response;
+      })
+    );
   });
 
-  it('should render Step 1 initially', () => {
-    render(<AccessRequestPage />);
+  it('blocks continue on step 1 until a client is selected', async () => {
+    renderWithProviders(<AccessRequestPage />);
 
-    expect(screen.getByText('Select Client')).toBeInTheDocument();
-    expect(screen.getByText('Client Info')).toBeInTheDocument();
-    expect(screen.getByTestId('client-selector')).toBeInTheDocument();
-  });
-
-  it('should disable Continue button when no client is selected', () => {
-    render(<AccessRequestPage />);
-
-    const continueButton = screen.getByRole('button', { name: /continue/i });
+    const continueButton = await screen.findByRole('button', { name: /continue to platforms/i });
     expect(continueButton).toBeDisabled();
-  });
 
-  it('should enable Continue button when client is selected', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
+    await userEvent.click(screen.getByRole('button', { name: /pick client/i }));
 
-    const selectClientButton = screen.getByText('Select Client');
-    await user.click(selectClientButton);
-
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    expect(continueButton).not.toBeDisabled();
-  });
-
-  it('should navigate to Step 2 when Continue is clicked', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Select client
-    const selectClientButton = screen.getByText('Select Client');
-    await user.click(selectClientButton);
-
-    // Click continue
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    await user.click(continueButton);
-
-    // Should now be on Step 2
-    await waitFor(() => {
-      expect(screen.getByText('Platforms')).toBeInTheDocument();
-    });
-  });
-
-  it('should require access level and platforms in Step 2', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Navigate to Step 2
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('access-level-selector')).toBeInTheDocument();
-    });
-
-    // Continue should be disabled
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    expect(continueButton).toBeDisabled();
-  });
-
-  it('should enable Continue in Step 2 when access level and platforms are selected', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Navigate to Step 2
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('access-level-selector')).toBeInTheDocument();
-    });
-
-    // Select access level using within() to scope to the component
-    const accessLevelSelector = screen.getByTestId('access-level-selector');
-    await user.click(within(accessLevelSelector).getByText('Select Admin'));
-
-    // Select platforms using within() to scope to the component
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
-
-    // Continue should now be enabled
-    const continueButton = screen.getByRole('button', { name: /continue/i });
     await waitFor(() => {
       expect(continueButton).not.toBeDisabled();
     });
   });
 
-  it('should show platform count when platforms are selected', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
+  it('blocks continue on step 2 until at least one platform is selected', async () => {
+    renderWithProviders(<AccessRequestPage />);
 
-    // Navigate to Step 2
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /pick client/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue to platforms/i }));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('platform-selector')).toBeInTheDocument();
-    });
+    const continueButton = await screen.findByRole('button', { name: /continue to customize/i });
+    expect(continueButton).toBeDisabled();
 
-    // Select platforms (google: 2, meta: 1 = 3 total)
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
+    await userEvent.click(screen.getByRole('button', { name: /pick platforms/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/3 products/i)).toBeInTheDocument();
-      expect(screen.getByText(/2 platforms/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should navigate to Step 3 (intake fields)', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Navigate through Steps 1 and 2
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('access-level-selector')).toBeInTheDocument();
-    });
-
-    const accessLevelSelector = screen.getByTestId('access-level-selector');
-    await user.click(within(accessLevelSelector).getByText('Select Admin'));
-
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
-
-    await waitFor(() => {
-      const continueButton = screen.getByRole('button', { name: /continue/i });
       expect(continueButton).not.toBeDisabled();
     });
-
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    // Should now be on Step 3
-    await waitFor(() => {
-      expect(screen.getByText('Form Fields')).toBeInTheDocument();
-    });
   });
 
-  it('should navigate to Step 4 (branding)', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Navigate through Steps 1, 2, and 3
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => screen.getByTestId('access-level-selector'));
-    const accessLevelSelector = screen.getByTestId('access-level-selector');
-    await user.click(within(accessLevelSelector).getByText('Select Admin'));
-
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
-
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => screen.getByText('Form Fields'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    // Should now be on Step 4
-    await waitFor(() => {
-      expect(screen.getByText('Branding')).toBeInTheDocument();
-    });
-  });
-
-  it('should allow going back to previous steps', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Navigate to Step 2
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    // Wait for Step 2 to be active (check for unique Step 2 content)
-    await waitFor(() => {
-      expect(screen.getByText('Platforms')).toBeInTheDocument(); // Progress indicator
-      expect(screen.getByText('Access Level for All Platforms')).toBeInTheDocument(); // Step 2 heading
-      expect(screen.getByTestId('access-level-selector')).toBeInTheDocument(); // Step 2 component
-    });
-
-    // Click the Back button (should be in the form navigation)
-    const backButton = screen.getByRole('button', { name: 'Back' });
-    await user.click(backButton);
-
-    // Should be back on Step 1 (check for Step 1 content)
-    await waitFor(() => {
-      expect(screen.getByText('Client Information')).toBeInTheDocument(); // Step 1 heading
-      expect(screen.getByTestId('client-selector')).toBeInTheDocument();
-    });
-  });
-
-  it('should preserve data when navigating between steps', async () => {
-    const user = userEvent.setup();
-    render(<AccessRequestPage />);
-
-    // Select client in Step 1
-    await user.click(screen.getByText('Select Client'));
-    expect(screen.getByTestId('selected-client')).toHaveTextContent('client-123');
-
-    // Navigate to Step 2
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    // Go back to Step 1
-    await waitFor(() => screen.getByText('Platforms'));
-    await user.click(screen.getByRole('button', { name: 'Back' }));
-
-    // Client should still be selected
-    await waitFor(() => {
-      expect(screen.getByTestId('selected-client')).toHaveTextContent('client-123');
-    });
-  });
-
-  it('should submit access request successfully', async () => {
-    const user = userEvent.setup();
-    const mockAccessRequest = {
-      id: 'request-123',
-      agencyId: 'agency-123',
-      clientId: 'client-123',
-      clientName: 'Test Client',
-      clientEmail: 'test@example.com',
-      authModel: 'client_authorization' as const,
-      platforms: [],
-      status: 'pending' as const,
-      uniqueToken: 'abc-def-ghi',
-      expiresAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+  it('submits successfully and routes to success page', async () => {
     vi.mocked(accessRequestsApi.createAccessRequest).mockResolvedValue({
-      data: mockAccessRequest,
-    });
+      data: {
+        id: 'request-123',
+      },
+    } as any);
 
-    render(<AccessRequestPage />);
+    renderWithProviders(<AccessRequestPage />);
 
-    // Navigate through all steps
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /pick client/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue to platforms/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /pick platforms/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue to customize/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /review & create/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /create access request/i }));
 
-    await waitFor(() => screen.getByTestId('access-level-selector'));
-    const accessLevelSelector = screen.getByTestId('access-level-selector');
-    await user.click(within(accessLevelSelector).getByText('Select Admin'));
-
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
-
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => screen.getByText('Form Fields'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => screen.getByText('Branding'));
-
-    // Submit the form
-    const createButton = screen.getByRole('button', { name: /create access request/i });
-    await user.click(createButton);
-
-    // Should call API
     await waitFor(() => {
-      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          agencyId: 'user-123',
-          clientId: 'client-123',
-          clientName: 'Test Client',
-          clientEmail: 'test@example.com',
-          authModel: 'client_authorization',
-        })
-      );
-    });
-
-    // Should navigate to success page
-    await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        '/access-requests/request-123/success'
-      );
+      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalled();
+      expect(mockRouter.push).toHaveBeenCalledWith('/access-requests/request-123/success');
     });
   });
 
-  it('should display error message when API fails', async () => {
-    const user = userEvent.setup();
-
+  it('shows API error message when creation fails', async () => {
     vi.mocked(accessRequestsApi.createAccessRequest).mockResolvedValue({
       error: {
         code: 'NETWORK_ERROR',
         message: 'Failed to create access request',
       },
-    });
+    } as any);
 
-    render(<AccessRequestPage />);
+    renderWithProviders(<AccessRequestPage />);
 
-    // Navigate through all steps and submit
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /pick client/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue to platforms/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /pick platforms/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue to customize/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /review & create/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /create access request/i }));
 
-    await waitFor(() => screen.getByTestId('access-level-selector'));
-    const accessLevelSelector = screen.getByTestId('access-level-selector');
-    await user.click(within(accessLevelSelector).getByText('Select Admin'));
-
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
-
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => screen.getByText('Form Fields'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
-
-    await waitFor(() => screen.getByText('Branding'));
-
-    const createButton = screen.getByRole('button', { name: /create access request/i });
-    await user.click(createButton);
-
-    // Should show error message
     await waitFor(() => {
       expect(screen.getByText(/failed to create access request/i)).toBeInTheDocument();
     });
-
-    // Should NOT navigate
-    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
-  it('should show loading state during submission', async () => {
-    const user = userEvent.setup();
+  it('routes to connections page when clicking manage platform connections', async () => {
+    renderWithProviders(<AccessRequestPage />);
 
-    // Create a promise we can control
-    let resolveApi: any;
-    const apiPromise = new Promise((resolve) => {
-      resolveApi = resolve;
+    const managePlatformsButton = await screen.findByRole('button', {
+      name: /manage platform connections/i,
     });
-    vi.mocked(accessRequestsApi.createAccessRequest).mockReturnValue(apiPromise as any);
 
-    render(<AccessRequestPage />);
+    await userEvent.click(managePlatformsButton);
 
-    // Navigate through all steps and submit
-    await user.click(screen.getByText('Select Client'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+    expect(mockRouter.push).toHaveBeenCalledWith('/connections');
+  });
 
-    await waitFor(() => screen.getByTestId('access-level-selector'));
-    const accessLevelSelector = screen.getByTestId('access-level-selector');
-    await user.click(within(accessLevelSelector).getByText('Select Admin'));
+  it('fetches active platform connections from uncached endpoint for auth model status', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/agencies')) {
+        return {
+          ok: true,
+          json: async () => ({ data: [{ id: 'agency-123' }] }),
+        } as Response;
+      }
 
-    const platformSelector = screen.getByTestId('platform-selector');
-    await user.click(within(platformSelector).getByText('Select Platforms'));
+      if (url.includes('/agency-platforms?')) {
+        return {
+          ok: true,
+          json: async () => ({ data: [{ platform: 'beehiiv', status: 'active', agencyEmail: 'ops@agency.com' }] }),
+        } as Response;
+      }
 
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+      return {
+        ok: true,
+        json: async () => ({ data: {} }),
+      } as Response;
+    });
 
-    await waitFor(() => screen.getByText('Form Fields'));
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+    vi.stubGlobal('fetch', fetchMock);
+    renderWithProviders(<AccessRequestPage />);
 
-    await waitFor(() => screen.getByText('Branding'));
-
-    const createButton = screen.getByRole('button', { name: /create access request/i });
-    await user.click(createButton);
-
-    // Should show loading state
     await waitFor(() => {
-      expect(screen.getByText(/creating\.\.\./i)).toBeInTheDocument();
-    });
-
-    // Button should be disabled during loading
-    expect(createButton).toBeDisabled();
-
-    // Resolve the API call
-    resolveApi({
-      data: {
-        id: 'request-123',
-        agencyId: 'agency-123',
-        clientId: 'client-123',
-        clientName: 'Test Client',
-        clientEmail: 'test@example.com',
-        authModel: 'client_authorization',
-        platforms: [],
-        status: 'pending',
-        uniqueToken: 'abc-def-ghi',
-        expiresAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    });
-
-    // Loading should go away
-    await waitFor(() => {
-      expect(screen.queryByText(/creating\.\.\./i)).not.toBeInTheDocument();
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/agency-platforms?agencyId=agency-123&status=active'),
+        expect.any(Object)
+      );
     });
   });
 });

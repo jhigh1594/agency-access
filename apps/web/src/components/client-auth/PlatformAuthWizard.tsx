@@ -53,6 +53,7 @@ export function PlatformAuthWizard({
   initialStep,
 }: PlatformAuthWizardProps) {
   const router = useRouter();
+  const isManualPlatform = platform === 'beehiiv' || platform === 'kit';
 
   // Redirect platforms to manual flow (no OAuth - uses team invitations)
   useEffect(() => {
@@ -64,15 +65,6 @@ export function PlatformAuthWizard({
     }
     // TODO: Add mailchimp and klaviyo redirects
   }, [platform, accessRequestToken, router]);
-
-  // Early return for manual flow platforms (redirecting)
-  if (platform === 'beehiiv' || platform === 'kit') {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
 
   // Initialize with props if returning from OAuth callback
   // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
@@ -271,7 +263,7 @@ export function PlatformAuthWizard({
               <h3 className="text-3xl font-bold text-[var(--ink)] mb-3 font-display">
                 Connect {platformName}
               </h3>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+              <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
                 Sign in to {platformName} and approve access. You'll choose which accounts to share next.
               </p>
             </div>
@@ -318,7 +310,7 @@ export function PlatformAuthWizard({
                 <h3 className="text-2xl font-bold text-[var(--ink)] mb-3 font-display">
                   Please connect your account first
                 </h3>
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">
+                <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto mb-6">
                   You need to complete Step 1 before you can select accounts to share.
                 </p>
               </div>
@@ -339,13 +331,13 @@ export function PlatformAuthWizard({
             <div className="border-2 border-black dark:border-white overflow-hidden">
               <button
                 onClick={() => setChooseAccountsExpanded(!chooseAccountsExpanded)}
-                className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors"
               >
                 <div className="text-left">
                   <h3 className="text-xl font-bold text-[var(--ink)] font-display">
                     Choose accounts to share
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                     Select the specific accounts you want to share.
                   </p>
                 </div>
@@ -353,7 +345,7 @@ export function PlatformAuthWizard({
                   animate={{ rotate: chooseAccountsExpanded ? 0 : -90 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                  <ChevronDown className="w-6 h-6 text-muted-foreground dark:text-muted-foreground" />
                 </m.div>
               </button>
 
@@ -472,7 +464,7 @@ export function PlatformAuthWizard({
                   <div className="w-full border-t-2 border-black dark:border-white" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-card px-4 text-sm text-slate-500 font-bold uppercase tracking-wider">then</span>
+                  <span className="bg-card px-4 text-sm text-muted-foreground font-bold uppercase tracking-wider">then</span>
                 </div>
               </div>
             );
@@ -505,13 +497,13 @@ export function PlatformAuthWizard({
                 <div className="border-2 border-black dark:border-white overflow-hidden">
                   <button
                     onClick={() => setGrantAccessExpanded(!grantAccessExpanded)}
-                    className="w-full px-6 py-4 flex items-center justify-between bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full px-6 py-4 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors"
                   >
                     <div className="text-left">
                       <h3 className="text-xl font-bold text-[var(--ink)] font-display">
                         Grant access
                       </h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                      <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                         Complete the steps below to grant access to your selected accounts.
                       </p>
                     </div>
@@ -519,7 +511,7 @@ export function PlatformAuthWizard({
                       animate={{ rotate: grantAccessExpanded ? 0 : -90 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <ChevronDown className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                      <ChevronDown className="w-6 h-6 text-muted-foreground dark:text-muted-foreground" />
                     </m.div>
                   </button>
 
@@ -652,7 +644,7 @@ export function PlatformAuthWizard({
               <h3 className="text-4xl font-bold text-[var(--ink)] mb-3 font-display">
                 Connected
               </h3>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+              <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
                 Access granted to the accounts you selected.
               </p>
             </m.div>
@@ -718,6 +710,14 @@ export function PlatformAuthWizard({
         return null;
     }
   };
+
+  if (isManualPlatform) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-coral" />
+      </div>
+    );
+  }
 
   return (
     <PlatformWizardCard

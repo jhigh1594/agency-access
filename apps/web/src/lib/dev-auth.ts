@@ -69,7 +69,15 @@ export function useAuthOrBypass(clerkAuth: {
     process.env.NODE_ENV === 'development';
 
   const signedOut = envBypass && isDevBypassSignedOut();
-  const isDevelopmentBypass = envBypass && !signedOut;
+  const hasRealAuthIdentity = !!clerkAuth.userId || !!clerkAuth.orgId;
+
+  // Only enable bypass when Clerk has finished loading and no real identity exists.
+  // This prevents dev IDs from overriding valid signed-in sessions.
+  const isDevelopmentBypass =
+    envBypass &&
+    !signedOut &&
+    clerkAuth.isLoaded &&
+    !hasRealAuthIdentity;
 
   if (isDevelopmentBypass) {
     return {

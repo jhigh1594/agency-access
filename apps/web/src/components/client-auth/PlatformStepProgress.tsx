@@ -56,7 +56,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
                       ? 'bg-[var(--teal)] border-[var(--teal)] text-white'
                       : isCurrent
                       ? 'bg-[var(--coral)] border-[var(--coral)] text-white shadow-brutalist-sm'
-                      : 'bg-transparent border-black dark:border-white text-slate-400'
+                      : 'bg-transparent border-black dark:border-white text-muted-foreground'
                   }
                 `}
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -75,7 +75,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
                 <div
                   className={`
                     w-8 h-0.5 mx-1
-                    ${index < currentStep - 1 ? 'bg-[var(--teal)]' : 'bg-slate-300 dark:bg-slate-600'}
+                    ${index < currentStep - 1 ? 'bg-[var(--teal)]' : 'bg-muted/50 dark:bg-muted/50'}
                   `}
                 />
               )}
@@ -100,7 +100,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
                       ? 'text-[var(--teal)]'
                       : isCurrent
                       ? 'text-[var(--coral)]'
-                      : 'text-slate-400'
+                      : 'text-muted-foreground'
                   }
                 `}
                 style={{ width: index < steps.length - 1 ? '2.5rem' : 'auto' }}

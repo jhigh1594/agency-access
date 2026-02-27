@@ -18,7 +18,8 @@ import { Fragment, FormEvent, useMemo, useState } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Plus, Trash2, Check, Loader2, AlertCircle, Save, Shield, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 // Phase 5 Components
 import { TemplateSelector } from '@/components/template-selector';
@@ -27,22 +28,26 @@ import { AuthModelSelector } from '@/components/auth-model-selector';
 import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform-selector';
 import { AccessLevelSelector } from '@/components/access-level-selector';
 import { SaveAsTemplateModal } from '@/components/save-as-template-modal';
-import { PlatformConnectionModal } from '@/components/platform-connection-modal';
+import { FlowShell } from '@/components/flow/flow-shell';
 
 // Context & Utilities
 import { AccessRequestProvider, useAccessRequest } from '@/contexts/access-request-context';
 import type { IntakeField } from '@/contexts/access-request-context';
 import { getPlatformCount } from '@/lib/transform-platforms';
+import { useAuthOrBypass } from '@/lib/dev-auth';
 import type { AccessRequestTemplate } from '@agency-platform/shared';
+import { PLATFORM_NAMES } from '@agency-platform/shared';
 
 // ============================================================
 // WIZARD CONTENT (Inner Component)
 // ============================================================
 
 function AccessRequestWizardContent() {
-  const { userId, orgId, getToken } = useAuth();
+  const clerkAuth = useAuth();
+  const { userId, orgId } = useAuthOrBypass(clerkAuth);
+  const { getToken } = clerkAuth;
   const { user } = useUser();
-  const queryClient = useQueryClient();
+  const router = useRouter();
   const {
     state,
     updateTemplate,
@@ -59,9 +64,6 @@ function AccessRequestWizardContent() {
 
   // Save as Template modal state
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
-
-  // Platform Connection Modal state
-  const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
 
   // Customize tab state (for Step 3: Form Fields | Branding)
   const [customizeTab, setCustomizeTab] = useState<'fields' | 'branding'>('fields');
@@ -96,17 +98,28 @@ function AccessRequestWizardContent() {
   // Use the agency's UUID id
   const agencyId = agencyData?.id;
 
-  // Fetch platform connections using the SAME endpoint as connections page
+  // Fetch active platform connections from an uncached source for real-time auth model status
   const {
     data: platformConnections = [],
     isLoading: isLoadingConnections,
-  } = useQuery({
-    queryKey: ['available-platforms', agencyId],
+  } = useQuery<
+    Array<{
+      platform: string;
+      name: string;
+      connected: boolean;
+      status?: string;
+      connectedEmail?: string;
+      connectedAt?: string;
+      expiresAt?: string;
+      metadata?: Record<string, unknown>;
+    }>
+  >({
+    queryKey: ['active-agency-platform-connections', agencyId],
     queryFn: async () => {
       if (!agencyId) return [];
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${agencyId}&status=active`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -115,17 +128,31 @@ function AccessRequestWizardContent() {
       );
       if (!response.ok) throw new Error('Failed to fetch platforms');
       const result = await response.json();
-      return result.data || [];
+      const activeConnections = Array.isArray(result.data) ? result.data : [];
+
+      return activeConnections.map((connection: any) => ({
+        platform: connection.platform,
+        name: PLATFORM_NAMES[connection.platform as keyof typeof PLATFORM_NAMES] || connection.platform,
+        connected: true,
+        status: connection.status || 'active',
+        connectedEmail:
+          connection.agencyEmail ||
+          connection.connectedBy ||
+          connection.metadata?.email ||
+          connection.metadata?.userEmail,
+        connectedAt: connection.connectedAt,
+        expiresAt: connection.expiresAt,
+        metadata: connection.metadata,
+      }));
     },
     enabled: !!agencyId,
   });
 
   // Build platform connection status map for AuthModelSelector
-  // The /agency-platforms/available endpoint returns { platform, connected, ... }
+  // The active connection query returns normalized connected platform records.
   const agencyHasConnectedPlatforms = useMemo(() => {
     const statusMap: Record<string, boolean> = {};
-    platformConnections.forEach((conn: { platform: string; connected?: boolean; status?: string }) => {
-      // Support both formats: 'connected' from /available endpoint, 'status' from direct endpoint
+    platformConnections.forEach((conn) => {
       if (conn.connected === true || conn.status === 'active') {
         statusMap[conn.platform] = true;
       }
@@ -188,75 +215,18 @@ function AccessRequestWizardContent() {
   ];
 
   return (
-    <div className="flex-1 bg-gradient-to-b from-slate-50 to-white p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-900">New Access Request</h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Create a request for client authorization
-          </p>
-        </div>
-
-        {/* Form & Progress - New Linear Progress */}
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="py-8">
-          {/* Linear Progress Bar */}
-          <div className="mb-8">
-            <div className="relative h-1 bg-slate-200 rounded-full overflow-hidden">
-              <motion.div
-                className="absolute inset-0 bg-indigo-600"
-                initial={{ width: 0 }}
-                animate={{
-                  width: `${((state.currentStep) / steps.length) * 100}%`,
-                }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
-              />
-            </div>
-
-            {/* Step Markers */}
-            <div className="flex justify-between mt-4">
-              {steps.map((step) => (
-                <div key={step.number} className="flex flex-col items-center gap-1.5">
-                  <span
-                    className={`text-xs font-mono font-medium tracking-wide ${
-                      step.number <= state.currentStep
-                        ? 'text-indigo-600'
-                        : 'text-slate-400'
-                    }`}
-                  >
-                    STEP {String(step.number).padStart(2, '0')}
-                  </span>
-                  <span
-                    className={`text-sm font-medium ${
-                      step.number === state.currentStep
-                        ? 'text-slate-900'
-                        : step.number < state.currentStep
-                        ? 'text-slate-600'
-                        : 'text-slate-400'
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Percentage Indicator */}
-            <div className="text-right mt-2">
-              <span className="text-xs font-mono font-medium text-slate-500">
-                {Math.round((state.currentStep / steps.length) * 100)}% COMPLETE
-              </span>
-            </div>
-          </div>
-      </div>
-
-      {/* Form */}
+    <FlowShell
+      title="New Access Request"
+      description="Create a request for client authorization"
+      step={state.currentStep}
+      totalSteps={steps.length}
+      steps={steps.map((step) => step.label)}
+    >
       <form id="access-request-form" onSubmit={handleSubmit}>
         <AnimatePresence mode="wait">
           {/* Step 1: Fundamentals (Template + Client + Auth Model) */}
           {state.currentStep === 1 && (
-            <motion.div
+            <m.div
             key="step-1"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -266,27 +236,27 @@ function AccessRequestWizardContent() {
             >
             {/* Main Card */}
             <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-1">Fundamentals</h2>
-              <p className="text-base text-slate-600 mb-6">
+              <h2 className="text-xl font-semibold text-ink mb-1">Fundamentals</h2>
+              <p className="text-base text-muted-foreground mb-6">
                 Set up the basics for your access request
               </p>
 
               {/* Vertical Flow with Clear Sections */}
               <div className="relative space-y-10 pl-5">
                 {/* Connecting line - runs through all sections */}
-                <div className="absolute left-[18px] top-3 bottom-3 w-px bg-slate-200 pointer-events-none" />
+                <div className="absolute left-[18px] top-3 bottom-3 w-px bg-muted/40 pointer-events-none" />
 
                 {/* Section 1: Client (Primary, Required) */}
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="relative z-10 h-9 w-9 rounded-full bg-indigo-100 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-indigo-700">1</span>
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-coral/20 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-coral/90">1</span>
                     </div>
                     <div>
-                      <label className="block text-base font-semibold text-slate-900">
-                        Select Client <span className="text-red-500">*</span>
+                      <label className="block text-base font-semibold text-ink">
+                        Select Client <span className="text-coral">*</span>
                       </label>
-                      <p className="text-sm text-slate-500">Who is this access request for?</p>
+                      <p className="text-sm text-muted-foreground">Who is this access request for?</p>
                     </div>
                   </div>
                   <div className="ml-10">
@@ -301,14 +271,14 @@ function AccessRequestWizardContent() {
                 {/* Section 2: Auth Model (Secondary, Has Default) */}
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="relative z-10 h-9 w-9 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-slate-600">2</span>
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-muted-foreground">2</span>
                     </div>
                     <div>
-                      <label className="block text-base font-semibold text-slate-900">
+                      <label className="block text-base font-semibold text-ink">
                         Authorization Model
                       </label>
-                      <p className="text-sm text-slate-500">How will you access their platform accounts?</p>
+                      <p className="text-sm text-muted-foreground">How will you access their platform accounts?</p>
                     </div>
                   </div>
                   <div className="ml-10">
@@ -325,24 +295,24 @@ function AccessRequestWizardContent() {
                     onClick={() => setTemplateExpanded(!templateExpanded)}
                     className="flex items-center gap-3 w-full text-left group"
                   >
-                    <div className="relative z-10 h-9 w-9 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-slate-600">3</span>
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-muted-foreground">3</span>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-base font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                        Start from Template <span className="text-slate-400 font-normal">(Optional)</span>
+                      <label className="block text-base font-semibold text-ink group-hover:text-coral/90 transition-colors">
+                        Start from Template <span className="text-muted-foreground font-normal">(Optional)</span>
                       </label>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-muted-foreground">
                         {templateExpanded ? 'Hide template selector' : 'Skip manually configuring platforms and branding'}
                       </p>
                     </div>
-                    <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${
+                    <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${
                       templateExpanded ? 'rotate-180' : ''
                     }`} />
                   </button>
 
                   {templateExpanded && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
@@ -353,7 +323,7 @@ function AccessRequestWizardContent() {
                         selectedTemplate={state.selectedTemplate}
                         onSelect={updateTemplate}
                       />
-                    </motion.div>
+                    </m.div>
                   )}
                 </div>
               </div>
@@ -363,13 +333,13 @@ function AccessRequestWizardContent() {
             {state.authModel === 'delegated_access' && (
               <div className="mt-4 p-4 bg-background border border-border rounded-lg flex items-center justify-between">
                 <div>
-                  <p className="text-base font-medium text-slate-900">Need to connect platforms?</p>
-                  <p className="text-sm text-slate-600">Connect your agency's platform accounts to use delegated access</p>
+                  <p className="text-base font-medium text-ink">Need to connect platforms?</p>
+                  <p className="text-sm text-muted-foreground">Connect your agency's platform accounts to use delegated access</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsPlatformModalOpen(true)}
-                  className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-base rounded-lg transition-colors flex items-center gap-2"
+                  onClick={() => router.push('/connections')}
+                  className="px-4 py-2.5 bg-accent hover:bg-accent text-foreground text-base rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
                   Manage Platform Connections
@@ -378,14 +348,14 @@ function AccessRequestWizardContent() {
             )}
 
             {state.error && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+                className="mt-6 p-4 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-3"
               >
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-base text-red-800">{state.error}</p>
-              </motion.div>
+                <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+                <p className="text-base text-coral">{state.error}</p>
+              </m.div>
             )}
 
             {/* Navigation */}
@@ -394,17 +364,17 @@ function AccessRequestWizardContent() {
                 type="button"
                 onClick={() => setStep(2)}
                 disabled={!state.client || !state.authModel}
-                className="px-8 py-3 bg-indigo-600 text-white text-base rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md font-medium"
+                className="px-8 py-3 bg-coral text-white text-base rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md font-medium"
               >
                 Continue to Platforms
               </button>
             </div>
-          </motion.div>
+          </m.div>
           )}
 
           {/* Step 2: Platforms & Access Level */}
           {state.currentStep === 2 && (
-            <motion.div
+            <m.div
             key="step-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -412,8 +382,8 @@ function AccessRequestWizardContent() {
             transition={{ duration: 0.3 }}
             className="bg-card rounded-lg shadow-sm border border-border p-6"
             >
-            <h2 className="text-lg font-semibold text-slate-900 mb-1">Platforms & Access</h2>
-            <p className="text-sm text-slate-600 mb-6">
+            <h2 className="text-lg font-semibold text-ink mb-1">Platforms & Access</h2>
+            <p className="text-sm text-muted-foreground mb-6">
               Select which platforms to include in this access request
             </p>
 
@@ -427,11 +397,11 @@ function AccessRequestWizardContent() {
               {/* Platform Selection Section */}
               <div>
               <div className="flex items-baseline justify-between mb-3">
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-foreground">
                   Select Platforms
                 </label>
                 {platformCount > 0 && (
-                  <span className="text-sm text-indigo-600 font-medium">
+                  <span className="text-sm text-coral font-medium">
                     {platformCount} selected
                   </span>
                 )}
@@ -446,9 +416,9 @@ function AccessRequestWizardContent() {
 
               {/* Info about connecting more platforms */}
               {platformConnections.filter((p: any) => p.connected).length > 0 && (
-                <p className="mt-3 text-xs text-slate-500">
+                <p className="mt-3 text-xs text-muted-foreground">
                   Only your connected platforms are shown.{' '}
-                  <a href="/connections" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                  <a href="/connections" className="text-coral hover:text-coral/90 font-medium">
                     Connect more platforms
                   </a>{' '}
                   to include them in access requests.
@@ -458,21 +428,21 @@ function AccessRequestWizardContent() {
             </div>
 
             {state.error && (
-              <motion.div
+              <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+              className="mt-6 p-3 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-2"
               >
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{state.error}</p>
-              </motion.div>
+              <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-coral">{state.error}</p>
+              </m.div>
             )}
 
             <div className="mt-6 flex justify-between">
               <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="px-6 py-2.5 text-foreground hover:text-ink hover:bg-muted/30 rounded-lg transition-colors"
               >
               Back
               </button>
@@ -480,17 +450,17 @@ function AccessRequestWizardContent() {
               type="button"
               onClick={() => setStep(3)}
               disabled={!currentStepValid}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
               >
               Continue to Customize
               </button>
             </div>
-            </motion.div>
+            </m.div>
           )}
 
           {/* Step 3: Customize (Intake Fields + Branding with tabs) */}
           {state.currentStep === 3 && (
-            <motion.div
+            <m.div
             key="step-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -498,9 +468,9 @@ function AccessRequestWizardContent() {
             transition={{ duration: 0.3 }}
             className="bg-card rounded-lg shadow-sm border border-border p-6"
             >
-            <h2 className="text-lg font-semibold text-slate-900 mb-1">Customize</h2>
-            <p className="text-sm text-slate-600 mb-6">
-              Add form fields and customize branding <span className="text-slate-400">(optional)</span>
+            <h2 className="text-lg font-semibold text-ink mb-1">Customize</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Add form fields and customize branding <span className="text-muted-foreground">(optional)</span>
             </p>
 
             {/* Simple Tabs - Form Fields | Branding */}
@@ -511,8 +481,8 @@ function AccessRequestWizardContent() {
                   onClick={() => setCustomizeTab('fields')}
                   className={`pb-3 px-1 text-sm font-medium transition-colors ${
                     customizeTab === 'fields'
-                      ? 'text-indigo-600 border-b-2 border-indigo-600'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'text-coral border-b-2 border-coral'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Form Fields ({state.intakeFields.length})
@@ -522,8 +492,8 @@ function AccessRequestWizardContent() {
                   onClick={() => setCustomizeTab('branding')}
                   className={`pb-3 px-1 text-sm font-medium transition-colors ${
                     customizeTab === 'branding'
-                      ? 'text-indigo-600 border-b-2 border-indigo-600'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'text-coral border-b-2 border-coral'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Branding
@@ -536,7 +506,7 @@ function AccessRequestWizardContent() {
               <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
               {state.intakeFields.map((field, index) => (
-                <motion.div
+                <m.div
                 key={field.id}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -550,7 +520,7 @@ function AccessRequestWizardContent() {
                 value={field.label}
                 onChange={(e) => updateIntakeField(field.id, { label: e.target.value })}
                 placeholder="Field label (e.g., Company Website)"
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-ring focus:border-coral"
                   />
                   <div className="flex items-center gap-3">
                 <select
@@ -558,7 +528,7 @@ function AccessRequestWizardContent() {
                   onChange={(e) =>
                     updateIntakeField(field.id, { type: e.target.value as any })
                   }
-                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-ring focus:border-coral"
                 >
                   <option value="text">Text</option>
                   <option value="email">Email</option>
@@ -566,14 +536,14 @@ function AccessRequestWizardContent() {
                   <option value="url">URL</option>
                   <option value="textarea">Text Area</option>
                 </select>
-                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={field.required}
                     onChange={(e) =>
               updateIntakeField(field.id, { required: e.target.checked })
                     }
-                    className="h-4 w-4 rounded border-border text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-border text-coral focus:ring-ring"
                   />
                   Required
                 </label>
@@ -582,18 +552,18 @@ function AccessRequestWizardContent() {
                 <button
                   type="button"
                   onClick={() => removeIntakeField(field.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-coral hover:bg-coral/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
-                </motion.div>
+                </m.div>
               ))}
               </AnimatePresence>
 
               <button
                 type="button"
                 onClick={addIntakeField}
-                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:border-coral/40 hover:text-coral hover:bg-coral/10 transition-all"
               >
                 <Plus className="h-4 w-4" />
                 Add Field
@@ -605,7 +575,7 @@ function AccessRequestWizardContent() {
             {customizeTab === 'branding' && (
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="logoUrl" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="logoUrl" className="block text-sm font-medium text-foreground mb-1">
                     Logo URL
                   </label>
                   <input
@@ -613,13 +583,13 @@ function AccessRequestWizardContent() {
                     id="logoUrl"
                     value={state.branding.logoUrl}
                     onChange={(e) => updateBranding({ logoUrl: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral"
                     placeholder="https://your-agency.com/logo.png"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="primaryColor" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="primaryColor" className="block text-sm font-medium text-foreground mb-1">
                     Primary Color
                   </label>
                   <div className="flex items-center gap-3">
@@ -634,14 +604,14 @@ function AccessRequestWizardContent() {
                       type="text"
                       value={state.branding.primaryColor}
                       onChange={(e) => updateBranding({ primaryColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral font-mono text-sm"
                       placeholder="#6366f1"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="subdomain" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="subdomain" className="block text-sm font-medium text-foreground mb-1">
                     Subdomain
                   </label>
                   <div className="flex items-center">
@@ -650,11 +620,11 @@ function AccessRequestWizardContent() {
                       id="subdomain"
                       value={state.branding.subdomain}
                       onChange={(e) => updateBranding({ subdomain: e.target.value.toLowerCase() })}
-                      className="flex-1 px-3 py-2 border border-border rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="flex-1 px-3 py-2 border border-border rounded-l-lg focus:ring-2 focus:ring-ring focus:border-coral"
                       placeholder="my-agency"
                       pattern="[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?"
                     />
-                    <span className="px-4 py-2 bg-slate-100 border border-l-0 border-border rounded-r-lg text-slate-600 text-sm">
+                    <span className="px-4 py-2 bg-muted/30 border border-l-0 border-border rounded-r-lg text-muted-foreground text-sm">
                       .agencyplatform.com
                     </span>
                   </div>
@@ -662,12 +632,12 @@ function AccessRequestWizardContent() {
 
                 {/* Preview */}
                 {(state.branding.logoUrl || state.branding.primaryColor !== '#6366f1') && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     className="p-4 border border-border rounded-lg overflow-hidden"
                   >
-                    <p className="text-sm font-medium text-slate-700 mb-3">Preview</p>
+                    <p className="text-sm font-medium text-foreground mb-3">Preview</p>
                     <div
                       className="p-6 rounded-lg text-center transition-colors"
                       style={{ backgroundColor: state.branding.primaryColor + '15' }}
@@ -688,48 +658,48 @@ function AccessRequestWizardContent() {
                       >
                         {state.client?.name || 'Your Client'}
                       </h3>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-muted-foreground">
                         Authorize access to {platformCount} platform{platformCount !== 1 ? 's' : ''}
                       </p>
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
               </div>
             )}
 
             {state.error && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                className="mt-6 p-3 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-2"
               >
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{state.error}</p>
-              </motion.div>
+                <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-coral">{state.error}</p>
+              </m.div>
             )}
 
             <div className="mt-6 flex justify-between">
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                className="px-6 py-2.5 text-foreground hover:text-ink hover:bg-muted/30 rounded-lg transition-colors"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
               >
                 Review & Create
               </button>
             </div>
-            </motion.div>
+            </m.div>
           )}
 
             {/* Step 4: Review & Create */}
             {state.currentStep === 4 && (
-              <motion.div
+              <m.div
                 key="step-4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -738,94 +708,115 @@ function AccessRequestWizardContent() {
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900 mb-1">Review & Create</h2>
-                  <p className="text-sm text-slate-600">
+                  <h2 className="text-lg font-semibold text-ink mb-1">Review & Create</h2>
+                  <p className="text-sm text-muted-foreground">
                     Review your access request settings before creating
                   </p>
                 </div>
 
                 {/* Summary Card */}
-                <div className="bg-card rounded-lg shadow-sm border border-border divide-y divide-slate-200">
+                <div className="bg-card rounded-lg shadow-sm border border-border divide-y divide-border">
                   {/* Client Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-semibold text-slate-600">
+                      <div className="h-10 w-10 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
+                        <span className="text-lg font-semibold text-muted-foreground">
                           {state.client?.name?.charAt(0)?.toUpperCase() || '?'}
                         </span>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Client</p>
-                        <p className="text-base font-semibold text-slate-900">{state.client?.name || 'Not selected'}</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Client</p>
+                        <p className="text-base font-semibold text-ink">{state.client?.name || 'Not selected'}</p>
                         {state.client?.email && (
-                          <p className="text-sm text-slate-600">{state.client.email}</p>
+                          <p className="text-sm text-muted-foreground">{state.client.email}</p>
                         )}
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                    >
+                      Edit
+                    </button>
                   </div>
 
                   {/* Auth Model Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                        <Shield className="h-5 w-5 text-indigo-600" />
+                      <div className="h-10 w-10 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
+                        <Shield className="h-5 w-5 text-coral" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Authorization Model</p>
-                        <p className="text-base font-semibold text-slate-900">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Authorization Model</p>
+                        <p className="text-base font-semibold text-ink">
                           {state.authModel === 'delegated_access' ? 'Delegated Access' : 'Client Authorization'}
                         </p>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-muted-foreground">
                           {state.authModel === 'delegated_access'
                             ? 'Agency grants access using their own platform connections'
                             : 'Client authorizes their own platform accounts'}
                         </p>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                    >
+                      Edit
+                    </button>
                   </div>
 
                   {/* Platforms Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-5 w-5 text-green-600" />
+                      <div className="h-10 w-10 rounded-full bg-teal/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="h-5 w-5 text-teal" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Platforms</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Platforms</p>
                         <div className="flex items-center gap-2 flex-wrap mt-1">
                           {Object.entries(state.selectedPlatforms).map(([platform, products]) => (
                             <span
                               key={platform}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700"
+                              className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-muted/30 text-foreground"
                             >
                               {platform} ({products.length})
                             </span>
                           ))}
                           {platformCount === 0 && (
-                            <span className="text-sm text-slate-500 italic">No platforms selected</span>
+                            <span className="text-sm text-muted-foreground italic">No platforms selected</span>
                           )}
                         </div>
-                        <p className="text-sm text-slate-600 mt-1">{platformCount} product{platformCount !== 1 ? 's' : ''} selected</p>
+                        <p className="text-sm text-muted-foreground mt-1">{platformCount} product{platformCount !== 1 ? 's' : ''} selected</p>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                    >
+                      Edit
+                    </button>
                   </div>
 
                   {/* Access Level Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
-                        <Shield className="h-5 w-5 text-amber-600" />
+                      <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                        <Shield className="h-5 w-5 text-foreground" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Access Level</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Access Level</p>
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
                           state.globalAccessLevel! === 'admin'
-                            ? 'bg-red-100 text-red-700'
+                            ? 'bg-coral/20 text-coral'
                             : state.globalAccessLevel! === 'standard'
-                            ? 'bg-blue-100 text-blue-700'
+                            ? 'bg-muted/30 text-foreground'
                             : state.globalAccessLevel! === 'read_only'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-purple-100 text-purple-700'
+                            ? 'bg-teal/20 text-teal-90'
+                            : 'bg-accent text-foreground'
                         }`}>
                           {state.globalAccessLevel! === 'admin'
                             ? 'ADMIN'
@@ -837,48 +828,62 @@ function AccessRequestWizardContent() {
                         </span>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                    >
+                      Edit
+                    </button>
                   </div>
 
                   {/* Intake Fields Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
-                        <Plus className="h-5 w-5 text-purple-600" />
+                      <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                        <Plus className="h-5 w-5 text-foreground" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Form Fields</p>
-                        <p className="text-base font-semibold text-slate-900">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Form Fields</p>
+                        <p className="text-base font-semibold text-ink">
                           {state.intakeFields.length} field{state.intakeFields.length !== 1 ? 's' : ''}
                         </p>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-muted-foreground">
                           {state.intakeFields.filter(f => f.required).length} required, {state.intakeFields.filter(f => !f.required).length} optional
                         </p>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(3)}
+                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                    >
+                      Edit
+                    </button>
                   </div>
 
                   {/* Branding Section (if configured) */}
                   {(state.branding.logoUrl || state.branding.primaryColor !== '#6366f1' || state.branding.subdomain) && (
                     <div className="p-4 flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 rounded-full bg-pink-50 flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                           {state.branding.logoUrl ? (
                             <img src={state.branding.logoUrl} alt="" className="h-5 w-5 object-contain" />
                           ) : (
-                            <span className="text-xs font-bold text-pink-600">B</span>
+                            <span className="text-xs font-bold text-foreground">B</span>
                           )}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Branding</p>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Branding</p>
                           <div className="flex items-center gap-2 mt-1">
                             {state.branding.logoUrl && (
-                              <span className="text-sm text-slate-700">Custom logo</span>
+                              <span className="text-sm text-foreground">Custom logo</span>
                             )}
                             {state.branding.primaryColor !== '#6366f1' && (
-                              <span className="text-sm text-slate-700">Custom color</span>
+                              <span className="text-sm text-foreground">Custom color</span>
                             )}
                             {state.branding.subdomain && (
-                              <span className="text-sm text-slate-700">{state.branding.subdomain}.agencyplatform.com</span>
+                              <span className="text-sm text-foreground">{state.branding.subdomain}.agencyplatform.com</span>
                             )}
                           </div>
                         </div>
@@ -899,20 +904,27 @@ function AccessRequestWizardContent() {
                           </div>
                         )}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setStep(3)}
+                        className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                      >
+                        Edit
+                      </button>
                     </div>
                   )}
                 </div>
 
                 {/* Error Display */}
                 {state.error && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                    className="p-3 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-2"
                   >
-                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-800">{state.error}</p>
-                  </motion.div>
+                    <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-coral">{state.error}</p>
+                  </m.div>
                 )}
 
                 {/* Action Buttons */}
@@ -920,7 +932,7 @@ function AccessRequestWizardContent() {
                   <button
                     type="button"
                     onClick={() => setStep(3)}
-                    className="px-6 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="px-6 py-2.5 text-foreground hover:text-ink hover:bg-muted/30 rounded-lg transition-colors"
                     disabled={state.submitting}
                   >
                     Back
@@ -930,7 +942,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setIsSaveTemplateModalOpen(true)}
-                      className="px-4 py-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-2"
+                      className="px-4 py-2.5 text-coral bg-coral/10 hover:bg-coral/20 rounded-lg transition-colors flex items-center gap-2"
                       disabled={state.submitting}
                     >
                       <Save className="h-4 w-4" />
@@ -939,7 +951,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="submit"
                       disabled={state.submitting}
-                      className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md flex items-center gap-2"
+                      className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md flex items-center gap-2"
                     >
                       {state.submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                       {state.submitting ? 'Creating Request...' : 'Create Access Request'}
@@ -958,24 +970,11 @@ function AccessRequestWizardContent() {
                     // Optionally show success message
                   }}
                 />
-              </motion.div>
+              </m.div>
             )}
-
-            {/* Platform Connection Modal */}
-            <PlatformConnectionModal
-              isOpen={isPlatformModalOpen}
-              onClose={() => setIsPlatformModalOpen(false)}
-              agencyId={agencyId}
-              onConnectionComplete={() => {
-                // Refetch platform connections after modal closes - use same key as connections page
-                queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
-              }}
-            />
           </AnimatePresence>
         </form>
-      </main>
-      </div>
-    </div>
+    </FlowShell>
   );
 }
 
@@ -984,13 +983,14 @@ function AccessRequestWizardContent() {
 // ============================================================
 
 export default function NewAccessRequestPage() {
-  const { userId, orgId } = useAuth();
+  const clerkAuth = useAuth();
+  const { userId, orgId } = useAuthOrBypass(clerkAuth);
   const queryClient = useQueryClient();
 
   if (!userId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-600">Loading...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -999,7 +999,7 @@ export default function NewAccessRequestPage() {
   const agencyId = orgId || userId;
 
   return (
-    <AccessRequestProvider agencyId={agencyId} queryClient={queryClient}>
+    <AccessRequestProvider agencyId={agencyId} queryClient={queryClient} getToken={clerkAuth.getToken}>
       <AccessRequestWizardContent />
     </AccessRequestProvider>
   );

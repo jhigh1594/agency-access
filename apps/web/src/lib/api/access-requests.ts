@@ -7,6 +7,7 @@
 
 import { PlatformGroupConfig } from '@/lib/transform-platforms';
 import { IntakeField } from '@/contexts/access-request-context';
+import { AuthorizedApiError, authorizedApiFetch } from './authorized-api-fetch';
 
 // ============================================================
 // TYPES
@@ -62,6 +63,8 @@ export interface CreateAccessRequestResponse {
   error?: ApiError;
 }
 
+type TokenProvider = () => Promise<string | null>;
+
 // ============================================================
 // API CLIENT
 // ============================================================
@@ -95,37 +98,31 @@ export interface CreateAccessRequestResponse {
  * }
  */
 export async function createAccessRequest(
-  payload: CreateAccessRequestPayload
+  payload: CreateAccessRequestPayload,
+  getToken?: TokenProvider
 ): Promise<CreateAccessRequestResponse> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/access-requests`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    const response = await authorizedApiFetch<{ data: AccessRequest; error: null }>(
+      '/api/access-requests',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        getToken: getToken ?? (async () => null),
+      }
+    );
 
-    const data = await response.json();
-
-    // Handle HTTP errors
-    if (!response.ok) {
-      // Backend returns { data: null, error: { code, message, details } }
+    return { data: response.data };
+  } catch (err) {
+    if (err instanceof AuthorizedApiError) {
       return {
         error: {
-          code: data.error?.code || 'UNKNOWN_ERROR',
-          message: data.error?.message || data.message || 'Failed to create access request',
-          details: data.error?.details || data.details,
+          code: err.code,
+          message: err.message,
+          details: err.details,
         },
       };
     }
 
-    // Success - backend returns { data, error: null }
-    return {
-      data: data.data || data,
-    };
-  } catch (err) {
-    // Network or parsing error
     return {
       error: {
         code: 'NETWORK_ERROR',
@@ -138,30 +135,30 @@ export async function createAccessRequest(
 /**
  * Get access request by ID
  */
-export async function getAccessRequest(id: string): Promise<CreateAccessRequestResponse> {
+export async function getAccessRequest(
+  id: string,
+  getToken?: TokenProvider
+): Promise<CreateAccessRequestResponse> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/access-requests/${id}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await authorizedApiFetch<{ data: AccessRequest; error: null }>(
+      `/api/access-requests/${id}`,
+      {
+        getToken: getToken ?? (async () => null),
+      }
+    );
 
-    const data = await response.json();
-
-    if (!response.ok) {
+    return { data: response.data };
+  } catch (err) {
+    if (err instanceof AuthorizedApiError) {
       return {
         error: {
-          code: data.error?.code || 'UNKNOWN_ERROR',
-          message: data.error?.message || data.message || 'Failed to fetch access request',
-          details: data.error?.details || data.details,
+          code: err.code,
+          message: err.message,
+          details: err.details,
         },
       };
     }
 
-    return {
-      data: data.data || data,
-    };
-  } catch (err) {
     return {
       error: {
         code: 'NETWORK_ERROR',

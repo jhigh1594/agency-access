@@ -8,7 +8,7 @@
 'use client';
 
 import { AlertCircle, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
-import { AuthModel } from '@agency-platform/shared';
+import { PLATFORM_NAMES } from '@agency-platform/shared';
 
 interface AuthModelSelectorProps {
   agencyHasConnectedPlatforms?: Record<string, boolean>;
@@ -24,8 +24,8 @@ export function AuthModelSelector({
       {/* Header */}
       <div className="px-5 py-4 border-b-2 border-black/10 bg-ink/5">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded flex items-center justify-center bg-acid/20">
-            <LinkIcon className="h-5 w-5 text-ink" />
+          <div className="h-10 w-10 rounded flex items-center justify-center bg-teal/10 border border-teal/30">
+            <LinkIcon className="h-5 w-5 text-teal-90" />
           </div>
           <div className="flex-1">
             <h3 className="text-base font-semibold text-ink">Delegated Access</h3>
@@ -49,8 +49,8 @@ export function AuthModelSelector({
 
         {/* Warning if no platforms connected */}
         {!hasAnyConnectedPlatform && (
-          <div className="mt-4 p-4 bg-acid/10 border-2 border-acid rounded-lg flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-acid flex-shrink-0 mt-0.5" />
+          <div className="mt-4 p-4 bg-teal/5 border border-teal/30 rounded-lg flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-teal-90 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-base font-medium text-ink">Platforms Required</p>
               <p className="text-sm text-gray-700 mt-1">
@@ -73,7 +73,7 @@ export function AuthModelSelector({
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-teal/10 border-2 border-teal rounded text-sm font-medium text-teal-90"
                   >
                     <span className="h-2 w-2 rounded-full bg-teal" />
-                    {platform}
+                    {PLATFORM_NAMES[platform as keyof typeof PLATFORM_NAMES] || platform}
                   </span>
                 ))}
             </div>

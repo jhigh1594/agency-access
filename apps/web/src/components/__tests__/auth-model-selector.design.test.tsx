@@ -65,13 +65,13 @@ describe('AuthModelSelector - Design System Compliance', () => {
       expect(greenElements.length).toBe(0);
     });
 
-    it('should use acid for warning states', () => {
+    it('should use teal for requirements callout accents', () => {
       render(<AuthModelSelector />);
       
-      // Find the warning container with acid styling
+      // Find the warning container with teal styling
       const { container } = render(<AuthModelSelector />);
-      const acidElements = container.querySelectorAll('[class*="acid"]');
-      expect(acidElements.length).toBeGreaterThan(0);
+      const tealElements = container.querySelectorAll('[class*="teal"]');
+      expect(tealElements.length).toBeGreaterThan(0);
       // Should NOT have amber
       const amberElements = container.querySelectorAll('[class*="amber"]');
       expect(amberElements.length).toBe(0);
@@ -155,8 +155,8 @@ describe('AuthModelSelector - Design System Compliance', () => {
     it('should use brutalist styling for icon container', () => {
       const { container } = render(<AuthModelSelector />);
       
-      // Icon container should exist with acid styling
-      const iconContainer = container.querySelector('.bg-acid\\/20');
+      // Icon container should use the calmer teal accent styling
+      const iconContainer = container.querySelector('.bg-teal\\/10.border-teal\\/30');
       expect(iconContainer).toBeDefined();
       
       // Should NOT have indigo
@@ -191,5 +191,12 @@ describe('AuthModelSelector - Visual Hierarchy', () => {
     
     const warning = screen.getByText(/Platforms Required/);
     expect(warning).toBeVisible();
+  });
+
+  it('should render connected manual platforms with canonical display names', () => {
+    render(<AuthModelSelector agencyHasConnectedPlatforms={{ beehiiv: true, klaviyo: true }} />);
+
+    expect(screen.getByText('Beehiiv')).toBeVisible();
+    expect(screen.getByText('Klaviyo')).toBeVisible();
   });
 });

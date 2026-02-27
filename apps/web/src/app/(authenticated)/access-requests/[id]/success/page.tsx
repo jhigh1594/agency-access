@@ -1,18 +1,13 @@
-/**
- * Access Request Success Page
- *
- * Phase 5: Celebration page shown after successful access request creation.
- * Displays authorization link with copy functionality and next actions.
- */
-
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Copy, ArrowLeft, Plus, ExternalLink } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
+import { Check, Copy, ArrowLeft, Plus, ExternalLink, Mail } from 'lucide-react';
 import { getAccessRequest, getAuthorizationUrl } from '@/lib/api/access-requests';
 import { getPlatformCount } from '@/lib/transform-platforms';
+import { Button } from '@/components/ui';
+import { FlowShell } from '@/components/flow/flow-shell';
 import type { AccessRequest } from '@/lib/api/access-requests';
 
 interface SuccessPageProps {
@@ -21,16 +16,16 @@ interface SuccessPageProps {
 
 export default function SuccessPage({ params }: SuccessPageProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [accessRequest, setAccessRequest] = useState<AccessRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function loadAccessRequest() {
       const resolvedParams = await params;
-      const result = await getAccessRequest(resolvedParams.id);
+      const result = await getAccessRequest(resolvedParams.id, getToken);
 
       if (result.error) {
         setError(result.error.message);
@@ -42,245 +37,164 @@ export default function SuccessPage({ params }: SuccessPageProps) {
     }
 
     loadAccessRequest();
-  }, [params]);
+  }, [params, getToken]);
 
   const authorizationUrl = accessRequest ? getAuthorizationUrl(accessRequest) : '';
 
+  const platformCount = useMemo(() => {
+    if (!accessRequest) return 0;
+    return getPlatformCount(
+      accessRequest.platforms.reduce(
+        (acc, group) => ({
+          ...acc,
+          [group.platformGroup]: group.products.map((p) => p.product),
+        }),
+        {}
+      )
+    );
+  }, [accessRequest]);
+
+  const expirationText = useMemo(() => {
+    if (!accessRequest?.expiresAt) return null;
+    const date = new Date(accessRequest.expiresAt);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }, [accessRequest]);
+
   const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(authorizationUrl);
-      setCopied(true);
-      setShowToast(true);
-
-      // Reset copied state after animation
-      setTimeout(() => setCopied(false), 2000);
-
-      // Hide toast after 3 seconds
-      setTimeout(() => setShowToast(false), 3000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
+    if (!authorizationUrl) return;
+    await navigator.clipboard.writeText(authorizationUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const platformCount = accessRequest
-    ? getPlatformCount(
-        accessRequest.platforms.reduce(
-          (acc, group) => ({
-            ...acc,
-            [group.platformGroup]: group.products.map((p) => p.product),
-          }),
-          {}
-        )
-      )
-    : 0;
+  const emailHref = accessRequest
+    ? `mailto:${encodeURIComponent(accessRequest.clientEmail)}?subject=${encodeURIComponent(
+        `Authorize platform access for ${accessRequest.clientName}`
+      )}&body=${encodeURIComponent(
+        `Hi ${accessRequest.clientName},\n\nPlease use this secure link to authorize platform access:\n${authorizationUrl}\n\nThis link expires on ${expirationText}.`
+      )}`
+    : '#';
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-coral border-t-transparent" />
       </div>
     );
   }
 
   if (error || !accessRequest) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-card rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">❌</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Request Not Found</h1>
-          <p className="text-gray-600 mb-6">{error || 'Could not load access request'}</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border-2 border-black bg-card p-8 shadow-brutalist text-center">
+          <h1 className="text-2xl font-semibold text-ink font-display">Request Not Found</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error || 'Could not load access request.'}</p>
+          <Button className="mt-6" onClick={() => router.push('/dashboard')}>
             Back to Dashboard
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
-          >
-            <Check className="h-5 w-5" />
-            <span className="font-medium">Link copied to clipboard!</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="max-w-3xl mx-auto px-4 py-16">
-        {/* Success Animation */}
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{
-            type: 'spring',
-            stiffness: 200,
-            damping: 20,
-            duration: 0.6,
-          }}
-          className="mb-8"
-        >
-          <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto shadow-xl">
-            <Check className="h-14 w-14 text-white" strokeWidth={3} />
-          </div>
-        </motion.div>
-
-        {/* Success Message */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Access Request Created!</h1>
-          <p className="text-lg text-gray-600">
-            Send this link to{' '}
-            <span className="font-semibold text-gray-900">{accessRequest.clientName}</span> to
-            authorize access to{' '}
-            <span className="font-semibold text-indigo-600">
-              {platformCount} {platformCount === 1 ? 'platform' : 'platforms'}
-            </span>
-          </p>
-        </motion.div>
-
-        {/* Authorization Link Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="bg-card rounded-2xl shadow-xl p-8 mb-8"
-        >
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Authorization Link
-          </h2>
-
-          <div className="bg-gray-50 rounded-lg p-4 mb-4 border-2 border-gray-200 break-all">
-            <code className="text-sm text-gray-800 font-mono">{authorizationUrl}</code>
-          </div>
-
-          <div className="flex gap-3">
-            <motion.button
-              onClick={handleCopyLink}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-medium"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-5 w-5" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-5 w-5" />
-                  Copy Link
-                </>
-              )}
-            </motion.button>
-
-            <motion.a
-              href={authorizationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-medium"
-            >
-              <ExternalLink className="h-5 w-5" />
-              Preview
-            </motion.a>
-          </div>
-        </motion.div>
-
-        {/* Client Details */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="bg-card rounded-xl shadow-md p-6 mb-8"
-        >
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Request Details
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Client Name</p>
-              <p className="font-medium text-gray-900">{accessRequest.clientName}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Client Email</p>
-              <p className="font-medium text-gray-900">{accessRequest.clientEmail}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Platforms</p>
-              <p className="font-medium text-gray-900">
-                {platformCount} {platformCount === 1 ? 'product' : 'products'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Status</p>
-              <div className="inline-flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-                <span className="font-medium text-gray-900 capitalize">
-                  {accessRequest.status}
-                </span>
+    <FlowShell
+      title="Access Request Created"
+      description={`Share this link with ${accessRequest.clientName} to authorize ${platformCount} platform${platformCount !== 1 ? 's' : ''}.`}
+      step={3}
+      totalSteps={3}
+      steps={['Build', 'Review', 'Send']}
+    >
+      <div className="space-y-6">
+        <div className="rounded-lg border-2 border-black bg-card p-6 shadow-brutalist">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full border border-teal bg-teal/10 flex items-center justify-center">
+                <Check className="h-6 w-6 text-teal" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-ink">Share Authorization Link</h2>
+                <p className="text-sm text-muted-foreground">Send this secure URL to your client.</p>
               </div>
             </div>
+            <span className="rounded-full border border-border bg-muted/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {accessRequest.status}
+            </span>
           </div>
-        </motion.div>
 
-        {/* Next Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="flex flex-col sm:flex-row gap-4"
-        >
-          <motion.button
-            onClick={() => router.push('/dashboard')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-medium shadow-sm"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            Back to Dashboard
-          </motion.button>
+          <div className="mt-5 rounded-lg border border-border bg-paper p-4">
+            <code className="break-all text-xs text-ink">{authorizationUrl}</code>
+          </div>
 
-          <motion.button
-            onClick={() => router.push('/access-requests/new')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg"
-          >
-            <Plus className="h-5 w-5" />
-            Create Another Request
-          </motion.button>
-        </motion.div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Button onClick={handleCopyLink} leftIcon={<Copy className="h-4 w-4" />}>
+              {copied ? 'Copied' : 'Copy Link'}
+            </Button>
+            <Button
+              variant="secondary"
+              leftIcon={<ExternalLink className="h-4 w-4" />}
+              onClick={() => window.open(authorizationUrl, '_blank', 'noopener,noreferrer')}
+            >
+              Preview Link
+            </Button>
+            <Button
+              variant="secondary"
+              leftIcon={<Mail className="h-4 w-4" />}
+              onClick={() => window.location.assign(emailHref)}
+            >
+              Email Client
+            </Button>
+            <Button
+              variant="secondary"
+              leftIcon={<ArrowLeft className="h-4 w-4" />}
+              onClick={() => router.push('/dashboard')}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
 
-        {/* Helpful Tip */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-          className="mt-12 text-center"
-        >
-          <p className="text-sm text-gray-500">
-            💡 Tip: The link expires in 7 days. Client can authorize platforms in any order.
+        <div className="rounded-lg border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Request Details</h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Client</p>
+              <p className="text-sm font-semibold text-ink">{accessRequest.clientName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-semibold text-ink">{accessRequest.clientEmail}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Products</p>
+              <p className="text-sm font-semibold text-ink">{platformCount}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Expires</p>
+              <p className="text-sm font-semibold text-ink">{expirationText}</p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            Link validity window is 7 days. Expiration date shown above.
           </p>
-        </motion.div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            variant="primary"
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={() => router.push('/access-requests/new')}
+          >
+            Create Another Request
+          </Button>
+        </div>
       </div>
-    </div>
+    </FlowShell>
   );
 }

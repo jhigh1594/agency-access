@@ -36,7 +36,7 @@ export function StepHelpText({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 border-2 border-black dark:border-white p-4 mt-4">
+    <div className="bg-muted/20 dark:bg-muted/60/50 border-2 border-black dark:border-white p-4 mt-4">
       {/* Header - Clickable to Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -52,7 +52,7 @@ export function StepHelpText({
           transition={{ duration: 0.2 }}
           className="flex-shrink-0"
         >
-          <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+          <ChevronDown className="w-5 h-5 text-muted-foreground dark:text-muted-foreground" />
         </m.div>
       </button>
 
@@ -69,7 +69,7 @@ export function StepHelpText({
             <div className="mt-4 pt-4 border-t-2 border-black dark:border-white">
               {/* Description */}
               {description && (
-                <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">{description}</p>
+                <p className="text-sm text-foreground dark:text-muted-foreground mb-4">{description}</p>
               )}
 
               {/* Steps List */}
@@ -82,7 +82,7 @@ export function StepHelpText({
                     {steps.map((step, index) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                        className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground"
                       >
                         <span className="flex-shrink-0 w-5 h-5 border border-black dark:border-white bg-[var(--coral)] text-white flex items-center justify-center text-xs font-bold">
                           {index + 1}
@@ -104,7 +104,7 @@ export function StepHelpText({
                     {grantingDetails.map((detail, index) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                        className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground"
                       >
                         <span className="text-[var(--coral)] mt-0.5">•</span>
                         <span>{detail}</span>

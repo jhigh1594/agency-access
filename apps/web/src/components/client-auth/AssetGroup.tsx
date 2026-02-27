@@ -84,7 +84,7 @@ export function AssetGroup({
           {icon}
           <div>
             <h3 className="text-lg font-bold text-[var(--ink)] font-display">{title}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
               {selectedCount} of {assets.length} selected
             </p>
           </div>
@@ -140,7 +140,7 @@ export function AssetGroup({
           {/* Expand/Collapse Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 border-2 border-black dark:border-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 border-2 border-black dark:border-white hover:bg-muted/30 dark:hover:bg-muted/60 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <m.div
@@ -188,11 +188,11 @@ export function AssetGroup({
       {/* Empty State - Brutalist Style */}
       {assets.length === 0 && isExpanded && (
         <div className="py-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-black dark:border-white bg-slate-100 dark:bg-slate-800 mb-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 mb-3">
             <span className="text-2xl">📭</span>
           </div>
           <p className="text-[var(--ink)] font-bold font-display">No {title.toLowerCase()} available</p>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             This account has no {title.toLowerCase()} to share
           </p>
         </div>

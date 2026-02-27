@@ -27,11 +27,11 @@ export function AssetSelectorDisabled({
       {/* Disabled overlay - positioned absolutely relative to parent */}
       <div className="absolute inset-0 bg-card/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center z-10">
         <div className="text-center px-6">
-          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-            <Lock className="w-8 h-8 text-slate-400" />
+          <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-8 h-8 text-muted-foreground" />
           </div>
-          <p className="text-base font-semibold text-slate-700 mb-1">{message}</p>
-          <p className="text-sm text-slate-500">{subtext}</p>
+          <p className="text-base font-semibold text-foreground mb-1">{message}</p>
+          <p className="text-sm text-muted-foreground">{subtext}</p>
         </div>
       </div>
     </>

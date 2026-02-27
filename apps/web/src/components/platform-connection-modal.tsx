@@ -9,7 +9,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, RefreshCw, Unlink, Plus, Loader2, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -208,7 +208,7 @@ export function PlatformConnectionModal({
   return (
     <AnimatePresence>
       {/* Backdrop */}
-      <motion.div
+      <m.div
         key="platform-modal-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -218,7 +218,7 @@ export function PlatformConnectionModal({
       />
 
       {/* Modal */}
-      <motion.div
+      <m.div
         key="platform-modal-content"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -248,25 +248,25 @@ export function PlatformConnectionModal({
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {/* Success/Error messages */}
             {successMessage && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-4 p-3 bg-teal/10 border-2 border-teal rounded-lg flex items-center gap-2"
               >
                 <CheckCircle2 className="h-4 w-4 text-teal flex-shrink-0" />
                 <p className="text-sm text-teal-90">{successMessage}</p>
-              </motion.div>
+              </m.div>
             )}
 
             {errorMessage && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-4 p-3 bg-coral/10 border-2 border-coral rounded-lg flex items-center gap-2"
               >
                 <AlertCircle className="h-4 w-4 text-coral flex-shrink-0" />
                 <p className="text-sm text-coral-90">{errorMessage}</p>
-              </motion.div>
+              </m.div>
             )}
 
             {/* Loading state */}
@@ -417,7 +417,7 @@ export function PlatformConnectionModal({
           <AnimatePresence>
             {disconnectPlatform && (
               <div className="absolute inset-0 bg-ink/5/95 backdrop-blur-sm flex items-center justify-center p-6 z-10 rounded-lg border-2 border-black">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -448,12 +448,12 @@ export function PlatformConnectionModal({
                       Disconnect
                     </button>
                   </div>
-                </motion.div>
+                </m.div>
               </div>
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }

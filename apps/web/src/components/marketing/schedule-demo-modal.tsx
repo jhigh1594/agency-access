@@ -17,11 +17,10 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
 
     // Initialize Cal.com embed loader
     (function (C: any, A: string, L: string) {
-      let p = function (a: any, ar: any) { a.q.push(ar); };
+      const p = (a: any, ar: any[]) => { a.q.push(ar); };
       let d = C.document;
-      C.Cal = C.Cal || function () {
+      C.Cal = C.Cal || function (...ar: any[]) {
         let cal = C.Cal;
-        let ar = arguments;
         if (!cal.loaded) {
           cal.ns = {};
           cal.q = cal.q || [];
@@ -29,7 +28,7 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
           cal.loaded = true;
         }
         if (ar[0] === L) {
-          const api: { (): void; q: any[] } = function () { p(api, arguments); };
+          const api: { (...args: any[]): void; q: any[] } = (...args: any[]) => { p(api, args); };
           api.q = api.q || [];
           const namespace = ar[1];
           if (typeof namespace === "string") {

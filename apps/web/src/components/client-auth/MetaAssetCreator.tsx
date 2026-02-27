@@ -177,10 +177,10 @@ export function MetaAssetCreator({
         </div>
 
         <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">Account Created!</h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
           "{createdAccount.name}" is ready to use
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-500 mb-4">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-4">
           ID: {createdAccount.id}
         </p>
 
@@ -242,10 +242,10 @@ export function MetaAssetCreator({
           onChange={(e) => setAccountName(e.target.value)}
           placeholder="e.g., Brand Name - Ads"
           disabled={state === 'loading'}
-          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-slate-900 text-[var(--ink)] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow"
+          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-ink text-[var(--ink)] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow"
           maxLength={100}
         />
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
           A descriptive name for your ad account (max 100 characters)
         </p>
       </div>
@@ -263,7 +263,7 @@ export function MetaAssetCreator({
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
           disabled={state === 'loading'}
-          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-slate-900 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow appearance-none cursor-pointer"
+          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-ink text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow appearance-none cursor-pointer"
         >
           {CURRENCIES.map((c) => (
             <option key={c.code} value={c.code}>
@@ -271,7 +271,7 @@ export function MetaAssetCreator({
             </option>
           ))}
         </select>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
           The currency for billing and reporting
         </p>
       </div>
@@ -289,7 +289,7 @@ export function MetaAssetCreator({
           value={timezoneId}
           onChange={(e) => setTimezoneId(e.target.value)}
           disabled={state === 'loading'}
-          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-slate-900 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow appearance-none cursor-pointer"
+          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-ink text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow appearance-none cursor-pointer"
         >
           {TIMEZONES.map((tz) => (
             <option key={tz.id} value={tz.id}>
@@ -297,7 +297,7 @@ export function MetaAssetCreator({
             </option>
           ))}
         </select>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
           Used for reporting and ad scheduling
         </p>
       </div>

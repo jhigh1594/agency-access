@@ -118,9 +118,15 @@ interface AccessRequestProviderProps {
   children: ReactNode;
   agencyId: string;
   queryClient?: QueryClient;
+  getToken?: () => Promise<string | null>;
 }
 
-export function AccessRequestProvider({ children, agencyId, queryClient }: AccessRequestProviderProps) {
+export function AccessRequestProvider({
+  children,
+  agencyId,
+  queryClient,
+  getToken,
+}: AccessRequestProviderProps) {
   const router = useRouter();
   const [state, setState] = useState<AccessRequestFormState>(initialState);
 
@@ -285,7 +291,7 @@ export function AccessRequestProvider({ children, agencyId, queryClient }: Acces
       };
 
       // Submit to API
-      const result = await createAccessRequest(payload);
+      const result = await createAccessRequest(payload, getToken);
 
       if (result.error) {
         // Handle specific error codes
@@ -352,7 +358,7 @@ export function AccessRequestProvider({ children, agencyId, queryClient }: Acces
         submitting: false,
       }));
     }
-  }, [state, agencyId, router]);
+  }, [state, agencyId, router, queryClient, getToken]);
 
   // ============================================================
   // CONTEXT VALUE

@@ -114,26 +114,26 @@ export function AutomaticPagesGrant({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-2xl font-bold text-slate-900 mb-1">{content.title}</h3>
-        <p className="text-slate-600">{content.subtitle}</p>
+        <h3 className="text-2xl font-bold text-ink mb-1">{content.title}</h3>
+        <p className="text-muted-foreground">{content.subtitle}</p>
       </div>
 
       {localError && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700">
+        <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-4 text-coral">
           <p className="font-semibold">{localError}</p>
         </div>
       )}
 
-      <div className="bg-card border-2 border-slate-200 rounded-xl p-6">
+      <div className="bg-card border-2 border-border rounded-xl p-6">
         <div className="flex items-start gap-4 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-coral/20 flex items-center justify-center flex-shrink-0">
             <span className="text-xl">f</span>
           </div>
           <div className="flex-1">
-            <h4 className="text-lg font-bold text-slate-900 mb-1">
+            <h4 className="text-lg font-bold text-ink mb-1">
               {content.facebookPages.title}
             </h4>
-            <span className="inline-block px-2 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded">
+            <span className="inline-block px-2 py-1 bg-muted/30 text-foreground text-xs font-semibold rounded">
               {accessLevel}
             </span>
           </div>
@@ -141,12 +141,12 @@ export function AutomaticPagesGrant({
 
         {/* Account Selector */}
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
+          <label className="block text-sm font-semibold text-foreground mb-2">
             Select Accounts
           </label>
-          <div className="min-h-[60px] border-2 border-slate-200 rounded-lg p-3 flex flex-wrap gap-2">
+          <div className="min-h-[60px] border-2 border-border rounded-lg p-3 flex flex-wrap gap-2">
             {displayPages.length === 0 ? (
-              <span className="text-slate-400 text-sm">No pages selected</span>
+              <span className="text-muted-foreground text-sm">No pages selected</span>
             ) : (
               displayPages.map((page) => {
                 const result = grantResults?.find((r) => r.id === page.id);
@@ -160,23 +160,23 @@ export function AutomaticPagesGrant({
                       isGranted
                         ? 'bg-emerald-50 border-emerald-200'
                         : isFailed
-                        ? 'bg-red-50 border-red-200'
-                        : 'bg-slate-50 border-slate-200'
+                        ? 'bg-coral/10 border-coral/30'
+                        : 'bg-muted/20 border-border'
                     }`}
                   >
-                    <span className="text-sm font-medium text-slate-900">
+                    <span className="text-sm font-medium text-ink">
                       {page.name} ({page.id.slice(0, 6)}...)
                     </span>
                     {isGranted && (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     )}
                     {isFailed && (
-                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <AlertCircle className="w-4 h-4 text-coral" />
                     )}
                     {!isGranting && (
                       <button
                         onClick={() => handleRemovePage(page.id)}
-                        className="text-slate-400 hover:text-slate-600"
+                        className="text-muted-foreground hover:text-muted-foreground"
                         aria-label="Remove page"
                       >
                         <X className="w-4 h-4" />
@@ -188,7 +188,7 @@ export function AutomaticPagesGrant({
             )}
           </div>
           {hasFailed && (
-            <div className="mt-2 text-sm text-red-600">
+            <div className="mt-2 text-sm text-coral">
               Some pages failed to grant access. Please try again.
             </div>
           )}
@@ -200,8 +200,8 @@ export function AutomaticPagesGrant({
           disabled={isGranting || displayPages.length === 0 || hasGranted}
           className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all ${
             isGranting || displayPages.length === 0 || hasGranted
-              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              : 'bg-slate-900 text-white hover:bg-slate-800'
+              ? 'bg-muted/40 text-muted-foreground cursor-not-allowed'
+              : 'bg-ink text-white hover:bg-muted/60'
           }`}
         >
           {isGranting ? (
@@ -222,4 +222,3 @@ export function AutomaticPagesGrant({
     </div>
   );
 }
-

@@ -64,24 +64,24 @@ export function AdAccountSharingInstructions({
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-2xl font-bold text-slate-900 mb-2">{content.title}</h3>
-        <p className="text-slate-600">{content.description}</p>
+        <h3 className="text-2xl font-bold text-ink mb-2">{content.title}</h3>
+        <p className="text-muted-foreground">{content.description}</p>
       </div>
 
       {/* Steps */}
       <div className="space-y-6">
         {/* Step 1: Select Assets */}
         <div className="flex gap-4">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-coral text-white flex items-center justify-center font-bold">
             1
           </div>
           <div className="flex-1">
-            <h4 className="font-bold text-slate-900 mb-1">{content.step1.title}</h4>
-            <p className="text-slate-600 text-sm mb-2">{content.step1.description}</p>
+            <h4 className="font-bold text-ink mb-1">{content.step1.title}</h4>
+            <p className="text-muted-foreground text-sm mb-2">{content.step1.description}</p>
             {selectedAdAccounts.length > 0 && (
               <div className="mt-2">
-                <p className="text-sm font-semibold text-slate-700 mb-1">Selected accounts:</p>
-                <ul className="list-disc list-inside text-sm text-slate-600">
+                <p className="text-sm font-semibold text-foreground mb-1">Selected accounts:</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground">
                   {selectedAdAccounts.map((account) => (
                     <li key={account.id}>{account.name}</li>
                   ))}
@@ -93,39 +93,39 @@ export function AdAccountSharingInstructions({
 
         {/* Step 2: Share Asset (combined navigation + sharing) */}
         <div className="flex gap-4">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-coral text-white flex items-center justify-center font-bold">
             2
           </div>
           <div className="flex-1">
-            <h4 className="font-bold text-slate-900 mb-1">{content.step2.title}</h4>
-            <p className="text-slate-600 text-sm mb-3">{content.step2.description}</p>
+            <h4 className="font-bold text-ink mb-1">{content.step2.title}</h4>
+            <p className="text-muted-foreground text-sm mb-3">{content.step2.description}</p>
             
             {/* Sub-steps for Step 2 */}
-            <div className="space-y-3 ml-4 border-l-2 border-slate-200 pl-4">
+            <div className="space-y-3 ml-4 border-l-2 border-border pl-4">
               {/* Sub-step 1: Select account and click Assign Partner */}
               <div>
-                <p className="text-slate-700 text-sm">{content.step2.substeps?.[0]}</p>
+                <p className="text-foreground text-sm">{content.step2.substeps?.[0]}</p>
               </div>
               
               {/* Sub-step 2: Enter Business Manager ID */}
               <div>
-                <p className="text-slate-700 text-sm mb-2">{content.step2.substeps?.[1]}</p>
+                <p className="text-foreground text-sm mb-2">{content.step2.substeps?.[1]}</p>
                 <BusinessIdDisplay businessId={businessId} businessName={businessName} />
               </div>
               
               {/* Sub-step 3: Check Manage ad accounts */}
               <div>
-                <p className="text-slate-700 text-sm">{content.step2.substeps?.[2]}</p>
+                <p className="text-foreground text-sm">{content.step2.substeps?.[2]}</p>
               </div>
               
               {/* Sub-step 4: Click Assign */}
               <div>
-                <p className="text-slate-700 text-sm">{content.step2.substeps?.[3]}</p>
+                <p className="text-foreground text-sm">{content.step2.substeps?.[3]}</p>
               </div>
               
               {/* Sub-step 5: Wait for confirmation */}
               <div>
-                <p className="text-slate-700 text-sm">{content.step2.substeps?.[4]}</p>
+                <p className="text-foreground text-sm">{content.step2.substeps?.[4]}</p>
               </div>
             </div>
           </div>
@@ -133,12 +133,12 @@ export function AdAccountSharingInstructions({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4 pt-4 border-t-2 border-slate-200">
+      <div className="flex gap-4 pt-4 border-t-2 border-border">
         <a
           href="https://business.facebook.com/settings"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 px-6 py-3 bg-card border-2 border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-6 py-3 bg-card border-2 border-border rounded-lg text-ink font-semibold hover:bg-muted/20 transition-colors flex items-center justify-center gap-2"
         >
           <ExternalLink className="w-5 h-5" />
           {content.openBusinessManager}
@@ -146,7 +146,7 @@ export function AdAccountSharingInstructions({
         <button
           onClick={handleMarkComplete}
           disabled={isMarkingComplete}
-          className="flex-1 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-6 py-3 bg-coral text-white font-semibold rounded-lg hover:bg-coral/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isMarkingComplete ? (
             <>

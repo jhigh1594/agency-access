@@ -38,7 +38,7 @@ export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: Templ
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral"></div>
       </div>
     );
   }
@@ -47,8 +47,8 @@ export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: Templ
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Choose a Template</h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <h2 className="text-lg font-semibold text-ink">Choose a Template</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Start with a pre-configured template or create from scratch
           </p>
         </div>
@@ -61,19 +61,19 @@ export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: Templ
           onClick={() => onSelect(null)}
           className={`p-6 rounded-lg border-2 text-left transition-all ${
             selectedTemplate === null
-              ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200'
-              : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
+              ? 'border-coral bg-coral/10 ring-2 ring-coral/30'
+              : 'border-border hover:border-coral/40 hover:bg-muted/20'
           }`}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-slate-100 rounded-lg">
-              <Sparkles className="h-5 w-5 text-slate-600" />
+            <div className="p-2 bg-muted/30 rounded-lg">
+              <Sparkles className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900">Start from Scratch</h3>
-              <p className="text-sm text-slate-600 mt-1">
+              <h3 className="font-semibold text-ink">Start from Scratch</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Create a custom access request with your preferred settings
               </p>
             </div>
@@ -92,28 +92,28 @@ export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: Templ
               onClick={() => onSelect(template)}
               className={`p-6 rounded-lg border-2 text-left transition-all ${
                 selectedTemplate?.id === template.id
-                  ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200'
-                  : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
+                  ? 'border-coral bg-coral/10 ring-2 ring-coral/30'
+                  : 'border-border hover:border-coral/40 hover:bg-muted/20'
               }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <LayoutTemplate className="h-5 w-5 text-indigo-600" />
+                  <div className="p-2 bg-coral/20 rounded-lg">
+                    <LayoutTemplate className="h-5 w-5 text-coral" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-slate-900">{template.name}</h3>
+                      <h3 className="font-semibold text-ink">{template.name}</h3>
                       {template.isDefault && (
-                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                        <Star className="h-4 w-4 text-coral fill-coral" />
                       )}
                     </div>
                     {template.description && (
-                      <p className="text-sm text-slate-600 mt-1">{template.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
                     )}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                       <span>
                         {platformCount} platform{platformCount !== 1 ? 's' : ''}
                       </span>
@@ -132,7 +132,7 @@ export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: Templ
       </div>
 
       {templates.length === 0 && (
-        <div className="text-center py-8 text-slate-500 text-sm">
+        <div className="text-center py-8 text-muted-foreground text-sm">
           No templates yet. Create your first template by saving a configuration!
         </div>
       )}

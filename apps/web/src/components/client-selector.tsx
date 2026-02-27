@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, X, Loader2, AlertCircle, Check, Globe } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { Client, ClientLanguage } from '@agency-platform/shared';
+import { useAuthOrBypass } from '@/lib/dev-auth';
 
 const SUPPORTED_LANGUAGES: Record<ClientLanguage, { name: string; flag: string }> = {
   en: { name: 'English', flag: '🇬🇧' },
@@ -34,7 +35,9 @@ interface PaginatedClientsResponse {
 }
 
 export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProps) {
-  const { getToken } = useAuth();
+  const clerkAuth = useAuth();
+  const { getToken } = clerkAuth;
+  const auth = useAuthOrBypass(clerkAuth);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +65,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
     try {
       const token = await getToken();
-      if (!token) throw new Error('No auth token');
+      if (!token && !auth.isDevelopmentBypass) throw new Error('No auth token');
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
       params.set('limit', '50');
@@ -70,9 +73,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/clients?${params.toString()}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
 
@@ -114,11 +115,11 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
     try {
       const token = await getToken();
-      if (!token) throw new Error('No auth token');
+      if (!token && !auth.isDevelopmentBypass) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newClient),
@@ -157,16 +158,16 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
   };
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
+    <div className="border border-border rounded-lg overflow-hidden">
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-border">
         <button
           type="button"
           onClick={() => setActiveTab('existing')}
           className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
             activeTab === 'existing'
-              ? 'text-indigo-600 border-indigo-600 bg-indigo-50/50'
-              : 'text-slate-600 border-transparent hover:text-slate-800 hover:bg-slate-50'
+              ? 'text-coral border-coral bg-coral/10'
+              : 'text-muted-foreground border-transparent hover:text-ink hover:bg-muted/20'
           }`}
         >
           Existing Clients
@@ -176,8 +177,8 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
           onClick={() => setActiveTab('new')}
           className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
             activeTab === 'new'
-              ? 'text-indigo-600 border-indigo-600 bg-indigo-50/50'
-              : 'text-slate-600 border-transparent hover:text-slate-800 hover:bg-slate-50'
+              ? 'text-coral border-coral bg-coral/10'
+              : 'text-muted-foreground border-transparent hover:text-ink hover:bg-muted/20'
           }`}
         >
           Create New
@@ -190,34 +191,34 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
           <div className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search existing clients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search clients"
-                className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                className="w-full pl-11 pr-4 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral text-base"
               />
             </div>
 
           {/* Loading State */}
           {loading && (
             <div className="flex items-center justify-center py-10" role="status" aria-live="polite">
-              <Loader2 className="h-6 w-6 animate-spin text-indigo-600 mr-2" />
-              <span className="text-slate-600 text-base">Loading clients...</span>
+              <Loader2 className="h-6 w-6 animate-spin text-coral mr-2" />
+              <span className="text-muted-foreground text-base">Loading clients...</span>
             </div>
           )}
 
           {/* Error State */}
           {error && !loading && (
             <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <AlertCircle className="h-9 w-9 text-red-500" />
-              <p className="text-slate-600 text-base">Failed to load clients</p>
+              <AlertCircle className="h-9 w-9 text-coral" />
+              <p className="text-muted-foreground text-base">Failed to load clients</p>
               <button
                 type="button"
                 onClick={loadClients}
-                className="px-5 py-2.5 text-indigo-600 hover:text-indigo-700 text-base rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-5 py-2.5 text-coral hover:text-coral/90 text-base rounded-lg hover:bg-muted/20 transition-colors"
               >
                 Retry
               </button>
@@ -227,8 +228,8 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
           {/* Empty State */}
           {!loading && !error && (clients?.length ?? 0) === 0 && (
             <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <p className="text-slate-600 text-base">No clients found</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-muted-foreground text-base">No clients found</p>
+              <p className="text-sm text-muted-foreground">
                 {searchQuery ? 'Try a different search term' : 'Add your first client to get started'}
               </p>
             </div>
@@ -248,18 +249,18 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                     onClick={() => handleSelectClient(client)}
                     className={`w-full text-left px-4 py-3.5 border rounded-lg transition-colors flex items-center gap-3 ${
                       isSelected
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-coral bg-coral/10'
+                        : 'border-border hover:border-border hover:bg-muted/20'
                     }`}
                     aria-selected={isSelected}
                   >
                     <div className="flex-1">
-                      <p className="font-semibold text-slate-900 text-base">{client.name}</p>
-                      <p className="text-sm text-slate-600">{client.company}</p>
-                      <p className="text-xs text-slate-500 mt-1">{client.email}</p>
+                      <p className="font-semibold text-ink text-base">{client.name}</p>
+                      <p className="text-sm text-muted-foreground">{client.company}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{client.email}</p>
                     </div>
                     {isSelected && (
-                      <Check className="h-5 w-5 text-indigo-600" />
+                      <Check className="h-5 w-5 text-coral" />
                     )}
                     {languageInfo && client.language !== 'en' && (
                       <span className="text-sm" title={languageInfo.name}>
@@ -276,11 +277,11 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
           /* New Client Form */
           <div className="space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900">Create new client</h3>
+              <h3 className="text-base font-semibold text-ink">Create new client</h3>
               <button
                 type="button"
                 onClick={handleCancelNewClient}
-                className="text-sm text-slate-500 hover:text-slate-700"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -288,16 +289,16 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Error */}
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-base text-red-800">{error}</p>
+              <div className="p-4 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+                <p className="text-base text-coral">{error}</p>
               </div>
             )}
 
             {/* Name */}
             <div>
-              <label htmlFor="client-name" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Client Name <span className="text-red-500">*</span>
+              <label htmlFor="client-name" className="block text-sm font-medium text-foreground mb-1.5">
+                Client Name <span className="text-coral">*</span>
               </label>
               <input
                 type="text"
@@ -305,14 +306,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 value={newClient.name}
                 onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateClient()}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base ${
-                  formErrors.name ? 'border-red-300' : 'border-slate-300'
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral text-base ${
+                  formErrors.name ? 'border-coral/50' : 'border-border'
                 }`}
                 aria-invalid={!!formErrors.name}
                 aria-describedby={formErrors.name ? 'name-error' : undefined}
               />
               {formErrors.name && (
-                <p id="name-error" className="mt-1.5 text-sm text-red-600">
+                <p id="name-error" className="mt-1.5 text-sm text-coral">
                   {formErrors.name}
                 </p>
               )}
@@ -320,8 +321,8 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Company */}
             <div>
-              <label htmlFor="client-company" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Company <span className="text-red-500">*</span>
+              <label htmlFor="client-company" className="block text-sm font-medium text-foreground mb-1.5">
+                Company <span className="text-coral">*</span>
               </label>
               <input
                 type="text"
@@ -329,14 +330,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 value={newClient.company}
                 onChange={(e) => setNewClient({ ...newClient, company: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateClient()}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base ${
-                  formErrors.company ? 'border-red-300' : 'border-slate-300'
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral text-base ${
+                  formErrors.company ? 'border-coral/50' : 'border-border'
                 }`}
                 aria-invalid={!!formErrors.company}
                 aria-describedby={formErrors.company ? 'company-error' : undefined}
               />
               {formErrors.company && (
-                <p id="company-error" className="mt-1.5 text-sm text-red-600">
+                <p id="company-error" className="mt-1.5 text-sm text-coral">
                   {formErrors.company}
                 </p>
               )}
@@ -344,8 +345,8 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Email */}
             <div>
-              <label htmlFor="client-email" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Email <span className="text-red-500">*</span>
+              <label htmlFor="client-email" className="block text-sm font-medium text-foreground mb-1.5">
+                Email <span className="text-coral">*</span>
               </label>
               <input
                 type="email"
@@ -353,14 +354,14 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 value={newClient.email}
                 onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateClient()}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base ${
-                  formErrors.email ? 'border-red-300' : 'border-slate-300'
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral text-base ${
+                  formErrors.email ? 'border-coral/50' : 'border-border'
                 }`}
                 aria-invalid={!!formErrors.email}
                 aria-describedby={formErrors.email ? 'email-error' : undefined}
               />
               {formErrors.email && (
-                <p id="email-error" className="mt-1.5 text-sm text-red-600">
+                <p id="email-error" className="mt-1.5 text-sm text-coral">
                   {formErrors.email}
                 </p>
               )}
@@ -368,7 +369,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
             {/* Language */}
             <div>
-              <label htmlFor="client-language" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label htmlFor="client-language" className="block text-sm font-medium text-foreground mb-1.5">
                 <span className="flex items-center gap-1">
                   <Globe className="h-4 w-4" />
                   Language
@@ -378,7 +379,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 id="client-language"
                 value={newClient.language}
                 onChange={(e) => setNewClient({ ...newClient, language: e.target.value as ClientLanguage })}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                className="w-full px-4 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral text-base"
               >
                 {Object.entries(SUPPORTED_LANGUAGES).map(([code, { name, flag }]) => (
                   <option key={code} value={code}>
@@ -394,7 +395,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                 type="button"
                 onClick={handleCreateClient}
                 disabled={creating}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 text-base font-medium"
+                className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 flex items-center gap-2 text-base font-medium"
               >
                 {creating && <Loader2 className="h-4 w-4 animate-spin" />}
                 Create Client

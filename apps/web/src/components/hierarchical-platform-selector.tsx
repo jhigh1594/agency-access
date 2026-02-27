@@ -182,19 +182,19 @@ export function HierarchicalPlatformSelector({
   // Empty state - no connected platforms
   if (availableGroups.length === 0) {
     return (
-      <div className="text-center py-8 px-6 bg-slate-50 rounded-lg border border-slate-200">
-        <div className="inline-flex p-3 bg-slate-100 rounded-full mb-4">
-          <AlertCircle className="h-6 w-6 text-slate-400" />
+      <div className="text-center py-8 px-6 bg-muted/20 rounded-lg border border-border">
+        <div className="inline-flex p-3 bg-muted/30 rounded-full mb-4">
+          <AlertCircle className="h-6 w-6 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+        <h3 className="text-lg font-semibold text-ink mb-2">
           No platforms connected
         </h3>
-        <p className="text-sm text-slate-600 mb-4 max-w-sm mx-auto">
+        <p className="text-sm text-muted-foreground mb-4 max-w-sm mx-auto">
           Connect platforms in your settings before creating access requests.
         </p>
         <Link
           href="/connections"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors text-sm font-medium"
         >
           <Link2 className="h-4 w-4" />
           Go to Connections
@@ -214,7 +214,7 @@ export function HierarchicalPlatformSelector({
           getGroupSelectAllState(groupKey, group.products.length);
 
         return (
-          <div key={groupKey} className="border border-slate-200 rounded-lg overflow-hidden bg-card">
+          <div key={groupKey} className="border border-border rounded-lg overflow-hidden bg-card">
             {/* Platform Header with Toggle */}
             <div className="flex items-center gap-3 px-4 py-3">
               {/* Toggle Switch */}
@@ -236,16 +236,16 @@ export function HierarchicalPlatformSelector({
                 />
                 <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
                   platformChecked 
-                    ? 'bg-green-500 peer-focus:ring-4 peer-focus:ring-green-300' 
+                    ? 'bg-teal peer-focus:ring-4 peer-focus:ring-teal/30' 
                     : platformIndeterminate
-                    ? 'bg-amber-400 peer-focus:ring-4 peer-focus:ring-amber-300'
-                    : 'bg-slate-300 peer-focus:ring-4 peer-focus:ring-slate-300'
+                    ? 'bg-accent peer-focus:ring-4 peer-focus:ring-ring'
+                    : 'bg-muted/40 peer-focus:ring-4 peer-focus:ring-ring'
                 }`}>
                   <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full transition-transform duration-200 ${
                     platformChecked ? 'translate-x-5' : platformIndeterminate ? 'translate-x-2.5' : ''
                   }`}>
                     {platformChecked && (
-                      <Check className="w-3 h-3 text-green-500 absolute top-1 left-1" />
+                      <Check className="w-3 h-3 text-teal absolute top-1 left-1" />
                     )}
                   </div>
                 </div>
@@ -258,13 +258,13 @@ export function HierarchicalPlatformSelector({
               >
                 <div className="flex items-center gap-3">
                   {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   )}
                   <div className="text-left">
-                    <h3 className="font-medium text-slate-900">{group.name}</h3>
-                    <p className="text-xs text-slate-500">
+                    <h3 className="font-medium text-ink">{group.name}</h3>
+                    <p className="text-xs text-muted-foreground">
                       {selectionCount > 0 
                         ? `${selectionCount} of ${group.products.length} products selected`
                         : `${group.products.length} products available`
@@ -273,7 +273,7 @@ export function HierarchicalPlatformSelector({
                   </div>
                 </div>
                 {selectionCount > 0 && (
-                  <div className="text-sm font-medium text-indigo-600">
+                  <div className="text-sm font-medium text-coral">
                     {selectionCount} selected
                   </div>
                 )}
@@ -288,24 +288,24 @@ export function HierarchicalPlatformSelector({
               if (isManualPlatform) {
                 // Email Configuration UI for manual invitation platforms
                 return (
-                  <div className="border-t border-slate-200 p-4 bg-slate-50/50">
-                    <div className="flex items-start gap-3 p-4 bg-card border border-slate-200 rounded-lg">
+                  <div className="border-t border-border p-4 bg-muted/20">
+                    <div className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg">
                       <div className="flex-shrink-0">
-                        <div className="h-10 w-10 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center">
-                          <Mail className="h-5 w-5 text-indigo-600" />
+                        <div className="h-10 w-10 rounded-lg bg-coral/10 border border-border flex items-center justify-center">
+                          <Mail className="h-5 w-5 text-coral" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 mb-1">
+                        <h4 className="text-sm font-semibold text-ink mb-1">
                           Invitation Email
                         </h4>
-                        <p className="text-xs text-slate-600 mb-3">
+                        <p className="text-xs text-muted-foreground mb-3">
                           Clients will invite this email to their {group.name} account
                         </p>
                         {platformEmail ? (
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
-                              <p className="text-sm font-mono text-slate-700 truncate" title={platformEmail}>
+                            <div className="flex-1 px-3 py-2 bg-muted/20 border border-border rounded-lg">
+                              <p className="text-sm font-mono text-foreground truncate" title={platformEmail}>
                                 {platformEmail}
                               </p>
                             </div>
@@ -313,7 +313,7 @@ export function HierarchicalPlatformSelector({
                               <button
                                 type="button"
                                 onClick={() => handleEditEmail(groupKey, platformEmail)}
-                                className="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
+                                className="px-3 py-2 text-xs font-medium text-muted-foreground hover:text-ink hover:bg-muted/30 rounded-lg transition-colors flex items-center gap-1"
                               >
                                 <Edit className="h-3 w-3" />
                                 Edit
@@ -321,12 +321,12 @@ export function HierarchicalPlatformSelector({
                             )}
                           </div>
                         ) : (
-                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                            <p className="text-xs text-amber-800">
+                          <div className="p-3 bg-accent border border-border rounded-lg">
+                            <p className="text-xs text-foreground">
                               No email configured.{' '}
                               <Link
                                 href="/connections"
-                                className="font-medium underline hover:text-amber-900"
+                                className="font-medium underline hover:text-ink"
                               >
                                 Connect {group.name}
                               </Link>{' '}
@@ -342,7 +342,7 @@ export function HierarchicalPlatformSelector({
 
               // Standard Product Selection UI for other platforms
               return (
-                <div className="border-t border-slate-200 p-4 bg-slate-50/50 space-y-3">
+                <div className="border-t border-border p-4 bg-muted/20 space-y-3">
                   {/* Select All */}
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -355,9 +355,9 @@ export function HierarchicalPlatformSelector({
                         }
                       }}
                       onChange={() => handleSelectAll(groupKey, group.products)}
-                      className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                      className="w-4 h-4 text-coral rounded focus:ring-2 focus:ring-ring"
                     />
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-foreground">
                       Select all ({group.products.length})
                     </span>
                   </label>
@@ -371,7 +371,7 @@ export function HierarchicalPlatformSelector({
                         <label
                           key={product.id}
                           className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                            isSelected ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-slate-100'
+                            isSelected ? 'bg-coral/10 border border-coral/30' : 'hover:bg-muted/30'
                           }`}
                         >
                           <input
@@ -380,13 +380,13 @@ export function HierarchicalPlatformSelector({
                             aria-label={product.name}
                             checked={isSelected}
                             onChange={() => handleProductToggle(groupKey, product.id)}
-                            className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                            className="w-4 h-4 text-coral rounded focus:ring-2 focus:ring-ring"
                           />
-                          <span className={`text-sm ${isSelected ? 'text-indigo-900 font-medium' : 'text-slate-700'}`}>
+                          <span className={`text-sm ${isSelected ? 'text-coral font-medium' : 'text-foreground'}`}>
                             {product.name}
                           </span>
                           {isSelected && (
-                            <Check className="h-3.5 w-3.5 text-indigo-600 ml-auto" />
+                            <Check className="h-3.5 w-3.5 text-coral ml-auto" />
                           )}
                         </label>
                       );

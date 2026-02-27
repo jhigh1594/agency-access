@@ -151,22 +151,22 @@ export function SaveAsTemplateModal({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-slate-200">
-                <h2 className="text-lg font-semibold text-slate-900">Save as Template</h2>
+              <div className="flex items-center justify-between p-6 border-b border-border">
+                <h2 className="text-lg font-semibold text-ink">Save as Template</h2>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-1 hover:bg-muted/30 rounded-lg transition-colors"
                 >
-                  <X className="h-5 w-5 text-slate-500" />
+                  <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
 
               {/* Body */}
               <div className="p-6 space-y-4">
                 <div>
-                  <label htmlFor="template-name" className="block text-sm font-medium text-slate-700 mb-1">
-                    Template Name <span className="text-red-500">*</span>
+                  <label htmlFor="template-name" className="block text-sm font-medium text-foreground mb-1">
+                    Template Name <span className="text-coral">*</span>
                   </label>
                   <input
                     type="text"
@@ -174,12 +174,12 @@ export function SaveAsTemplateModal({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g., E-commerce Standard Access"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="template-description" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="template-description" className="block text-sm font-medium text-foreground mb-1">
                     Description
                   </label>
                   <textarea
@@ -188,7 +188,7 @@ export function SaveAsTemplateModal({
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Brief description of what this template is for..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral"
                   />
                 </div>
 
@@ -197,16 +197,16 @@ export function SaveAsTemplateModal({
                     type="checkbox"
                     checked={isDefault}
                     onChange={(e) => setIsDefault(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-border text-coral focus:ring-ring"
                   />
-                  <span className="text-sm text-slate-700">Set as default template</span>
+                  <span className="text-sm text-foreground">Set as default template</span>
                 </label>
 
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800"
+                    className="p-3 bg-coral/10 border border-coral/30 rounded-lg text-sm text-coral"
                   >
                     {error}
                   </motion.div>
@@ -214,12 +214,12 @@ export function SaveAsTemplateModal({
               </div>
 
               {/* Footer */}
-              <div className="flex justify-end gap-3 p-6 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-6 border-t border-border">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={saving}
-                  className="px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-foreground hover:text-ink hover:bg-muted/30 rounded-lg transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -227,7 +227,7 @@ export function SaveAsTemplateModal({
                   type="button"
                   onClick={handleSave}
                   disabled={saving || !name.trim()}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {saving ? 'Saving...' : 'Save Template'}

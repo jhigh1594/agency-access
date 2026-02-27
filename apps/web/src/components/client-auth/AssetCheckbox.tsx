@@ -42,8 +42,8 @@ export function AssetCheckbox({
         transition-all duration-200
         ${
           checked
-            ? 'bg-indigo-50 border-indigo-500 shadow-md'
-            : 'bg-card border-slate-200 hover:border-slate-300 hover:shadow-md'
+            ? 'bg-coral/10 border-coral shadow-md'
+            : 'bg-card border-border hover:border-border hover:shadow-md'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
@@ -58,8 +58,8 @@ export function AssetCheckbox({
           className="w-12 h-12 rounded-lg object-cover"
         />
       ) : (
-        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-          <span className="text-xl font-bold text-slate-400">
+        <div className="w-12 h-12 rounded-lg bg-muted/30 flex items-center justify-center">
+          <span className="text-xl font-bold text-muted-foreground">
             {name.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -67,10 +67,10 @@ export function AssetCheckbox({
 
       {/* Asset Info */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-slate-900 truncate">{name}</h4>
+        <h4 className="font-semibold text-ink truncate">{name}</h4>
         <div className="flex items-center gap-2 mt-1">
           {metadata?.id && (
-            <span className="text-sm text-slate-500">ID: {metadata.id}</span>
+            <span className="text-sm text-muted-foreground">ID: {metadata.id}</span>
           )}
           {metadata?.status && (
             <span
@@ -79,7 +79,7 @@ export function AssetCheckbox({
                 ${
                   metadata.status.toUpperCase() === 'ACTIVE'
                     ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-slate-100 text-slate-600'
+                    : 'bg-muted/30 text-muted-foreground'
                 }
               `}
             >
@@ -104,8 +104,8 @@ export function AssetCheckbox({
             w-7 h-7 rounded-lg border-2 flex items-center justify-center
             ${
               checked
-                ? 'bg-indigo-600 border-indigo-600'
-                : 'bg-card border-slate-300'
+                ? 'bg-coral border-coral'
+                : 'bg-card border-border'
             }
           `}
           animate={{

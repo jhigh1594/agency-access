@@ -101,4 +101,18 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
       expect(componentCode).toMatch(/border-(black|2)/);
     });
   });
+
+  describe('Motion strict mode compatibility', () => {
+    it('should use m components instead of motion components under LazyMotion strict mode', () => {
+      const fs = require('fs');
+      const componentCode = fs.readFileSync(
+        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'utf-8'
+      );
+
+      expect(componentCode).toContain("import { m, AnimatePresence } from 'framer-motion'");
+      expect(componentCode).not.toContain('<motion.');
+      expect(componentCode).not.toContain(' motion.');
+    });
+  });
 });

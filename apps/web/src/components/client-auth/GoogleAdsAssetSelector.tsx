@@ -83,8 +83,8 @@ export function GoogleAdsAssetSelector({
       <div className="space-y-4">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
-            <p className="text-lg font-semibold text-slate-900">
+            <Loader2 className="w-12 h-12 text-coral animate-spin mx-auto mb-4" />
+            <p className="text-lg font-semibold text-ink">
               Loading your accounts
             </p>
           </div>
@@ -95,12 +95,12 @@ export function GoogleAdsAssetSelector({
 
   if (error) {
     return (
-      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
-        <h3 className="text-lg font-bold text-red-900 mb-2">Couldn't load accounts</h3>
-        <p className="text-red-700 mb-4">{error}</p>
+      <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-6 text-center">
+        <h3 className="text-lg font-bold text-coral mb-2">Couldn't load accounts</h3>
+        <p className="text-coral mb-4">{error}</p>
         <button
           onClick={fetchAssets}
-          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
+          className="px-6 py-3 bg-coral text-white font-semibold rounded-xl hover:bg-coral/90 transition-colors"
         >
           Try again
         </button>
@@ -119,15 +119,15 @@ export function GoogleAdsAssetSelector({
 
   return (
     <div className="space-y-6">
-      <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4">
+      <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-indigo-900">Selected</h3>
-            <p className="text-xs text-indigo-700 mt-0.5">
+            <h3 className="text-sm font-semibold text-coral">Selected</h3>
+            <p className="text-xs text-coral/90 mt-0.5">
               Accounts you're sharing
             </p>
           </div>
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 text-white">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-coral text-white">
             <span className="text-xl font-bold">{totalSelected}</span>
           </div>
         </div>
@@ -140,14 +140,14 @@ export function GoogleAdsAssetSelector({
           selectedIds={selectedAdAccounts}
           onSelectionChange={setSelectedAdAccounts}
           icon={
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-coral to-coral/80 flex items-center justify-center">
               <span className="text-white text-lg">📊</span>
             </div>
           }
         />
       ) : (
-        <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-8 text-center">
-          <p className="text-slate-600">No Google Ads accounts found.</p>
+        <div className="bg-muted/20 border-2 border-dashed border-border rounded-xl p-8 text-center">
+          <p className="text-muted-foreground">No Google Ads accounts found.</p>
         </div>
       )}
     </div>

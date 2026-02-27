@@ -191,7 +191,7 @@ export function GoogleAssetSelector({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">Selected</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
               {getTitle()} you're sharing
             </p>
           </div>
@@ -207,7 +207,7 @@ export function GoogleAssetSelector({
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         icon={
-          <div className="w-10 h-10 border-2 border-black dark:border-white bg-blue-500 flex items-center justify-center">
+          <div className="w-10 h-10 border-2 border-black dark:border-white bg-coral flex items-center justify-center">
             <span className="text-white text-lg">📊</span>
           </div>
         }
