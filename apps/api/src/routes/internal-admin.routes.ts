@@ -20,6 +20,13 @@ function parsePositiveInt(value: string | undefined): number | undefined {
   return parsed;
 }
 
+function parseOptionalBoolean(value: string | undefined): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return undefined;
+}
+
 export async function internalAdminRoutes(
   fastify: FastifyInstance,
   options: InternalAdminRouteOptions = {},
@@ -43,9 +50,10 @@ export async function internalAdminRoutes(
 
   fastify.get('/internal-admin/agencies', async (request, reply) => {
     try {
-      const query = request.query as { search?: string; page?: string; limit?: string };
+      const query = request.query as { search?: string; page?: string; limit?: string; includeSynthetic?: string };
       const page = parsePositiveInt(query.page);
       const limit = parsePositiveInt(query.limit);
+      const includeSynthetic = parseOptionalBoolean(query.includeSynthetic);
 
       if (query.page && (!page || page < 1)) {
         return sendValidationError(reply, 'page must be a positive integer');
@@ -53,11 +61,15 @@ export async function internalAdminRoutes(
       if (query.limit && (!limit || limit < 1)) {
         return sendValidationError(reply, 'limit must be a positive integer');
       }
+      if (query.includeSynthetic !== undefined && includeSynthetic === undefined) {
+        return sendValidationError(reply, 'includeSynthetic must be true or false');
+      }
 
       const result = await internalAdminService.listAgencies({
         search: query.search,
         page,
         limit,
+        includeSynthetic,
       });
 
       if (result.error || !result.data) {

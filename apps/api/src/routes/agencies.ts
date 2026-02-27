@@ -100,22 +100,16 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         return sendValidationError(reply, 'Either email or clerkUserId query parameter is required');
       }
 
-      const principalId = getPrincipalId(request);
-      if (!principalId) {
-        return sendError(reply, 'UNAUTHORIZED', 'Authenticated user context is required', 401);
-      }
+      const principal = await requirePrincipalAgency(request, reply);
+      if (!principal) return;
+      const principalId = principal.principalId;
 
       if (clerkUserId && clerkUserId !== principalId) {
         return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
       }
 
-      if (email) {
-        const principal = await requirePrincipalAgency(request, reply);
-        if (!principal) return;
-
-        if (email !== principal.agency.email) {
-          return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
-        }
+      if (email && email !== principal.agency.email) {
+        return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
       }
 
       // Parse fields parameter to determine what to include

@@ -130,6 +130,35 @@ describe('Internal Admin Routes', () => {
     expect(response.json().error.code).toBe('VALIDATION_ERROR');
   });
 
+  it('passes includeSynthetic filter to agencies service', async () => {
+    vi.mocked(internalAdminService.listAgencies).mockResolvedValue({
+      data: {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+      },
+      error: null,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/internal-admin/agencies?includeSynthetic=true',
+      headers: {
+        authorization: 'Bearer token',
+        'x-mock-user': 'admin_user|admin@example.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(internalAdminService.listAgencies).toHaveBeenCalledWith({
+      search: undefined,
+      page: undefined,
+      limit: undefined,
+      includeSynthetic: true,
+    });
+  });
+
   it('returns 404 when agency detail is not found', async () => {
     vi.mocked(internalAdminService.getAgencyDetail).mockResolvedValue({
       data: null,

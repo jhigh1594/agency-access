@@ -63,6 +63,8 @@ export function PricingTierCard({
         : tier;
       localStorage.setItem('selectedSubscriptionTier', backendTier);
       localStorage.setItem('selectedBillingInterval', billingInterval);
+      // Notify providers to update Clerk sign-up subtitle dynamically
+      window.dispatchEvent(new CustomEvent('tierSelected', { detail: { tier: backendTier, displayName: name } }));
     }
   };
   const yearlyDiscountedPrice = Math.round(yearlyPrice * 0.75);

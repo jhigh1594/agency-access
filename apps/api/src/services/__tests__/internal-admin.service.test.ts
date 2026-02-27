@@ -106,6 +106,46 @@ describe('InternalAdminService', () => {
         subscriptionTier: 'STARTER',
         subscriptionStatus: 'active',
       });
+      expect(prisma.agency.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({
+          NOT: expect.objectContaining({
+            OR: expect.any(Array),
+          }),
+        }),
+      }));
+    });
+
+    it('can include synthetic and test agencies when explicitly requested', async () => {
+      vi.mocked(prisma.agency.count).mockResolvedValue(0);
+      vi.mocked(prisma.agency.findMany).mockResolvedValue([] as any);
+
+      await internalAdminService.listAgencies({ includeSynthetic: true });
+
+      expect(prisma.agency.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: undefined,
+      }));
+    });
+
+    it('applies search and synthetic filters together by default', async () => {
+      vi.mocked(prisma.agency.count).mockResolvedValue(0);
+      vi.mocked(prisma.agency.findMany).mockResolvedValue([] as any);
+
+      await internalAdminService.listAgencies({ search: 'pillar' });
+
+      expect(prisma.agency.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              OR: expect.any(Array),
+            }),
+            expect.objectContaining({
+              NOT: expect.objectContaining({
+                OR: expect.any(Array),
+              }),
+            }),
+          ]),
+        }),
+      }));
     });
   });
 

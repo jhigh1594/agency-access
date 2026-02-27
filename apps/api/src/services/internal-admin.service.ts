@@ -44,6 +44,7 @@ interface ListAgenciesParams {
   search?: string;
   page?: number;
   limit?: number;
+  includeSynthetic?: boolean;
 }
 
 interface AgencyListItem {
@@ -175,6 +176,83 @@ function safePagination(page?: number, limit?: number) {
   };
 }
 
+const SYNTHETIC_OR_TEST_AGENCY_FILTERS = [
+  {
+    email: {
+      endsWith: '@clerk.temp',
+      mode: 'insensitive' as const,
+    },
+  },
+  {
+    AND: [
+      {
+        name: {
+          equals: 'My Agency',
+          mode: 'insensitive' as const,
+        },
+      },
+      {
+        email: {
+          startsWith: 'user@',
+          mode: 'insensitive' as const,
+        },
+      },
+      {
+        email: {
+          endsWith: '.agency',
+          mode: 'insensitive' as const,
+        },
+      },
+    ],
+  },
+  {
+    name: {
+      contains: 'test',
+      mode: 'insensitive' as const,
+    },
+  },
+  {
+    email: {
+      endsWith: '@test.com',
+      mode: 'insensitive' as const,
+    },
+  },
+  {
+    email: {
+      startsWith: 'test-',
+      mode: 'insensitive' as const,
+    },
+  },
+];
+
+function buildAgencyWhere(search?: string, includeSynthetic?: boolean) {
+  const filters: any[] = [];
+
+  if (search) {
+    filters.push({
+      OR: [
+        { name: { contains: search, mode: 'insensitive' as const } },
+        { email: { contains: search, mode: 'insensitive' as const } },
+      ],
+    });
+  }
+
+  if (!includeSynthetic) {
+    filters.push({
+      NOT: {
+        OR: SYNTHETIC_OR_TEST_AGENCY_FILTERS,
+      },
+    });
+  }
+
+  if (filters.length === 0) return undefined;
+  if (filters.length === 1) return filters[0];
+
+  return {
+    AND: filters,
+  };
+}
+
 class InternalAdminService {
   async getOverview(): Promise<ServiceResult<OverviewData>> {
     const thirtyDaysAgo = new Date();
@@ -283,16 +361,9 @@ class InternalAdminService {
   }
 
   async listAgencies(params: ListAgenciesParams): Promise<ServiceResult<ListAgenciesData>> {
-    const { search } = params;
+    const { search, includeSynthetic } = params;
     const pagination = safePagination(params.page, params.limit);
-    const where = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { email: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : undefined;
+    const where = buildAgencyWhere(search, includeSynthetic);
 
     const [total, agencies] = await Promise.all([
       prisma.agency.count({ where }),

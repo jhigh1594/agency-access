@@ -4,7 +4,7 @@ import '@/lib/suppress-extension-hydration'; // Suppress browser extension hydra
 import { ClerkProvider } from '@clerk/nextjs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LazyMotion, domAnimation } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -41,6 +41,28 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Track selected tier display name for dynamic Clerk sign-up subtitle
+  const [selectedPlanName, setSelectedPlanName] = useState('Growth');
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.displayName) {
+        setSelectedPlanName(detail.displayName);
+      }
+    };
+    window.addEventListener('tierSelected', handler);
+    return () => window.removeEventListener('tierSelected', handler);
+  }, []);
+
+  const localization = useMemo(() => ({
+    signUp: {
+      start: {
+        subtitle: `You're starting a 14-day free trial of the ${selectedPlanName} plan.`,
+      },
+    },
+  }), [selectedPlanName]);
+
   // Get dynamic afterSignUpUrl based on localStorage tier selection
   const getAfterSignUpUrl = () => {
     if (typeof window !== 'undefined') {
@@ -74,14 +96,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
               formField__lastName: { display: 'none' },
             },
           }}
-          // Sign-up modal: show 14-day Growth trial message (custom localization override)
-          localization={{
-            signUp: {
-              start: {
-                subtitle: "You're starting a 14-day free trial of the Growth plan.",
-              },
-            },
-          }}
+          // Sign-up modal: show 14-day trial message for selected plan
+          localization={localization}
           // Redirect to onboarding after signup (new users only) - dynamic based on tier selection
           afterSignUpUrl={getAfterSignUpUrl()}
           // Redirect existing users to dashboard (they'll be redirected to onboarding if needed)

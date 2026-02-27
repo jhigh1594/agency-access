@@ -78,7 +78,7 @@ export function PricingTiers() {
               <span className="text-coral italic">fits your team</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
-              Start free, upgrade when you're ready. Growth plan includes a 14-day free trial.
+              Start free, upgrade when you're ready. Paid plans include a 14-day free trial.
             </p>
           </div>
 
@@ -155,7 +155,7 @@ export function PricingTiers() {
             />
           </div>
 
-          {/* Scale Tier - No Free Trial */}
+          {/* Scale Tier - Has Free Trial */}
           <div className="md:col-span-1">
             <PricingTierCard
               tier="SCALE"
@@ -165,9 +165,9 @@ export function PricingTiers() {
               yearlyPrice={1120}
               monthlyPrice={93.33}
               isYearly={isYearly}
-              hasTrial={false}
+              hasTrial={true}
               features={tierFeatures.scale}
-              buttonText="Get Started"
+              buttonText="Start Free Trial"
               buttonVariant="brutalist-rounded"
               billingInterval={isYearly ? 'yearly' : 'monthly'}
             />

@@ -16,10 +16,36 @@ export interface PrincipalAgencyData {
   };
 }
 
+interface AuthUserClaims {
+  sub?: string;
+  orgId?: string;
+  email?: string;
+  email_address?: string;
+  emailAddress?: string;
+  email_addresses?: Array<{ email_address?: string; emailAddress?: string }>;
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function resolveUserEmail(user: AuthUserClaims | undefined): string | undefined {
+  const direct = user?.email || user?.email_address || user?.emailAddress;
+  if (direct) return normalizeEmail(direct);
+
+  const firstEmail = user?.email_addresses?.[0];
+  if (!firstEmail) return undefined;
+
+  const nested = firstEmail.email_address || firstEmail.emailAddress;
+  if (!nested) return undefined;
+
+  return normalizeEmail(nested);
+}
+
 export async function resolvePrincipalAgency(
   request: FastifyRequest
 ): Promise<{ data: PrincipalAgencyData | null; error: AuthorizationError | null }> {
-  const user = (request as any).user as { sub?: string; orgId?: string } | undefined;
+  const user = (request as any).user as AuthUserClaims | undefined;
   const principalId = user?.orgId || user?.sub;
 
   if (!principalId) {
@@ -32,8 +58,10 @@ export async function resolvePrincipalAgency(
     };
   }
 
+  const userEmail = resolveUserEmail(user);
   const agencyResult = await agencyResolutionService.resolveAgency(principalId, {
-    createIfMissing: false,
+    createIfMissing: true,
+    userEmail,
   });
 
   if (agencyResult.error || !agencyResult.data) {
