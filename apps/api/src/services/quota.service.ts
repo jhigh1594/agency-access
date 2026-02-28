@@ -30,9 +30,10 @@
  * ```
  */
 
-import { TIER_LIMITS, type SubscriptionTier, type MetricType, type TierLimits, getTierLimitsConfig } from '@agency-platform/shared';
+import { type SubscriptionTier, type MetricType, getTierLimitsConfig } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
 import { createClerkClient } from '@clerk/backend';
+import { resolveEffectiveSubscriptionTier } from '@/lib/effective-subscription-tier';
 
 // ============================================================
 // TYPES
@@ -129,14 +130,21 @@ export class QuotaService {
     // Get agency's current tier
     const agency = await prisma.agency.findUnique({
       where: { id: agencyId },
-      select: { subscriptionTier: true },
+      select: {
+        subscription: {
+          select: {
+            tier: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!agency) {
       throw new Error('Agency not found');
     }
 
-    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tier = resolveEffectiveSubscriptionTier(agency);
     const tierConfig = getTierLimitsConfig(tier);
 
     // Map metric to tier config property
@@ -332,14 +340,21 @@ export class QuotaService {
     try {
       const agency = await prisma.agency.findUnique({
         where: { id: agencyId },
-        select: { subscriptionTier: true },
+        select: {
+          subscription: {
+            select: {
+              tier: true,
+              status: true,
+            },
+          },
+        },
       });
 
       if (!agency) {
         return null;
       }
 
-      const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+      const tier = resolveEffectiveSubscriptionTier(agency);
       const tierConfig = getTierLimitsConfig(tier);
 
       // Get usage for all metrics

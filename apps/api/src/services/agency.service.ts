@@ -99,7 +99,7 @@ export async function createAgency(input: CreateAgencyInput) {
           email: validated.email,
           clerkUserId: validated.clerkUserId || null,
           settings: validated.settings || null,
-          subscriptionTier: validated.subscriptionTier || 'STARTER',
+          subscriptionTier: validated.subscriptionTier || null,
         },
       });
 

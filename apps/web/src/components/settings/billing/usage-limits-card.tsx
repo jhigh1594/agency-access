@@ -34,10 +34,15 @@ export function UsageLimitsCard() {
   }
 
   const limits = tierDetails?.limits;
-  const currentTier = tierDetails?.tier || 'STARTER';
+  const currentTier = tierDetails?.tier;
 
   const handleUpgrade = async () => {
-    const nextTier = currentTier === 'STARTER' ? 'PRO' : 'ENTERPRISE';
+    const nextTier =
+      !currentTier
+        ? 'STARTER'
+        : currentTier === 'STARTER'
+          ? 'PRO'
+          : 'ENTERPRISE';
     const result = await createCheckout.mutateAsync({
       tier: nextTier,
       successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,

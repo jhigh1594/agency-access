@@ -12,7 +12,12 @@ import { prisma } from '@/lib/prisma';
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     agency: {
-      findUnique: vi.fn().mockResolvedValue({ subscriptionTier: 'STARTER' }),
+      findUnique: vi.fn().mockResolvedValue({
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
+      }),
     },
     accessRequest: {
       count: vi.fn().mockResolvedValue(0),
@@ -39,7 +44,10 @@ describe('TierLimitsService', () => {
   describe('checkTierLimit', () => {
     it('should allow action when under limit', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
       });
       vi.mocked(prisma.accessRequest.count).mockResolvedValue(5);
 
@@ -58,7 +66,10 @@ describe('TierLimitsService', () => {
 
     it('should deny action when at limit', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
       });
       vi.mocked(prisma.accessRequest.count).mockResolvedValue(10);
 
@@ -77,7 +88,10 @@ describe('TierLimitsService', () => {
 
     it('should allow unlimited for Enterprise tier', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'ENTERPRISE',
+        subscription: {
+          tier: 'ENTERPRISE',
+          status: 'active',
+        },
       });
       vi.mocked(prisma.accessRequest.count).mockResolvedValue(9999);
 
@@ -110,7 +124,10 @@ describe('TierLimitsService', () => {
 
     it('should check different resource types', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
       });
 
       // Test clients
@@ -140,12 +157,38 @@ describe('TierLimitsService', () => {
       expect(templatesResult.allowed).toBe(true);
       expect(templatesResult.limit).toBe(3);
     });
+
+    it('should enforce Free limits when paid subscription is not active', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'incomplete',
+        },
+      });
+      vi.mocked(prisma.client.count).mockResolvedValue(1);
+
+      const result = await tierLimitsService.checkTierLimit(
+        mockAgencyId,
+        'clients'
+      );
+
+      expect(result).toEqual({
+        allowed: false,
+        limit: 1,
+        current: 1,
+        error: 'TIER_LIMIT_EXCEEDED',
+      });
+    });
   });
 
   describe('hasFeatureAccess', () => {
     it('should return true for feature in tier', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
       });
 
       const result = await tierLimitsService.hasFeatureAccess(
@@ -158,7 +201,10 @@ describe('TierLimitsService', () => {
 
     it('should return false for feature not in tier', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
       });
 
       const result = await tierLimitsService.hasFeatureAccess(
@@ -171,7 +217,10 @@ describe('TierLimitsService', () => {
 
     it('should return true for Enterprise (all features)', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'ENTERPRISE',
+        subscription: {
+          tier: 'ENTERPRISE',
+          status: 'active',
+        },
       });
 
       const result = await tierLimitsService.hasFeatureAccess(
@@ -197,7 +246,10 @@ describe('TierLimitsService', () => {
   describe('getTierDetails', () => {
     it('should return tier details with usage', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'active',
+        },
       });
       vi.mocked(prisma.accessRequest.count).mockResolvedValue(5);
       vi.mocked(prisma.client.count).mockResolvedValue(2);
@@ -249,7 +301,10 @@ describe('TierLimitsService', () => {
 
     it('should show unlimited for Enterprise tier', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
-        subscriptionTier: 'ENTERPRISE',
+        subscription: {
+          tier: 'ENTERPRISE',
+          status: 'active',
+        },
       });
       vi.mocked(prisma.accessRequest.count).mockResolvedValue(9999);
       vi.mocked(prisma.client.count).mockResolvedValue(500);
@@ -279,6 +334,50 @@ describe('TierLimitsService', () => {
           used: 50,
           remaining: -1,
         },
+      });
+    });
+
+    it('should return Free tier details when paid subscription is not active', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        subscriptionTier: 'STARTER',
+        subscription: {
+          tier: 'STARTER',
+          status: 'incomplete',
+        },
+      });
+      vi.mocked(prisma.accessRequest.count).mockResolvedValue(0);
+      vi.mocked(prisma.client.count).mockResolvedValue(1);
+      vi.mocked(prisma.agencyMember.count).mockResolvedValue(1);
+      vi.mocked(prisma.accessRequestTemplate.count).mockResolvedValue(0);
+
+      const result = await tierLimitsService.getTierDetails(mockAgencyId);
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual({
+        tier: null,
+        limits: {
+          accessRequests: {
+            limit: 3,
+            used: 0,
+            remaining: 3,
+          },
+          clients: {
+            limit: 1,
+            used: 1,
+            remaining: 0,
+          },
+          members: {
+            limit: 1,
+            used: 1,
+            remaining: 0,
+          },
+          templates: {
+            limit: 1,
+            used: 0,
+            remaining: 1,
+          },
+        },
+        features: ['core_platforms', 'email_support'],
       });
     });
   });

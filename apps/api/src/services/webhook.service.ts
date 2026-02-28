@@ -92,7 +92,7 @@ class WebhookService {
       creemSubscriptionId: session.subscription,
       creemCustomerId: session.customer,
       productId: session.product_id,
-      status: 'active',
+      status: session.status || 'active', // Pass through Creem's actual status (may be 'trialing')
     });
   }
 

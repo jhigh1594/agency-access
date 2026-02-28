@@ -19,7 +19,7 @@ export interface SubscriptionData {
 }
 
 export interface TierDetailsData {
-  tier: SubscriptionTier;
+  tier: SubscriptionTier | null;
   status: string;
   limits: TierLimits;
   features: string[];

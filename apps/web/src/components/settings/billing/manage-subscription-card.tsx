@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSubscription, useUpgradeSubscription } from '@/lib/query/billing';
+import { useCreateCheckout, useSubscription, useUpgradeSubscription } from '@/lib/query/billing';
 import {
   SUBSCRIPTION_TIER_DESCRIPTIONS,
   getPricingTierNameFromSubscriptionTier,
@@ -47,6 +47,7 @@ function normalizeCurrentTier(tier: SubscriptionTier | null | undefined): Curren
 export function ManageSubscriptionCard() {
   const { data: subscription, isLoading } = useSubscription();
   const upgradeMutation = useUpgradeSubscription();
+  const createCheckoutMutation = useCreateCheckout();
 
   const [showTierSelector, setShowTierSelector] = useState(false);
   const [selectedTier, setSelectedTier] = useState<ManageableTier | null>(null);
@@ -87,6 +88,16 @@ export function ManageSubscriptionCard() {
     setSuccessMessage(null);
 
     try {
+      if (currentTier === 'FREE') {
+        const result = await createCheckoutMutation.mutateAsync({
+          tier: selectedTier,
+          successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
+          cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
+        });
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
       await upgradeMutation.mutateAsync({
         newTier: selectedTier,
         updateBehavior,
@@ -342,16 +353,16 @@ export function ManageSubscriptionCard() {
                 <Button
                   variant="ghost"
                   onClick={() => setSelectedTier(null)}
-                  disabled={upgradeMutation.isPending}
+                  disabled={upgradeMutation.isPending || createCheckoutMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant={isUpgrade ? 'success' : 'warning'}
                   onClick={handleTierChange}
-                  disabled={upgradeMutation.isPending}
+                  disabled={upgradeMutation.isPending || createCheckoutMutation.isPending}
                 >
-                  {upgradeMutation.isPending ? (
+                  {upgradeMutation.isPending || createCheckoutMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Processing...

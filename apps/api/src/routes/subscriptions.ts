@@ -265,6 +265,107 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
     }
   });
 
+  /**
+   * GET /api/subscriptions/:agencyId/payment-methods
+   * List payment methods for the agency's customer account
+   */
+  fastify.get('/subscriptions/:agencyId/payment-methods', async (request, reply) => {
+    try {
+      const agencyId = (request as any).principalAgencyId as string;
+
+      fastify.log.info({ agencyId }, 'GET /subscriptions/:agencyId/payment-methods');
+
+      const result = await subscriptionService.getPaymentMethods(agencyId);
+
+      if (result.error) {
+        return sendError(
+          reply,
+          result.error.code,
+          result.error.message,
+          result.error.code === 'AGENCY_NOT_FOUND' ? 404 : 500
+        );
+      }
+
+      return sendSuccess(reply, result.data || []);
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in GET /subscriptions/:agencyId/payment-methods');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve payment methods', 500);
+    }
+  });
+
+  /**
+   * GET /api/subscriptions/:agencyId/billing-details
+   * Get billing profile details
+   */
+  fastify.get('/subscriptions/:agencyId/billing-details', async (request, reply) => {
+    try {
+      const agencyId = (request as any).principalAgencyId as string;
+
+      fastify.log.info({ agencyId }, 'GET /subscriptions/:agencyId/billing-details');
+
+      const result = await subscriptionService.getBillingDetails(agencyId);
+
+      if (result.error) {
+        return sendError(
+          reply,
+          result.error.code,
+          result.error.message,
+          result.error.code === 'AGENCY_NOT_FOUND' ? 404 : 500
+        );
+      }
+
+      return sendSuccess(reply, result.data || {});
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in GET /subscriptions/:agencyId/billing-details');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve billing details', 500);
+    }
+  });
+
+  /**
+   * PUT /api/subscriptions/:agencyId/billing-details
+   * Update billing profile details
+   */
+  fastify.put('/subscriptions/:agencyId/billing-details', async (request, reply) => {
+    try {
+      const agencyId = (request as any).principalAgencyId as string;
+      const body = request.body as {
+        name?: string;
+        email?: string;
+        taxId?: string;
+        address?: {
+          line1?: string;
+          line2?: string;
+          city?: string;
+          state?: string;
+          postalCode?: string;
+          country?: string;
+        };
+      };
+
+      if (!body || typeof body !== 'object') {
+        return sendValidationError(reply, 'Billing details payload is required');
+      }
+
+      fastify.log.info({ agencyId }, 'PUT /subscriptions/:agencyId/billing-details');
+
+      const result = await subscriptionService.updateBillingDetails(agencyId, body);
+
+      if (result.error) {
+        return sendError(
+          reply,
+          result.error.code,
+          result.error.message,
+          result.error.code === 'AGENCY_NOT_FOUND' ? 404 : 500
+        );
+      }
+
+      return sendSuccess(reply, result.data || {});
+    } catch (error) {
+      fastify.log.error({ error }, 'Error in PUT /subscriptions/:agencyId/billing-details');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to update billing details', 500);
+    }
+  });
+
   // ============================================================
   // SUBSCRIPTION MANAGEMENT
   // ============================================================

@@ -64,6 +64,37 @@ interface ServiceResult<T> {
   error: { code: string; message: string } | null;
 }
 
+interface BillingDetails {
+  name?: string;
+  email?: string;
+  address?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  taxId?: string;
+}
+
+interface PaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+}
+
+function isObject(value: unknown): value is Record<string, any> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return isObject(value) ? (value as Record<string, unknown>) : {};
+}
+
 class SubscriptionService {
   /**
    * Create a checkout session for a new subscription or upgrade
@@ -185,6 +216,7 @@ class SubscriptionService {
       cancelAtPeriodEnd: boolean;
       creemCustomerId?: string;
       creemSubscriptionId?: string;
+      trialEnd?: Date;
     }>
   > {
     const subscription = await prisma.subscription.findUnique({
@@ -205,6 +237,7 @@ class SubscriptionService {
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
         creemCustomerId: subscription.creemCustomerId || undefined,
         creemSubscriptionId: subscription.creemSubscriptionId || undefined,
+        trialEnd: subscription.trialEnd || undefined,
       },
       error: null,
     };
@@ -252,6 +285,139 @@ class SubscriptionService {
 
     return {
       data: { portalUrl: portalResult.data.url },
+      error: null,
+    };
+  }
+
+  /**
+   * Get payment methods for an agency subscription.
+   * Returns an empty array when unavailable.
+   */
+  async getPaymentMethods(agencyId: string): Promise<ServiceResult<PaymentMethod[]>> {
+    const subscription = await prisma.subscription.findUnique({
+      where: { agencyId },
+      select: { creemCustomerId: true },
+    });
+
+    if (!subscription?.creemCustomerId) {
+      return { data: [], error: null };
+    }
+
+    const customerResult = await creem.retrieveCustomer(subscription.creemCustomerId);
+    if (customerResult.error || !customerResult.data) {
+      return { data: [], error: null };
+    }
+
+    const rawMethods = customerResult.data.payment_methods || customerResult.data.paymentMethods || [];
+    if (!Array.isArray(rawMethods)) {
+      return { data: [], error: null };
+    }
+
+    const paymentMethods: PaymentMethod[] = rawMethods.map((method: any, index: number) => ({
+      id: String(method.id || `pm_${index}`),
+      brand: String(method.brand || method.card?.brand || 'card'),
+      last4: String(method.last4 || method.card?.last4 || '****'),
+      expMonth: Number(method.exp_month || method.expMonth || method.card?.exp_month || 0),
+      expYear: Number(method.exp_year || method.expYear || method.card?.exp_year || 0),
+      isDefault: Boolean(method.is_default || method.isDefault || false),
+    }));
+
+    return { data: paymentMethods, error: null };
+  }
+
+  /**
+   * Get billing details from agency settings.
+   */
+  async getBillingDetails(agencyId: string): Promise<ServiceResult<BillingDetails>> {
+    const agency = await prisma.agency.findUnique({
+      where: { id: agencyId },
+      select: {
+        name: true,
+        email: true,
+        settings: true,
+      },
+    });
+
+    if (!agency) {
+      return {
+        data: null,
+        error: {
+          code: 'AGENCY_NOT_FOUND',
+          message: 'Agency not found',
+        },
+      };
+    }
+
+    const settings = asRecord(agency.settings);
+    const storedBilling = asRecord(settings['billingDetails']);
+    const address = asRecord(storedBilling['address']);
+
+    return {
+      data: {
+        name: String(storedBilling['name'] || agency.name || ''),
+        email: String(storedBilling['email'] || agency.email || ''),
+        ...(Object.keys(address).length > 0
+          ? { address: address as BillingDetails['address'] }
+          : {}),
+        ...(storedBilling['taxId'] ? { taxId: String(storedBilling['taxId']) } : {}),
+      },
+      error: null,
+    };
+  }
+
+  /**
+   * Update billing details in agency settings.
+   */
+  async updateBillingDetails(
+    agencyId: string,
+    details: BillingDetails
+  ): Promise<ServiceResult<BillingDetails>> {
+    const agency = await prisma.agency.findUnique({
+      where: { id: agencyId },
+      select: { settings: true },
+    });
+
+    if (!agency) {
+      return {
+        data: null,
+        error: {
+          code: 'AGENCY_NOT_FOUND',
+          message: 'Agency not found',
+        },
+      };
+    }
+
+    const currentSettings = asRecord(agency.settings);
+    const nextBillingDetails: Record<string, unknown> = {};
+    if (details.name !== undefined) nextBillingDetails.name = details.name;
+    if (details.email !== undefined) nextBillingDetails.email = details.email;
+    if (details.address !== undefined) nextBillingDetails.address = details.address as Record<string, unknown>;
+    if (details.taxId !== undefined) nextBillingDetails.taxId = details.taxId;
+
+    const updated = await prisma.agency.update({
+      where: { id: agencyId },
+      data: {
+        settings: {
+          ...currentSettings,
+          billingDetails: nextBillingDetails,
+        } as any,
+      },
+      select: { settings: true },
+    });
+
+    const updatedSettings = asRecord(updated.settings);
+    const storedBilling = asRecord(updatedSettings['billingDetails']);
+    const address = asRecord(storedBilling['address']);
+
+    return {
+      data: {
+        ...(storedBilling['name'] ? { name: String(storedBilling['name']) } : {}),
+        ...(storedBilling['email'] ? { email: String(storedBilling['email']) } : {}),
+        ...(Object.keys(address).length > 0
+          ? { address: address as BillingDetails['address'] }
+          : {}),
+        ...(storedBilling['taxId'] ? { taxId: String(storedBilling['taxId']) } : {}),
+      },
       error: null,
     };
   }

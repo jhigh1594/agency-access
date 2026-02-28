@@ -8,7 +8,8 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { TIER_LIMITS, SubscriptionTier, TierLimitsDetails, getTierLimitsConfig } from '@agency-platform/shared';
+import { SubscriptionTier, TierLimitsDetails, getTierLimitsConfig } from '@agency-platform/shared';
+import { resolveEffectiveSubscriptionTier } from '@/lib/effective-subscription-tier';
 
 // Resource type mapping for API endpoints
 type ResourceType = 'access_requests' | 'clients' | 'members' | 'templates';
@@ -58,7 +59,14 @@ class TierLimitsService {
     // Get agency to determine tier
     const agency = await prisma.agency.findUnique({
       where: { id: agencyId },
-      select: { subscriptionTier: true },
+      select: {
+        subscription: {
+          select: {
+            tier: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!agency) {
@@ -68,7 +76,7 @@ class TierLimitsService {
       };
     }
 
-    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tier = resolveEffectiveSubscriptionTier(agency);
     const tierConfig = getTierLimitsConfig(tier);
 
     const limitKey = RESOURCE_TO_TIER_KEY[resource];
@@ -113,14 +121,21 @@ class TierLimitsService {
     // Get agency to determine tier
     const agency = await prisma.agency.findUnique({
       where: { id: agencyId },
-      select: { subscriptionTier: true },
+      select: {
+        subscription: {
+          select: {
+            tier: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!agency) {
       return false;
     }
 
-    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tier = resolveEffectiveSubscriptionTier(agency);
     const tierConfig = getTierLimitsConfig(tier);
 
     // Enterprise has all features
@@ -138,7 +153,14 @@ class TierLimitsService {
     // Get agency to determine tier
     const agency = await prisma.agency.findUnique({
       where: { id: agencyId },
-      select: { subscriptionTier: true },
+      select: {
+        subscription: {
+          select: {
+            tier: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!agency) {
@@ -151,7 +173,7 @@ class TierLimitsService {
       };
     }
 
-    const tier = (agency.subscriptionTier as SubscriptionTier) || null;
+    const tier = resolveEffectiveSubscriptionTier(agency);
     const tierConfig = getTierLimitsConfig(tier);
 
     // Get current usage for all resources

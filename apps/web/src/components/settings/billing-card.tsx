@@ -29,10 +29,11 @@ import {
 interface SubscriptionData {
   id: string;
   tier: SubscriptionTier;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete';
+  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'expired';
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd: boolean;
+  trialEnd?: string;
 }
 
 interface TierDetailsData {
@@ -205,6 +206,20 @@ export function BillingSettingsCard() {
             Active
           </span>
         );
+      case 'trialing':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+            <AlertCircle className="h-3 w-3" />
+            Trial
+          </span>
+        );
+      case 'expired':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+            <X className="h-3 w-3" />
+            Expired
+          </span>
+        );
       case 'past_due':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
@@ -300,6 +315,20 @@ export function BillingSettingsCard() {
             </p>
           </div>
         )}
+        {subscription?.status === 'trialing' && subscription.trialEnd && (
+          <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-sm text-blue-800">
+              <AlertCircle className="h-4 w-4 inline mr-1" />
+              Your trial ends on{' '}
+              {new Date(subscription.trialEnd).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+              . Subscribe to keep your {tierName} features.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Usage Statistics */}
@@ -325,34 +354,65 @@ export function BillingSettingsCard() {
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={handleOpenPortal}
-          disabled={isOpeningPortal || !subscription}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isOpeningPortal ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Opening...
-            </>
-          ) : (
-            <>
-              <ExternalLink className="h-4 w-4" />
-              Manage Subscription
-            </>
-          )}
-        </button>
+        {subscription?.status === 'trialing' ? (
+          <>
+            <button
+              onClick={() => handleUpgrade(currentTier || 'STARTER')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <CreditCard className="h-4 w-4" />
+              Subscribe Now
+            </button>
+            <button
+              onClick={handleOpenPortal}
+              disabled={isOpeningPortal || !subscription}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              {isOpeningPortal ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Opening...
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="h-4 w-4" />
+                  Manage Subscription
+                </>
+              )}
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={handleOpenPortal}
+              disabled={isOpeningPortal || !subscription}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {isOpeningPortal ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Opening...
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="h-4 w-4" />
+                  Manage Subscription
+                </>
+              )}
+            </button>
 
-        {currentTier !== 'ENTERPRISE' && (
-          <button
-            onClick={() =>
-              handleUpgrade(isFree ? 'STARTER' : currentTier === 'STARTER' ? 'PRO' : 'ENTERPRISE')
-            }
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
-          >
-            <TrendingUp className="h-4 w-4" />
-            Upgrade to {isFree ? 'Growth' : currentTier === 'STARTER' ? 'Pro' : 'Enterprise'}
-          </button>
+            {currentTier !== 'ENTERPRISE' && (
+              <button
+                onClick={() =>
+                  handleUpgrade(isFree ? 'STARTER' : currentTier === 'STARTER' ? 'PRO' : 'ENTERPRISE')
+                }
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Upgrade to {isFree ? 'Growth' : currentTier === 'STARTER' ? 'Pro' : 'Enterprise'}
+              </button>
+            )}
+          </>
         )}
       </div>
 

@@ -16,6 +16,9 @@ import { cn } from '@/lib/utils';
 import { m } from 'framer-motion';
 import { useAuthOrBypass, getDevBypassAgencyData, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
+import { TrialBanner } from '@/components/trial-banner';
+import { useSubscription } from '@/lib/query/billing';
+import { SUBSCRIPTION_TIER_NAMES } from '@agency-platform/shared';
 
 const agencyCheckDedup = new Set<string>();
 
@@ -29,6 +32,7 @@ export default function AuthenticatedLayout({
   const perfHarness = useMemo(() => readPerfHarnessContext(), []);
   const runPerfAgencyCheck = isDevelopmentBypass && !!perfHarness?.token;
   const [open, setOpen] = useState(true);
+  const { data: subscription } = useSubscription();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -264,6 +268,12 @@ export default function AuthenticatedLayout({
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-auto bg-background">
+        {subscription?.status === 'trialing' && subscription.trialEnd && (
+          <TrialBanner
+            trialEnd={subscription.trialEnd}
+            tierName={subscription.tier ? SUBSCRIPTION_TIER_NAMES[subscription.tier] : 'your'}
+          />
+        )}
         {children}
       </div>
     </div>

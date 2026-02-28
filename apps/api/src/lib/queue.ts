@@ -45,6 +45,10 @@ export const notificationQueue = new Queue('notification', {
   connection: connectionOptions,
 });
 
+export const trialExpirationQueue = new Queue('trial-expiration', {
+  connection: connectionOptions,
+});
+
 /**
  * Token Refresh Worker
  *
@@ -261,6 +265,36 @@ export async function startNotificationWorker() {
 }
 
 /**
+ * Trial Expiration Worker
+ *
+ * Checks for and expires overdue trials daily.
+ */
+export async function startTrialExpirationWorker() {
+  const worker = new Worker(
+    'trial-expiration',
+    async (job) => {
+      const { expireTrials } = await import('../jobs/trial-expiration.js');
+      const result = await expireTrials();
+      console.log(`Trial expiration job completed: ${result.expired} expired`);
+      return result;
+    },
+    {
+      connection: connectionOptions,
+    }
+  );
+
+  worker.on('completed', (job) => {
+    console.log(`Trial expiration job completed: ${job.id}`);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`Trial expiration job failed: ${job?.id}`, err);
+  });
+
+  return worker;
+}
+
+/**
  * Schedule recurring jobs
  */
 export async function scheduleJobs() {
@@ -292,6 +326,22 @@ export async function scheduleJobs() {
     {
       repeat: {
         pattern: '0 2 * * *', // Daily at 2 AM
+        tz: 'UTC',
+      },
+    }
+  );
+
+  // Trial expiration check - runs daily at 3 AM UTC
+  const trialExpQueue = new Queue('trial-expiration', {
+    connection: connectionOptions,
+  });
+
+  await trialExpQueue.add(
+    'check-expired-trials',
+    { type: 'check-expired-trials' },
+    {
+      repeat: {
+        pattern: '0 3 * * *', // Daily at 3 AM UTC
         tz: 'UTC',
       },
     }

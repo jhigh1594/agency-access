@@ -98,6 +98,43 @@ describe('AgencyService', () => {
       expect(result.data).toBeNull();
       expect(result.error?.code).toBe('AGENCY_EXISTS');
     });
+
+    it('should default subscriptionTier to null for free agencies', async () => {
+      const mockAgency = {
+        id: 'agency-1',
+        name: 'Test Agency',
+      };
+      const agencyCreate = vi.fn().mockResolvedValue(mockAgency);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.agency.findFirst).mockResolvedValue(null);
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+        return callback({
+          agency: {
+            create: agencyCreate,
+          },
+          agencyMember: {
+            create: vi.fn().mockResolvedValue({
+              id: 'member-1',
+              agencyId: 'agency-1',
+              email: 'admin@test.com',
+              role: 'admin',
+            }),
+          },
+        } as any);
+      });
+
+      await agencyService.createAgency({
+        name: 'Test Agency',
+        email: 'admin@test.com',
+      });
+
+      expect(agencyCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          subscriptionTier: null,
+        }),
+      });
+    });
   });
 
   describe('getAgency', () => {

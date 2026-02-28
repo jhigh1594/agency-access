@@ -8,6 +8,9 @@ vi.mock('@/lib/authorization.js');
 vi.mock('@/services/subscription.service', () => ({
   subscriptionService: {
     getSubscription: vi.fn(),
+    getPaymentMethods: vi.fn(),
+    getBillingDetails: vi.fn(),
+    updateBillingDetails: vi.fn(),
   },
 }));
 vi.mock('@/services/tier-limits.service', () => ({
@@ -69,5 +72,72 @@ describe('Subscription Routes - Security', () => {
 
     expect(response.statusCode).toBe(200);
     expect(subscriptionService.getSubscription).toHaveBeenCalledWith('agency-owner');
+  });
+
+  it('returns payment methods for principal agency', async () => {
+    vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+      data: { agencyId: 'agency-owner', principalId: 'user_123' },
+      error: null,
+    });
+    vi.mocked(subscriptionService.getPaymentMethods).mockResolvedValue({
+      data: [],
+      error: null,
+    } as any);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/subscriptions/agency-other/payment-methods',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(subscriptionService.getPaymentMethods).toHaveBeenCalledWith('agency-owner');
+  });
+
+  it('returns billing details for principal agency', async () => {
+    vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+      data: { agencyId: 'agency-owner', principalId: 'user_123' },
+      error: null,
+    });
+    vi.mocked(subscriptionService.getBillingDetails).mockResolvedValue({
+      data: { name: 'Agency Owner', email: 'owner@example.com' },
+      error: null,
+    } as any);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/subscriptions/agency-other/billing-details',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(subscriptionService.getBillingDetails).toHaveBeenCalledWith('agency-owner');
+  });
+
+  it('updates billing details for principal agency', async () => {
+    vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+      data: { agencyId: 'agency-owner', principalId: 'user_123' },
+      error: null,
+    });
+    vi.mocked(subscriptionService.updateBillingDetails).mockResolvedValue({
+      data: { name: 'Updated Agency', email: 'billing@example.com' },
+      error: null,
+    } as any);
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/subscriptions/agency-other/billing-details',
+      headers: { authorization: 'Bearer token' },
+      payload: {
+        name: 'Updated Agency',
+        email: 'billing@example.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(subscriptionService.updateBillingDetails).toHaveBeenCalledWith('agency-owner', {
+      name: 'Updated Agency',
+      email: 'billing@example.com',
+    });
   });
 });

@@ -22,14 +22,15 @@ function resolvePrincipalId(orgId: string | null | undefined, userId: string | n
 export interface SubscriptionData {
   id: string;
   tier: SubscriptionTier;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';
+  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing' | 'expired';
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd: boolean;
+  trialEnd?: string;
 }
 
 export interface TierDetailsData {
-  tier: SubscriptionTier;
+  tier: SubscriptionTier | null;
   status: string;
   limits: TierLimits;
   features: string[];

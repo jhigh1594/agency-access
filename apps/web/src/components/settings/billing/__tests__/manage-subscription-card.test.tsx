@@ -4,11 +4,16 @@ import { ManageSubscriptionCard } from '../manage-subscription-card';
 
 const mockUseSubscription = vi.fn();
 const mockMutateAsync = vi.fn();
+const mockCreateCheckoutMutateAsync = vi.fn();
 
 vi.mock('@/lib/query/billing', () => ({
   useSubscription: () => mockUseSubscription(),
   useUpgradeSubscription: () => ({
     mutateAsync: mockMutateAsync,
+    isPending: false,
+  }),
+  useCreateCheckout: () => ({
+    mutateAsync: mockCreateCheckoutMutateAsync,
     isPending: false,
   }),
 }));
@@ -23,6 +28,9 @@ describe('ManageSubscriptionCard', () => {
     mockMutateAsync.mockResolvedValue({
       tier: 'AGENCY',
       status: 'active',
+    });
+    mockCreateCheckoutMutateAsync.mockResolvedValue({
+      checkoutUrl: 'https://checkout.example.com/session_123',
     });
   });
 
@@ -130,5 +138,29 @@ describe('ManageSubscriptionCard', () => {
     expect(screen.queryByRole('button', { name: /upgrade now/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /downgrade now/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^cancel$/i })).not.toBeInTheDocument();
+  });
+
+  it('uses checkout flow instead of upgrade API for free accounts', async () => {
+    mockUseSubscription.mockReturnValue({
+      data: null,
+      isLoading: false,
+    });
+    mockCreateCheckoutMutateAsync.mockRejectedValueOnce(new Error('Checkout unavailable'));
+
+    render(<ManageSubscriptionCard />);
+
+    fireEvent.click(screen.getByRole('button', { name: /change plan/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Growth.*Upgrade/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Upgrade Now/i }));
+
+    await waitFor(() => {
+      expect(mockCreateCheckoutMutateAsync).toHaveBeenCalledWith({
+        tier: 'STARTER',
+        successUrl: expect.stringContaining('/settings?tab=billing&checkout=success'),
+        cancelUrl: expect.stringContaining('/settings?tab=billing&checkout=cancel'),
+      });
+    });
+
+    expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 });
