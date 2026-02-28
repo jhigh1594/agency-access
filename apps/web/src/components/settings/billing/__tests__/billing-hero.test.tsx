@@ -1,0 +1,112 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { BillingHero } from '../billing-hero';
+
+const mockUseSubscription = vi.fn();
+const mockCreateCheckoutMutateAsync = vi.fn();
+const mockOpenPortalMutateAsync = vi.fn();
+const trackBillingEventMock = vi.fn();
+const storageState = new Map<string, string>();
+const localStorageMock = {
+  getItem: vi.fn((key: string) => storageState.get(key) ?? null),
+  setItem: vi.fn((key: string, value: string) => {
+    storageState.set(key, value);
+  }),
+  clear: vi.fn(() => {
+    storageState.clear();
+  }),
+};
+
+vi.mock('@/lib/query/billing', () => ({
+  useSubscription: () => mockUseSubscription(),
+  useCreateCheckout: () => ({
+    mutateAsync: mockCreateCheckoutMutateAsync,
+    isPending: false,
+  }),
+  useOpenPortal: () => ({
+    mutateAsync: mockOpenPortalMutateAsync,
+    isPending: false,
+  }),
+}));
+
+vi.mock('@/lib/analytics/billing', () => ({
+  trackBillingEvent: (...args: any[]) => trackBillingEventMock(...args),
+}));
+
+describe('BillingHero', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    storageState.clear();
+    vi.stubGlobal('localStorage', localStorageMock);
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      configurable: true,
+      writable: true,
+    });
+    mockCreateCheckoutMutateAsync.mockResolvedValue({
+      checkoutUrl: 'https://checkout.example.com/session_123',
+    });
+    mockOpenPortalMutateAsync.mockResolvedValue({
+      portalUrl: 'https://portal.example.com/session_123',
+    });
+
+    vi.stubGlobal('location', {
+      origin: 'http://localhost',
+      href: 'http://localhost/settings?tab=billing',
+    });
+  });
+
+  it('shows free trial CTA for free users and starts checkout', async () => {
+    mockUseSubscription.mockReturnValue({ data: null, isLoading: false });
+
+    render(<BillingHero />);
+
+    fireEvent.click(screen.getByRole('button', { name: /start free trial/i }));
+
+    await waitFor(() => {
+      expect(mockCreateCheckoutMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tier: 'STARTER',
+          billingInterval: 'yearly',
+        })
+      );
+    });
+  });
+
+  it('shows activate paid plan CTA for trialing users', async () => {
+    mockUseSubscription.mockReturnValue({
+      data: {
+        id: 'sub_123',
+        tier: 'STARTER',
+        status: 'trialing',
+        cancelAtPeriodEnd: false,
+        trialEnd: '2026-03-10T00:00:00.000Z',
+      },
+      isLoading: false,
+    });
+
+    render(<BillingHero />);
+
+    expect(screen.getByRole('button', { name: /activate paid plan/i })).toBeInTheDocument();
+  });
+
+  it('uses billing portal CTA for past due users', async () => {
+    mockUseSubscription.mockReturnValue({
+      data: {
+        id: 'sub_456',
+        tier: 'STARTER',
+        status: 'past_due',
+        cancelAtPeriodEnd: false,
+      },
+      isLoading: false,
+    });
+
+    render(<BillingHero />);
+
+    fireEvent.click(screen.getByRole('button', { name: /manage in billing portal/i }));
+
+    await waitFor(() => {
+      expect(mockOpenPortalMutateAsync).toHaveBeenCalled();
+    });
+  });
+});

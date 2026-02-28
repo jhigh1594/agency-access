@@ -4,7 +4,7 @@
  * Centralized functions for billing/subscription API calls.
  */
 
-import type { SubscriptionTier, TierLimits } from '@agency-platform/shared';
+import type { BillingInterval, SubscriptionTier, TierLimits } from '@agency-platform/shared';
 import { getApiBaseUrl } from '@/lib/api/api-env';
 
 const API_URL = getApiBaseUrl();
@@ -157,6 +157,7 @@ export async function createCheckoutSession(
   orgId: string,
   token: string,
   tier: SubscriptionTier,
+  billingInterval: BillingInterval,
   successUrl: string,
   cancelUrl: string
 ): Promise<{ checkoutUrl: string }> {
@@ -166,7 +167,7 @@ export async function createCheckoutSession(
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ agencyId: orgId, tier, successUrl, cancelUrl }),
+    body: JSON.stringify({ agencyId: orgId, tier, billingInterval, successUrl, cancelUrl }),
   });
   if (!response.ok) throw new Error('Failed to create checkout session');
   const result = await response.json();

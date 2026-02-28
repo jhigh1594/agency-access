@@ -54,7 +54,7 @@ export function TrialBanner({ trialEnd, tierName }: TrialBannerProps) {
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
-          onClick={() => router.push('/settings')}
+          onClick={() => router.push('/settings?tab=billing')}
           className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-xs font-bold transition-colors"
         >
           Subscribe Now

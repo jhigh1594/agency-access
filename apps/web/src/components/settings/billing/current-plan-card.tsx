@@ -160,7 +160,7 @@ export function CurrentPlanCard() {
           ) : (
             <>
               <ExternalLink className="h-4 w-4" />
-              Manage Subscription
+              Manage in Billing Portal
             </>
           )}
         </Button>

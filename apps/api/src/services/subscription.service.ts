@@ -15,9 +15,12 @@ import { creem } from '@/lib/creem';
 import { getProductId, getTierFromProductId } from '@/config/creem.config';
 import type { SubscriptionTier } from '@agency-platform/shared';
 
+type BillingInterval = 'monthly' | 'yearly';
+
 interface CheckoutSessionParams {
   agencyId: string;
   tier: SubscriptionTier;
+  billingInterval?: BillingInterval;
   successUrl: string;
   cancelUrl: string;
 }
@@ -102,7 +105,7 @@ class SubscriptionService {
   async createCheckoutSession(params: CheckoutSessionParams): Promise<
     ServiceResult<{ checkoutUrl: string }>
   > {
-    const { agencyId, tier, successUrl, cancelUrl } = params;
+    const { agencyId, tier, billingInterval, successUrl, cancelUrl } = params;
 
     // Get agency
     const agency = await prisma.agency.findUnique({
@@ -155,7 +158,7 @@ class SubscriptionService {
     // Create checkout session
     let productId: string;
     try {
-      productId = getProductId(tier);
+      productId = getProductId(tier, billingInterval ?? 'monthly');
     } catch (error) {
       return {
         data: null,
@@ -168,7 +171,7 @@ class SubscriptionService {
       productId,
       successUrl,
       cancelUrl,
-      metadata: { agencyId, tier },
+      metadata: { agencyId, tier, billingInterval: billingInterval ?? 'monthly' },
     });
 
     if (checkoutResult.error || !checkoutResult.data) {

@@ -18,6 +18,8 @@ import { SubscriptionTier } from '@agency-platform/shared';
 import { authenticate } from '@/middleware/auth.js';
 import { resolvePrincipalAgency } from '@/lib/authorization.js';
 
+type BillingInterval = 'monthly' | 'yearly';
+
 export async function subscriptionRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate());
   fastify.addHook('onRequest', async (request: any, reply) => {
@@ -48,6 +50,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       const body = request.body as {
         agencyId: string;
         tier: SubscriptionTier;
+        billingInterval?: BillingInterval;
         successUrl: string;
         cancelUrl: string;
       };
@@ -67,11 +70,17 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }
 
+      const validIntervals: BillingInterval[] = ['monthly', 'yearly'];
+      if (body.billingInterval && !validIntervals.includes(body.billingInterval)) {
+        return sendValidationError(reply, 'Invalid billing interval');
+      }
+
       fastify.log.info({ agencyId, tier: body.tier }, 'POST /subscriptions/checkout');
 
       const result = await subscriptionService.createCheckoutSession({
         agencyId,
         tier: body.tier,
+        billingInterval: body.billingInterval || 'monthly',
         successUrl: body.successUrl,
         cancelUrl: body.cancelUrl,
       });

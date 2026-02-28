@@ -7,10 +7,12 @@
  * Matches the marketing site pricing tiers at https://www.authhub.co/pricing
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Check, X } from 'lucide-react';
 import { useSubscription, useCreateCheckout } from '@/lib/query/billing';
+import { trackBillingEvent } from '@/lib/analytics/billing';
 import {
+  type BillingInterval,
   type PricingDisplayTier,
   PRICING_DISPLAY_TIER_ORDER,
   PRICING_DISPLAY_TIER_DETAILS,
@@ -18,6 +20,8 @@ import {
   getPricingDisplayTierFromSubscriptionTier,
 } from '@agency-platform/shared';
 import { Button } from '@/components/ui/button';
+import { persistBillingIntervalPreference, readBillingIntervalPreference } from './billing-interval';
+import { resolveBillingLifecycle } from './billing-lifecycle';
 
 // Tier pricing configuration (yearly price, monthly price)
 const tierPricing: Record<PricingDisplayTier, { yearly: number; monthly: number }> = {
@@ -76,14 +80,52 @@ export function PlanComparison() {
   const createCheckout = useCreateCheckout();
 
   const currentTier = getPricingDisplayTierFromSubscriptionTier(subscription?.tier);
-  const [isYearly, setIsYearly] = useState(true);
+  const lifecycle = resolveBillingLifecycle(subscription);
+  const [isYearly, setIsYearly] = useState(() => {
+    const fallback: BillingInterval = lifecycle === 'PAID' ? 'monthly' : 'yearly';
+    return readBillingIntervalPreference(fallback) === 'yearly';
+  });
+
+  useEffect(() => {
+    const fallback: BillingInterval = lifecycle === 'PAID' ? 'monthly' : 'yearly';
+    setIsYearly(readBillingIntervalPreference(fallback) === 'yearly');
+  }, [lifecycle]);
+
+  const setBillingInterval = (interval: BillingInterval) => {
+    setIsYearly(interval === 'yearly');
+    persistBillingIntervalPreference(interval);
+    trackBillingEvent('billing_interval_toggled', {
+      lifecycle,
+      currentTier: subscription?.tier ?? null,
+      targetTier: null,
+      interval,
+      surface: 'plan_comparison',
+    });
+  };
 
   const handleUpgrade = async (displayTier: PricingDisplayTier) => {
     const subscriptionTier = PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER[displayTier];
     if (!subscriptionTier) return; // FREE tier has no checkout
+    const billingInterval: BillingInterval = isYearly ? 'yearly' : 'monthly';
+
+    trackBillingEvent('billing_primary_cta_clicked', {
+      lifecycle,
+      currentTier: subscription?.tier ?? null,
+      targetTier: subscriptionTier,
+      interval: billingInterval,
+      surface: 'plan_comparison',
+    });
+    trackBillingEvent('billing_checkout_started', {
+      lifecycle,
+      currentTier: subscription?.tier ?? null,
+      targetTier: subscriptionTier,
+      interval: billingInterval,
+      surface: 'plan_comparison',
+    });
 
     const result = await createCheckout.mutateAsync({
       tier: subscriptionTier,
+      billingInterval,
       successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
       cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
     });
@@ -113,7 +155,7 @@ export function PlanComparison() {
       <div className="flex flex-col items-center gap-3 mb-8">
         <div className="relative inline-flex items-center gap-2 bg-card border-2 border-border-hard dark:border-white p-1 shadow-brutalist-sm">
           <button
-            onClick={() => setIsYearly(false)}
+            onClick={() => setBillingInterval('monthly')}
             className={`relative px-6 py-3 min-h-[44px] font-bold uppercase tracking-wider text-xs transition-all ${
               !isYearly
                 ? 'bg-coral text-black shadow-[2px_2px_0px_var(--shadow-hard)]'
@@ -123,7 +165,7 @@ export function PlanComparison() {
             Monthly
           </button>
           <button
-            onClick={() => setIsYearly(true)}
+            onClick={() => setBillingInterval('yearly')}
             className={`relative px-6 py-3 min-h-[44px] font-bold uppercase tracking-wider text-xs transition-all ${
               isYearly
                 ? 'bg-coral text-black shadow-[2px_2px_0px_var(--shadow-hard)]'

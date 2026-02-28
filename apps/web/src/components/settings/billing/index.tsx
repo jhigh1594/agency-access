@@ -1,4 +1,5 @@
 export { BillingTab } from './billing-tab';
+export { BillingHero } from './billing-hero';
 export { CheckoutSuccessToast } from './checkout-success-toast';
 export { CurrentPlanCard } from './current-plan-card';
 export { UsageLimitsCard } from './usage-limits-card';

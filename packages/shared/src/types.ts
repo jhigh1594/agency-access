@@ -782,6 +782,9 @@ export interface TemplatesListResponse {
 export const SubscriptionTierSchema = z.enum(['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE']);
 export type SubscriptionTier = z.infer<typeof SubscriptionTierSchema>;
 
+export const BillingIntervalSchema = z.enum(['monthly', 'yearly']);
+export type BillingInterval = z.infer<typeof BillingIntervalSchema>;
+
 export const SUBSCRIPTION_TIER_NAMES: Record<SubscriptionTier, string> = {
   STARTER: 'Starter',
   AGENCY: 'Agency',

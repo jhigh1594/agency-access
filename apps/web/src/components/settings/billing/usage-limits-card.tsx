@@ -9,6 +9,8 @@
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { useTierDetails, useCreateCheckout } from '@/lib/query/billing';
 import { Button } from '@/components/ui/button';
+import { trackBillingEvent } from '@/lib/analytics/billing';
+import { readBillingIntervalPreference } from './billing-interval';
 
 export function UsageLimitsCard() {
   const { data: tierDetails, isLoading } = useTierDetails();
@@ -35,20 +37,57 @@ export function UsageLimitsCard() {
 
   const limits = tierDetails?.limits;
   const currentTier = tierDetails?.tier;
+  const lifecycle = !currentTier
+    ? 'FREE'
+    : tierDetails?.status === 'trialing'
+      ? 'TRIALING'
+      : 'PAID';
+  const preferredInterval = readBillingIntervalPreference(lifecycle === 'PAID' ? 'monthly' : 'yearly');
 
   const handleUpgrade = async () => {
     const nextTier =
       !currentTier
         ? 'STARTER'
         : currentTier === 'STARTER'
-          ? 'PRO'
-          : 'ENTERPRISE';
+          ? 'AGENCY'
+          : null;
+
+    if (!nextTier) return;
+
+    trackBillingEvent('billing_primary_cta_clicked', {
+      lifecycle,
+      currentTier: currentTier ?? null,
+      targetTier: nextTier,
+      interval: preferredInterval,
+      surface: 'usage_limits_card',
+    });
+    trackBillingEvent('billing_checkout_started', {
+      lifecycle,
+      currentTier: currentTier ?? null,
+      targetTier: nextTier,
+      interval: preferredInterval,
+      surface: 'usage_limits_card',
+    });
+
     const result = await createCheckout.mutateAsync({
       tier: nextTier,
+      billingInterval: preferredInterval,
       successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
       cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
     });
     window.location.href = result.checkoutUrl;
+  };
+
+  const handleContactSales = () => {
+    trackBillingEvent('billing_primary_cta_clicked', {
+      lifecycle,
+      currentTier: currentTier ?? null,
+      targetTier: null,
+      interval: preferredInterval,
+      surface: 'usage_limits_card',
+    });
+
+    window.location.href = 'mailto:sales@authhub.co?subject=AuthHub%20Scale%20Expansion';
   };
 
   const renderProgressBar = (
@@ -145,15 +184,25 @@ export function UsageLimitsCard() {
                 Upgrade to get more capacity and unlock premium features.
               </p>
             </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleUpgrade}
-              disabled={createCheckout.isPending}
-            >
-              <TrendingUp className="h-3.5 w-3.5" />
-              Upgrade
-            </Button>
+            {currentTier === 'AGENCY' || currentTier === 'PRO' ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleContactSales}
+              >
+                Contact Sales
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleUpgrade}
+                disabled={createCheckout.isPending}
+              >
+                <TrendingUp className="h-3.5 w-3.5" />
+                Upgrade
+              </Button>
+            )}
           </div>
         </div>
       )}

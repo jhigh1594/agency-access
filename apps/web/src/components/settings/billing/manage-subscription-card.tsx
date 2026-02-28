@@ -14,12 +14,12 @@ import {
   AlertCircle,
   Info,
   Loader2,
-  ChevronDown,
   X,
   CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCreateCheckout, useSubscription, useUpgradeSubscription } from '@/lib/query/billing';
+import { trackBillingEvent } from '@/lib/analytics/billing';
 import {
   SUBSCRIPTION_TIER_DESCRIPTIONS,
   getPricingTierNameFromSubscriptionTier,
@@ -27,6 +27,8 @@ import {
 } from '@agency-platform/shared';
 import { CancelSubscriptionModal } from './cancel-subscription-modal';
 import { Button } from '@/components/ui/button';
+import { readBillingIntervalPreference } from './billing-interval';
+import { resolveBillingLifecycle } from './billing-lifecycle';
 
 type ManageableTier = 'STARTER' | 'AGENCY';
 type CurrentTier = 'FREE' | ManageableTier;
@@ -76,10 +78,12 @@ export function ManageSubscriptionCard() {
   }
 
   const currentTier = normalizeCurrentTier(subscription?.tier);
+  const lifecycle = resolveBillingLifecycle(subscription);
   const currentTierRank = TIER_RANK[currentTier];
   const isDowngrade = selectedTier ? TIER_RANK[selectedTier] < currentTierRank : false;
   const isUpgrade = selectedTier ? TIER_RANK[selectedTier] > currentTierRank : false;
   const canCancelSubscription = !!subscription;
+  const preferredInterval = readBillingIntervalPreference(lifecycle === 'PAID' ? 'monthly' : 'yearly');
 
   const handleTierChange = async () => {
     if (!selectedTier || selectedTier === currentTier) return;
@@ -89,8 +93,24 @@ export function ManageSubscriptionCard() {
 
     try {
       if (currentTier === 'FREE') {
+        trackBillingEvent('billing_primary_cta_clicked', {
+          lifecycle,
+          currentTier: null,
+          targetTier: selectedTier,
+          interval: preferredInterval,
+          surface: 'manage_subscription_card',
+        });
+        trackBillingEvent('billing_checkout_started', {
+          lifecycle,
+          currentTier: null,
+          targetTier: selectedTier,
+          interval: preferredInterval,
+          surface: 'manage_subscription_card',
+        });
+
         const result = await createCheckoutMutation.mutateAsync({
           tier: selectedTier,
+          billingInterval: preferredInterval,
           successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
           cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
         });
@@ -123,7 +143,7 @@ export function ManageSubscriptionCard() {
   };
 
   return (
-    <section className="clean-card p-6">
+    <section id="manage-subscription-card" className="clean-card p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-coral/10 rounded-lg">
           <Info className="h-5 w-5 text-coral" />
@@ -198,7 +218,16 @@ export function ManageSubscriptionCard() {
               {canCancelSubscription && (
                 <Button
                   variant="ghost"
-                  onClick={() => setShowCancelModal(true)}
+                  onClick={() => {
+                    trackBillingEvent('billing_cancel_flow_opened', {
+                      lifecycle,
+                      currentTier: subscription?.tier ?? null,
+                      targetTier: null,
+                      interval: preferredInterval,
+                      surface: 'manage_subscription_card',
+                    });
+                    setShowCancelModal(true);
+                  }}
                 >
                   Cancel Subscription
                 </Button>

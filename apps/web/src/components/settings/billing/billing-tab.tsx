@@ -14,6 +14,11 @@
  */
 
 import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useSubscription } from '@/lib/query/billing';
+import { trackBillingEvent } from '@/lib/analytics/billing';
+import { BillingHero } from './billing-hero';
+import { resolveBillingLifecycle } from './billing-lifecycle';
 import { CurrentPlanCard } from './current-plan-card';
 import { ManageSubscriptionCard } from './manage-subscription-card';
 import { UsageLimitsCard } from './usage-limits-card';
@@ -26,19 +31,80 @@ import { CheckoutSuccessToast } from './checkout-success-toast';
 export function BillingTab() {
   const searchParams = useSearchParams();
   const checkoutStatus = searchParams.get('checkout');
+  const { data: subscription } = useSubscription();
+  const lifecycle = resolveBillingLifecycle(subscription);
+  const isBillingV2Enabled = process.env.NEXT_PUBLIC_BILLING_V2_ENABLED !== 'false';
+
+  useEffect(() => {
+    trackBillingEvent('billing_page_viewed', {
+      lifecycle,
+      currentTier: subscription?.tier ?? null,
+      status: subscription?.status ?? 'none',
+      surface: 'billing_tab',
+    });
+  }, [lifecycle, subscription?.tier, subscription?.status]);
+
+  useEffect(() => {
+    if (checkoutStatus === 'success') {
+      trackBillingEvent('billing_checkout_success', {
+        lifecycle,
+        currentTier: subscription?.tier ?? null,
+        status: subscription?.status ?? 'none',
+        surface: 'billing_tab',
+      });
+    }
+
+    if (checkoutStatus === 'cancel') {
+      trackBillingEvent('billing_checkout_canceled', {
+        lifecycle,
+        currentTier: subscription?.tier ?? null,
+        status: subscription?.status ?? 'none',
+        surface: 'billing_tab',
+      });
+    }
+  }, [checkoutStatus, lifecycle, subscription?.tier, subscription?.status]);
+
+  if (!isBillingV2Enabled) {
+    return (
+      <>
+        {checkoutStatus === 'success' && <CheckoutSuccessToast />}
+
+        <div className="space-y-6">
+          <CurrentPlanCard />
+          <ManageSubscriptionCard />
+          <UsageLimitsCard />
+          <PlanComparison />
+          <PaymentMethodsCard />
+          <InvoicesCard />
+          <BillingDetailsCard />
+        </div>
+      </>
+    );
+  }
+
+  const showFreeOrTrialLayout = lifecycle === 'FREE' || lifecycle === 'TRIALING';
 
   return (
     <>
       {checkoutStatus === 'success' && <CheckoutSuccessToast />}
 
       <div className="space-y-6">
-        <CurrentPlanCard />
-        <ManageSubscriptionCard />
-        <UsageLimitsCard />
-        <PlanComparison />
-        <PaymentMethodsCard />
-        <InvoicesCard />
-        <BillingDetailsCard />
+        <BillingHero />
+        {showFreeOrTrialLayout ? (
+          <>
+            <PlanComparison />
+            <UsageLimitsCard />
+          </>
+        ) : (
+          <>
+            <CurrentPlanCard />
+            <UsageLimitsCard />
+            <ManageSubscriptionCard />
+            <PaymentMethodsCard />
+            <InvoicesCard />
+            <BillingDetailsCard />
+          </>
+        )}
       </div>
     </>
   );

@@ -1,9 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { PlanComparison } from '../plan-comparison';
 
 const mockUseSubscription = vi.fn();
 const mockMutateAsync = vi.fn();
+const storageState = new Map<string, string>();
+const localStorageMock = {
+  getItem: vi.fn((key: string) => storageState.get(key) ?? null),
+  setItem: vi.fn((key: string, value: string) => {
+    storageState.set(key, value);
+  }),
+  clear: vi.fn(() => {
+    storageState.clear();
+  }),
+};
 
 vi.mock('@/lib/query/billing', () => ({
   useSubscription: () => mockUseSubscription(),
@@ -16,6 +26,21 @@ vi.mock('@/lib/query/billing', () => ({
 describe('PlanComparison', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    storageState.clear();
+    vi.stubGlobal('localStorage', localStorageMock);
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      configurable: true,
+      writable: true,
+    });
+    mockMutateAsync.mockResolvedValue({
+      checkoutUrl: 'https://checkout.example.com/session_123',
+    });
+
+    vi.stubGlobal('location', {
+      origin: 'http://localhost',
+      href: 'http://localhost/settings?tab=billing',
+    });
   });
 
   it('marks Growth as current plan for STARTER subscriptions', () => {
@@ -31,7 +56,9 @@ describe('PlanComparison', () => {
 
     render(<PlanComparison />);
 
-    const growthCard = screen.getByRole('heading', { name: 'Growth' }).closest('div.relative');
+    const growthCard = screen.getAllByText('Growth')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
     expect(growthCard).toBeTruthy();
     expect(within(growthCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
   });
@@ -49,7 +76,9 @@ describe('PlanComparison', () => {
 
     render(<PlanComparison />);
 
-    const scaleCard = screen.getByRole('heading', { name: 'Scale' }).closest('div.relative');
+    const scaleCard = screen.getAllByText('Scale')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
     expect(scaleCard).toBeTruthy();
     expect(within(scaleCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
   });
@@ -67,8 +96,54 @@ describe('PlanComparison', () => {
 
     render(<PlanComparison />);
 
-    const scaleCard = screen.getByRole('heading', { name: 'Scale' }).closest('div.relative');
+    const scaleCard = screen.getAllByText('Scale')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
     expect(scaleCard).toBeTruthy();
     expect(within(scaleCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
+  });
+
+  it('uses persisted interval from localStorage for checkout payload', async () => {
+    localStorageMock.setItem('selectedBillingInterval', 'monthly');
+    mockUseSubscription.mockReturnValue({
+      data: null,
+      isLoading: false,
+    });
+
+    render(<PlanComparison />);
+
+    fireEvent.click(screen.getByRole('button', { name: /start free trial/i }));
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tier: 'STARTER',
+          billingInterval: 'monthly',
+        })
+      );
+    });
+  });
+
+  it('updates localStorage and checkout payload when interval toggles', async () => {
+    mockUseSubscription.mockReturnValue({
+      data: null,
+      isLoading: false,
+    });
+
+    render(<PlanComparison />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^monthly$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /start free trial/i }));
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tier: 'STARTER',
+          billingInterval: 'monthly',
+        })
+      );
+    });
+
+    expect(localStorageMock.getItem('selectedBillingInterval')).toBe('monthly');
   });
 });

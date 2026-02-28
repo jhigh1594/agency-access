@@ -6,7 +6,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { SubscriptionTier, TierLimits } from '@agency-platform/shared';
+import type { BillingInterval, SubscriptionTier, TierLimits } from '@agency-platform/shared';
 import { getApiBaseUrl } from '@/lib/api/api-env';
 
 const API_URL = getApiBaseUrl();
@@ -272,6 +272,7 @@ export function useCreateCheckout() {
   return useMutation({
     mutationFn: async (params: {
       tier: SubscriptionTier;
+      billingInterval: BillingInterval;
       successUrl: string;
       cancelUrl: string;
     }) => {
@@ -287,6 +288,7 @@ export function useCreateCheckout() {
         body: JSON.stringify({
           agencyId: principalId,
           tier: params.tier,
+          billingInterval: params.billingInterval,
           successUrl: params.successUrl,
           cancelUrl: params.cancelUrl,
         }),

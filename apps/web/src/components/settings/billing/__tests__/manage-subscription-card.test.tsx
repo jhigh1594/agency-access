@@ -154,11 +154,14 @@ describe('ManageSubscriptionCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Upgrade Now/i }));
 
     await waitFor(() => {
-      expect(mockCreateCheckoutMutateAsync).toHaveBeenCalledWith({
-        tier: 'STARTER',
-        successUrl: expect.stringContaining('/settings?tab=billing&checkout=success'),
-        cancelUrl: expect.stringContaining('/settings?tab=billing&checkout=cancel'),
-      });
+      expect(mockCreateCheckoutMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tier: 'STARTER',
+          billingInterval: expect.any(String),
+          successUrl: expect.stringContaining('/settings?tab=billing&checkout=success'),
+          cancelUrl: expect.stringContaining('/settings?tab=billing&checkout=cancel'),
+        })
+      );
     });
 
     expect(mockMutateAsync).not.toHaveBeenCalled();

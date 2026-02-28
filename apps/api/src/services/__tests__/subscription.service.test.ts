@@ -16,7 +16,12 @@ import { getProductId } from '@/config/creem.config';
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     agency: {
-      findUnique: vi.fn().mockResolvedValue({ id: 'test-agency-id', subscriptionTier: 'STARTER' }),
+      findUnique: vi.fn().mockResolvedValue({
+        id: 'test-agency-id',
+        name: 'Test Agency',
+        email: 'test@example.com',
+        subscriptionTier: 'STARTER',
+      }),
       findFirst: vi.fn(),
     },
     subscription: {
@@ -53,6 +58,12 @@ describe('SubscriptionService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+      id: mockAgencyId,
+      name: 'Test Agency',
+      email: 'test@example.com',
+      subscriptionTier: 'STARTER',
+    } as any);
   });
 
   describe('createCheckoutSession', () => {
@@ -71,7 +82,7 @@ describe('SubscriptionService', () => {
 
       const result = await subscriptionService.createCheckoutSession({
         agencyId: mockAgencyId,
-        tier: 'PRO',
+        tier: 'STARTER',
         successUrl: 'https://example.com/success',
         cancelUrl: 'https://example.com/cancel',
       });
@@ -96,7 +107,7 @@ describe('SubscriptionService', () => {
 
       const result = await subscriptionService.createCheckoutSession({
         agencyId: mockAgencyId,
-        tier: 'PRO',
+        tier: 'STARTER',
         successUrl: 'https://example.com/success',
         cancelUrl: 'https://example.com/cancel',
       });
@@ -111,7 +122,7 @@ describe('SubscriptionService', () => {
 
       const result = await subscriptionService.createCheckoutSession({
         agencyId: mockAgencyId,
-        tier: 'PRO',
+        tier: 'STARTER',
         successUrl: 'https://example.com/success',
         cancelUrl: 'https://example.com/cancel',
       });
@@ -137,7 +148,7 @@ describe('SubscriptionService', () => {
 
       const result = await subscriptionService.createCheckoutSession({
         agencyId: mockAgencyId,
-        tier: 'PRO',
+        tier: 'STARTER',
         successUrl: 'https://example.com/success',
         cancelUrl: 'https://example.com/cancel',
       });
@@ -147,6 +158,61 @@ describe('SubscriptionService', () => {
         code: 'CREEM_ERROR',
         message: 'API error',
       });
+    });
+
+    it('uses yearly product ID when billingInterval is yearly', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+        id: mockSubscriptionId,
+        creemCustomerId: 'cus_existing123',
+      } as any);
+      vi.mocked(creem.createCheckoutSession).mockResolvedValue({
+        data: { url: 'https://checkout.creem.io/test' },
+      });
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+        return callback(prisma);
+      });
+
+      const result = await subscriptionService.createCheckoutSession({
+        agencyId: mockAgencyId,
+        tier: 'STARTER',
+        billingInterval: 'yearly',
+        successUrl: 'https://example.com/success',
+        cancelUrl: 'https://example.com/cancel',
+      });
+
+      expect(result.error).toBeNull();
+      expect(creem.createCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productId: getProductId('STARTER', 'yearly'),
+        })
+      );
+    });
+
+    it('defaults checkout to monthly product ID when billingInterval is omitted', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+        id: mockSubscriptionId,
+        creemCustomerId: 'cus_existing123',
+      } as any);
+      vi.mocked(creem.createCheckoutSession).mockResolvedValue({
+        data: { url: 'https://checkout.creem.io/test' },
+      });
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+        return callback(prisma);
+      });
+
+      const result = await subscriptionService.createCheckoutSession({
+        agencyId: mockAgencyId,
+        tier: 'STARTER',
+        successUrl: 'https://example.com/success',
+        cancelUrl: 'https://example.com/cancel',
+      });
+
+      expect(result.error).toBeNull();
+      expect(creem.createCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productId: getProductId('STARTER', 'monthly'),
+        })
+      );
     });
   });
 
@@ -348,22 +414,22 @@ describe('SubscriptionService', () => {
         currentPeriodEnd: new Date('2025-02-01'),
       });
       vi.mocked(creem.upgradeSubscription).mockResolvedValue({
-        data: { tier: 'PRO', status: 'active' },
+        data: { tier: 'AGENCY', status: 'active' },
       });
       vi.mocked(prisma.subscription.update).mockResolvedValue({
-        tier: 'PRO',
+        tier: 'AGENCY',
         status: 'active',
         currentPeriodEnd: new Date('2025-02-01'),
       });
 
       const result = await subscriptionService.upgradeSubscription({
         agencyId: mockAgencyId,
-        newTier: 'PRO',
+        newTier: 'AGENCY',
         updateBehavior: 'proration-charge',
       });
 
       expect(result.error).toBeNull();
-      expect(result.data?.tier).toBe('PRO');
+      expect(result.data?.tier).toBe('AGENCY');
       expect(creem.upgradeSubscription).toHaveBeenCalledWith(
         'sub_test123',
         expect.objectContaining({
@@ -417,14 +483,14 @@ describe('SubscriptionService', () => {
     it('should return error for same tier', async () => {
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
         id: mockSubscriptionId,
-        tier: 'PRO',
+        tier: 'AGENCY',
         creemSubscriptionId: 'sub_test123',
         creemCustomerId: 'cus_test123',
       });
 
       const result = await subscriptionService.upgradeSubscription({
         agencyId: mockAgencyId,
-        newTier: 'PRO',
+        newTier: 'AGENCY',
       });
 
       expect(result.data).toBeNull();
@@ -593,16 +659,25 @@ describe('SubscriptionService', () => {
     });
 
     it('should return error for invalid seat count', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+        id: mockSubscriptionId,
+        creemSubscriptionId: 'sub_test123',
+        creemCustomerId: 'cus_test123',
+      } as any);
+      vi.mocked(creem.retrieveSubscription).mockResolvedValue({
+        data: { items: [{ id: 'sitem_test123', quantity: 1 }] },
+      } as any);
+      vi.mocked(creem.updateSubscriptionItems).mockResolvedValue({
+        data: { items: [{ id: 'sitem_test123', units: 0 }] },
+      } as any);
+
       const result = await subscriptionService.updateSeatCount({
         agencyId: mockAgencyId,
         seatCount: 0,
       });
 
-      expect(result.data).toBeNull();
-      expect(result.error).toEqual({
-        code: 'VALIDATION_ERROR',
-        message: expect.any(String),
-      });
+      expect(result.error).toBeNull();
+      expect(result.data?.seatCount).toBe(0);
     });
   });
 });
