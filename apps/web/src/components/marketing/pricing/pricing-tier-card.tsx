@@ -2,7 +2,7 @@
 
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, CheckIcon, XIcon } from '@/components/ui/ui-icons';
+import { ArrowRight, Check, X } from 'lucide-react';
 import { m } from 'framer-motion';
 
 interface Feature {
@@ -155,7 +155,7 @@ export function PricingTierCard({
             variant={buttonVariant}
             size="lg"
             className="w-full"
-            rightIcon={<ArrowRightIcon size={18} />}
+            rightIcon={<ArrowRight size={18} />}
             onClick={handleTierSelect}
           >
             {buttonText}
@@ -175,13 +175,13 @@ export function PricingTierCard({
             >
               <div className="flex items-start gap-3">
                 {feature.included ? (
-                  <CheckIcon
+                  <Check
                     size={16}
                     className="mt-0.5 flex-shrink-0"
-                    color={isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))'}
+                    style={{ color: isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))' }}
                   />
                 ) : (
-                  <XIcon size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
+                  <X size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
                 )}
                 <span className={`text-sm ${
                   feature.included
@@ -208,23 +208,23 @@ export function PricingTierCard({
       {!isFree && hasTrial && (
         <div className={`mt-6 pt-6 border-t-2 ${isPro ? 'border-gray-700' : 'border-black'} space-y-2`}>
         <div className={`flex items-center gap-2 text-xs font-mono ${textColorMutedClass}`}>
-          <CheckIcon
+          <Check
             size={12}
-            color={isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))'}
+            style={{ color: isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))' }}
           />
           <span>14-day free trial</span>
         </div>
         <div className={`flex items-center gap-2 text-xs font-mono ${textColorMutedClass}`}>
-          <CheckIcon
+          <Check
             size={12}
-            color={isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))'}
+            style={{ color: isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))' }}
           />
           <span>Cancel anytime</span>
         </div>
         <div className={`flex items-center gap-2 text-xs font-mono ${textColorMutedClass}`}>
-          <CheckIcon
+          <Check
             size={12}
-            color={isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))'}
+            style={{ color: isPro ? 'rgb(var(--teal))' : 'rgb(var(--coral))' }}
           />
           <span>No credit card required</span>
         </div>

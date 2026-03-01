@@ -112,7 +112,14 @@ describe('PlanComparison', () => {
 
     render(<PlanComparison />);
 
-    fireEvent.click(screen.getByRole('button', { name: /start free trial/i }));
+    const growthCard = screen.getAllByText('Growth')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
+    expect(growthCard).toBeTruthy();
+
+    fireEvent.click(
+      within(growthCard as HTMLElement).getByRole('button', { name: /start free trial/i })
+    );
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith(
@@ -132,8 +139,15 @@ describe('PlanComparison', () => {
 
     render(<PlanComparison />);
 
+    const growthCard = screen.getAllByText('Growth')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
+    expect(growthCard).toBeTruthy();
+
     fireEvent.click(screen.getByRole('button', { name: /^monthly$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /start free trial/i }));
+    fireEvent.click(
+      within(growthCard as HTMLElement).getByRole('button', { name: /start free trial/i })
+    );
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith(

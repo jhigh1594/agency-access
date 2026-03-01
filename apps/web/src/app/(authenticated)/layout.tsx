@@ -2,6 +2,7 @@
 
 import { useAuth, UserButton } from '@clerk/nextjs';
 import { redirect, usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
@@ -13,8 +14,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { m } from 'framer-motion';
-import { useAuthOrBypass, getDevBypassAgencyData, signOutDevBypass } from '@/lib/dev-auth';
+import { useAuthOrBypass, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { TrialBanner } from '@/components/trial-banner';
 import { useSubscription } from '@/lib/query/billing';
@@ -140,14 +140,14 @@ export default function AuthenticatedLayout({
       label: 'Dashboard',
       href: '/dashboard',
       icon: (
-        <LayoutDashboard className="text-foreground h-6 w-6 flex-shrink-0" />
+        <LayoutDashboard className="h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Connections',
       href: '/connections',
       icon: (
-        <Network className="text-foreground h-6 w-6 flex-shrink-0" />
+        <Network className="h-6 w-6 flex-shrink-0" />
       ),
     },
     // TODO: Token Health page commented out until future state is determined
@@ -162,14 +162,14 @@ export default function AuthenticatedLayout({
       label: 'Clients',
       href: '/clients',
       icon: (
-        <Users className="text-foreground h-6 w-6 flex-shrink-0" />
+        <Users className="h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: 'Settings',
       href: '/settings',
       icon: (
-        <Settings className="text-foreground h-6 w-6 flex-shrink-0" />
+        <Settings className="h-6 w-6 flex-shrink-0" />
       ),
     },
   ];
@@ -189,58 +189,57 @@ export default function AuthenticatedLayout({
               "flex items-center gap-3 mb-8 overflow-hidden min-h-[2rem]",
               open ? "justify-center md:justify-start" : "justify-center"
             )}>
-              <m.div 
-                className="flex items-center justify-center flex-shrink-0"
-                animate={{
-                  width: open ? "2rem" : "1.25rem",
-                  height: open ? "2rem" : "1.25rem",
-                }}
-                transition={{ duration: 0.2 }}
+              <div
+                className={cn(
+                  'relative h-8 w-8 flex-shrink-0 transition-transform duration-200 motion-reduce:transition-none',
+                  open ? 'scale-100' : 'scale-75'
+                )}
               >
-                <img 
-                  src="/authhub.png" 
-                  alt="AuthHub" 
-                  className="w-full h-full object-contain"
-                  style={{ imageRendering: 'crisp-edges' }}
+                <Image
+                  src="/authhub.png"
+                  alt="AuthHub"
+                  fill
+                  sizes="32px"
+                  className="object-contain"
+                  priority
                 />
-              </m.div>
-              <m.span
-                animate={{
-                  display: open ? 'inline-block' : 'none',
-                  opacity: open ? 1 : 0,
-                  width: open ? 'auto' : 0,
-                }}
-                className="font-semibold text-xl text-foreground whitespace-nowrap overflow-hidden"
+              </div>
+              <span
+                aria-hidden={!open}
+                className={cn(
+                  'inline-block origin-left overflow-hidden whitespace-nowrap text-xl font-semibold text-paper transition-all duration-200 motion-reduce:transition-none',
+                  open ? 'scale-x-100 opacity-100' : 'pointer-events-none scale-x-0 opacity-0'
+                )}
               >
                 AuthHub
-              </m.span>
+              </span>
             </div>
 
             {/* Navigation Links */}
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
+            <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-2">
+              {links.map((link) => (
+                <SidebarLink key={link.href} link={link} />
               ))}
-            </div>
+            </nav>
           </div>
 
           {/* User Profile at Bottom */}
-          <div className="border-t border-border pt-4">
+          <div className="border-t border-paper/20 pt-4">
             <div className="flex items-center gap-2">
               {isDevelopmentBypass ? (
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-amber-50 border border-amber-200 min-w-0 flex-1">
-                  <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0" aria-hidden>
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-warning text-paper text-xs font-bold" aria-hidden>
                     D
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium text-amber-900 truncate">Dev Mode</span>
+                    <span className="truncate text-sm font-medium text-warning">Dev Mode</span>
                     <button
                       type="button"
                       onClick={() => {
                         signOutDevBypass();
                         router.push('/');
                       }}
-                      className="text-xs text-amber-700 hover:text-amber-900 hover:underline text-left"
+                      className="text-left text-xs text-warning/90 hover:text-warning hover:underline"
                     >
                       Sign out
                     </button>
@@ -249,15 +248,15 @@ export default function AuthenticatedLayout({
               ) : (
                 <>
                   <UserButton afterSignOutUrl="/" />
-                  <m.div
-                    animate={{
-                      display: open ? 'inline-block' : 'none',
-                      opacity: open ? 1 : 0,
-                    }}
-                    className="text-sm text-foreground"
+                  <span
+                    aria-hidden={!open}
+                    className={cn(
+                      'inline-block origin-left text-sm text-paper transition-all duration-200 motion-reduce:transition-none',
+                      open ? 'scale-x-100 opacity-100' : 'pointer-events-none scale-x-0 opacity-0'
+                    )}
                   >
                     Profile
-                  </m.div>
+                  </span>
                 </>
               )}
               <ThemeToggle />

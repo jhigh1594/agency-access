@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import { ShieldCheckIcon, LockIcon, GlobeIcon } from '@/components/ui/ui-icons';
+import { ShieldCheck, Lock, Globe } from 'lucide-react';
 
 export function TrustSection() {
   return (
@@ -35,9 +35,9 @@ export function TrustSection() {
         {/* Security Grid - Brutalist cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
           {[
-            { icon: ShieldCheckIcon, title: "Enterprise Grade", desc: "Bank-level encryption for all OAuth tokens." },
-            { icon: LockIcon, title: "Secure Storage", desc: "Tokens stored in Infisical vault with audit logs." },
-            { icon: GlobeIcon, title: "Privacy First", desc: "GDPR and CCPA compliant architecture." },
+            { icon: ShieldCheck, title: "Enterprise Grade", desc: "Bank-level encryption for all OAuth tokens." },
+            { icon: Lock, title: "Secure Storage", desc: "Tokens stored in Infisical vault with audit logs." },
+            { icon: Globe, title: "Privacy First", desc: "GDPR and CCPA compliant architecture." },
           ].map((item, i) => (
             <m.div
               key={i}

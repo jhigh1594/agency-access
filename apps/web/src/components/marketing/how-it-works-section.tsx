@@ -2,10 +2,9 @@
 
 import { m, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState } from 'react';
-import { ArrowRightIcon, ClockIcon, CheckIcon, ZapIcon } from '@/components/ui/ui-icons';
 import { Button } from '@/components/ui/button';
 import { SignUpButton } from '@clerk/nextjs';
-import { Link2, Shield, Users, BarChart3 } from 'lucide-react';
+import { ArrowRight, Clock, Check, Zap, Link2, Shield, Users, BarChart3 } from 'lucide-react';
 import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
 import { useAnimationOrchestrator } from '@/hooks/use-animation-orchestrator';
@@ -110,7 +109,7 @@ export function HowItWorksSection() {
             <div className="text-center mb-12 sm:mb-16 md:mb-20">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 border-2 border-black bg-ink text-paper px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist rounded-[0.75rem] mb-6 sm:mb-8">
-                <ClockIcon size={14} />
+                <Clock size={14} />
                 5-Minute Setup
               </div>
 
@@ -139,9 +138,9 @@ export function HowItWorksSection() {
                     className="flex items-center gap-4 mx-8 text-paper font-dela text-xl sm:text-2xl"
                   >
                     <span className="text-acid">2-3 DAYS</span>
-                    <ArrowRightIcon size={16} className="text-coral" />
+                    <ArrowRight size={16} className="text-coral" />
                     <span className="font-mono text-sm">becomes</span>
-                    <ArrowRightIcon size={16} className="text-coral" />
+                    <ArrowRight size={16} className="text-coral" />
                     <span className="text-acid">5 MINUTES</span>
                   </div>
                 ))}
@@ -251,7 +250,7 @@ export function HowItWorksSection() {
                           className="absolute -bottom-2 -right-2 w-10 h-10 bg-acid border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           animate={{ rotate: hoveredStep === step.number ? 45 : 0 }}
                         >
-                          <ArrowRightIcon size={16} className="text-black" />
+                          <ArrowRight size={16} className="text-black" />
                         </m.div>
                       </m.div>
                     </div>
@@ -268,10 +267,10 @@ export function HowItWorksSection() {
           <Reveal delay={1.2}>
             <div className="mt-16 sm:mt-20 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
               {[
-                { value: '99.9%', label: 'Success Rate', icon: CheckIcon, color: 'teal' },
-                { value: '8+', label: 'Platforms', icon: ZapIcon, color: 'acid' },
+                { value: '99.9%', label: 'Success Rate', icon: Check, color: 'teal' },
+                { value: '8+', label: 'Platforms', icon: Zap, color: 'acid' },
                 { value: '1 Link', label: 'Per Client', icon: Users, color: 'coral' },
-                { value: '5 min', label: 'Avg Setup', icon: ClockIcon, color: 'electric' },
+                { value: '5 min', label: 'Avg Setup', icon: Clock, color: 'electric' },
               ].map((stat, i) => (
                 <m.div
                   key={stat.label}
@@ -336,7 +335,7 @@ export function HowItWorksSection() {
                         variant="brutalist"
                         size="lg"
                         className="bg-coral text-white border-2 border-black hover:bg-coral/90 hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-brutalist-sm"
-                        rightIcon={<ZapIcon size={18} />}
+                        rightIcon={<Zap size={18} />}
                         onClick={handleTrialSignup}
                       >
                         Start Free Trial

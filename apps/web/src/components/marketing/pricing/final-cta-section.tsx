@@ -2,7 +2,7 @@
 
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, CheckIcon } from '@/components/ui/ui-icons';
+import { ArrowRight, Check } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Reveal } from '../reveal';
 
@@ -61,7 +61,7 @@ export function FinalCTASection() {
                     variant="brutalist-rounded"
                     size="xl"
                     className="w-full sm:w-auto px-8 sm:px-12"
-                    rightIcon={<ArrowRightIcon size={20} />}
+                    rightIcon={<ArrowRight size={20} />}
                     onClick={handleTrialSignup}
                   >
                     Start 14-Day Free Trial
@@ -85,15 +85,15 @@ export function FinalCTASection() {
               {/* Trust Badges */}
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-600 font-mono">
                 <div className="flex items-center gap-2">
-                  <CheckIcon size={16} color="rgb(var(--coral))" />
+                  <Check size={16} className="text-coral" />
                   <span>14-day free trial</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckIcon size={16} color="rgb(var(--coral))" />
+                  <Check size={16} className="text-coral" />
                   <span>No credit card required</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckIcon size={16} color="rgb(var(--coral))" />
+                  <Check size={16} className="text-coral" />
                   <span>Cancel anytime</span>
                 </div>
               </div>

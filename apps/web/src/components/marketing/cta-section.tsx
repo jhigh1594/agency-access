@@ -2,7 +2,7 @@
 
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, CheckIcon } from '@/components/ui/ui-icons';
+import { ArrowRight, Check } from 'lucide-react';
 import { m } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ScheduleDemoModal } from './schedule-demo-modal';
@@ -62,7 +62,7 @@ export function CTASection() {
                   variant="brutalist"
                   size="xl"
                   className="w-full sm:w-auto px-8 sm:px-12"
-                  rightIcon={<ArrowRightIcon size={20} />}
+                  rightIcon={<ArrowRight size={20} />}
                   onClick={handleTrialSignup}
                 >
                   Start 14-Day Free Trial
@@ -81,19 +81,19 @@ export function CTASection() {
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-600 font-mono">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckIcon size={14} className="sm:hidden" color="rgb(var(--coral))" />
-                <CheckIcon size={16} className="hidden sm:block" color="rgb(var(--coral))" />
+                <Check size={14} className="text-coral sm:hidden" />
+                <Check size={16} className="text-coral hidden sm:block" />
                 <span className="hidden xs:inline">No credit card required</span>
                 <span className="xs:hidden">No card required</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckIcon size={14} className="sm:hidden" color="rgb(var(--coral))" />
-                <CheckIcon size={16} className="hidden sm:block" color="rgb(var(--coral))" />
+                <Check size={14} className="text-coral sm:hidden" />
+                <Check size={16} className="text-coral hidden sm:block" />
                 <span>Unlimited clients</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckIcon size={14} className="sm:hidden" color="rgb(var(--coral))" />
-                <CheckIcon size={16} className="hidden sm:block" color="rgb(var(--coral))" />
+                <Check size={14} className="text-coral sm:hidden" />
+                <Check size={16} className="text-coral hidden sm:block" />
                 <span>Cancel anytime</span>
               </div>
             </div>
@@ -115,7 +115,7 @@ export function CTASection() {
               variant="brutalist"
               size="lg"
               className="w-full touch-feedback-bounce"
-              rightIcon={<ArrowRightIcon size={18} />}
+              rightIcon={<ArrowRight size={18} />}
               onClick={handleTrialSignup}
             >
               Start Free Trial

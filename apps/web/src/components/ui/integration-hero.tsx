@@ -1,54 +1,39 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
 import { SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import {
-  SiGoogle,
-  SiMeta,
-  SiLinkedin,
-  SiSnapchat,
-  SiTiktok,
-  SiInstagram,
-  SiZapier,
-  SiGoogleanalytics,
-} from "react-icons/si";
-import type { IconType } from "react-icons";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Zap } from "lucide-react";
 
 interface IconItem {
-  icon?: IconType;
-  image?: string;
-  color?: string;
+  platform: string;
   name: string;
-  bgColor?: string;
 }
 
 // Row 1 icons
 const ICONS_ROW1: IconItem[] = [
-  { icon: SiGoogle, color: "#4285F4", name: "Google" },
-  { icon: SiMeta, color: "#0668E1", name: "Meta" },
-  { icon: SiLinkedin, color: "#0A66C2", name: "LinkedIn" },
-  { icon: SiSnapchat, color: "#FFFC00", name: "Snapchat" },
-  { icon: SiTiktok, color: "#000000", name: "TikTok" },
-  { icon: SiInstagram, color: "#E1306C", name: "Instagram" },
-  { icon: SiZapier, color: "#FF4A00", name: "Zapier" },
-  { image: "/beehiiv.jpg", name: "Beehiiv", bgColor: "#ffffff" },
-  { image: "/kit.jpg", name: "Kit" },
+  { platform: "google", name: "Google" },
+  { platform: "meta", name: "Meta" },
+  { platform: "linkedin", name: "LinkedIn" },
+  { platform: "snapchat", name: "Snapchat" },
+  { platform: "tiktok", name: "TikTok" },
+  { platform: "instagram", name: "Instagram" },
+  { platform: "zapier", name: "Zapier" },
+  { platform: "beehiiv", name: "Beehiiv" },
+  { platform: "kit", name: "Kit" },
 ];
 
 // Row 2 icons (can repeat or use different ones)
 const ICONS_ROW2: IconItem[] = [
-  { icon: SiGoogleanalytics, color: "#F9AB00", name: "Google Analytics" },
-  { icon: SiGoogle, color: "#4285F4", name: "Google Ads" },
-  { icon: SiMeta, color: "#0668E1", name: "Meta Ads" },
-  { icon: SiLinkedin, color: "#0A66C2", name: "LinkedIn Ads" },
-  { icon: SiTiktok, color: "#000000", name: "TikTok Ads" },
-  { icon: SiSnapchat, color: "#FFFC00", name: "Snapchat Ads" },
-  { icon: SiInstagram, color: "#E1306C", name: "Instagram Business" },
-  { image: "/kit.jpg", name: "Kit" },
-  { image: "/beehiiv.jpg", name: "Beehiiv", bgColor: "#ffffff" },
+  { platform: "ga4", name: "Google Analytics" },
+  { platform: "google_ads", name: "Google Ads" },
+  { platform: "meta_ads", name: "Meta Ads" },
+  { platform: "linkedin_ads", name: "LinkedIn Ads" },
+  { platform: "tiktok_ads", name: "TikTok Ads" },
+  { platform: "snapchat_ads", name: "Snapchat Ads" },
+  { platform: "instagram", name: "Instagram Business" },
+  { platform: "kit", name: "Kit" },
+  { platform: "beehiiv", name: "Beehiiv" },
 ];
 
 // Utility to repeat icons enough times for seamless scroll
@@ -101,27 +86,14 @@ export default function IntegrationHero() {
           {/* Row 1 */}
           <div className="flex gap-6 whitespace-nowrap animate-scroll-left">
             {repeatedIcons(ICONS_ROW1, 4).map((item, i) => {
-              const Icon = item.icon;
-              const bgColor = item.bgColor || "white";
-
               return (
                 <div
                   key={`row1-${i}`}
                   className="h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
-                  style={{ backgroundColor: bgColor }}
+                  style={{ backgroundColor: "white" }}
+                  aria-label={item.name}
                 >
-                  {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={40}
-                      height={40}
-                      className="object-contain"
-                      unoptimized
-                    />
-                  ) : Icon ? (
-                    <Icon size={32} style={{ color: item.color }} />
-                  ) : null}
+                  <PlatformIcon platform={item.platform} size="md" />
                 </div>
               );
             })}
@@ -130,27 +102,14 @@ export default function IntegrationHero() {
           {/* Row 2 */}
           <div className="flex gap-6 whitespace-nowrap mt-6 animate-scroll-right">
             {repeatedIcons(ICONS_ROW2, 4).map((item, i) => {
-              const Icon = item.icon;
-              const bgColor = item.bgColor || "white";
-
               return (
                 <div
                   key={`row2-${i}`}
                   className="h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_#000] rounded-none flex items-center justify-center overflow-hidden hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
-                  style={{ backgroundColor: bgColor }}
+                  style={{ backgroundColor: "white" }}
+                  aria-label={item.name}
                 >
-                  {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={40}
-                      height={40}
-                      className="object-contain"
-                      unoptimized
-                    />
-                  ) : Icon ? (
-                    <Icon size={32} style={{ color: item.color }} />
-                  ) : null}
+                  <PlatformIcon platform={item.platform} size="md" />
                 </div>
               );
             })}

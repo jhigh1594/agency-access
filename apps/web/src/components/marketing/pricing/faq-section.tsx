@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { ChevronDownIcon } from '@/components/ui/ui-icons';
+import { ChevronDown } from 'lucide-react';
 import { Reveal } from '../reveal';
 
 interface FAQItem {
@@ -107,7 +107,7 @@ export function FAQSection() {
                     transition={{ duration: 0.2 }}
                     className="flex-shrink-0"
                   >
-                    <ChevronDownIcon size={20} className="text-gray-600" />
+                    <ChevronDown size={20} className="text-gray-600" />
                   </m.div>
                 </button>
 

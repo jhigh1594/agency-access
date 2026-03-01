@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, TrendingUp, Clock, CheckCircle } from 'lucide-react';
-import { UsersIcon } from '@/components/ui/ui-icons';
+import { ChevronLeft, ChevronRight, TrendingUp, Clock, Users } from 'lucide-react';
 
 // Data structure for case studies
 const CASE_STUDIES = [
@@ -19,7 +18,7 @@ const CASE_STUDIES = [
     metrics: [
       { label: 'Platform Connection Time', before: '2-3 days', after: '< 5 min', icon: Clock },
       { label: 'Automation Setup Speed', before: '1 week', after: 'Same day', icon: TrendingUp },
-      { label: 'Active Client Projects', before: '12', after: '38', icon: UsersIcon },
+      { label: 'Active Client Projects', before: '12', after: '38', icon: Users },
     ],
   },
   // {
@@ -34,7 +33,7 @@ const CASE_STUDIES = [
   //   metrics: [
   //     { label: 'Time Per Onboarding', before: '2+ hours', after: '5 min', icon: Clock },
   //     { label: 'Client Satisfaction', before: '3.8/5', after: '4.9/5', icon: CheckCircle },
-  //     { label: 'Team Capacity', before: '15 clients', after: '45 clients', icon: UsersIcon },
+  //     { label: 'Team Capacity', before: '15 clients', after: '45 clients', icon: Users },
   //   ],
   // },
   // {

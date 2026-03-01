@@ -2,8 +2,7 @@
 
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { GlobeIcon, ShieldCheckIcon, ZapIcon } from '@/components/ui/ui-icons';
-import { TrendingUp, Check } from 'lucide-react';
+import { Globe, ShieldCheck, Zap, TrendingUp, Check } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Reveal } from './reveal';
 import { ScheduleDemoModal } from './schedule-demo-modal';
@@ -39,7 +38,7 @@ export function HeroSection() {
             {/* Badge - Tilted with rotation */}
             <Reveal delay={0.2}>
               <div className="inline-flex items-center gap-2 border-2 border-black bg-ink text-paper px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
-                <GlobeIcon size={14} />
+                <Globe size={14} />
                 #1 Client Access Platform
               </div>
             </Reveal>
@@ -92,7 +91,7 @@ export function HeroSection() {
                       variant="brutalist-rounded"
                       size="xl"
                       className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
-                      rightIcon={<ZapIcon size={18} />}
+                      rightIcon={<Zap size={18} />}
                       onClick={handleTrialSignup}
                     >
                       Start Free Trial
@@ -175,7 +174,7 @@ export function HeroSection() {
                 <div className="border-2 border-black bg-card rounded-none p-6 shadow-brutalist-sm">
                   <div className="flex items-center justify-center mb-6">
                     <div className="w-16 h-16 border-2 border-black bg-coral flex items-center justify-center text-white shadow-brutalist relative">
-                      <GlobeIcon size={32} />
+                      <Globe size={32} />
                       <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-acid border-2 border-black animate-pulse" />
                     </div>
                   </div>
@@ -192,7 +191,7 @@ export function HeroSection() {
                       >
                         <span className="text-sm font-bold text-ink">{p}</span>
                         <div className="w-5 h-5 rounded-[0.5rem] bg-teal/20 border-2 border-black flex items-center justify-center flex-shrink-0">
-                          <ShieldCheckIcon size={14} />
+                          <ShieldCheck size={14} />
                         </div>
                       </m.div>
                     ))}

@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import { ArrowRightIcon } from '@/components/ui/ui-icons';
+import { ArrowRight } from 'lucide-react';
 import { Reveal } from '../reveal';
 
 export function CaseStudyFeature() {
@@ -71,7 +71,7 @@ export function CaseStudyFeature() {
                     className="inline-flex items-center gap-2 font-bold uppercase tracking-wider text-xs px-6 py-3 border-2 border-black bg-transparent hover:bg-ink hover:text-white hover:shadow-brutalist transition-all duration-200 group"
                   >
                     Read Full Story
-                    <ArrowRightIcon
+                    <ArrowRight
                       size={16}
                       className="group-hover:translate-x-1 transition-transform"
                     />

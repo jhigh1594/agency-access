@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { m } from 'framer-motion';
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, CheckIcon, InfoIcon } from '@/components/ui/ui-icons';
+import { ArrowRight, Check, Info } from 'lucide-react';
 import { Reveal } from '../reveal';
 
 // Helper to set Growth tier (STARTER in backend) for trial signup
@@ -205,7 +205,7 @@ export function SavingsCalculator() {
                         className="text-gray-400 hover:text-gray-600 transition-colors"
                         aria-label="See how savings are calculated"
                       >
-                        <InfoIcon size={14} />
+                        <Info size={14} />
                       </button>
                       {showTooltip && (
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-card border-2 border-black shadow-brutalist-lg p-4 z-50">
@@ -295,7 +295,7 @@ export function SavingsCalculator() {
                     variant="brutalist-rounded"
                     size="lg"
                     className="w-full"
-                    rightIcon={<ArrowRightIcon size={18} />}
+                    rightIcon={<ArrowRight size={18} />}
                     onClick={handleTrialSignup}
                   >
                     Start Free Trial
@@ -320,7 +320,7 @@ export function SavingsCalculator() {
             className="mt-12 text-center max-w-2xl mx-auto"
           >
             <div className="inline-flex items-center gap-2 bg-paper border-2 border-black px-4 py-3 shadow-brutalist-sm">
-              <CheckIcon size={16} color="rgb(var(--coral))" />
+              <Check size={16} className="text-coral" />
               <span className="font-mono text-xs text-gray-700">
                 Conservative baseline calculation. Actual savings often 2-3× higher when accounting for full onboarding overhead.
               </span>

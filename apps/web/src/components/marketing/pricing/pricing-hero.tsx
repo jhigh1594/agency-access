@@ -2,7 +2,7 @@
 
 import { SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon } from '@/components/ui/ui-icons';
+import { ArrowRight } from 'lucide-react';
 import { m } from 'framer-motion';
 import { SocialProofSection } from '../social-proof-section';
 
@@ -71,7 +71,7 @@ export function PricingHero() {
                 variant="brutalist-rounded"
                 size="xl"
                 className="w-full sm:w-auto px-8 sm:px-12"
-                rightIcon={<ArrowRightIcon size={20} />}
+                rightIcon={<ArrowRight size={20} />}
                 onClick={handleTrialSignup}
               >
                 Start 14-Day Free Trial

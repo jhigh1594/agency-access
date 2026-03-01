@@ -272,7 +272,7 @@ export function PlanComparison() {
                 isCurrentTier
                   ? 'border-indigo-500 bg-indigo-50/50 shadow-brutalist-sm'
                   : isRecommended
-                  ? 'border-coral bg-card shadow-brutalist hover:shadow-brutalist-lg hover:-translate-x-0.5 hover:-translate-y-0.5'
+                  ? 'border-coral bg-card shadow-brutalist'
                   : isFree
                   ? '!bg-white !border-black dark:!bg-card'
                   : 'border-slate-300 bg-card hover:shadow-brutalist-sm'
@@ -372,7 +372,7 @@ export function PlanComparison() {
                     className="w-full"
                     rightIcon={<ArrowRight size={16} />}
                   >
-                    {tier === 'GROWTH' ? 'Start Free Trial' : 'Get Started'}
+                    Start Free Trial
                   </Button>
                 ) : (
                   <div className="text-center py-2 text-sm text-muted-foreground border border-border rounded-lg">
