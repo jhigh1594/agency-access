@@ -101,7 +101,7 @@ export const DesktopSidebar = ({
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "absolute -right-3 top-4 z-10 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-colors",
+          "absolute -right-2 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm transition-colors",
           "hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         )}
         aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
@@ -113,7 +113,7 @@ export const DesktopSidebar = ({
             open ? "rotate-0" : "rotate-180"
           )}
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
       </button>
       {children}
