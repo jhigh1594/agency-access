@@ -8,8 +8,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ExternalLink } from 'lucide-react';
-import { StatusBadge, PlatformIcon } from '@/components/ui';
+import { ExternalLink } from 'lucide-react';
+import { Card, EmptyState, PlatformIcon, StatusBadge } from '@/components/ui';
 import type { ClientAccessRequest } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
 import Link from 'next/link';
@@ -22,7 +22,6 @@ type StatusFilter = 'all' | 'connected' | 'pending' | 'expired' | 'revoked';
 
 export function OverviewTab({ accessRequests }: OverviewTabProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Filter access requests based on selected status
   const filteredRequests = useMemo(() => {
@@ -65,56 +64,48 @@ export function OverviewTab({ accessRequests }: OverviewTabProps) {
     <div>
       {/* Filter bar */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">Access Requests</h3>
+        <h3 className="text-lg font-semibold text-foreground font-display">Access Requests</h3>
 
-        {/* Status filter dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm"
+        {/* Status filter */}
+        <div>
+          <label htmlFor="request-status-filter" className="sr-only">
+            Filter access requests by status
+          </label>
+          <select
+            id="request-status-filter"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+            className="min-h-[44px] px-3 py-2 border border-border bg-card rounded-lg text-sm text-foreground"
           >
-            {statusFilterOptions.find((o) => o.value === statusFilter)?.label}
-            <ChevronDown className="h-4 w-4" />
-          </button>
-
-          {showFilterDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-card border border-slate-200 rounded-lg shadow-lg z-10">
-              {statusFilterOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    setStatusFilter(option.value);
-                    setShowFilterDropdown(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors ${
-                    statusFilter === option.value ? 'bg-slate-100 font-medium' : ''
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          )}
+            {statusFilterOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* Access requests list */}
       {filteredRequests.length === 0 ? (
-        <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-          <p className="text-slate-600">No access requests found</p>
-        </div>
+        <Card className="border-dashed border-border/70 bg-muted/10">
+          <EmptyState
+            title="No access requests found"
+            description="Create a new access request to invite this client to authorize platforms."
+          />
+        </Card>
       ) : (
         <div className="space-y-4">
           {filteredRequests.map((request) => (
-            <div
+            <Card
               key={request.id}
-              className="border border-slate-200 rounded-lg p-5 hover:border-slate-300 transition-colors"
+              className="p-5 border-black/10 hover:border-border transition-colors"
             >
               <div className="flex items-start justify-between">
                 {/* Left side: Name and platforms */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="text-base font-semibold text-slate-900">
+                    <h4 className="text-base font-semibold text-foreground">
                       {request.name}
                     </h4>
                     <StatusBadge
@@ -144,19 +135,19 @@ export function OverviewTab({ accessRequests }: OverviewTabProps) {
                         />
                       ))
                     ) : (
-                      <span className="text-sm text-slate-400 italic">No platforms</span>
+                      <span className="text-sm text-muted-foreground italic">No platforms</span>
                     )}
                   </div>
 
                   {/* Dates */}
-                  <div className="flex gap-6 text-sm text-slate-600">
+                  <div className="flex gap-6 text-sm text-muted-foreground">
                     <div>
-                      <span className="font-medium text-slate-500">Created:</span>{' '}
+                      <span className="font-medium text-muted">Created:</span>{' '}
                       {formatDate(request.createdAt)}
                     </div>
                     {request.authorizedAt && (
                       <div>
-                        <span className="font-medium text-slate-500">Authorized:</span>{' '}
+                        <span className="font-medium text-muted">Authorized:</span>{' '}
                         {formatDate(request.authorizedAt)}
                       </div>
                     )}
@@ -166,13 +157,13 @@ export function OverviewTab({ accessRequests }: OverviewTabProps) {
                 {/* Right side: View details link */}
                 <Link
                   href={`/access-requests/${request.id}` as any}
-                  className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 ml-4"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary/90 ml-4 min-h-[44px]"
                 >
                   View details
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

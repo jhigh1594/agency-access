@@ -52,14 +52,15 @@ describe('DeleteClientModal - Static Design Validation', () => {
       expect(componentCode).not.toMatch(/shadow-(xl|2xl)(?!-brutalist)/);
     });
 
-    it('should use coral for danger actions', () => {
+    it('should use shared Button primitives for danger actions', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
         '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 
-      expect(componentCode).toMatch(/bg-coral[^/]/);
+      expect(componentCode).toMatch(/import\s+\{\s*Button\s*\}\s+from ['"]@\/components\/ui['"]/);
+      expect(componentCode).toMatch(/<Button/g);
     });
 
     it('should use teal for success states', () => {

@@ -9,9 +9,9 @@
  */
 
 import { useState } from 'react';
-import { User, Mail, Building2, Calendar, Edit, Trash2, Plus, Link2 } from 'lucide-react';
-import { StatusBadge } from '@/components/ui';
-import type { Client, ClientLanguage } from '@agency-platform/shared';
+import { Mail, Building2, Calendar, Edit, Trash2, Link2 } from 'lucide-react';
+import { Button, Card, StatusBadge } from '@/components/ui';
+import type { ClientLanguage } from '@agency-platform/shared';
 import { EditClientModal } from './EditClientModal';
 import { DeleteClientModal } from './DeleteClientModal';
 import { CreateRequestModal } from './CreateRequestModal';
@@ -56,13 +56,13 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
 
   return (
     <>
-      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6">
-        <div className="flex items-start justify-between">
+      <Card className="p-6 border-black/10 shadow-brutalist">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           {/* Left side: Avatar and info */}
           <div className="flex items-start space-x-4 flex-1">
             {/* Avatar */}
-            <div className="h-16 w-16 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-xl font-semibold text-indigo-700">
+            <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center border border-border flex-shrink-0">
+              <span className="text-xl font-semibold font-mono text-foreground">
                 {initials}
               </span>
             </div>
@@ -70,7 +70,7 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
             {/* Client info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-semibold text-slate-900">
+                <h1 className="font-display text-2xl font-semibold text-foreground">
                   {client.name}
                 </h1>
                 <StatusBadge status={status} size="md" />
@@ -78,19 +78,19 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
 
               <div className="space-y-1">
                 {/* Company */}
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <Building2 className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span className="font-medium">{client.company}</span>
                 </div>
 
                 {/* Email */}
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span>{client.email}</span>
                 </div>
 
                 {/* Client since */}
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span>Client since {clientSince}</span>
                 </div>
@@ -99,33 +99,36 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
           </div>
 
           {/* Right side: Action buttons */}
-          <div className="flex items-center gap-2 ml-4">
-            <button
+          <div className="flex flex-wrap items-center gap-2 lg:ml-4">
+            <Button
               onClick={() => setShowCreateRequestModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
+              size="sm"
+              leftIcon={<Link2 className="h-4 w-4" />}
             >
-              <Link2 className="h-4 w-4" />
               Create Request
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => setShowEditModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+              variant="secondary"
+              size="sm"
+              leftIcon={<Edit className="h-4 w-4" />}
             >
-              <Edit className="h-4 w-4" />
               Edit
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => setShowDeleteModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+              variant="secondary"
+              size="sm"
+              leftIcon={<Trash2 className="h-4 w-4" />}
+              className="text-coral border-coral/40 hover:bg-coral/10"
             >
-              <Trash2 className="h-4 w-4" />
               Delete
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Modals */}
       {showCreateRequestModal && (

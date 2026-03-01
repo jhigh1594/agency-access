@@ -13,7 +13,8 @@ import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ClientLanguage, SUPPORTED_LANGUAGES } from '@agency-platform/shared';
+import type { ClientLanguage } from '@agency-platform/shared';
+import { Button } from '@/components/ui';
 
 interface EditClientModalProps {
   client: {
@@ -114,87 +115,89 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-card rounded-lg shadow-brutalist max-w-md w-full"
+          className="bg-card rounded-lg shadow-brutalist max-w-md w-full border border-black/10"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
-            <h2 className="text-lg font-semibold text-ink">Edit Client</h2>
-            <button
+            <h2 className="text-lg font-semibold text-ink font-display">Edit Client</h2>
+            <Button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              variant="ghost"
+              size="icon"
+              aria-label="Close modal"
             >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
+              <X className="h-5 w-5 text-muted-foreground" />
+            </Button>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Name <span className="text-coral">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="Client contact name"
               />
             </div>
 
             {/* Company */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Company <span className="text-coral">*</span>
               </label>
               <input
                 type="text"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className="w-full px-3 py-2 border border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="Company name"
               />
             </div>
 
             {/* Email (read-only) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Email
               </label>
               <input
                 type="email"
                 value={client.email}
                 disabled
-                className="w-full px-3 py-2 border border-2 border-black/10 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-muted/20 text-muted-foreground cursor-not-allowed"
                 title="Email cannot be changed"
               />
-              <p className="text-xs text-gray-600 mt-1">Email cannot be changed</p>
+              <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
             </div>
 
             {/* Website */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Website
               </label>
               <input
                 type="url"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                className="w-full px-3 py-2 border border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="https://example.com"
               />
             </div>
 
             {/* Language */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Language
               </label>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as ClientLanguage)}
-                className="w-full px-3 py-2 border border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               >
                 <option value="en">🇬🇧 English</option>
                 <option value="es">🇪🇸 Español</option>
@@ -219,28 +222,23 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-black/10">
-              <button
+              <Button
                 type="button"
                 onClick={onClose}
                 disabled={updateMutation.isPending}
-                className="px-4 py-2 border border-2 border-black/10 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                variant="secondary"
+                size="sm"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                size="sm"
+                leftIcon={!updateMutation.isPending ? undefined : <Loader2 className="h-4 w-4 animate-spin" />}
               >
-                {updateMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </button>
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
           </form>
         </m.div>

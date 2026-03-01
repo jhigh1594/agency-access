@@ -45,10 +45,10 @@ export default function ClientDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex-1 bg-background p-8">
+      <div className="flex-1 bg-paper p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-          <span className="ml-2 text-slate-600">Loading client details...</span>
+          <Loader2 className="h-6 w-6 animate-spin text-muted" />
+          <span className="ml-2 text-muted-foreground">Loading client details...</span>
         </div>
       </div>
     );
@@ -57,19 +57,19 @@ export default function ClientDetailPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex-1 bg-background p-8">
+      <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/clients"
-            className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 mb-6"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             All clients
           </Link>
           <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
-            <p className="text-red-600 mb-2">{error instanceof Error ? error.message : 'Failed to load client'}</p>
-            <Link href="/clients" className="text-indigo-600 hover:text-indigo-700">
+            <AlertCircle className="h-12 w-12 text-coral mx-auto mb-3" />
+            <p className="text-coral mb-2">{error instanceof Error ? error.message : 'Failed to load client'}</p>
+            <Link href="/clients" className="text-primary hover:text-primary/90">
               Return to clients list
             </Link>
           </div>
@@ -81,18 +81,18 @@ export default function ClientDetailPage() {
   // No data state
   if (!data?.data) {
     return (
-      <div className="flex-1 bg-background p-8">
+      <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/clients"
-            className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 mb-6"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             All clients
           </Link>
           <div className="text-center py-12">
-            <p className="text-slate-600">Client not found</p>
-            <Link href="/clients" className="text-indigo-600 hover:text-indigo-700 mt-2 inline-block">
+            <p className="text-muted-foreground">Client not found</p>
+            <Link href="/clients" className="text-primary hover:text-primary/90 mt-2 inline-block">
               Return to clients list
             </Link>
           </div>
@@ -104,12 +104,12 @@ export default function ClientDetailPage() {
   const { client, stats, accessRequests, activity } = data.data;
 
   return (
-    <div className="flex-1 bg-background p-8">
+    <div className="flex-1 bg-paper p-8">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb navigation */}
         <Link
           href="/clients"
-          className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 mb-6"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           All clients

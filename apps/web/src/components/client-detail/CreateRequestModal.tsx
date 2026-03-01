@@ -9,11 +9,11 @@
 
 import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { X, Loader2, CheckCircle2, Link2, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, CheckCircle2, Link2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type Platform } from '@agency-platform/shared';
-import { PlatformIcon } from '@/components/ui';
+import { Button, PlatformIcon } from '@/components/ui';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
 
@@ -32,9 +32,6 @@ interface SelectedPlatform {
   platformGroup: string;
   products: Array<{ product: string; accessLevel: AccessLevel }>;
 }
-
-// Simplified platform list (major platforms only for cleaner UX)
-const MAJOR_PLATFORMS = ['google', 'meta', 'linkedin'];
 
 export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequestModalProps) {
   const { orgId, getToken } = useAuth();
@@ -58,17 +55,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
     }));
   };
 
-  // Toggle all products in a group
-  const toggleGroupProducts = (groupKey: string, products: Array<{ id: string }>) => {
-    const currentSelection = selectedPlatforms[groupKey] || [];
-    const allSelected = products.length > 0 && currentSelection.length === products.length;
-
-    setSelectedPlatforms(prev => ({
-      ...prev,
-      [groupKey]: allSelected ? [] : products.map(p => p.id),
-    }));
-  };
-
   // Toggle single product
   const toggleProduct = (groupKey: string, productId: string) => {
     const currentSelection = selectedPlatforms[groupKey] || [];
@@ -85,18 +71,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   // Check if product is selected
   const isProductSelected = (groupKey: string, productId: string) => {
     return selectedPlatforms[groupKey]?.includes(productId) || false;
-  };
-
-  // Check if all products in a group are selected
-  const isGroupFullySelected = (groupKey: string, products: Array<{ id: string }>) => {
-    const selection = selectedPlatforms[groupKey] || [];
-    return products.length > 0 && selection.length === products.length;
-  };
-
-  // Check if some products in a group are selected
-  const isGroupPartiallySelected = (groupKey: string, products: Array<{ id: string }>) => {
-    const selection = selectedPlatforms[groupKey] || [];
-    return selection.length > 0 && selection.length < products.length;
   };
 
   // Get total selected product count
@@ -245,41 +219,43 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-card rounded-lg shadow-xl max-w-2xl w-full my-8"
+          className="bg-card rounded-lg shadow-brutalist max-w-2xl w-full my-8 border border-black/10"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-lg">
-                <Link2 className="h-4 w-4 text-indigo-600" />
+              <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-lg">
+                <Link2 className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Create Access Request</h2>
-                <p className="text-sm text-slate-500">for {client.name}</p>
+                <h2 className="text-lg font-semibold text-foreground font-display">Create Access Request</h2>
+                <p className="text-sm text-muted-foreground">for {client.name}</p>
               </div>
             </div>
-            <button
+            <Button
               onClick={onClose}
-              className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              variant="ghost"
+              size="icon"
+              aria-label="Close modal"
             >
-              <X className="h-5 w-5 text-slate-500" />
-            </button>
+              <X className="h-5 w-5 text-muted-foreground" />
+            </Button>
           </div>
 
           {/* Success state */}
           {success && createdRequest ? (
             <div className="p-6">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-teal/10 rounded-full mb-4">
+                  <CheckCircle2 className="h-8 w-8 text-teal" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">Access Request Created!</h3>
-                <p className="text-slate-600">Send this link to {client.name} to request platform access</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2 font-display">Access Request Created!</h3>
+                <p className="text-muted-foreground">Send this link to {client.name} to request platform access</p>
               </div>
 
               {/* Invite link */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+              <div className="bg-muted/10 border border-border rounded-lg p-4 mb-4">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Client Authorization Link
                 </label>
                 <div className="flex items-center gap-2">
@@ -287,15 +263,16 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                     type="text"
                     readOnly
                     value={inviteLink || ''}
-                    className="flex-1 px-3 py-2 bg-card border border-slate-300 rounded-lg text-sm text-slate-700 font-mono"
+                    className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground font-mono"
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={copyLinkToClipboard}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
+                    size="sm"
+                    className="whitespace-nowrap"
                   >
                     Copy Link
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -304,27 +281,27 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
               {/* Form */}
               <form onSubmit={handleSubmitWithQuotaCheck} className="max-h-[60vh] overflow-y-auto">
                 {/* Client info (read-only) */}
-                <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <div className="px-6 py-4 bg-muted/10 border-b border-border">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-slate-500">Name:</span>
-                      <span className="ml-2 font-medium text-slate-900">{client.name}</span>
+                      <span className="text-muted-foreground">Name:</span>
+                      <span className="ml-2 font-medium text-foreground">{client.name}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Email:</span>
-                      <span className="ml-2 font-medium text-slate-900">{client.email}</span>
+                      <span className="text-muted-foreground">Email:</span>
+                      <span className="ml-2 font-medium text-foreground">{client.email}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Company:</span>
-                      <span className="ml-2 font-medium text-slate-900">{client.company}</span>
+                      <span className="text-muted-foreground">Company:</span>
+                      <span className="ml-2 font-medium text-foreground">{client.company}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Step 1: Platform Selection */}
-                <div className="px-6 py-4 border-b border-slate-200">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-4">
-                    1. Select Platforms <span className="text-red-500">*</span>
+                <div className="px-6 py-4 border-b border-border">
+                  <h3 className="text-sm font-semibold text-foreground mb-4">
+                    1. Select Platforms <span className="text-coral">*</span>
                   </h3>
 
                   <div className="space-y-3">
@@ -333,42 +310,42 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                       const products = group.products;
 
                       return (
-                        <div key={groupKey} className="border border-slate-200 rounded-lg overflow-hidden">
+                        <div key={groupKey} className="border border-border rounded-lg overflow-hidden">
                           {/* Group header */}
                           <button
                             type="button"
                             onClick={() => toggleGroup(groupKey)}
-                            className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-muted/10 transition-colors min-h-[44px]"
                           >
                             <div className="flex items-center gap-3">
                               <PlatformIcon platform={groupKey as Platform} size="sm" />
-                              <span className="font-medium text-slate-900">{group.name}</span>
-                              <span className="text-xs text-slate-500">({products.length} products)</span>
+                              <span className="font-medium text-foreground">{group.name}</span>
+                              <span className="text-xs text-muted-foreground">({products.length} products)</span>
                             </div>
                             {isExpanded ? (
-                              <ChevronUp className="h-4 w-4 text-slate-400" />
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
                             ) : (
-                              <ChevronDown className="h-4 w-4 text-slate-400" />
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
                             )}
                           </button>
 
                           {/* Products (expanded) */}
                           {isExpanded && (
-                            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 space-y-2">
+                            <div className="px-4 py-3 bg-muted/10 border-t border-border space-y-2">
                               {products.map((product) => (
                                 <label
                                   key={product.id}
-                                  className="flex items-center gap-3 cursor-pointer hover:bg-card rounded px-2 py-1 transition-colors"
+                                  className="flex items-center gap-3 cursor-pointer hover:bg-card rounded px-2 py-1 transition-colors min-h-[44px]"
                                 >
                                   <input
                                     type="checkbox"
                                     checked={isProductSelected(groupKey, product.id)}
                                     onChange={() => toggleProduct(groupKey, product.id)}
-                                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                    className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
                                   />
                                   <PlatformIcon platform={product.id as Platform} size="sm" />
-                                  <span className="text-sm text-slate-700">{product.name}</span>
-                                  <span className="text-xs text-slate-500">({products.length} products)</span>
+                                  <span className="text-sm text-foreground">{product.name}</span>
+                                  <span className="text-xs text-muted-foreground">({products.length} products)</span>
                                 </label>
                               ))}
                             </div>
@@ -380,16 +357,16 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
                   {/* Selected count */}
                   {totalSelected > 0 && (
-                    <p className="mt-3 text-sm text-slate-600">
+                    <p className="mt-3 text-sm text-muted-foreground">
                       {totalSelected} platform{totalSelected !== 1 ? 's' : ''} selected
                     </p>
                   )}
                 </div>
 
                 {/* Step 2: Access Level */}
-                <div className="px-6 py-4 border-b border-slate-200">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-4">
-                    2. Select Access Level <span className="text-red-500">*</span>
+                <div className="px-6 py-4 border-b border-border">
+                  <h3 className="text-sm font-semibold text-foreground mb-4">
+                    2. Select Access Level <span className="text-coral">*</span>
                   </h3>
 
                   <div className="space-y-3">
@@ -400,8 +377,8 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                           key={level}
                           className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
                             globalAccessLevel === level
-                              ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500'
-                              : 'border-slate-200 hover:border-slate-300'
+                              ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                              : 'border-border hover:border-foreground/20'
                           }`}
                         >
                           <input
@@ -410,11 +387,11 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                             value={level}
                             checked={globalAccessLevel === level}
                             onChange={(e) => setGlobalAccessLevel(e.target.value as AccessLevel)}
-                            className="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                            className="mt-0.5 w-4 h-4 text-primary border-border focus:ring-ring"
                           />
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900">{info.title}</div>
-                            <div className="text-sm text-slate-600 mt-1">{info.description}</div>
+                            <div className="font-medium text-foreground">{info.title}</div>
+                            <div className="text-sm text-muted-foreground mt-1">{info.description}</div>
                           </div>
                         </label>
                       );
@@ -424,38 +401,32 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
                 {/* Error message */}
                 {errorMessage && (
-                  <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-600">{errorMessage}</p>
+                  <div className="mx-6 mb-4 p-3 bg-coral/10 border border-coral/40 rounded-lg">
+                    <p className="text-sm text-coral">{errorMessage}</p>
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50">
-                  <button
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-border bg-muted/10">
+                  <Button
                     type="button"
                     onClick={onClose}
                     disabled={createMutation.isPending}
-                    className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                    variant="secondary"
+                    size="sm"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={createMutation.isPending || totalSelected === 0}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    size="sm"
+                    isLoading={createMutation.isPending}
+                    leftIcon={!createMutation.isPending ? <Link2 className="h-4 w-4" /> : undefined}
+                    className="disabled:cursor-not-allowed"
                   >
-                    {createMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <Link2 className="h-4 w-4" />
-                        Create & Send Link
-                      </>
-                    )}
-                  </button>
+                    {createMutation.isPending ? 'Creating...' : 'Create & Send Link'}
+                  </Button>
                 </div>
               </form>
             </>

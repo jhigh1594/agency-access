@@ -11,6 +11,7 @@
  */
 
 import { FileText, Link, Clock, AlertCircle } from 'lucide-react';
+import { Card } from '@/components/ui';
 import type { ClientStats } from '@agency-platform/shared';
 
 interface ClientStatsProps {
@@ -18,59 +19,53 @@ interface ClientStatsProps {
 }
 
 export function ClientStats({ stats }: ClientStatsProps) {
+  const statCards = [
+    {
+      label: 'Total Requests',
+      value: stats.totalRequests,
+      icon: <FileText className="h-5 w-5 text-primary" />,
+      iconContainerClass: 'bg-primary/10',
+    },
+    {
+      label: 'Active Connections',
+      value: stats.activeConnections,
+      icon: <Link className="h-5 w-5 text-teal" />,
+      iconContainerClass: 'bg-teal/10',
+    },
+    {
+      label: 'Pending',
+      value: stats.pendingConnections,
+      icon: <Clock className="h-5 w-5 text-warning" />,
+      iconContainerClass: 'bg-warning/10',
+    },
+    {
+      label: 'Expired',
+      value: stats.expiredConnections,
+      icon: <AlertCircle className="h-5 w-5 text-coral" />,
+      iconContainerClass: 'bg-coral/10',
+    },
+  ] as const;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Total Requests */}
-      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
-            Total Requests
-          </span>
-          <div className="p-2.5 rounded-lg bg-indigo-50">
-            <FileText className="h-5 w-5 text-indigo-600" />
+      {statCards.map((card) => (
+        <Card
+          key={card.label}
+          className="p-6 border-black/10 shadow-sm hover:shadow-brutalist transition-all"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {card.label}
+            </span>
+            <div className={`p-2.5 rounded-lg ${card.iconContainerClass}`}>
+              {card.icon}
+            </div>
           </div>
-        </div>
-        <p className="text-3xl font-semibold text-slate-900">{stats.totalRequests}</p>
-      </div>
-
-      {/* Active Connections */}
-      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
-            Active Connections
-          </span>
-          <div className="p-2.5 rounded-lg bg-green-50">
-            <Link className="h-5 w-5 text-green-600" />
-          </div>
-        </div>
-        <p className="text-3xl font-semibold text-slate-900">{stats.activeConnections}</p>
-      </div>
-
-      {/* Pending */}
-      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
-            Pending
-          </span>
-          <div className="p-2.5 rounded-lg bg-yellow-50">
-            <Clock className="h-5 w-5 text-yellow-600" />
-          </div>
-        </div>
-        <p className="text-3xl font-semibold text-slate-900">{stats.pendingConnections}</p>
-      </div>
-
-      {/* Expired */}
-      <div className="bg-card rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
-            Expired
-          </span>
-          <div className="p-2.5 rounded-lg bg-red-50">
-            <AlertCircle className="h-5 w-5 text-red-600" />
-          </div>
-        </div>
-        <p className="text-3xl font-semibold text-slate-900">{stats.expiredConnections}</p>
-      </div>
+          <p className="text-3xl font-semibold font-mono tabular-nums text-foreground">
+            {card.value}
+          </p>
+        </Card>
+      ))}
     </div>
   );
 }

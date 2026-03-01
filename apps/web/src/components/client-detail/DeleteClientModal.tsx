@@ -13,6 +13,7 @@ import { X, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui';
 
 interface DeleteClientModalProps {
   client: {
@@ -99,17 +100,19 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-card rounded-lg shadow-brutalist max-w-md w-full"
+          className="bg-card rounded-lg shadow-brutalist max-w-md w-full border border-black/10"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
-            <h2 className="text-lg font-semibold text-ink">Delete Client</h2>
-            <button
+            <h2 className="text-lg font-semibold text-ink font-display">Delete Client</h2>
+            <Button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              variant="ghost"
+              size="icon"
+              aria-label="Close modal"
             >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
+              <X className="h-5 w-5 text-muted-foreground" />
+            </Button>
           </div>
 
           {/* Content */}
@@ -123,7 +126,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
                 <h3 className="text-lg font-semibold text-ink">
                   Delete {client.name}?
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   from {client.company}
                 </p>
               </div>
@@ -131,7 +134,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
 
             {/* Warning message */}
             <div className="bg-coral/10 border border-coral rounded-lg p-4 mb-6">
-              <p className="text-sm text-coral-90">
+              <p className="text-sm text-coral">
                 <strong>Warning:</strong> This action cannot be undone. All access requests and
                 connections associated with this client will be permanently deleted.
               </p>
@@ -141,17 +144,17 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
             {!success && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Type the client email to confirm
                   </label>
                   <input
                     type="text"
                     value={confirmation}
                     onChange={(e) => setConfirmation(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                     placeholder={client.email}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Enter <strong>{client.email}</strong> to confirm deletion
                   </p>
                 </div>
@@ -159,34 +162,29 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
                 {/* Error message */}
                 {errorMessage && (
                   <div className="p-3 bg-coral/10 border border-coral rounded-lg">
-                    <p className="text-sm text-coral-90">{errorMessage}</p>
+                    <p className="text-sm text-coral">{errorMessage}</p>
                   </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-black/10">
-                  <button
+                  <Button
                     type="button"
                     onClick={onClose}
                     disabled={deleteMutation.isPending}
-                    className="px-4 py-2 border-2 border-black text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    variant="secondary"
+                    size="sm"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={!canDelete || deleteMutation.isPending}
-                    className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    size="sm"
+                    leftIcon={!deleteMutation.isPending ? undefined : <Loader2 className="h-4 w-4 animate-spin" />}
                   >
-                    {deleteMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      'Delete Client'
-                    )}
-                  </button>
+                    {deleteMutation.isPending ? 'Deleting...' : 'Delete Client'}
+                  </Button>
                 </div>
               </form>
             )}
@@ -198,7 +196,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
                   <CheckCircle2 className="h-6 w-6 text-teal" />
                   <p className="text-lg font-semibold text-ink">Client Deleted</p>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Redirecting to clients list...
                 </p>
               </div>
