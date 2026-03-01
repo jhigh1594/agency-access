@@ -207,7 +207,7 @@ export default function AuthenticatedLayout({
               <span
                 aria-hidden={!open}
                 className={cn(
-                  'inline-block origin-left overflow-hidden whitespace-nowrap text-xl font-semibold text-paper transition-all duration-200 motion-reduce:transition-none',
+                  'inline-block origin-left overflow-hidden whitespace-nowrap text-xl font-semibold text-foreground transition-all duration-200 motion-reduce:transition-none',
                   open ? 'scale-x-100 opacity-100' : 'pointer-events-none scale-x-0 opacity-0'
                 )}
               >
@@ -224,11 +224,11 @@ export default function AuthenticatedLayout({
           </div>
 
           {/* User Profile at Bottom */}
-          <div className="border-t border-paper/20 pt-4">
+          <div className="border-t border-border pt-4">
             <div className="flex items-center gap-2">
               {isDevelopmentBypass ? (
                 <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-warning text-paper text-xs font-bold" aria-hidden>
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-warning text-white text-xs font-bold" aria-hidden>
                     D
                   </div>
                   <div className="flex flex-col min-w-0">
@@ -251,7 +251,7 @@ export default function AuthenticatedLayout({
                   <span
                     aria-hidden={!open}
                     className={cn(
-                      'inline-block origin-left text-sm text-paper transition-all duration-200 motion-reduce:transition-none',
+                      'inline-block origin-left text-sm text-foreground transition-all duration-200 motion-reduce:transition-none',
                       open ? 'scale-x-100 opacity-100' : 'pointer-events-none scale-x-0 opacity-0'
                     )}
                   >

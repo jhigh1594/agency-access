@@ -90,7 +90,7 @@ export const DesktopSidebar = ({
   return (
     <div
       className={cn(
-        "relative hidden h-full flex-shrink-0 border-r border-paper/20 bg-ink py-4 text-paper md:flex md:flex-col",
+        "relative hidden h-full flex-shrink-0 border-r border-border bg-card py-4 text-foreground md:flex md:flex-col",
         open ? "w-[250px] px-4" : "w-[72px] px-2",
         className
       )}
@@ -101,8 +101,8 @@ export const DesktopSidebar = ({
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "absolute -right-3 top-4 z-10 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-paper/30 bg-ink text-paper shadow-sm transition-colors",
-          "hover:bg-paper/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+          "absolute -right-3 top-4 z-10 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-colors",
+          "hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         )}
         aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
         aria-expanded={open}
@@ -134,14 +134,14 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "flex min-h-[56px] w-full flex-row items-center justify-between border-b border-paper/20 bg-ink px-4 py-2 text-paper md:hidden"
+          "flex min-h-[56px] w-full flex-row items-center justify-between border-b border-border bg-card px-4 py-2 text-foreground md:hidden"
         )}
         {...props}
       >
         <div className="z-20 flex w-full justify-end">
           <button
             type="button"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md transition-colors hover:bg-paper/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md transition-colors hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setOpen(!open)}
             aria-label={open ? "Close navigation menu" : "Open navigation menu"}
             aria-controls={mobileMenuPanelId}
@@ -165,13 +165,13 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed inset-0 z-[100] flex h-full w-full flex-col justify-between bg-ink p-6 text-paper",
+                "fixed inset-0 z-[100] flex h-full w-full flex-col justify-between bg-card p-6 text-foreground",
                 className
               )}
             >
               <button
                 type="button"
-                className="absolute right-6 top-6 z-50 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md transition-colors hover:bg-paper/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+                className="absolute right-6 top-6 z-50 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md transition-colors hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 onClick={() => setOpen(!open)}
                 aria-label="Close navigation menu"
               >
@@ -209,8 +209,8 @@ export const SidebarLink = ({
         aria-current={isActive ? "page" : undefined}
         className={cn(
           "group/sidebar flex w-full items-center rounded-lg transition-colors",
-          "hover:bg-paper/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ink",
-          isActive && "bg-paper/15",
+          "hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          isActive && "bg-muted/20",
           open ? "justify-start pl-3 py-2" : "justify-center px-4 py-3",
           className
         )}
@@ -220,7 +220,7 @@ export const SidebarLink = ({
           className={cn(
             "flex h-6 w-6 flex-shrink-0 items-center justify-center transition-colors",
             open && "mr-2",
-            isActive ? "text-paper" : "text-paper/70 group-hover/sidebar:text-paper"
+            isActive ? "text-foreground" : "text-muted-foreground group-hover/sidebar:text-foreground"
           )}
         >
           {link.icon}
@@ -234,8 +234,8 @@ export const SidebarLink = ({
               "inline-block origin-left whitespace-nowrap !m-0 !p-0 font-sans text-base transition-all duration-200 motion-reduce:transition-none",
               open ? "translate-x-0 scale-x-100 opacity-100" : "-translate-x-2 scale-x-0 opacity-0",
               isActive
-                ? "font-medium text-paper"
-                : "text-paper/70 group-hover/sidebar:translate-x-1 group-hover/sidebar:text-paper"
+                ? "font-medium text-foreground"
+                : "text-muted-foreground group-hover/sidebar:translate-x-1 group-hover/sidebar:text-foreground"
             )}
           >
             {link.label}
