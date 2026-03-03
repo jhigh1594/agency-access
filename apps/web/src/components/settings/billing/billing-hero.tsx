@@ -48,7 +48,11 @@ export function BillingHero() {
         cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
       });
 
-      window.location.href = result.checkoutUrl;
+      if (result?.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+      } else {
+        setErrorMessage('Checkout session did not return a valid URL. Please try again.');
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to create checkout session');
     }

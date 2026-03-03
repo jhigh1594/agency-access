@@ -294,12 +294,20 @@ export function useCreateCheckout() {
         }),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const message =
+          (result?.error?.message as string) || 'Failed to create checkout session';
+        throw new Error(message);
       }
 
-      const result = await response.json();
-      return result.data as { checkoutUrl: string };
+      const checkoutUrl = result?.data?.checkoutUrl;
+      if (!checkoutUrl || typeof checkoutUrl !== 'string') {
+        throw new Error('Checkout session did not return a valid URL. Please try again.');
+      }
+
+      return { checkoutUrl };
     },
   });
 }

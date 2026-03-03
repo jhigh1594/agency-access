@@ -45,7 +45,7 @@ class CreemClient {
       const response = await fetch(url, {
         ...options,
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          'x-api-key': this.config.apiKey,
           'Content-Type': 'application/json',
           ...options.headers,
         },
@@ -125,18 +125,29 @@ class CreemClient {
 
   /**
    * Create a checkout session for one-time payment or subscription
+   * Creem API: POST /v1/checkouts
    */
   async createCheckoutSession(params: {
     customer?: string;
     customerEmail?: string;
     productId: string;
     successUrl: string;
-    cancelUrl: string;
+    cancelUrl?: string;
     metadata?: Record<string, any>;
   }): Promise<CreemResponse<any>> {
-    return this.request('/checkout/sessions', {
+    const body: Record<string, unknown> = {
+      product_id: params.productId,
+      success_url: params.successUrl,
+      ...(params.metadata && { metadata: params.metadata }),
+    };
+    if (params.customer) {
+      body.customer = { id: params.customer };
+    } else if (params.customerEmail) {
+      body.customer = { email: params.customerEmail };
+    }
+    return this.request('/v1/checkouts', {
       method: 'POST',
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
     });
   }
 

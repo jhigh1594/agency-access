@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check, X } from 'lucide-react';
 import { useSubscription, useCreateCheckout } from '@/lib/query/billing';
 import { trackBillingEvent } from '@/lib/analytics/billing';
 import {
@@ -81,6 +81,7 @@ export function PlanComparison() {
 
   const currentTier = getPricingDisplayTierFromSubscriptionTier(subscription?.tier);
   const lifecycle = resolveBillingLifecycle(subscription);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isYearly, setIsYearly] = useState(() => {
     const fallback: BillingInterval = lifecycle === 'PAID' ? 'monthly' : 'yearly';
     return readBillingIntervalPreference(fallback) === 'yearly';
@@ -108,6 +109,8 @@ export function PlanComparison() {
     if (!subscriptionTier) return; // FREE tier has no checkout
     const billingInterval: BillingInterval = isYearly ? 'yearly' : 'monthly';
 
+    setErrorMessage(null);
+
     trackBillingEvent('billing_primary_cta_clicked', {
       lifecycle,
       currentTier: subscription?.tier ?? null,
@@ -123,13 +126,21 @@ export function PlanComparison() {
       surface: 'plan_comparison',
     });
 
-    const result = await createCheckout.mutateAsync({
-      tier: subscriptionTier,
-      billingInterval,
-      successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
-      cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
-    });
-    window.location.href = result.checkoutUrl;
+    try {
+      const result = await createCheckout.mutateAsync({
+        tier: subscriptionTier,
+        billingInterval,
+        successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
+        cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
+      });
+      if (result?.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+      } else {
+        setErrorMessage('Checkout session did not return a valid URL. Please try again.');
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to start checkout. Please try again.');
+    }
   };
 
   const tierIndex = PRICING_DISPLAY_TIER_ORDER.indexOf(currentTier);
@@ -150,6 +161,13 @@ export function PlanComparison() {
           Scale your client onboarding without the complexity
         </p>
       </div>
+
+      {errorMessage && (
+        <div className="mb-6 p-3 bg-coral/10 border border-coral/20 rounded-lg flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-coral">{errorMessage}</p>
+        </div>
+      )}
 
       {/* Monthly/Yearly Toggle */}
       <div className="flex flex-col items-center gap-3 mb-8">

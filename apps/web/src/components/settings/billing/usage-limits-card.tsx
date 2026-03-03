@@ -6,7 +6,8 @@
  * Shows usage progress bars with upgrade nudges at 80%.
  */
 
-import { TrendingUp, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, TrendingUp, Loader2 } from 'lucide-react';
 import { getNextTierForCheckout } from '@agency-platform/shared';
 import { useTierDetails, useCreateCheckout } from '@/lib/query/billing';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { readBillingIntervalPreference } from './billing-interval';
 export function UsageLimitsCard() {
   const { data: tierDetails, isLoading } = useTierDetails();
   const createCheckout = useCreateCheckout();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -50,6 +52,8 @@ export function UsageLimitsCard() {
 
     if (!nextTier) return;
 
+    setErrorMessage(null);
+
     trackBillingEvent('billing_primary_cta_clicked', {
       lifecycle,
       currentTier: currentTier ?? null,
@@ -65,13 +69,21 @@ export function UsageLimitsCard() {
       surface: 'usage_limits_card',
     });
 
-    const result = await createCheckout.mutateAsync({
-      tier: nextTier,
-      billingInterval: preferredInterval,
-      successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
-      cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
-    });
-    window.location.href = result.checkoutUrl;
+    try {
+      const result = await createCheckout.mutateAsync({
+        tier: nextTier,
+        billingInterval: preferredInterval,
+        successUrl: `${window.location.origin}/settings?tab=billing&checkout=success`,
+        cancelUrl: `${window.location.origin}/settings?tab=billing&checkout=cancel`,
+      });
+      if (result?.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+      } else {
+        setErrorMessage('Checkout session did not return a valid URL. Please try again.');
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to start checkout. Please try again.');
+    }
   };
 
   const handleContactSales = () => {
@@ -166,6 +178,13 @@ export function UsageLimitsCard() {
           {renderProgressBar(limits.clients.used, limits.clients.limit, 'clients')}
           {renderProgressBar(limits.members.used, limits.members.limit, 'team members')}
           {renderProgressBar(limits.templates.used, limits.templates.limit, 'templates')}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="mt-4 p-3 bg-coral/10 border border-coral/20 rounded-lg flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-coral">{errorMessage}</p>
         </div>
       )}
 

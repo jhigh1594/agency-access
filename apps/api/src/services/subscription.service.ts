@@ -125,37 +125,10 @@ class SubscriptionService {
       where: { agencyId },
     });
 
-    let creemCustomerId = existingSubscription?.creemCustomerId ?? undefined;
-
-    // Create new Creem customer if needed
-    if (!creemCustomerId) {
-      const customerResult = await creem.createCustomer({
-        email: agency.email,
-        name: agency.name,
-        metadata: { agencyId },
-      });
-
-      if (customerResult.error || !customerResult.data) {
-        return {
-          data: null,
-          error: {
-            code: customerResult.error?.code || 'CREEM_ERROR',
-            message: customerResult.error?.message || 'Failed to create customer',
-          },
-        };
-      }
-
-      creemCustomerId = customerResult.data.id;
-    }
-
-    if (!creemCustomerId) {
-      return {
-        data: null,
-        error: { code: 'CREEM_ERROR', message: 'Missing customer ID' },
-      };
-    }
+    const creemCustomerId = existingSubscription?.creemCustomerId ?? undefined;
 
     // Create checkout session
+    // Pass customer id if we have one; otherwise pass email so Creem creates customer on checkout
     let productId: string;
     try {
       productId = getProductId(tier, billingInterval ?? 'monthly');
@@ -166,8 +139,7 @@ class SubscriptionService {
       };
     }
     const checkoutResult = await creem.createCheckoutSession({
-      customer: creemCustomerId,
-      customerEmail: agency.email,
+      ...(creemCustomerId ? { customer: creemCustomerId } : { customerEmail: agency.email }),
       productId,
       successUrl,
       cancelUrl,
@@ -180,6 +152,18 @@ class SubscriptionService {
         error: {
           code: checkoutResult.error?.code || 'CHECKOUT_ERROR',
           message: checkoutResult.error?.message || 'Failed to create checkout session',
+        },
+      };
+    }
+
+    const checkoutUrl =
+      (checkoutResult.data as any)?.checkout_url ?? (checkoutResult.data as any)?.url;
+    if (!checkoutUrl || typeof checkoutUrl !== 'string') {
+      return {
+        data: null,
+        error: {
+          code: 'CHECKOUT_ERROR',
+          message: 'Creem did not return a checkout URL',
         },
       };
     }
@@ -201,7 +185,7 @@ class SubscriptionService {
     });
 
     return {
-      data: { checkoutUrl: checkoutResult.data.url },
+      data: { checkoutUrl },
       error: null,
     };
   }

@@ -68,13 +68,10 @@ describe('SubscriptionService', () => {
 
   describe('createCheckoutSession', () => {
     it('should create checkout session for new subscription', async () => {
-      // Mock agency without Creem customer
+      // Mock agency without Creem customer - pass email to checkout, Creem creates customer
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
-      vi.mocked(creem.createCustomer).mockResolvedValue({
-        data: { id: 'cus_test123' },
-      });
       vi.mocked(creem.createCheckoutSession).mockResolvedValue({
-        data: { url: 'https://checkout.creem.io/test' },
+        data: { checkout_url: 'https://checkout.creem.io/test' },
       });
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         return callback(prisma);
@@ -97,9 +94,9 @@ describe('SubscriptionService', () => {
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
         id: mockSubscriptionId,
         creemCustomerId: 'cus_existing123',
-      });
+      } as any);
       vi.mocked(creem.createCheckoutSession).mockResolvedValue({
-        data: { url: 'https://checkout.creem.io/test' },
+        data: { checkout_url: 'https://checkout.creem.io/test' },
       });
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         return callback(prisma);
@@ -141,9 +138,9 @@ describe('SubscriptionService', () => {
         email: 'test@example.com',
         name: 'Test Agency',
       });
-      vi.mocked(creem.createCustomer).mockResolvedValue({
+      vi.mocked(creem.createCheckoutSession).mockResolvedValue({
         data: null,
-        error: { code: 'CREEM_ERROR', message: 'API error' },
+        error: { code: 'CHECKOUT_ERROR', message: 'Creem checkout failed' },
       });
 
       const result = await subscriptionService.createCheckoutSession({
@@ -155,8 +152,8 @@ describe('SubscriptionService', () => {
 
       expect(result.data).toBeNull();
       expect(result.error).toEqual({
-        code: 'CREEM_ERROR',
-        message: 'API error',
+        code: 'CHECKOUT_ERROR',
+        message: 'Creem checkout failed',
       });
     });
 
