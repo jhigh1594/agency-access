@@ -249,6 +249,30 @@ describe('SubscriptionService', () => {
       expect(result.error).toBeNull();
       expect(result.data).toBeNull();
     });
+
+    it('should return null when subscription status is incomplete (user abandoned checkout)', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+        id: mockSubscriptionId,
+        agencyId: mockAgencyId,
+        tier: 'STARTER',
+        status: 'incomplete',
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        creemCustomerId: null,
+        creemSubscriptionId: null,
+        cancelAtPeriodEnd: false,
+        trialStart: null,
+        trialEnd: null,
+        creemData: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await subscriptionService.getSubscription(mockAgencyId);
+
+      expect(result.error).toBeNull();
+      expect(result.data).toBeNull();
+    });
   });
 
   describe('createPortalSession', () => {

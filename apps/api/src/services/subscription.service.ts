@@ -214,6 +214,13 @@ class SubscriptionService {
       return { data: null, error: null };
     }
 
+    // Treat incomplete checkout as no subscription - user hasn't completed payment.
+    // Clerk/Agency.subscriptionTier is only set when Creem webhook confirms completion;
+    // until then, show FREE to avoid falsely displaying the upgrade target as current plan.
+    if (subscription.status === 'incomplete') {
+      return { data: null, error: null };
+    }
+
     return {
       data: {
         id: subscription.id,
