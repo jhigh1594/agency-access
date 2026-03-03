@@ -1117,6 +1117,27 @@ export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
   },
 };
 
+/** Tier order for upgrade sequencing (lowest to highest). */
+const SUBSCRIPTION_TIER_ORDER: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+
+/** Tiers that have Creem checkout configured (STARTER, AGENCY). PRO has prod_tbd; ENTERPRISE has no product. */
+const CREEM_CHECKOUT_TIERS: SubscriptionTier[] = ['STARTER', 'AGENCY'];
+
+/**
+ * Returns the next tier up from the current tier that has Creem checkout.
+ * Use for Upgrade buttons that should redirect to Creem checkout.
+ * Returns null when no next tier exists or next tier lacks Creem checkout (→ use Contact Sales).
+ */
+export function getNextTierForCheckout(
+  currentTier: SubscriptionTier | null | undefined
+): SubscriptionTier | null {
+  if (!currentTier) return 'STARTER';
+  const idx = SUBSCRIPTION_TIER_ORDER.indexOf(currentTier);
+  if (idx < 0 || idx >= SUBSCRIPTION_TIER_ORDER.length - 1) return null;
+  const next = SUBSCRIPTION_TIER_ORDER[idx + 1];
+  return CREEM_CHECKOUT_TIERS.includes(next) ? next : null;
+}
+
 // ============================================================
 // USAGE QUOTA TYPES
 // ============================================================

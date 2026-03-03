@@ -7,6 +7,7 @@
  */
 
 import { TrendingUp, Loader2 } from 'lucide-react';
+import { getNextTierForCheckout } from '@agency-platform/shared';
 import { useTierDetails, useCreateCheckout } from '@/lib/query/billing';
 import { Button } from '@/components/ui/button';
 import { trackBillingEvent } from '@/lib/analytics/billing';
@@ -45,12 +46,7 @@ export function UsageLimitsCard() {
   const preferredInterval = readBillingIntervalPreference(lifecycle === 'PAID' ? 'monthly' : 'yearly');
 
   const handleUpgrade = async () => {
-    const nextTier =
-      !currentTier
-        ? 'STARTER'
-        : currentTier === 'STARTER'
-          ? 'AGENCY'
-          : null;
+    const nextTier = getNextTierForCheckout(currentTier ?? undefined);
 
     if (!nextTier) return;
 

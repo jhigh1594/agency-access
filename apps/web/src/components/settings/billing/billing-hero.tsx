@@ -5,6 +5,7 @@ import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { useCreateCheckout, useOpenPortal, useSubscription } from '@/lib/query/billing';
 import { Button } from '@/components/ui/button';
 import { trackBillingEvent } from '@/lib/analytics/billing';
+import { getNextTierForCheckout } from '@agency-platform/shared';
 import { persistBillingIntervalPreference, readBillingIntervalPreference } from './billing-interval';
 import { resolveBillingLifecycle } from './billing-lifecycle';
 
@@ -128,9 +129,23 @@ export function BillingHero() {
             }
           : {
               title: 'Scale When You’re Ready',
-              description: 'Review upgrade options and increase limits as your agency grows.',
-              buttonLabel: 'Review Upgrade Options',
-              onClick: focusManageSubscription,
+              description: (() => {
+              const nextTier = getNextTierForCheckout(subscription?.tier);
+              const hasCheckout = !!nextTier;
+              return hasCheckout
+                ? 'Upgrade to the next tier for more capacity and premium features.'
+                : 'Review upgrade options and increase limits as your agency grows.';
+            })(),
+              buttonLabel: (() => {
+              const nextTier = getNextTierForCheckout(subscription?.tier);
+              return nextTier ? 'Upgrade' : 'Review Upgrade Options';
+            })(),
+              onClick: (() => {
+              const nextTier = getNextTierForCheckout(subscription?.tier);
+              return nextTier
+                ? () => startCheckout(nextTier as 'STARTER' | 'AGENCY', 'billing_hero_paid')
+                : focusManageSubscription;
+            })(),
             };
 
   return (
