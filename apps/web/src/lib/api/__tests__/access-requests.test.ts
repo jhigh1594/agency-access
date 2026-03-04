@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAccessRequest, getAccessRequest } from '../access-requests';
+import { createAccessRequest, getAccessRequest, updateAccessRequest } from '../access-requests';
 
 function getAuthorizationHeader(headers: HeadersInit | undefined): string | undefined {
   if (!headers) return undefined;
@@ -58,6 +58,29 @@ describe('access-requests api client', () => {
     await getAccessRequest('request-123', async () => 'token-123');
 
     const [, requestOptions] = fetchMock.mock.calls[0];
+    expect(getAuthorizationHeader(requestOptions.headers)).toBe('Bearer token-123');
+  });
+
+  it('includes Authorization header when updating an access request', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: { id: 'request-123', authorizationLinkChanged: false },
+        error: null,
+      }),
+    });
+
+    await updateAccessRequest(
+      'request-123',
+      {
+        authModel: 'delegated_access',
+        platforms: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin', accounts: [] }] }],
+      },
+      async () => 'token-123'
+    );
+
+    const [, requestOptions] = fetchMock.mock.calls[0];
+    expect(requestOptions.method).toBe('PATCH');
     expect(getAuthorizationHeader(requestOptions.headers)).toBe('Bearer token-123');
   });
 });

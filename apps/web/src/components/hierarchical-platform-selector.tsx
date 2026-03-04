@@ -29,6 +29,7 @@ interface HierarchicalPlatformSelectorProps {
   onSelectionChange: (platforms: Record<string, string[]>) => void;
   connectedPlatforms?: ConnectedPlatform[];
   agencyId?: string; // For manual invitation modal
+  showAllPlatforms?: boolean;
 }
 
 // Platforms that use manual invitation flow instead of OAuth
@@ -38,11 +39,49 @@ interface GroupState {
   [key: string]: boolean;
 }
 
+function normalizeConnectedPlatformToGroup(platform: string): string {
+  if (platform in PLATFORM_HIERARCHY) {
+    return platform;
+  }
+
+  if (
+    platform === 'ga4' ||
+    platform === 'youtube_studio' ||
+    platform === 'display_video_360' ||
+    platform.startsWith('google_')
+  ) {
+    return 'google';
+  }
+
+  if (
+    platform === 'instagram' ||
+    platform === 'whatsapp_business' ||
+    platform.startsWith('meta_')
+  ) {
+    return 'meta';
+  }
+
+  if (platform.startsWith('linkedin')) {
+    return 'linkedin';
+  }
+
+  if (platform.startsWith('tiktok')) {
+    return 'tiktok';
+  }
+
+  if (platform.startsWith('snapchat')) {
+    return 'snapchat';
+  }
+
+  return platform;
+}
+
 export function HierarchicalPlatformSelector({
   selectedPlatforms,
   onSelectionChange,
   connectedPlatforms = [],
   agencyId,
+  showAllPlatforms = false,
 }: HierarchicalPlatformSelectorProps) {
   const [expandedGroups, setExpandedGroups] = useState<GroupState>({});
 
@@ -56,16 +95,20 @@ export function HierarchicalPlatformSelector({
     return new Set(
       connectedPlatforms
         .filter(p => p.connected)
-        .map(p => p.platform)
+        .map(p => normalizeConnectedPlatformToGroup(p.platform))
     );
   }, [connectedPlatforms]);
 
   // Filter PLATFORM_HIERARCHY to only include connected platforms
   const availableGroups = useMemo(() => {
+    if (showAllPlatforms) {
+      return Object.entries(PLATFORM_HIERARCHY);
+    }
+
     return Object.entries(PLATFORM_HIERARCHY).filter(([groupKey]) => 
       connectedPlatformIds.has(groupKey)
     );
-  }, [connectedPlatformIds]);
+  }, [connectedPlatformIds, showAllPlatforms]);
 
   const toggleGroup = useCallback((groupKey: string) => {
     setExpandedGroups(prev => ({
@@ -180,7 +223,7 @@ export function HierarchicalPlatformSelector({
   }, [connectedPlatforms]);
 
   // Empty state - no connected platforms
-  if (availableGroups.length === 0) {
+  if (!showAllPlatforms && availableGroups.length === 0) {
     return (
       <div className="text-center py-8 px-6 bg-muted/20 rounded-lg border border-border">
         <div className="inline-flex p-3 bg-muted/30 rounded-full mb-4">

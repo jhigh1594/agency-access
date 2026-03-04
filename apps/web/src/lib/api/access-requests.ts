@@ -47,6 +47,18 @@ export interface AccessRequest {
     primaryColor: string;
     subdomain?: string;
   };
+  authorizationLinkChanged?: boolean;
+}
+
+export interface UpdateAccessRequestPayload {
+  authModel?: 'client_authorization' | 'delegated_access';
+  platforms?: PlatformGroupConfig[];
+  intakeFields?: IntakeField[];
+  branding?: {
+    logoUrl?: string;
+    primaryColor?: string;
+    subdomain?: string;
+  };
 }
 
 export interface ApiError {
@@ -143,6 +155,45 @@ export async function getAccessRequest(
     const response = await authorizedApiFetch<{ data: AccessRequest; error: null }>(
       `/api/access-requests/${id}`,
       {
+        getToken: getToken ?? (async () => null),
+      }
+    );
+
+    return { data: response.data };
+  } catch (err) {
+    if (err instanceof AuthorizedApiError) {
+      return {
+        error: {
+          code: err.code,
+          message: err.message,
+          details: err.details,
+        },
+      };
+    }
+
+    return {
+      error: {
+        code: 'NETWORK_ERROR',
+        message: err instanceof Error ? err.message : 'Network error. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Update an existing access request
+ */
+export async function updateAccessRequest(
+  id: string,
+  payload: UpdateAccessRequestPayload,
+  getToken?: TokenProvider
+): Promise<CreateAccessRequestResponse> {
+  try {
+    const response = await authorizedApiFetch<{ data: AccessRequest; error: null }>(
+      `/api/access-requests/${id}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
         getToken: getToken ?? (async () => null),
       }
     );

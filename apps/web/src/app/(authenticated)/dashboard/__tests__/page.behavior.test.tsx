@@ -139,7 +139,7 @@ describe('DashboardPage behavior', () => {
     expect(await screen.findByText('Showing latest 10 of 42 connections')).toBeInTheDocument();
   });
 
-  it('links each recent request row to client details', async () => {
+  it('links each recent request row to request details', async () => {
     useQueryMock.mockReturnValue({
       data: {
         data: {
@@ -199,10 +199,8 @@ describe('DashboardPage behavior', () => {
     render(<DashboardPage />);
 
     expect(await screen.findByText('Client One')).toBeInTheDocument();
-    expect(document.querySelector('a[href=\"/clients/client-123\"]')).toBeInTheDocument();
-    expect(
-      document.querySelector('a[href=\"/clients?email=client.two%2Beast%40example.com\"]')
-    ).toBeInTheDocument();
+    expect(document.querySelector('a[href=\"/access-requests/request-1\"]')).toBeInTheDocument();
+    expect(document.querySelector('a[href=\"/access-requests/request-2\"]')).toBeInTheDocument();
   });
 
   it('shows onboarding checklist when lifecycle status is in_progress', async () => {

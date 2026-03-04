@@ -41,6 +41,13 @@ interface DashboardApiResponse {
   error: DashboardApiError | null;
 }
 
+const EMPTY_DASHBOARD_STATS = {
+  totalRequests: 0,
+  pendingRequests: 0,
+  activeConnections: 0,
+  totalPlatforms: 0,
+};
+
 interface DashboardPerfMetrics {
   tokenFetchMs: number;
   dashboardApiMs: number;
@@ -103,11 +110,7 @@ function iconForPlatform(platform: string): string | null {
 }
 
 function requestClientHref(request: DashboardRequestSummary): string {
-  if (request.clientId) {
-    return `/clients/${request.clientId}`;
-  }
-
-  return `/clients?email=${encodeURIComponent(request.clientEmail)}`;
+  return `/access-requests/${request.id}`;
 }
 
 export default function DashboardPage() {
@@ -229,12 +232,7 @@ export default function DashboardPage() {
     (onboardingStatus.status === 'in_progress' || onboardingStatus.status === 'activated')
   );
   const isActivatedChecklist = onboardingStatus?.status === 'activated';
-  const stats = payload?.stats || {
-    totalRequests: 0,
-    pendingRequests: 0,
-    activeConnections: 0,
-    totalPlatforms: 0,
-  };
+  const stats = payload?.stats ?? EMPTY_DASHBOARD_STATS;
   const requests: DashboardRequestSummary[] = payload?.requests || [];
   const connections: DashboardConnectionSummary[] = payload?.connections || [];
   const requestsMeta = payload?.meta?.requests;
@@ -255,17 +253,6 @@ export default function DashboardPage() {
       status: onboardingStatus?.status,
     });
   };
-
-  if (!canFetchDashboard && !dashboardData) {
-    return (
-      <div className="flex-1 bg-paper p-8 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-coral mx-auto" />
-          <p className="mt-4 text-muted-foreground">Initializing session...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Track dashboard view in PostHog (only once per mount)
   useEffect(() => {
@@ -307,6 +294,17 @@ export default function DashboardPage() {
     });
     hasTrackedChecklistView.current = true;
   }, [agency, onboardingStatus, showOnboardingChecklist]);
+
+  if (!canFetchDashboard && !dashboardData) {
+    return (
+      <div className="flex-1 bg-paper p-8 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-coral mx-auto" />
+          <p className="mt-4 text-muted-foreground">Initializing session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading && !dashboardData) {
     return (
