@@ -559,30 +559,35 @@ export async function getAgencyAccessRequests(
  */
 export async function getDashboardAccessRequestSummaries(
   agencyId: string,
-  limit: number
+  limit: number,
+  options: { includeTotal?: boolean } = {}
 ): Promise<{ data: { items: DashboardRequestSummary[]; total: number } | null; error: any }> {
   try {
-    const [requests, total] = await Promise.all([
-      prisma.accessRequest.findMany({
-        where: { agencyId },
-        select: {
-          id: true,
-          clientName: true,
-          clientEmail: true,
-          status: true,
-          createdAt: true,
-          platforms: true,
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-      }),
-      prisma.accessRequest.count({
-        where: { agencyId },
-      }),
-    ]);
+    const includeTotal = options.includeTotal ?? true;
+    const requestsPromise = prisma.accessRequest.findMany({
+      where: { agencyId },
+      select: {
+        id: true,
+        clientId: true,
+        clientName: true,
+        clientEmail: true,
+        status: true,
+        createdAt: true,
+        platforms: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    const totalPromise = includeTotal
+      ? prisma.accessRequest.count({
+          where: { agencyId },
+        })
+      : Promise.resolve<number | null>(null);
+    const [requests, total] = await Promise.all([requestsPromise, totalPromise]);
 
     const items: DashboardRequestSummary[] = requests.map((request) => ({
       id: request.id,
+      clientId: request.clientId,
       clientName: request.clientName,
       clientEmail: request.clientEmail,
       status: request.status,
@@ -593,7 +598,7 @@ export async function getDashboardAccessRequestSummaries(
     return {
       data: {
         items,
-        total,
+        total: total ?? items.length,
       },
       error: null,
     };

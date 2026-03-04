@@ -1205,6 +1205,7 @@ export type DashboardSummarySliceMeta = z.infer<typeof DashboardSummarySliceMeta
 
 export const DashboardRequestSummarySchema = z.object({
   id: z.string(),
+  clientId: z.string().nullable().optional(),
   clientName: z.string(),
   clientEmail: z.string(),
   status: z.string(),

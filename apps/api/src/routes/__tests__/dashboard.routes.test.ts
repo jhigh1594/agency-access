@@ -162,8 +162,12 @@ describe('Dashboard Routes', () => {
     expect(response.statusCode).toBe(200);
 
     const body = response.json();
-    expect(getDashboardAccessRequestSummariesMock).toHaveBeenCalledWith('agency-1', 10);
-    expect(getDashboardConnectionSummariesMock).toHaveBeenCalledWith('agency-1', 10);
+    expect(getDashboardAccessRequestSummariesMock).toHaveBeenCalledWith('agency-1', 10, {
+      includeTotal: false,
+    });
+    expect(getDashboardConnectionSummariesMock).toHaveBeenCalledWith('agency-1', 10, {
+      includeTotal: false,
+    });
 
     expect(body.data.meta.requests).toEqual({
       limit: 10,
@@ -178,6 +182,52 @@ describe('Dashboard Routes', () => {
       total: 42,
       hasMore: true,
     });
+  });
+
+  it('uses stats totals and skips extra summary count queries', async () => {
+    getDashboardStatsMock.mockResolvedValue({
+      data: {
+        totalRequests: 99,
+        pendingRequests: 6,
+        activeConnections: 88,
+        totalPlatforms: 7,
+      },
+      error: null,
+    });
+
+    getDashboardAccessRequestSummariesMock.mockResolvedValue({
+      data: {
+        items: createItems(10),
+        total: 10,
+      },
+      error: null,
+    });
+
+    getDashboardConnectionSummariesMock.mockResolvedValue({
+      data: {
+        items: createItems(10),
+        total: 10,
+      },
+      error: null,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/dashboard',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(getDashboardAccessRequestSummariesMock).toHaveBeenCalledWith('agency-1', 10, {
+      includeTotal: false,
+    });
+    expect(getDashboardConnectionSummariesMock).toHaveBeenCalledWith('agency-1', 10, {
+      includeTotal: false,
+    });
+
+    const body = response.json();
+    expect(body.data.meta.requests.total).toBe(99);
+    expect(body.data.meta.connections.total).toBe(88);
   });
 
   it('returns 304 when if-none-match matches current etag', async () => {

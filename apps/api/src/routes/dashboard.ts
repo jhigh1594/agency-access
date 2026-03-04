@@ -20,6 +20,7 @@ import type { DashboardPayload } from '@agency-platform/shared';
 
 const DASHBOARD_REQUESTS_LIMIT = 10;
 const DASHBOARD_CONNECTIONS_LIMIT = 10;
+const DASHBOARD_SUMMARY_TOTALS_DISABLED = { includeTotal: false } as const;
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate());
@@ -74,8 +75,16 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
           // Parallel fetch ALL dashboard data
           const [statsResult, requestsResult, connectionsResult] = await Promise.all([
             getDashboardStats(agencyId),
-            accessRequestService.getDashboardAccessRequestSummaries(agencyId, requestsLimit),
-            connectionService.getDashboardConnectionSummaries(agencyId, connectionsLimit),
+            accessRequestService.getDashboardAccessRequestSummaries(
+              agencyId,
+              requestsLimit,
+              DASHBOARD_SUMMARY_TOTALS_DISABLED
+            ),
+            connectionService.getDashboardConnectionSummaries(
+              agencyId,
+              connectionsLimit,
+              DASHBOARD_SUMMARY_TOTALS_DISABLED
+            ),
           ]);
 
           // Check for errors in any of the parallel requests
@@ -92,9 +101,10 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
           }
 
           const requests = (requestsResult.data?.items || []).slice(0, requestsLimit);
-          const requestsTotal = requestsResult.data?.total || requests.length;
+          const requestsTotal = statsResult.data?.totalRequests ?? requestsResult.data?.total ?? requests.length;
           const connections = (connectionsResult.data?.items || []).slice(0, connectionsLimit);
-          const connectionsTotal = connectionsResult.data?.total || connections.length;
+          const connectionsTotal =
+            statsResult.data?.activeConnections ?? connectionsResult.data?.total ?? connections.length;
 
           const payload: DashboardPayload = {
             agency: {

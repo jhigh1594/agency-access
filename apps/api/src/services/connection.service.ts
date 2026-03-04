@@ -386,38 +386,41 @@ export async function getAgencyConnectionSummaries(agencyId: string) {
  */
 export async function getDashboardConnectionSummaries(
   agencyId: string,
-  limit: number
+  limit: number,
+  options: { includeTotal?: boolean } = {}
 ): Promise<{ data: { items: DashboardConnectionSummary[]; total: number } | null; error: any }> {
   try {
+    const includeTotal = options.includeTotal ?? true;
     const where = {
       agencyId,
       status: 'active',
     };
 
-    const [connections, total] = await Promise.all([
-      prisma.clientConnection.findMany({
-        where,
-        select: {
-          id: true,
-          clientEmail: true,
-          status: true,
-          createdAt: true,
-          authorizations: {
-            where: {
-              status: 'active',
-            },
-            select: {
-              platform: true,
-            },
+    const connectionsPromise = prisma.clientConnection.findMany({
+      where,
+      select: {
+        id: true,
+        clientEmail: true,
+        status: true,
+        createdAt: true,
+        authorizations: {
+          where: {
+            status: 'active',
+          },
+          select: {
+            platform: true,
           },
         },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-      }),
-      prisma.clientConnection.count({
-        where,
-      }),
-    ]);
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    const totalPromise = includeTotal
+      ? prisma.clientConnection.count({
+          where,
+        })
+      : Promise.resolve<number | null>(null);
+    const [connections, total] = await Promise.all([connectionsPromise, totalPromise]);
 
     const items: DashboardConnectionSummary[] = connections.map((connection) => ({
       id: connection.id,
@@ -430,7 +433,7 @@ export async function getDashboardConnectionSummaries(
     return {
       data: {
         items,
-        total,
+        total: total ?? items.length,
       },
       error: null,
     };
