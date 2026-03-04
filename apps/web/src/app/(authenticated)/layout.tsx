@@ -23,6 +23,23 @@ import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { SUBSCRIPTION_TIER_NAMES } from '@agency-platform/shared';
 
 const agencyCheckDedup = new Set<string>();
+const inAppUserButtonAppearance = {
+  elements: {
+    userButtonTrigger: 'clerk-user-trigger',
+    userButtonAvatarBox: 'clerk-user-avatar',
+    userButtonPopoverCard: 'clerk-user-popover',
+    userButtonPopoverMain: 'clerk-user-popover-main',
+    userButtonPopoverActions: 'clerk-user-popover-actions',
+    userButtonPopoverActionButton: 'clerk-user-popover-action',
+    userButtonPopoverActionButtonIconBox: 'clerk-user-popover-action-icon-box',
+    userButtonPopoverActionButtonIcon: 'clerk-user-popover-action-icon',
+    userButtonPopoverFooter: 'clerk-user-popover-footer',
+    userPreview: 'clerk-user-preview',
+    userPreviewTextContainer: 'clerk-user-preview-text',
+    userPreviewMainIdentifier: 'clerk-user-preview-name',
+    userPreviewSecondaryIdentifier: 'clerk-user-preview-email',
+  },
+};
 
 export default function AuthenticatedLayout({
   children,
@@ -256,7 +273,7 @@ export default function AuthenticatedLayout({
 
           {/* User Profile at Bottom */}
           <div className="border-t border-border pt-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2">
               {isDevelopmentBypass ? (
                 <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5">
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-warning text-white text-xs font-bold" aria-hidden>
@@ -277,18 +294,18 @@ export default function AuthenticatedLayout({
                   </div>
                 </div>
               ) : (
-                <>
-                  <UserButton afterSignOutUrl="/" />
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <UserButton appearance={inAppUserButtonAppearance} afterSignOutUrl="/" />
                   <span
                     aria-hidden={!open}
                     className={cn(
-                      'inline-block origin-left text-sm text-foreground transition-all duration-200 motion-reduce:transition-none',
+                      'inline-block origin-left text-sm font-medium text-foreground/90 transition-all duration-200 motion-reduce:transition-none',
                       open ? 'scale-x-100 opacity-100' : 'pointer-events-none scale-x-0 opacity-0'
                     )}
                   >
-                    Profile
+                    Account
                   </span>
-                </>
+                </div>
               )}
               <ThemeToggle />
             </div>

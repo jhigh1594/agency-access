@@ -934,6 +934,132 @@ html.animations-ready .animate-float-pillar {
     transform: translateX(2px) translateY(2px) scale(0.97);
     box-shadow: none !important;
   }
+
+  .clerk-user-trigger,
+  .cl-userButtonTrigger {
+    border-radius: 0.75rem !important;
+    padding: 0.125rem !important;
+    transition: background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease !important;
+  }
+
+  .clerk-user-trigger:hover,
+  .cl-userButtonTrigger:hover {
+    background: rgb(var(--muted) / 0.45) !important;
+  }
+
+  .clerk-user-trigger:focus-visible,
+  .cl-userButtonTrigger:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgb(var(--primary) / 0.2) !important;
+  }
+
+  .clerk-user-avatar,
+  .cl-userButtonAvatarBox {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    border: 1px solid rgb(var(--border) / 0.8) !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 1px 2px rgb(var(--foreground) / 0.12) !important;
+  }
+
+  .clerk-user-popover,
+  .cl-userButtonPopoverCard {
+    width: min(22rem, calc(100vw - 1.5rem)) !important;
+    border-radius: 1rem !important;
+    border: 1px solid rgb(var(--border)) !important;
+    background: rgb(var(--card)) !important;
+    box-shadow: 0 18px 40px rgb(var(--foreground) / 0.14) !important;
+    overflow: hidden !important;
+  }
+
+  .clerk-user-popover-main,
+  .cl-userButtonPopoverMain {
+    padding: 0.875rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .clerk-user-preview,
+  .cl-userPreview {
+    border-radius: 0.875rem !important;
+    background: rgb(var(--muted) / 0.35) !important;
+    padding: 0.75rem !important;
+    min-height: 4.25rem !important;
+  }
+
+  .clerk-user-preview-text,
+  .cl-userPreviewTextContainer {
+    gap: 0.2rem !important;
+  }
+
+  .clerk-user-preview-name,
+  .cl-userPreviewMainIdentifier {
+    color: rgb(var(--foreground)) !important;
+    font-size: 1.02rem !important;
+    font-weight: 650 !important;
+    line-height: 1.2 !important;
+  }
+
+  .clerk-user-preview-email,
+  .cl-userPreviewSecondaryIdentifier {
+    color: rgb(var(--muted-foreground)) !important;
+    font-size: 0.93rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .clerk-user-popover-actions,
+  .cl-userButtonPopoverActions {
+    border-top: 1px solid rgb(var(--border)) !important;
+    padding-top: 0.5rem !important;
+    display: grid !important;
+    gap: 0.2rem !important;
+  }
+
+  .clerk-user-popover-action,
+  .cl-userButtonPopoverActionButton {
+    min-height: 2.65rem !important;
+    border-radius: 0.7rem !important;
+    padding: 0.55rem 0.65rem !important;
+    font-size: 0.96rem !important;
+    font-weight: 550 !important;
+    color: rgb(var(--foreground)) !important;
+    transition: background-color 160ms ease, color 160ms ease !important;
+  }
+
+  .clerk-user-popover-action:hover,
+  .cl-userButtonPopoverActionButton:hover {
+    background: rgb(var(--muted) / 0.55) !important;
+  }
+
+  .clerk-user-popover-action:focus-visible,
+  .cl-userButtonPopoverActionButton:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgb(var(--primary) / 0.18) !important;
+  }
+
+  .clerk-user-popover-action-icon-box,
+  .cl-userButtonPopoverActionButtonIconBox {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    border-radius: 0.5rem !important;
+    background: rgb(var(--muted) / 0.62) !important;
+    color: rgb(var(--muted-foreground)) !important;
+  }
+
+  .clerk-user-popover-action-icon,
+  .cl-userButtonPopoverActionButtonIcon {
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+  }
+
+  .clerk-user-popover-footer,
+  .cl-userButtonPopoverFooter {
+    border-top: 1px solid rgb(var(--border)) !important;
+    background: rgb(var(--muted) / 0.35) !important;
+    padding: 0.7rem 1rem !important;
+    min-height: 0 !important;
+  }
 }
 
 /* ========================================
