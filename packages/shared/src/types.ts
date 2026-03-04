@@ -57,6 +57,29 @@ export const AUTH_MODEL_DESCRIPTIONS: Record<AuthModel, { title: string; descrip
   },
 };
 
+// Unified onboarding lifecycle (server-persisted progress for re-entry and recovery)
+export const UnifiedOnboardingStatusSchema = z.enum([
+  'not_started',
+  'in_progress',
+  'activated',
+  'completed',
+]);
+export type UnifiedOnboardingStatus = z.infer<typeof UnifiedOnboardingStatusSchema>;
+
+export const UnifiedOnboardingProgressSchema = z.object({
+  status: UnifiedOnboardingStatusSchema.optional(),
+  lastCompletedStep: z.number().int().min(0).max(6).optional(),
+  lastVisitedStep: z.number().int().min(0).max(6).optional(),
+  startedAt: z.string().datetime().optional(),
+  activatedAt: z.string().datetime().optional(),
+  completedAt: z.string().datetime().optional(),
+  dismissedAt: z.string().datetime().optional(),
+  accessRequestId: z.string().min(1).optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'At least one onboarding progress field is required',
+});
+export type UnifiedOnboardingProgress = z.infer<typeof UnifiedOnboardingProgressSchema>;
+
 // Platform display names
 export const PLATFORM_NAMES: Record<Platform, string> = {
   google: 'Google',
@@ -1167,6 +1190,61 @@ export interface UsageSnapshot {
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
 }
+
+// ============================================================
+// DASHBOARD SUMMARY TYPES
+// ============================================================
+
+export const DashboardSummarySliceMetaSchema = z.object({
+  limit: z.number().int().nonnegative(),
+  returned: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  hasMore: z.boolean(),
+});
+export type DashboardSummarySliceMeta = z.infer<typeof DashboardSummarySliceMetaSchema>;
+
+export const DashboardRequestSummarySchema = z.object({
+  id: z.string(),
+  clientName: z.string(),
+  clientEmail: z.string(),
+  status: z.string(),
+  createdAt: z.string(),
+  platforms: z.array(z.string()),
+});
+export type DashboardRequestSummary = z.infer<typeof DashboardRequestSummarySchema>;
+
+export const DashboardConnectionSummarySchema = z.object({
+  id: z.string(),
+  clientEmail: z.string(),
+  status: z.string(),
+  createdAt: z.string(),
+  platforms: z.array(z.string()),
+});
+export type DashboardConnectionSummary = z.infer<typeof DashboardConnectionSummarySchema>;
+
+export const DashboardSummaryMetaSchema = z.object({
+  requests: DashboardSummarySliceMetaSchema,
+  connections: DashboardSummarySliceMetaSchema,
+});
+export type DashboardSummaryMeta = z.infer<typeof DashboardSummaryMetaSchema>;
+
+export const DashboardPayloadSchema = z.object({
+  agency: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+  }),
+  stats: z.object({
+    totalRequests: z.number().int().nonnegative(),
+    pendingRequests: z.number().int().nonnegative(),
+    activeConnections: z.number().int().nonnegative(),
+    totalPlatforms: z.number().int().nonnegative(),
+  }),
+  requests: z.array(DashboardRequestSummarySchema),
+  connections: z.array(DashboardConnectionSummarySchema),
+  meta: DashboardSummaryMetaSchema,
+});
+export type DashboardPayload = z.infer<typeof DashboardPayloadSchema>;
 
 export interface MetricUsage {
   used: number;
