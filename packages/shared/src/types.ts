@@ -691,6 +691,42 @@ export interface BrandingConfig {
   subdomain: string;
 }
 
+export const IntakeFieldTypeSchema = z.enum(['text', 'email', 'phone', 'url', 'dropdown', 'textarea']);
+
+export const AccessRequestIntakeFieldSchema = z.object({
+  id: z.string().optional(),
+  label: z.string(),
+  type: IntakeFieldTypeSchema,
+  required: z.boolean(),
+  options: z.array(z.string()).optional(),
+  order: z.number().optional(),
+});
+export type AccessRequestIntakeFieldInput = z.infer<typeof AccessRequestIntakeFieldSchema>;
+
+export const AccessRequestBrandingUpdateSchema = z.object({
+  logoUrl: z.string().url().optional(),
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid hex color').optional(),
+  subdomain: z.string().min(3).max(63).regex(/^[a-z0-9-]+$/, 'Invalid subdomain').optional(),
+});
+export type AccessRequestBrandingUpdate = z.infer<typeof AccessRequestBrandingUpdateSchema>;
+
+export const AccessRequestPlatformUpdateSchema = z.object({
+  platform: z.string().min(1),
+  accessLevel: z.enum(['manage', 'view_only']),
+});
+export type AccessRequestPlatformUpdate = z.infer<typeof AccessRequestPlatformUpdateSchema>;
+
+export const AccessRequestUpdatePayloadSchema = z.object({
+  authModel: z.enum(['client_authorization', 'delegated_access']).optional(),
+  platforms: z.array(AccessRequestPlatformUpdateSchema).min(1).optional(),
+  intakeFields: z.array(AccessRequestIntakeFieldSchema).optional(),
+  branding: AccessRequestBrandingUpdateSchema.optional(),
+  status: AccessRequestStatusSchema.optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'At least one field is required to update an access request',
+});
+export type AccessRequestUpdatePayload = z.infer<typeof AccessRequestUpdatePayloadSchema>;
+
 // Additional agency identity details used for manual invite flows.
 export interface ManualInviteTarget {
   agencyEmail?: string;

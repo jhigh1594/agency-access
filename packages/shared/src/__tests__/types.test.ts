@@ -23,6 +23,7 @@ import {
   getPricingDisplayTierFromSubscriptionTier,
   getPricingTierNameFromSubscriptionTier,
   MetricTypeSchema,
+  AccessRequestUpdatePayloadSchema,
 } from '../types';
 
 // Type imports for TypeScript validation
@@ -565,5 +566,41 @@ describe('Pinterest Connection Metadata - TDD Tests', () => {
       expect(metadata.businessName).toBe('My Business Name');
       expect(metadata.businessId).toBeUndefined();
     });
+  });
+});
+
+describe('Access Request Update Payload Schema', () => {
+  it('accepts update payload with editable request configuration fields', () => {
+    const parsed = AccessRequestUpdatePayloadSchema.parse({
+      authModel: 'delegated_access',
+      platforms: [
+        { platform: 'google_ads', accessLevel: 'manage' },
+        { platform: 'ga4', accessLevel: 'view_only' },
+      ],
+      intakeFields: [
+        { id: '1', label: 'Website', type: 'url', required: true, order: 0 },
+      ],
+      branding: {
+        primaryColor: '#FF6B35',
+      },
+    });
+
+    expect(parsed.authModel).toBe('delegated_access');
+    expect(parsed.platforms).toHaveLength(2);
+    expect(parsed.branding?.primaryColor).toBe('#FF6B35');
+  });
+
+  it('rejects empty update payloads', () => {
+    expect(() => AccessRequestUpdatePayloadSchema.parse({})).toThrow(
+      'At least one field is required to update an access request'
+    );
+  });
+
+  it('rejects invalid legacy status values in update payload', () => {
+    expect(() =>
+      AccessRequestUpdatePayloadSchema.parse({
+        status: 'authorized',
+      })
+    ).toThrow();
   });
 });
