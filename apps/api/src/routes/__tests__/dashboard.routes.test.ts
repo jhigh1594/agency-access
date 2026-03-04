@@ -1,0 +1,223 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import Fastify, { FastifyInstance } from 'fastify';
+import { dashboardRoutes } from '../dashboard';
+import { performanceOnRequest, performanceOnSend } from '@/middleware/performance.js';
+
+const {
+  resolvePrincipalAgencyMock,
+  getDashboardStatsMock,
+  getDashboardAccessRequestSummariesMock,
+  getDashboardConnectionSummariesMock,
+  getCachedMock,
+} = vi.hoisted(() => ({
+  resolvePrincipalAgencyMock: vi.fn(),
+  getDashboardStatsMock: vi.fn(),
+  getDashboardAccessRequestSummariesMock: vi.fn(),
+  getDashboardConnectionSummariesMock: vi.fn(),
+  getCachedMock: vi.fn(),
+}));
+
+vi.mock('@/lib/authorization.js', () => ({
+  resolvePrincipalAgency: resolvePrincipalAgencyMock,
+  assertAgencyAccess: vi.fn(),
+}));
+
+vi.mock('@/services/connection-aggregation.service', () => ({
+  getDashboardStats: getDashboardStatsMock,
+}));
+
+vi.mock('@/services/access-request.service', () => ({
+  accessRequestService: {
+    getDashboardAccessRequestSummaries: getDashboardAccessRequestSummariesMock,
+    getAgencyAccessRequests: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/connection.service', () => ({
+  connectionService: {
+    getDashboardConnectionSummaries: getDashboardConnectionSummariesMock,
+    getAgencyConnectionSummaries: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/cache', () => ({
+  getCached: getCachedMock,
+  CacheKeys: { dashboard: (agencyId: string) => `dashboard:${agencyId}` },
+  CacheTTL: { MEDIUM: 300 },
+}));
+
+vi.mock('@/middleware/auth.js', async () => {
+  const perf = await vi.importActual<typeof import('@/middleware/performance.js')>('@/middleware/performance.js');
+
+  return {
+    authenticate: () => async (request: any, reply: any) => {
+      perf.recordPerformanceMark(request, 'auth', 1);
+
+      if (!request.headers.authorization) {
+        return reply.code(401).send({
+          data: null,
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'Missing token',
+          },
+        });
+      }
+
+      request.user = { sub: 'user_123' };
+    },
+  };
+});
+
+function createItems(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `id-${i + 1}`,
+    clientName: `Client ${i + 1}`,
+    clientEmail: `client${i + 1}@example.com`,
+    status: 'pending',
+    createdAt: new Date('2026-01-01T00:00:00.000Z').toISOString(),
+    platforms: ['google'],
+  }));
+}
+
+describe('Dashboard Routes', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    app = Fastify();
+    app.addHook('onRequest', performanceOnRequest);
+    app.addHook('onSend', performanceOnSend);
+    await app.register(dashboardRoutes);
+
+    resolvePrincipalAgencyMock.mockReset();
+    getDashboardStatsMock.mockReset();
+    getDashboardAccessRequestSummariesMock.mockReset();
+    getDashboardConnectionSummariesMock.mockReset();
+    getCachedMock.mockReset();
+
+    const cache = new Map<string, unknown>();
+    getCachedMock.mockImplementation(async ({ key, fetch }: { key: string; fetch: () => Promise<{ data: unknown; error: unknown }> }) => {
+      if (cache.has(key)) {
+        return { data: cache.get(key), error: null, cached: true };
+      }
+
+      const result = await fetch();
+      if (result.data && !result.error) {
+        cache.set(key, result.data);
+      }
+
+      return { ...result, cached: false };
+    });
+
+    resolvePrincipalAgencyMock.mockResolvedValue({
+      data: {
+        agencyId: 'agency-1',
+        principalId: 'user_123',
+        agency: {
+          id: 'agency-1',
+          name: 'Agency One',
+          email: 'owner@agency.test',
+        },
+      },
+      error: null,
+    });
+
+    getDashboardStatsMock.mockResolvedValue({
+      data: {
+        totalRequests: 25,
+        pendingRequests: 6,
+        activeConnections: 42,
+        totalPlatforms: 7,
+      },
+      error: null,
+    });
+
+    getDashboardAccessRequestSummariesMock.mockResolvedValue({
+      data: {
+        items: createItems(12),
+        total: 25,
+      },
+      error: null,
+    });
+
+    getDashboardConnectionSummariesMock.mockResolvedValue({
+      data: {
+        items: createItems(14),
+        total: 42,
+      },
+      error: null,
+    });
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('returns bounded dashboard summaries and truncation metadata', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/dashboard',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json();
+    expect(getDashboardAccessRequestSummariesMock).toHaveBeenCalledWith('agency-1', 10);
+    expect(getDashboardConnectionSummariesMock).toHaveBeenCalledWith('agency-1', 10);
+
+    expect(body.data.meta.requests).toEqual({
+      limit: 10,
+      returned: 10,
+      total: 25,
+      hasMore: true,
+    });
+
+    expect(body.data.meta.connections).toEqual({
+      limit: 10,
+      returned: 10,
+      total: 42,
+      hasMore: true,
+    });
+  });
+
+  it('returns 304 when if-none-match matches current etag', async () => {
+    const first = await app.inject({
+      method: 'GET',
+      url: '/dashboard',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(first.statusCode).toBe(200);
+    const etag = first.headers.etag as string;
+    expect(etag).toBeTruthy();
+
+    const second = await app.inject({
+      method: 'GET',
+      url: '/dashboard',
+      headers: {
+        authorization: 'Bearer token',
+        'if-none-match': etag,
+      },
+    });
+
+    expect(second.statusCode).toBe(304);
+  });
+
+  it('adds response-time and server-timing headers for dashboard requests', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/dashboard',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['x-response-time']).toBeTruthy();
+
+    const serverTiming = String(response.headers['server-timing'] || '');
+    expect(serverTiming).toContain('total;dur=');
+    expect(serverTiming).toContain('auth;dur=');
+    expect(serverTiming).toContain('resolveAgency;dur=');
+    expect(serverTiming).toContain('cache;dur=');
+    expect(serverTiming).toContain('dataFetch;dur=');
+  });
+});

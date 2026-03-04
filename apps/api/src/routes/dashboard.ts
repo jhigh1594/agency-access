@@ -6,6 +6,7 @@
  */
 
 import { FastifyInstance } from 'fastify';
+import { performance } from 'node:perf_hooks';
 import { getDashboardStats } from '../services/connection-aggregation.service.js';
 import { accessRequestService } from '../services/access-request.service.js';
 import { connectionService } from '../services/connection.service.js';
@@ -13,6 +14,12 @@ import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
 import { createHash } from 'crypto';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { env } from '@/lib/env.js';
+import { recordPerformanceMark } from '@/middleware/performance.js';
+import type { DashboardPayload } from '@agency-platform/shared';
+
+const DASHBOARD_REQUESTS_LIMIT = 10;
+const DASHBOARD_CONNECTIONS_LIMIT = 10;
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate());
@@ -30,7 +37,10 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
    * - connections: Active client connections with authorizations
    */
   fastify.get('/dashboard', async (request, reply) => {
+    const resolveAgencyStart = performance.now();
     const principalResult = await resolvePrincipalAgency(request);
+    recordPerformanceMark(request, 'resolveAgency', performance.now() - resolveAgencyStart);
+
     if (principalResult.error || !principalResult.data) {
       const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
       return reply.code(statusCode).send({
@@ -44,54 +54,91 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
 
     const agencyId = principalResult.data.agencyId;
     const agency = principalResult.data.agency;
+    const useSummaryLimits = env.DASHBOARD_SUMMARY_LIMITS_ENABLED;
+    const requestsLimit = useSummaryLimits ? DASHBOARD_REQUESTS_LIMIT : 1000;
+    const connectionsLimit = useSummaryLimits ? DASHBOARD_CONNECTIONS_LIMIT : 1000;
+    let dataFetchDurationMs = 0;
 
     // Use caching layer for dashboard data
     const cacheKey = CacheKeys.dashboard(agencyId);
+    const cacheStart = performance.now();
     const cachedResult = await getCached<{
-      agency: { id: string; name: string; email: string };
-      stats: { totalRequests: number; pendingRequests: number; activeConnections: number; totalPlatforms: number };
-      requests: any[];
-      connections: any[];
+      payload: DashboardPayload;
+      etag: string;
     }>({
       key: cacheKey,
       ttl: CacheTTL.MEDIUM, // 5 minutes
       fetch: async () => {
-        // Parallel fetch ALL dashboard data
-        const [statsResult, requestsResult, connectionsResult] = await Promise.all([
-          getDashboardStats(agencyId),
-          accessRequestService.getAgencyAccessRequests(agencyId, { limit: 10 }),
-          connectionService.getAgencyConnectionSummaries(agencyId), // Use lightweight summaries
-        ]);
+        const dataFetchStart = performance.now();
+        try {
+          // Parallel fetch ALL dashboard data
+          const [statsResult, requestsResult, connectionsResult] = await Promise.all([
+            getDashboardStats(agencyId),
+            accessRequestService.getDashboardAccessRequestSummaries(agencyId, requestsLimit),
+            connectionService.getDashboardConnectionSummaries(agencyId, connectionsLimit),
+          ]);
 
-        // Check for errors in any of the parallel requests
-        if (statsResult.error) {
-          return { data: null, error: statsResult.error };
-        }
+          // Check for errors in any of the parallel requests
+          if (statsResult.error) {
+            return { data: null, error: statsResult.error };
+          }
 
-        if (requestsResult.error) {
-          return { data: null, error: requestsResult.error };
-        }
+          if (requestsResult.error) {
+            return { data: null, error: requestsResult.error };
+          }
 
-        if (connectionsResult.error) {
-          return { data: null, error: connectionsResult.error };
-        }
+          if (connectionsResult.error) {
+            return { data: null, error: connectionsResult.error };
+          }
 
-        // Return consolidated dashboard data in the expected format
-        return {
-          data: {
+          const requests = (requestsResult.data?.items || []).slice(0, requestsLimit);
+          const requestsTotal = requestsResult.data?.total || requests.length;
+          const connections = (connectionsResult.data?.items || []).slice(0, connectionsLimit);
+          const connectionsTotal = connectionsResult.data?.total || connections.length;
+
+          const payload: DashboardPayload = {
             agency: {
               id: agency.id,
               name: agency.name,
               email: agency.email,
             },
             stats: statsResult.data!,
-            requests: requestsResult.data!,
-            connections: connectionsResult.data!,
-          },
-          error: null,
-        };
+            requests,
+            connections,
+            meta: {
+              requests: {
+                limit: requestsLimit,
+                returned: requests.length,
+                total: requestsTotal,
+                hasMore: requestsTotal > requests.length,
+              },
+              connections: {
+                limit: connectionsLimit,
+                returned: connections.length,
+                total: connectionsTotal,
+                hasMore: connectionsTotal > connections.length,
+              },
+            },
+          };
+
+          const etag = createHash('md5')
+            .update(JSON.stringify(payload))
+            .digest('hex');
+
+          return {
+            data: {
+              payload,
+              etag,
+            },
+            error: null,
+          };
+        } finally {
+          dataFetchDurationMs = performance.now() - dataFetchStart;
+        }
       },
     });
+    recordPerformanceMark(request, 'cache', performance.now() - cacheStart);
+    recordPerformanceMark(request, 'dataFetch', dataFetchDurationMs);
 
     // Handle errors from fetch function
     if (cachedResult.error || !cachedResult.data) {
@@ -104,10 +151,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // Generate ETag for conditional requests (based on data hash)
-    const etag = createHash('md5')
-      .update(JSON.stringify(cachedResult.data))
-      .digest('hex');
+    const { payload, etag } = cachedResult.data;
 
     // Check for conditional request (If-None-Match header)
     const ifNoneMatch = request.headers['if-none-match'];
@@ -129,7 +173,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
 
     // Return consolidated dashboard data
     return reply.send({
-      data: cachedResult.data,
+      data: payload,
       error: null,
     });
   });

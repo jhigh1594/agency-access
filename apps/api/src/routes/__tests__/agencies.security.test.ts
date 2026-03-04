@@ -17,6 +17,7 @@ vi.mock('../../services/agency.service.js', () => ({
     inviteMember: vi.fn(),
     bulkInviteMembers: vi.fn(),
     getOnboardingStatus: vi.fn(),
+    updateOnboardingProgress: vi.fn(),
     updateMemberRole: vi.fn(),
     removeMember: vi.fn(),
     updateMemberRoleForAgency: vi.fn(),
@@ -188,6 +189,21 @@ describe('Agency Routes - Security', () => {
     expect(response.statusCode).toBe(403);
     expect(response.json().error.code).toBe('FORBIDDEN');
     expect(agencyService.getOnboardingStatus).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when updating onboarding progress for a different agency', async () => {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/agencies/agency-other/onboarding-progress',
+      headers: { authorization: 'Bearer token' },
+      payload: {
+        status: 'in_progress',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe('FORBIDDEN');
+    expect(agencyService.updateOnboardingProgress).not.toHaveBeenCalled();
   });
 
   it('returns 403 when create agency payload clerkUserId mismatches principal', async () => {

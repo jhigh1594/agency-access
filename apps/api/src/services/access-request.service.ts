@@ -8,7 +8,12 @@
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-import { PlatformSchema, type Platform, type AccessRequestStatus } from '@agency-platform/shared';
+import {
+  PlatformSchema,
+  type Platform,
+  type AccessRequestStatus,
+  type DashboardRequestSummary,
+} from '@agency-platform/shared';
 import { invalidateCache } from '@/lib/cache.js';
 
 const LegacyPlatformSchema = z.enum([
@@ -279,6 +284,31 @@ function normalizePlatformGroup(platform: string): string {
   return platform;
 }
 
+function extractDashboardPlatformGroups(platforms: unknown): string[] {
+  if (!Array.isArray(platforms)) {
+    return [];
+  }
+
+  const groups = new Set<string>();
+  for (const entry of platforms) {
+    if (entry && typeof entry === 'object') {
+      const maybeGroup = (entry as any).platformGroup;
+      const maybeProduct = (entry as any).platform;
+
+      if (typeof maybeGroup === 'string' && maybeGroup.length > 0) {
+        groups.add(maybeGroup);
+        continue;
+      }
+
+      if (typeof maybeProduct === 'string' && maybeProduct.length > 0) {
+        groups.add(normalizePlatformGroup(maybeProduct));
+      }
+    }
+  }
+
+  return Array.from(groups);
+}
+
 function getIdentityFromConnection(connection: {
   agencyEmail: string | null;
   businessId: string | null;
@@ -524,6 +554,61 @@ export async function getAgencyAccessRequests(
 }
 
 /**
+ * Get lightweight dashboard access request summaries.
+ * Returns only the latest rows required for dashboard rendering.
+ */
+export async function getDashboardAccessRequestSummaries(
+  agencyId: string,
+  limit: number
+): Promise<{ data: { items: DashboardRequestSummary[]; total: number } | null; error: any }> {
+  try {
+    const [requests, total] = await Promise.all([
+      prisma.accessRequest.findMany({
+        where: { agencyId },
+        select: {
+          id: true,
+          clientName: true,
+          clientEmail: true,
+          status: true,
+          createdAt: true,
+          platforms: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      prisma.accessRequest.count({
+        where: { agencyId },
+      }),
+    ]);
+
+    const items: DashboardRequestSummary[] = requests.map((request) => ({
+      id: request.id,
+      clientName: request.clientName,
+      clientEmail: request.clientEmail,
+      status: request.status,
+      createdAt: request.createdAt.toISOString(),
+      platforms: extractDashboardPlatformGroups(request.platforms),
+    }));
+
+    return {
+      data: {
+        items,
+        total,
+      },
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to retrieve dashboard access request summaries',
+      },
+    };
+  }
+}
+
+/**
  * Update access request
  */
 export async function updateAccessRequest(
@@ -678,6 +763,7 @@ export const accessRequestService = {
   getAccessRequestById,
   getAccessRequestByToken,
   getAgencyAccessRequests,
+  getDashboardAccessRequestSummaries,
   updateAccessRequest,
   markRequestAuthorized,
   cancelAccessRequest,

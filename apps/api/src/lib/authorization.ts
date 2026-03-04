@@ -59,12 +59,43 @@ export async function resolvePrincipalAgency(
   }
 
   const userEmail = resolveUserEmail(user);
-  const agencyResult = await agencyResolutionService.resolveAgency(principalId, {
+  const buildPrincipalData = (agencyResultData: {
+    agencyId: string;
+    agency: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  }): PrincipalAgencyData => ({
+    agencyId: agencyResultData.agencyId,
+    principalId,
+    agency: {
+      id: agencyResultData.agency.id,
+      name: agencyResultData.agency.name,
+      email: agencyResultData.agency.email,
+    },
+  });
+
+  // Cache-first lookup: avoid create-if-missing on the hot path for existing users.
+  const cacheFirstResult = await agencyResolutionService.resolveAgency(principalId, {
+    createIfMissing: false,
+    userEmail,
+  });
+
+  if (cacheFirstResult.data) {
+    return {
+      data: buildPrincipalData(cacheFirstResult.data),
+      error: null,
+    };
+  }
+
+  // Only fallback to create-if-missing when agency does not exist.
+  const createIfMissingResult = await agencyResolutionService.resolveAgency(principalId, {
     createIfMissing: true,
     userEmail,
   });
 
-  if (agencyResult.error || !agencyResult.data) {
+  if (createIfMissingResult.error || !createIfMissingResult.data) {
     return {
       data: null,
       error: {
@@ -75,15 +106,7 @@ export async function resolvePrincipalAgency(
   }
 
   return {
-    data: {
-      agencyId: agencyResult.data.agencyId,
-      principalId,
-      agency: {
-        id: agencyResult.data.agency.id,
-        name: agencyResult.data.agency.name,
-        email: agencyResult.data.agency.email,
-      },
-    },
+    data: buildPrincipalData(createIfMissingResult.data),
     error: null,
   };
 }

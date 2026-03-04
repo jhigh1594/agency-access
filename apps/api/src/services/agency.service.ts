@@ -10,6 +10,12 @@ import { z } from 'zod';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 import { creem } from '@/lib/creem.js';
 import { getProductId } from '@/config/creem.config';
+import {
+  UnifiedOnboardingProgressSchema,
+  UnifiedOnboardingStatusSchema,
+  type UnifiedOnboardingProgress,
+  type UnifiedOnboardingStatus,
+} from '@agency-platform/shared';
 
 // Validation schemas
 const createAgencySchema = z.object({
@@ -36,6 +42,63 @@ const updateAgencySchema = z.object({
 export type CreateAgencyInput = z.infer<typeof createAgencySchema>;
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
 export type UpdateAgencyInput = z.infer<typeof updateAgencySchema>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getUnifiedOnboardingSettings(settings: unknown): Partial<UnifiedOnboardingProgress> {
+  if (!isRecord(settings)) {
+    return {};
+  }
+
+  const onboarding = settings.onboarding;
+  if (!isRecord(onboarding)) {
+    return {};
+  }
+
+  const unifiedV1 = onboarding.unifiedV1;
+  if (!isRecord(unifiedV1)) {
+    return {};
+  }
+
+  return unifiedV1 as Partial<UnifiedOnboardingProgress>;
+}
+
+function resolveOnboardingLifecycleStatus(
+  onboarding: Partial<UnifiedOnboardingProgress>,
+  hasProfile: boolean,
+  hasRequests: boolean
+): UnifiedOnboardingStatus {
+  const explicitStatus = UnifiedOnboardingStatusSchema.safeParse(onboarding.status);
+  if (explicitStatus.success && explicitStatus.data === 'completed') {
+    return 'completed';
+  }
+
+  if (onboarding.completedAt || onboarding.dismissedAt) {
+    return 'completed';
+  }
+
+  if (
+    hasRequests ||
+    (explicitStatus.success && explicitStatus.data === 'activated') ||
+    onboarding.activatedAt
+  ) {
+    return 'activated';
+  }
+
+  if (
+    (explicitStatus.success && explicitStatus.data === 'in_progress') ||
+    onboarding.startedAt ||
+    typeof onboarding.lastVisitedStep === 'number' ||
+    typeof onboarding.lastCompletedStep === 'number' ||
+    hasProfile
+  ) {
+    return 'in_progress';
+  }
+
+  return 'not_started';
+}
 
 /**
  * Create a new agency with an admin member
@@ -802,14 +865,20 @@ export async function getOnboardingStatus(agencyId: string) {
       };
     }
 
-    // Check onboarding completion
+    // Legacy onboarding flags
     const hasProfile = !!(agency.name && agency.settings);
     const hasMembers = agency.members.length > 1; // More than just the creator
     const hasRequests = agency.accessRequests.length > 0;
+    const onboarding = getUnifiedOnboardingSettings(agency.settings);
+    const status = resolveOnboardingLifecycleStatus(onboarding, hasProfile, hasRequests);
+    const legacyCompleted = hasProfile && hasMembers;
+    const completed = status === 'completed' || legacyCompleted;
 
     return {
       data: {
-        completed: hasProfile && hasMembers,
+        completed,
+        status,
+        lifecycle: onboarding,
         step: {
           profile: hasProfile,
           members: hasMembers,
@@ -824,6 +893,89 @@ export async function getOnboardingStatus(agencyId: string) {
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to check onboarding status',
+      },
+    };
+  }
+}
+
+export async function updateOnboardingProgress(
+  agencyId: string,
+  progressInput: UnifiedOnboardingProgress
+) {
+  try {
+    const validated = UnifiedOnboardingProgressSchema.parse(progressInput);
+
+    const agency = await prisma.agency.findUnique({
+      where: { id: agencyId },
+      select: { id: true, settings: true },
+    });
+
+    if (!agency) {
+      return {
+        data: null,
+        error: {
+          code: 'AGENCY_NOT_FOUND',
+          message: 'Agency not found',
+        },
+      };
+    }
+
+    const currentSettings = isRecord(agency.settings) ? { ...agency.settings } : {};
+    const currentOnboarding = isRecord(currentSettings.onboarding)
+      ? { ...currentSettings.onboarding }
+      : {};
+    const currentUnified = isRecord(currentOnboarding.unifiedV1)
+      ? { ...currentOnboarding.unifiedV1 }
+      : {};
+
+    const mergedProgress = {
+      ...currentUnified,
+      ...validated,
+    };
+
+    const updatedSettings = {
+      ...currentSettings,
+      onboarding: {
+        ...currentOnboarding,
+        unifiedV1: mergedProgress,
+      },
+    };
+
+    const updatedAgency = await prisma.agency.update({
+      where: { id: agencyId },
+      data: {
+        settings: updatedSettings,
+      },
+      select: {
+        id: true,
+        settings: true,
+      },
+    });
+
+    return {
+      data: {
+        agencyId: updatedAgency.id,
+        lifecycle: getUnifiedOnboardingSettings(updatedAgency.settings),
+      },
+      error: null,
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid onboarding progress payload',
+          details: error.errors,
+        },
+      };
+    }
+
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to update onboarding progress',
       },
     };
   }
@@ -921,5 +1073,6 @@ export const agencyService = {
   removeMember,
   removeMemberForAgency,
   getOnboardingStatus,
+  updateOnboardingProgress,
   bulkInviteMembers,
 };

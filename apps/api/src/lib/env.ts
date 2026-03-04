@@ -115,6 +115,7 @@ const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   RATE_LIMIT_TIME_WINDOW_SECONDS: z.coerce.number().default(60),
   RATE_LIMIT_SKIP_AUTHENTICATED: z.boolean().default(true),
+  DASHBOARD_SUMMARY_LIMITS_ENABLED: z.coerce.boolean().optional(),
   TRUST_PROXY_IPS: z.string().optional(),
   DB_ENFORCE_LEAST_PRIVILEGE: z.boolean().default(false),
 
@@ -175,6 +176,8 @@ const API_URL = parsedEnv.API_URL ?? `http://localhost:${parsedEnv.PORT}`;
 const INTERNAL_ADMIN_USER_IDS = parseCsvList(parsedEnv.INTERNAL_ADMIN_USER_IDS);
 const INTERNAL_ADMIN_EMAILS = parseCsvList(parsedEnv.INTERNAL_ADMIN_EMAILS);
 const TRUST_PROXY_IPS = parseCsvList(parsedEnv.TRUST_PROXY_IPS);
+const DASHBOARD_SUMMARY_LIMITS_ENABLED =
+  parsedEnv.DASHBOARD_SUMMARY_LIMITS_ENABLED ?? true;
 
 // Parse Redis URL into components for IORedis
 const redisUrl = new URL(parsedEnv.REDIS_URL);
@@ -189,4 +192,5 @@ export const env = {
   INTERNAL_ADMIN_USER_IDS,
   INTERNAL_ADMIN_EMAILS,
   TRUST_PROXY_IPS,
+  DASHBOARD_SUMMARY_LIMITS_ENABLED,
 };

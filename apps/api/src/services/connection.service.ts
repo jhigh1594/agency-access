@@ -8,7 +8,7 @@
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { getConnector } from '@/services/connectors/factory';
-import type { Platform } from '@agency-platform/shared';
+import type { Platform, DashboardConnectionSummary } from '@agency-platform/shared';
 import { z } from 'zod';
 import { invalidateCache } from '@/lib/cache.js';
 
@@ -381,6 +381,71 @@ export async function getAgencyConnectionSummaries(agencyId: string) {
 }
 
 /**
+ * Get lightweight dashboard connection summaries.
+ * Includes only active connections and active platform authorizations.
+ */
+export async function getDashboardConnectionSummaries(
+  agencyId: string,
+  limit: number
+): Promise<{ data: { items: DashboardConnectionSummary[]; total: number } | null; error: any }> {
+  try {
+    const where = {
+      agencyId,
+      status: 'active',
+    };
+
+    const [connections, total] = await Promise.all([
+      prisma.clientConnection.findMany({
+        where,
+        select: {
+          id: true,
+          clientEmail: true,
+          status: true,
+          createdAt: true,
+          authorizations: {
+            where: {
+              status: 'active',
+            },
+            select: {
+              platform: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      prisma.clientConnection.count({
+        where,
+      }),
+    ]);
+
+    const items: DashboardConnectionSummary[] = connections.map((connection) => ({
+      id: connection.id,
+      clientEmail: connection.clientEmail,
+      status: connection.status,
+      createdAt: connection.createdAt.toISOString(),
+      platforms: Array.from(new Set(connection.authorizations.map((auth) => auth.platform))),
+    }));
+
+    return {
+      data: {
+        items,
+        total,
+      },
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to get dashboard connection summaries',
+      },
+    };
+  }
+}
+
+/**
  * Refresh a platform authorization
  */
 export async function refreshPlatformAuthorization(
@@ -517,6 +582,7 @@ export const connectionService = {
   getTokenHealth,
   getAgencyConnections,
   getAgencyConnectionSummaries,
+  getDashboardConnectionSummaries,
   refreshPlatformAuthorization,
   revokePlatformAuthorization,
 };

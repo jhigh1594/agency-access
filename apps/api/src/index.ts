@@ -6,7 +6,7 @@ import helmet from '@fastify/helmet';
 import fastifyRawBody from 'fastify-raw-body';
 import { env } from './lib/env.js';
 import { getCorsOptions } from './lib/cors.js';
-import { authenticate } from './middleware/auth.js';
+import { authenticate, verifyAuthToken } from './middleware/auth.js';
 import { extractClientIp } from './lib/ip.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
@@ -26,7 +26,7 @@ import { subscriptionRoutes } from './routes/subscriptions.js';
 import { internalAdminRoutes } from './routes/internal-admin.routes.js';
 import { quotaRoutes } from './routes/quota.routes';
 import { contactRoutes } from './routes/contact.js';
-import { performanceMiddleware } from './middleware/performance.js';
+import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
 
@@ -70,14 +70,18 @@ if (env.RATE_LIMIT_ENABLED) {
       // Skip rate limiting for authenticated users if configured
       if (env.RATE_LIMIT_SKIP_AUTHENTICATED) {
         try {
+          if ((request as any).user) {
+            return true;
+          }
+
           const authHeader = request.headers.authorization;
           if (authHeader?.startsWith('Bearer ')) {
             const token = authHeader.substring(7);
-            const { verifyToken } = await import('@clerk/backend');
-            const verified = await verifyToken(token, {
-              secretKey: process.env.CLERK_SECRET_KEY,
-            });
-            return !!verified;
+            const verified = await verifyAuthToken(token);
+            if (verified) {
+              (request as any).user = verified;
+              return true;
+            }
           }
         } catch {
           return false;
@@ -122,7 +126,8 @@ await fastify.register(helmet, {
 });
 
 // Register performance monitoring middleware
-fastify.addHook('onRequest', performanceMiddleware);
+fastify.addHook('onRequest', performanceOnRequest);
+fastify.addHook('onSend', performanceOnSend);
 
 // Note: JWT verification is now handled in the authenticate() middleware
 // using Clerk's backend SDK which properly handles RS256 tokens

@@ -328,4 +328,143 @@ describe('AgencyService', () => {
       expect(prisma.agencyMember.delete).not.toHaveBeenCalled();
     });
   });
+
+  describe('onboarding lifecycle', () => {
+    it('returns in_progress when no request has been created yet', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        name: 'Agency One',
+        settings: {
+          onboarding: {
+            unifiedV1: {
+              status: 'in_progress',
+              startedAt: '2026-03-04T10:00:00.000Z',
+            },
+          },
+        },
+        members: [{ id: 'member-1' }],
+        accessRequests: [],
+      } as any);
+
+      const result = await agencyService.getOnboardingStatus('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toMatchObject({
+        status: 'in_progress',
+        completed: false,
+        step: {
+          firstRequest: false,
+        },
+      });
+    });
+
+    it('returns activated when first request exists and onboarding is not completed', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        name: 'Agency One',
+        settings: {
+          onboarding: {
+            unifiedV1: {
+              status: 'in_progress',
+              startedAt: '2026-03-04T10:00:00.000Z',
+            },
+          },
+        },
+        members: [{ id: 'member-1' }],
+        accessRequests: [{ id: 'req-1' }],
+      } as any);
+
+      const result = await agencyService.getOnboardingStatus('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toMatchObject({
+        status: 'activated',
+        completed: false,
+        step: {
+          firstRequest: true,
+        },
+      });
+    });
+
+    it('returns completed when lifecycle metadata marks onboarding complete', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        name: 'Agency One',
+        settings: {
+          onboarding: {
+            unifiedV1: {
+              status: 'completed',
+              completedAt: '2026-03-04T10:20:00.000Z',
+            },
+          },
+        },
+        members: [{ id: 'member-1' }, { id: 'member-2' }],
+        accessRequests: [{ id: 'req-1' }],
+      } as any);
+
+      const result = await agencyService.getOnboardingStatus('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toMatchObject({
+        status: 'completed',
+        completed: true,
+      });
+    });
+  });
+
+  describe('updateOnboardingProgress', () => {
+    it('merges onboarding lifecycle fields without deleting unrelated agency settings', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        settings: {
+          timezone: 'America/Los_Angeles',
+          onboarding: {
+            unifiedV1: {
+              status: 'in_progress',
+              startedAt: '2026-03-04T10:00:00.000Z',
+            },
+          },
+        },
+      } as any);
+
+      vi.mocked(prisma.agency.update).mockResolvedValue({
+        id: 'agency-1',
+        settings: {
+          timezone: 'America/Los_Angeles',
+          onboarding: {
+            unifiedV1: {
+              status: 'activated',
+              startedAt: '2026-03-04T10:00:00.000Z',
+              activatedAt: '2026-03-04T10:05:00.000Z',
+              accessRequestId: 'req-1',
+            },
+          },
+        },
+      } as any);
+
+      const result = await agencyService.updateOnboardingProgress('agency-1', {
+        status: 'activated',
+        activatedAt: '2026-03-04T10:05:00.000Z',
+        accessRequestId: 'req-1',
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(prisma.agency.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: 'agency-1' },
+        data: {
+          settings: {
+            timezone: 'America/Los_Angeles',
+            onboarding: {
+              unifiedV1: {
+                status: 'activated',
+                startedAt: '2026-03-04T10:00:00.000Z',
+                activatedAt: '2026-03-04T10:05:00.000Z',
+                accessRequestId: 'req-1',
+              },
+            },
+          },
+        },
+      }));
+    });
+  });
 });

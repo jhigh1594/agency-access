@@ -333,6 +333,28 @@ export async function agencyRoutes(fastify: FastifyInstance) {
     return reply.send(result);
   });
 
+  // Update onboarding progress metadata
+  fastify.patch('/agencies/:id/onboarding-progress', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const principal = await requirePrincipalAgency(request, reply);
+    if (!principal) return;
+    if (forbidIfAgencyMismatch(reply, id, principal.agencyId)) return;
+
+    const result = await agencyService.updateOnboardingProgress(id, request.body as any);
+
+    if (result.error) {
+      const statusCode =
+        result.error.code === 'AGENCY_NOT_FOUND'
+          ? 404
+          : result.error.code === 'VALIDATION_ERROR'
+            ? 400
+            : 500;
+      return sendError(reply, result.error.code, result.error.message, statusCode);
+    }
+
+    return reply.send(result);
+  });
+
   // Update member role
   fastify.patch('/members/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
