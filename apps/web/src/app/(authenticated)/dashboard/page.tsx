@@ -17,9 +17,90 @@ import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
+import { useAgencyOnboardingStatus, useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
+import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
+import type {
+  DashboardPayload,
+  DashboardRequestSummary,
+  DashboardConnectionSummary,
+} from '@agency-platform/shared';
 
 // Simple in-memory ETag cache for conditional requests
 const etagCache = new Map<string, string>();
+const DASHBOARD_PERF_SAMPLE_RATE = 0.2;
+const dashboardSessionSeen = new Set<string>();
+
+interface DashboardApiError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+interface DashboardApiResponse {
+  data: DashboardPayload | null;
+  error: DashboardApiError | null;
+}
+
+interface DashboardPerfMetrics {
+  tokenFetchMs: number;
+  dashboardApiMs: number;
+  timeToDataMs: number;
+  cacheStatus: string;
+  isColdSession: boolean;
+  principalId: string;
+}
+
+function nowMs(): number {
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+    return performance.now();
+  }
+
+  return Date.now();
+}
+
+function shouldSampleDashboardPerf(): boolean {
+  return Math.random() < DASHBOARD_PERF_SAMPLE_RATE;
+}
+
+async function captureDashboardLoadPerf(metrics: DashboardPerfMetrics): Promise<void> {
+  if (!shouldSampleDashboardPerf()) {
+    return;
+  }
+
+  try {
+    const { default: posthog } = await import('posthog-js');
+    posthog.capture('dashboard_load_perf', {
+      token_fetch_ms: Number(metrics.tokenFetchMs.toFixed(2)),
+      dashboard_api_ms: Number(metrics.dashboardApiMs.toFixed(2)),
+      time_to_data_ms: Number(metrics.timeToDataMs.toFixed(2)),
+      cache_status: metrics.cacheStatus,
+      is_cold_session: metrics.isColdSession,
+      principal_id: metrics.principalId,
+    });
+  } catch {
+    // Ignore analytics failures.
+  }
+}
+
+function hasPlatformFamily(platforms: string[] | undefined, family: 'google' | 'meta'): boolean {
+  if (!platforms || platforms.length === 0) {
+    return false;
+  }
+
+  return platforms.some((platform) => platform === family || platform.startsWith(`${family}_`));
+}
+
+function iconForPlatform(platform: string): string | null {
+  if (platform.includes('google')) {
+    return '/google-ads.svg';
+  }
+
+  if (platform.includes('meta') || platform.includes('instagram')) {
+    return '/meta-color.svg';
+  }
+
+  return null;
+}
 
 export default function DashboardPage() {
   const clerkAuth = useAuth();
@@ -29,60 +110,85 @@ export default function DashboardPage() {
   const principalId = perfHarness?.principalId || orgId || userId;
   const canFetchDashboard = Boolean(perfHarness?.token) || (isLoaded && Boolean(principalId));
   const hasTrackedView = useRef(false);
+  const hasTrackedChecklistView = useRef(false);
 
-  // Single unified query that fetches all dashboard data at once
-  // This replaces 4 separate API calls (agency, stats, requests, connections)
-  const { data: dashboardData, isLoading, error, refetch } = useQuery({
+  // Single unified query that fetches all dashboard data at once.
+  const { data: dashboardData, isLoading, error, refetch } = useQuery<DashboardApiResponse>({
     queryKey: ['dashboard', principalId || 'anonymous'],
     queryFn: async () => {
-      const cacheKey = `dashboard-${principalId || 'anonymous'}`;
+      const principalKey = principalId || 'anonymous';
+      const cacheKey = `dashboard-${principalKey}`;
+      const requestStart = nowMs();
+
       const stopTokenTimer = startPerfTimer('dashboard:token-fetch');
+      const tokenFetchStart = nowMs();
       const token = perfHarness?.token || await getToken();
+      const tokenFetchMs = nowMs() - tokenFetchStart;
       stopTokenTimer?.();
 
       if (!token) {
         throw new Error('AUTH_TOKEN_UNAVAILABLE');
       }
+
       const stopTimer = startPerfTimer('dashboard:data-fetch');
 
       try {
         const etag = etagCache.get(cacheKey);
-
         const headers: Record<string, string> = {
           Authorization: `Bearer ${token}`,
         };
 
-        // Add ETag for conditional request
         if (etag) {
           headers['If-None-Match'] = etag;
         }
 
+        const apiFetchStart = nowMs();
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
           headers,
         });
+        const dashboardApiMs = nowMs() - apiFetchStart;
+        const cacheStatus = response.headers.get('X-Cache') || 'UNKNOWN';
 
-        // Handle 304 Not Modified - return cached data
         if (response.status === 304) {
-          // Return the cached data with a flag indicating it was not modified
           const cached = etagCache.get(`${cacheKey}-data`);
           if (cached) {
-            return JSON.parse(cached);
+            const cachedResponse = JSON.parse(cached) as DashboardApiResponse;
+            const isColdSession = !dashboardSessionSeen.has(principalKey);
+            dashboardSessionSeen.add(principalKey);
+            void captureDashboardLoadPerf({
+              tokenFetchMs,
+              dashboardApiMs,
+              timeToDataMs: nowMs() - requestStart,
+              cacheStatus,
+              isColdSession,
+              principalId: principalKey,
+            });
+            return cachedResponse;
           }
-          // If no cached data, fall through to fetch
         }
 
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard data');
         }
 
-        const data = await response.json();
+        const data = await response.json() as DashboardApiResponse;
 
-        // Cache ETag for next request
         const responseEtag = response.headers.get('ETag')?.replace(/"/g, '');
         if (responseEtag) {
           etagCache.set(cacheKey, responseEtag);
           etagCache.set(`${cacheKey}-data`, JSON.stringify(data));
         }
+
+        const isColdSession = !dashboardSessionSeen.has(principalKey);
+        dashboardSessionSeen.add(principalKey);
+        void captureDashboardLoadPerf({
+          tokenFetchMs,
+          dashboardApiMs,
+          timeToDataMs: nowMs() - requestStart,
+          cacheStatus,
+          isColdSession,
+          principalId: principalKey,
+        });
 
         return data;
       } finally {
@@ -97,22 +203,67 @@ export default function DashboardPage() {
       }
       return failureCount < 1;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    placeholderData: (previousData) => previousData, // Use stale data while refetching (stale-while-revalidate)
+    placeholderData: (previousData) => previousData,
   });
 
-  const agency = dashboardData?.data?.agency;
-  const stats = dashboardData?.data?.stats || {
+  const payload = dashboardData?.data;
+  const agency = payload?.agency;
+  const onboardingStatusQuery = useAgencyOnboardingStatus(agency?.id);
+  const onboardingProgressMutation = useUpdateAgencyOnboardingProgress(agency?.id);
+  const onboardingStatus = onboardingStatusQuery.data;
+  const showOnboardingChecklist = Boolean(
+    onboardingStatus &&
+    !onboardingStatus.completed &&
+    (onboardingStatus.status === 'in_progress' || onboardingStatus.status === 'activated')
+  );
+  const isActivatedChecklist = onboardingStatus?.status === 'activated';
+  const stats = payload?.stats || {
     totalRequests: 0,
     pendingRequests: 0,
     activeConnections: 0,
     totalPlatforms: 0,
   };
-  const requests = dashboardData?.data?.requests || [];
-  const connections = dashboardData?.data?.connections || [];
+  const requests: DashboardRequestSummary[] = payload?.requests || [];
+  const connections: DashboardConnectionSummary[] = payload?.connections || [];
+  const requestsMeta = payload?.meta?.requests;
+  const connectionsMeta = payload?.meta?.connections;
+
+  const handleDismissOptionalSetup = async () => {
+    if (!agency?.id) return;
+
+    await onboardingProgressMutation.mutateAsync({
+      status: 'completed',
+      dismissedAt: new Date().toISOString(),
+      lastVisitedStep: 6,
+      lastCompletedStep: 6,
+    });
+
+    trackOnboardingEvent('onboarding_optional_dismissed', {
+      agencyId: agency.id,
+      status: onboardingStatus?.status,
+    });
+  };
+
+  const handleCompleteOnboarding = async () => {
+    if (!agency?.id) return;
+
+    await onboardingProgressMutation.mutateAsync({
+      status: 'completed',
+      completedAt: new Date().toISOString(),
+      lastVisitedStep: 6,
+      lastCompletedStep: 6,
+    });
+
+    trackOnboardingEvent('onboarding_completed', {
+      agencyId: agency.id,
+      source: 'dashboard_checklist',
+      status: onboardingStatus?.status,
+    });
+  };
 
   if (!canFetchDashboard && !dashboardData) {
     return (
@@ -154,7 +305,18 @@ export default function DashboardPage() {
     }
   }, [agency, stats]);
 
-  // Show loading state only on first load
+  useEffect(() => {
+    if (!agency || !showOnboardingChecklist || hasTrackedChecklistView.current || !onboardingStatus) {
+      return;
+    }
+
+    trackOnboardingEvent('checklist_shown', {
+      agencyId: agency.id,
+      status: onboardingStatus.status,
+    });
+    hasTrackedChecklistView.current = true;
+  }, [agency, onboardingStatus, showOnboardingChecklist]);
+
   if (isLoading && !dashboardData) {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
@@ -166,7 +328,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Show error state
   if (error) {
     const isAuthUnavailable = error instanceof Error && error.message === 'AUTH_TOKEN_UNAVAILABLE';
 
@@ -197,16 +358,16 @@ export default function DashboardPage() {
     );
   }
 
-  // Show onboarding prompt if no agency found
   if (!agency && !isLoading) {
     return (
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-acid/10 border border-acid rounded-lg p-6 text-center">
+            <span className="hidden bg-acid" aria-hidden />
             <AlertCircle className="h-8 w-8 text-acid mx-auto mb-3" />
             <h2 className="text-lg font-semibold text-acid mb-2">Agency Setup Required</h2>
             <p className="text-acid/90 mb-4">
-              We couldn't find an agency associated with your account. Let's set one up.
+              We couldn&apos;t find an agency associated with your account. Let&apos;s set one up.
             </p>
             <Link
               href="/onboarding/unified"
@@ -234,7 +395,7 @@ export default function DashboardPage() {
             </span>
           </div>
         )}
-        {/* Page Header */}
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
@@ -249,7 +410,58 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Stats Grid */}
+        {showOnboardingChecklist && (
+          <div className="mb-6 rounded-lg border border-acid/40 bg-acid/10 p-5">
+            <h2 className="text-lg font-semibold text-ink">Finish your onboarding setup</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isActivatedChecklist
+                ? 'You generated your first access link. Wrap up optional setup to complete onboarding.'
+                : 'Continue onboarding to generate your first client access link.'}
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/onboarding/unified"
+                onClick={() => {
+                  trackOnboardingEvent('checklist_resume_clicked', {
+                    agencyId: agency?.id,
+                    status: onboardingStatus?.status,
+                  });
+                }}
+                className="inline-flex min-h-[40px] items-center rounded-lg bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral/90"
+              >
+                Resume onboarding
+              </Link>
+
+              {isActivatedChecklist && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleDismissOptionalSetup();
+                    }}
+                    disabled={onboardingProgressMutation.isPending}
+                    className="inline-flex min-h-[40px] items-center rounded-lg border border-black/15 bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Skip optional setup
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleCompleteOnboarding();
+                    }}
+                    disabled={onboardingProgressMutation.isPending}
+                    className="inline-flex min-h-[40px] items-center rounded-lg border border-black/15 bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Finish setup
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             label="Total Requests"
@@ -273,10 +485,16 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Recent Access Requests */}
         <div className="bg-card rounded-lg shadow-brutalist border border-black/10">
           <div className="px-6 py-4 border-b border-black/10 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-ink">Recent Access Requests</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-ink">Recent Access Requests</h2>
+              {requestsMeta?.hasMore && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Showing latest {requestsMeta.returned} of {requestsMeta.total} requests
+                </p>
+              )}
+            </div>
             <Link
               href="/access-requests/new"
               className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
@@ -293,7 +511,7 @@ export default function DashboardPage() {
             />
           ) : (
             <div className="divide-y divide-black/10">
-              {requests.map((request: any, index: number) => (
+              {requests.map((request, index) => (
                 <div
                   key={request.id}
                   className={cn(
@@ -305,10 +523,10 @@ export default function DashboardPage() {
                     <h3 className="font-medium text-ink">{request.clientName}</h3>
                     <p className="text-sm text-muted-foreground">{request.clientEmail}</p>
                     <div className="mt-1 flex gap-2">
-                      {request.platforms?.google?.length > 0 && (
+                      {hasPlatformFamily(request.platforms, 'google') && (
                         <span className="text-[10px] bg-teal/10 text-teal-90 px-1.5 py-0.5 rounded border border-teal uppercase font-medium">Google</span>
                       )}
-                      {request.platforms?.meta?.length > 0 && (
+                      {hasPlatformFamily(request.platforms, 'meta') && (
                         <span className="text-[10px] bg-coral/10 text-coral-90 px-1.5 py-0.5 rounded border border-coral uppercase font-medium">Meta</span>
                       )}
                     </div>
@@ -317,7 +535,7 @@ export default function DashboardPage() {
                     <span className="text-xs text-gray-500">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </span>
-                    <StatusBadge status={request.status} />
+                    <StatusBadge status={request.status as any} />
                   </div>
                 </div>
               ))}
@@ -325,10 +543,16 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Client Connections */}
         <div className="bg-card rounded-lg shadow-brutalist border border-black/10 mt-6">
           <div className="px-6 py-4 border-b border-black/10 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-ink">Active Connections</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-ink">Active Connections</h2>
+              {connectionsMeta?.hasMore && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Showing latest {connectionsMeta.returned} of {connectionsMeta.total} connections
+                </p>
+              )}
+            </div>
             <Link href="/clients" className="text-sm text-coral hover:text-coral/90 font-semibold">
               Manage Clients
             </Link>
@@ -341,7 +565,7 @@ export default function DashboardPage() {
             />
           ) : (
             <div className="divide-y divide-black/10">
-              {connections.map((connection: any, index: number) => (
+              {connections.map((connection, index) => (
                 <div
                   key={connection.id}
                   className={cn(
@@ -357,19 +581,29 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex -space-x-2">
-                      {connection.authorizations?.map((auth: any) => (
-                        <div
-                          key={auth.id}
-                          className="h-7 w-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden"
-                          title={auth.platform}
-                        >
-                          <img
-                            src={auth.platform.includes('google') ? '/google-ads.svg' : '/meta-color.svg'}
-                            className="h-4 w-4"
-                            alt={auth.platform}
-                          />
-                        </div>
-                      ))}
+                      {connection.platforms.map((platform) => {
+                        const iconSrc = iconForPlatform(platform);
+
+                        return (
+                          <div
+                            key={`${connection.id}-${platform}`}
+                            className="h-7 w-7 rounded-full border-2 border-white bg-muted flex items-center justify-center overflow-hidden"
+                            title={platform}
+                          >
+                            {iconSrc ? (
+                              <img
+                                src={iconSrc}
+                                className="h-4 w-4"
+                                alt={platform}
+                              />
+                            ) : (
+                              <span className="text-[9px] font-semibold uppercase text-muted-foreground">
+                                {platform.slice(0, 2)}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     <Link
                       href={`/clients?email=${encodeURIComponent(connection.clientEmail)}`}

@@ -18,6 +18,8 @@ import { useAuthOrBypass, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { TrialBanner } from '@/components/trial-banner';
 import { useSubscription } from '@/lib/query/billing';
+import { shouldEnforceOnboardingRedirect, type AgencyOnboardingStatusData } from '@/lib/query/onboarding';
+import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { SUBSCRIPTION_TIER_NAMES } from '@agency-platform/shared';
 
 const agencyCheckDedup = new Set<string>();
@@ -46,12 +48,6 @@ export default function AuthenticatedLayout({
     const checkAgencyAndRedirect = async () => {
       // Skip if already on onboarding page
       if (pathname?.startsWith('/onboarding')) {
-        return;
-      }
-
-      // Dashboard already handles missing agency state. Skip preflight check
-      // to avoid an extra blocking network round-trip on sign-in.
-      if (pathname === '/dashboard') {
         return;
       }
 
@@ -110,6 +106,41 @@ export default function AuthenticatedLayout({
         if (!result.data || result.data.length === 0) {
           router.replace('/onboarding/unified');
           return;
+        }
+
+        const agencyId = result.data[0]?.id as string | undefined;
+        if (!agencyId) {
+          return;
+        }
+
+        const onboardingResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/${agencyId}/onboarding-status`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!onboardingResponse.ok) {
+          return;
+        }
+
+        const onboardingResult = await onboardingResponse.json() as {
+          data?: AgencyOnboardingStatusData;
+          error?: { code: string; message: string };
+        };
+        if (onboardingResult.error || !onboardingResult.data) {
+          return;
+        }
+
+        if (shouldEnforceOnboardingRedirect(onboardingResult.data)) {
+          trackOnboardingEvent('redirected_to_onboarding', {
+            source: 'authenticated_layout',
+            status: onboardingResult.data.status,
+            agencyId,
+          });
+          router.replace('/onboarding/unified');
         }
       } catch (err) {
         console.error('Failed to check agency for redirect:', err);

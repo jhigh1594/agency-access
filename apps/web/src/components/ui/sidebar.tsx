@@ -225,9 +225,7 @@ export const SidebarLink = ({
         >
           {link.icon}
         </div>
-        <div
-          className="overflow-hidden"
-        >
+        <div className={cn(open ? "overflow-visible" : "overflow-hidden")}>
           <span
             aria-hidden={!open}
             className={cn(

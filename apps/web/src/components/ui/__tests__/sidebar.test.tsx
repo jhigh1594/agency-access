@@ -88,4 +88,29 @@ describe('Sidebar', () => {
       expect(settingsLink).toHaveAttribute('aria-current', 'page');
     });
   });
+
+  it('keeps open nav labels visible during hover animation', () => {
+    render(
+      <Sidebar>
+        <SidebarBody>
+          <SidebarLink
+            link={{
+              label: 'Settings',
+              href: '/settings',
+              icon: <span aria-hidden>⚙</span>,
+            }}
+          />
+        </SidebarBody>
+      </Sidebar>
+    );
+
+    const labels = screen.getAllByText('Settings');
+
+    labels.forEach((label) => {
+      const labelWrapper = label.parentElement;
+      expect(labelWrapper).toBeInTheDocument();
+      expect(labelWrapper).toHaveClass('overflow-visible');
+      expect(labelWrapper).not.toHaveClass('overflow-hidden');
+    });
+  });
 });
