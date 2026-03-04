@@ -636,6 +636,7 @@ export function UnifiedOnboardingProvider({
 
       // Step 1: Resolve agency (existing first, then create)
       let agencyId = state.agencyId;
+      const agencyResolvedFromState = Boolean(agencyId);
       let agencyResolvedFromExisting = false;
       if (!agencyId && principalClerkId) {
         const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
@@ -672,7 +673,7 @@ export function UnifiedOnboardingProvider({
         agencyId = agencyJson.data.id;
       }
 
-      if (agencyId && agencyResolvedFromExisting) {
+      if (agencyId && (agencyResolvedFromExisting || agencyResolvedFromState)) {
         await authorizedApiFetch(`/api/agencies/${agencyId}`, {
           method: 'PATCH',
           getToken,

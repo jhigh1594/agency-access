@@ -561,6 +561,114 @@ describe('UnifiedOnboardingContext', () => {
     });
   });
 
+  it('persists updated agency name when onboarding resumes with an existing agency id', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const method = (init?.method || 'GET').toUpperCase();
+
+      if (url.endsWith('/api/agencies?clerkUserId=user_123') && method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+        };
+      }
+
+      if (url.endsWith('/api/agencies/agency-1/onboarding-status') && method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: {
+              status: 'in_progress',
+              completed: false,
+              lifecycle: {
+                status: 'in_progress',
+                lastVisitedStep: 3,
+              },
+              step: {
+                profile: true,
+                members: false,
+                firstRequest: false,
+              },
+            },
+            error: null,
+          }),
+        };
+      }
+
+      if (url.endsWith('/api/agencies/agency-1') && method === 'PATCH') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: { id: 'agency-1' }, error: null }),
+        };
+      }
+
+      if (url.endsWith('/api/clients') && method === 'POST') {
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({ data: { id: 'client-1' }, error: null }),
+        };
+      }
+
+      if (url.endsWith('/api/access-requests') && method === 'POST') {
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({ data: { id: 'req-1', uniqueToken: 'abc123', agencyId: 'agency-1' }, error: null }),
+        };
+      }
+
+      if (url.endsWith('/api/agencies/agency-1/onboarding-progress') && method === 'PATCH') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: { agencyId: 'agency-1' }, error: null }),
+        };
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        json: async () => ({ error: { code: 'NOT_FOUND', message: `Unhandled test request: ${method} ${url}` } }),
+      };
+    });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper: hydrationWrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.agencyId).toBe('agency-1');
+    });
+
+    act(() => {
+      result.current.updateAgency({
+        name: 'Updated Agency Name',
+        settings: {
+          timezone: 'America/New_York',
+          industry: 'digital_marketing',
+        },
+      });
+      result.current.updateClient({
+        name: 'Acme Client',
+        email: 'client@acme.com',
+      });
+    });
+
+    await act(async () => {
+      await result.current.createAgencyAndAccessRequest();
+    });
+
+    const patchAgencyCall = fetchMock.mock.calls.find((call) =>
+      String(call[0]).endsWith('/api/agencies/agency-1') && (call[1]?.method || 'GET').toUpperCase() === 'PATCH'
+    );
+
+    expect(patchAgencyCall).toBeDefined();
+    const patchBody = JSON.parse(patchAgencyCall?.[1]?.body as string);
+    expect(patchBody.name).toBe('Updated Agency Name');
+  });
+
   it('persists activated onboarding lifecycle after creating first access request', async () => {
     fetchMock
       .mockResolvedValueOnce({
