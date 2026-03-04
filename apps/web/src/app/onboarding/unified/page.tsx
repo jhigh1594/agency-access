@@ -20,7 +20,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { AlertCircle } from 'lucide-react';
@@ -38,29 +38,88 @@ import { FinalSuccessScreen } from '@/components/onboarding/screens/final-succes
 // ONBOARDING FLOW COMPONENT
 // ============================================================
 
+interface OnboardingStepErrorBoundaryProps {
+  children: ReactNode;
+  onExit: () => void;
+}
+
+interface OnboardingStepErrorBoundaryState {
+  hasError: boolean;
+}
+
+class OnboardingStepErrorBoundary extends Component<
+  OnboardingStepErrorBoundaryProps,
+  OnboardingStepErrorBoundaryState
+> {
+  state: OnboardingStepErrorBoundaryState = {
+    hasError: false,
+  };
+
+  static getDerivedStateFromError(): OnboardingStepErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Unified onboarding step render failed', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="mx-8 my-10 rounded-xl border border-red-300 bg-red-50 p-6 text-red-900">
+          <h2 className="text-xl font-semibold">Something went wrong in onboarding</h2>
+          <p className="mt-2 text-sm">
+            We hit an unexpected issue while loading this step. Please return to your dashboard and try onboarding again.
+          </p>
+          <button
+            type="button"
+            onClick={this.props.onExit}
+            className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+          >
+            Go to dashboard
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function OnboardingFlow() {
-  const { state, nextStep, prevStep, canGoNext, canGoBack, canSkip, updateAgency, updateClient, updatePlatforms, loadExistingClients, createAgencyAndAccessRequest, addTeamInvite, removeTeamInvite, updateTeamInviteRole, sendTeamInvites, completeOnboarding } = useUnifiedOnboarding();
+  const { state, nextStep, prevStep, canGoNext, canGoBack, canSkip, updateAgency, updateClient, updatePlatforms, createAgencyAndAccessRequest, addTeamInvite, removeTeamInvite, updateTeamInviteRole, sendTeamInvites, completeOnboarding, setError } = useUnifiedOnboarding();
   const router = useRouter();
 
   const handleNext = async () => {
-    if (state.currentStep === 3) {
-      const createResult = await createAgencyAndAccessRequest();
-      if (createResult.ok) {
+    try {
+      if (state.currentStep === 3) {
+        const createResult = await createAgencyAndAccessRequest();
+        if (createResult.ok) {
+          nextStep();
+        }
+        return;
+      }
+
+      if (state.currentStep === 5 && state.teamInvites.length > 0) {
+        const invitesSent = await sendTeamInvites();
+        if (invitesSent) {
+          nextStep();
+        }
+        return;
+      }
+
+      if (canGoNext()) {
         nextStep();
       }
-      return;
-    }
-
-    if (state.currentStep === 5 && state.teamInvites.length > 0) {
-      const invitesSent = await sendTeamInvites();
-      if (invitesSent) {
-        nextStep();
-      }
-      return;
-    }
-
-    if (canGoNext()) {
-      nextStep();
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : 'Unexpected onboarding error. Please try again.';
+      setError(message);
     }
   };
 
@@ -95,7 +154,6 @@ function OnboardingFlow() {
             loading={state.loading}
             onUpdate={(data) => updateClient(data)}
             onWebsiteUrlChange={(website) => updateAgency({ name: state.agencyName, settings: { website } })}
-            onLoadClients={loadExistingClients}
           />
         );
 
@@ -158,15 +216,17 @@ function OnboardingFlow() {
       showClose={state.currentStep >= 4} // Can close after value is delivered
       onClose={() => router.push('/dashboard')}
     >
-      {state.error && (
-        <div className="mx-8 mt-8 mb-0 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>{state.error}</span>
+      <OnboardingStepErrorBoundary onExit={() => router.push('/dashboard')}>
+        {state.error && (
+          <div className="mx-8 mt-8 mb-0 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>{state.error}</span>
+            </div>
           </div>
-        </div>
-      )}
-      {renderScreen()}
+        )}
+        {renderScreen()}
+      </OnboardingStepErrorBoundary>
     </UnifiedWizard>
   );
 }

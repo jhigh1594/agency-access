@@ -36,7 +36,7 @@ interface ClientSelectionScreenProps {
   loading: boolean;
   onUpdate: (data: { id?: string; name: string; email: string }) => void;
   onWebsiteUrlChange: (website: string) => void;
-  onLoadClients: () => Promise<void>;
+  onLoadClients?: () => Promise<void>;
 }
 
 type ClientSelectionMode = 'existing' | 'new';
@@ -53,18 +53,12 @@ export function ClientSelectionScreen({
   loading,
   onUpdate,
   onWebsiteUrlChange,
-  onLoadClients,
 }: ClientSelectionScreenProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [mode, setMode] = useState<ClientSelectionMode>(
     existingClients.length > 0 ? 'existing' : 'new'
   );
   const [hasUserSelectedMode, setHasUserSelectedMode] = useState(false);
-
-  // Load existing clients on mount
-  useEffect(() => {
-    onLoadClients();
-  }, [onLoadClients]);
 
   // Auto-select the best mode only before the user has interacted.
   useEffect(() => {

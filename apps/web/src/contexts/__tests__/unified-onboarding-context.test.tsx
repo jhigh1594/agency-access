@@ -50,7 +50,11 @@ describe('UnifiedOnboardingContext', () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <UnifiedOnboardingProvider>{children}</UnifiedOnboardingProvider>
+    <UnifiedOnboardingProvider enableProgressHydration={false}>{children}</UnifiedOnboardingProvider>
+  );
+
+  const hydrationWrapper = ({ children }: { children: ReactNode }) => (
+    <UnifiedOnboardingProvider enableProgressHydration>{children}</UnifiedOnboardingProvider>
   );
 
   it('prefills agency name from email domain', async () => {
@@ -66,6 +70,22 @@ describe('UnifiedOnboardingContext', () => {
 
     await waitFor(() => {
       expect(result.current.state.agencyName).toBe('Pillar AI Agency');
+    });
+  });
+
+  it('falls back to "My Agency" when Clerk user has no email addresses array', async () => {
+    mockUser = {
+      id: 'user_123',
+      firstName: 'Jon',
+      lastName: 'Doe',
+      emailAddresses: undefined as any,
+      primaryEmailAddress: null,
+    } as any;
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.agencyName).toBe('My Agency');
     });
   });
 
@@ -180,6 +200,19 @@ describe('UnifiedOnboardingContext', () => {
       .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ data: { id: 'agency-1' }, error: null }) })
       .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { id: 'client-1' }, error: null }) })
       .mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({ data: { id: 'req-1', uniqueToken: 'abc123' }, error: null }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: {
+            agencyId: 'agency-1',
+            lifecycle: {
+              status: 'activated',
+            },
+          },
+          error: null,
+        }),
+      })
       .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ data: { invited: 1 }, error: null }) });
 
     const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
@@ -242,6 +275,19 @@ describe('UnifiedOnboardingContext', () => {
         ok: true,
         status: 201,
         json: async () => ({ data: { id: 'req-1', uniqueToken: 'abc123', agencyId: 'agency-org' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: {
+            agencyId: 'agency-org',
+            lifecycle: {
+              status: 'activated',
+            },
+          },
+          error: null,
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -477,6 +523,107 @@ describe('UnifiedOnboardingContext', () => {
       expect.objectContaining({ method: 'POST' })
     );
     expect(mockPush).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('hydrates onboarding step from persisted onboarding status when agency already exists', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: {
+            status: 'in_progress',
+            completed: false,
+            lifecycle: {
+              status: 'in_progress',
+              lastVisitedStep: 3,
+            },
+            step: {
+              profile: true,
+              members: false,
+              firstRequest: false,
+            },
+          },
+          error: null,
+        }),
+      });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper: hydrationWrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.currentStep).toBe(3);
+      expect(result.current.state.agencyId).toBe('agency-1');
+    });
+  });
+
+  it('persists activated onboarding lifecycle after creating first access request', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { id: 'agency-1' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ data: { id: 'client-1' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ data: { id: 'req-1', uniqueToken: 'abc123' }, error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: {
+            agencyId: 'agency-1',
+            lifecycle: {
+              status: 'activated',
+              accessRequestId: 'req-1',
+            },
+          },
+          error: null,
+        }),
+      });
+
+    const { result } = renderHook(() => useUnifiedOnboarding(), { wrapper });
+
+    act(() => {
+      result.current.updateAgency({
+        name: 'Acme Agency',
+        settings: {
+          timezone: 'America/New_York',
+          industry: 'digital_marketing',
+        },
+      });
+      result.current.updateClient({
+        name: 'Acme Client',
+        email: 'client@acme.com',
+      });
+    });
+
+    await act(async () => {
+      await result.current.createAgencyAndAccessRequest();
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/api/agencies/agency-1/onboarding-progress',
+      expect.objectContaining({
+        method: 'PATCH',
+      })
+    );
   });
 
   it('allows continue on client and platform steps even when skipped', () => {

@@ -21,12 +21,16 @@
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { Client, Platform, AgencyRole } from '@agency-platform/shared';
+import { Client, Platform, AgencyRole, UnifiedOnboardingProgress } from '@agency-platform/shared';
 import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
+import {
+  resolveOnboardingResumeStep,
+  type AgencyOnboardingStatusData,
+} from '@/lib/query/onboarding';
 
 // ============================================================
 // TYPES
@@ -322,17 +326,20 @@ const initialState: OnboardingState = {
 interface UnifiedOnboardingProviderProps {
   children: ReactNode;
   onComplete?: () => void; // Optional callback when onboarding completes
+  enableProgressHydration?: boolean;
 }
 
 export function UnifiedOnboardingProvider({
   children,
   onComplete,
+  enableProgressHydration = true,
 }: UnifiedOnboardingProviderProps) {
   const router = useRouter();
   const { userId, orgId, getToken } = useAuth();
   const { user } = useUser();
 
   const [state, setState] = useState<OnboardingState>(initialState);
+  const hasHydratedProgressRef = useRef(false);
 
   // ============================================================
   // ANALYTICS TRACKING
@@ -368,15 +375,55 @@ export function UnifiedOnboardingProvider({
     }
   }, [state.currentStep, state.completedSteps, state.startedAt]);
 
+  const persistOnboardingProgress = useCallback(
+    async (agencyId: string | undefined, progress: UnifiedOnboardingProgress) => {
+      if (!agencyId) {
+        return;
+      }
+
+      try {
+        await authorizedApiFetch(`/api/agencies/${agencyId}/onboarding-progress`, {
+          method: 'PATCH',
+          getToken,
+          body: JSON.stringify(progress),
+        });
+      } catch {
+        // Non-blocking persistence path. Recovery still works from server-derived defaults.
+      }
+    },
+    [getToken]
+  );
+
   // ============================================================
   // NAVIGATION METHODS
   // ============================================================
 
   const nextStep = useCallback(() => {
-    if (state.currentStep < TOTAL_STEPS) {
-      setState((prev) => ({ ...prev, currentStep: prev.currentStep + 1, error: null }));
+    let progressPayload: UnifiedOnboardingProgress | null = null;
+    let agencyIdForPersist: string | undefined;
+
+    setState((prev) => {
+      if (prev.currentStep >= TOTAL_STEPS) {
+        return prev;
+      }
+
+      const next = prev.currentStep + 1;
+      progressPayload = {
+        status: next >= 4 ? 'activated' : 'in_progress',
+        startedAt: new Date(prev.startedAt).toISOString(),
+        lastCompletedStep: prev.currentStep,
+        lastVisitedStep: next,
+        accessRequestId: prev.accessRequestId,
+      };
+      agencyIdForPersist = prev.agencyId;
+
+      return { ...prev, currentStep: next, error: null };
+    });
+
+    if (progressPayload) {
+      void persistOnboardingProgress(agencyIdForPersist, progressPayload);
     }
-  }, [state.currentStep]);
+  }, [persistOnboardingProgress]);
 
   const prevStep = useCallback(() => {
     if (state.currentStep > 0) {
@@ -388,9 +435,14 @@ export function UnifiedOnboardingProvider({
     (step: number) => {
       if (step >= 0 && step <= TOTAL_STEPS) {
         setState((prev) => ({ ...prev, currentStep: step, error: null }));
+        void persistOnboardingProgress(state.agencyId, {
+          status: step >= 4 ? 'activated' : 'in_progress',
+          startedAt: new Date(state.startedAt).toISOString(),
+          lastVisitedStep: step,
+        });
       }
     },
-    [TOTAL_STEPS]
+    [TOTAL_STEPS, persistOnboardingProgress, state.agencyId, state.startedAt]
   );
 
   const canGoNext = useCallback(() => {
@@ -555,7 +607,7 @@ export function UnifiedOnboardingProvider({
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0]?.emailAddress;
+      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
       const principalClerkId = orgId || userId;
       const safeAgencyName = state.agencyName.trim().length > 0
         ? state.agencyName.trim()
@@ -701,6 +753,15 @@ export function UnifiedOnboardingProvider({
         loading: false,
       }));
 
+      void persistOnboardingProgress(resolvedAgencyId, {
+        status: 'activated',
+        startedAt: new Date(state.startedAt).toISOString(),
+        activatedAt: new Date().toISOString(),
+        lastCompletedStep: 3,
+        lastVisitedStep: 4,
+        accessRequestId: accessRequest.id,
+      });
+
       return {
         ok: true,
         agencyId: resolvedAgencyId,
@@ -731,7 +792,7 @@ export function UnifiedOnboardingProvider({
         error: errorMessage,
       };
     }
-  }, [flattenSelectedPlatforms, getToken, orgId, state, user, userId]);
+  }, [flattenSelectedPlatforms, getToken, orgId, persistOnboardingProgress, state, user, userId]);
 
   const sendTeamInvites = useCallback(async (): Promise<boolean> => {
     if (state.teamInvites.length === 0) {
@@ -795,7 +856,7 @@ export function UnifiedOnboardingProvider({
 
   const completeOnboarding = useCallback(async () => {
     try {
-      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0]?.emailAddress;
+      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
       const principalClerkId = orgId || userId;
       let resolvedAgencyId = state.agencyId;
 
@@ -858,6 +919,14 @@ export function UnifiedOnboardingProvider({
         accessRequestId: state.accessRequestId,
       });
 
+      await persistOnboardingProgress(resolvedAgencyId, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        lastCompletedStep: 6,
+        lastVisitedStep: 6,
+        accessRequestId: state.accessRequestId,
+      });
+
       if (onComplete) {
         onComplete();
       } else {
@@ -875,7 +944,7 @@ export function UnifiedOnboardingProvider({
         error: errorMessage,
       }));
     }
-  }, [getToken, onComplete, orgId, router, state, user, userId]);
+  }, [getToken, onComplete, orgId, persistOnboardingProgress, router, state, user, userId]);
 
   const skipOnboarding = useCallback(() => {
     trackOnboardingEvent('onboarding_skipped', {
@@ -884,9 +953,76 @@ export function UnifiedOnboardingProvider({
       timestamp: Date.now(),
     });
 
+    void persistOnboardingProgress(state.agencyId, {
+      status: 'completed',
+      dismissedAt: new Date().toISOString(),
+      lastVisitedStep: state.currentStep,
+      accessRequestId: state.accessRequestId,
+    });
+
     // Navigate to dashboard
     router.push('/dashboard');
-  }, [state.currentStep, router]);
+  }, [persistOnboardingProgress, router, state.accessRequestId, state.agencyId, state.currentStep]);
+
+  useEffect(() => {
+    if (!enableProgressHydration) {
+      return;
+    }
+
+    if (hasHydratedProgressRef.current) {
+      return;
+    }
+
+    const principalClerkId = orgId || userId;
+    if (!principalClerkId) {
+      return;
+    }
+
+    if (state.currentStep > 0 || state.agencyId) {
+      return;
+    }
+
+    hasHydratedProgressRef.current = true;
+    let cancelled = false;
+
+    const hydrateProgress = async () => {
+      try {
+        const agencyLookup = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
+          `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+          { getToken }
+        );
+
+        if (!agencyLookup.data.length) {
+          return;
+        }
+
+        const resolvedAgencyId = agencyLookup.data[0].id;
+        const onboardingStatus = await authorizedApiFetch<{ data: AgencyOnboardingStatusData; error: null }>(
+          `/api/agencies/${resolvedAgencyId}/onboarding-status`,
+          { getToken }
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        const resumeStep = resolveOnboardingResumeStep(onboardingStatus.data);
+        setState((prev) => ({
+          ...prev,
+          agencyId: resolvedAgencyId,
+          currentStep: prev.currentStep > 0 ? prev.currentStep : resumeStep,
+        }));
+      } catch {
+        // Non-blocking hydration path.
+      }
+    };
+
+    void hydrateProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enableProgressHydration, getToken, orgId, state.agencyId, state.currentStep, userId]);
 
   // ============================================================
   // ERROR HANDLING
@@ -907,7 +1043,7 @@ export function UnifiedOnboardingProvider({
   useEffect(() => {
     // Pre-fill agency name from the account email domain.
     if (user && !state.agencyName) {
-      const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress;
+      const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress;
       const suggestedName = getAgencyNameFromEmail(email) || 'My Agency';
 
       setState((prev) => ({

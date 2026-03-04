@@ -3,6 +3,25 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ClientSelectionScreen } from '../client-selection-screen';
 
 describe('ClientSelectionScreen', () => {
+  it('does not auto-load existing clients for new-user onboarding', () => {
+    const onLoadClients = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ClientSelectionScreen
+        clientName=""
+        clientEmail=""
+        websiteUrl=""
+        existingClients={[]}
+        loading={false}
+        onUpdate={vi.fn()}
+        onWebsiteUrlChange={vi.fn()}
+        onLoadClients={onLoadClients}
+      />
+    );
+
+    expect(onLoadClients).not.toHaveBeenCalled();
+  });
+
   it('does not mark client name and email as required', () => {
     const onUpdate = vi.fn();
     const onLoadClients = vi.fn().mockResolvedValue(undefined);
