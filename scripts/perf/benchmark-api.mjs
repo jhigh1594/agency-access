@@ -40,6 +40,9 @@ async function main() {
   const runs = Number(arg('--runs', process.env.PERF_RUNS || '10'));
   const label = arg('--label', 'baseline');
   const freshTokenPerRun = arg('--fresh-token-per-run', 'false') === 'true';
+  const enforceBudget = arg('--enforce-budget', process.env.PERF_ENFORCE_BUDGET || 'false') === 'true';
+  const warmP95BudgetMs = Number(arg('--warm-p95-budget-ms', process.env.PERF_WARM_P95_BUDGET_MS || '400'));
+  const coldMaxBudgetMs = Number(arg('--cold-max-ms', process.env.PERF_COLD_MAX_BUDGET_MS || '2500'));
 
   const dashboardUrl = `${apiBase}/api/dashboard`;
 
@@ -92,6 +95,10 @@ async function main() {
   const dashboardDurations = samples.map((entry) => entry.dashboard.durationMs);
   const conditionalDurations = samples.map((entry) => entry.dashboardConditional.durationMs);
   const criticalDurations = samples.map((entry) => entry.criticalPathMs);
+  const warmCriticalDurations = criticalDurations.slice(1);
+  const warmCriticalSummary = summarize(
+    warmCriticalDurations.length > 0 ? warmCriticalDurations : criticalDurations
+  );
 
   const report = {
     label,
@@ -105,14 +112,44 @@ async function main() {
       dashboard: summarize(dashboardDurations),
       dashboardConditional: summarize(conditionalDurations),
       criticalPath: summarize(criticalDurations),
+      warmCriticalPath: warmCriticalSummary,
       firstRun: {
         agenciesMs: round(samples[0].agencies.durationMs),
         dashboardMs: round(samples[0].dashboard.durationMs),
         criticalPathMs: samples[0].criticalPathMs,
       },
     },
+    budgets: {
+      enforce: enforceBudget,
+      warmP95BudgetMs,
+      coldMaxBudgetMs,
+    },
     samples,
   };
+
+  if (enforceBudget) {
+    const failures = [];
+    if (report.summary.warmCriticalPath.p95Ms > warmP95BudgetMs) {
+      failures.push({
+        metric: 'warmCriticalPath.p95Ms',
+        observed: report.summary.warmCriticalPath.p95Ms,
+        budget: warmP95BudgetMs,
+      });
+    }
+
+    if (report.summary.firstRun.criticalPathMs > coldMaxBudgetMs) {
+      failures.push({
+        metric: 'firstRun.criticalPathMs',
+        observed: report.summary.firstRun.criticalPathMs,
+        budget: coldMaxBudgetMs,
+      });
+    }
+
+    report.budgetCheck = {
+      pass: failures.length === 0,
+      failures,
+    };
+  }
 
   const outputFile = path.join(__dirname, 'results', `api-${label}-${Date.now()}.json`);
   await fs.writeFile(outputFile, JSON.stringify(report, null, 2));
@@ -120,6 +157,16 @@ async function main() {
   process.stdout.write(`\nSaved API benchmark report: ${outputFile}\n`);
   process.stdout.write(`Critical path mean: ${report.summary.criticalPath.meanMs}ms\n`);
   process.stdout.write(`Critical path p95: ${report.summary.criticalPath.p95Ms}ms\n`);
+  process.stdout.write(`Warm critical path p95: ${report.summary.warmCriticalPath.p95Ms}ms\n`);
+
+  if (report.budgetCheck) {
+    if (!report.budgetCheck.pass) {
+      process.stdout.write('❌ Dashboard perf budget check failed.\n');
+      process.stdout.write(`${JSON.stringify(report.budgetCheck.failures, null, 2)}\n`);
+      process.exit(1);
+    }
+    process.stdout.write('✅ Dashboard perf budget check passed.\n');
+  }
 }
 
 main().catch((error) => {
