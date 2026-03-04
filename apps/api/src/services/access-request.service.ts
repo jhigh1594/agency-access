@@ -59,9 +59,31 @@ const createAccessRequestSchema = z.object({
 });
 
 const updateAccessRequestSchema = z.object({
-  clientName: z.string().min(1).optional(),
-  clientEmail: z.string().email().optional(),
-  status: z.enum(['pending', 'authorized', 'expired', 'cancelled']).optional(),
+  authModel: z.enum(['client_authorization', 'delegated_access']).optional(),
+  platforms: z.array(
+    z.object({
+      platform: AccessRequestPlatformSchema,
+      accessLevel: z.enum(['manage', 'view_only']),
+    })
+  ).min(1).optional(),
+  intakeFields: z.array(
+    z.object({
+      id: z.string().optional(),
+      label: z.string(),
+      type: z.enum(['text', 'email', 'phone', 'url', 'dropdown', 'textarea']),
+      required: z.boolean(),
+      options: z.array(z.string()).optional(),
+      order: z.number().optional(),
+    })
+  ).optional(),
+  branding: z.object({
+    logoUrl: z.string().url().optional(),
+    primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid hex color').optional(),
+    subdomain: z.string().min(3).max(63).regex(/^[a-z0-9-]+$/, 'Invalid subdomain').optional(),
+  }).optional(),
+  status: z.enum(['pending', 'partial', 'completed', 'expired', 'revoked']).optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'At least one field is required to update an access request',
 });
 
 export type CreateAccessRequestInput = z.infer<typeof createAccessRequestSchema>;
@@ -621,14 +643,52 @@ export async function updateAccessRequest(
   input: UpdateAccessRequestInput
 ) {
   try {
+    const existing = await prisma.accessRequest.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        agencyId: true,
+      },
+    });
+
+    if (!existing) {
+      return {
+        data: null,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Access request not found',
+        },
+      };
+    }
+
+    if (existing.status !== 'pending' && existing.status !== 'partial') {
+      return {
+        data: null,
+        error: {
+          code: 'REQUEST_NOT_EDITABLE',
+          message: 'Only pending or partial requests can be edited',
+        },
+      };
+    }
+
     const validated = updateAccessRequestSchema.parse(input);
+    const updateData: Record<string, unknown> = { ...validated };
 
     const accessRequest = await prisma.accessRequest.update({
       where: { id },
-      data: validated,
+      data: updateData,
     });
 
-    return { data: accessRequest, error: null };
+    await invalidateCache(`dashboard:${existing.agencyId}:*`);
+
+    return {
+      data: {
+        ...accessRequest,
+        authorizationLinkChanged: false,
+      },
+      error: null,
+    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -703,7 +763,7 @@ export async function cancelAccessRequest(id: string) {
   try {
     await prisma.accessRequest.update({
       where: { id },
-      data: { status: 'cancelled' },
+      data: { status: 'revoked' },
     });
 
     return { data: { success: true }, error: null };

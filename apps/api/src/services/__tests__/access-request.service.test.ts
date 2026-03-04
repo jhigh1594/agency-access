@@ -328,6 +328,80 @@ describe('AccessRequestService', () => {
     });
   });
 
+  describe('updateAccessRequest', () => {
+    it('should reject updates for non-editable request statuses', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        status: 'completed',
+        clientEmail: 'client@test.com',
+        uniqueToken: 'tokenold12345',
+      } as any);
+
+      const result = await accessRequestService.updateAccessRequest('request-1', {
+        authModel: 'delegated_access',
+      } as any);
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('REQUEST_NOT_EDITABLE');
+      expect(prisma.accessRequest.update).not.toHaveBeenCalled();
+    });
+
+    it('should update editable request without rotating token when recipient is unchanged', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        status: 'pending',
+        clientEmail: 'client@test.com',
+        uniqueToken: 'tokenold12345',
+      } as any);
+      vi.mocked(prisma.accessRequest.update).mockResolvedValue({
+        id: 'request-1',
+        status: 'pending',
+        clientEmail: 'client@test.com',
+        uniqueToken: 'tokenold12345',
+        authModel: 'delegated_access',
+      } as any);
+
+      const result = await accessRequestService.updateAccessRequest('request-1', {
+        authModel: 'delegated_access',
+        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        intakeFields: [{ id: '1', label: 'Website', type: 'url', required: true, order: 0 }],
+        branding: { primaryColor: '#FF6B35' },
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(result.data).toMatchObject({
+        id: 'request-1',
+        uniqueToken: 'tokenold12345',
+        authorizationLinkChanged: false,
+      });
+      expect(prisma.accessRequest.update).toHaveBeenCalledWith({
+        where: { id: 'request-1' },
+        data: expect.objectContaining({
+          authModel: 'delegated_access',
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+          intakeFields: [{ id: '1', label: 'Website', type: 'url', required: true, order: 0 }],
+          branding: { primaryColor: '#FF6B35' },
+        }),
+      });
+    });
+
+    it('should reject identity-only updates', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        status: 'pending',
+        agencyId: 'agency-1',
+      } as any);
+
+      const result = await accessRequestService.updateAccessRequest('request-1', {
+        clientEmail: 'new@test.com',
+      } as any);
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('VALIDATION_ERROR');
+      expect(prisma.accessRequest.update).not.toHaveBeenCalled();
+    });
+  });
+
   describe('generateUniqueToken', () => {
     it('should generate a 12-character hex string', () => {
       const token = accessRequestService.generateUniqueToken();

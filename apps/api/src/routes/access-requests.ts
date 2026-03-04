@@ -321,6 +321,7 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const principalAgencyId = (request as any).principalAgencyId as string;
+    const requestBody = request.body as any;
 
     const existing = await accessRequestService.getAccessRequestById(id);
     if (!existing.error && existing.data) {
@@ -333,7 +334,28 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
       }
     }
 
-    const result = await accessRequestService.updateAccessRequest(id, request.body as any);
+    const identityFields = ['clientName', 'clientEmail'].filter((field) => requestBody?.[field] !== undefined);
+    if (identityFields.length > 0) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Client identity fields must be edited in client profile management',
+          details: {
+            fields: identityFields,
+          },
+        },
+      });
+    }
+
+    const transformedRequestBody = {
+      ...requestBody,
+      ...(requestBody?.platforms !== undefined
+        ? { platforms: normalizePlatformsPayload(requestBody.platforms) }
+        : {}),
+    };
+
+    const result = await accessRequestService.updateAccessRequest(id, transformedRequestBody as any);
 
     if (result.error) {
       const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;

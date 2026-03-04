@@ -486,6 +486,100 @@ describe('Access Requests Routes - Platform Connection Validation', () => {
     });
   });
 
+  describe('PATCH /access-requests/:id', () => {
+    it('should normalize hierarchical platform payload before update', async () => {
+      vi.mocked(accessRequestService.getAccessRequestById).mockResolvedValue({
+        data: { id: 'req-1', agencyId: 'agency-1' } as any,
+        error: null,
+      });
+      vi.mocked(accessRequestService.updateAccessRequest).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          authModel: 'delegated_access',
+          authorizationLinkChanged: false,
+        } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/access-requests/req-1',
+        payload: {
+          authModel: 'delegated_access',
+          platforms: [
+            {
+              platformGroup: 'google',
+              products: [
+                { product: 'google_ads', accessLevel: 'admin' },
+                { product: 'ga4', accessLevel: 'read_only' },
+              ],
+            },
+          ],
+          branding: { primaryColor: '#FF6B35' },
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(accessRequestService.updateAccessRequest).toHaveBeenCalledWith(
+        'req-1',
+        expect.objectContaining({
+          authModel: 'delegated_access',
+          platforms: [
+            { platform: 'google_ads', accessLevel: 'manage' },
+            { platform: 'ga4', accessLevel: 'view_only' },
+          ],
+          branding: { primaryColor: '#FF6B35' },
+        })
+      );
+    });
+
+    it('should return 400 for non-editable request status errors', async () => {
+      vi.mocked(accessRequestService.getAccessRequestById).mockResolvedValue({
+        data: { id: 'req-1', agencyId: 'agency-1' } as any,
+        error: null,
+      });
+      vi.mocked(accessRequestService.updateAccessRequest).mockResolvedValue({
+        data: null as any,
+        error: {
+          code: 'REQUEST_NOT_EDITABLE',
+          message: 'Only pending or partial requests can be edited',
+        } as any,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/access-requests/req-1',
+        payload: {
+          authModel: 'delegated_access',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('REQUEST_NOT_EDITABLE');
+    });
+
+    it('should reject client identity mutations from request edit payloads', async () => {
+      vi.mocked(accessRequestService.getAccessRequestById).mockResolvedValue({
+        data: { id: 'req-1', agencyId: 'agency-1' } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/access-requests/req-1',
+        payload: {
+          clientEmail: 'new-recipient@example.com',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('VALIDATION_ERROR');
+      expect(response.json().error.message).toMatch(/client profile management/i);
+      expect(accessRequestService.getAccessRequestById).toHaveBeenCalledWith('req-1');
+      expect(accessRequestService.updateAccessRequest).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GET /client/:token - public client payload', () => {
     it('should return enriched client payload from service', async () => {
       vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
