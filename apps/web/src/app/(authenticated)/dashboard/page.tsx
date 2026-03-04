@@ -8,7 +8,7 @@
  * Includes ETag support for conditional requests to save bandwidth.
  */
 
-import { Plus, Users, Key, Activity, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Users, Key, Activity, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
@@ -100,6 +100,14 @@ function iconForPlatform(platform: string): string | null {
   }
 
   return null;
+}
+
+function requestClientHref(request: DashboardRequestSummary): string {
+  if (request.clientId) {
+    return `/clients/${request.clientId}`;
+  }
+
+  return `/clients?email=${encodeURIComponent(request.clientEmail)}`;
 }
 
 export default function DashboardPage() {
@@ -244,23 +252,6 @@ export default function DashboardPage() {
 
     trackOnboardingEvent('onboarding_optional_dismissed', {
       agencyId: agency.id,
-      status: onboardingStatus?.status,
-    });
-  };
-
-  const handleCompleteOnboarding = async () => {
-    if (!agency?.id) return;
-
-    await onboardingProgressMutation.mutateAsync({
-      status: 'completed',
-      completedAt: new Date().toISOString(),
-      lastVisitedStep: 6,
-      lastCompletedStep: 6,
-    });
-
-    trackOnboardingEvent('onboarding_completed', {
-      agencyId: agency.id,
-      source: 'dashboard_checklist',
       status: onboardingStatus?.status,
     });
   };
@@ -434,29 +425,16 @@ export default function DashboardPage() {
               </Link>
 
               {isActivatedChecklist && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleDismissOptionalSetup();
-                    }}
-                    disabled={onboardingProgressMutation.isPending}
-                    className="inline-flex min-h-[40px] items-center rounded-lg border border-black/15 bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Skip optional setup
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleCompleteOnboarding();
-                    }}
-                    disabled={onboardingProgressMutation.isPending}
-                    className="inline-flex min-h-[40px] items-center rounded-lg border border-black/15 bg-card px-4 py-2 text-sm font-semibold text-ink hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Finish setup
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleDismissOptionalSetup();
+                  }}
+                  disabled={onboardingProgressMutation.isPending}
+                  className="inline-flex min-h-[40px] items-center rounded-lg border-2 border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all duration-200 hover:border-teal/30 hover:bg-teal/10 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Finish setup
+                </button>
               )}
             </div>
           </div>
@@ -512,10 +490,12 @@ export default function DashboardPage() {
           ) : (
             <div className="divide-y divide-black/10">
               {requests.map((request, index) => (
-                <div
+                <Link
                   key={request.id}
+                  href={requestClientHref(request) as any}
+                  aria-label={`View details for ${request.clientName}`}
                   className={cn(
-                    'px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors',
+                    'group px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/60 focus-visible:ring-inset',
                     index === requests.length - 1 && 'rounded-b-lg'
                   )}
                 >
@@ -536,8 +516,12 @@ export default function DashboardPage() {
                       {new Date(request.createdAt).toLocaleDateString()}
                     </span>
                     <StatusBadge status={request.status as any} />
+                    <ChevronRight
+                      className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+                      aria-hidden="true"
+                    />
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

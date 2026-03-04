@@ -22,7 +22,7 @@ export function StatCard({
   trend,
 }: StatCardProps) {
   return (
-    <div className="bg-card rounded-sm border border-border p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-sm border border-black/10 p-6 shadow-sm hover:shadow-brutalist transition-all">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-sans font-medium uppercase tracking-wider text-muted">
           {label}

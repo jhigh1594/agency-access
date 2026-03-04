@@ -139,6 +139,72 @@ describe('DashboardPage behavior', () => {
     expect(await screen.findByText('Showing latest 10 of 42 connections')).toBeInTheDocument();
   });
 
+  it('links each recent request row to client details', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          agency: {
+            id: 'agency_1',
+            name: 'Agency One',
+            email: 'owner@agency.test',
+          },
+          stats: {
+            totalRequests: 2,
+            pendingRequests: 1,
+            activeConnections: 0,
+            totalPlatforms: 1,
+          },
+          requests: [
+            {
+              id: 'request-1',
+              clientId: 'client-123',
+              clientName: 'Client One',
+              clientEmail: 'client.one@example.com',
+              status: 'pending',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              platforms: ['google'],
+            },
+            {
+              id: 'request-2',
+              clientName: 'Client Two',
+              clientEmail: 'client.two+east@example.com',
+              status: 'partial',
+              createdAt: '2026-01-02T00:00:00.000Z',
+              platforms: ['meta'],
+            },
+          ],
+          connections: [],
+          meta: {
+            requests: {
+              limit: 10,
+              returned: 2,
+              total: 2,
+              hasMore: false,
+            },
+            connections: {
+              limit: 10,
+              returned: 0,
+              total: 0,
+              hasMore: false,
+            },
+          },
+        },
+        error: null,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByText('Client One')).toBeInTheDocument();
+    expect(document.querySelector('a[href=\"/clients/client-123\"]')).toBeInTheDocument();
+    expect(
+      document.querySelector('a[href=\"/clients?email=client.two%2Beast%40example.com\"]')
+    ).toBeInTheDocument();
+  });
+
   it('shows onboarding checklist when lifecycle status is in_progress', async () => {
     useQueryMock.mockReturnValue({
       data: {
@@ -180,6 +246,52 @@ describe('DashboardPage behavior', () => {
 
     expect(await screen.findByText('Finish your onboarding setup')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Resume onboarding' })).toHaveAttribute('href', '/onboarding/unified');
+  });
+
+  it('shows only resume and finish actions when lifecycle status is activated', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          agency: {
+            id: 'agency_1',
+            name: 'Agency One',
+            email: 'owner@agency.test',
+          },
+          stats: {
+            totalRequests: 0,
+            pendingRequests: 0,
+            activeConnections: 0,
+            totalPlatforms: 0,
+          },
+          requests: [],
+          connections: [],
+        },
+        error: null,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    useAgencyOnboardingStatusMock.mockReturnValue({
+      data: {
+        status: 'activated',
+        completed: false,
+        lifecycle: {
+          status: 'activated',
+          lastVisitedStep: 5,
+          activatedAt: '2026-03-01T00:00:00.000Z',
+        },
+      },
+      isLoading: false,
+    });
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByText('Finish your onboarding setup')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Resume onboarding' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish setup' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Skip optional setup' })).not.toBeInTheDocument();
   });
 
   it('hides onboarding checklist when onboarding is completed', async () => {
