@@ -6,6 +6,9 @@ import { assertAgencyAccess } from '@/lib/authorization.js';
 import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache.js';
 
 export async function registerManualRoutes(fastify: FastifyInstance) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const pinterestBusinessIdRegex = /^\d{1,20}$/;
+
   /**
    * POST /agency-platforms/:platform/manual-connect
    * Create manual invitation connection (no OAuth tokens).
@@ -44,11 +47,13 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       return reply.code(403).send({ data: null, error: accessError });
     }
 
-    // Pinterest requires businessId, other platforms require invitationEmail
+    // Pinterest requires businessId. Shopify is enablement-only on agency-side;
+    // client provides store details during invite flow.
+    // other manual platforms require invitationEmail.
     const isPinterest = platform === 'pinterest';
+    const isShopify = platform === 'shopify';
 
     if (isPinterest) {
-      // Validate Business ID for Pinterest (numeric, 1-20 digits)
       if (!businessId) {
         return reply.code(400).send({
           data: null,
@@ -59,8 +64,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const businessIdRegex = /^\d{1,20}$/;
-      if (!businessIdRegex.test(businessId)) {
+      if (!pinterestBusinessIdRegex.test(businessId)) {
         return reply.code(400).send({
           data: null,
           error: {
@@ -69,8 +73,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
           },
         });
       }
-    } else {
-      // Validate email for other manual platforms
+    } else if (!isShopify) {
       if (!invitationEmail) {
         return reply.code(400).send({
           data: null,
@@ -81,7 +84,6 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(invitationEmail)) {
         return reply.code(400).send({
           data: null,
@@ -133,17 +135,19 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         agencyId: actualAgencyId,
         platform,
         connectionMode: 'manual_invitation',
-        agencyEmail: isPinterest ? null : invitationEmail!.toLowerCase(),
+        agencyEmail: isPinterest || isShopify ? null : invitationEmail!.toLowerCase(),
         secretId: null,
         status: 'active',
         verificationStatus: 'pending',
         connectedBy: 'agency',
         metadata: {
-          authMethod: isPinterest ? 'manual_partnership' : 'manual_team_invitation',
-          ...(isPinterest
-            ? { businessId }
-            : { invitationEmail: invitationEmail!.toLowerCase() }
-          ),
+          authMethod: isPinterest
+            ? 'manual_partnership'
+            : isShopify
+            ? 'manual_collaborator_request'
+            : 'manual_team_invitation',
+          ...(isPinterest ? { businessId } : {}),
+          ...(isShopify ? {} : { invitationEmail: invitationEmail!.toLowerCase() }),
           invitationSentAt: new Date().toISOString(),
         },
       },
@@ -158,10 +162,8 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         metadata: {
           platform,
           connectionMode: 'manual_invitation',
-          ...(isPinterest
-            ? { businessId }
-            : { invitationEmail: invitationEmail!.toLowerCase() }
-          ),
+          ...(isPinterest ? { businessId } : {}),
+          ...(isShopify ? {} : { invitationEmail: invitationEmail!.toLowerCase() }),
         },
         ipAddress: '0.0.0.0',
         userAgent: 'unknown',
@@ -224,8 +226,20 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       return reply.code(403).send({ data: null, error: accessError });
     }
 
-    // Pinterest requires businessId, other platforms require invitationEmail
+    // Pinterest requires businessId.
+    // Shopify details are client-owned and cannot be updated from agency settings.
+    // other manual platforms require invitationEmail.
     const isPinterest = platform === 'pinterest';
+    const isShopify = platform === 'shopify';
+    if (isShopify) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'UNSUPPORTED_OPERATION',
+          message: 'Shopify store details are provided by the client during the access request flow.',
+        },
+      });
+    }
 
     if (isPinterest) {
       if (!businessId) {
@@ -238,8 +252,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const businessIdRegex = /^\d{1,20}$/;
-      if (!businessIdRegex.test(businessId)) {
+      if (!pinterestBusinessIdRegex.test(businessId)) {
         return reply.code(400).send({
           data: null,
           error: {
@@ -259,7 +272,6 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(invitationEmail)) {
         return reply.code(400).send({
           data: null,
@@ -308,13 +320,12 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     const updatedConnection = await prisma.agencyPlatformConnection.update({
       where: { id: existingConnection.id },
       data: {
-        agencyEmail: isPinterest ? null : invitationEmail!.toLowerCase(),
+        agencyEmail: isPinterest || isShopify ? null : invitationEmail!.toLowerCase(),
         metadata: {
           ...((existingConnection.metadata as any) || {}),
-          ...(isPinterest
-            ? { businessId, businessIdUpdatedAt: new Date().toISOString() }
-            : { invitationEmail: invitationEmail!.toLowerCase(), invitationEmailUpdatedAt: new Date().toISOString() }
-          ),
+          ...(isPinterest ? { businessId, businessIdUpdatedAt: new Date().toISOString() } : {}),
+          invitationEmail: invitationEmail!.toLowerCase(),
+          invitationEmailUpdatedAt: new Date().toISOString(),
         },
       },
     });
@@ -328,14 +339,13 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         metadata: {
           platform,
           previousEmail: existingConnection.agencyEmail,
-          newEmail: isPinterest ? null : invitationEmail!.toLowerCase(),
+          newEmail: isPinterest || isShopify ? null : invitationEmail!.toLowerCase(),
           ...(isPinterest
             ? {
                 previousBusinessId: (existingConnection.metadata as any)?.businessId,
                 newBusinessId: businessId,
               }
-            : {}
-          ),
+            : {}),
         },
         ipAddress: '0.0.0.0',
         userAgent: 'unknown',

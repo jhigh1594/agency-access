@@ -12,12 +12,13 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, X } from 'lucide-react';
 import posthog from 'posthog-js';
 import { PlatformCard, Button, EmptyState } from '@/components/ui';
 import { Platform, PlatformInfo } from '@agency-platform/shared';
 import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
 import { GoogleUnifiedSettings } from '@/components/google-unified-settings';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { m, AnimatePresence } from 'framer-motion';
 
@@ -284,7 +285,7 @@ function ConnectionsPageContent() {
     setErrorMessage(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'zapier'];
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'shopify', 'zapier'];
     if (manualPlatforms.includes(platform)) {
       // Open manual invitation modal in create mode
       setManualInvitationPlatform(platform);
@@ -340,7 +341,7 @@ function ConnectionsPageContent() {
         {/* Loading Agency */}
         {!agencyId && !agencyData && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-coral" />
+            <LogoSpinner size="md" />
             <span className="ml-2 text-muted-foreground">Loading agency...</span>
           </div>
         )}
@@ -391,7 +392,7 @@ function ConnectionsPageContent() {
         {/* Loading State */}
         {isLoading && agencyId && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-coral" />
+            <LogoSpinner size="md" />
             <span className="ml-2 text-muted-foreground">Loading platforms...</span>
           </div>
         )}
@@ -568,7 +569,7 @@ export default function ConnectionsPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen bg-paper">
-        <Loader2 className="h-8 w-8 animate-spin text-coral" />
+        <LogoSpinner size="lg" />
       </div>
     }>
       <ConnectionsPageContent />

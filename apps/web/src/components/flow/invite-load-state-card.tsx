@@ -1,6 +1,7 @@
 'use client';
 
-import { Loader2, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { Button } from '@/components/ui';
 
 export type InviteLoadState = 'loading' | 'delayed' | 'timeout' | 'error';
@@ -22,7 +23,7 @@ export function InviteLoadStateCard({
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
-          <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-coral" />
+          <LogoSpinner size="lg" className="mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
             {phase === 'loading'
               ? 'Loading your authorization request...'

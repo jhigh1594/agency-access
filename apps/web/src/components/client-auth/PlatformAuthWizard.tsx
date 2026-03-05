@@ -21,9 +21,8 @@ import { m, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, CheckCircle2, ChevronDown } from 'lucide-react';
 import { PlatformWizardCard } from './PlatformWizardCard';
 import { MetaAssetSelector } from './MetaAssetSelector';
-import { GoogleAdsAssetSelector } from './GoogleAdsAssetSelector';
-import { GA4AssetSelector } from './GA4AssetSelector';
 import { GoogleAssetSelector } from './GoogleAssetSelector';
+import { TikTokAssetSelector } from './TikTokAssetSelector';
 import { AutomaticPagesGrant } from './AutomaticPagesGrant';
 import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
 import { StepHelpText } from './StepHelpText';
@@ -31,6 +30,7 @@ import { AssetSelectorDisabled } from './AssetSelectorDisabled';
 import { PlatformIcon, Button } from '@/components/ui';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
+import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 
 interface PlatformAuthWizardProps {
   platform: Platform;
@@ -43,6 +43,24 @@ interface PlatformAuthWizardProps {
   initialStep?: 1 | 2 | 3;
 }
 
+interface TikTokShareResult {
+  advertiserId: string;
+  status: 'granted' | 'failed' | 'already_granted';
+  error?: string;
+  verified?: boolean;
+}
+
+interface TikTokShareResponse {
+  success: boolean;
+  partialFailure?: boolean;
+  results: TikTokShareResult[];
+  manualFallback?: {
+    required: boolean;
+    reason?: string | null;
+    agencyBusinessCenterId?: string | null;
+  };
+}
+
 export function PlatformAuthWizard({
   platform,
   platformName,
@@ -53,7 +71,7 @@ export function PlatformAuthWizard({
   initialStep,
 }: PlatformAuthWizardProps) {
   const router = useRouter();
-  const isManualPlatform = platform === 'beehiiv' || platform === 'kit';
+  const isManualPlatform = platform === 'beehiiv' || platform === 'kit' || platform === 'shopify';
 
   // Redirect platforms to manual flow (no OAuth - uses team invitations)
   useEffect(() => {
@@ -62,6 +80,9 @@ export function PlatformAuthWizard({
     }
     if (platform === 'kit') {
       router.push(`/invite/${accessRequestToken}/kit/manual` as any);
+    }
+    if (platform === 'shopify') {
+      router.push(`/invite/${accessRequestToken}/shopify/manual` as any);
     }
     // TODO: Add mailchimp and klaviyo redirects
   }, [platform, accessRequestToken, router]);
@@ -86,6 +107,9 @@ export function PlatformAuthWizard({
   const [assetsSaved, setAssetsSaved] = useState(false);
   const [chooseAccountsExpanded, setChooseAccountsExpanded] = useState(true);
   const [grantAccessExpanded, setGrantAccessExpanded] = useState(true);
+  const [tiktokShareResult, setTikTokShareResult] = useState<TikTokShareResponse | null>(null);
+  const [isTikTokSharing, setIsTikTokSharing] = useState(false);
+  const [tiktokShareError, setTikTokShareError] = useState<string | null>(null);
 
   // Update state when initialStep or initialConnectionId props change (for test page)
   useEffect(() => {
@@ -120,6 +144,14 @@ export function PlatformAuthWizard({
 
       const { authUrl } = json.data;
 
+      if (platform === 'tiktok') {
+        trackOnboardingEvent('client_tiktok_connect_clicked', {
+          platform,
+          step: 1,
+          requestedProducts: products.map((p) => p.product),
+        });
+      }
+
       // Redirect to external OAuth provider
       window.location.href = authUrl;
     } catch (err) {
@@ -134,6 +166,21 @@ export function PlatformAuthWizard({
       ...prev,
       [product]: selectedAssets,
     }));
+
+    if (platform === 'tiktok' || product === 'tiktok' || product === 'tiktok_ads') {
+      const selectedCount =
+        (selectedAssets?.selectedAdvertiserIds?.length ?? 0) ||
+        (selectedAssets?.adAccounts?.length ?? 0) ||
+        0;
+
+      trackOnboardingEvent('client_tiktok_assets_selected', {
+        platform: 'tiktok',
+        step: 2,
+        product,
+        selectedAccountCount: selectedCount,
+        selectedBusinessCenterId: selectedAssets?.selectedBusinessCenterId,
+      });
+    }
   }, []);
 
   // Fetch Business Manager ID for Meta
@@ -199,6 +246,70 @@ export function PlatformAuthWizard({
 
       // Mark assets as saved
       setAssetsSaved(true);
+
+      if (platform === 'tiktok') {
+        const tiktokAssets = groupAssets['tiktok_ads'] || groupAssets['tiktok'] || {};
+        const selectedCount =
+          (tiktokAssets.selectedAdvertiserIds?.length ?? 0) ||
+          (tiktokAssets.adAccounts?.length ?? 0) ||
+          0;
+        trackOnboardingEvent('client_tiktok_assets_saved', {
+          platform: 'tiktok',
+          step: 2,
+          selectedAccountCount: selectedCount,
+          selectedBusinessCenterId: tiktokAssets.selectedBusinessCenterId,
+        });
+
+        setTikTokShareError(null);
+        setTikTokShareResult(null);
+        setIsTikTokSharing(true);
+
+        try {
+          const selectedAdvertiserIds = tiktokAssets.selectedAdvertiserIds || tiktokAssets.adAccounts || [];
+          const shareResponse = await fetch(`/api/client/${accessRequestToken}/tiktok/share-partner-access`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              connectionId,
+              advertiserIds: selectedAdvertiserIds,
+              selectedBusinessCenterId: tiktokAssets.selectedBusinessCenterId,
+            }),
+          });
+
+          const shareJson = await shareResponse.json();
+          if (!shareResponse.ok || shareJson.error) {
+            throw new Error(shareJson.error?.message || 'Failed to share TikTok advertiser access');
+          }
+
+          const shareData = shareJson.data as TikTokShareResponse;
+          setTikTokShareResult(shareData);
+
+          trackOnboardingEvent('client_tiktok_partner_share_attempted', {
+            platform: 'tiktok',
+            step: 2,
+            success: shareData.success,
+            resultCount: shareData.results?.length || 0,
+            failedCount: shareData.results?.filter((item) => item.status === 'failed').length || 0,
+          });
+
+          // Keep user on Step 2 when manual follow-up is required.
+          if (shareData.success) {
+            setCurrentStep(3);
+          } else {
+            setGrantAccessExpanded(true);
+          }
+        } catch (shareError) {
+          const shareErrorMessage =
+            shareError instanceof Error
+              ? shareError.message
+              : 'Failed to automate TikTok Business Center sharing';
+          setTikTokShareError(shareErrorMessage);
+          setGrantAccessExpanded(true);
+        } finally {
+          setIsTikTokSharing(false);
+        }
+      }
+
       // Collapse "Choose Accounts" section after saving
       setChooseAccountsExpanded(false);
       // Expand "Grant Access" section if needed
@@ -225,6 +336,8 @@ export function PlatformAuthWizard({
         } else {
           setCurrentStep(3);
         }
+      } else if (platform === 'tiktok') {
+        // Progress is controlled by the partner-share automation result above.
       } else {
         setCurrentStep(3);
       }
@@ -237,9 +350,14 @@ export function PlatformAuthWizard({
 
   // Check if any assets are selected in the group
   const hasGroupSelections = () => {
+    if (platform === 'tiktok') {
+      return true;
+    }
+
     return Object.values(groupAssets).some((assets: any) => {
       return (
         (assets.adAccounts?.length ?? 0) > 0 ||
+        (assets.selectedAdvertiserIds?.length ?? 0) > 0 ||
         (assets.pages?.length ?? 0) > 0 ||
         (assets.instagramAccounts?.length ?? 0) > 0 ||
         (assets.properties?.length ?? 0) > 0
@@ -370,7 +488,13 @@ export function PlatformAuthWizard({
               {products
                 .filter((p) => {
                   // Show Meta products and all Google products
-                  return p.product === 'meta_ads' || p.product.startsWith('google_') || p.product === 'ga4';
+                  return (
+                    p.product === 'meta_ads' ||
+                    p.product.startsWith('google_') ||
+                    p.product === 'ga4' ||
+                    p.product === 'tiktok' ||
+                    p.product === 'tiktok_ads'
+                  );
                 })
                 .map((p) => {
                   // Map product IDs to display names (some products aren't in PLATFORM_CONFIG)
@@ -382,6 +506,8 @@ export function PlatformAuthWizard({
                     'google_merchant_center': 'Google Merchant Center',
                     'google_business_profile': 'Google Business Profile',
                     'meta_ads': 'Meta Ads',
+                    'tiktok': 'TikTok Ads',
+                    'tiktok_ads': 'TikTok Ads',
                   };
                   const productName = PLATFORM_NAMES[p.product as Platform] || productNameMap[p.product] || p.product;
 
@@ -416,6 +542,18 @@ export function PlatformAuthWizard({
                             sessionId={connectionId!}
                             accessRequestToken={accessRequestToken}
                             product={p.product}
+                            onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
+                            onError={setError}
+                          />
+                          {!connectionId && <AssetSelectorDisabled />}
+                        </div>
+                      )}
+
+                      {(p.product === 'tiktok' || p.product === 'tiktok_ads') && (
+                        <div className="relative">
+                          <TikTokAssetSelector
+                            sessionId={connectionId!}
+                            accessRequestToken={accessRequestToken}
                             onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
                             onError={setError}
                           />
@@ -620,10 +758,138 @@ export function PlatformAuthWizard({
                 </div>
               );
             })()}
+
+            {platform === 'tiktok' && connectionId && assetsSaved && (
+              <div className="border-2 border-black dark:border-white overflow-hidden">
+                <button
+                  onClick={() => setGrantAccessExpanded(!grantAccessExpanded)}
+                  className="w-full px-6 py-4 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors"
+                >
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-[var(--ink)] font-display">
+                      Grant access
+                    </h3>
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
+                      We attempt TikTok Business Center partner sharing automatically.
+                    </p>
+                  </div>
+                  <m.div
+                    animate={{ rotate: grantAccessExpanded ? 0 : -90 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown className="w-6 h-6 text-muted-foreground dark:text-muted-foreground" />
+                  </m.div>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {grantAccessExpanded && (
+                    <m.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 space-y-5">
+                        {isTikTokSharing && (
+                          <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
+                            <p className="font-semibold flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Granting access in TikTok Business Center...
+                            </p>
+                          </div>
+                        )}
+
+                        {tiktokShareError && (
+                          <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)]">
+                            <p className="font-semibold mb-2">Automatic TikTok sharing failed</p>
+                            <p className="text-sm">{tiktokShareError}</p>
+                            <p className="text-sm mt-3">
+                              Complete sharing manually in TikTok Business Center, then continue.
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              <a
+                                href="https://business.tiktok.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 border-2 border-black dark:border-white font-semibold text-[var(--ink)] hover:bg-muted/20 transition-colors"
+                              >
+                                Open TikTok Business Center
+                              </a>
+                              <Button
+                                onClick={() => setCurrentStep(3)}
+                                size="lg"
+                                variant="brutalist-rounded"
+                              >
+                                Continue with partial access
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {tiktokShareResult && !tiktokShareResult.success && (
+                          <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
+                            <p className="font-semibold mb-2">Automation completed with issues</p>
+                            <p className="text-sm mb-3">
+                              Some advertisers could not be shared automatically. Complete them manually in TikTok Business Center.
+                            </p>
+                            <ul className="text-sm space-y-1">
+                              {tiktokShareResult.results
+                                .filter((item) => item.status === 'failed')
+                                .map((item) => (
+                                  <li key={item.advertiserId}>
+                                    {item.advertiserId}: {item.error || 'Manual action required'}
+                                  </li>
+                                ))}
+                            </ul>
+
+                            {tiktokShareResult.manualFallback?.agencyBusinessCenterId && (
+                              <p className="text-sm mt-3">
+                                Agency Business Center ID: <span className="font-semibold">{tiktokShareResult.manualFallback.agencyBusinessCenterId}</span>
+                              </p>
+                            )}
+
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              <a
+                                href="https://business.tiktok.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 border-2 border-black dark:border-white font-semibold text-[var(--ink)] hover:bg-muted/20 transition-colors"
+                              >
+                                Open TikTok Business Center
+                              </a>
+                              <Button
+                                onClick={() => setCurrentStep(3)}
+                                size="lg"
+                                variant="brutalist-rounded"
+                              >
+                                Continue with partial access
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {tiktokShareResult?.success && (
+                          <div className="border-2 border-[var(--teal)] bg-[var(--teal)]/10 p-4 text-[var(--teal)]">
+                            <p className="font-semibold">TikTok partner sharing completed</p>
+                            <p className="text-sm mt-1">
+                              Selected advertisers were shared with your agency Business Center.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </m.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
             </div>
           );
 
-      case 3:
+      case 3: {
+        const hasTikTokPartialShare =
+          platform === 'tiktok' && Boolean(tiktokShareResult?.partialFailure || tiktokShareError);
+
         return (
           <div className="text-center space-y-6 py-8">
             {/* Success Icon with Brutalist Border */}
@@ -645,7 +911,9 @@ export function PlatformAuthWizard({
                 Connected
               </h3>
               <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
-                Access granted to the accounts you selected.
+                {hasTikTokPartialShare
+                  ? 'Some selected TikTok accounts still require manual sharing in Business Center.'
+                  : 'Access granted to the accounts you selected.'}
               </p>
             </m.div>
 
@@ -705,6 +973,7 @@ export function PlatformAuthWizard({
             </Button>
           </div>
         );
+      }
 
       default:
         return null;

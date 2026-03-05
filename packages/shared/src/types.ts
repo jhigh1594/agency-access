@@ -731,6 +731,8 @@ export type AccessRequestUpdatePayload = z.infer<typeof AccessRequestUpdatePaylo
 export interface ManualInviteTarget {
   agencyEmail?: string;
   businessId?: string;
+  shopDomain?: string;
+  collaboratorCode?: string;
 }
 
 // Client-side completion progress for multi-platform authorization.

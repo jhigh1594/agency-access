@@ -73,6 +73,8 @@ const envSchema = z.object({
   GOOGLE_ADS_DEVELOPER_TOKEN: z.string().optional(),
 
   // TikTok OAuth
+  TIKTOK_CLIENT_ID: z.string().optional(),
+  TIKTOK_CLIENT_SECRET: z.string().optional(),
   TIKTOK_APP_ID: z.string().optional(),
   TIKTOK_APP_SECRET: z.string().optional(),
 
@@ -132,6 +134,12 @@ const envSchema = z.object({
 const rawEnv = {
   ...process.env,
   INFISICAL_ENVIRONMENT: process.env.INFISICAL_ENVIRONMENT ?? process.env.INFISICAL_ENV,
+  // TikTok credential migration: prefer new CLIENT_* names and fall back to legacy APP_* names.
+  TIKTOK_CLIENT_ID: process.env.TIKTOK_CLIENT_ID ?? process.env.TIKTOK_APP_ID,
+  TIKTOK_CLIENT_SECRET: process.env.TIKTOK_CLIENT_SECRET ?? process.env.TIKTOK_APP_SECRET,
+  // Keep legacy vars populated for compatibility with any older code paths.
+  TIKTOK_APP_ID: process.env.TIKTOK_APP_ID ?? process.env.TIKTOK_CLIENT_ID,
+  TIKTOK_APP_SECRET: process.env.TIKTOK_APP_SECRET ?? process.env.TIKTOK_CLIENT_SECRET,
 };
 
 const parsedEnv = envSchema.parse(rawEnv);

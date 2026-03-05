@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ClientDetailHeader, ClientStats, ClientTabs } from '@/components/client-detail';
 import type { ClientDetailResponse } from '@agency-platform/shared';
 
@@ -47,7 +48,7 @@ export default function ClientDetailPage() {
     return (
       <div className="flex-1 bg-paper p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted" />
+          <LogoSpinner size="md" />
           <span className="ml-2 text-muted-foreground">Loading client details...</span>
         </div>
       </div>

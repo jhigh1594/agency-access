@@ -5,8 +5,9 @@
  * instead of OAuth. Agencies provide either:
  * - Email address (for Kit, Mailchimp, Beehiiv, Klaviyo)
  * - Business ID (for Pinterest)
+ * - Shopify store domain + collaborator code (for Shopify)
  *
- * Used for: Kit, Mailchimp, Beehiiv, Klaviyo, Pinterest
+ * Used for: Kit, Mailchimp, Beehiiv, Klaviyo, Pinterest, Shopify
  */
 
 'use client';
@@ -25,6 +26,7 @@ const PLATFORM_NAMES: Record<string, string> = {
   beehiiv: 'Beehiiv',
   klaviyo: 'Klaviyo',
   pinterest: 'Pinterest',
+  shopify: 'Shopify',
   zapier: 'Zapier',
 };
 
@@ -34,10 +36,10 @@ const BUSINESS_ID_PLATFORMS = ['pinterest'];
 interface ManualInvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  platform: string; // 'kit' | 'mailchimp' | 'beehiiv' | 'klaviyo' | 'pinterest'
+  platform: string; // 'kit' | 'mailchimp' | 'beehiiv' | 'klaviyo' | 'pinterest' | 'shopify'
   agencyId: string;
   onSuccess?: () => void;
-  mode?: 'create' | 'edit'; // 'create' for new connection, 'edit' to update email/businessId
+  mode?: 'create' | 'edit'; // 'create' for new connection, 'edit' to update details
   currentValue?: string; // Pre-filled value for edit mode
 }
 
@@ -55,6 +57,7 @@ export function ManualInvitationModal({
   const { getToken } = useAuth();
 
   const isBusinessIdPlatform = BUSINESS_ID_PLATFORMS.includes(platform);
+  const isShopifyPlatform = platform === 'shopify';
   const platformName = PLATFORM_NAMES[platform] || platform;
 
   // Reset form when modal opens
@@ -84,6 +87,8 @@ export function ManualInvitationModal({
 
       const body = isBusinessIdPlatform
         ? { agencyId, businessId: inputValue }
+        : isShopifyPlatform
+        ? { agencyId }
         : { agencyId, invitationEmail: inputValue };
 
       const response = await fetch(endpoint, {
@@ -114,7 +119,10 @@ export function ManualInvitationModal({
   const handleSubmit = () => {
     setError(null);
 
-    if (isBusinessIdPlatform) {
+    if (isShopifyPlatform) {
+      connectPlatform('');
+      return;
+    } else if (isBusinessIdPlatform) {
       // Validate Business ID (numeric, 1-20 digits)
       const businessIdRegex = /^\d{1,20}$/;
       if (!value || !businessIdRegex.test(value)) {
@@ -172,7 +180,13 @@ export function ManualInvitationModal({
                   {mode === 'edit' ? `Update ${platformName}` : `Connect ${platformName}`}
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  {isBusinessIdPlatform ? 'Business partnership setup' : mode === 'edit' ? 'Update invitation email' : 'Team invitation setup'}
+                  {isBusinessIdPlatform
+                    ? 'Business partnership setup'
+                    : isShopifyPlatform
+                    ? 'Collaborator access setup'
+                    : mode === 'edit'
+                    ? 'Update invitation email'
+                    : 'Team invitation setup'}
                 </p>
               </div>
             </div>
@@ -200,6 +214,10 @@ export function ManualInvitationModal({
                     <p className="text-muted-foreground">
                       Your clients will use this Business ID to add your agency as a partner in their {platformName} Business Manager.
                     </p>
+                  ) : isShopifyPlatform ? (
+                    <p className="text-muted-foreground">
+                      Enable Shopify for access requests. Clients provide their store domain and collaborator code during authorization.
+                    </p>
                   ) : (
                     <p className="text-muted-foreground">
                       When requesting {platformName} account access, your client will invite{' '}
@@ -224,26 +242,40 @@ export function ManualInvitationModal({
             {/* Content */}
             <div>
               <div className="mb-5">
-                <label htmlFor={isBusinessIdPlatform ? 'business-id' : 'invitation-email'} className="block text-sm font-medium text-ink mb-2">
-                  {isBusinessIdPlatform ? 'Pinterest Business ID' : 'Email to receive invitations'}
-                </label>
-                <input
-                  id={isBusinessIdPlatform ? 'business-id' : 'invitation-email'}
-                  type={isBusinessIdPlatform ? 'text' : 'email'}
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  placeholder={isBusinessIdPlatform ? '1234567890' : 'your-agency@example.com'}
-                  pattern={isBusinessIdPlatform ? '\\d{1,20}' : undefined}
-                  maxLength={isBusinessIdPlatform ? 20 : undefined}
-                  className="w-full px-4 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-primary transition-colors bg-background"
-                  disabled={isPending}
-                  autoFocus
-                />
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {isBusinessIdPlatform
-                    ? 'Your Pinterest Business ID (1-20 digits)'
-                    : 'This email will receive team invitations from your clients'}
-                </p>
+                {isShopifyPlatform ? (
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <p>
+                      Enabling Shopify here prepares request links so clients can submit their store domain and collaborator code.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Client enters store details in the invite flow.</li>
+                      <li>Your team uses those details to request access in Shopify Partners.</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <>
+                    <label htmlFor={isBusinessIdPlatform ? 'business-id' : 'invitation-email'} className="block text-sm font-medium text-ink mb-2">
+                      {isBusinessIdPlatform ? 'Pinterest Business ID' : 'Email to receive invitations'}
+                    </label>
+                    <input
+                      id={isBusinessIdPlatform ? 'business-id' : 'invitation-email'}
+                      type={isBusinessIdPlatform ? 'text' : 'email'}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      placeholder={isBusinessIdPlatform ? '1234567890' : 'your-agency@example.com'}
+                      pattern={isBusinessIdPlatform ? '\\d{1,20}' : undefined}
+                      maxLength={isBusinessIdPlatform ? 20 : undefined}
+                      className="w-full px-4 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-primary transition-colors bg-background"
+                      disabled={isPending}
+                      autoFocus
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {isBusinessIdPlatform
+                        ? 'Your Pinterest Business ID (1-20 digits)'
+                        : 'This email will receive team invitations from your clients'}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Find your Business ID helper - Pinterest only */}
@@ -295,7 +327,7 @@ export function ManualInvitationModal({
                   type="button"
                   variant="primary"
                   onClick={handleSubmit}
-                  disabled={isPending || !value}
+                  disabled={isPending || (!isShopifyPlatform && !value)}
                   isLoading={isPending}
                   className="flex-1"
                 >
@@ -310,6 +342,8 @@ export function ManualInvitationModal({
             <p className="text-xs text-muted-foreground text-center">
               {isBusinessIdPlatform
                 ? 'You can change this Business ID later from your settings'
+                : isShopifyPlatform
+                ? 'Clients provide Shopify store details during the access request flow.'
                 : 'You can change this email address later from your settings'}
             </p>
           </div>

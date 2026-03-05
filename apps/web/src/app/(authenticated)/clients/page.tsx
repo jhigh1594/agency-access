@@ -11,6 +11,7 @@ import { useState, Suspense } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Search, Filter, Loader2, AlertCircle, ExternalLink, Plus } from 'lucide-react';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import Link from 'next/link';
 import { StatusBadge, PlatformIcon, EmptyState } from '@/components/ui';
 import { CreateClientModal } from '@/components/client-detail/CreateClientModal';
@@ -85,7 +86,7 @@ function ClientsPageContent() {
     return (
       <div className="flex-1 bg-paper p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted" />
+          <LogoSpinner size="md" />
           <span className="ml-2 text-muted-foreground">Loading clients...</span>
         </div>
       </div>
@@ -310,7 +311,7 @@ export default function ClientsPage() {
       fallback={
         <div className="flex-1 bg-paper p-8">
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted" />
+            <LogoSpinner size="md" />
             <span className="ml-2 text-muted-foreground">Loading...</span>
           </div>
         </div>

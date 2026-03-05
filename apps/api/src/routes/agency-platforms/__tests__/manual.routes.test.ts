@@ -115,4 +115,79 @@ describe('Manual Agency Platform Routes', () => {
     expect(deleteCache).toHaveBeenCalledWith(CacheKeys.agencyConnections('agency-1'));
     expect(invalidateCache).toHaveBeenCalledWith('dashboard:agency-1:*');
   });
+
+  it('creates Shopify manual connection as enablement only', async () => {
+    vi.mocked(agencyResolutionService.resolveAgency).mockResolvedValue({
+      data: { agencyId: 'agency-1' },
+      error: null,
+    } as any);
+    vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(null as any);
+    vi.mocked(prisma.agencyPlatformConnection.create).mockResolvedValue({
+      id: 'conn-shopify-1',
+      platform: 'shopify',
+      agencyEmail: null,
+      status: 'active',
+      connectedAt: new Date(),
+    } as any);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/agency-platforms/shopify/manual-connect',
+      payload: {
+        agencyId: 'agency-1',
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(prisma.agencyPlatformConnection.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          platform: 'shopify',
+          metadata: expect.objectContaining({
+            authMethod: 'manual_collaborator_request',
+          }),
+        }),
+      })
+    );
+  });
+
+  it('rejects Shopify detail updates via manual invitation endpoint', async () => {
+    vi.mocked(agencyResolutionService.resolveAgency).mockResolvedValue({
+      data: { agencyId: 'agency-1' },
+      error: null,
+    } as any);
+    vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue({
+      id: 'conn-shopify-1',
+      agencyId: 'agency-1',
+      platform: 'shopify',
+      agencyEmail: null,
+      metadata: {
+        shopDomain: 'old-shop.myshopify.com',
+        collaboratorCode: '1111',
+      },
+    } as any);
+    vi.mocked(prisma.agencyPlatformConnection.update).mockResolvedValue({
+      id: 'conn-shopify-1',
+      platform: 'shopify',
+      agencyEmail: null,
+      status: 'active',
+      connectedAt: new Date(),
+    } as any);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/agency-platforms/shopify/manual-invitation',
+      payload: {
+        agencyId: 'agency-1',
+        shopDomain: 'new-shop.myshopify.com',
+        collaboratorCode: '5678',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error.code).toBe('UNSUPPORTED_OPERATION');
+    expect(prisma.agencyPlatformConnection.update).not.toHaveBeenCalled();
+  });
 });

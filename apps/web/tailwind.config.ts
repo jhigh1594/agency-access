@@ -87,6 +87,13 @@ const config: Config = {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        // Gentle spin for branded loading spinner
+        // Intermittent rotation (0 → 180 → 360) with easing for elegant feel
+        "gentle-spin": {
+          "0%": { transform: "rotate(0deg)" },
+          "50%": { transform: "rotate(180deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.6s ease-out forwards",
@@ -94,6 +101,8 @@ const config: Config = {
         "scroll-right": "scroll-right 30s linear infinite",
         "scroll-slow": "scroll-left-slow 40s linear infinite",
         "marquee": "marquee 30s linear infinite",
+        // 2.5s per rotation with ease-in-out for smooth, non-frantic feel
+        "gentle-spin": "gentle-spin 2.5s ease-in-out infinite",
       },
       boxShadow: {
         'brutalist': '4px 4px 0px #000',

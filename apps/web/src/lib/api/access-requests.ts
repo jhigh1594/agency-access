@@ -47,6 +47,13 @@ export interface AccessRequest {
     primaryColor: string;
     subdomain?: string;
   };
+  shopifySubmission?: {
+    status: 'pending_client' | 'submitted' | 'legacy_unreadable';
+    connectionId?: string;
+    shopDomain?: string;
+    collaboratorCode?: string;
+    submittedAt?: string;
+  };
   authorizationLinkChanged?: boolean;
 }
 

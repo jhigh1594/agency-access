@@ -140,6 +140,21 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
         },
       });
 
+      if (platform === 'tiktok' || platform === 'tiktok_ads') {
+        await auditService.createAuditLog({
+          agencyId: accessRequest.agencyId,
+          action: 'TIKTOK_TOKEN_EXCHANGED',
+          userEmail: stateData.clientEmail!,
+          resourceType: 'client_connection',
+          resourceId: clientConnection.id,
+          metadata: {
+            platform,
+            platformAuthId: platformAuth.id,
+          },
+          request,
+        });
+      }
+
       return reply.send({
         data: {
           connectionId: clientConnection.id,
@@ -294,6 +309,21 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
           platformAuthId: platformAuth.id,
         },
       });
+
+      if (platform === 'tiktok' || platform === 'tiktok_ads') {
+        await auditService.createAuditLog({
+          agencyId: accessRequest.agencyId,
+          action: 'TIKTOK_TOKEN_EXCHANGED',
+          userEmail: stateData.clientEmail!,
+          resourceType: 'client_connection',
+          resourceId: clientConnection.id,
+          metadata: {
+            platform,
+            platformAuthId: platformAuth.id,
+          },
+          request,
+        });
+      }
 
       return reply.send({
         data: {

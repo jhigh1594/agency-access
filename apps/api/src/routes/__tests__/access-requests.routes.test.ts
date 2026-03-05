@@ -10,11 +10,13 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { accessRequestRoutes } from '../access-requests.js';
 import * as accessRequestService from '@/services/access-request.service';
 import * as agencyPlatformService from '@/services/agency-platform.service';
+import * as auditService from '@/services/audit.service';
 import * as authorization from '@/lib/authorization.js';
 
 // Mock services
 vi.mock('@/services/access-request.service');
 vi.mock('@/services/agency-platform.service');
+vi.mock('@/services/audit.service');
 vi.mock('@/lib/authorization.js');
 vi.mock('@/services/quota.service', () => ({
   quotaService: {
@@ -483,6 +485,72 @@ describe('Access Requests Routes - Platform Connection Validation', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBeDefined();
+    });
+  });
+
+  describe('GET /access-requests/:id', () => {
+    it('logs audit event when Shopify submission details are viewed', async () => {
+      vi.mocked(accessRequestService.getAccessRequestById).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          shopifySubmission: {
+            status: 'submitted',
+            shopDomain: 'client-store.myshopify.com',
+            collaboratorCode: '1234',
+            connectionId: 'conn-1',
+          },
+        } as any,
+        error: null,
+      });
+      vi.mocked(auditService.auditService.createAuditLog).mockResolvedValue({
+        data: {} as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/access-requests/req-1',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(auditService.auditService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'SHOPIFY_SUBMISSION_VIEWED',
+          resourceType: 'access_request',
+          resourceId: 'req-1',
+          metadata: expect.objectContaining({
+            hasCollaboratorCode: true,
+            shopDomain: 'client-store.myshopify.com',
+            connectionId: 'conn-1',
+          }),
+        })
+      );
+    });
+
+    it('does not log Shopify submission event when submission is pending', async () => {
+      vi.mocked(accessRequestService.getAccessRequestById).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          shopifySubmission: {
+            status: 'pending_client',
+          },
+        } as any,
+        error: null,
+      });
+      vi.mocked(auditService.auditService.createAuditLog).mockResolvedValue({
+        data: {} as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/access-requests/req-1',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(auditService.auditService.createAuditLog).not.toHaveBeenCalled();
     });
   });
 

@@ -43,8 +43,9 @@ export function PlatformCard({
   onEditEmail,
 }: PlatformCardProps) {
   const platformName = PLATFORM_NAMES[platform];
-  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'zapier'];
+  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'shopify', 'zapier'];
   const isManualPlatform = manualPlatforms.includes(platform);
+  const isShopify = platform === 'shopify';
 
   const isFeatured = variant === 'featured';
   const iconSize = isFeatured ? 'lg' : 'md';
@@ -96,7 +97,7 @@ export function PlatformCard({
                   </Button>
                 )}
 
-                {onEditEmail && isManualPlatform && connectedEmail && (
+                {onEditEmail && isManualPlatform && !isShopify && connectedEmail && (
                   <Button
                     variant="ghost"
                     size="sm"

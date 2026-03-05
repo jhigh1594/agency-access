@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import BeehiivManualPage from '../beehiiv/manual/page';
 import KitManualPage from '../kit/manual/page';
 import PinterestManualPage from '../pinterest/manual/page';
+import ShopifyManualPage from '../shopify/manual/page';
 
 const { pushMock, backMock } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -45,6 +46,7 @@ function buildPayload(overrides?: Partial<any>) {
         beehiiv: { agencyEmail: 'ops@demoagency.com' },
         kit: { agencyEmail: 'ops@demoagency.com' },
         pinterest: { businessId: '123456789' },
+        shopify: { shopDomain: 'store-demo.myshopify.com', collaboratorCode: '1234' },
       },
       authorizationProgress: { completedPlatforms: [], isComplete: false },
       ...overrides,
@@ -90,7 +92,7 @@ describe('Manual invite flows', () => {
     await clickPrimaryAction('I opened settings');
     await screen.findByText(/invite your agency in beehiiv/i);
     await clickPrimaryAction('I sent the invite');
-    await screen.findByText(/confirm and continue/i);
+    await screen.findByRole('heading', { name: /confirm and continue/i });
 
     await clickPrimaryAction('Continue');
     expect(screen.getAllByText('Confirm completion before continuing.').length).toBeGreaterThan(0);
@@ -133,7 +135,7 @@ describe('Manual invite flows', () => {
     await clickPrimaryAction('I opened team settings');
     await screen.findByText(/invite your agency in kit/i);
     await clickPrimaryAction('I sent the invite');
-    await screen.findByText(/confirm and continue/i);
+    await screen.findByRole('heading', { name: /confirm and continue/i });
     await userEvent.click(screen.getByRole('checkbox', { name: /i invited ops@demoagency.com/i }));
     await clickPrimaryAction('Continue');
 
@@ -165,5 +167,47 @@ describe('Manual invite flows', () => {
     const blockedAction = screen.getAllByRole('button', { name: 'Business ID required' })[0];
     expect(blockedAction).toBeDisabled();
     expect(screen.getAllByText(/business id is required before this step can continue/i).length).toBeGreaterThan(0);
+  });
+
+  it('Shopify flow submits collaborator details and redirects', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/shopify/manual-connect')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { connectionId: 'conn-shopify-1' }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => buildPayload(),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<ShopifyManualPage />);
+
+    await screen.findByText(/open shopify users and permissions/i);
+    await clickPrimaryAction('I opened Shopify');
+    await screen.findByText(/copy your collaborator request code/i);
+    await clickPrimaryAction('I copied the code');
+    await screen.findByText(/send these details to your agency/i);
+    await clickPrimaryAction('I shared the details');
+    await screen.findByRole('heading', { name: /confirm and continue/i });
+
+    await clickPrimaryAction('Continue');
+    expect(screen.getAllByText('Confirm completion before continuing.').length).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /i have shared my shop domain and collaborator code/i }));
+    await clickPrimaryAction('Continue');
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/api/client/token-123/shopify/manual-connect'),
+        expect.objectContaining({ method: 'POST' })
+      );
+      expect(pushMock).toHaveBeenCalledWith('/invite/token-123?step=2&platform=shopify&connectionId=conn-shopify-1');
+    });
   });
 });

@@ -142,7 +142,11 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/agency-platforms/:platform/callback', async (request, reply) => {
     const { platform } = request.params as { platform: string };
-    const { code, state } = request.query as { code?: string; state?: string };
+    const { code, auth_code: authCode, state } = request.query as {
+      code?: string;
+      auth_code?: string;
+      state?: string;
+    };
 
     try {
       const stateResult = await oauthStateService.validateState(state || '');
@@ -190,10 +194,11 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
       try {
         // Handle platform-specific parameters (e.g., shop for Shopify)
         const shop = (stateData as unknown as Record<string, unknown>).shop as string | undefined;
+        const authCodeToUse = code || authCode || '';
         if (platform === 'shopify' && shop) {
-          tokens = await (connector as any).exchangeCode(code || '', undefined, shop);
+          tokens = await (connector as any).exchangeCode(authCodeToUse, undefined, shop);
         } else {
-          tokens = await connector.exchangeCode(code || '');
+          tokens = await connector.exchangeCode(authCodeToUse);
         }
 
         if (platform === 'meta' && 'getLongLivedToken' in connector) {

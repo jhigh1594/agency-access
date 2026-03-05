@@ -4,6 +4,7 @@ import { useAuth, UserButton } from '@clerk/nextjs';
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   LayoutDashboard,
@@ -180,7 +181,7 @@ export default function AuthenticatedLayout({
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <LogoSpinner size="lg" />
           <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { AdminStatCard, AdminTableShell } from '@/components/internal-admin';
 import { useInternalAdminOverview } from '@/lib/query/internal-admin';
 
@@ -18,7 +18,7 @@ export default function InternalAdminOverviewPage() {
   if (isLoading) {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-coral" />
+        <LogoSpinner size="lg" />
       </div>
     );
   }

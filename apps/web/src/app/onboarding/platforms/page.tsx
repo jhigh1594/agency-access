@@ -7,7 +7,7 @@
  * Allows agencies to connect their OAuth platforms for delegated access.
  *
  * Now with unified Google connector - one OAuth gives access to all Google products.
- * Also supports manual invitation platforms (Kit, Mailchimp, Beehiiv, Klaviyo).
+ * Also supports manual invitation platforms (Kit, Mailchimp, Beehiiv, Klaviyo, Shopify).
  */
 
 import { useState } from 'react';
@@ -95,6 +95,7 @@ const SUPPORTED_PLATFORMS = [
   { id: 'mailchimp', name: 'Mailchimp', description: 'Email marketing - team invitation', type: 'manual' },
   { id: 'beehiiv', name: 'Beehiiv', description: 'Newsletter platform - team invitation', type: 'manual' },
   { id: 'klaviyo', name: 'Klaviyo', description: 'Email marketing & automation - team invitation', type: 'manual' },
+  { id: 'shopify', name: 'Shopify', description: 'Store access - collaborator request details', type: 'manual' },
 ];
 
 interface Platform {
@@ -207,7 +208,7 @@ export default function PlatformsPage() {
     setError(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest'];
+    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'shopify'];
     if (manualPlatforms.includes(platform)) {
       // Open manual invitation modal
       setManualInvitationPlatform(platform);

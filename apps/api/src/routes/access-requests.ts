@@ -8,6 +8,7 @@
 import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../services/access-request.service.js';
 import { agencyPlatformService } from '../services/agency-platform.service.js';
+import { auditService } from '../services/audit.service.js';
 import { quotaMiddleware } from '../middleware/quota.middleware.js';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
@@ -309,6 +310,30 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({
         data: null,
         error: result.error,
+      });
+    }
+
+    const shopifySubmission = (result.data as any)?.shopifySubmission;
+    if (
+      shopifySubmission &&
+      (shopifySubmission.status === 'submitted' || shopifySubmission.status === 'legacy_unreadable')
+    ) {
+      await auditService.createAuditLog({
+        agencyId: (result.data as any).agencyId,
+        userEmail:
+          ((request as any).user?.email as string | undefined) ||
+          ((request as any).user?.sub as string | undefined) ||
+          'agency',
+        action: 'SHOPIFY_SUBMISSION_VIEWED',
+        resourceType: 'access_request',
+        resourceId: id,
+        metadata: {
+          shopifySubmissionStatus: shopifySubmission.status,
+          hasCollaboratorCode: typeof shopifySubmission.collaboratorCode === 'string',
+          shopDomain: shopifySubmission.shopDomain,
+          connectionId: shopifySubmission.connectionId,
+        },
+        request,
       });
     }
 

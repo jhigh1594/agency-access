@@ -137,6 +137,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
           meta.email ||
           meta.userEmail ||
           meta.businessEmail ||
+          meta.shopDomain ||
           connection.connectedBy;
       } else if (connection) {
         connectedEmail = connection.connectedBy;

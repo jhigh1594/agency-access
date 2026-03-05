@@ -1,0 +1,554 @@
+'use client';
+
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
+import { FlowShell } from '@/components/flow/flow-shell';
+import { AccessLevelSelector } from '@/components/access-level-selector';
+import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform-selector';
+import { Button } from '@/components/ui';
+import { getAccessRequest, updateAccessRequest } from '@/lib/api/access-requests';
+import type { AccessRequest } from '@/lib/api/access-requests';
+import { transformPlatformsForAPI } from '@/lib/transform-platforms';
+import type { AccessLevel } from '@agency-platform/shared';
+import type { IntakeField } from '@/contexts/access-request-context';
+
+interface EditAccessRequestPageProps {
+  params: Promise<{ id: string }>;
+}
+
+interface ConnectedPlatform {
+  platform: string;
+  name: string;
+  connected: boolean;
+  status?: string;
+  connectedEmail?: string;
+}
+
+interface BrandingDraft {
+  logoUrl: string;
+  primaryColor: string;
+  subdomain: string;
+}
+
+function normalizeConnectedPlatformToGroup(platform: string): string {
+  if (
+    platform === 'ga4' ||
+    platform === 'youtube_studio' ||
+    platform === 'display_video_360' ||
+    platform.startsWith('google_')
+  ) {
+    return 'google';
+  }
+
+  if (
+    platform === 'instagram' ||
+    platform === 'whatsapp_business' ||
+    platform.startsWith('meta_')
+  ) {
+    return 'meta';
+  }
+
+  if (platform.startsWith('linkedin')) {
+    return 'linkedin';
+  }
+
+  if (platform.startsWith('tiktok')) {
+    return 'tiktok';
+  }
+
+  if (platform.startsWith('snapchat')) {
+    return 'snapchat';
+  }
+
+  return platform;
+}
+
+function isEditable(status: AccessRequest['status']): boolean {
+  return status === 'pending' || status === 'partial';
+}
+
+function normalizeIntakeFields(fields: IntakeField[]): IntakeField[] {
+  return fields.map((field, index) => ({
+    ...field,
+    order: index,
+  }));
+}
+
+function toPlatformSelection(request: AccessRequest): Record<string, string[]> {
+  return request.platforms.reduce<Record<string, string[]>>((acc, group) => {
+    acc[group.platformGroup] = group.products.map((product) => product.product);
+    return acc;
+  }, {});
+}
+
+function inferAccessLevel(request: AccessRequest): AccessLevel {
+  const firstProduct = request.platforms[0]?.products[0];
+  if (!firstProduct) {
+    return 'standard';
+  }
+
+  const value = firstProduct.accessLevel;
+  if (value === 'admin' || value === 'standard' || value === 'read_only' || value === 'email_only') {
+    return value;
+  }
+
+  return 'standard';
+}
+
+export default function EditAccessRequestPage({ params }: EditAccessRequestPageProps) {
+  const { getToken } = useAuth();
+  const router = useRouter();
+
+  const [requestId, setRequestId] = useState<string>('');
+  const [request, setRequest] = useState<AccessRequest | null>(null);
+  const [authModel, setAuthModel] = useState<'client_authorization' | 'delegated_access'>('delegated_access');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
+  const [globalAccessLevel, setGlobalAccessLevel] = useState<AccessLevel>('standard');
+  const [intakeFields, setIntakeFields] = useState<IntakeField[]>([]);
+  const [branding, setBranding] = useState<BrandingDraft>({
+    logoUrl: '',
+    primaryColor: '#FF6B35',
+    subdomain: '',
+  });
+  const [connectedPlatforms, setConnectedPlatforms] = useState<ConnectedPlatform[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [initialSnapshot, setInitialSnapshot] = useState<string>('');
+
+  const snapshot = useMemo(
+    () =>
+      JSON.stringify({
+        authModel,
+        selectedPlatforms,
+        globalAccessLevel,
+        intakeFields,
+        branding,
+      }),
+    [authModel, selectedPlatforms, globalAccessLevel, intakeFields, branding]
+  );
+  const hasUnsavedChanges = initialSnapshot !== '' && initialSnapshot !== snapshot;
+
+  useEffect(() => {
+    async function load() {
+      const resolved = await params;
+      setRequestId(resolved.id);
+
+      const result = await getAccessRequest(resolved.id, getToken);
+      if (result.error || !result.data) {
+        setError(result.error?.message || 'Failed to load access request');
+        setLoading(false);
+        return;
+      }
+
+      if (!isEditable(result.data.status)) {
+        router.push(`/access-requests/${resolved.id}` as any);
+        return;
+      }
+
+      const requestData = result.data;
+      const selection = toPlatformSelection(requestData);
+      const normalizedFields = normalizeIntakeFields((requestData.intakeFields || []) as IntakeField[]);
+      const nextBranding: BrandingDraft = {
+        logoUrl: requestData.branding?.logoUrl || '',
+        primaryColor: requestData.branding?.primaryColor || '#FF6B35',
+        subdomain: requestData.branding?.subdomain || '',
+      };
+
+      setRequest(requestData);
+      setAuthModel(requestData.authModel);
+      setSelectedPlatforms(selection);
+      setGlobalAccessLevel(inferAccessLevel(requestData));
+      setIntakeFields(normalizedFields);
+      setBranding(nextBranding);
+
+      setInitialSnapshot(JSON.stringify({
+        authModel: requestData.authModel,
+        selectedPlatforms: selection,
+        globalAccessLevel: inferAccessLevel(requestData),
+        intakeFields: normalizedFields,
+        branding: nextBranding,
+      }));
+
+      setLoading(false);
+    }
+
+    load();
+  }, [params, getToken, router]);
+
+  useEffect(() => {
+    if (!request?.agencyId) {
+      return;
+    }
+
+    const loadConnections = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${request.agencyId}&status=active`,
+          {
+            headers: {
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        );
+
+        if (!response.ok) {
+          setConnectedPlatforms([]);
+          return;
+        }
+
+        const payload = await response.json();
+        const data = Array.isArray(payload.data) ? payload.data : [];
+        const normalized = data.map((item: any) => ({
+          platform: normalizeConnectedPlatformToGroup(item.platform),
+          name: item.name || item.platform,
+          connected: item.connected === true || item.status === 'active' || item.status === undefined,
+          status: item.status,
+          connectedEmail: item.agencyEmail || item.connectedBy || item.metadata?.email,
+        }));
+        setConnectedPlatforms(normalized);
+      } catch {
+        setConnectedPlatforms([]);
+      }
+    };
+
+    void loadConnections();
+  }, [request?.agencyId, getToken]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return;
+    }
+
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const mergedConnectedPlatforms = useMemo(() => {
+    const map = new Map<string, ConnectedPlatform>();
+
+    for (const connection of connectedPlatforms) {
+      map.set(connection.platform, connection);
+    }
+
+    for (const platformGroup of Object.keys(selectedPlatforms)) {
+      if (!map.has(platformGroup)) {
+        map.set(platformGroup, {
+          platform: platformGroup,
+          name: platformGroup,
+          connected: true,
+          status: 'active',
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  }, [connectedPlatforms, selectedPlatforms]);
+
+  const profileEditHref = useMemo(() => {
+    if (!request) {
+      return '/clients';
+    }
+
+    if (request.clientId) {
+      return `/clients/${request.clientId}`;
+    }
+
+    return `/clients?email=${encodeURIComponent(request.clientEmail)}`;
+  }, [request]);
+
+  const addIntakeField = () => {
+    const next: IntakeField = {
+      id: String(Date.now()),
+      label: '',
+      type: 'text',
+      required: false,
+      order: intakeFields.length,
+    };
+    setIntakeFields([...intakeFields, next]);
+  };
+
+  const updateIntakeField = (id: string, updates: Partial<IntakeField>) => {
+    setIntakeFields((prev) =>
+      prev.map((field) => (field.id === id ? { ...field, ...updates } : field))
+    );
+  };
+
+  const removeIntakeField = (id: string) => {
+    setIntakeFields((prev) => prev.filter((field) => field.id !== id));
+  };
+
+  const handleDiscard = () => {
+    if (hasUnsavedChanges && !window.confirm('Discard unsaved changes?')) {
+      return;
+    }
+
+    router.push(`/access-requests/${requestId}` as any);
+  };
+
+  const handleSave = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!requestId) {
+      return;
+    }
+
+    const selectedCount = Object.values(selectedPlatforms).reduce((sum, products) => sum + products.length, 0);
+    if (selectedCount === 0) {
+      setError('Select at least one platform before saving.');
+      return;
+    }
+
+    if (intakeFields.some((field) => !field.label.trim())) {
+      setError('All intake fields must have a label before saving.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    const result = await updateAccessRequest(
+      requestId,
+      {
+        authModel,
+        platforms: transformPlatformsForAPI(selectedPlatforms, globalAccessLevel),
+        intakeFields: normalizeIntakeFields(intakeFields),
+        branding: {
+          logoUrl: branding.logoUrl || undefined,
+          primaryColor: branding.primaryColor || undefined,
+          subdomain: branding.subdomain || undefined,
+        },
+      },
+      getToken
+    );
+
+    if (result.error || !result.data) {
+      setError(result.error?.message || 'Failed to save changes');
+      setSaving(false);
+      return;
+    }
+
+    setRequest(result.data);
+    setInitialSnapshot(snapshot);
+    if (result.data.authorizationLinkChanged) {
+      setSuccess('Link updated. Resend this link to your client.');
+    } else {
+      setSuccess('Request updated.');
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <LogoSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error && !request) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-coral/30 bg-card p-6 text-center">
+          <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <div className="mt-4">
+            <Button variant="secondary" onClick={() => router.push('/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <FlowShell
+      title="Edit Access Request"
+      description="Update request settings for pending authorization links"
+      step={4}
+      totalSteps={4}
+      steps={['Fundamentals', 'Platforms', 'Customize', 'Review']}
+    >
+      <form onSubmit={handleSave} className="space-y-6">
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Fundamentals</h2>
+
+          <div>
+            <label htmlFor="authModel" className="block text-sm font-medium text-foreground mb-1">
+              Authorization Model
+            </label>
+            <select
+              id="authModel"
+              value={authModel}
+              onChange={(event) => setAuthModel(event.target.value as 'client_authorization' | 'delegated_access')}
+              className="w-full rounded-lg border border-border bg-card px-3 py-2"
+            >
+              <option value="delegated_access">Delegated Access</option>
+              <option value="client_authorization">Client Authorization</option>
+            </select>
+          </div>
+
+          <div className="rounded-lg border border-border bg-paper p-3 text-xs text-muted-foreground">
+            Client name and email are managed in the client profile.
+            <button
+              type="button"
+              onClick={() => router.push(profileEditHref as any)}
+              className="ml-1 font-semibold text-coral hover:text-coral/90"
+            >
+              Edit client profile
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Platforms</h2>
+          <AccessLevelSelector
+            selectedAccessLevel={globalAccessLevel}
+            onSelectionChange={(next) => setGlobalAccessLevel(next)}
+          />
+          <HierarchicalPlatformSelector
+            selectedPlatforms={selectedPlatforms}
+            onSelectionChange={setSelectedPlatforms}
+            connectedPlatforms={mergedConnectedPlatforms}
+            agencyId={request?.agencyId}
+          />
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Customize</h2>
+
+          <div className="space-y-3">
+            {intakeFields.map((field) => (
+              <div key={field.id} className="rounded-lg border border-border p-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    value={field.label}
+                    onChange={(event) => updateIntakeField(field.id, { label: event.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2"
+                    placeholder="Field label"
+                  />
+                  <select
+                    value={field.type}
+                    onChange={(event) => updateIntakeField(field.id, { type: event.target.value as IntakeField['type'] })}
+                    className="w-full rounded-lg border border-border px-3 py-2 bg-card"
+                  >
+                    <option value="text">Text</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="url">URL</option>
+                    <option value="textarea">Text Area</option>
+                    <option value="dropdown">Dropdown</option>
+                  </select>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <label className="inline-flex items-center gap-2 text-sm text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={field.required}
+                      onChange={(event) => updateIntakeField(field.id, { required: event.target.checked })}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    Required
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => removeIntakeField(field.id)}
+                    className="inline-flex items-center gap-1 text-sm text-coral hover:text-coral/90"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addIntakeField}
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-paper"
+            >
+              <Plus className="h-4 w-4" />
+              Add Field
+            </button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="logoUrl" className="block text-sm font-medium text-foreground mb-1">
+                Logo URL
+              </label>
+              <input
+                id="logoUrl"
+                type="url"
+                value={branding.logoUrl}
+                onChange={(event) => setBranding((prev) => ({ ...prev, logoUrl: event.target.value }))}
+                className="w-full rounded-lg border border-border px-3 py-2"
+              />
+            </div>
+            <div>
+              <label htmlFor="primaryColor" className="block text-sm font-medium text-foreground mb-1">
+                Primary Color
+              </label>
+              <input
+                id="primaryColor"
+                type="text"
+                value={branding.primaryColor}
+                onChange={(event) => setBranding((prev) => ({ ...prev, primaryColor: event.target.value }))}
+                className="w-full rounded-lg border border-border px-3 py-2"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="subdomain" className="block text-sm font-medium text-foreground mb-1">
+              Subdomain
+            </label>
+            <input
+              id="subdomain"
+              type="text"
+              value={branding.subdomain}
+              onChange={(event) => setBranding((prev) => ({ ...prev, subdomain: event.target.value.toLowerCase() }))}
+              className="w-full rounded-lg border border-border px-3 py-2"
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-coral/30 bg-coral/10 p-3 text-sm text-coral">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="rounded-lg border border-teal/30 bg-teal/10 p-3 text-sm text-teal-90">
+            {success}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleDiscard}
+          >
+            Discard Changes
+          </Button>
+          <Button type="submit" isLoading={saving}>
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    </FlowShell>
+  );
+}

@@ -242,21 +242,23 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
 
   tiktok: {
     name: 'TikTok',
-    authUrl: 'https://business-api.tiktok.com/passport/v2/authorize/',
-    tokenUrl: 'https://business-api.tiktok.com/passport/v2/token/',
+    authUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth2/authorize/',
+    tokenUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth/token/',
     scopeSeparator: ',',
-    userInfoUrl: 'https://business-api.tiktok.com/v1.3/user/info/',
-    supportsRefreshTokens: true,
+    userInfoUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth2/advertiser/get/',
+    verifyUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth2/advertiser/get/',
+    supportsRefreshTokens: false,
     defaultScopes: ['advertiser.info'],
   },
 
   tiktok_ads: {
     name: 'TikTok Ads',
-    authUrl: 'https://business-api.tiktok.com/passport/v2/authorize/',
-    tokenUrl: 'https://business-api.tiktok.com/passport/v2/token/',
+    authUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth2/authorize/',
+    tokenUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth/token/',
     scopeSeparator: ',',
-    userInfoUrl: 'https://business-api.tiktok.com/v1.3/user/info/',
-    supportsRefreshTokens: true,
+    userInfoUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth2/advertiser/get/',
+    verifyUrl: 'https://business-api.tiktok.com/open_api/v1.3/oauth2/advertiser/get/',
+    supportsRefreshTokens: false,
     defaultScopes: ['advertiser.info'],
   },
 

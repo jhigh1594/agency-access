@@ -13,6 +13,7 @@ import { Platform } from '@agency-platform/shared';
 describe('PlatformCard', () => {
   const mockOnConnect = vi.fn();
   const mockOnDisconnect = vi.fn();
+  const mockOnEditEmail = vi.fn();
 
   afterEach(() => {
     vi.clearAllMocks();
@@ -96,7 +97,7 @@ describe('PlatformCard', () => {
       />
     );
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/loading/i).length).toBeGreaterThan(0);
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
   });
@@ -205,5 +206,34 @@ describe('PlatformCard', () => {
     const emailElement = screen.getByText(longEmail);
     expect(emailElement).toHaveClass('truncate');
     expect(emailElement).toHaveAttribute('title', longEmail);
+  });
+
+  it('should render edit email button for non-Shopify manual platforms', () => {
+    render(
+      <PlatformCard
+        platform={'kit' as Platform}
+        connected={true}
+        connectedEmail="ops@example.com"
+        onConnect={mockOnConnect}
+        onEditEmail={mockOnEditEmail}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /edit email/i })).toBeInTheDocument();
+  });
+
+  it('should not render edit details button for Shopify', () => {
+    render(
+      <PlatformCard
+        platform={'shopify' as Platform}
+        connected={true}
+        connectedEmail="enabled"
+        onConnect={mockOnConnect}
+        onEditEmail={mockOnEditEmail}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: /edit details/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /edit email/i })).not.toBeInTheDocument();
   });
 });

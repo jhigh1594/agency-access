@@ -2,10 +2,101 @@ import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { auditService } from '../../services/audit.service.js';
 import { clientAssetsService } from '../../services/client-assets.service.js';
+import {
+  mapAccessLevelToTikTokRole,
+  tiktokPartnerService,
+  type TikTokPartnerShareResultItem,
+} from '@/services/tiktok-partner.service';
 import { infisical } from '../../lib/infisical.js';
 import { prisma } from '../../lib/prisma.js';
 import type { Platform } from '@agency-platform/shared';
-import { adAccountsSharedSchema, grantPagesAccessSchema, saveAssetsSchema } from './schemas.js';
+import {
+  adAccountsSharedSchema,
+  grantPagesAccessSchema,
+  saveAssetsSchema,
+  tiktokPartnerShareSchema,
+  tiktokPartnerVerifySchema,
+} from './schemas.js';
+
+type ShareResultWithVerification = TikTokPartnerShareResultItem & { verified?: boolean };
+
+function resolveAgencyTikTokBusinessCenterId(connection: {
+  businessId?: string | null;
+  metadata?: unknown;
+} | null): string | null {
+  if (!connection) return null;
+  const metadata = (connection.metadata as Record<string, unknown> | null) || {};
+  const tiktokMetadata =
+    (metadata.tiktok as Record<string, unknown> | undefined) || {};
+
+  const fromMetadata =
+    tiktokMetadata.businessCenterId ??
+    tiktokMetadata.selectedBusinessCenterId ??
+    tiktokMetadata.bcId ??
+    metadata.businessCenterId ??
+    metadata.selectedBusinessCenterId ??
+    metadata.bcId;
+
+  const resolved = connection.businessId || (typeof fromMetadata === 'string' ? fromMetadata : null);
+  return resolved ? String(resolved) : null;
+}
+
+function resolveRequestedTikTokAccessLevel(accessRequest: any): string {
+  const platforms = Array.isArray(accessRequest?.platforms) ? accessRequest.platforms : [];
+
+  for (const group of platforms) {
+    if (group?.platformGroup !== 'tiktok' || !Array.isArray(group.products)) continue;
+    const productLevels = group.products
+      .map((product: any) => product?.accessLevel)
+      .filter((value: unknown): value is string => typeof value === 'string');
+
+    if (productLevels.includes('admin')) return 'admin';
+    if (productLevels.includes('standard')) return 'standard';
+    if (productLevels.includes('read_only')) return 'read_only';
+    if (productLevels.includes('email_only')) return 'email_only';
+  }
+
+  for (const platform of platforms) {
+    const platformName = platform?.platform;
+    if (platformName !== 'tiktok' && platformName !== 'tiktok_ads') continue;
+    if (platform?.accessLevel === 'manage') return 'admin';
+    if (platform?.accessLevel === 'view_only') return 'read_only';
+  }
+
+  return 'standard';
+}
+
+function mergeTikTokShareResults(
+  previous: unknown,
+  current: ShareResultWithVerification[]
+): ShareResultWithVerification[] {
+  const map = new Map<string, ShareResultWithVerification>();
+
+  if (Array.isArray(previous)) {
+    for (const item of previous) {
+      if (!item || typeof item !== 'object') continue;
+      const advertiserId = String((item as any).advertiserId || '');
+      if (!advertiserId) continue;
+      map.set(advertiserId, {
+        advertiserId,
+        status: (item as any).status,
+        error: (item as any).error,
+        verified: (item as any).verified,
+      });
+    }
+  }
+
+  for (const item of current) {
+    map.set(item.advertiserId, item);
+  }
+
+  return Array.from(map.values());
+}
+
+function normalizeStringIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item)).filter(Boolean);
+}
 
 export async function registerAssetRoutes(fastify: FastifyInstance) {
   async function resolveAuthorizedConnection(token: string, connectionId: string) {
@@ -127,12 +218,36 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
       if (existingAuth) {
         const existingMetadata = (existingAuth.metadata as any) || {};
+        const tiktokSelection =
+          authPlatform === 'tiktok'
+            ? {
+                selectedAdvertiserIds:
+                  selectedAssets.selectedAdvertiserIds ||
+                  selectedAssets.adAccounts ||
+                  selectedAssets.advertisers ||
+                  [],
+                selectedBusinessCenterId: selectedAssets.selectedBusinessCenterId || null,
+                discoverySnapshot: {
+                  advertisers: selectedAssets.availableAdvertisers || [],
+                  businessCenters: selectedAssets.availableBusinessCenters || [],
+                },
+              }
+            : undefined;
+
         const updatedMetadata = {
           ...existingMetadata,
           selectedAssets: {
             ...(existingMetadata.selectedAssets || {}),
             [platform]: selectedAssets,
           },
+          ...(tiktokSelection
+            ? {
+                tiktok: {
+                  ...(existingMetadata.tiktok || {}),
+                  ...tiktokSelection,
+                },
+              }
+            : {}),
         };
 
         await prisma.platformAuthorization.update({
@@ -517,6 +632,493 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // Run TikTok Business Center partner sharing automation for selected advertisers
+  fastify.post('/client/:token/tiktok/share-partner-access', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = tiktokPartnerShareSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid TikTok partner-share payload',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId, advertiserIds, selectedBusinessCenterId } = validated.data;
+
+    try {
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
+          data: null,
+          error: authContext.error,
+        });
+      }
+      const connection = authContext.connection;
+
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'tiktok',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'TikTok authorization not found',
+          },
+        });
+      }
+
+      if (platformAuth.status !== 'active') {
+        return reply.code(403).send({
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_INACTIVE',
+            message: 'TikTok authorization is not active',
+          },
+        });
+      }
+
+      const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
+      if (!tokens?.accessToken) {
+        return reply.code(500).send({
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        });
+      }
+
+      const authMetadata = (platformAuth.metadata as Record<string, any> | null) || {};
+      const tiktokMetadata = (authMetadata.tiktok as Record<string, any> | undefined) || {};
+
+      const effectiveAdvertiserIds = Array.from(
+        new Set(
+          normalizeStringIds(
+            advertiserIds && advertiserIds.length > 0
+              ? advertiserIds
+              : tiktokMetadata.selectedAdvertiserIds
+          )
+        )
+      );
+      const clientBusinessCenterId = selectedBusinessCenterId || tiktokMetadata.selectedBusinessCenterId;
+
+      if (!clientBusinessCenterId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'selectedBusinessCenterId is required for TikTok partner sharing',
+          },
+        });
+      }
+
+      if (effectiveAdvertiserIds.length === 0) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'At least one advertiser must be selected before partner sharing',
+          },
+        });
+      }
+
+      const agencyConnection = await prisma.agencyPlatformConnection.findFirst({
+        where: {
+          agencyId: connection.agencyId,
+          platform: 'tiktok',
+          status: 'active',
+        },
+      });
+
+      const agencyBusinessCenterId = resolveAgencyTikTokBusinessCenterId(agencyConnection);
+      if (!agencyBusinessCenterId) {
+        const failedResults: ShareResultWithVerification[] = effectiveAdvertiserIds.map((id) => ({
+          advertiserId: id,
+          status: 'failed',
+          error: 'Agency TikTok Business Center ID is not configured',
+          verified: false,
+        }));
+
+        const mergedResults = mergeTikTokShareResults(
+          tiktokMetadata.partnerSharing?.results,
+          failedResults
+        );
+
+        const updatedMetadata = {
+          ...authMetadata,
+          tiktok: {
+            ...tiktokMetadata,
+            selectedAdvertiserIds: effectiveAdvertiserIds,
+            selectedBusinessCenterId: clientBusinessCenterId,
+            partnerSharing: {
+              ...(tiktokMetadata.partnerSharing || {}),
+              agencyBusinessCenterId: null,
+              clientBusinessCenterId,
+              lastAttemptAt: new Date().toISOString(),
+              results: mergedResults,
+              partialFailure: true,
+            },
+          },
+        };
+
+        await prisma.platformAuthorization.update({
+          where: { id: platformAuth.id },
+          data: {
+            metadata: updatedMetadata as any,
+          },
+        });
+
+        await auditService.createAuditLog({
+          agencyId: connection.agencyId,
+          action: 'TIKTOK_PARTNER_SHARE_ATTEMPT',
+          userEmail: connection.clientEmail,
+          resourceType: 'client_connection',
+          resourceId: connection.id,
+          metadata: {
+            advertiserCount: effectiveAdvertiserIds.length,
+            successCount: 0,
+            failedCount: failedResults.length,
+            agencyBusinessCenterId: null,
+            clientBusinessCenterId,
+            requestedAccessLevel: resolveRequestedTikTokAccessLevel(authContext.accessRequest),
+            advertiserRole: null,
+            reason: 'AGENCY_BUSINESS_CENTER_MISSING',
+          },
+          request,
+        });
+
+        return reply.send({
+          data: {
+            success: false,
+            partialFailure: true,
+            results: failedResults,
+            manualFallback: {
+              required: true,
+              reason: 'AGENCY_BUSINESS_CENTER_MISSING',
+              agencyBusinessCenterId: null,
+            },
+          },
+          error: null,
+        });
+      }
+
+      const requestedAccessLevel = resolveRequestedTikTokAccessLevel(authContext.accessRequest);
+      const advertiserRole = mapAccessLevelToTikTokRole(requestedAccessLevel);
+
+      const previouslyGrantedAdvertiserIds = Array.isArray(tiktokMetadata.partnerSharing?.results)
+        ? tiktokMetadata.partnerSharing.results
+            .filter((item: any) => item?.status === 'granted' || item?.status === 'already_granted')
+            .map((item: any) => String(item.advertiserId))
+        : [];
+
+      const shareOutcome = await tiktokPartnerService.shareAdvertiserAssets({
+        accessToken: tokens.accessToken,
+        clientBusinessCenterId,
+        agencyBusinessCenterId,
+        advertiserIds: effectiveAdvertiserIds,
+        advertiserRole,
+        alreadyGrantedAdvertiserIds: previouslyGrantedAdvertiserIds,
+      });
+
+      const verifiedResults: ShareResultWithVerification[] = await Promise.all(
+        shareOutcome.results.map(async (result) => {
+          if (result.status === 'failed') {
+            return { ...result, verified: false };
+          }
+
+          const verified = await tiktokPartnerService.verifyAdvertiserShare({
+            accessToken: tokens.accessToken!,
+            clientBusinessCenterId,
+            agencyBusinessCenterId,
+            advertiserId: result.advertiserId,
+          });
+
+          if (!verified) {
+            return {
+              advertiserId: result.advertiserId,
+              status: 'failed',
+              error: result.error || 'Unable to verify advertiser share',
+              verified: false,
+            };
+          }
+
+          return {
+            ...result,
+            verified: true,
+          };
+        })
+      );
+
+      const success = verifiedResults.every((item) => item.status !== 'failed');
+      const mergedResults = mergeTikTokShareResults(
+        tiktokMetadata.partnerSharing?.results,
+        verifiedResults
+      );
+
+      const updatedMetadata = {
+        ...authMetadata,
+        tiktok: {
+          ...tiktokMetadata,
+          selectedAdvertiserIds: effectiveAdvertiserIds,
+          selectedBusinessCenterId: clientBusinessCenterId,
+          partnerSharing: {
+            ...(tiktokMetadata.partnerSharing || {}),
+            agencyBusinessCenterId,
+            clientBusinessCenterId,
+            advertiserRole,
+            lastAttemptAt: new Date().toISOString(),
+            results: mergedResults,
+            partialFailure: !success,
+          },
+        },
+      };
+
+      await prisma.platformAuthorization.update({
+        where: { id: platformAuth.id },
+        data: {
+          metadata: updatedMetadata as any,
+        },
+      });
+
+      await auditService.createAuditLog({
+        agencyId: connection.agencyId,
+        action: 'TIKTOK_PARTNER_SHARE_ATTEMPT',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connection.id,
+        metadata: {
+          advertiserCount: effectiveAdvertiserIds.length,
+          successCount: verifiedResults.filter((item) => item.status !== 'failed').length,
+          failedCount: verifiedResults.filter((item) => item.status === 'failed').length,
+          agencyBusinessCenterId,
+          clientBusinessCenterId,
+          requestedAccessLevel,
+          advertiserRole,
+        },
+        request,
+      });
+
+      return reply.send({
+        data: {
+          success,
+          partialFailure: !success,
+          results: verifiedResults,
+          manualFallback: {
+            required: !success,
+            reason: success ? null : 'PARTIAL_FAILURE',
+            agencyBusinessCenterId,
+          },
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'TIKTOK_PARTNER_SHARE_ERROR',
+          message: `Failed to share TikTok partner access: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        },
+      });
+    }
+  });
+
+  // Verify TikTok Business Center sharing for selected advertisers
+  fastify.post('/client/:token/tiktok/verify-share', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = tiktokPartnerVerifySchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid TikTok verify payload',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId, advertiserIds } = validated.data;
+
+    try {
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
+          data: null,
+          error: authContext.error,
+        });
+      }
+
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'tiktok',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'TikTok authorization not found',
+          },
+        });
+      }
+
+      const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
+      if (!tokens?.accessToken) {
+        return reply.code(500).send({
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        });
+      }
+
+      const authMetadata = (platformAuth.metadata as Record<string, any> | null) || {};
+      const tiktokMetadata = (authMetadata.tiktok as Record<string, any> | undefined) || {};
+      const shareMetadata = (tiktokMetadata.partnerSharing as Record<string, any> | undefined) || {};
+
+      const clientBusinessCenterId =
+        tiktokMetadata.selectedBusinessCenterId || shareMetadata.clientBusinessCenterId;
+      const agencyBusinessCenterId =
+        shareMetadata.agencyBusinessCenterId ||
+        resolveAgencyTikTokBusinessCenterId(
+          await prisma.agencyPlatformConnection.findFirst({
+            where: {
+              agencyId: authContext.connection.agencyId,
+              platform: 'tiktok',
+              status: 'active',
+            },
+          })
+        );
+
+      if (!clientBusinessCenterId || !agencyBusinessCenterId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'TikTok business center IDs are required before verification',
+          },
+        });
+      }
+
+      const effectiveAdvertiserIds = Array.from(
+        new Set(
+          normalizeStringIds(
+            advertiserIds && advertiserIds.length > 0
+              ? advertiserIds
+              : tiktokMetadata.selectedAdvertiserIds
+          )
+        )
+      );
+
+      if (effectiveAdvertiserIds.length === 0) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'At least one advertiser must be selected before verification',
+          },
+        });
+      }
+
+      const results: ShareResultWithVerification[] = await Promise.all(
+        effectiveAdvertiserIds.map(async (advertiserId) => {
+          const verified = await tiktokPartnerService.verifyAdvertiserShare({
+            accessToken: tokens.accessToken!,
+            clientBusinessCenterId,
+            agencyBusinessCenterId,
+            advertiserId,
+          });
+
+          return {
+            advertiserId,
+            status: verified ? 'granted' : 'failed',
+            verified,
+            error: verified ? undefined : 'Advertiser is not shared with agency business center',
+          };
+        })
+      );
+
+      const success = results.every((item) => item.status !== 'failed');
+      const mergedResults = mergeTikTokShareResults(shareMetadata.results, results);
+
+      const updatedMetadata = {
+        ...authMetadata,
+        tiktok: {
+          ...tiktokMetadata,
+          partnerSharing: {
+            ...shareMetadata,
+            agencyBusinessCenterId,
+            clientBusinessCenterId,
+            lastVerifiedAt: new Date().toISOString(),
+            results: mergedResults,
+            partialFailure: !success,
+          },
+        },
+      };
+
+      await prisma.platformAuthorization.update({
+        where: { id: platformAuth.id },
+        data: {
+          metadata: updatedMetadata as any,
+        },
+      });
+
+      await auditService.createAuditLog({
+        agencyId: authContext.connection.agencyId,
+        action: 'TIKTOK_PARTNER_SHARE_VERIFIED',
+        userEmail: authContext.connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: authContext.connection.id,
+        metadata: {
+          advertiserCount: effectiveAdvertiserIds.length,
+          successCount: results.filter((item) => item.status !== 'failed').length,
+          failedCount: results.filter((item) => item.status === 'failed').length,
+          agencyBusinessCenterId,
+          clientBusinessCenterId,
+        },
+        request,
+      });
+
+      return reply.send({
+        data: {
+          success,
+          partialFailure: !success,
+          results,
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'TIKTOK_VERIFY_ERROR',
+          message: `Failed to verify TikTok partner sharing: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        },
+      });
+    }
+  });
+
   // Fetch client assets using token-scoped connection authorization
   fastify.get('/client/:token/assets/:platform', async (request, reply) => {
     const { token, platform: platformParam } = request.params as {
@@ -599,6 +1201,21 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
             code: 'TOKEN_NOT_FOUND',
             message: 'OAuth tokens not found in secure storage',
           },
+        });
+      }
+
+      if (authPlatform === 'tiktok' && authContext.accessRequest) {
+        await auditService.createAuditLog({
+          agencyId: authContext.accessRequest.agencyId,
+          action: 'TIKTOK_TOKEN_READ',
+          userEmail: authContext.connection?.clientEmail,
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            platform: platformParam,
+            source: 'client_assets_fetch',
+          },
+          request,
         });
       }
 

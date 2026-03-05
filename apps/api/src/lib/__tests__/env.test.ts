@@ -166,4 +166,28 @@ describe('env contract', () => {
 
     expect(module.env.DB_ENFORCE_LEAST_PRIVILEGE).toBe(false);
   });
+
+  it('maps legacy TikTok app credentials to TIKTOK_CLIENT_* when client vars are unset', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      TIKTOK_CLIENT_ID: undefined,
+      TIKTOK_CLIENT_SECRET: undefined,
+      TIKTOK_APP_ID: 'legacy-app-id',
+      TIKTOK_APP_SECRET: 'legacy-app-secret',
+    }));
+
+    expect(module.env.TIKTOK_CLIENT_ID).toBe('legacy-app-id');
+    expect(module.env.TIKTOK_CLIENT_SECRET).toBe('legacy-app-secret');
+  });
+
+  it('prefers TIKTOK_CLIENT_* over legacy TIKTOK_APP_* when both are present', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      TIKTOK_CLIENT_ID: 'new-client-id',
+      TIKTOK_CLIENT_SECRET: 'new-client-secret',
+      TIKTOK_APP_ID: 'legacy-app-id',
+      TIKTOK_APP_SECRET: 'legacy-app-secret',
+    }));
+
+    expect(module.env.TIKTOK_CLIENT_ID).toBe('new-client-id');
+    expect(module.env.TIKTOK_CLIENT_SECRET).toBe('new-client-secret');
+  });
 });

@@ -18,7 +18,6 @@ export const createOAuthStateSchema = z.object({
     'mailchimp',
     'pinterest',
     'klaviyo',
-    'shopify',
   ]),
 });
 
@@ -38,7 +37,6 @@ export const oauthExchangeSchema = z.object({
     'mailchimp',
     'pinterest',
     'klaviyo',
-    'shopify',
   ]).optional(),
 });
 
@@ -47,6 +45,7 @@ export const saveAssetsSchema = z.object({
   platform: z.string(),
   selectedAssets: z.object({
     adAccounts: z.array(z.string()).optional(),
+    advertisers: z.array(z.string()).optional(),
     pages: z.array(z.string()).optional(),
     instagramAccounts: z.array(z.string()).optional(),
     properties: z.array(z.string()).optional(),
@@ -54,6 +53,10 @@ export const saveAssetsSchema = z.object({
     containers: z.array(z.string()).optional(),
     sites: z.array(z.string()).optional(),
     merchantAccounts: z.array(z.string()).optional(),
+    selectedBusinessCenterId: z.string().optional(),
+    selectedAdvertiserIds: z.array(z.string()).optional(),
+    availableBusinessCenters: z.array(z.any()).optional(),
+    availableAdvertisers: z.array(z.any()).optional(),
   }),
 });
 
@@ -65,4 +68,15 @@ export const grantPagesAccessSchema = z.object({
 export const adAccountsSharedSchema = z.object({
   connectionId: z.string(),
   sharedAdAccountIds: z.array(z.string()).optional(),
+});
+
+export const tiktokPartnerShareSchema = z.object({
+  connectionId: z.string(),
+  advertiserIds: z.array(z.string()).optional(),
+  selectedBusinessCenterId: z.string().optional(),
+});
+
+export const tiktokPartnerVerifySchema = z.object({
+  connectionId: z.string(),
+  advertiserIds: z.array(z.string()).optional(),
 });

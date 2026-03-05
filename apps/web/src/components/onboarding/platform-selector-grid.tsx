@@ -22,6 +22,8 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
+import { cn } from '@/lib/utils';
+import { PlatformIcon } from '@/components/ui/platform-icon';
 import {
   Platform,
   PLATFORM_NAMES,
@@ -56,20 +58,20 @@ const PRIMARY_PLATFORM_GROUPS: PlatformGroupConfig[] = [
   {
     name: 'Google',
     platforms: ['google'],
-    color: 'bg-blue-50 hover:bg-blue-100 border-blue-200',
-    selectedColor: 'bg-blue-100 border-blue-500',
+    color: 'bg-paper hover:bg-card border-black/20',
+    selectedColor: 'bg-teal/5 border-teal',
   },
   {
     name: 'Meta',
     platforms: ['meta'],
-    color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
-    selectedColor: 'bg-purple-100 border-purple-500',
+    color: 'bg-paper hover:bg-card border-black/20',
+    selectedColor: 'bg-teal/5 border-teal',
   },
   {
     name: 'LinkedIn',
     platforms: ['linkedin'],
-    color: 'bg-gray-50 hover:bg-gray-100 border-gray-200',
-    selectedColor: 'bg-gray-100 border-gray-500',
+    color: 'bg-paper hover:bg-card border-black/20',
+    selectedColor: 'bg-teal/5 border-teal',
   },
 ];
 
@@ -78,8 +80,8 @@ const SECONDARY_PLATFORM_GROUP: PlatformGroupConfig = {
   platforms: SUPPORTED_CONNECTION_PLATFORMS.filter(
     (platform: Platform) => !RECOMMENDED_CONNECTION_PLATFORMS.includes(platform as any)
   ) as Platform[],
-  color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
-  selectedColor: 'bg-orange-100 border-orange-500',
+  color: 'bg-paper hover:bg-card border-black/20',
+  selectedColor: 'bg-coral/5 border-coral',
 };
 
 // ============================================================
@@ -128,29 +130,6 @@ export function PlatformSelectorGrid({
     [selectedPlatforms]
   );
 
-  // Get platform icon (emoji or simplified representation)
-  const getPlatformIcon = useCallback((platform: Platform) => {
-    const iconMap: Record<string, string> = {
-      google: '🔍',
-      meta: '📱',
-      linkedin: '💼',
-      kit: '✉️',
-      beehiiv: '📰',
-      mailchimp: '🐵',
-      pinterest: '📌',
-      klaviyo: '📨',
-      shopify: '🛍️',
-      zapier: '⚡',
-      google_ads: '🔍',
-      ga4: '📊',
-      meta_ads: '📱',
-      instagram: '📸',
-      tiktok: '🎵',
-      snapchat: '👻',
-    };
-    return iconMap[platform] || '🔗';
-  }, []);
-
   const renderGroup = (group: PlatformGroupConfig, platformGridClassName: string) => {
     if (group.platforms.length === 0) {
       return null;
@@ -158,11 +137,11 @@ export function PlatformSelectorGrid({
 
     return (
       <div key={group.name} className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700">{group.name}</h3>
+        <h3 className="text-sm font-semibold text-ink/70">{group.name}</h3>
         <div className={platformGridClassName}>
           {group.platforms.map((platform) => {
             const selected = isSelected(platform);
-            const preSelected = isPreSelected(platform);
+            const isPreselected = isPreSelected(platform);
 
             return (
               <motion.button
@@ -172,23 +151,23 @@ export function PlatformSelectorGrid({
                 onMouseEnter={() => setHoveredPlatform(platform)}
                 onMouseLeave={() => setHoveredPlatform(null)}
                 disabled={disabled}
-                className={`
-                  relative p-4 rounded-lg border-2 transition-all text-left
-                  ${selected ? group.selectedColor : group.color}
-                  ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
-                `}
+                className={cn(
+                  'relative p-4 rounded-lg border-2 transition-all text-left min-h-[120px]',
+                  selected ? group.selectedColor : group.color,
+                  disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                )}
                 variants={staggerItem}
                 whileHover={{ scale: disabled ? 1 : 1.02 }}
                 whileTap={{ scale: disabled ? 1 : 0.98 }}
               >
                 {selected && (
                   <motion.div
-                    className="absolute top-2 right-2 w-5 h-5 bg-card rounded-full flex items-center justify-center shadow-sm"
+                    className="absolute top-2 right-2 w-6 h-6 bg-teal rounded-full flex items-center justify-center shadow-brutalist-sm border border-black"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                   >
                     <svg
-                      className="w-3 h-3 text-green-500"
+                      className="w-3.5 h-3.5 text-white"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -201,20 +180,22 @@ export function PlatformSelectorGrid({
                   </motion.div>
                 )}
 
-                {preSelected && !selected && (
-                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-indigo-500 text-white text-xs font-medium rounded-full">
-                    Popular
+                {isPreselected && !selected && (
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-teal text-white text-xs font-bold rounded border border-black shadow-brutalist-sm">
+                    Recommended
                   </div>
                 )}
 
-                <div className="text-3xl mb-2">{getPlatformIcon(platform)}</div>
-                <div className="font-semibold text-gray-900 text-sm">
+                <div className="mb-3">
+                  <PlatformIcon platform={platform} size="lg" />
+                </div>
+                <div className="font-semibold text-ink text-sm">
                   {PLATFORM_NAMES[platform]}
                 </div>
 
                 {hoveredPlatform === platform && !selected && (
                   <motion.div
-                    className="text-xs text-gray-500 mt-1"
+                    className="text-xs text-ink/50 mt-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
@@ -231,20 +212,20 @@ export function PlatformSelectorGrid({
 
   return (
     <div className="space-y-6">
-      {/* Pre-selected Message */}
+      {/* Pre-selected Message - Brutalist Info Callout */}
       {showPreSelectedMessage && preSelected.length > 0 && (
         <motion.div
-          className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg"
+          className="p-4 bg-paper border-2 border-black rounded-lg shadow-brutalist-sm"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-start gap-3">
-            <span className="text-2xl">💡</span>
+            <span className="text-teal text-xl font-bold">→</span>
             <div className="flex-1">
-              <div className="font-semibold text-indigo-900 mb-1">
+              <div className="font-semibold text-ink mb-1">
                 Most agencies start with Google and Meta
               </div>
-              <div className="text-sm text-indigo-700">
+              <div className="text-sm text-ink/70">
                 We've pre-selected them for you (you can customize in the next step)
               </div>
             </div>
@@ -268,13 +249,13 @@ export function PlatformSelectorGrid({
       {/* Selection Summary */}
       {selectedPlatforms.length > 0 && (
         <motion.div
-          className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
+          className="p-4 bg-paper border-2 border-black rounded-lg shadow-brutalist-sm"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-ink">
             <span className="font-semibold">{selectedPlatforms.length} platform(s) selected:</span>{' '}
-            <span className="text-gray-600">
+            <span className="text-ink/60">
               {selectedPlatforms.map((p) => PLATFORM_NAMES[p]).join(', ')}
             </span>
           </div>

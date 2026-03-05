@@ -83,5 +83,31 @@ describe('Client Auth Asset Routes - Security', () => {
     expect(response.statusCode).toBe(403);
     expect(response.json().error.code).toBe('FORBIDDEN');
   });
-});
 
+  it('returns 403 for TikTok share automation when connection is outside token access request', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-a',
+        agencyId: 'agency-a',
+      } as any,
+      error: null,
+    });
+    vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({
+      id: 'conn-b',
+      accessRequestId: 'request-b',
+      agencyId: 'agency-b',
+      clientEmail: 'client@example.com',
+    } as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-a/tiktok/share-partner-access',
+      payload: {
+        connectionId: 'conn-b',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe('FORBIDDEN');
+  });
+});

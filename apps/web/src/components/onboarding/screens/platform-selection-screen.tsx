@@ -101,9 +101,9 @@ export function PlatformSelectionScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-indigo-600 mb-2">Step 3 of 6</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Choose Platforms</h2>
-        <p className="text-gray-600">
+        <div className="text-sm font-semibold text-coral mb-2">Step 3 of 6</div>
+        <h2 className="text-3xl font-bold text-ink mb-2">Choose Platforms</h2>
+        <p className="text-ink/60">
           Which platforms does this client need to authorize?
         </p>
       </div>
@@ -120,24 +120,26 @@ export function PlatformSelectionScreen({
 
         {/* Selection Summary */}
         <motion.div
-          className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg"
+          className="mt-6 p-4 bg-paper border-2 border-black rounded-lg shadow-brutalist-sm"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-ink">
             <span className="font-semibold">{platformCount} platform(s) selected</span>
             {platformCount > 0 && (
-              <span className="text-gray-600 ml-2">
+              <span className="text-ink/60 ml-2">
                 → Ready to generate access link
               </span>
             )}
           </div>
         </motion.div>
 
-        {/* What Happens Next */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">What happens next?</h3>
-          <ol className="text-sm text-blue-800 space-y-1.5 list-decimal list-inside">
+        {/* What Happens Next - Brutalist Info Card */}
+        <div className="mt-6 p-5 bg-paper border-2 border-black rounded-lg">
+          <h3 className="font-semibold text-ink mb-3 flex items-center gap-2">
+            <span className="text-teal">→</span> What happens next?
+          </h3>
+          <ol className="text-sm text-ink/80 space-y-2 list-decimal list-inside">
             <li>We'll generate a unique access link for your client</li>
             <li>You'll send it to them (we'll copy it to your clipboard)</li>
             <li>They'll click the link and authorize each platform in one flow</li>

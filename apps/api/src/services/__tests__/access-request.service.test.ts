@@ -290,6 +290,63 @@ describe('AccessRequestService', () => {
     });
   });
 
+  describe('getAccessRequestById', () => {
+    it('returns pending Shopify submission state when Shopify is requested but not submitted', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientName: 'Client',
+        clientEmail: 'client@example.com',
+        status: 'pending',
+        uniqueToken: 'token12345678',
+        expiresAt: new Date(Date.now() + 100000),
+        createdAt: new Date(),
+        platforms: [{ platform: 'shopify', accessLevel: 'manage' }],
+      } as any);
+      vi.mocked(prisma.clientConnection.findFirst).mockResolvedValue(null);
+
+      const result = await accessRequestService.getAccessRequestById('request-1');
+
+      expect(result.error).toBeNull();
+      expect((result.data as any)?.shopifySubmission).toMatchObject({
+        status: 'pending_client',
+      });
+    });
+
+    it('returns submitted Shopify details when client has provided them', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientName: 'Client',
+        clientEmail: 'client@example.com',
+        status: 'partial',
+        uniqueToken: 'token12345678',
+        expiresAt: new Date(Date.now() + 100000),
+        createdAt: new Date(),
+        platforms: [{ platform: 'shopify', accessLevel: 'manage' }],
+      } as any);
+      vi.mocked(prisma.clientConnection.findFirst).mockResolvedValue({
+        id: 'conn-1',
+        createdAt: new Date('2026-03-05T00:00:00.000Z'),
+        grantedAssets: {
+          platform: 'shopify',
+          shopDomain: 'client-store.myshopify.com',
+          collaboratorCode: '1234',
+        },
+      } as any);
+
+      const result = await accessRequestService.getAccessRequestById('request-1');
+
+      expect(result.error).toBeNull();
+      expect((result.data as any)?.shopifySubmission).toMatchObject({
+        status: 'submitted',
+        connectionId: 'conn-1',
+        shopDomain: 'client-store.myshopify.com',
+        collaboratorCode: '1234',
+      });
+    });
+  });
+
   describe('markRequestAuthorized', () => {
     it('should mark request as completed', async () => {
       const mockRequest = {

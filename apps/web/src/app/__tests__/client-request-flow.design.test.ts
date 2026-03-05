@@ -9,6 +9,7 @@ const FILES_TO_VALIDATE = [
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/beehiiv/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/kit/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/pinterest/manual/page.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/shopify/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/client-selector.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/template-selector.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/hierarchical-platform-selector.tsx',

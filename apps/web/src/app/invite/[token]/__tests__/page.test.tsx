@@ -286,4 +286,65 @@ describe('Invite Flow Page', () => {
 
     expect(screen.queryByRole('button', { name: /complete platform/i })).not.toBeInTheDocument();
   });
+
+  it('auto-completes manual platform callback for Shopify', async () => {
+    searchParamGetMock.mockImplementation((key: string) => {
+      if (key === 'step') return '2';
+      if (key === 'platform') return 'shopify';
+      if (key === 'connectionId') return 'conn-shopify-1';
+      return null;
+    });
+
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/complete')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { success: true }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            authModel: 'delegated_access',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'shopify',
+                products: [{ product: 'shopify', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: {
+              shopify: { shopDomain: 'store-demo.myshopify.com', collaboratorCode: '1234' },
+            },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<InvitePage />);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/api/client/token-123/complete'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    expect(screen.queryByRole('button', { name: /complete platform/i })).not.toBeInTheDocument();
+  });
 });

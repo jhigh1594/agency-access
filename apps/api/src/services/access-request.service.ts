@@ -350,10 +350,13 @@ function getIdentityFromConnection(connection: {
 
   const metadataBusinessId =
     typeof metadata?.businessId === 'string' ? metadata.businessId : undefined;
+  const metadataShopDomain =
+    typeof metadata?.shopDomain === 'string' ? metadata.shopDomain : undefined;
 
   return {
     agencyEmail: connection.agencyEmail || metadataEmail || connection.connectedBy,
     businessId: connection.businessId || metadataBusinessId,
+    shopDomain: metadataShopDomain,
   };
 }
 
@@ -382,10 +385,74 @@ export async function getAccessRequestById(id: string) {
       ? transformPlatformsToHierarchical(platforms)
       : platforms; // Already in hierarchical format or empty
 
+    const requestedPlatformGroups = Array.isArray(hierarchicalPlatforms)
+      ? hierarchicalPlatforms
+          .map((group: any) => group?.platformGroup)
+          .filter((group: unknown): group is string => typeof group === 'string')
+      : [];
+
+    let shopifySubmission:
+      | {
+          status: 'pending_client' | 'submitted' | 'legacy_unreadable';
+          connectionId?: string;
+          shopDomain?: string;
+          collaboratorCode?: string;
+          submittedAt?: string;
+        }
+      | undefined;
+
+    if (requestedPlatformGroups.includes('shopify')) {
+      const latestShopifyConnection = await prisma.clientConnection.findFirst({
+        where: { accessRequestId: accessRequest.id },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          createdAt: true,
+          grantedAssets: true,
+        },
+      });
+
+      const grantedAssets = (latestShopifyConnection?.grantedAssets as Record<string, unknown> | null) || null;
+      const isShopifySubmission = grantedAssets?.platform === 'shopify';
+      const shopDomain = typeof grantedAssets?.shopDomain === 'string' ? grantedAssets.shopDomain : undefined;
+      const collaboratorCode =
+        typeof grantedAssets?.collaboratorCode === 'string' ? grantedAssets.collaboratorCode : undefined;
+      const collaboratorCodeHash =
+        typeof grantedAssets?.collaboratorCodeHash === 'string'
+          ? grantedAssets.collaboratorCodeHash
+          : undefined;
+
+      if (!latestShopifyConnection || !isShopifySubmission) {
+        shopifySubmission = {
+          status: 'pending_client',
+        };
+      } else if (shopDomain && collaboratorCode) {
+        shopifySubmission = {
+          status: 'submitted',
+          connectionId: latestShopifyConnection.id,
+          shopDomain,
+          collaboratorCode,
+          submittedAt: latestShopifyConnection.createdAt.toISOString(),
+        };
+      } else if (shopDomain && collaboratorCodeHash) {
+        shopifySubmission = {
+          status: 'legacy_unreadable',
+          connectionId: latestShopifyConnection.id,
+          shopDomain,
+          submittedAt: latestShopifyConnection.createdAt.toISOString(),
+        };
+      } else {
+        shopifySubmission = {
+          status: 'pending_client',
+        };
+      }
+    }
+
     return {
       data: {
         ...accessRequest,
         platforms: hierarchicalPlatforms,
+        ...(shopifySubmission ? { shopifySubmission } : {}),
       },
       error: null,
     };
@@ -480,7 +547,12 @@ export async function getAccessRequestByToken(token: string) {
     const manualInviteTargets = requestedPlatformGroups.reduce((acc, platform) => {
       acc[platform] = {};
       return acc;
-    }, {} as Record<string, { agencyEmail?: string; businessId?: string }>);
+    }, {} as Record<string, {
+      agencyEmail?: string;
+      businessId?: string;
+      shopDomain?: string;
+      collaboratorCode?: string;
+    }>);
 
     for (const connection of platformConnections) {
       manualInviteTargets[connection.platform] = getIdentityFromConnection(connection);

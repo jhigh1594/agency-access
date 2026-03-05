@@ -2,8 +2,9 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 
 function ClientOAuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -11,7 +12,7 @@ function ClientOAuthCallbackContent() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
-  const code = searchParams.get('code');
+  const code = searchParams.get('code') || searchParams.get('auth_code');
   const state = searchParams.get('state');
 
   useEffect(() => {
@@ -69,7 +70,7 @@ function ClientOAuthCallbackContent() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-lg border-2 border-black bg-card p-8 shadow-brutalist text-center">
-        <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-coral" />
+        <LogoSpinner size="xl" className="mx-auto mb-4" />
         <h1 className="text-2xl font-semibold text-ink font-display">Processing Authorization</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {isProcessing ? 'Exchanging OAuth code securely...' : 'Redirecting...'}
@@ -84,7 +85,7 @@ export default function ClientOAuthCallbackPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-paper flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-coral" />
+          <LogoSpinner size="lg" />
         </div>
       }
     >

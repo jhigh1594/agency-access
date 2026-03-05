@@ -16,7 +16,7 @@ import type { ClientAccessRequestPayload, Platform } from '@agency-platform/shar
 type PagePhase = 'intake' | 'platforms' | 'complete';
 
 const SESSION_STORAGE_PREFIX = 'invite-progress:';
-const MANUAL_CALLBACK_PLATFORMS: Platform[] = ['beehiiv', 'kit', 'pinterest'];
+const MANUAL_CALLBACK_PLATFORMS: Platform[] = ['beehiiv', 'kit', 'pinterest', 'shopify'];
 
 export default function ClientAuthorizationPage() {
   const params = useParams();
@@ -79,6 +79,16 @@ export default function ClientAuthorizationPage() {
     const pinterestBusinessId = (targets as any)?.pinterest?.businessId;
     if (pinterestBusinessId) {
       identities.push({ label: 'Pinterest Business ID', value: pinterestBusinessId });
+    }
+
+    const shopifyDomain = (targets as any)?.shopify?.shopDomain;
+    if (shopifyDomain) {
+      identities.push({ label: 'Shopify store', value: shopifyDomain });
+    }
+
+    const shopifyCollaboratorCode = (targets as any)?.shopify?.collaboratorCode;
+    if (shopifyCollaboratorCode) {
+      identities.push({ label: 'Shopify collaborator code', value: shopifyCollaboratorCode });
     }
 
     return identities;

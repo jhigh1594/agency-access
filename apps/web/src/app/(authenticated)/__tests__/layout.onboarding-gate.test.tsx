@@ -1,0 +1,138 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, waitFor } from '@testing-library/react';
+import AuthenticatedLayout from '../layout';
+
+const replaceMock = vi.fn();
+const mockGetToken = vi.fn();
+const usePathnameMock = vi.fn();
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => usePathnameMock(),
+  useRouter: () => ({
+    replace: replaceMock,
+    push: vi.fn(),
+  }),
+  redirect: vi.fn(),
+}));
+
+vi.mock('@clerk/nextjs', () => ({
+  useAuth: () => ({
+    getToken: mockGetToken,
+    userId: 'user_123',
+    orgId: null,
+    isLoaded: true,
+  }),
+  UserButton: () => <div>User</div>,
+}));
+
+vi.mock('@/lib/dev-auth', () => ({
+  useAuthOrBypass: () => ({
+    userId: 'user_123',
+    orgId: null,
+    isLoaded: true,
+    isDevelopmentBypass: false,
+  }),
+  signOutDevBypass: vi.fn(),
+}));
+
+vi.mock('@/lib/perf-harness', () => ({
+  readPerfHarnessContext: vi.fn(() => null),
+  startPerfTimer: vi.fn(() => null),
+}));
+
+vi.mock('@/components/ui/sidebar', () => ({
+  Sidebar: ({ children }: any) => <div>{children}</div>,
+  SidebarBody: ({ children }: any) => <div>{children}</div>,
+  SidebarLink: ({ link }: any) => <a href={link.href}>{link.label}</a>,
+}));
+
+vi.mock('@/components/ui/theme-toggle', () => ({
+  ThemeToggle: () => <button type="button">Theme</button>,
+}));
+
+vi.mock('@/components/trial-banner', () => ({
+  TrialBanner: () => null,
+}));
+
+vi.mock('@/lib/query/billing', () => ({
+  useSubscription: () => ({ data: null }),
+}));
+
+vi.mock('next/image', () => ({
+  default: (props: any) => <img alt={props.alt} />,
+}));
+
+describe('AuthenticatedLayout onboarding re-entry gate', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (global as any).fetch = fetchMock;
+    process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
+    mockGetToken.mockResolvedValue('token-123');
+    usePathnameMock.mockReturnValue('/connections-layout-default');
+  });
+
+  it('redirects to unified onboarding when onboarding status is in_progress', async () => {
+    usePathnameMock.mockReturnValue('/connections-layout-in-progress');
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            status: 'in_progress',
+            completed: false,
+          },
+          error: null,
+        }),
+      });
+
+    render(
+      <AuthenticatedLayout>
+        <div>Content</div>
+      </AuthenticatedLayout>
+    );
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalled();
+      expect(replaceMock).toHaveBeenCalledWith('/onboarding/unified');
+    });
+  });
+
+  it('does not redirect when onboarding status is activated', async () => {
+    usePathnameMock.mockReturnValue('/connections-layout-activated');
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            status: 'activated',
+            completed: false,
+          },
+          error: null,
+        }),
+      });
+
+    render(
+      <AuthenticatedLayout>
+        <div>Content</div>
+      </AuthenticatedLayout>
+    );
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(replaceMock).not.toHaveBeenCalledWith('/onboarding/unified');
+  });
+});

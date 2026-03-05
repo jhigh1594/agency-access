@@ -8,6 +8,7 @@
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { getConnector } from '@/services/connectors/factory';
+import { auditService } from '@/services/audit.service';
 import type { Platform, DashboardConnectionSummary } from '@agency-platform/shared';
 import { z } from 'zod';
 import { invalidateCache } from '@/lib/cache.js';
@@ -264,6 +265,19 @@ export async function revokeConnection(connectionId: string) {
 
     // Delete all tokens from Infisical
     for (const auth of authorizations) {
+      if (auth.platform === 'tiktok' || auth.platform === 'tiktok_ads') {
+        await auditService.createAuditLog({
+          agencyId: connection.agencyId,
+          userEmail: connection.clientEmail,
+          action: 'TIKTOK_TOKEN_REVOKED',
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            platform: auth.platform,
+            reason: 'connection_revoked',
+          },
+        });
+      }
       await infisical.deleteSecret(auth.secretId);
     }
 
@@ -552,6 +566,28 @@ export async function revokePlatformAuthorization(
 
     // Delete tokens from Infisical
     await infisical.deleteOAuthTokens(authorization.secretId);
+
+    if (platform === 'tiktok' || platform === 'tiktok_ads') {
+      const connection = await prisma.clientConnection.findUnique({
+        where: { id: connectionId },
+        select: {
+          agencyId: true,
+          clientEmail: true,
+        },
+      });
+
+      await auditService.createAuditLog({
+        agencyId: connection?.agencyId,
+        userEmail: connection?.clientEmail,
+        action: 'TIKTOK_TOKEN_REVOKED',
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          platform,
+          reason: 'platform_authorization_revoked',
+        },
+      });
+    }
 
     // Update authorization status
     const updated = await prisma.platformAuthorization.update({

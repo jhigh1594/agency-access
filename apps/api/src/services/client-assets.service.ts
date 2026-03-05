@@ -49,6 +49,32 @@ export interface GA4Property {
   accountName: string;
 }
 
+export interface TikTokAdvertiser {
+  id: string;
+  name: string;
+  status?: string;
+  businessCenterId?: string;
+  raw?: Record<string, any>;
+}
+
+export interface TikTokBusinessCenter {
+  id: string;
+  name: string;
+  role?: string;
+  raw?: Record<string, any>;
+}
+
+export interface TikTokBusinessCenterAssetGroup {
+  bcId: string;
+  advertisers: TikTokAdvertiser[];
+}
+
+export interface TikTokAssets {
+  advertisers: TikTokAdvertiser[];
+  businessCenters: TikTokBusinessCenter[];
+  businessCenterAssets: TikTokBusinessCenterAssetGroup[];
+}
+
 export interface MetaAssets {
   adAccounts: MetaAdAccount[];
   pages: MetaPage[];
@@ -469,44 +495,152 @@ class ClientAssetsService {
   }
 
   /**
-   * Fetch TikTok advertisers
+   * Fetch TikTok advertisers and Business Center assets.
    *
    * @param accessToken - Client's OAuth access token
-   * @returns Object containing arrays of advertisers
+   * @returns Normalized TikTok asset model for UI selection
    */
-  async fetchTikTokAssets(accessToken: string): Promise<{
-    advertisers: any[];
-  }> {
+  async fetchTikTokAssets(accessToken: string): Promise<TikTokAssets> {
     logger.info('Fetching TikTok assets');
 
     try {
-      // Fetch advertiser info
-      const advertiserResponse = await fetch(
-        'https://business-api.tiktok.com/open_api/v1.3/advertiser/info/',
-        {
-          method: 'POST',
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            advertiser_id: null, // Fetch all accessible advertisers
-          }),
-        }
+      const [advertisers, businessCenters] = await Promise.all([
+        this.fetchTikTokAdvertisers(accessToken),
+        this.fetchTikTokBusinessCenters(accessToken),
+      ]);
+
+      const businessCenterAssets = await Promise.all(
+        businessCenters.map(async (bc) => ({
+          bcId: bc.id,
+          advertisers: await this.fetchTikTokBusinessCenterAdvertisers(accessToken, bc.id),
+        }))
       );
 
-      const advertiserData = await advertiserResponse.json() as any;
-
       logger.info('Successfully fetched TikTok assets', {
-        advertiserCount: advertiserData.data?.list?.length || 0,
+        advertiserCount: advertisers.length,
+        businessCenterCount: businessCenters.length,
+        businessCenterAssetGroups: businessCenterAssets.length,
       });
 
       return {
-        advertisers: advertiserData.data?.list || [],
+        advertisers,
+        businessCenters,
+        businessCenterAssets,
       };
     } catch (error) {
       logger.error('Failed to fetch TikTok assets', { error });
-      return { advertisers: [] };
+      return {
+        advertisers: [],
+        businessCenters: [],
+        businessCenterAssets: [],
+      };
+    }
+  }
+
+  private async fetchTikTokAdvertisers(accessToken: string): Promise<TikTokAdvertiser[]> {
+    try {
+      const response = await fetch(
+        'https://business-api.tiktok.com/open_api/v1.3/oauth2/advertiser/get/',
+        {
+          method: 'GET',
+          headers: {
+            'Access-Token': accessToken,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`TikTok advertiser API failed (${response.status})`);
+      }
+
+      const payload = await response.json() as any;
+      if (payload?.code && payload.code !== 0) {
+        throw new Error(payload?.message || 'TikTok advertiser API returned non-zero code');
+      }
+
+      const list = Array.isArray(payload?.data?.list) ? payload.data.list : [];
+      return list.map((item: any) => ({
+        id: String(item.advertiser_id ?? item.id ?? ''),
+        name: item.advertiser_name ?? item.name ?? String(item.advertiser_id ?? item.id ?? ''),
+        status: item.status,
+        raw: item,
+      })).filter((item: TikTokAdvertiser) => Boolean(item.id));
+    } catch (error) {
+      logger.error('Failed to fetch TikTok advertisers', { error });
+      return [];
+    }
+  }
+
+  private async fetchTikTokBusinessCenters(accessToken: string): Promise<TikTokBusinessCenter[]> {
+    try {
+      const response = await fetch(
+        'https://business-api.tiktok.com/open_api/v1.3/bc/get/',
+        {
+          method: 'GET',
+          headers: {
+            'Access-Token': accessToken,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`TikTok business center API failed (${response.status})`);
+      }
+
+      const payload = await response.json() as any;
+      if (payload?.code && payload.code !== 0) {
+        throw new Error(payload?.message || 'TikTok business center API returned non-zero code');
+      }
+
+      const list = Array.isArray(payload?.data?.list) ? payload.data.list : [];
+      return list.map((item: any) => ({
+        id: String(item.bc_id ?? item.business_center_id ?? item.id ?? ''),
+        name: item.name ?? item.bc_name ?? String(item.bc_id ?? item.business_center_id ?? item.id ?? ''),
+        role: item.role,
+        raw: item,
+      })).filter((item: TikTokBusinessCenter) => Boolean(item.id));
+    } catch (error) {
+      logger.error('Failed to fetch TikTok business centers', { error });
+      return [];
+    }
+  }
+
+  private async fetchTikTokBusinessCenterAdvertisers(
+    accessToken: string,
+    bcId: string
+  ): Promise<TikTokAdvertiser[]> {
+    try {
+      const url = new URL('https://business-api.tiktok.com/open_api/v1.3/bc/asset/get/');
+      url.searchParams.set('bc_id', bcId);
+      url.searchParams.set('asset_type', 'ADVERTISER');
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Access-Token': accessToken,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`TikTok BC asset API failed (${response.status})`);
+      }
+
+      const payload = await response.json() as any;
+      if (payload?.code && payload.code !== 0) {
+        throw new Error(payload?.message || 'TikTok BC asset API returned non-zero code');
+      }
+
+      const list = Array.isArray(payload?.data?.list) ? payload.data.list : [];
+      return list.map((item: any) => ({
+        id: String(item.advertiser_id ?? item.asset_id ?? item.id ?? ''),
+        name: item.advertiser_name ?? item.asset_name ?? item.name ?? String(item.advertiser_id ?? item.asset_id ?? item.id ?? ''),
+        status: item.status,
+        businessCenterId: bcId,
+        raw: item,
+      })).filter((item: TikTokAdvertiser) => Boolean(item.id));
+    } catch (error) {
+      logger.error('Failed to fetch TikTok business center assets', { error, bcId });
+      return [];
     }
   }
 }

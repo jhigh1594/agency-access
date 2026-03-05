@@ -8,13 +8,14 @@
  * Includes ETag support for conditional requests to save bandwidth.
  */
 
-import { Plus, Users, Key, Activity, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
+import { Plus, Users, Key, Activity, AlertCircle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { useEffect, useRef } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { useAgencyOnboardingStatus, useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
@@ -299,7 +300,7 @@ export default function DashboardPage() {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-coral mx-auto" />
+          <LogoSpinner size="lg" className="mx-auto" />
           <p className="mt-4 text-muted-foreground">Initializing session...</p>
         </div>
       </div>
@@ -310,7 +311,7 @@ export default function DashboardPage() {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-coral mx-auto" />
+          <LogoSpinner size="lg" className="mx-auto" />
           <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
