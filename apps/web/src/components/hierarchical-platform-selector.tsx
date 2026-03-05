@@ -11,10 +11,14 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Check, AlertCircle, Link2, Edit, Mail } from 'lucide-react';
+import { ChevronDown, Check, Minus, AlertCircle, Link2, Edit, Mail } from 'lucide-react';
+import { m, AnimatePresence } from 'framer-motion';
 import { PLATFORM_HIERARCHY } from '@agency-platform/shared';
 import Link from 'next/link';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
+import { PlatformIcon } from '@/components/ui';
+import type { Platform } from '@agency-platform/shared';
+import { cn } from '@/lib/utils';
 
 interface ConnectedPlatform {
   platform: string;
@@ -247,197 +251,222 @@ export function HierarchicalPlatformSelector({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {availableGroups.map(([groupKey, group]) => {
         const isExpanded = expandedGroups[groupKey] || false;
         const selectionCount = getGroupSelectionCount(groupKey);
         const { checked: platformChecked, indeterminate: platformIndeterminate } =
           getPlatformToggleState(groupKey, group.products.length);
-        const { checked: selectAllChecked, indeterminate: selectAllIndeterminate } =
-          getGroupSelectAllState(groupKey, group.products.length);
+        const selectionState = platformChecked ? 'all' : platformIndeterminate ? 'partial' : 'none';
 
         return (
-          <div key={groupKey} className="border border-border rounded-lg overflow-hidden bg-card">
-            {/* Platform Header with Toggle */}
-            <div className="flex items-center gap-3 px-4 py-3">
-              {/* Toggle Switch */}
-              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                <input
-                  type="checkbox"
-                  checked={platformChecked}
-                  ref={input => {
-                    if (input) {
-                      input.indeterminate = platformIndeterminate;
-                    }
-                  }}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    handlePlatformToggle(groupKey, group.products);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="sr-only peer"
-                />
-                <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-                  platformChecked 
-                    ? 'bg-teal peer-focus:ring-4 peer-focus:ring-teal/30' 
-                    : platformIndeterminate
-                    ? 'bg-accent peer-focus:ring-4 peer-focus:ring-ring'
-                    : 'bg-muted/40 peer-focus:ring-4 peer-focus:ring-ring'
-                }`}>
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full transition-transform duration-200 ${
-                    platformChecked ? 'translate-x-5' : platformIndeterminate ? 'translate-x-2.5' : ''
-                  }`}>
-                    {platformChecked && (
-                      <Check className="w-3 h-3 text-teal absolute top-1 left-1" />
-                    )}
-                  </div>
-                </div>
-              </label>
-
-              {/* Platform Info */}
-              <div 
-                className="flex-1 flex items-center justify-between cursor-pointer"
-                onClick={() => toggleGroup(groupKey)}
-              >
-                <div className="flex items-center gap-3">
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <div className="text-left">
-                    <h3 className="font-medium text-ink">{group.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {selectionCount > 0 
-                        ? `${selectionCount} of ${group.products.length} products selected`
-                        : `${group.products.length} products available`
-                      }
-                    </p>
-                  </div>
-                </div>
-                {selectionCount > 0 && (
-                  <div className="text-sm font-medium text-coral">
-                    {selectionCount} selected
-                  </div>
+          <div
+            key={groupKey}
+            className={cn(
+              'border rounded-xl overflow-hidden transition-all duration-200',
+              selectionState !== 'none'
+                ? 'border-[rgb(var(--coral))]/40 bg-[rgb(var(--coral))]/[0.03] shadow-sm'
+                : 'border-border bg-card'
+            )}
+          >
+            {/* Platform Header */}
+            <div className="flex items-center gap-3 px-4 py-3 min-h-[56px]">
+              {/* Select-all toggle checkbox */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlatformToggle(groupKey, group.products);
+                }}
+                aria-label={`Toggle all ${group.name} products`}
+                className={cn(
+                  'flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200',
+                  selectionState === 'all'
+                    ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                    : selectionState === 'partial'
+                      ? 'bg-[rgb(var(--coral))]/15 border-[rgb(var(--coral))]'
+                      : 'bg-background border-border hover:border-[rgb(var(--coral))]/50'
                 )}
-              </div>
+              >
+                {selectionState === 'all' && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+                {selectionState === 'partial' && <Minus className="h-3.5 w-3.5 text-[rgb(var(--coral))]" strokeWidth={3} />}
+              </button>
+
+              {/* Clickable header area */}
+              <button
+                type="button"
+                onClick={() => toggleGroup(groupKey)}
+                className="flex-1 flex items-center gap-3 text-left min-w-0"
+                aria-expanded={isExpanded}
+              >
+                <PlatformIcon platform={groupKey as Platform} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <span className="font-semibold text-sm text-foreground">{group.name}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {selectionCount > 0
+                      ? `${selectionCount} of ${group.products.length} selected`
+                      : `${group.products.length} products`}
+                  </span>
+                </div>
+
+                {selectionCount > 0 && (
+                  <span className="flex-shrink-0 text-xs font-semibold text-[rgb(var(--coral))]">
+                    {selectionCount} selected
+                  </span>
+                )}
+
+                <ChevronDown
+                  className={cn(
+                    'flex-shrink-0 h-4 w-4 text-muted-foreground transition-transform duration-200',
+                    isExpanded && 'rotate-180'
+                  )}
+                />
+              </button>
             </div>
 
-            {/* Products List (Expanded) - Show email UI for manual invitation platforms */}
-            {isExpanded && (() => {
-              const isManualPlatform = MANUAL_INVITATION_PLATFORMS.has(groupKey);
-              const platformEmail = getPlatformEmail(groupKey);
+            {/* Products / Email config (expanded) */}
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <m.div
+                  key="content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  {(() => {
+                    const isManualPlatform = MANUAL_INVITATION_PLATFORMS.has(groupKey);
+                    const platformEmail = getPlatformEmail(groupKey);
 
-              if (isManualPlatform) {
-                // Email Configuration UI for manual invitation platforms
-                return (
-                  <div className="border-t border-border p-4 bg-muted/20">
-                    <div className="flex items-start gap-3 p-4 bg-card border border-border rounded-lg">
-                      <div className="flex-shrink-0">
-                        <div className="h-10 w-10 rounded-lg bg-coral/10 border border-border flex items-center justify-center">
-                          <Mail className="h-5 w-5 text-coral" />
+                    if (isManualPlatform) {
+                      return (
+                        <div className="border-t border-border/50 p-4 bg-muted/10">
+                          <div className="flex items-start gap-3 p-4 bg-card border border-border rounded-xl">
+                            <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-[rgb(var(--coral))]/10 border border-border flex items-center justify-center">
+                              <Mail className="h-5 w-5 text-[rgb(var(--coral))]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-foreground mb-1">Invitation Email</h4>
+                              <p className="text-xs text-muted-foreground mb-3">
+                                Clients will invite this email to their {group.name} account
+                              </p>
+                              {platformEmail ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 px-3 py-2 bg-muted/20 border border-border rounded-lg">
+                                    <p className="text-sm font-mono text-foreground truncate" title={platformEmail}>
+                                      {platformEmail}
+                                    </p>
+                                  </div>
+                                  {agencyId && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditEmail(groupKey, platformEmail)}
+                                      className="px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-colors flex items-center gap-1"
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                      Edit
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="p-3 bg-muted/20 border border-border rounded-lg">
+                                  <p className="text-xs text-foreground">
+                                    No email configured.{' '}
+                                    <Link href="/connections" className="font-medium underline hover:text-foreground">
+                                      Connect {group.name}
+                                    </Link>{' '}
+                                    to set up the invitation email.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Standard product grid
+                    return (
+                      <div className="border-t border-border/50 px-4 pb-3 pt-2 bg-muted/5">
+                        {/* Select all row */}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAll(groupKey, group.products)}
+                          className="flex items-center gap-2.5 cursor-pointer py-2 mb-1 w-full text-left"
+                          aria-label={`Select all ${group.name} products`}
+                        >
+                          <div
+                            className={cn(
+                              'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150',
+                              selectionState === 'all'
+                                ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                                : selectionState === 'partial'
+                                  ? 'bg-[rgb(var(--coral))]/15 border-[rgb(var(--coral))]'
+                                  : 'bg-background border-border'
+                            )}
+                          >
+                            {selectionState === 'all' && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                            {selectionState === 'partial' && <Minus className="h-3 w-3 text-[rgb(var(--coral))]" strokeWidth={3} />}
+                          </div>
+                          <span className="text-sm font-medium text-foreground">
+                            Select all ({group.products.length})
+                          </span>
+                        </button>
+
+                        {/* Product grid */}
+                        <div className="grid grid-cols-2 gap-1">
+                          {group.products.map(product => {
+                            const isSelected = isProductSelected(groupKey, product.id);
+                            const inputId = `product-${groupKey}-${product.id}`;
+                            return (
+                              <label
+                                key={product.id}
+                                htmlFor={inputId}
+                                className={cn(
+                                  'flex items-center gap-2.5 cursor-pointer rounded-lg px-3 py-2.5 transition-all duration-150 min-h-[44px]',
+                                  isSelected
+                                    ? 'bg-[rgb(var(--coral))]/8'
+                                    : 'hover:bg-muted/40'
+                                )}
+                              >
+                                <div
+                                  className={cn(
+                                    'flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-150 pointer-events-none',
+                                    isSelected
+                                      ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                                      : 'bg-background border-border'
+                                  )}
+                                >
+                                  {isSelected && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                                </div>
+                                <input
+                                  id={inputId}
+                                  type="checkbox"
+                                  className="sr-only"
+                                  checked={isSelected}
+                                  onChange={() => handleProductToggle(groupKey, product.id)}
+                                />
+                                <PlatformIcon platform={product.id as Platform} size="sm" />
+                                <span className={cn(
+                                  'text-sm font-medium leading-tight',
+                                  isSelected ? 'text-[rgb(var(--coral))]' : 'text-foreground'
+                                )}>
+                                  {product.name}
+                                </span>
+                                {isSelected && (
+                                  <Check className="h-3.5 w-3.5 text-[rgb(var(--coral))] ml-auto flex-shrink-0" />
+                                )}
+                              </label>
+                            );
+                          })}
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-ink mb-1">
-                          Invitation Email
-                        </h4>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          Clients will invite this email to their {group.name} account
-                        </p>
-                        {platformEmail ? (
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 px-3 py-2 bg-muted/20 border border-border rounded-lg">
-                              <p className="text-sm font-mono text-foreground truncate" title={platformEmail}>
-                                {platformEmail}
-                              </p>
-                            </div>
-                            {agencyId && (
-                              <button
-                                type="button"
-                                onClick={() => handleEditEmail(groupKey, platformEmail)}
-                                className="px-3 py-2 text-xs font-medium text-muted-foreground hover:text-ink hover:bg-muted/30 rounded-lg transition-colors flex items-center gap-1"
-                              >
-                                <Edit className="h-3 w-3" />
-                                Edit
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="p-3 bg-accent border border-border rounded-lg">
-                            <p className="text-xs text-foreground">
-                              No email configured.{' '}
-                              <Link
-                                href="/connections"
-                                className="font-medium underline hover:text-ink"
-                              >
-                                Connect {group.name}
-                              </Link>{' '}
-                              to set up the invitation email.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Standard Product Selection UI for other platforms
-              return (
-                <div className="border-t border-border p-4 bg-muted/20 space-y-3">
-                  {/* Select All */}
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name={`Select all ${group.name} products`}
-                      checked={selectAllChecked}
-                      ref={input => {
-                        if (input) {
-                          input.indeterminate = selectAllIndeterminate;
-                        }
-                      }}
-                      onChange={() => handleSelectAll(groupKey, group.products)}
-                      className="w-4 h-4 text-coral rounded focus:ring-2 focus:ring-ring"
-                    />
-                    <span className="text-sm font-medium text-foreground">
-                      Select all ({group.products.length})
-                    </span>
-                  </label>
-
-                  {/* Individual Products */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-7">
-                    {group.products.map(product => {
-                      const isSelected = isProductSelected(groupKey, product.id);
-
-                      return (
-                        <label
-                          key={product.id}
-                          className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                            isSelected ? 'bg-coral/10 border border-coral/30' : 'hover:bg-muted/30'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            name={product.name}
-                            aria-label={product.name}
-                            checked={isSelected}
-                            onChange={() => handleProductToggle(groupKey, product.id)}
-                            className="w-4 h-4 text-coral rounded focus:ring-2 focus:ring-ring"
-                          />
-                          <span className={`text-sm ${isSelected ? 'text-coral font-medium' : 'text-foreground'}`}>
-                            {product.name}
-                          </span>
-                          {isSelected && (
-                            <Check className="h-3.5 w-3.5 text-coral ml-auto" />
-                          )}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
+                    );
+                  })()}
+                </m.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       })}

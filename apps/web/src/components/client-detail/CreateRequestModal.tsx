@@ -9,13 +9,14 @@
 
 import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Link2, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, CheckCircle2, Link2, ChevronDown, Check, Minus } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type Platform } from '@agency-platform/shared';
 import { Button, PlatformIcon } from '@/components/ui';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
+import { cn } from '@/lib/utils';
 
 interface CreateRequestModalProps {
   client: {
@@ -68,9 +69,32 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
     }));
   };
 
+  // Toggle all products in a group
+  const toggleGroupAll = (groupKey: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const products = PLATFORM_HIERARCHY[groupKey]?.products ?? [];
+    const allProductIds = products.map(p => p.id);
+    const currentSelection = selectedPlatforms[groupKey] || [];
+    const allSelected = allProductIds.every(id => currentSelection.includes(id));
+
+    setSelectedPlatforms(prev => ({
+      ...prev,
+      [groupKey]: allSelected ? [] : allProductIds,
+    }));
+  };
+
   // Check if product is selected
   const isProductSelected = (groupKey: string, productId: string) => {
     return selectedPlatforms[groupKey]?.includes(productId) || false;
+  };
+
+  // Get selection state for a group: 'none' | 'partial' | 'all'
+  const getGroupSelectionState = (groupKey: string): 'none' | 'partial' | 'all' => {
+    const products = PLATFORM_HIERARCHY[groupKey]?.products ?? [];
+    const selected = selectedPlatforms[groupKey] || [];
+    if (selected.length === 0) return 'none';
+    if (selected.length === products.length) return 'all';
+    return 'partial';
   };
 
   // Get total selected product count
@@ -300,65 +324,141 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
                 {/* Step 1: Platform Selection */}
                 <div className="px-6 py-4 border-b border-border">
-                  <h3 className="text-sm font-semibold text-foreground mb-4">
-                    1. Select Platforms <span className="text-coral">*</span>
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      1. Select Platforms <span className="text-[rgb(var(--coral))]">*</span>
+                    </h3>
+                    {totalSelected > 0 && (
+                      <m.span
+                        key={totalSelected}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--coral))]/10 text-[rgb(var(--coral))] border border-[rgb(var(--coral))]/20"
+                      >
+                        <Check className="h-3 w-3" />
+                        {totalSelected} selected
+                      </m.span>
+                    )}
+                  </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {Object.entries(PLATFORM_HIERARCHY).map(([groupKey, group]) => {
                       const isExpanded = expandedGroups[groupKey];
                       const products = group.products;
+                      const selectionState = getGroupSelectionState(groupKey);
+                      const selectedCount = selectedPlatforms[groupKey]?.length ?? 0;
 
                       return (
-                        <div key={groupKey} className="border border-border rounded-lg overflow-hidden">
+                        <div
+                          key={groupKey}
+                          className={cn(
+                            'border rounded-xl overflow-hidden transition-all duration-200',
+                            selectionState !== 'none'
+                              ? 'border-[rgb(var(--coral))]/40 bg-[rgb(var(--coral))]/[0.03] shadow-sm'
+                              : 'border-border bg-card hover:border-border/80'
+                          )}
+                        >
                           {/* Group header */}
                           <button
                             type="button"
                             onClick={() => toggleGroup(groupKey)}
-                            className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-muted/10 transition-colors min-h-[44px]"
+                            className="w-full flex items-center gap-3 px-4 py-3 min-h-[52px] text-left"
+                            aria-expanded={isExpanded}
                           >
-                            <div className="flex items-center gap-3">
-                              <PlatformIcon platform={groupKey as Platform} size="sm" />
-                              <span className="font-medium text-foreground">{group.name}</span>
-                              <span className="text-xs text-muted-foreground">({products.length} products)</span>
+                            {/* Select-all checkbox */}
+                            <button
+                              type="button"
+                              onClick={(e) => toggleGroupAll(groupKey, e)}
+                              aria-label={`Select all ${group.name} products`}
+                              className={cn(
+                                'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150',
+                                selectionState === 'all'
+                                  ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                                  : selectionState === 'partial'
+                                    ? 'bg-[rgb(var(--coral))]/20 border-[rgb(var(--coral))]'
+                                    : 'bg-background border-border hover:border-[rgb(var(--coral))]/60'
+                              )}
+                            >
+                              {selectionState === 'all' && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                              {selectionState === 'partial' && <Minus className="h-3 w-3 text-[rgb(var(--coral))]" strokeWidth={3} />}
+                            </button>
+
+                            <PlatformIcon platform={groupKey as Platform} size="sm" />
+
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium text-foreground text-sm">{group.name}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {selectedCount > 0
+                                  ? `${selectedCount} of ${products.length} selected`
+                                  : `${products.length} products`}
+                              </span>
                             </div>
-                            {isExpanded ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            )}
+
+                            <ChevronDown
+                              className={cn(
+                                'h-4 w-4 text-muted-foreground transition-transform duration-200 flex-shrink-0',
+                                isExpanded && 'rotate-180'
+                              )}
+                            />
                           </button>
 
                           {/* Products (expanded) */}
-                          {isExpanded && (
-                            <div className="px-4 py-3 bg-muted/10 border-t border-border space-y-2">
-                              {products.map((product) => (
-                                <label
-                                  key={product.id}
-                                  className="flex items-center gap-3 cursor-pointer hover:bg-card rounded px-2 py-1 transition-colors min-h-[44px]"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isProductSelected(groupKey, product.id)}
-                                    onChange={() => toggleProduct(groupKey, product.id)}
-                                    className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
-                                  />
-                                  <PlatformIcon platform={product.id as Platform} size="sm" />
-                                  <span className="text-sm text-foreground">{product.name}</span>
-                                  <span className="text-xs text-muted-foreground">({products.length} products)</span>
-                                </label>
-                              ))}
-                            </div>
-                          )}
+                          <AnimatePresence initial={false}>
+                            {isExpanded && (
+                              <m.div
+                                key="products"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                className="overflow-hidden"
+                              >
+                                <div className="px-4 pb-3 pt-1 border-t border-border/50 grid grid-cols-2 gap-1">
+                                  {products.map((product) => {
+                                    const checked = isProductSelected(groupKey, product.id);
+                                    return (
+                                      <label
+                                        key={product.id}
+                                        className={cn(
+                                          'flex items-center gap-2.5 cursor-pointer rounded-lg px-3 py-2.5 transition-all duration-150 min-h-[44px]',
+                                          checked
+                                            ? 'bg-[rgb(var(--coral))]/8 text-foreground'
+                                            : 'hover:bg-muted/40 text-foreground'
+                                        )}
+                                      >
+                                        <div
+                                          className={cn(
+                                            'flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-150',
+                                            checked
+                                              ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                                              : 'bg-background border-border'
+                                          )}
+                                        >
+                                          {checked && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                                        </div>
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={() => toggleProduct(groupKey, product.id)}
+                                          className="sr-only"
+                                        />
+                                        <PlatformIcon platform={product.id as Platform} size="sm" />
+                                        <span className="text-sm font-medium leading-tight">{product.name}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </m.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* Selected count */}
-                  {totalSelected > 0 && (
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      {totalSelected} platform{totalSelected !== 1 ? 's' : ''} selected
+                  {totalSelected === 0 && (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Click a platform to expand and select products, or use the checkbox to select all.
                     </p>
                   )}
                 </div>
