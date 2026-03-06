@@ -9,9 +9,9 @@ describe('docs url helpers', () => {
   it('defaults to the production docs hostname when env is unset', async () => {
     const { getDocsUrl } = await import('../docs-url');
 
-    expect(getDocsUrl()).toBe('https://docs.authhub.com');
+    expect(getDocsUrl()).toBe('https://docs.authhub.co');
     expect(getDocsUrl('/getting-started/create-your-first-request')).toBe(
-      'https://docs.authhub.com/getting-started/create-your-first-request',
+      'https://docs.authhub.co/getting-started/create-your-first-request',
     );
   });
 

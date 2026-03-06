@@ -1,4 +1,4 @@
-const DEFAULT_DOCS_URL = 'https://docs.authhub.com';
+const DEFAULT_DOCS_URL = 'https://docs.authhub.co';
 
 function normalizeBaseUrl(url: string): string {
   return url.replace(/\/+$/, '');
