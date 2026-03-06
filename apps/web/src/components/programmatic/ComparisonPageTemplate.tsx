@@ -221,12 +221,12 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
                   <h3 className="font-dela text-lg text-ink mb-4 border-l-4 border-coral pl-4">
                     {category.category}
                   </h3>
-                  <table className="w-full border-2 border-black text-sm font-mono">
+                  <table className="w-full border-2 border-black text-sm font-mono table-fixed">
                     <thead>
                       <tr className="bg-gray-100 border-b-2 border-black">
-                        <th className="px-4 py-3 text-left font-bold text-ink border-r border-black">Feature</th>
-                        <th className="px-4 py-3 text-center font-bold text-ink border-r border-black">{competitor.name}</th>
-                        <th className="px-4 py-3 text-center font-bold text-ink">{ourProduct.name}</th>
+                        <th className="w-1/3 px-4 py-3 text-left font-bold text-ink border-r border-black">Feature</th>
+                        <th className="w-1/3 px-4 py-3 text-center font-bold text-ink border-r border-black">{competitor.name}</th>
+                        <th className="w-1/3 px-4 py-3 text-center font-bold text-ink">{ourProduct.name}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y border-black">
