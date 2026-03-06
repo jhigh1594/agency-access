@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ContactForm } from '@/components/marketing/contact/contact-form';
 import { ContactInfoCard } from '@/components/marketing/contact/contact-info-card';
 import { Reveal } from '@/components/marketing/reveal';
+import { getDocsUrl } from '@/lib/docs-url';
 
 export const metadata: Metadata = {
   title: 'Contact Us | AuthHub',
@@ -110,10 +111,10 @@ export default function ContactPage() {
           <Reveal direction="up" delay={0.4}>
             <div className="text-center mt-8">
               <a
-                href="/pricing#faq"
+                href={getDocsUrl()}
                 className="inline-flex items-center gap-2 text-coral hover:text-coral/80 font-medium transition-colors"
               >
-                View all FAQs
+                Visit the Help Center
                 <span>&rarr;</span>
               </a>
             </div>

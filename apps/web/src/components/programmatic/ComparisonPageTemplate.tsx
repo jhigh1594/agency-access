@@ -1,119 +1,229 @@
 /**
- * Programmatic Comparison Page Template
- * AIDA/PAS framework-based comparison page component for SEO and conversions
- * Designed for programmatic generation with data-driven content
+ * Comparison Page Template
+ * Clean, modern comparison page design for SEO and conversions
+ * Supports head-to-head feature comparison, differentiators, pricing, and FAQs
  */
 
 "use client";
 
-import { Check, X, ArrowRight, Clock, DollarSign, Globe, Zap, Shield, Users } from "lucide-react";
+import { useState } from "react";
+import { Check, X, ChevronDown, Sparkles, Shield, Code, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
 import type { ProgrammaticComparisonPage } from "@/lib/programmatic-types";
-
-// Icon mapping for dynamic icon rendering
-const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Clock,
-  DollarSign,
-  Globe,
-  Zap,
-  Shield,
-  Users,
-  ArrowRight,
-};
 
 interface ComparisonPageTemplateProps {
   page: ProgrammaticComparisonPage;
 }
 
-/**
- * Main comparison page template component
- * Renders the full comparison page with all sections
- */
+// Differentiator content for the key differentiators section
+const DIFFERENTIATOR_CONTENT = {
+  "Automatic Token Refresh": {
+    authhub: "AuthHub automatically monitors token health and refreshes credentials before they expire. This happens in the background with zero client involvement, ensuring 99.9% uptime for your connected accounts.",
+    competitor: "{competitor} uses official platform APIs but doesn't advertise automatic token refresh. When tokens expire, clients need to manually reconnect, which can interrupt live campaigns.",
+    whyMatters: "Never lose access mid-campaign. AuthHub's auto-refresh eliminates the 'token expired' support tickets that plague agencies using manual reconnection workflows.",
+    icon: Sparkles,
+  },
+  "Enterprise Security & Compliance": {
+    authhub: "SOC 2 Type II certified with bank-grade token encryption through Infisical. Complete audit logs track who accessed what and when for internal accountability and compliance requirements.",
+    competitor: "{competitor} is GDPR compliant and secure by design using official platform APIs. No passwords are stored. No public SOC 2 certification or detailed audit log functionality advertised.",
+    whyMatters: "Agencies with enterprise clients or regulated industries benefit from AuthHub's SOC 2 certification and complete audit trails for compliance documentation.",
+    icon: Shield,
+  },
+  "Developer-Friendly Automation": {
+    authhub: "Webhooks and API access included on paid tiers with live OAuth event telemetry. Build internal workflows, data pipelines, and custom automation beyond pre-built connectors.",
+    competitor: "{competitor} offers Zapier integration on Premium plans ($74+/mo) for connecting to other tools. No public API advertised for custom development or advanced automation.",
+    whyMatters: "Automation-heavy teams building internal workflows get deeper control and flexibility with API/webhooks versus being limited to Zapier-only integrations.",
+    icon: Code,
+  },
+  "SOC 2 Type II Certified": {
+    authhub: "SOC 2 Type II certified with bank-grade token encryption through Infisical. Complete audit logs track who accessed what and when for internal accountability and compliance requirements.",
+    competitor: "{competitor} is GDPR compliant and secure by design using official platform APIs. No passwords are stored. No public SOC 2 certification or detailed audit log functionality advertised.",
+    whyMatters: "Agencies with enterprise clients or regulated industries benefit from AuthHub's SOC 2 certification and complete audit trails for compliance documentation.",
+    icon: Shield,
+  },
+  "API & Webhooks Built-In": {
+    authhub: "Webhooks and API access included on paid tiers with live OAuth event telemetry. Build internal workflows, data pipelines, and custom automation beyond pre-built connectors.",
+    competitor: "{competitor} offers Zapier integration on Premium plans ($74+/mo) for connecting to other tools. No public API advertised for custom development or advanced automation.",
+    whyMatters: "Automation-heavy teams building internal workflows get deeper control and flexibility with API/webhooks versus being limited to Zapier-only integrations.",
+    icon: Code,
+  },
+};
+
 export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
-  const { competitor, ourProduct, cta, testimonials, painPoints, quickComparison, detailedComparison, recommendations, migrationSteps, pricingComparison, faqs } = page;
+  const { competitor, ourProduct, cta, quickComparison, recommendations, faqs } = page;
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Get the three differentiators for this page
+  const differentiators = ourProduct.differentiators.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-paper">
-      {/* Hero Section - AIDA: Attention */}
-      <section className="border-b-2 border-black bg-coral/10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-slate-50 to-white py-16 md:py-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <p className="font-mono text-sm text-coral font-bold uppercase tracking-wider mb-4">
-              {competitor.name} Alternative Comparison
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+              2026 Comparison Guide
             </p>
-            <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl text-ink mb-6 tracking-tight">
-              Looking for a {competitor.name} Alternative?
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
+              {ourProduct.name} vs {competitor.name}
             </h1>
-            <p className="font-mono text-lg md:text-xl text-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               {page.excerpt}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link
                 href={(cta.primaryLink || "/signup") as Route}
-                className="inline-flex items-center justify-center gap-2 font-bold uppercase tracking-wider px-8 py-4 bg-ink text-white border-2 border-black shadow-brutalist hover:shadow-brutalist-lg hover:-translate-y-0.5 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {cta.primaryButton}
+                START FREE TRIAL
+                <ExternalLink size={16} />
               </Link>
               <Link
-                href="#comparison"
-                className="inline-flex items-center justify-center gap-2 font-bold uppercase tracking-wider px-8 py-4 bg-transparent text-ink border-2 border-black hover:bg-ink hover:text-white transition-all"
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
               >
-                See Full Comparison
+                SCHEDULE DEMO
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TL;DR Summary - AIDA: Interest */}
-      <section className="border-b-2 border-black bg-ink text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="font-dela text-xl md:text-2xl mb-4 text-center">
-              Why Agencies Switch to {ourProduct.name}
-            </h2>
-            <div className="grid md:grid-cols-3 gap-6 text-center">
-              {ourProduct.differentiators.slice(0, 3).map((diff, i) => (
-                <div key={i} className="p-4">
-                  <div className="text-coral font-bold text-lg mb-2">{diff}</div>
-                  <p className="font-mono text-sm text-white/80">
-                    {getDifferentiatorDescription(diff)}
-                  </p>
-                </div>
-              ))}
+            {/* Trust badges */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-green-500" />
+                <span>14-DAY FREE TRIAL</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-green-500" />
+                <span>NO CREDIT CARD</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-green-500" />
+                <span>CANCEL ANYTIME</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Why Agencies Look for Alternatives - PAS Formula */}
-      <section className="border-b-2 border-black bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h2 className="font-dela text-2xl md:text-3xl text-ink mb-4 text-center">
-            Why Agencies Look for {competitor.name} Alternatives
-          </h2>
-          <p className="font-mono text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            Growing agencies hit these walls with {competitor.name}. Sound familiar?
-          </p>
+      {/* Feature Comparison Table */}
+      <section id="comparison" className="py-16 md:py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">
+              Feature Comparison
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Head-to-Head Comparison
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              A detailed look at how {ourProduct.name} and {competitor.name} stack up on features, security, and pricing.
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {painPoints.map((pain, index) => {
-              const IconComponent = iconMap[pain.icon] || ArrowRight;
+          <div className="max-w-4xl mx-auto overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    Feature
+                  </th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                    {ourProduct.name}
+                  </th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    {competitor.name}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {quickComparison.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                      {row.feature}
+                    </td>
+                    <td className={`px-4 py-4 text-sm text-center ${row.winner === "authhub" ? "font-semibold text-gray-900" : "text-gray-600"}`}>
+                      {formatValue(row.authhub, row.winner === "authhub")}
+                    </td>
+                    <td className={`px-4 py-4 text-sm text-center ${row.winner === "competitor" ? "font-semibold text-gray-900" : "text-gray-600"}`}>
+                      {formatValue(row.competitor, row.winner === "competitor")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Differentiators */}
+      <section className="py-16 md:py-20 bg-slate-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">
+              Key Differentiators
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Where {ourProduct.name} Stands Out
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Three critical areas where {ourProduct.name} delivers better value for agencies that need reliability, security, and automation.
+            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto space-y-8">
+            {differentiators.map((diff, index) => {
+              const content = DIFFERENTIATOR_CONTENT[diff as keyof typeof DIFFERENTIATOR_CONTENT] || {
+                authhub: `${ourProduct.name} excels in this area.`,
+                competitor: `${competitor.name} has limited capabilities here.`,
+                whyMatters: "This can significantly impact your agency's efficiency.",
+                icon: Sparkles,
+              };
+              const IconComponent = content.icon;
+
               return (
-                <div key={index} className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-destructive/10 border-2 border-black rounded-none flex items-center justify-center">
-                      <IconComponent size={20} className="text-destructive" />
+                <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <IconComponent size={20} className="text-blue-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">{diff}</h3>
                     </div>
-                    <h3 className="font-dela text-lg text-ink">{pain.title}</h3>
                   </div>
-                  <p className="font-mono text-sm text-foreground mb-3">
-                    <em>&ldquo;{pain.quote}&rdquo;</em>
-                  </p>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    {pain.description}
-                  </p>
+                  <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">A</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-500 uppercase">{ourProduct.name}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {content.authhub}
+                      </p>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 bg-gray-400 rounded flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">A</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-500 uppercase">{competitor.name}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {content.competitor.replace("{competitor}", competitor.name)}
+                      </p>
+                    </div>
+                    <div className="p-6 bg-blue-50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles size={16} className="text-blue-600" />
+                        <span className="text-sm font-semibold text-blue-600 uppercase">Why it matters</span>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed font-medium">
+                        {content.whyMatters}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -121,329 +231,249 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
         </div>
       </section>
 
-      {/* Quick Comparison Table - AIDA: Interest */}
-      <section id="comparison" className="border-b-2 border-black bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
-            Quick Comparison
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      {/* Pricing Comparison */}
+      <section className="py-16 md:py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">
+              Pricing
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Cost Comparison
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Compare equivalent feature sets and see where you get the most value for your budget.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-8">
+            {/* AuthHub Card */}
+            <div className="relative bg-white rounded-xl border-2 border-blue-600 shadow-lg overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider py-2 text-center">
+                Best Value
+              </div>
+              <div className="p-6 pt-12">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{ourProduct.name} Growth</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">${ourProduct.pricing.starter?.price || ourProduct.pricing.starting}</span>
+                  <span className="text-gray-500 ml-2">per month</span>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  {ourProduct.pricing.starter?.features?.slice(0, 7).map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+                      <Check size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={(cta.primaryLink || "/signup") as Route}
+                  className="block w-full py-3 bg-blue-600 text-white font-semibold text-center rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  START FREE TRIAL
+                </Link>
+              </div>
+            </div>
+
             {/* Competitor Card */}
-            <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
-              <div className="text-center mb-6">
-                <h3 className="font-dela text-xl text-ink mb-2">{competitor.name}</h3>
-                <div className="space-y-1">
-                  <p className="font-mono text-2xl font-bold text-ink">
-                    ${competitor.pricing.starting}
-                    <span className="text-sm font-normal text-muted-foreground">/month</span>
-                  </p>
-                  {competitor.pricing.billing === "yearly" && (
-                    <p className="font-mono text-xs text-muted-foreground">
-                      Billed yearly
-                    </p>
-                  )}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{competitor.name} Premium</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">${competitor.pricing.pro?.price || competitor.pricing.starting}</span>
+                  <span className="text-gray-500 ml-2">per month {competitor.pricing.billing === "yearly" ? "(annual)" : ""}</span>
                 </div>
+                <ul className="space-y-3 mb-6">
+                  {competitor.pricing.pro?.features?.slice(0, 6).map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+                      <Check size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={competitor.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full py-3 bg-gray-100 text-gray-700 font-semibold text-center rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  VISIT WEBSITE
+                </a>
               </div>
-              <ul className="space-y-3 mb-6">
-                {quickComparison.slice(0, 5).map((row, i) => (
-                  <li key={i} className="flex items-start gap-2 font-mono text-sm">
-                    {typeof row.competitor === "boolean" ? (
-                      row.competitor ? (
-                        <Check size={16} className="text-teal mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <X size={16} className="text-red mt-0.5 flex-shrink-0" />
-                      )
-                    ) : (
-                      <span className="w-4 text-center">{row.competitor}</span>
-                    )}
-                    <span>{row.feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* AuthHub Card - Winner */}
-            <div className="border-[3px] border-black p-6 rounded-none shadow-brutalist-xl bg-teal/10 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-coral text-white px-4 py-1 text-xs font-bold uppercase tracking-wider border-2 border-black">
-                Better Value
-              </div>
-              <div className="text-center mb-6 mt-2">
-                <h3 className="font-dela text-xl text-ink mb-2">{ourProduct.name}</h3>
-                <div className="space-y-1">
-                  <p className="font-mono text-2xl font-bold text-coral">
-                    ${ourProduct.pricing.starting}
-                    <span className="text-sm font-normal text-muted-foreground">/month</span>
-                  </p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    Flat-rate, unlimited clients
-                  </p>
-                </div>
-                {pricingComparison.savings.yearly > 0 && (
-                  <p className="font-mono text-xs text-teal font-bold mt-2">
-                    Save ${pricingComparison.savings.yearly}/year
-                  </p>
-                )}
-              </div>
-              <ul className="space-y-3 mb-6">
-                {quickComparison.slice(0, 5).map((row, i) => (
-                  <li key={i} className="flex items-start gap-2 font-mono text-sm">
-                    {typeof row.authhub === "boolean" ? (
-                      row.authhub ? (
-                        <Check size={16} className="text-teal mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <X size={16} className="text-red mt-0.5 flex-shrink-0" />
-                      )
-                    ) : (
-                      <span className="w-4 text-center font-bold">{row.authhub}</span>
-                    )}
-                    <span className={row.isExclusive ? "font-bold" : ""}>{row.feature}</span>
-                    {row.isExclusive && (
-                      <span className="text-xs text-coral font-bold">(Exclusive)</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Feature-by-Feature Comparison */}
-      {detailedComparison.length > 0 && (
-        <section className="border-b-2 border-black bg-card">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
-              Feature-by-Feature Comparison
-            </h2>
-            <div className="max-w-4xl mx-auto overflow-x-auto">
-              {detailedComparison.map((category, catIndex) => (
-                <div key={catIndex} className="mb-8">
-                  <h3 className="font-dela text-lg text-ink mb-4 border-l-4 border-coral pl-4">
-                    {category.category}
-                  </h3>
-                  <table className="w-full border-2 border-black text-sm font-mono">
-                    <thead>
-                      <tr className="bg-gray-100 border-b-2 border-black">
-                        <th className="px-4 py-3 text-left font-bold text-ink border-r border-black">Feature</th>
-                        <th className="px-4 py-3 text-center font-bold text-ink border-r border-black">{competitor.name}</th>
-                        <th className="px-4 py-3 text-center font-bold text-ink">{ourProduct.name}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y border-black">
-                      {category.features.map((feature, featIndex) => (
-                        <tr key={featIndex} className="border-b border-gray-300">
-                          <td className="px-4 py-3 text-ink border-r border-gray-300">{feature.name}</td>
-                          <td className="px-4 py-3 text-center border-r border-gray-300">
-                            {typeof feature.competitor === "boolean" ? (
-                              feature.competitor ? (
-                                <Check size={16} className="text-teal mx-auto" />
-                              ) : (
-                                <X size={16} className="text-red mx-auto" />
-                              )
-                            ) : (
-                              feature.competitor
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            {typeof feature.authhub === "boolean" ? (
-                              feature.authhub ? (
-                                <Check size={16} className="text-teal mx-auto" />
-                              ) : (
-                                <X size={16} className="text-red mx-auto" />
-                              )
-                            ) : (
-                              <span className="font-bold">{feature.authhub}</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
+          {/* Value Summary */}
+          <div className="max-w-4xl mx-auto bg-blue-50 rounded-xl p-6 flex items-start gap-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Sparkles size={20} className="text-blue-600" />
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Who Should Switch (and Who Shouldn't) */}
-      <section className="border-b-2 border-black bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h2 className="font-dela text-2xl md:text-3xl text-ink mb-12 text-center">
-            Who Should Switch (and Who Shouldn&apos;t)
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* Stick with competitor */}
-            <div className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
-              <h3 className="font-dela text-xl text-ink mb-4">Stick with {competitor.name} If</h3>
-              <ul className="space-y-2 font-mono text-sm text-foreground">
-                {recommendations.stickWithCompetitor.map((item, i) => (
-                  <li key={i}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Switch to AuthHub */}
-            <div className="border-[3px] border-coral p-6 rounded-none shadow-brutalist-xl bg-coral/5">
-              <h3 className="font-dela text-xl text-coral mb-4">
-                Switch to {ourProduct.name} If
-              </h3>
-              <ul className="space-y-2 font-mono text-sm text-foreground">
-                {recommendations.switchToAuthHub.map((item, i) => (
-                  <li key={i}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Migration Steps */}
-      {migrationSteps.length > 0 && (
-        <section className="border-b-2 border-ink bg-teal/10">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="font-dela text-3xl md:text-4xl text-ink mb-4">
-                Switch in {page.migrationTimeMinutes || 15} Minutes
-              </h2>
-              <p className="font-mono text-muted-foreground mb-12">
-                Moving from {competitor.name} is straightforward. Here&apos;s how agencies do it:
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Value Summary</h4>
+              <p className="text-sm text-gray-600">
+                For agencies needing unlimited clients, API access, and automatic token refresh, {ourProduct.name} Growth (${ourProduct.pricing.starting}/mo) delivers more automation than {competitor.name} Premium (${competitor.pricing.pro?.price}/mo). Save over $500/year while gaining enterprise security and developer tools. {competitor.name} excels with broader platform coverage and 24/7 chat support on higher tiers.
               </p>
-
-              <div className="grid md:grid-cols-3 gap-6 md:gap-8 text-left">
-                {migrationSteps.map((step) => (
-                  <div key={step.step} className="bg-paper border-2 border-ink p-6 shadow-brutalist hover-lift-brutalist group">
-                    <div className="w-12 h-12 bg-coral text-white font-display font-bold text-xl flex items-center justify-center shadow-brutalist-sm mb-4">
-                      {step.step}
-                    </div>
-                    <h3 className="font-display font-semibold text-ink text-lg mb-2">{step.title}</h3>
-                    <p className="font-mono text-sm text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-10 p-4 bg-ink/5 border border-ink/10 inline-flex items-center gap-3">
-                <div className="w-8 h-8 bg-teal/20 rounded-full flex items-center justify-center">
-                  <Check size={16} className="text-teal" />
-                </div>
-                <p className="font-mono text-sm text-ink/80">
-                  <span className="font-semibold">Free migration support:</span> Our team walks you through the switch during onboarding.
-                </p>
-              </div>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* Testimonials */}
-      {testimonials.length > 0 && (
-        <section className="border-b-2 border-black bg-card">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
-              What Agencies Say
+      {/* Who Should Choose Which */}
+      <section className="py-16 md:py-20 bg-slate-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">
+              Right Fit
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              Who Should Choose Which?
             </h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {testimonials.slice(0, 2).map((testimonial, i) => (
-                <div key={i} className="border-2 border-black p-6 rounded-none shadow-brutalist-sm">
-                  <blockquote className="font-mono text-ink mb-4">
-                    &ldquo;{testimonial.quote}&rdquo;
-                  </blockquote>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-coral/20 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-coral">{testimonial.author[0]}</span>
-                    </div>
-                    <div>
-                      <p className="font-bold text-ink text-sm">{testimonial.author}</p>
-                      <p className="text-muted-foreground text-xs font-mono">
-                        {testimonial.role} at {testimonial.company}
-                        {testimonial.previousTool && (
-                          <span className="text-coral"> • {testimonial.previousTool}</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
+          </div>
+
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+            {/* AuthHub */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">{ourProduct.name[0]}</span>
                 </div>
-              ))}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{ourProduct.name}</h3>
+                  <p className="text-sm text-gray-500">Best for automation-focused agencies</p>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {recommendations.switchToAuthHub.slice(0, 5).map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+                    <Check size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Competitor */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gray-400 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">{competitor.name[0]}</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{competitor.name}</h3>
+                  <p className="text-sm text-gray-500">Best for broad platform coverage</p>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {recommendations.stickWithCompetitor.slice(0, 5).map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+                    <Check size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* FAQ Section */}
-      {faqs.length > 0 && (
-        <section className="border-b-2 border-black bg-card">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <h2 className="font-dela text-2xl md:text-3xl text-ink mb-8 text-center">
+      <section className="py-16 md:py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Frequently Asked Questions
             </h2>
-            <div className="max-w-3xl mx-auto space-y-4">
-              {faqs.map((faq, i) => (
-                <details key={i} className="group border-2 border-black p-4 rounded-none">
-                  <summary className="font-dela text-lg text-ink cursor-pointer list-none flex justify-between items-center">
-                    {faq.question}
-                    <span className="transform transition-transform group-open:rotate-180">
-                      ▼
-                    </span>
-                  </summary>
-                  <p className="font-mono text-sm text-foreground mt-4 pt-4 border-t border-gray-200">
-                    {faq.answer}
-                  </p>
-                </details>
-              ))}
+            <p className="text-gray-600">
+              Common questions about switching from {competitor.name} to {ourProduct.name}.
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-3">
+            {faqs.map((faq, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <h3 className="font-semibold text-gray-900 pr-4">{faq.question}</h3>
+                  <ChevronDown
+                    size={20}
+                    className={`text-gray-400 flex-shrink-0 transition-transform ${
+                      openFaq === index ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === index && (
+                  <div className="px-4 pb-4">
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-16 md:py-20 bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              {cta.headline}
+            </h2>
+            <p className="text-blue-100 mb-8">
+              {cta.subheadline}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <Link
+                href={(cta.primaryLink || "/signup") as Route}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                START 14-DAY FREE TRIAL
+                <ExternalLink size={16} />
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-400 transition-colors"
+              >
+                SCHEDULE A DEMO
+              </Link>
+            </div>
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-blue-100">
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-green-300" />
+                <span>NO CREDIT CARD REQUIRED</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-green-300" />
+                <span>UNLIMITED CLIENTS</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-green-300" />
+                <span>CANCEL ANYTIME</span>
+              </div>
             </div>
           </div>
-        </section>
-      )}
-
-      {/* Final CTA - AIDA: Action */}
-      <section className="bg-ink text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h2 className="font-dela text-3xl md:text-4xl mb-4">
-            {cta.headline}
-          </h2>
-          <p className="font-mono text-white/80 mb-8 max-w-xl mx-auto">
-            {cta.subheadline}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href={(cta.primaryLink ?? "/signup") as Route}
-              className="inline-flex items-center justify-center gap-2 font-bold uppercase tracking-wider px-8 py-4 bg-coral text-white border-2 border-white rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-y-0.5 transition-all"
-            >
-              {cta.primaryButton}
-            </Link>
-            {cta.secondaryButton && (
-              <Link
-                href={(cta.secondaryLink ?? "/pricing") as Route}
-                className="inline-flex items-center justify-center gap-2 font-bold uppercase tracking-wider px-8 py-4 bg-transparent text-white border-2 border-white hover:bg-white hover:text-ink transition-all"
-              >
-                {cta.secondaryButton}
-              </Link>
-            )}
-          </div>
-          {cta.guarantee && (
-            <p className="font-mono text-xs text-muted-foreground mt-6">
-              {cta.guarantee}
-            </p>
-          )}
         </div>
       </section>
     </div>
   );
 }
 
-// Helper function to get differentiator descriptions
-function getDifferentiatorDescription(differentiator: string): string {
-  const descriptions: Record<string, string> = {
-    "Access + Intake": "One link handles OAuth and collects client info—no separate forms needed.",
-    "Flat-Rate Pricing": "No credits, no surprises. Predictable costs mean predictable margins.",
-    "US-Based Support": "Same-day responses during US hours. No more time zone delays.",
-    "15+ Platforms": "Support for Pinterest, Klaviyo, Shopify, and more emerging channels.",
-    "Enterprise Security": "Infisical token storage with audit logs for SOC2 compliance.",
-  };
-
-  return descriptions[differentiator] || "Industry-leading capability that sets us apart.";
+// Helper function to format comparison values
+function formatValue(value: boolean | string, isWinner: boolean): React.ReactNode {
+  if (typeof value === "boolean") {
+    if (value) {
+      return <Check size={18} className="text-green-500 mx-auto" />;
+    }
+    return <X size={18} className="text-red-400 mx-auto" />;
+  }
+  return <span className={isWinner ? "font-semibold" : ""}>{value}</span>;
 }
 
 export default ComparisonPageTemplate;
