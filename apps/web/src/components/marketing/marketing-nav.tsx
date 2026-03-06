@@ -2,7 +2,6 @@
 
 import { SignInButton, SignUpButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { getDocsUrl } from '@/lib/docs-url';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -141,7 +140,6 @@ export function MarketingNav() {
           <Link href="#how-it-works" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-black hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">How It Works</Link>
           <Link href="/pricing" className="px-4 py-2 text-sm font-bold text-coral border-2 border-black rounded-none hover:bg-coral hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Pricing</Link>
           <Link href="/blog" onClick={handleLinkClick} className="px-4 py-2 text-sm font-bold text-teal border-2 border-black rounded-none hover:bg-teal hover:text-white hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Blog</Link>
-          <a href={getDocsUrl()} className="px-4 py-2 text-sm font-bold text-ink border-2 border-black rounded-none hover:bg-acid hover:text-black hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_#000] transition-all duration-200 uppercase tracking-wider">Help Center</a>
         </div>
 
         {/* Desktop Actions - Brutalist buttons */}
@@ -246,12 +244,6 @@ export function MarketingNav() {
                     >
                       Blog
                     </Link>
-                    <a
-                      href={getDocsUrl()}
-                      className="py-4 px-6 text-lg font-bold min-h-[60px] flex items-center border-2 border-black bg-acid/10 text-ink hover:bg-acid hover:text-black hover:shadow-[4px_4px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 touch-feedback"
-                    >
-                      Help Center
-                    </a>
                   </div>
 
                   {/* Auth Buttons - Brutalist */}
