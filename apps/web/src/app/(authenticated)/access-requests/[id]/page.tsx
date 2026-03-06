@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { useAuth } from '@clerk/nextjs';
+import { useAuthOrBypass } from '@/lib/dev-auth';
 import { getAccessRequest, getAuthorizationUrl } from '@/lib/api/access-requests';
 import type { AccessRequest } from '@/lib/api/access-requests';
 import {
@@ -17,16 +18,29 @@ interface AccessRequestDetailPageProps {
 }
 
 export default function AccessRequestDetailPage({ params }: AccessRequestDetailPageProps) {
-  const { getToken } = useAuth();
+  const clerkAuth = useAuth();
+  const { getToken } = clerkAuth;
+  const { isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
   const [accessRequest, setAccessRequest] = useState<AccessRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const resolveApiToken = useMemo(
+    () => async () => {
+      if (isDevelopmentBypass) {
+        return 'dev-bypass-token';
+      }
+
+      return getToken();
+    },
+    [getToken, isDevelopmentBypass]
+  );
+
   useEffect(() => {
     async function load() {
       const resolved = await params;
-      const result = await getAccessRequest(resolved.id, getToken);
+      const result = await getAccessRequest(resolved.id, resolveApiToken);
 
       if (result.error) {
         setError(result.error.message);
@@ -45,7 +59,7 @@ export default function AccessRequestDetailPage({ params }: AccessRequestDetailP
     }
 
     load();
-  }, [params, getToken]);
+  }, [params, resolveApiToken]);
 
   useEffect(() => {
     if (!accessRequest) {

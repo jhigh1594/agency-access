@@ -345,28 +345,64 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const connection = await prisma.clientConnection.create({
-        data: {
-          accessRequestId: accessRequest.data.id,
-          agencyId: accessRequest.data.agencyId,
-          clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
-          status: 'pending_verification',
-          grantedAssets: {
-            platform: 'shopify',
-            shopDomain,
-            collaboratorCode,
-            collaboratorCodeHash,
-            clientEmail: clientEmail || accessRequest.data.clientEmail,
-            setupComplete: true,
-            setupCompletedAt: new Date().toISOString(),
-            authMethod: 'manual_collaborator_request',
-          },
+      const grantedAssetsPayload = {
+        platform: 'shopify',
+        shopDomain,
+        collaboratorCode,
+        collaboratorCodeHash,
+        clientEmail: clientEmail || accessRequest.data.clientEmail,
+        setupComplete: true,
+        setupCompletedAt: new Date().toISOString(),
+        authMethod: 'manual_collaborator_request',
+      };
+
+      const existingConnection = await prisma.clientConnection.findUnique({
+        where: { accessRequestId: accessRequest.data.id },
+        select: {
+          id: true,
+          grantedAssets: true,
         },
       });
 
+      const existingPlatform =
+        existingConnection &&
+        existingConnection.grantedAssets &&
+        typeof (existingConnection.grantedAssets as Record<string, unknown>).platform === 'string'
+          ? (existingConnection.grantedAssets as Record<string, unknown>).platform as string
+          : undefined;
+
+      if (existingConnection && existingPlatform && existingPlatform !== 'shopify') {
+        return reply.code(409).send({
+          data: null,
+          error: {
+            code: 'CONNECTION_CONFLICT',
+            message: 'This access request already has a non-Shopify connection',
+          },
+        });
+      }
+
+      const connection = existingConnection
+        ? await prisma.clientConnection.update({
+            where: { id: existingConnection.id },
+            data: {
+              clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
+              status: 'pending_verification',
+              grantedAssets: grantedAssetsPayload,
+            },
+          })
+        : await prisma.clientConnection.create({
+            data: {
+              accessRequestId: accessRequest.data.id,
+              agencyId: accessRequest.data.agencyId,
+              clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
+              status: 'pending_verification',
+              grantedAssets: grantedAssetsPayload,
+            },
+          });
+
       await auditService.createAuditLog({
         agencyId: accessRequest.data.agencyId,
-        action: 'MANUAL_INVITATION_INITIATED',
+        action: existingConnection ? 'MANUAL_INVITATION_UPDATED' : 'MANUAL_INVITATION_INITIATED',
         resourceType: 'ClientConnection',
         resourceId: connection.id,
         platform: 'shopify',

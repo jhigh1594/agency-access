@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import * as agencyService from '@/services/agency.service';
+import { onboardingEmailService } from '@/services/onboarding-email.service';
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
@@ -27,6 +28,13 @@ vi.mock('@/lib/prisma', () => ({
       count: vi.fn(),
     },
     $transaction: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/onboarding-email.service', () => ({
+  onboardingEmailService: {
+    queueSequenceStart: vi.fn(),
+    queueActivatedFollowUp: vi.fn(),
   },
 }));
 
@@ -71,6 +79,9 @@ describe('AgencyService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data).toEqual(mockAgency);
+      expect(onboardingEmailService.queueSequenceStart).toHaveBeenCalledWith({
+        agencyId: 'agency-1',
+      });
     });
 
     it('should return error for invalid input', async () => {
@@ -465,6 +476,46 @@ describe('AgencyService', () => {
           },
         },
       }));
+    });
+
+    it('queues the activated follow-up email when onboarding reaches activated status', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        settings: {
+          onboarding: {
+            unifiedV1: {
+              status: 'in_progress',
+              startedAt: '2026-03-04T10:00:00.000Z',
+            },
+          },
+        },
+      } as any);
+
+      vi.mocked(prisma.agency.update).mockResolvedValue({
+        id: 'agency-1',
+        settings: {
+          onboarding: {
+            unifiedV1: {
+              status: 'activated',
+              startedAt: '2026-03-04T10:00:00.000Z',
+              activatedAt: '2026-03-04T10:05:00.000Z',
+              accessRequestId: 'req-1',
+            },
+          },
+        },
+      } as any);
+
+      const result = await agencyService.updateOnboardingProgress('agency-1', {
+        status: 'activated',
+        activatedAt: '2026-03-04T10:05:00.000Z',
+        accessRequestId: 'req-1',
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(onboardingEmailService.queueActivatedFollowUp).toHaveBeenCalledWith({
+        agencyId: 'agency-1',
+        accessRequestId: 'req-1',
+      });
     });
   });
 });

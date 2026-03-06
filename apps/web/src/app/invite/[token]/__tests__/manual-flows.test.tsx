@@ -188,13 +188,17 @@ describe('Manual invite flows', () => {
 
     render(<ShopifyManualPage />);
 
-    await screen.findByText(/open shopify users and permissions/i);
-    await clickPrimaryAction('I opened Shopify');
-    await screen.findByText(/copy your collaborator request code/i);
-    await clickPrimaryAction('I copied the code');
-    await screen.findByText(/send these details to your agency/i);
-    await clickPrimaryAction('I shared the details');
-    await screen.findByRole('heading', { name: /confirm and continue/i });
+    await screen.findByRole('heading', { name: /connect shopify/i });
+    expect(screen.getAllByText(/step 1 of 3/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Select Store')).toBeInTheDocument();
+    expect(screen.getByText('Connected')).toBeInTheDocument();
+
+    await clickPrimaryAction('Connect Shopify');
+    await screen.findByRole('heading', { name: /select store/i });
+    expect(screen.getAllByText(/step 2 of 3/i).length).toBeGreaterThan(0);
+    await clickPrimaryAction('Select Store');
+    await screen.findByRole('heading', { name: /connected/i });
+    expect(screen.getAllByText(/step 3 of 3/i).length).toBeGreaterThan(0);
 
     await clickPrimaryAction('Continue');
     expect(screen.getAllByText('Confirm completion before continuing.').length).toBeGreaterThan(0);

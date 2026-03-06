@@ -164,4 +164,34 @@ describe('AccessRequestDetailPage', () => {
     expect(await screen.findByText('Client Re-confirmation Needed')).toBeInTheDocument();
     expect(screen.getByText('legacy-store.myshopify.com')).toBeInTheDocument();
   });
+
+  it('renders pending Shopify submission state when client has not submitted details', async () => {
+    vi.mocked(accessRequestsApi.getAccessRequest).mockResolvedValue({
+      data: {
+        id: 'request-5',
+        agencyId: 'agency-1',
+        clientName: 'Pending Shopify Client',
+        clientEmail: 'owner@pending.com',
+        authModel: 'client_authorization',
+        status: 'pending',
+        uniqueToken: 'token-555',
+        expiresAt: '2026-03-14T00:00:00.000Z',
+        createdAt: '2026-03-01T00:00:00.000Z',
+        updatedAt: '2026-03-01T00:00:00.000Z',
+        platforms: [
+          {
+            platformGroup: 'shopify',
+            products: [{ product: 'shopify', accessLevel: 'admin', accounts: [] }],
+          },
+        ],
+        shopifySubmission: {
+          status: 'pending_client',
+        },
+      } as any,
+    });
+
+    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-5' })} />);
+
+    expect(await screen.findByText('Shopify Submission Pending')).toBeInTheDocument();
+  });
 });

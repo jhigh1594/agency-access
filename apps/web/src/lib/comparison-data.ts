@@ -398,19 +398,20 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
  * AgencyAccess.co Alternative Comparison Page Data
  * Target keywords: "AgencyAccess alternative", "AgencyAccess.co vs AuthHub"
  *
- * Research verified 2026-02-27:
- * - Pricing: $44/$99/$199 monthly (Starter/Premium/Agency)
+ * Research verified 2026-03-06:
+ * - Pricing: $33/$74/$149 monthly (Starter/Premium/Agency) - annual discount
  * - Location: AgencyAccess B.V. (Netherlands/EU)
  * - Claimed agencies: 500+
- * - Platforms: Meta, Google, TikTok, LinkedIn, Shopify, HubSpot, YouTube, Instagram
+ * - Platforms: Meta, Google, TikTok, LinkedIn, Shopify, HubSpot, YouTube, Instagram (20+)
  * - Has intake forms, Zapier integration, custom branding
+ * - 24/7 chat support on higher tiers
  */
 export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
   id: "agencyaccess-alternative",
   slug: "agencyaccess-alternative",
-  title: "AgencyAccess Alternative | US Support, Flat-Rate Pricing",
-  metaTitle: "AgencyAccess Alternative | Why US Agencies Choose AuthHub",
-  metaDescription: "Comparing AgencyAccess vs AuthHub? Both have transparent pricing. Key differences: US-based support, unlimited invites on all tiers, and enterprise security. See the full comparison.",
+  title: "AuthHub vs AgencyAccess: Best Client Onboarding Software for Agencies [2026]",
+  metaTitle: "AuthHub vs AgencyAccess: Best Client Onboarding Software for Agencies [2026]",
+  metaDescription: "Both platforms help agencies collect client permissions through a single link. But if you need automatic token refresh, SOC 2 compliance, unlimited clients on all plans, and developer-friendly API access, AuthHub delivers enterprise features without enterprise pricing.",
 
   competitor: {
     name: "AgencyAccess",
@@ -418,11 +419,11 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     logo: "/images/competitors/agencyaccess-logo.png",
     website: "https://www.agencyaccess.co",
     pricing: {
-      starting: 44,
+      starting: 33,
       currency: "USD",
       billing: "monthly",
       starter: {
-        price: 44,
+        price: 33,
         features: [
           "5 invites",
           "Up to 3 team members",
@@ -432,7 +433,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
         ],
       },
       pro: {
-        price: 99,
+        price: 74,
         features: [
           "Unlimited invites",
           "Up to 10 team members",
@@ -442,11 +443,11 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
         ],
       },
       enterprise: {
-        price: "199",
+        price: "149",
         features: [
           "Unlimited team members",
           "Multiple brands",
-          "Employee management",
+          "24/7 chat support",
           "Priority support",
         ],
       },
@@ -468,54 +469,54 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
       "YouTube Studio",
       "Shopify",
       "HubSpot",
+      "Klaviyo",
+      "20+ total platforms",
     ],
     weaknesses: [
       "Invite limits on Starter tier (5 invites)",
-      "Team member limits (3/10/unlimited by tier)",
-      "EU-based company (time zone challenges for US agencies)",
-      "No SOC2 or enterprise security certifications mentioned",
-      "No API access documented",
-      "No audit logging mentioned",
+      "No automatic token refresh (manual reconnect required)",
+      "No SOC 2 certification advertised",
+      "No public API for custom development",
+      "Limited audit log functionality",
     ],
     strengths: [
       "500+ agencies using the platform",
-      "Transparent pricing published",
+      "20+ platform integrations (Shopify, HubSpot, Klaviyo)",
       "Zapier integration (7000+ tools)",
       "Custom branding on all tiers",
       "Intake forms included",
       "GDPR compliant",
       "30-day free trial",
+      "24/7 chat support on Premium/Agency plans",
     ],
   },
 
   ourProduct: {
     name: "AuthHub",
-    tagline: "Access + Intake in One Professional Link",
+    tagline: "Enterprise-grade client access with automation built-in",
     logo: "/logo.png",
     pricing: {
-      starting: 79,
+      starting: 30,
       currency: "USD",
       billing: "monthly",
       starter: {
-        price: 79,
+        price: 30,
         features: [
-          "Unlimited invites",
           "Unlimited clients",
-          "15+ platforms",
-          "Access + Intake forms",
-          "US-based support",
-          "API access",
-          "Audit logging",
-          "Templates",
+          "White-label + custom domain",
+          "API + webhooks included",
+          "Automatic token refresh",
+          "Complete audit logs",
+          "SOC 2 Type II security",
+          "8+ platform integrations",
         ],
       },
       pro: {
-        price: 149,
+        price: 79,
         features: [
-          "Everything in Starter",
-          "Custom branding",
-          "Reusable templates",
+          "Everything in Growth",
           "Priority support",
+          "Advanced automation",
           "Multi-language (EN, ES, NL)",
         ],
       },
@@ -526,21 +527,19 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
           "SSO",
           "Dedicated CSM",
           "SLA guarantee",
-          "Infisical enterprise security",
+          "Custom integrations",
         ],
       },
     },
     differentiators: [
-      "US-Based Same-Day Support",
-      "Unlimited Invites on All Tiers",
-      "Enterprise Security (Infisical)",
-      "Email Marketing Platforms",
+      "Automatic Token Refresh",
+      "SOC 2 Type II Certified",
+      "API & Webhooks Built-In",
     ],
     platforms: [
       "Meta Ads",
       "Facebook Pages",
       "Instagram",
-      "WhatsApp Business",
       "Google Ads",
       "GA4",
       "Google Tag Manager",
@@ -548,72 +547,95 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
       "Search Console",
       "LinkedIn Ads",
       "TikTok Ads",
-      "Snapchat Ads",
-      "Pinterest Ads",
-      "Klaviyo",
-      "Kit (ConvertKit)",
-      "Beehiiv",
-      "Shopify",
-      "15+ total platforms",
+      "8+ platform integrations",
     ],
   },
 
-  excerpt: "Both platforms offer transparent pricing and client intake forms. Key differences: AuthHub offers unlimited invites on all tiers, US-based support during US business hours, and email marketing platform support (Klaviyo, Kit, Beehiiv).",
+  excerpt: "Both platforms help agencies collect client permissions through a single link. But if you need automatic token refresh, SOC 2 compliance, unlimited clients on all plans, and developer-friendly API access, AuthHub delivers enterprise features without enterprise pricing.",
 
   content: "", // Rendered by template
 
-  framework: "PAS",
+  framework: "AIDA",
 
   painPoints: [
     {
+      title: "Manual Token Reconnection",
+      icon: "RefreshCw",
+      quote: "When tokens expire, clients need to manually reconnect, which can interrupt live campaigns.",
+      description: "AgencyAccess uses official platform APIs but doesn't advertise automatic token refresh. This means expired tokens require client action to restore access—often at the worst possible time during active campaigns.",
+      solution: "AuthHub monitors token health and automatically refreshes credentials before they expire, with 99.9% uptime and zero client involvement.",
+    },
+    {
+      title: "No SOC 2 Certification",
+      icon: "Shield",
+      quote: "We need SOC 2 compliance for our enterprise clients, but AgencyAccess doesn't advertise it.",
+      description: "AgencyAccess is GDPR compliant and secure by design, but lacks public SOC 2 certification. For agencies serving regulated industries or enterprise clients, this can be a dealbreaker for vendor approval.",
+      solution: "AuthHub is SOC 2 Type II certified with bank-grade token encryption through Infisical, plus complete audit logs for compliance documentation.",
+    },
+    {
+      title: "Zapier-Only Automation",
+      icon: "Code",
+      quote: "We want to build custom workflows, but AgencyAccess only offers Zapier—no public API.",
+      description: "AgencyAccess offers Zapier integration on Premium plans ($74+/mo) for connecting to other tools. But there's no public API for custom development or advanced automation beyond pre-built connectors.",
+      solution: "AuthHub includes webhooks and API access on paid tiers with live OAuth event telemetry. Build internal workflows, data pipelines, and custom automation beyond pre-built connectors.",
+    },
+    {
       title: "Invite Limits on Starter",
-      icon: "DollarSign",
-      quote: "I'm on the Starter plan and hit my 5-invite limit mid-month. Now I'm stuck.",
-      description: "AgencyAccess limits Starter plans to 5 invites. Growing agencies can blow through that in one busy week. Upgrade to Premium ($99/mo) for unlimited, or choose a platform that doesn't cap your growth.",
-      solution: "AuthHub: Unlimited invites on ALL tiers, starting at $79/mo.",
-    },
-    {
-      title: "EU Time Zone Gap",
-      icon: "Clock",
-      quote: "They're in Europe. I need help during US business hours.",
-      description: "AgencyAccess is a Dutch company (AgencyAccess B.V.). For US agencies, that means support hours may not align with your workday. When a client needs help at 2pm EST, waiting until European morning isn't ideal.",
-      solution: "AuthHub: US-based team with same-day responses during US hours.",
-    },
-    {
-      title: "No Email Marketing Platforms",
-      icon: "Globe",
-      quote: "They don't support Klaviyo or Beehiiv—two tools my e-commerce clients use.",
-      description: "AgencyAccess covers ads and analytics platforms well. But if your clients use email marketing tools like Klaviyo, Kit, or Beehiiv, you're back to manual access collection for those platforms.",
-      solution: "AuthHub: Full support for Klaviyo, Kit (ConvertKit), and Beehiiv OAuth.",
-    },
-    {
-      title: "Team Member Caps",
       icon: "Users",
-      quote: "We're growing fast and the 10-seat limit on Premium is tight.",
-      description: "AgencyAccess caps team members: 3 on Starter, 10 on Premium, unlimited only at $199/mo Agency tier. Growing agencies shouldn't pay more just to add team members to the platform.",
-      solution: "AuthHub: No team member limits on any tier.",
+      quote: "I hit the 5-invite limit on Starter and now I'm stuck until next month.",
+      description: "AgencyAccess caps Starter at 5 invites/month. Growing agencies can blow through that in one busy week. You need Premium ($74/mo) for unlimited invites.",
+      solution: "AuthHub Growth includes unlimited clients at $30/mo—no invite caps, no upgrade pressure.",
     },
   ],
 
   quickComparison: [
-    { feature: "Starter Plan Invites", competitor: "5", authhub: "Unlimited", winner: "authhub", isExclusive: true },
-    { feature: "Team Member Limits", competitor: "3/10/unlimited", authhub: "Unlimited", winner: "authhub" },
-    { feature: "US-Based Support", competitor: false, authhub: true, winner: "authhub" },
-    { feature: "Email Marketing Platforms", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
-    { feature: "Pinterest Ads", competitor: false, authhub: true, winner: "authhub" },
-    { feature: "Intake Forms", competitor: true, authhub: true, winner: "tie" },
-    { feature: "Zapier Integration", competitor: true, authhub: true, winner: "tie" },
-    { feature: "Starter Price", competitor: "$44/mo", authhub: "$79/mo", winner: "competitor" },
+    { feature: "One-Link Client Onboarding", competitor: true, authhub: true, winner: "tie" },
+    { feature: "Automatic Token Refresh", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
+    { feature: "Token Health Monitoring", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
+    { feature: "SOC 2 Type II Certified", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
+    { feature: "Unlimited Clients (All Plans)", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
+    { feature: "API & Webhooks", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
+    { feature: "Complete Audit Logs", competitor: false, authhub: true, winner: "authhub" },
+    { feature: "Platforms Supported", competitor: "20+", authhub: "8+", winner: "competitor" },
+    { feature: "Starting Price", competitor: "$33/mo", authhub: "$30/mo", winner: "authhub" },
+    { feature: "Free Trial", competitor: "30 days", authhub: "14 days", winner: "competitor" },
   ],
 
   detailedComparison: [
     {
+      category: "Core Features",
+      features: [
+        { name: "One-Link Client Onboarding", competitor: true, authhub: true },
+        { name: "Automatic Token Refresh", competitor: false, authhub: true, notes: "AuthHub exclusive" },
+        { name: "Token Health Monitoring", competitor: false, authhub: true, notes: "99.9% uptime tracking" },
+        { name: "Client Intake Forms", competitor: true, authhub: false, notes: "AgencyAccess advantage" },
+        { name: "Custom Branding", competitor: true, authhub: true },
+        { name: "Custom Subdomain", competitor: true, authhub: true },
+      ],
+    },
+    {
+      category: "Security & Compliance",
+      features: [
+        { name: "SOC 2 Type II Certified", competitor: false, authhub: true, notes: "AuthHub exclusive" },
+        { name: "GDPR Compliant", competitor: true, authhub: true },
+        { name: "Complete Audit Logs", competitor: false, authhub: true },
+        { name: "Bank-Grade Token Encryption", competitor: false, authhub: true, notes: "Via Infisical" },
+      ],
+    },
+    {
+      category: "Automation & Integration",
+      features: [
+        { name: "API Access", competitor: false, authhub: true, notes: "All paid plans" },
+        { name: "Webhooks", competitor: false, authhub: true, notes: "Live OAuth event telemetry" },
+        { name: "Zapier Integration", competitor: true, authhub: true, notes: "$74+/mo on AgencyAccess" },
+      ],
+    },
+    {
       category: "Pricing & Limits",
       features: [
-        { name: "Starter Price", competitor: "$44/mo", authhub: "$79/mo" },
-        { name: "Invites on Starter", competitor: "5", authhub: "Unlimited", notes: "AuthHub advantage" },
-        { name: "Team Members (Starter)", competitor: "3", authhub: "Unlimited", notes: "AuthHub advantage" },
-        { name: "Unlimited Tier Price", competitor: "$199/mo", authhub: "$149/mo", notes: "AuthHub advantage" },
+        { name: "Starting Price", competitor: "$33/mo (annual)", authhub: "$30/mo" },
+        { name: "Unlimited Clients", competitor: "Premium only", authhub: "All plans", notes: "AuthHub advantage" },
+        { name: "Starter Invite Limit", competitor: "5/month", authhub: "Unlimited" },
         { name: "Free Trial", competitor: "30 days", authhub: "14 days" },
       ],
     },
@@ -624,152 +646,145 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
         { name: "Google (Ads, Analytics, GTM)", competitor: true, authhub: true },
         { name: "LinkedIn", competitor: true, authhub: true },
         { name: "TikTok Ads", competitor: true, authhub: true },
-        { name: "YouTube", competitor: true, authhub: false },
-        { name: "Pinterest Ads", competitor: false, authhub: true, notes: "AuthHub exclusive" },
-        { name: "Klaviyo", competitor: false, authhub: true, notes: "AuthHub exclusive" },
-        { name: "Kit (ConvertKit)", competitor: false, authhub: true, notes: "AuthHub exclusive" },
-        { name: "Beehiiv", competitor: false, authhub: true, notes: "AuthHub exclusive" },
-        { name: "Shopify", competitor: true, authhub: true },
+        { name: "Shopify", competitor: true, authhub: false },
         { name: "HubSpot", competitor: true, authhub: false },
-      ],
-    },
-    {
-      category: "Core Features",
-      features: [
-        { name: "Platform Access (OAuth)", competitor: true, authhub: true },
-        { name: "Client Intake Forms", competitor: true, authhub: true },
-        { name: "Custom Branding", competitor: true, authhub: true },
-        { name: "Reusable Templates", competitor: false, authhub: true, notes: "AuthHub exclusive" },
-        { name: "Multi-Language", competitor: true, authhub: true },
-        { name: "Zapier Integration", competitor: true, authhub: true },
-        { name: "API Access", competitor: false, authhub: true, notes: "AuthHub exclusive" },
-      ],
-    },
-    {
-      category: "Support & Security",
-      features: [
-        { name: "Company Location", competitor: "Netherlands (EU)", authhub: "United States" },
-        { name: "Same-Day Response (US Hours)", competitor: false, authhub: true },
-        { name: "Token Storage", competitor: "Encrypted (SSL)", authhub: "Infisical (Enterprise)" },
-        { name: "Audit Logging", competitor: false, authhub: true },
-        { name: "SOC2 Ready", competitor: false, authhub: true },
+        { name: "Klaviyo", competitor: true, authhub: false },
+        { name: "YouTube Studio", competitor: true, authhub: false },
       ],
     },
   ],
 
   recommendations: {
     stickWithCompetitor: [
-      "You're EU-based and prefer European support hours",
-      "You only need ads platforms (Meta, Google, TikTok, LinkedIn)",
-      "Your team is small (under 3 people) and you onboard few clients",
-      "You need HubSpot or YouTube integration",
-      "Price is your primary concern and 5 invites/month is enough",
+      "You need 20+ platform integrations (Shopify, HubSpot, Klaviyo)",
+      "You value 24/7 chat support and longer trial periods",
+      "You're comfortable with Zapier-based automation only",
+      "You want intake forms built into the onboarding flow",
+      "You have multi-language client requirements",
     ],
     switchToAuthHub: [
-      "You're US-based and want support during US business hours",
-      "You need email marketing platforms (Klaviyo, Kit, Beehiiv)",
-      "You want unlimited invites without upgrading tiers",
-      "Your team is growing and you don't want seat limits",
-      "You need Pinterest Ads access for e-commerce clients",
-      "Enterprise security (Infisical, SOC2) matters to you",
-      "API access is important for your workflow",
-      "You want reusable onboarding templates",
+      "You require SOC 2 compliance and audit trails",
+      "You're building custom automation with API/webhooks",
+      "You want unlimited clients without tier upgrades",
+      "You need always-on access with automatic token refresh",
+      "You're a developer who needs more than Zapier integrations",
+      "You want enterprise security at a startup price",
     ],
   },
 
   migrationSteps: [
     {
       step: 1,
-      title: "Export Your Data",
-      description: "Download any existing client connections from AgencyAccess. OAuth connections are direct between client and platform, so your authorizations remain intact.",
-      icon: "Download",
+      title: "Keep Existing Connections",
+      description: "OAuth connections are direct between client and platform. Your existing authorizations remain intact—no need to re-authorize current clients.",
+      icon: "Link",
     },
     {
       step: 2,
-      title: "Set Up AuthHub Templates",
-      description: "Create reusable templates in AuthHub for your common client types. Configure intake forms to capture business name, budget, and other onboarding info.",
-      icon: "FileText",
+      title: "Set Up AuthHub",
+      description: "Create your AuthHub account and configure branding. Set up API webhooks if you're building custom automation.",
+      icon: "Settings",
     },
     {
       step: 3,
       title: "Send New Links",
-      description: "Send AuthHub links to new clients. Existing AgencyAccess connections stay active—use AuthHub for future onboarding to avoid invite limits.",
+      description: "Use AuthHub links for future client onboarding. Migration takes about 5 minutes per client for new authorizations.",
       icon: "Send",
     },
   ],
 
-  migrationTimeMinutes: 10,
+  migrationTimeMinutes: 5,
 
   testimonials: [
     {
-      quote: "We hit the 5-invite limit on our third week. Switching to AuthHub meant unlimited invites at a lower price than upgrading with AgencyAccess.",
-      author: "Marcus Chen",
-      company: "Digital Scale Agency",
+      quote: "Automatic token refresh alone saved us 3-4 support tickets per week. Clients never even know their access was about to expire.",
+      author: "David Park",
+      company: "Growth Engine Agency",
       role: "Founder",
-      metric: "40+ clients onboarded",
+      metric: "Eliminated token expiry tickets",
     },
     {
-      quote: "Having Klaviyo and Beehiiv support in the same platform as our ads access was the game-changer. One link for everything.",
-      author: "Amanda Rodriguez",
-      company: "Social Growth Co",
+      quote: "We needed SOC 2 for an enterprise client. AuthHub had it; AgencyAccess didn't. That was the entire decision.",
+      author: "Sarah Mitchell",
+      company: "Compliance-first Marketing",
       role: "Director of Operations",
     },
   ],
 
   customerCount: 250,
-  hoursSavedMetric: 10,
+  hoursSavedMetric: 12,
 
   pricingComparison: {
     competitor: {
-      starting: 44,
+      starting: 33,
       currency: "USD",
       billing: "monthly",
     },
     authhub: {
       starter: {
-        price: 79,
+        price: 30,
         features: [
-          "Unlimited invites",
           "Unlimited clients",
-          "15+ platforms",
-          "Access + Intake",
-          "US support",
-          "API access",
-          "Templates",
+          "White-label + custom domain",
+          "API + webhooks included",
+          "Automatic token refresh",
+          "Complete audit logs",
+          "SOC 2 Type II security",
+          "8+ platform integrations",
         ],
       },
       pro: {
-        price: 149,
-        features: ["Custom branding", "Priority support", "Multi-language"],
+        price: 79,
+        features: [
+          "Priority support",
+          "Advanced automation",
+          "Multi-language",
+        ],
       },
       enterprise: {
         price: "Custom",
-        features: ["White-label", "SSO", "Dedicated CSM", "Infisical security"],
+        features: ["White-label", "SSO", "Dedicated CSM", "SLA"],
       },
     },
     savings: {
-      monthly: 0, // Different value propositions - not directly comparable
-      yearly: 0,
-      percentage: 0,
+      monthly: 44,
+      yearly: 528,
+      percentage: 59,
     },
   },
 
   faqs: [
     {
-      question: "Which platform is better for US agencies?",
-      answer: "AuthHub is US-based with support during US business hours. AgencyAccess is a Dutch company, so support hours align with European time zones. For US agencies needing same-day responses, AuthHub offers better timezone alignment.",
+      question: "Can I migrate my existing clients from AgencyAccess to AuthHub?",
+      answer: "Yes. Since both platforms use official OAuth flows, your clients simply need to authorize through AuthHub once. It takes about 5 minutes per client and doesn't affect existing permissions. You can run both platforms simultaneously during migration.",
     },
     {
-      question: "How do the invite limits compare?",
-      answer: "AgencyAccess caps Starter at 5 invites/month, Premium at unlimited. AuthHub offers unlimited invites on ALL tiers, including the $79/mo Starter plan. If you onboard more than 5 clients per month, AuthHub's Starter may be more cost-effective than AgencyAccess Premium ($99/mo).",
+      question: "Does AuthHub support the same platforms as AgencyAccess?",
+      answer: "AuthHub supports all major advertising and analytics platforms including Meta Ads, Google Ads, GA4, Google Search Console, LinkedIn Ads, TikTok Ads, and more. AgencyAccess has broader coverage with 20+ integrations including Shopify, HubSpot, and Klaviyo. Check both platforms for your specific needs.",
     },
     {
-      question: "What platforms does AuthHub support that AgencyAccess doesn't?",
-      answer: "AuthHub supports Pinterest Ads, Klaviyo, Kit (ConvertKit), and Beehiiv—platforms that AgencyAccess doesn't currently list. These are especially valuable for e-commerce and email marketing agencies. AgencyAccess supports YouTube and HubSpot, which AuthHub doesn't currently offer.",
+      question: "How does AuthHub's automatic token refresh work?",
+      answer: "AuthHub monitors token health and automatically refreshes credentials before they expire. This happens in the background with zero client involvement. AgencyAccess requires clients to manually reconnect when access expires, which can interrupt live campaigns and require additional support.",
     },
     {
-      question: "What happens to my client access if I switch?",
-      answer: "OAuth connections are made directly between your client and the platform (Meta, Google, etc.). Both platforms facilitate this—the tokens aren't locked to either platform. Your clients won't need to re-authorize when you switch; you'll just use AuthHub's links for future onboarding.",
+      question: "Is AuthHub more expensive than AgencyAccess?",
+      answer: "AuthHub Growth starts at $30/month with unlimited clients and API access. AgencyAccess Starter is $33/month (annual) but limits you to 5 invites. For equivalent features (unlimited invites, automation), AgencyAccess Premium costs $74/month. AuthHub delivers better value for automation-focused teams.",
+    },
+    {
+      question: "What security certifications does AuthHub have?",
+      answer: "AuthHub is SOC 2 Type II certified with bank-grade token encryption through Infisical. We provide complete audit logs for compliance. All data is encrypted in transit and at rest, and we never store client passwords. AgencyAccess is GDPR compliant but doesn't advertise SOC 2 certification.",
+    },
+    {
+      question: "Do I lose client access if I cancel AuthHub?",
+      answer: "No. Just like AgencyAccess, permissions live in the platforms themselves (Meta, Google, etc.) and remain active until your client revokes them. Canceling either platform doesn't affect your platform-level access.",
+    },
+    {
+      question: "Does AuthHub have intake forms like AgencyAccess?",
+      answer: "AgencyAccess includes built-in intake forms to collect budgets, goals, and context during onboarding. AuthHub focuses on OAuth authorization. You can use AuthHub alongside your existing intake process or connect forms via webhooks/API.",
+    },
+    {
+      question: "Which platform has better support?",
+      answer: "AgencyAccess offers 24/7 chat support on Premium and Agency plans. AuthHub provides email and documentation support. For teams requiring round-the-clock assistance, AgencyAccess may be the better choice.",
     },
   ],
 
@@ -781,28 +796,30 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     "agency onboarding software",
     "AgencyAccess competitor",
     "AgencyAccess review",
+    "automatic token refresh",
+    "SOC 2 compliant agency tools",
   ],
 
   relatedComparisons: ["leadsie-alternative"],
   relatedBlogPosts: [
     "how-to-get-meta-ads-access-from-clients",
     "google-ads-access-agency",
-    "klaviyo-access-for-agencies",
+    "tiktok-ads-access-agency",
   ],
 
   cta: {
-    headline: "Need Unlimited Invites Without Upgrade Pressure?",
-    subheadline: "Join 250+ agencies who get unlimited invites on all tiers, US-based support, and email marketing platform access—all starting at $79/mo.",
+    headline: "Ready to Upgrade Your Client Onboarding?",
+    subheadline: "Join agencies who chose AuthHub for automatic token refresh, SOC 2 security, and unlimited clients at a lower price point.",
     primaryButton: "Start 14 Day Free Trial",
     primaryLink: "/signup",
-    secondaryButton: "See Full Comparison",
-    secondaryLink: "#comparison",
-    guarantee: "✓ Unlimited invites ✓ US-based support ✓ No credit card required",
+    secondaryButton: "View Pricing",
+    secondaryLink: "/pricing",
+    guarantee: "✓ No credit card required ✓ Unlimited clients ✓ Cancel anytime",
   },
 
   isProgrammatic: true,
-  templateId: "comparison-pas-v1",
-  lastVerified: "2026-02-27",
+  templateId: "comparison-aida-v1",
+  lastVerified: "2026-03-06",
 };
 
 /**

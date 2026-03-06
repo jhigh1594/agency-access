@@ -45,6 +45,10 @@ export const notificationQueue = new Queue('notification', {
   connection: connectionOptions,
 });
 
+export const onboardingEmailQueue = new Queue('onboarding-email', {
+  connection: connectionOptions,
+});
+
 export const trialExpirationQueue = new Queue('trial-expiration', {
   connection: connectionOptions,
 });
@@ -259,6 +263,41 @@ export async function startNotificationWorker() {
 
   worker.on('failed', (job, err) => {
     console.error(`Notification job failed: ${job?.id}`, err);
+  });
+
+  return worker;
+}
+
+/**
+ * Onboarding Email Worker
+ *
+ * Processes delayed onboarding emails for activation and habit-building.
+ */
+export async function startOnboardingEmailWorker() {
+  const worker = new Worker(
+    'onboarding-email',
+    async (job) => {
+      const { onboardingEmailService } = await import('../services/onboarding-email.service.js');
+      const result = await onboardingEmailService.sendOnboardingEmail(job.data);
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      return result.data;
+    },
+    {
+      connection: connectionOptions,
+      concurrency: 5,
+    }
+  );
+
+  worker.on('completed', (job) => {
+    console.log(`Onboarding email job completed: ${job.id}`);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`Onboarding email job failed: ${job?.id}`, err);
   });
 
   return worker;

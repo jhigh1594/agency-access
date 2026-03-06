@@ -1,0 +1,437 @@
+import { prisma } from '@/lib/prisma';
+import { env } from '@/lib/env';
+import { onboardingEmailQueue } from '@/lib/queue';
+import { sendEmail } from '@/services/email.service';
+
+type OnboardingEmailKey =
+  | 'welcome_first_step'
+  | 'get_to_first_link'
+  | 'send_the_link'
+  | 'track_status_keep_momentum'
+  | 'turn_one_request_into_workflow';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const EMAIL_DELAYS: Record<Exclude<OnboardingEmailKey, 'send_the_link'>, number> = {
+  welcome_first_step: 0,
+  get_to_first_link: DAY_MS,
+  track_status_keep_momentum: 3 * DAY_MS,
+  turn_one_request_into_workflow: 7 * DAY_MS,
+};
+
+function getOnboardingUrl(): string {
+  return `${env.FRONTEND_URL}/onboarding/unified`;
+}
+
+function getDashboardUrl(): string {
+  return `${env.FRONTEND_URL}/dashboard`;
+}
+
+function getAuthorizeUrl(uniqueToken: string): string {
+  return `${env.FRONTEND_URL}/authorize/${uniqueToken}`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function textToHtml(text: string): string {
+  const blocks = text.trim().split(/\n{2,}/);
+  const htmlBlocks = blocks.map((block) => {
+    const trimmed = block.trim();
+    if (!trimmed) return '';
+
+    const lines = trimmed.split('\n').map((line) => escapeHtml(line).replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1">$1</a>'
+    ));
+
+    return `<p style="margin: 0 0 16px; line-height: 1.6; white-space: pre-wrap;">${lines.join('<br />')}</p>`;
+  });
+
+  return `
+    <div style="font-family: Inter, Arial, sans-serif; color: #111827; max-width: 640px; margin: 0 auto; padding: 24px;">
+      ${htmlBlocks.join('')}
+    </div>
+  `;
+}
+
+async function hasAlreadySentEmail(agencyId: string, emailKey: OnboardingEmailKey): Promise<boolean> {
+  const existing = await prisma.auditLog.findFirst({
+    where: {
+      agencyId,
+      action: 'ONBOARDING_EMAIL_SENT',
+      resourceType: 'onboarding_email',
+      resourceId: `${agencyId}:${emailKey}`,
+    },
+  });
+
+  return Boolean(existing);
+}
+
+async function logEmailSent(agencyId: string, emailKey: OnboardingEmailKey, subject: string) {
+  await prisma.auditLog.create({
+    data: {
+      agencyId,
+      userEmail: 'system',
+      action: 'ONBOARDING_EMAIL_SENT',
+      resourceType: 'onboarding_email',
+      resourceId: `${agencyId}:${emailKey}`,
+      metadata: {
+        emailKey,
+        subject,
+      },
+    },
+  });
+}
+
+function buildWelcomeEmail(agencyName: string) {
+  const subject = 'Your client access flow starts here';
+  const text = `Hi there,
+
+You signed up for one reason: get client access without the usual week of back-and-forth.
+
+${agencyName} now has the shortest path to that outcome: one secure link your client can use to authorize the platforms you need.
+
+Your fastest path to value:
+1. Add your agency details
+2. Choose a client
+3. Select the platforms you need
+4. Generate your access link
+
+The goal is not to set up everything. The goal is to get your first real request live.
+
+Start here:
+${getOnboardingUrl()}
+
+If you want a quick recommendation, reply with the first client you plan to onboard and the platforms you need.
+
+- The AuthHub team`;
+
+  return { subject, text };
+}
+
+function buildFirstLinkReminderEmail() {
+  const subject = 'Your first access link is still waiting';
+  const text = `Hi there,
+
+If you have not created your first access link yet, that is the only step that matters right now.
+
+Pick one real client. Create one real request. Send one real link.
+
+That gets you to value fast:
+1. Pick the client you want to onboard first
+2. Choose the platforms they need to authorize
+3. Generate the link
+4. Send it
+
+Create your first request here:
+${getOnboardingUrl()}
+
+If you hit a blocker, reply with the step where you got stuck.
+
+- The AuthHub team`;
+
+  return { subject, text };
+}
+
+function buildSendTheLinkEmail(clientName: string, accessRequestUrl: string) {
+  const subject = 'Your access link is ready to send';
+  const text = `Hi there,
+
+Your first access link is ready.
+
+Next move: send it to ${clientName}.
+
+Once they open it:
+1. They authorize each requested platform
+2. You track status from your dashboard
+3. You move the work forward without another email thread
+
+If you want a clean note to forward, use this:
+
+Hi ${clientName},
+
+Please use this secure link to grant us access to the platforms we need. It should take a few minutes:
+${accessRequestUrl}
+
+Once you finish, we will be able to get started faster.
+
+Open your request here:
+${accessRequestUrl}
+
+- The AuthHub team`;
+
+  return { subject, text };
+}
+
+function buildMomentumEmail(hasRequest: boolean) {
+  if (!hasRequest) {
+    return {
+      subject: 'Need help getting your first request live?',
+      text: `Hi there,
+
+If you have not launched your first request yet, pick one client and create one link.
+
+That is the moment where the product starts paying off. Everything else can wait.
+
+Start here:
+${getOnboardingUrl()}
+
+If you want help choosing which platforms to include, reply to this email and we will point you in the right direction.
+
+- The AuthHub team`,
+    };
+  }
+
+  return {
+    subject: 'Check your request status',
+    text: `Hi there,
+
+Once your first request is in motion, the dashboard matters more than your inbox.
+
+Use it to:
+- see which requests are pending
+- confirm when a client has authorized access
+- create the next request without starting from scratch
+
+Open your dashboard here:
+${getDashboardUrl()}
+
+If your client has not completed the request yet, this is the right moment for a short follow-up.
+
+- The AuthHub team`,
+  };
+}
+
+function buildWorkflowEmail() {
+  const subject = 'Turn this into your standard onboarding flow';
+  const text = `Hi there,
+
+One completed request is useful.
+
+What matters next is turning that one request into a repeatable onboarding workflow for your agency.
+
+From your dashboard, you can:
+- create requests for new clients faster
+- track every authorization in one place
+- invite teammates so access setup does not live with one person
+- add your branding for a cleaner client experience
+
+Go back to your dashboard here:
+${getDashboardUrl()}
+
+If you are still testing, run one more real client through the flow. That is usually when the time savings become obvious.
+
+- The AuthHub team`;
+
+  return { subject, text };
+}
+
+export async function queueSequenceStart(input: { agencyId: string }) {
+  try {
+    const jobs = Object.entries(EMAIL_DELAYS) as Array<[Exclude<OnboardingEmailKey, 'send_the_link'>, number]>;
+
+    for (const [emailKey, delay] of jobs) {
+      await onboardingEmailQueue.add(
+        'onboarding-email',
+        {
+          agencyId: input.agencyId,
+          emailKey,
+        },
+        {
+          jobId: `onboarding-email:${input.agencyId}:${emailKey}`,
+          delay,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+        }
+      );
+    }
+
+    return { data: true, error: null };
+  } catch (error: any) {
+    if (error?.code === 'ECONNREFUSED' && env.NODE_ENV !== 'production') {
+      return { data: true, error: null };
+    }
+
+    return {
+      data: null,
+      error: {
+        code: 'ONBOARDING_EMAIL_QUEUE_FAILED',
+        message: 'Failed to queue onboarding email sequence',
+      },
+    };
+  }
+}
+
+export async function queueActivatedFollowUp(input: { agencyId: string; accessRequestId: string }) {
+  try {
+    await onboardingEmailQueue.add(
+      'onboarding-email',
+      {
+        agencyId: input.agencyId,
+        accessRequestId: input.accessRequestId,
+        emailKey: 'send_the_link' as const,
+      },
+      {
+        jobId: `onboarding-email:${input.agencyId}:send_the_link:${input.accessRequestId}`,
+        delay: DAY_MS,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      }
+    );
+
+    return { data: true, error: null };
+  } catch (error: any) {
+    if (error?.code === 'ECONNREFUSED' && env.NODE_ENV !== 'production') {
+      return { data: true, error: null };
+    }
+
+    return {
+      data: null,
+      error: {
+        code: 'ONBOARDING_EMAIL_QUEUE_FAILED',
+        message: 'Failed to queue onboarding activation follow-up',
+      },
+    };
+  }
+}
+
+export async function sendOnboardingEmail(input: {
+  agencyId: string;
+  emailKey: OnboardingEmailKey;
+  accessRequestId?: string;
+}) {
+  const { agencyId, emailKey, accessRequestId } = input;
+
+  if (await hasAlreadySentEmail(agencyId, emailKey)) {
+    return { data: { skipped: true, reason: 'already_sent' }, error: null };
+  }
+
+  const agency = await prisma.agency.findUnique({
+    where: { id: agencyId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      settings: true,
+      accessRequests: {
+        select: {
+          id: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
+    },
+  });
+
+  if (!agency) {
+    return {
+      data: null,
+      error: {
+        code: 'AGENCY_NOT_FOUND',
+        message: 'Agency not found',
+      },
+    };
+  }
+
+  let message: { subject: string; text: string } | null = null;
+
+  if (emailKey === 'welcome_first_step') {
+    message = buildWelcomeEmail(agency.name);
+  }
+
+  if (emailKey === 'get_to_first_link') {
+    if (agency.accessRequests.length > 0) {
+      return { data: { skipped: true, reason: 'already_activated' }, error: null };
+    }
+    message = buildFirstLinkReminderEmail();
+  }
+
+  if (emailKey === 'send_the_link') {
+    const accessRequest = await prisma.accessRequest.findUnique({
+      where: { id: accessRequestId },
+      select: {
+        id: true,
+        status: true,
+        clientName: true,
+        uniqueToken: true,
+      },
+    });
+
+    if (!accessRequest) {
+      return { data: { skipped: true, reason: 'missing_access_request' }, error: null };
+    }
+
+    if (accessRequest.status === 'completed') {
+      return { data: { skipped: true, reason: 'already_completed' }, error: null };
+    }
+
+    message = buildSendTheLinkEmail(accessRequest.clientName, getAuthorizeUrl(accessRequest.uniqueToken));
+  }
+
+  if (emailKey === 'track_status_keep_momentum') {
+    const latestRequest = await prisma.accessRequest.findFirst({
+      where: { agencyId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+
+    message = buildMomentumEmail(Boolean(latestRequest));
+  }
+
+  if (emailKey === 'turn_one_request_into_workflow') {
+    if (agency.accessRequests.length === 0) {
+      return { data: { skipped: true, reason: 'not_activated' }, error: null };
+    }
+    message = buildWorkflowEmail();
+  }
+
+  if (!message) {
+    return {
+      data: null,
+      error: {
+        code: 'UNKNOWN_ONBOARDING_EMAIL',
+        message: `Unknown onboarding email key: ${emailKey}`,
+      },
+    };
+  }
+
+  const result = await sendEmail({
+    to: agency.email,
+    subject: message.subject,
+    text: message.text,
+    html: textToHtml(message.text),
+  });
+
+  if (result.error) {
+    return result;
+  }
+
+  await logEmailSent(agencyId, emailKey, message.subject);
+
+  return {
+    data: {
+      sent: true,
+      emailKey,
+    },
+    error: null,
+  };
+}
+
+export const onboardingEmailService = {
+  queueSequenceStart,
+  queueActivatedFollowUp,
+  sendOnboardingEmail,
+};

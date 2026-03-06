@@ -21,11 +21,14 @@ import { GoogleUnifiedSettings } from '@/components/google-unified-settings';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { m, AnimatePresence } from 'framer-motion';
+import { useAuthOrBypass } from '@/lib/dev-auth';
 
 function ConnectionsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { userId, orgId, getToken } = useAuth();
+  const clerkAuth = useAuth();
+  const { userId, orgId, isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
+  const { getToken } = clerkAuth;
   const { user } = useUser();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -52,7 +55,7 @@ function ConnectionsPageContent() {
       }
 
       // Get Clerk session token for authenticated request
-      const token = await getToken();
+      const token = isDevelopmentBypass ? null : await getToken();
 
       // Resolve the active principal's agency by clerk user/org id.
       const response = await fetch(
@@ -132,7 +135,7 @@ function ConnectionsPageContent() {
       if (!agencyId) return [];
 
       // Get Clerk session token for authenticated request
-      const token = await getToken();
+      const token = isDevelopmentBypass ? null : await getToken();
 
       // Get stored ETag from previous request
       const etagKey = `etag-available-platforms-${agencyId}`;
@@ -196,7 +199,7 @@ function ConnectionsPageContent() {
       setConnectingPlatform(platform);
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
-      const token = await getToken();
+      const token = isDevelopmentBypass ? null : await getToken();
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/initiate`,
@@ -241,7 +244,7 @@ function ConnectionsPageContent() {
       setDisconnectingPlatform(platform);
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
-      const token = await getToken();
+      const token = isDevelopmentBypass ? null : await getToken();
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,

@@ -13,7 +13,9 @@ export interface SendEmailOptions {
   to: string | string[];
   subject: string;
   html: string;
+  text?: string;
   from?: string;
+  replyTo?: string | string[];
 }
 
 /**
@@ -26,7 +28,14 @@ export async function sendEmail(options: SendEmailOptions) {
   }
 
   try {
-    const { to, subject, html, from = 'AuthHub <notifications@notifications.authhub.co>' } = options;
+    const {
+      to,
+      subject,
+      html,
+      text,
+      from = env.RESEND_FROM_EMAIL || 'AuthHub <notifications@notifications.authhub.co>',
+      replyTo = env.RESEND_REPLY_TO_EMAIL,
+    } = options;
     
     // In development/test, we might want to log instead of sending if a real key isn't provided
     if (env.NODE_ENV !== 'production' && env.RESEND_API_KEY === 're_123456789') {
@@ -39,6 +48,8 @@ export async function sendEmail(options: SendEmailOptions) {
       to,
       subject,
       html,
+      text,
+      replyTo,
     });
 
     if (result.error) {
@@ -104,4 +115,3 @@ export async function sendClientAuthorizationEmail(options: {
     html,
   });
 }
-

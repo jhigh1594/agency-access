@@ -59,7 +59,7 @@ export default function ShopifyManualPage() {
     blockedReason?: string;
   }>({
     stepIndex: 0,
-    totalSteps: 4,
+    totalSteps: 3,
     label: 'Continue',
   });
 
@@ -134,9 +134,9 @@ export default function ShopifyManualPage() {
 
     return [
       {
-        id: 'open-shopify-users',
-        title: 'Open Shopify users and permissions',
-        description: 'Sign in to your Shopify admin and open Users and permissions.',
+        id: 'connect-shopify',
+        title: 'Connect Shopify',
+        description: 'Open Shopify admin and navigate to Users and permissions.',
         content: (
           <div className="flex flex-wrap gap-3">
             <a
@@ -159,11 +159,11 @@ export default function ShopifyManualPage() {
             </a>
           </div>
         ),
-        primaryAction: { label: 'I opened Shopify' },
+        primaryAction: { label: 'Connect Shopify' },
       },
       {
-        id: 'collect-collaborator-details',
-        title: 'Copy your collaborator request code',
+        id: 'select-store',
+        title: 'Select Store',
         description: 'Enter your store domain and 4-digit collaborator request code.',
         content: (
           <div className="space-y-4">
@@ -199,7 +199,7 @@ export default function ShopifyManualPage() {
           </div>
         ),
         primaryAction: {
-          label: isFormValid ? 'I copied the code' : 'Details required',
+          label: isFormValid ? 'Select Store' : 'Details required',
           disabled: !isFormValid,
           disabledReason: !isFormValid
             ? 'A valid shop domain and 4-digit collaborator code are required.'
@@ -207,32 +207,28 @@ export default function ShopifyManualPage() {
         },
       },
       {
-        id: 'request-agency-access',
-        title: 'Send these details to your agency',
-        description: 'Your agency uses these details in Shopify Partners to request access.',
-        content: (
-          <div className="rounded-lg border border-border bg-muted/10 px-4 py-3">
-            <ul className="list-disc space-y-2 pl-5 text-sm text-foreground">
-              <li>Shop domain: <span className="font-mono">{normalizeShopDomain(shopDomain)}</span></li>
-              <li>Collaborator code: <span className="font-mono">{collaboratorCode.trim()}</span></li>
-              <li>Your agency sends the collaborator access request from Shopify Partners.</li>
-            </ul>
-          </div>
-        ),
-        primaryAction: { label: 'I shared the details' },
-      },
-      {
-        id: 'confirm-completion',
-        title: 'Confirm and continue',
+        id: 'connected',
+        title: 'Connected',
         description: 'Confirm completion and return to your authorization request.',
-        content: submissionError ? (
-          <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
-            {submissionError}
+        content: (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-muted/10 px-4 py-3">
+              <ul className="list-disc space-y-2 pl-5 text-sm text-foreground">
+                <li>Shop domain: <span className="font-mono">{normalizeShopDomain(shopDomain)}</span></li>
+                <li>Collaborator code: <span className="font-mono">{collaboratorCode.trim()}</span></li>
+                <li>Your agency sends the collaborator access request from Shopify Partners.</li>
+              </ul>
+            </div>
+            {submissionError ? (
+              <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+                {submissionError}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                We will mark Shopify as complete once you confirm and continue.
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            We will mark Shopify as complete once you confirm and continue.
-          </p>
         ),
         completionGate: {
           label: 'I have shared my shop domain and collaborator code with the agency',
@@ -325,9 +321,12 @@ export default function ShopifyManualPage() {
   return (
     <InviteFlowShell
       title={data.agencyName}
-      description="Connect Shopify by completing each checklist step."
+      description="Connect Shopify in 3 steps: Connect Shopify, Select Store, Connected."
       layoutMode="split"
-      showProgress={false}
+      showProgress={true}
+      step={Math.min(railState.stepIndex + 1, 3)}
+      totalSteps={3}
+      steps={['Connect Shopify', 'Select Store', 'Connected']}
       rightSlot={
         <Button
           variant="ghost"

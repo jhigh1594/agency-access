@@ -21,6 +21,13 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
+vi.mock('next/image', () => ({
+  default: (props: any) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img alt={props.alt || ''} {...props} />;
+  },
+}));
+
 // Mock Clerk
 vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Mail, Calendar, Clock, Linkedin, Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScheduleDemoModal } from '@/components/marketing/schedule-demo-modal';
+import { getDocsUrl } from '@/lib/docs-url';
 
 export function ContactInfoCard() {
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
@@ -99,10 +100,10 @@ export function ContactInfoCard() {
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <p className="font-mono text-xs text-gray-500 mb-2">Looking for quick answers?</p>
           <a
-            href="/pricing#faq"
+            href={getDocsUrl()}
             className="text-coral hover:text-coral/80 transition-colors text-sm font-medium"
           >
-            Check our FAQ &rarr;
+            Visit the Help Center &rarr;
           </a>
         </div>
       </div>

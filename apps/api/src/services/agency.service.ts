@@ -16,6 +16,7 @@ import {
   type UnifiedOnboardingProgress,
   type UnifiedOnboardingStatus,
 } from '@agency-platform/shared';
+import { onboardingEmailService } from '@/services/onboarding-email.service';
 
 // Validation schemas
 const createAgencySchema = z.object({
@@ -177,6 +178,17 @@ export async function createAgency(input: CreateAgencyInput) {
       return { agency, admin };
     });
 
+    const queued = await onboardingEmailService.queueSequenceStart({
+      agencyId: result.agency.id,
+    });
+
+    if (queued?.error) {
+      console.warn('Failed to queue onboarding email sequence', {
+        agencyId: result.agency.id,
+        error: queued.error,
+      });
+    }
+
     return { data: result.agency, error: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -298,6 +310,17 @@ export async function createAgencyWithCheckout(input: CreateAgencyWithCheckoutIn
 
       return { agency };
     });
+
+    const queued = await onboardingEmailService.queueSequenceStart({
+      agencyId: result.agency.id,
+    });
+
+    if (queued?.error) {
+      console.warn('Failed to queue onboarding email sequence', {
+        agencyId: result.agency.id,
+        error: queued.error,
+      });
+    }
 
     // 3. Create Creem checkout session (outside transaction - agency is already created)
     const productId = getProductId(validated.selectedTier, validated.billingInterval);
@@ -951,6 +974,21 @@ export async function updateOnboardingProgress(
         settings: true,
       },
     });
+
+    if (validated.status === 'activated' && validated.accessRequestId) {
+      const queued = await onboardingEmailService.queueActivatedFollowUp({
+        agencyId: updatedAgency.id,
+        accessRequestId: validated.accessRequestId,
+      });
+
+      if (queued?.error) {
+        console.warn('Failed to queue onboarding activation follow-up', {
+          agencyId: updatedAgency.id,
+          accessRequestId: validated.accessRequestId,
+          error: queued.error,
+        });
+      }
+    }
 
     return {
       data: {

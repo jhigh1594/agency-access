@@ -104,6 +104,8 @@ const envSchema = z.object({
 
   // Notifications
   RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
+  RESEND_REPLY_TO_EMAIL: z.string().optional(),
 
   // Creem Payments
   CREEM_API_KEY: z.string(),

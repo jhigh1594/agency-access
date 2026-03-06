@@ -21,7 +21,9 @@ vi.mock('@/services/audit.service', () => ({
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     clientConnection: {
+      findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -54,6 +56,7 @@ describe('Client Auth Manual Routes - Shopify', () => {
       } as any,
       error: null,
     });
+    vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.clientConnection.create).mockResolvedValue({
       id: 'conn-1',
       status: 'pending_verification',
@@ -102,5 +105,52 @@ describe('Client Auth Manual Routes - Shopify', () => {
     const body = response.json() as any;
     expect(body?.data?.shopDomain).toBe('store-example.myshopify.com');
     expect(body?.data?.collaboratorCode).toBeUndefined();
+  });
+
+  it('updates an existing Shopify submission for the same access request instead of creating a new connection', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      } as any,
+      error: null,
+    });
+    vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({
+      id: 'conn-existing',
+      grantedAssets: {
+        platform: 'shopify',
+      },
+    } as any);
+    vi.mocked(prisma.clientConnection.update).mockResolvedValue({
+      id: 'conn-existing',
+      status: 'pending_verification',
+    } as any);
+    vi.mocked(auditService.createAuditLog).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-1/shopify/manual-connect',
+      payload: {
+        platform: 'shopify',
+        shopDomain: 'https://new-store.myshopify.com/',
+        collaboratorCode: '9876',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(prisma.clientConnection.create).not.toHaveBeenCalled();
+    expect(prisma.clientConnection.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'conn-existing' },
+        data: expect.objectContaining({
+          grantedAssets: expect.objectContaining({
+            platform: 'shopify',
+            shopDomain: 'new-store.myshopify.com',
+            collaboratorCodeHash: hashCollaboratorCode('9876'),
+          }),
+        }),
+      })
+    );
   });
 });

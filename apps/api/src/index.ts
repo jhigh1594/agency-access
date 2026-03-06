@@ -195,6 +195,22 @@ const start = async () => {
       }
     }
 
+    try {
+      const { startOnboardingEmailWorker } = await import('./lib/queue.js');
+      const workerPromise = startOnboardingEmailWorker();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Worker startup timeout')), 10000)
+      );
+      await Promise.race([workerPromise, timeoutPromise]);
+      fastify.log.info('Onboarding email worker started');
+    } catch (workerErr) {
+      fastify.log.warn('Failed to start onboarding email worker (Redis may be unavailable)');
+      fastify.log.warn('Onboarding emails will not be delayed. To enable, ensure Redis is running.');
+      if (env.NODE_ENV === 'development') {
+        fastify.log.info('To start Redis: brew services start redis (macOS) or docker run -p 6379:6379 redis');
+      }
+    }
+
     await fastify.listen({
       port: env.PORT,
       host: '0.0.0.0',
