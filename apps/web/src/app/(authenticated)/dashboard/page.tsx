@@ -20,6 +20,7 @@ import { useEffect, useRef } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { useAgencyOnboardingStatus, useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
+import { getDocsUrl } from '@/lib/docs-url';
 import type {
   DashboardPayload,
   DashboardRequestSummary,
@@ -113,6 +114,8 @@ function iconForPlatform(platform: string): string | null {
 function requestClientHref(request: DashboardRequestSummary): string {
   return `/access-requests/${request.id}`;
 }
+
+const HELP_CENTER_URL = getDocsUrl();
 
 export default function DashboardPage() {
   const clerkAuth = useAuth();
@@ -485,6 +488,8 @@ export default function DashboardPage() {
             <EmptyState
               title="No access requests yet"
               description="Create your first access request to start onboarding clients."
+              actionLabel="Open Help Center"
+              actionHref={HELP_CENTER_URL}
             />
           ) : (
             <div className="divide-y divide-black/10">
@@ -545,6 +550,8 @@ export default function DashboardPage() {
             <EmptyState
               title="No client connections yet"
               description="Connections will appear here after clients authorize access."
+              actionLabel="Open Help Center"
+              actionHref={HELP_CENTER_URL}
             />
           ) : (
             <div className="divide-y divide-black/10">

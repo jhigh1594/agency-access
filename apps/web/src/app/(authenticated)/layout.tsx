@@ -6,12 +6,15 @@ import Image from 'next/image';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { HelpScoutBeacon } from '@/components/help-scout-beacon';
+import { getDocsUrl } from '@/lib/docs-url';
 import {
   LayoutDashboard,
   Network,
   // Heart, // TODO: Re-enable when Token Health page is restored
   Users,
   Settings,
+  CircleHelp,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -226,6 +229,7 @@ export default function AuthenticatedLayout({
       ),
     },
   ];
+  const docsUrl = getDocsUrl();
 
   return (
     <div
@@ -274,6 +278,40 @@ export default function AuthenticatedLayout({
                 <SidebarLink key={link.href} link={link} />
               ))}
             </nav>
+
+            <div className="mt-6 border-t border-border pt-4">
+              <a
+                href={docsUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Help Center"
+                className={cn(
+                  'group flex w-full items-center rounded-lg transition-colors',
+                  'hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  open ? 'justify-start pl-3 py-2' : 'justify-center px-4 py-3'
+                )}
+              >
+                <div
+                  className={cn(
+                    'flex h-6 w-6 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground',
+                    open && 'mr-2'
+                  )}
+                >
+                  <CircleHelp className="h-6 w-6 flex-shrink-0" />
+                </div>
+                <div className={cn(open ? 'overflow-visible' : 'overflow-hidden')}>
+                  <span
+                    aria-hidden={!open}
+                    className={cn(
+                      'inline-block origin-left whitespace-nowrap text-base text-muted-foreground transition-all duration-200 motion-reduce:transition-none group-hover:translate-x-1 group-hover:text-foreground',
+                      open ? 'translate-x-0 scale-x-100 opacity-100' : '-translate-x-2 scale-x-0 opacity-0'
+                    )}
+                  >
+                    Help Center
+                  </span>
+                </div>
+              </a>
+            </div>
           </div>
 
           {/* User Profile at Bottom */}
@@ -328,6 +366,7 @@ export default function AuthenticatedLayout({
         )}
         {children}
       </div>
+      <HelpScoutBeacon />
     </div>
   );
 }

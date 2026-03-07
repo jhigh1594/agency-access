@@ -190,4 +190,12 @@ describe('env contract', () => {
     expect(module.env.TIKTOK_CLIENT_ID).toBe('new-client-id');
     expect(module.env.TIKTOK_CLIENT_SECRET).toBe('new-client-secret');
   });
+
+  it('preserves optional Help Scout Beacon secret when configured', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      HELPSCOUT_BEACON_SECRET: 'hs_secret_test',
+    }));
+
+    expect(module.env.HELPSCOUT_BEACON_SECRET).toBe('hs_secret_test');
+  });
 });

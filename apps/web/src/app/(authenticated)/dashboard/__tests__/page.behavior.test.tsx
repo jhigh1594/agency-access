@@ -60,10 +60,11 @@ vi.mock('@/components/ui', () => ({
     </div>
   ),
   StatusBadge: ({ status }: any) => <span>{status}</span>,
-  EmptyState: ({ title, description }: any) => (
+  EmptyState: ({ title, description, actionLabel, actionHref }: any) => (
     <div>
       <h3>{title}</h3>
       <p>{description}</p>
+      {actionLabel && actionHref ? <a href={actionHref}>{actionLabel}</a> : null}
     </div>
   ),
 }));
@@ -244,6 +245,54 @@ describe('DashboardPage behavior', () => {
 
     expect(await screen.findByText('Finish your onboarding setup')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Resume onboarding' })).toHaveAttribute('href', '/onboarding/unified');
+  });
+
+  it('offers help center links in dashboard empty states', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          agency: {
+            id: 'agency_1',
+            name: 'Agency One',
+            email: 'owner@agency.test',
+          },
+          stats: {
+            totalRequests: 0,
+            pendingRequests: 0,
+            activeConnections: 0,
+            totalPlatforms: 0,
+          },
+          requests: [],
+          connections: [],
+          meta: {
+            requests: {
+              limit: 10,
+              returned: 0,
+              total: 0,
+              hasMore: false,
+            },
+            connections: {
+              limit: 10,
+              returned: 0,
+              total: 0,
+              hasMore: false,
+            },
+          },
+        },
+        error: null,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<DashboardPage />);
+
+    const helpLinks = await screen.findAllByRole('link', { name: 'Open Help Center' });
+    expect(helpLinks).toHaveLength(2);
+    helpLinks.forEach((helpLink) => {
+      expect(helpLink).toHaveAttribute('href', 'https://docs.authhub.co');
+    });
   });
 
   it('shows only resume and finish actions when lifecycle status is activated', async () => {

@@ -1,0 +1,67 @@
+import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MarketingNav } from '../marketing-nav';
+import { MarketingFooter } from '../marketing-footer';
+import { ContactInfoCard } from '../contact/contact-info-card';
+
+vi.mock('next/link', () => ({
+  default: ({ children, href, onClick, className }: any) => (
+    <a href={href} onClick={onClick} className={className}>
+      {children}
+    </a>
+  ),
+}));
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
+vi.mock('@clerk/nextjs', () => ({
+  SignInButton: ({ children }: any) => <div>{children}</div>,
+  SignUpButton: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('framer-motion', () => ({
+  m: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+
+vi.mock('@/components/marketing/schedule-demo-modal', () => ({
+  ScheduleDemoModal: () => null,
+}));
+
+describe('help center links', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_DOCS_URL = 'https://docs.authhub.co';
+  });
+
+  it('renders help center links in marketing navigation and footer', () => {
+    const { container } = render(
+      <>
+        <MarketingNav />
+        <MarketingFooter />
+      </>,
+    );
+
+    const helpCenterLinks = screen.getAllByRole('link', { name: 'Help Center' });
+    expect(helpCenterLinks.length).toBeGreaterThanOrEqual(2);
+
+    for (const link of helpCenterLinks) {
+      expect(link).toHaveAttribute('href', 'https://docs.authhub.co');
+    }
+
+    expect(container).toHaveTextContent('Help Center');
+  });
+
+  it('sends quick-help contact traffic to the docs site instead of pricing faq', () => {
+    render(<ContactInfoCard />);
+
+    const quickHelpLink = screen.getByRole('link', { name: /help center/i });
+    expect(quickHelpLink).toHaveAttribute('href', 'https://docs.authhub.co');
+  });
+});

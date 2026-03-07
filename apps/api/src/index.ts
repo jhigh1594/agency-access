@@ -26,6 +26,7 @@ import { subscriptionRoutes } from './routes/subscriptions.js';
 import { internalAdminRoutes } from './routes/internal-admin.routes.js';
 import { quotaRoutes } from './routes/quota.routes';
 import { contactRoutes } from './routes/contact.js';
+import { helpScoutRoutes } from './routes/help-scout.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
@@ -151,6 +152,7 @@ await fastify.register(subscriptionRoutes, { prefix: '/api' });
 await fastify.register(internalAdminRoutes, { prefix: '/api' });
 await fastify.register(quotaRoutes, { prefix: '/api' });
 await fastify.register(contactRoutes);
+await fastify.register(helpScoutRoutes, { prefix: '/api' });
 
 // Health check and root routes
 fastify.get('/health', async () => {

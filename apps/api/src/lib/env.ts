@@ -107,6 +107,9 @@ const envSchema = z.object({
   RESEND_FROM_EMAIL: z.string().optional(),
   RESEND_REPLY_TO_EMAIL: z.string().optional(),
 
+  // Help Scout Beacon secure mode
+  HELPSCOUT_BEACON_SECRET: z.string().optional(),
+
   // Creem Payments
   CREEM_API_KEY: z.string(),
   CREEM_WEBHOOK_SECRET: z.string(),

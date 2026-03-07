@@ -22,6 +22,9 @@ import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { m, AnimatePresence } from 'framer-motion';
 import { useAuthOrBypass } from '@/lib/dev-auth';
+import { getDocsUrl } from '@/lib/docs-url';
+
+const HELP_CENTER_URL = getDocsUrl();
 
 function ConnectionsPageContent() {
   const router = useRouter();
@@ -407,6 +410,8 @@ function ConnectionsPageContent() {
               icon={AlertCircle}
               title="No platforms available"
               description="No platforms are currently configured. Please contact support."
+              actionLabel="Open Help Center"
+              actionHref={HELP_CENTER_URL}
             />
           </div>
         )}

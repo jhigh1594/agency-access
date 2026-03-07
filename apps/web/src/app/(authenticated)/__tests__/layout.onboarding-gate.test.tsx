@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import AuthenticatedLayout from '../layout';
 
 const replaceMock = vi.fn();
@@ -58,6 +58,15 @@ vi.mock('@/lib/query/billing', () => ({
   useSubscription: () => ({ data: null }),
 }));
 
+vi.mock('@/lib/query/onboarding', () => ({
+  shouldEnforceOnboardingRedirect: (statusData: { status?: string } | null | undefined) =>
+    statusData?.status === 'in_progress' || statusData?.status === 'not_started',
+}));
+
+vi.mock('@/lib/analytics/onboarding', () => ({
+  trackOnboardingEvent: vi.fn(),
+}));
+
 vi.mock('next/image', () => ({
   default: (props: any) => <img alt={props.alt} />,
 }));
@@ -87,6 +96,11 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
           data: {
             status: 'in_progress',
             completed: false,
+            step: {
+              profile: true,
+              members: false,
+              firstRequest: false,
+            },
           },
           error: null,
         }),
@@ -118,6 +132,11 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
           data: {
             status: 'activated',
             completed: false,
+            step: {
+              profile: true,
+              members: true,
+              firstRequest: true,
+            },
           },
           error: null,
         }),
@@ -134,5 +153,39 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
     });
 
     expect(replaceMock).not.toHaveBeenCalledWith('/onboarding/unified');
+  });
+
+  it('renders a help center link in the authenticated shell', async () => {
+    usePathnameMock.mockReturnValue('/dashboard');
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            status: 'completed',
+            completed: true,
+            step: {
+              profile: true,
+              members: true,
+              firstRequest: true,
+            },
+          },
+          error: null,
+        }),
+      });
+
+    render(
+      <AuthenticatedLayout>
+        <div>Content</div>
+      </AuthenticatedLayout>
+    );
+
+    const helpCenterLink = await screen.findByRole('link', { name: 'Help Center' });
+    expect(helpCenterLink).toHaveAttribute('href', 'https://docs.authhub.co');
   });
 });

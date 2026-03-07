@@ -82,6 +82,7 @@ describe('ConnectionsPage', () => {
       },
     });
     vi.clearAllMocks();
+    (global.fetch as any).mockReset();
     localStorageStore.clear();
     mockSearchParams.delete('success');
     mockSearchParams.delete('error');
@@ -265,6 +266,17 @@ describe('ConnectionsPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/failed to connect platform: TOKEN_EXCHANGE_FAILED/i)).toBeInTheDocument();
     });
+  });
+
+  it('shows a help center link when no platforms are available', async () => {
+    (global.fetch as any)
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [] }));
+
+    renderPage();
+
+    const helpCenterLink = await screen.findByRole('link', { name: 'Open Help Center' });
+    expect(helpCenterLink).toHaveAttribute('href', 'https://docs.authhub.co');
   });
 
   it('should initiate OAuth flow on Connect click', async () => {

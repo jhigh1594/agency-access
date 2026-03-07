@@ -589,16 +589,12 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
   ],
 
   quickComparison: [
-    { feature: "One-Link Client Onboarding", competitor: true, authhub: true, winner: "tie" },
-    { feature: "Automatic Token Refresh", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
-    { feature: "Token Health Monitoring", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
-    { feature: "SOC 2 Type II Certified", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
-    { feature: "Unlimited Clients (All Plans)", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
-    { feature: "API & Webhooks", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
-    { feature: "Complete Audit Logs", competitor: false, authhub: true, winner: "authhub" },
-    { feature: "Platforms Supported", competitor: "20+", authhub: "8+", winner: "competitor" },
-    { feature: "Starting Price", competitor: "$33/mo", authhub: "$30/mo", winner: "authhub" },
-    { feature: "Free Trial", competitor: "30 days", authhub: "14 days", winner: "competitor" },
+    { feature: "Client onboarding", competitor: true, authhub: true, winner: "tie" },
+    { feature: "Access request management", competitor: true, authhub: true, winner: "tie" },
+    { feature: "Multi-platform OAuth", competitor: true, authhub: true, winner: "tie" },
+    { feature: "Priority support", competitor: false, authhub: true, winner: "authhub" },
+    { feature: "API access", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
+    { feature: "Custom branding", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
   ],
 
   detailedComparison: [
@@ -810,9 +806,9 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
   cta: {
     headline: "Ready to Upgrade Your Client Onboarding?",
     subheadline: "Join agencies who chose AuthHub for automatic token refresh, SOC 2 security, and unlimited clients at a lower price point.",
-    primaryButton: "Start 14 Day Free Trial",
+    primaryButton: "Start Free Trial",
     primaryLink: "/signup",
-    secondaryButton: "View Pricing",
+    secondaryButton: "Schedule Demo",
     secondaryLink: "/pricing",
     guarantee: "✓ No credit card required ✓ Unlimited clients ✓ Cancel anytime",
   },
