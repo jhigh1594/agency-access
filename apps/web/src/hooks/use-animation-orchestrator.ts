@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react';
+import {
+  ANIMATIONS_READY_CLASS,
+  ANIMATIONS_READY_EVENT,
+  HYDRATED_CLASS,
+  HYDRATED_EVENT,
+} from '@/lib/animation-lifecycle';
 
 /**
  * Animation Orchestration States
@@ -46,37 +52,54 @@ export interface AnimationOrchestratorState {
  * ```
  */
 export function useAnimationOrchestrator(): AnimationOrchestratorState {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [animationsReady, setAnimationsReady] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(() => {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+
+    return document.documentElement.classList.contains(HYDRATED_CLASS);
+  });
+  const [isMounted, setIsMounted] = useState(() => {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+
+    return document.documentElement.classList.contains(HYDRATED_CLASS);
+  });
+  const [animationsReady, setAnimationsReady] = useState(() => {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+
+    return document.documentElement.classList.contains(ANIMATIONS_READY_CLASS);
+  });
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
+    const syncLifecycle = () => {
+      const root = document.documentElement;
+      const hydrated = root.classList.contains(HYDRATED_CLASS);
+      const ready = root.classList.contains(ANIMATIONS_READY_CLASS);
+
+      setIsHydrated(hydrated);
+      setIsMounted(hydrated);
+      setAnimationsReady(ready);
+    };
+
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
 
     const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
     mediaQuery.addEventListener('change', handleChange);
-
-    // Phase 1: Mark as hydrated (prevents SSR mismatch)
-    setIsHydrated(true);
-
-    // Phase 2: Add html.hydrated class on mount
-    requestAnimationFrame(() => {
-      setIsMounted(true);
-      document.documentElement.classList.add('hydrated');
-    });
-
-    // Phase 3: After 100ms delay, add html.animations-ready class
-    const timeoutId = setTimeout(() => {
-      setAnimationsReady(true);
-      document.documentElement.classList.add('animations-ready');
-    }, 100);
+    window.addEventListener(HYDRATED_EVENT, syncLifecycle);
+    window.addEventListener(ANIMATIONS_READY_EVENT, syncLifecycle);
+    syncLifecycle();
 
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
-      clearTimeout(timeoutId);
+      window.removeEventListener(HYDRATED_EVENT, syncLifecycle);
+      window.removeEventListener(ANIMATIONS_READY_EVENT, syncLifecycle);
     };
   }, []);
 

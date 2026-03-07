@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MarketingShellEffects } from "@/components/marketing/marketing-shell-effects";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 
@@ -20,10 +21,10 @@ export default function MarketingLayout({
 }>) {
   return (
     <div className="flex min-h-screen flex-col">
+      <MarketingShellEffects />
       <MarketingNav />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
     </div>
   );
 }
-

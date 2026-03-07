@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, JetBrains_Mono, Dela_Gothic_One } from "next/font/google";
 import { DeferredAnalytics } from "@/components/deferred-analytics";
-import { Providers } from "./providers";
+import { RootProviders } from "./root-providers";
 import "./globals.css";
 
 // Preconnect to Google Fonts for faster font loading
@@ -78,7 +78,7 @@ export default function RootLayout({
             __html: `(function(){var p=window.location.pathname;var m=p==='/'||p.startsWith('/pricing')||p.startsWith('/contact')||p.startsWith('/blog')||p.startsWith('/terms')||p.startsWith('/privacy-policy')||p.startsWith('/compare')||p.startsWith('/onboarding');if(m){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}})();`,
           }}
         />
-        <Providers>{children}</Providers>
+        <RootProviders>{children}</RootProviders>
         <DeferredAnalytics />
       </body>
     </html>

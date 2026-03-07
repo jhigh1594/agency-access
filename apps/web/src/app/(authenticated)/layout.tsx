@@ -1,5 +1,6 @@
 'use client';
 
+import { AppProviders } from '../app-providers';
 import { useAuth, UserButton } from '@clerk/nextjs';
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -50,6 +51,18 @@ const inAppUserButtonAppearance = {
 };
 
 export default function AuthenticatedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AppProviders>
+      <AuthenticatedLayoutInner>{children}</AuthenticatedLayoutInner>
+    </AppProviders>
+  );
+}
+
+function AuthenticatedLayoutInner({
   children,
 }: {
   children: React.ReactNode;

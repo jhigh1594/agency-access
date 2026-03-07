@@ -9,7 +9,7 @@ function readFile(relativePathFromWebRoot: string) {
 
 describe('Onboarding route targets', () => {
   it('uses unified onboarding after sign up', () => {
-    const providersCode = readFile('src/app/providers.tsx');
+    const providersCode = readFile('src/app/root-providers.tsx');
 
     expect(providersCode).toContain('`/onboarding/unified?tier=${storedTier}`');
     expect(providersCode).toContain("return '/onboarding/unified'");
