@@ -8,6 +8,13 @@ vi.mock('@clerk/nextjs', () => ({
   ),
 }));
 
+vi.mock('framer-motion', () => ({
+  LazyMotion: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="app-motion-provider">{children}</div>
+  ),
+  domAnimation: {},
+}));
+
 vi.mock('@tanstack/react-query', () => ({
   QueryClient: class QueryClient {},
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
@@ -29,6 +36,7 @@ describe('AppProviders', () => {
       </AppProviders>
     );
 
+    expect(screen.getByTestId('app-motion-provider')).toBeInTheDocument();
     expect(screen.getByTestId('query-provider')).toBeInTheDocument();
     expect(screen.getByTestId('theme-provider')).toBeInTheDocument();
     expect(screen.getByText('Child')).toBeInTheDocument();

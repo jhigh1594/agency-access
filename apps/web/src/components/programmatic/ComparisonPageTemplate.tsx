@@ -32,15 +32,7 @@ function AgencyAccessPricingSection({ page }: ComparisonPageTemplateProps) {
     ? page.competitor.pricing.pro.price
     : page.competitor.pricing.starting;
 
-  const authHubFeatures = [
-    "Unlimited clients",
-    "White-label + custom domain",
-    "API + webhooks included",
-    "Automatic token refresh",
-    "Complete audit logs",
-    "SOC 2 Type II security",
-    "8+ platform integrations",
-  ];
+  const authHubFeatures = page.pricingComparison.authhub.starter.features;
 
   const agencyAccessFeatures = [
     "Unlimited invites",

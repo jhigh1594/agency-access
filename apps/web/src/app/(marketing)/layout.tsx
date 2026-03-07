@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LazyMotion, domAnimation } from 'framer-motion';
 import { MarketingShellEffects } from "@/components/marketing/marketing-shell-effects";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
@@ -20,11 +21,13 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <MarketingShellEffects />
-      <MarketingNav />
-      <main className="flex-1">{children}</main>
-      <MarketingFooter />
-    </div>
+    <LazyMotion features={domAnimation} strict>
+      <div className="flex min-h-screen flex-col">
+        <MarketingShellEffects />
+        <MarketingNav />
+        <main className="flex-1">{children}</main>
+        <MarketingFooter />
+      </div>
+    </LazyMotion>
   );
 }

@@ -508,7 +508,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
           "Automatic token refresh",
           "Complete audit logs",
           "SOC 2 Type II security",
-          "8+ platform integrations",
+          "19 platform connectors",
         ],
       },
       pro: {
@@ -547,7 +547,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
       "Search Console",
       "LinkedIn Ads",
       "TikTok Ads",
-      "8+ platform integrations",
+      "19 platform connectors",
     ],
   },
 
@@ -726,7 +726,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
           "Automatic token refresh",
           "Complete audit logs",
           "SOC 2 Type II security",
-          "8+ platform integrations",
+          "19 platform connectors",
         ],
       },
       pro: {
