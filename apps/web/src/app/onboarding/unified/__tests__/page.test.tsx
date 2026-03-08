@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useEffect } from 'react';
 import UnifiedOnboardingPage from '../page';
 
 const mockPush = vi.fn();
 const mockNextStep = vi.fn();
 const mockCreateAgencyAndAccessRequest = vi.fn();
+const mockLoadExistingClients = vi.fn();
+const mockDeferUntilClientReady = vi.fn();
+let mockCurrentStep = 3;
+let mockCanSkip = false;
 let shouldThrowPlatformScreen = false;
 
 vi.mock('next/navigation', () => ({
@@ -24,7 +29,7 @@ vi.mock('@/contexts/unified-onboarding-context', () => ({
   UnifiedOnboardingProvider: ({ children }: any) => children,
   useUnifiedOnboarding: () => ({
     state: {
-      currentStep: 3,
+      currentStep: mockCurrentStep,
       selectedPlatforms: { google: ['google_ads'] },
       loading: false,
       teamInvites: [],
@@ -40,27 +45,29 @@ vi.mock('@/contexts/unified-onboarding-context', () => ({
     prevStep: vi.fn(),
     canGoNext: () => true,
     canGoBack: () => true,
-    canSkip: () => false,
+    canSkip: () => mockCanSkip,
     updateAgency: vi.fn(),
     updateClient: vi.fn(),
     updatePlatforms: vi.fn(),
-    loadExistingClients: vi.fn(),
+    loadExistingClients: mockLoadExistingClients,
     createAgencyAndAccessRequest: mockCreateAgencyAndAccessRequest,
     addTeamInvite: vi.fn(),
     removeTeamInvite: vi.fn(),
     updateTeamInviteRole: vi.fn(),
     sendTeamInvites: vi.fn(),
     completeOnboarding: vi.fn(),
+    deferUntilClientReady: mockDeferUntilClientReady,
     setError: vi.fn(),
   }),
 }));
 
 vi.mock('@/components/onboarding/unified-wizard', () => ({
-  UnifiedWizard: ({ onNext, children }: any) => {
+  UnifiedWizard: ({ onNext, onSkip, canSkip, children }: any) => {
     return (
       <div>
         {children}
         <button onClick={() => onNext()}>Run Next</button>
+        {canSkip && <button onClick={() => onSkip()}>Run Skip</button>}
       </div>
     );
   },
@@ -68,7 +75,15 @@ vi.mock('@/components/onboarding/unified-wizard', () => ({
 
 vi.mock('@/components/onboarding/screens/welcome-screen', () => ({ WelcomeScreen: () => null }));
 vi.mock('@/components/onboarding/screens/agency-profile-screen', () => ({ AgencyProfileScreen: () => null }));
-vi.mock('@/components/onboarding/screens/client-selection-screen', () => ({ ClientSelectionScreen: () => null }));
+vi.mock('@/components/onboarding/screens/client-selection-screen', () => ({
+  ClientSelectionScreen: ({ onDefer, onLoadClients }: any) => {
+    useEffect(() => {
+      void onLoadClients?.();
+    }, [onLoadClients]);
+
+    return <button onClick={onDefer}>No client yet</button>;
+  },
+}));
 vi.mock('@/components/onboarding/screens/platform-selection-screen', () => ({
   PlatformSelectionScreen: () => {
     if (shouldThrowPlatformScreen) {
@@ -84,6 +99,8 @@ vi.mock('@/components/onboarding/screens/final-success-screen', () => ({ FinalSu
 describe('UnifiedOnboardingPage step progression', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCurrentStep = 3;
+    mockCanSkip = false;
     shouldThrowPlatformScreen = false;
   });
 
@@ -124,5 +141,36 @@ describe('UnifiedOnboardingPage step progression', () => {
     expect(screen.getByRole('button', { name: /go to dashboard/i })).toBeInTheDocument();
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it('loads existing clients when the client step is shown', async () => {
+    mockCurrentStep = 2;
+
+    render(<UnifiedOnboardingPage />);
+
+    await waitFor(() => {
+      expect(mockLoadExistingClients).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('supports the deferred client exit from the client step', async () => {
+    mockCurrentStep = 2;
+
+    render(<UnifiedOnboardingPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: /no client yet/i }));
+
+    await waitFor(() => {
+      expect(mockDeferUntilClientReady).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('only exposes skip controls on optional post-activation steps', () => {
+    mockCurrentStep = 5;
+    mockCanSkip = true;
+
+    render(<UnifiedOnboardingPage />);
+
+    expect(screen.getByRole('button', { name: 'Run Skip' })).toBeInTheDocument();
   });
 });

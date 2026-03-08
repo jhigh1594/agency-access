@@ -2,7 +2,7 @@
  * UnifiedOnboardingContext
  *
  * State management for the unified PLG onboarding flow.
- * Implements the "Zero-to-One" flow that gets founders to their first access link in under 60 seconds.
+ * Implements the "Zero-to-One" flow that gets founders to their first real client access link quickly.
  *
  * Design Principles:
  * - Opinionated: Smart defaults, pre-select best path (Google + Meta)
@@ -117,6 +117,7 @@ interface UnifiedOnboardingContextValue {
   // API actions
   loadExistingClients: () => Promise<void>;
   createAgencyAndAccessRequest: () => Promise<CreateAgencyAndAccessRequestResult>;
+  deferUntilClientReady: () => Promise<void>;
   sendTeamInvites: () => Promise<boolean>;
 
   // Completion
@@ -275,6 +276,10 @@ function getAgencyNameFromEmail(email?: string): string | null {
 
   const localPart = email.split('@')[0];
   return localPart ? formatAgencyName(localPart) : null;
+}
+
+function isValidClientData(clientName?: string, clientEmail?: string): boolean {
+  return Boolean(clientName?.trim() && clientName.trim().length >= 2 && clientEmail?.trim() && EMAIL_REGEX.test(clientEmail.trim()));
 }
 
 const initialState: OnboardingState = {
@@ -451,9 +456,9 @@ export function UnifiedOnboardingProvider({
         return true;
       case 1: // Agency profile - requires agency name
         return state.agencyName.trim().length > 0;
-      case 2: // Client step is optional - defaults are applied if skipped
-        return true;
-      case 3: // Platform step is optional - defaults are applied if skipped
+      case 2: // Client step requires a real client before link generation
+        return isValidClientData(state.clientName, state.clientEmail);
+      case 3: // Platform step can proceed with the default opinionated selection
         return true;
       case 4: // Success link display - always can proceed
         return true;
@@ -471,12 +476,7 @@ export function UnifiedOnboardingProvider({
   }, [state.currentStep]);
 
   const canSkip = useCallback(() => {
-    // Agency name is required; all other non-final steps are skippable.
-    if (state.currentStep === 1) {
-      return false;
-    }
-
-    return state.currentStep < 6;
+    return state.currentStep === 5;
   }, [state.currentStep]);
 
   // ============================================================
@@ -603,23 +603,103 @@ export function UnifiedOnboardingProvider({
     }
   }, [getToken, orgId, userId]);
 
+  const resolveAgency = useCallback(async () => {
+    const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
+    const principalClerkId = orgId || userId;
+    const safeAgencyName = state.agencyName.trim().length > 0
+      ? state.agencyName.trim()
+      : (getAgencyNameFromEmail(userEmail) || 'My Agency');
+    const safeAgencyWebsite = state.agencySettings.website?.trim() || undefined;
+    const safeAgencyLogoUrl = state.agencySettings.logoUrl?.trim() || undefined;
+
+    let agencyId = state.agencyId;
+    const agencyResolvedFromState = Boolean(agencyId);
+    let agencyResolvedFromExisting = false;
+
+    if (!agencyId && principalClerkId) {
+      const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
+        `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+        { getToken }
+      );
+
+      if (existingAgencyResponse.data.length > 0) {
+        agencyId = existingAgencyResponse.data[0].id;
+        agencyResolvedFromExisting = true;
+      }
+    }
+
+    if (!agencyId) {
+      if (!userEmail) {
+        throw new Error('Unable to resolve your account email from Clerk.');
+      }
+
+      const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
+        method: 'POST',
+        getToken,
+        body: JSON.stringify({
+          clerkUserId: principalClerkId || undefined,
+          name: safeAgencyName,
+          email: userEmail,
+          settings: {
+            timezone: state.agencySettings.timezone,
+            industry: state.agencySettings.industry,
+            logoUrl: safeAgencyLogoUrl,
+            website: safeAgencyWebsite,
+          },
+        }),
+      });
+      agencyId = agencyJson.data.id;
+    }
+
+    if (agencyId && (agencyResolvedFromExisting || agencyResolvedFromState)) {
+      await authorizedApiFetch(`/api/agencies/${agencyId}`, {
+        method: 'PATCH',
+        getToken,
+        body: JSON.stringify({
+          name: safeAgencyName,
+          settings: {
+            timezone: state.agencySettings.timezone,
+            industry: state.agencySettings.industry,
+            logoUrl: safeAgencyLogoUrl || null,
+            website: safeAgencyWebsite || null,
+          },
+        }),
+      });
+    }
+
+    return {
+      agencyId,
+      safeAgencyName,
+      safeAgencyWebsite,
+      safeAgencyLogoUrl,
+    };
+  }, [getToken, orgId, state.agencyId, state.agencyName, state.agencySettings.industry, state.agencySettings.logoUrl, state.agencySettings.timezone, state.agencySettings.website, user, userId]);
+
   const createAgencyAndAccessRequest = useCallback(async (): Promise<CreateAgencyAndAccessRequestResult> => {
+    if (!isValidClientData(state.clientName, state.clientEmail)) {
+      const errorMessage = 'Select or create a client with a valid name and email before generating your first access link.';
+      setState((prev) => ({
+        ...prev,
+        error: errorMessage,
+        loading: false,
+      }));
+
+      return {
+        ok: false,
+        error: errorMessage,
+      };
+    }
+
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-
-      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
-      const principalClerkId = orgId || userId;
-      const safeAgencyName = state.agencyName.trim().length > 0
-        ? state.agencyName.trim()
-        : (getAgencyNameFromEmail(userEmail) || 'My Agency');
-      const safeAgencyWebsite = state.agencySettings.website?.trim() || undefined;
-      const safeAgencyLogoUrl = state.agencySettings.logoUrl?.trim() || undefined;
-      const safeClientName = state.clientName?.trim()
-        ? state.clientName.trim()
-        : `${safeAgencyName} Client`;
-      const safeClientEmail = state.clientEmail?.trim() && EMAIL_REGEX.test(state.clientEmail.trim())
-        ? state.clientEmail.trim()
-        : (userEmail ? userEmail.replace('@', '+client@') : 'client@example.com');
+      const {
+        agencyId,
+        safeAgencyName,
+        safeAgencyWebsite,
+        safeAgencyLogoUrl,
+      } = await resolveAgency();
+      const safeClientName = state.clientName?.trim() || '';
+      const safeClientEmail = state.clientEmail?.trim() || '';
       const selectedPlatforms = Object.entries(state.selectedPlatforms || {}).reduce<Record<string, string[]>>(
         (acc, [group, platforms]) => {
           const validPlatforms = (platforms || []).filter((platform) => typeof platform === 'string' && platform.trim().length > 0);
@@ -633,61 +713,6 @@ export function UnifiedOnboardingProvider({
       const safeSelectedPlatforms = Object.keys(selectedPlatforms).length > 0
         ? selectedPlatforms
         : { google: ['google'] };
-
-      // Step 1: Resolve agency (existing first, then create)
-      let agencyId = state.agencyId;
-      const agencyResolvedFromState = Boolean(agencyId);
-      let agencyResolvedFromExisting = false;
-      if (!agencyId && principalClerkId) {
-        const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
-          `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
-          { getToken }
-        );
-
-        if (existingAgencyResponse.data.length > 0) {
-          agencyId = existingAgencyResponse.data[0].id;
-          agencyResolvedFromExisting = true;
-        }
-      }
-
-      if (!agencyId) {
-        if (!userEmail) {
-          throw new Error('Unable to resolve your account email from Clerk.');
-        }
-
-        const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
-          method: 'POST',
-          getToken,
-          body: JSON.stringify({
-            clerkUserId: principalClerkId || undefined,
-            name: safeAgencyName,
-            email: userEmail,
-            settings: {
-              timezone: state.agencySettings.timezone,
-              industry: state.agencySettings.industry,
-              logoUrl: safeAgencyLogoUrl,
-              website: safeAgencyWebsite,
-            },
-          }),
-        });
-        agencyId = agencyJson.data.id;
-      }
-
-      if (agencyId && (agencyResolvedFromExisting || agencyResolvedFromState)) {
-        await authorizedApiFetch(`/api/agencies/${agencyId}`, {
-          method: 'PATCH',
-          getToken,
-          body: JSON.stringify({
-            name: safeAgencyName,
-            settings: {
-              timezone: state.agencySettings.timezone,
-              industry: state.agencySettings.industry,
-              logoUrl: safeAgencyLogoUrl || null,
-              website: safeAgencyWebsite || null,
-            },
-          }),
-        });
-      }
 
       // Step 2: Create or select client
       let clientId = state.clientId;
@@ -793,7 +818,60 @@ export function UnifiedOnboardingProvider({
         error: errorMessage,
       };
     }
-  }, [flattenSelectedPlatforms, getToken, orgId, persistOnboardingProgress, state, user, userId]);
+  }, [flattenSelectedPlatforms, persistOnboardingProgress, resolveAgency, state]);
+
+  const deferUntilClientReady = useCallback(async () => {
+    try {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+
+      const {
+        agencyId,
+        safeAgencyName,
+        safeAgencyWebsite,
+        safeAgencyLogoUrl,
+      } = await resolveAgency();
+
+      trackOnboardingEvent('onboarding_client_deferred', {
+        version: 'unified_v1',
+        step: state.currentStep,
+        agencyId,
+        timestamp: Date.now(),
+      });
+
+      setState((prev) => ({
+        ...prev,
+        agencyId,
+        agencyName: safeAgencyName,
+        agencySettings: {
+          ...prev.agencySettings,
+          logoUrl: safeAgencyLogoUrl || '',
+          website: safeAgencyWebsite || '',
+        },
+        loading: false,
+      }));
+
+      await persistOnboardingProgress(agencyId, {
+        status: 'in_progress',
+        startedAt: new Date(state.startedAt).toISOString(),
+        lastCompletedStep: 1,
+        lastVisitedStep: 2,
+      });
+
+      router.push('/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof AuthorizedApiError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : 'Unable to finish setup right now.';
+
+      setState((prev) => ({
+        ...prev,
+        error: errorMessage,
+        loading: false,
+      }));
+    }
+  }, [persistOnboardingProgress, resolveAgency, router, state.currentStep, state.startedAt]);
 
   const sendTeamInvites = useCallback(async (): Promise<boolean> => {
     if (state.teamInvites.length === 0) {
@@ -857,60 +935,27 @@ export function UnifiedOnboardingProvider({
 
   const completeOnboarding = useCallback(async () => {
     try {
-      const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
-      const principalClerkId = orgId || userId;
-      let resolvedAgencyId = state.agencyId;
-
-      if (!resolvedAgencyId && principalClerkId) {
-        const existingAgencyResponse = await authorizedApiFetch<{ data: Array<{ id: string }>; error: null }>(
-          `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
-          { getToken }
-        );
-
-        if (existingAgencyResponse.data.length > 0) {
-          resolvedAgencyId = existingAgencyResponse.data[0].id;
-        }
-      }
-
-      if (!resolvedAgencyId && principalClerkId && userEmail) {
-        const safeAgencyName = state.agencyName.trim().length > 0
-          ? state.agencyName.trim()
-          : (getAgencyNameFromEmail(userEmail) || 'My Agency');
-        const safeAgencyWebsite = state.agencySettings.website?.trim() || undefined;
-        const safeAgencyLogoUrl = state.agencySettings.logoUrl?.trim() || undefined;
-
-        const agencyJson = await authorizedApiFetch<{ data: { id: string }; error: null }>('/api/agencies', {
-          method: 'POST',
-          getToken,
-          body: JSON.stringify({
-            clerkUserId: principalClerkId,
-            name: safeAgencyName,
-            email: userEmail,
-            settings: {
-              timezone: state.agencySettings.timezone,
-              industry: state.agencySettings.industry,
-              logoUrl: safeAgencyLogoUrl,
-              website: safeAgencyWebsite,
-            },
-          }),
-        });
-
-        resolvedAgencyId = agencyJson.data.id;
-        setState((prev) => ({
-          ...prev,
-          agencyId: resolvedAgencyId,
-          agencyName: safeAgencyName,
-          agencySettings: {
-            ...prev.agencySettings,
-            logoUrl: safeAgencyLogoUrl || '',
-            website: safeAgencyWebsite || '',
-          },
-        }));
-      }
+      const {
+        agencyId: resolvedAgencyId,
+        safeAgencyName,
+        safeAgencyWebsite,
+        safeAgencyLogoUrl,
+      } = await resolveAgency();
 
       if (!resolvedAgencyId) {
         throw new Error('Unable to complete onboarding because your agency could not be created.');
       }
+
+      setState((prev) => ({
+        ...prev,
+        agencyId: resolvedAgencyId,
+        agencyName: safeAgencyName,
+        agencySettings: {
+          ...prev.agencySettings,
+          logoUrl: safeAgencyLogoUrl || '',
+          website: safeAgencyWebsite || '',
+        },
+      }));
 
       const totalTime = Date.now() - state.startedAt;
       trackOnboardingEvent('onboarding_completed', {
@@ -945,7 +990,7 @@ export function UnifiedOnboardingProvider({
         error: errorMessage,
       }));
     }
-  }, [getToken, onComplete, orgId, persistOnboardingProgress, router, state, user, userId]);
+  }, [onComplete, persistOnboardingProgress, resolveAgency, router, state]);
 
   const skipOnboarding = useCallback(() => {
     trackOnboardingEvent('onboarding_skipped', {
@@ -1074,6 +1119,7 @@ export function UnifiedOnboardingProvider({
     updateTeamInviteRole,
     loadExistingClients,
     createAgencyAndAccessRequest,
+    deferUntilClientReady,
     sendTeamInvites,
     completeOnboarding,
     skipOnboarding,

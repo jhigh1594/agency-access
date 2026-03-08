@@ -2,7 +2,7 @@
  * Unified Onboarding Page
  *
  * Main entry point for the PLG onboarding flow.
- * Implements the "Zero-to-One" flow that gets founders to their first access link in under 60 seconds.
+ * Implements the "Zero-to-One" flow that gets founders to their first real client access link quickly.
  *
  * Flow:
  * Screen 0: Welcome & Value Hook
@@ -91,7 +91,7 @@ class OnboardingStepErrorBoundary extends Component<
 }
 
 function OnboardingFlow() {
-  const { state, nextStep, prevStep, canGoNext, canGoBack, canSkip, updateAgency, updateClient, updatePlatforms, createAgencyAndAccessRequest, addTeamInvite, removeTeamInvite, updateTeamInviteRole, sendTeamInvites, completeOnboarding, setError } = useUnifiedOnboarding();
+  const { state, nextStep, prevStep, canGoNext, canGoBack, canSkip, updateAgency, updateClient, updatePlatforms, loadExistingClients, createAgencyAndAccessRequest, deferUntilClientReady, addTeamInvite, removeTeamInvite, updateTeamInviteRole, sendTeamInvites, completeOnboarding, setError } = useUnifiedOnboarding();
   const router = useRouter();
 
   const handleNext = async () => {
@@ -154,6 +154,8 @@ function OnboardingFlow() {
             loading={state.loading}
             onUpdate={(data) => updateClient(data)}
             onWebsiteUrlChange={(website) => updateAgency({ name: state.agencyName, settings: { website } })}
+            onLoadClients={loadExistingClients}
+            onDefer={deferUntilClientReady}
           />
         );
 

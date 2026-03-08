@@ -4,11 +4,11 @@
 
 Move a new self-serve agency user from signup to first value as quickly as possible:
 
-`Signup -> first access link created -> link sent to client -> authorization tracked -> repeat usage / team expansion`
+`Signup -> first real client request created -> link sent to client -> authorization tracked -> repeat usage / team expansion`
 
 In this product, the clearest activation event is:
 
-- `Primary activation:` first access link created
+- `Primary activation:` first real client request created
 - `Secondary activation:` first client authorization completed
 
 ## Assumptions
@@ -27,7 +27,7 @@ What the reader wants:
 
 What is in the way:
 
-- they have not created the first access link yet
+- they have not created the first real client request yet
 - they do not know the fastest setup path
 - once the link exists, they still need the client to complete it
 
@@ -54,15 +54,15 @@ This is a 5-email flow. If you want the shorter version, use emails 1, 2, and 4 
 
 | Email | Timing | Trigger / audience | One job | Primary CTA |
 |---|---|---|---|---|
-| 1. Welcome + first step | Immediately after signup | All new users | Start onboarding and create first access link | Complete setup |
-| 2. Get to first link | 1 day after signup | Users with no access link created | Remove friction to activation | Create your first link |
+| 1. Welcome + first step | Immediately after signup | All new users | Start onboarding and create first real client request | Complete setup |
+| 2. Get to first link | 1 day after signup | Users with no real client request created | Remove friction to activation | Create your first link |
 | 3. Send the link | 1 day after link creation | Users with a link but no client authorization yet | Get the link in front of the client | Send your link |
 | 4. Track status + keep momentum | 3 days after signup or 2 days after link send | Users in progress | Bring them back to the dashboard and reinforce value | Check request status |
 | 5. Turn one request into a workflow | 6-7 days after signup | Activated users | Expand usage through repeat requests, team invites, and branding | Go to dashboard |
 
 ## Behavior Rules
 
-- If the user creates an access link before email 2, skip email 2 and move them to email 3.
+- If the user creates a real client request before email 2, skip email 2 and move them to email 3.
 - If the user's client authorizes before email 3, skip email 3 and send email 4 as a success/status email.
 - If the user has already invited teammates, downplay team invites in email 5 and focus on repeat requests.
 - If the user has not created a link by email 4, use the fallback version included below.
@@ -184,7 +184,7 @@ If you hit a blocker, reply with the step where you got stuck. We can usually un
 ### Email 3
 
 **Name:** Send the link  
-**Send:** 1 day after first access link creation  
+**Send:** 1 day after first real client request creation  
 **Target:** Users with a generated link and no completed client authorization
 
 **Subject options**

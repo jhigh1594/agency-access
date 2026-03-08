@@ -37,6 +37,7 @@ interface ClientSelectionScreenProps {
   onUpdate: (data: { id?: string; name: string; email: string }) => void;
   onWebsiteUrlChange: (website: string) => void;
   onLoadClients?: () => Promise<void>;
+  onDefer?: () => Promise<void> | void;
 }
 
 type ClientSelectionMode = 'existing' | 'new';
@@ -53,6 +54,8 @@ export function ClientSelectionScreen({
   loading,
   onUpdate,
   onWebsiteUrlChange,
+  onLoadClients,
+  onDefer,
 }: ClientSelectionScreenProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [mode, setMode] = useState<ClientSelectionMode>(
@@ -66,6 +69,10 @@ export function ClientSelectionScreen({
       setMode(existingClients.length > 0 ? 'existing' : 'new');
     }
   }, [existingClients.length, hasUserSelectedMode]);
+
+  useEffect(() => {
+    void onLoadClients?.();
+  }, [onLoadClients]);
 
   // Get client suggestions for typeahead
   const clientSuggestions = existingClients.map((c) => c.name);
@@ -228,9 +235,10 @@ export function ClientSelectionScreen({
                 onChange={handleClientNameChange}
                 placeholder="e.g., Acme Corp"
                 type="text"
-                helperText="Optional: the company or client name"
-                validationMessage="Please enter a client name (at least 2 characters)"
-                isValid={clientName.trim().length === 0 || clientName.trim().length >= 2}
+                required
+                helperText="Required: use the real client or company name"
+                validationMessage="Please enter the real client name (at least 2 characters)"
+                isValid={clientName.trim().length >= 2}
                 suggestions={clientSuggestions}
               />
 
@@ -240,9 +248,10 @@ export function ClientSelectionScreen({
                 onChange={handleClientEmailChange}
                 placeholder="client@acmecorp.com"
                 type="email"
-                helperText="Optional: we'll send the access link here if provided"
+                required
+                helperText="Required: use the real email that should receive or own this request"
                 validationMessage="Please enter a valid email address"
-                isValid={clientEmail.trim().length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
+                isValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail.trim())}
               />
             </div>
           </div>
@@ -271,6 +280,18 @@ export function ClientSelectionScreen({
             </div>
           </div>
         </div>
+
+        {onDefer && (
+          <div className="flex justify-start">
+            <button
+              type="button"
+              onClick={() => void onDefer()}
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            >
+              No client yet
+            </button>
+          </div>
+        )}
 
         {/* Next Step Teaser */}
         <div className="border-t border-gray-200 pt-6">

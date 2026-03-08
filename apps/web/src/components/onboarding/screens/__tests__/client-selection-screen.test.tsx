@@ -19,10 +19,10 @@ describe('ClientSelectionScreen', () => {
       />
     );
 
-    expect(onLoadClients).not.toHaveBeenCalled();
+    expect(onLoadClients).toHaveBeenCalledTimes(1);
   });
 
-  it('does not mark client name and email as required', () => {
+  it('marks client name and email as required', () => {
     const onUpdate = vi.fn();
     const onLoadClients = vi.fn().mockResolvedValue(undefined);
 
@@ -39,8 +39,8 @@ describe('ClientSelectionScreen', () => {
       />
     );
 
-    expect(screen.getByText('Client Name').parentElement?.textContent).not.toContain('*');
-    expect(screen.getByText('Client Email').parentElement?.textContent).not.toContain('*');
+    expect(screen.getByText('Client Name').parentElement?.textContent).toContain('*');
+    expect(screen.getByText('Client Email').parentElement?.textContent).toContain('*');
     expect(screen.getByText('Website URL').parentElement?.textContent).not.toContain('*');
   });
 
@@ -86,5 +86,23 @@ describe('ClientSelectionScreen', () => {
 
     expect(screen.getByPlaceholderText('e.g., Acme Corp')).toBeInTheDocument();
     expect(screen.queryByText('Select an existing client')).not.toBeInTheDocument();
+  });
+
+  it('shows a deferred CTA when the user is not ready with a client', () => {
+    render(
+      <ClientSelectionScreen
+        clientName=""
+        clientEmail=""
+        websiteUrl=""
+        existingClients={[]}
+        loading={false}
+        onUpdate={vi.fn()}
+        onWebsiteUrlChange={vi.fn()}
+        onLoadClients={vi.fn().mockResolvedValue(undefined)}
+        onDefer={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /no client yet/i })).toBeInTheDocument();
   });
 });
