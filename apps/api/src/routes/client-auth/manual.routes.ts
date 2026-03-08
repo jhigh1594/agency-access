@@ -209,6 +209,100 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     }
   });
 
+  // Snapchat manual connection endpoint (business + ad account invite flow)
+  fastify.post('/client/:token/snapchat/manual-connect', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const manualConnectSchema = z.object({
+      agencyEmail: z.string().email(),
+      clientEmail: z.string().email().optional(),
+      platform: z.literal('snapchat'),
+    });
+
+    const validated = manualConnectSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { agencyEmail, clientEmail } = validated.data;
+
+    const accessRequest = await accessRequestService.getAccessRequestByToken(token);
+
+    if (accessRequest.error || !accessRequest.data) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'INVALID_TOKEN',
+          message: 'Access request not found or expired',
+        },
+      });
+    }
+
+    try {
+      const connection = await prisma.clientConnection.create({
+        data: {
+          accessRequestId: accessRequest.data.id,
+          agencyId: accessRequest.data.agencyId,
+          clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
+          status: 'pending_verification',
+          grantedAssets: {
+            platform: 'snapchat',
+            agencyEmail,
+            clientEmail: clientEmail || accessRequest.data.clientEmail,
+            invitationSentAt: new Date().toISOString(),
+            authMethod: 'manual_team_invitation',
+          },
+        },
+      });
+
+      await auditService.createAuditLog({
+        agencyId: accessRequest.data.agencyId,
+        action: 'MANUAL_INVITATION_INITIATED',
+        resourceType: 'ClientConnection',
+        resourceId: connection.id,
+        platform: 'snapchat',
+        metadata: {
+          connectionId: connection.id,
+          clientEmail: clientEmail || accessRequest.data.clientEmail,
+          agencyEmail,
+          accessRequestId: accessRequest.data.id,
+        },
+      });
+
+      return reply.send({
+        data: {
+          connectionId: connection.id,
+          status: connection.status,
+          agencyEmail,
+          message: 'Snapchat access sharing initiated. Complete both organization and ad account invites in Snapchat Ads Manager.',
+        },
+        error: null,
+      });
+    } catch (error) {
+      fastify.log.error({
+        error,
+        context: 'Failed to create Snapchat manual connection',
+        token,
+        agencyEmail,
+      });
+
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'CONNECTION_CREATION_FAILED',
+          message: 'Failed to create connection. Please try again.',
+        },
+      });
+    }
+  });
+
   // Pinterest manual connection endpoint (partnership flow)
   fastify.post('/client/:token/pinterest/manual-connect', async (request, reply) => {
   const { token } = request.params as { token: string };

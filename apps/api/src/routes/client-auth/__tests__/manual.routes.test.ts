@@ -34,7 +34,7 @@ function hashCollaboratorCode(code: string): string {
     .digest('hex');
 }
 
-describe('Client Auth Manual Routes - Shopify', () => {
+describe('Client Auth Manual Routes', () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
@@ -149,6 +149,52 @@ describe('Client Auth Manual Routes - Shopify', () => {
             shopDomain: 'new-store.myshopify.com',
             collaboratorCodeHash: hashCollaboratorCode('9876'),
           }),
+        }),
+      })
+    );
+  });
+
+  it('creates Snapchat manual connection with pending verification status', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      } as any,
+      error: null,
+    });
+    vi.mocked(prisma.clientConnection.create).mockResolvedValue({
+      id: 'conn-snapchat-1',
+      status: 'pending_verification',
+    } as any);
+    vi.mocked(auditService.createAuditLog).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-1/snapchat/manual-connect',
+      payload: {
+        platform: 'snapchat',
+        agencyEmail: 'snap@agency.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(prisma.clientConnection.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'pending_verification',
+          grantedAssets: expect.objectContaining({
+            platform: 'snapchat',
+            agencyEmail: 'snap@agency.com',
+            authMethod: 'manual_team_invitation',
+          }),
+        }),
+      })
+    );
+    expect(auditService.createAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          agencyEmail: 'snap@agency.com',
         }),
       })
     );

@@ -222,6 +222,20 @@ describe('PlatformCard', () => {
     expect(screen.getByRole('button', { name: /edit email/i })).toBeInTheDocument();
   });
 
+  it('should render edit email button for snapchat manual platform', () => {
+    render(
+      <PlatformCard
+        platform={'snapchat' as Platform}
+        connected={true}
+        connectedEmail="snap@agency.com"
+        onConnect={mockOnConnect}
+        onEditEmail={mockOnEditEmail}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /edit email/i })).toBeInTheDocument();
+  });
+
   it('should not render edit details button for Shopify', () => {
     render(
       <PlatformCard

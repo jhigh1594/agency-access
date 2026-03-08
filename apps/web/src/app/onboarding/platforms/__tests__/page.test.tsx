@@ -156,6 +156,30 @@ describe('Onboarding Platforms Page', () => {
 
       expect(mutateFn).toHaveBeenCalled();
     });
+
+    it('should open manual modal for Snapchat instead of initiating OAuth', async () => {
+      const user = userEvent.setup();
+      const mutateFn = vi.fn();
+
+      mockUseMutation.mockReturnValue({
+        mutate: mutateFn,
+        isPending: false,
+      });
+
+      render(<PlatformsPage />);
+
+      const snapchatHeading = screen.getByText('Snapchat');
+      const connectButton = snapchatHeading
+        .closest('div')
+        ?.parentElement
+        ?.querySelector('button');
+
+      expect(connectButton).toBeTruthy();
+      await user.click(connectButton as HTMLButtonElement);
+
+      expect(mutateFn).not.toHaveBeenCalled();
+      expect(screen.getByText(/snapchat business email/i)).toBeInTheDocument();
+    });
   });
 
   describe('OAuth Flow Initiation', () => {

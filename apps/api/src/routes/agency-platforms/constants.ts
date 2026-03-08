@@ -27,7 +27,7 @@ export function getPlatformCategory(platform: Platform): 'recommended' | 'other'
 export const SUPPORTED_PLATFORMS = SUPPORTED_CONNECTION_PLATFORMS;
 export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
-export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'shopify', 'zapier'] as const;
+export const MANUAL_PLATFORMS = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'snapchat', 'pinterest', 'shopify', 'zapier'] as const;
 
 export const PLATFORM_CONNECTORS = {
   google: GoogleConnector,

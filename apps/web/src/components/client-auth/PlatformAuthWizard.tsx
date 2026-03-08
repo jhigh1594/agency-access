@@ -71,7 +71,7 @@ export function PlatformAuthWizard({
   initialStep,
 }: PlatformAuthWizardProps) {
   const router = useRouter();
-  const isManualPlatform = platform === 'beehiiv' || platform === 'kit' || platform === 'shopify';
+  const isManualPlatform = platform === 'beehiiv' || platform === 'kit' || platform === 'snapchat' || platform === 'shopify';
 
   // Redirect platforms to manual flow (no OAuth - uses team invitations)
   useEffect(() => {
@@ -80,6 +80,9 @@ export function PlatformAuthWizard({
     }
     if (platform === 'kit') {
       router.push(`/invite/${accessRequestToken}/kit/manual` as any);
+    }
+    if (platform === 'snapchat') {
+      router.push(`/invite/${accessRequestToken}/snapchat/manual` as any);
     }
     if (platform === 'shopify') {
       router.push(`/invite/${accessRequestToken}/shopify/manual` as any);

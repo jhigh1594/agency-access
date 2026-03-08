@@ -43,7 +43,7 @@ export function PlatformCard({
   onEditEmail,
 }: PlatformCardProps) {
   const platformName = PLATFORM_NAMES[platform];
-  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'pinterest', 'shopify', 'zapier'];
+  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'snapchat', 'pinterest', 'shopify', 'zapier'];
   const isManualPlatform = manualPlatforms.includes(platform);
   const isShopify = platform === 'shopify';
 

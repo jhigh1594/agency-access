@@ -123,6 +123,28 @@ describe('Client Auth Routes', () => {
       expect(response.statusCode).toBe(400);
       expect(response.json().error.code).toBe('VALIDATION_ERROR');
     });
+
+    it('should reject snapchat for client OAuth URL generation', async () => {
+      const mockAccessRequest = {
+        id: 'req-1',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      };
+
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: mockAccessRequest as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/client/test-token/oauth-url',
+        payload: { platform: 'snapchat' },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('VALIDATION_ERROR');
+    });
   });
 
   describe('POST /client/:token/oauth-exchange', () => {
@@ -170,6 +192,17 @@ describe('Client Auth Routes', () => {
         mockCode,
         'http://localhost:3000/invite/oauth-callback'
       );
+    });
+
+    it('should reject snapchat in OAuth exchange payload', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/client/test-token/oauth-exchange',
+        payload: { code: 'test-code', state: 'test-state', platform: 'snapchat' },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('VALIDATION_ERROR');
     });
   });
 });

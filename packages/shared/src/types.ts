@@ -247,6 +247,7 @@ export const SUPPORTED_CONNECTION_PLATFORMS = [
   'kit',
   'beehiiv',
   'tiktok',
+  'snapchat',
   'mailchimp',
   'pinterest',
   'klaviyo',
