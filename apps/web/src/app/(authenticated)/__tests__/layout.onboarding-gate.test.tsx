@@ -5,9 +5,11 @@ import AuthenticatedLayout from '../layout';
 const replaceMock = vi.fn();
 const mockGetToken = vi.fn();
 const usePathnameMock = vi.fn();
+const useSearchParamsMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   usePathname: () => usePathnameMock(),
+  useSearchParams: () => useSearchParamsMock(),
   useRouter: () => ({
     replace: replaceMock,
     push: vi.fn(),
@@ -54,6 +56,10 @@ vi.mock('@/components/trial-banner', () => ({
   TrialBanner: () => null,
 }));
 
+vi.mock('@/components/help-scout-beacon', () => ({
+  HelpScoutBeacon: () => null,
+}));
+
 vi.mock('@/lib/query/billing', () => ({
   useSubscription: () => ({ data: null }),
 }));
@@ -77,9 +83,19 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (global as any).fetch = fetchMock;
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      },
+    });
     process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
     mockGetToken.mockResolvedValue('token-123');
     usePathnameMock.mockReturnValue('/connections-layout-default');
+    useSearchParamsMock.mockReturnValue(new URLSearchParams());
   });
 
   it('redirects to unified onboarding when onboarding status is in_progress', async () => {
@@ -187,5 +203,23 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
 
     const helpCenterLink = await screen.findByRole('link', { name: 'Help Center' });
     expect(helpCenterLink).toHaveAttribute('href', 'https://docs.authhub.co');
+  });
+
+  it('does not redirect from a dashboard onboarding recovery URL', async () => {
+    usePathnameMock.mockReturnValue('/dashboard');
+    useSearchParamsMock.mockReturnValue(new URLSearchParams('onboardingRecovery=1'));
+
+    render(
+      <AuthenticatedLayout>
+        <div>Content</div>
+      </AuthenticatedLayout>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Content')).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 });

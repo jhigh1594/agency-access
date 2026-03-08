@@ -569,13 +569,19 @@ export function UnifiedOnboardingProvider({
         return;
       }
 
-      const json = await authorizedApiFetch<{ data: Client[]; error: null }>('/api/clients', {
+      const json = await authorizedApiFetch<{ data: { data?: Client[] } | Client[]; error: null }>('/api/clients', {
         getToken,
       });
 
+      const resolvedClients = Array.isArray(json.data)
+        ? json.data
+        : Array.isArray(json.data?.data)
+          ? json.data.data
+          : [];
+
       setState((prev) => ({
         ...prev,
-        existingClients: json.data || [],
+        existingClients: resolvedClients,
         loading: false,
       }));
     } catch (err) {

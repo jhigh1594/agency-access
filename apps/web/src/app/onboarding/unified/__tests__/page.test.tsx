@@ -138,7 +138,8 @@ describe('UnifiedOnboardingPage step progression', () => {
     render(<UnifiedOnboardingPage />);
 
     expect(screen.getByText(/something went wrong in onboarding/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /go to dashboard/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /go to dashboard/i }));
+    expect(mockPush).toHaveBeenCalledWith('/dashboard?onboardingRecovery=1');
 
     consoleErrorSpy.mockRestore();
   });

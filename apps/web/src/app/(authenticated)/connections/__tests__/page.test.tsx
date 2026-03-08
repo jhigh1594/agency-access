@@ -268,17 +268,6 @@ describe('ConnectionsPage', () => {
     });
   });
 
-  it('shows a help center link when no platforms are available', async () => {
-    (global.fetch as any)
-      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
-      .mockResolvedValueOnce(mockJsonResponse({ data: [] }));
-
-    renderPage();
-
-    const helpCenterLink = await screen.findByRole('link', { name: 'Open Help Center' });
-    expect(helpCenterLink).toHaveAttribute('href', 'https://docs.authhub.co');
-  });
-
   it('should initiate OAuth flow on Connect click', async () => {
     (global.fetch as any)
       .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))

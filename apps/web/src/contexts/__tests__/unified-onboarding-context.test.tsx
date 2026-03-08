@@ -410,7 +410,9 @@ describe('UnifiedOnboardingContext', () => {
         ok: true,
         status: 200,
         json: async () => ({
-          data: [{ id: 'client-1', name: 'Acme', email: 'client@acme.com' }],
+          data: {
+            data: [{ id: 'client-1', name: 'Acme', email: 'client@acme.com' }],
+          },
           error: null,
         }),
       });

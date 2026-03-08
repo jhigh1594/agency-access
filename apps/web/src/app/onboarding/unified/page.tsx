@@ -34,6 +34,8 @@ import { SuccessLinkScreen } from '@/components/onboarding/screens/success-link-
 import { TeamInviteScreen } from '@/components/onboarding/screens/team-invite-screen';
 import { FinalSuccessScreen } from '@/components/onboarding/screens/final-success-screen';
 
+const DASHBOARD_ONBOARDING_RECOVERY_URL = '/dashboard?onboardingRecovery=1';
+
 // ============================================================
 // ONBOARDING FLOW COMPONENT
 // ============================================================
@@ -218,7 +220,7 @@ function OnboardingFlow() {
       showClose={state.currentStep >= 4} // Can close after value is delivered
       onClose={() => router.push('/dashboard')}
     >
-      <OnboardingStepErrorBoundary onExit={() => router.push('/dashboard')}>
+      <OnboardingStepErrorBoundary onExit={() => router.push(DASHBOARD_ONBOARDING_RECOVERY_URL)}>
         {state.error && (
           <div className="mx-8 mt-8 mb-0 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
             <div className="flex items-start gap-2">

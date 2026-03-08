@@ -2,7 +2,7 @@
 
 import { AppProviders } from '../app-providers';
 import { useAuth, UserButton } from '@clerk/nextjs';
-import { redirect, usePathname, useRouter } from 'next/navigation';
+import { redirect, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
@@ -74,6 +74,7 @@ function AuthenticatedLayoutInner({
   const [open, setOpen] = useState(true);
   const { data: subscription } = useSubscription();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   // Redirect unauthenticated users (skip in bypass mode)
@@ -95,6 +96,11 @@ function AuthenticatedLayoutInner({
       }
 
       if (!isLoaded || !userId) {
+        return;
+      }
+
+      const isOnboardingRecoveryDashboard = pathname === '/dashboard' && searchParams.get('onboardingRecovery') === '1';
+      if (isOnboardingRecoveryDashboard) {
         return;
       }
 
@@ -189,7 +195,7 @@ function AuthenticatedLayoutInner({
     };
 
     checkAgencyAndRedirect();
-  }, [userId, orgId, isLoaded, pathname, isDevelopmentBypass, router, clerkAuth, runPerfAgencyCheck, perfHarness]);
+  }, [userId, orgId, isLoaded, pathname, searchParams, isDevelopmentBypass, router, clerkAuth, runPerfAgencyCheck, perfHarness]);
 
   // Show loading state while auth loads.
   // Agency checks run in the background to avoid blocking initial route render.
