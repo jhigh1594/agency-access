@@ -42,6 +42,7 @@
 | 10 | **[quality-speed](quality-speed/SKILL.md)** | Balancing craft vs velocity | Dylan Field, Brian Chesky | 580K |
 | 11 | **[ship-decisions](ship-decisions/SKILL.md)** | Deciding when to ship | Shreyas Doshi, Marty Cagan, Tobi Lutke | 486K+ |
 | 12 | **[principal-ui-ux-designer](principal-ui-ux-designer/SKILL.md)** | UI/UX design feedback, dashboards, accessibility | SaaS UX best practices 2024-2025, WCAG 2.1 AA | - |
+| 13 | **[activation-optimizer](activation-optimizer/SKILL.md)** | Onboarding audits, time-to-value, 60-sec activation | Wes Bush (ProductLed), Bowling Alley Framework | - |
 
 ---
 
@@ -153,7 +154,10 @@
 → Use: `ai-product-patterns`, `ai-startup-building`
 
 **...grow users**
-→ Use: `growth-embedded`, `exp-driven-dev`, `metrics-frameworks`
+→ Use: `growth-embedded`, `exp-driven-dev`, `metrics-frameworks`, `activation-optimizer`
+
+**...optimize onboarding**
+→ Use: `activation-optimizer`, `design-first-dev`, `principal-ui-ux-designer`
 
 **...communicate better**
 → Use: `exec-comms`, `strategic-storytelling`, `confident-speaking`

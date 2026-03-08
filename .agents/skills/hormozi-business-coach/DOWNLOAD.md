@@ -1,0 +1,1 @@
+https://blueprint.mightyailab.com/skills/abb-skills-stack/tier-4-market-intelligence-skills/hormozi-business-coach.zip
