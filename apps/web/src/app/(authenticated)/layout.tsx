@@ -17,7 +17,7 @@ import {
   Settings,
   CircleHelp,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthOrBypass, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
@@ -57,8 +57,21 @@ export default function AuthenticatedLayout({
 }) {
   return (
     <AppProviders>
-      <AuthenticatedLayoutInner>{children}</AuthenticatedLayoutInner>
+      <Suspense fallback={<AuthenticatedLayoutFallback />}>
+        <AuthenticatedLayoutInner>{children}</AuthenticatedLayoutInner>
+      </Suspense>
     </AppProviders>
+  );
+}
+
+function AuthenticatedLayoutFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="text-center">
+        <LogoSpinner size="lg" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
+      </div>
+    </div>
   );
 }
 
