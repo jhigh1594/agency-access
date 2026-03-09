@@ -108,6 +108,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
   const [externalReference, setExternalReference] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
   const [globalAccessLevel, setGlobalAccessLevel] = useState<AccessLevel>('standard');
+  const [platformAccessLevels, setPlatformAccessLevels] = useState<Record<string, AccessLevel>>({});
   const [intakeFields, setIntakeFields] = useState<IntakeField[]>([]);
   const [branding, setBranding] = useState<BrandingDraft>({
     logoUrl: '',
@@ -324,9 +325,8 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
     const result = await updateAccessRequest(
       requestId,
       {
-        authModel,
         externalReference: externalReference.trim() || undefined,
-        platforms: transformPlatformsForAPI(selectedPlatforms, globalAccessLevel),
+        platforms: transformPlatformsForAPI(selectedPlatforms, platformAccessLevels, globalAccessLevel),
         intakeFields: normalizeIntakeFields(intakeFields),
         branding: {
           logoUrl: branding.logoUrl || undefined,

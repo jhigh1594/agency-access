@@ -39,7 +39,7 @@ const createAccessRequestSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   clientEmail: z.string().email('Invalid email address'),
   externalReference: z.string().max(255, 'External reference must be 255 characters or less').optional(),
-  authModel: z.enum(['client_authorization', 'delegated_access']).optional().default('client_authorization'),
+  authModel: z.enum(['client_authorization', 'delegated_access']).optional().default('delegated_access'),
   platforms: z.array(
     z.object({
       platform: AccessRequestPlatformSchema,

@@ -31,21 +31,23 @@ export interface PlatformGroupConfig {
  *
  * @param selection - Record of platform groups to product IDs
  *                    Example: { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
- * @param globalAccessLevel - Access level to apply to all products
+ * @param platformAccessLevels - Per-platform access level overrides (key: platform group)
+ * @param globalAccessLevel - Default access level for platforms without explicit override
  * @returns Array of platform group configurations for API
  *
  * @example
  * transformPlatformsForAPI(
  *   { google: ['google_ads', 'ga4'], meta: ['meta_ads'] },
- *   'admin'
+ *   { meta: 'admin' }, // Meta has explicit override
+ *   'standard' // Google uses default
  * )
  * // Returns:
  * [
  *   {
  *     platformGroup: 'google',
  *     products: [
- *       { product: 'google_ads', accessLevel: 'admin', accounts: [] },
- *       { product: 'ga4', accessLevel: 'admin', accounts: [] }
+ *       { product: 'google_ads', accessLevel: 'standard', accounts: [] },
+ *       { product: 'ga4', accessLevel: 'standard', accounts: [] }
  *     ]
  *   },
  *   {
@@ -58,18 +60,23 @@ export interface PlatformGroupConfig {
  */
 export function transformPlatformsForAPI(
   selection: Record<string, string[]>,
-  globalAccessLevel: AccessLevel
+  platformAccessLevels: Record<string, AccessLevel>,
+  globalAccessLevel: AccessLevel = 'standard'
 ): PlatformGroupConfig[] {
   return Object.entries(selection)
     .filter(([_, productIds]) => productIds.length > 0) // Filter out empty groups
-    .map(([platformGroup, productIds]) => ({
-      platformGroup,
-      products: productIds.map((productId) => ({
-        product: productId,
-        accessLevel: globalAccessLevel,
-        accounts: [], // Empty for client_authorization flow
-      })),
-    }));
+    .map(([platformGroup, productIds]) => {
+      // Use platform-specific level if set, otherwise fall back to global
+      const accessLevel = platformAccessLevels[platformGroup] ?? globalAccessLevel;
+      return {
+        platformGroup,
+        products: productIds.map((productId) => ({
+          product: productId,
+          accessLevel,
+          accounts: [], // Empty for client_authorization flow
+        })),
+      };
+    });
 }
 
 // ============================================================

@@ -24,7 +24,6 @@ import { useRouter } from 'next/navigation';
 // Phase 5 Components
 import { TemplateSelector } from '@/components/template-selector';
 import { ClientSelector } from '@/components/client-selector';
-import { AuthModelSelector } from '@/components/auth-model-selector';
 import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform-selector';
 import { AccessLevelSelector } from '@/components/access-level-selector';
 import { SaveAsTemplateModal } from '@/components/save-as-template-modal';
@@ -54,6 +53,7 @@ function AccessRequestWizardContent() {
     updateExternalReference,
     updatePlatforms,
     updateAccessLevel,
+    updatePlatformAccessLevel,
     updateIntakeFields,
     updateBranding,
     setStep,
@@ -145,18 +145,6 @@ function AccessRequestWizardContent() {
     },
     enabled: !!agencyId,
   });
-
-  // Build platform connection status map for AuthModelSelector
-  // The active connection query returns normalized connected platform records.
-  const agencyHasConnectedPlatforms = useMemo(() => {
-    const statusMap: Record<string, boolean> = {};
-    platformConnections.forEach((conn) => {
-      if (conn.connected === true || conn.status === 'active') {
-        statusMap[conn.platform] = true;
-      }
-    });
-    return statusMap;
-  }, [platformConnections]);
 
   // Calculate platform counts
   const platformCount = useMemo(
@@ -286,27 +274,7 @@ function AccessRequestWizardContent() {
                   </div>
                 </div>
 
-                {/* Section 3: Auth Model (Secondary, Has Default) */}
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-muted-foreground">3</span>
-                    </div>
-                    <div>
-                      <label className="block text-base font-semibold text-ink">
-                        Authorization Model
-                      </label>
-                      <p className="text-sm text-muted-foreground">How will you access their platform accounts?</p>
-                    </div>
-                  </div>
-                  <div className="ml-10">
-                    <AuthModelSelector
-                      agencyHasConnectedPlatforms={agencyHasConnectedPlatforms}
-                    />
-                  </div>
-                </div>
-
-                {/* Section 4: Template (Optional, Collapsible) */}
+                {/* Section 3: Template (Optional, Collapsible) */}
                 <div className="relative">
                   <button
                     type="button"
@@ -314,7 +282,7 @@ function AccessRequestWizardContent() {
                     className="flex items-center gap-3 w-full text-left group"
                   >
                     <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-muted-foreground">4</span>
+                      <span className="text-sm font-semibold text-muted-foreground">3</span>
                     </div>
                     <div className="flex-1">
                       <label className="block text-base font-semibold text-ink group-hover:text-coral/90 transition-colors">
@@ -347,23 +315,21 @@ function AccessRequestWizardContent() {
               </div>
             </div>
 
-            {/* Platform Quick Actions - only shown for delegated_access */}
-            {state.authModel === 'delegated_access' && (
-              <div className="mt-4 p-4 bg-background border border-border rounded-lg flex items-center justify-between">
-                <div>
-                  <p className="text-base font-medium text-ink">Need to connect platforms?</p>
-                  <p className="text-sm text-muted-foreground">Connect your agency's platform accounts to use delegated access</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => router.push('/connections')}
-                  className="px-4 py-2.5 bg-accent hover:bg-accent text-foreground text-base rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Manage Platform Connections
-                </button>
+            {/* Platform Quick Actions */}
+            <div className="mt-4 p-4 bg-background border border-border rounded-lg flex items-center justify-between">
+              <div>
+                <p className="text-base font-medium text-ink">Need to connect platforms?</p>
+                <p className="text-sm text-muted-foreground">Connect your agency's platform accounts to use delegated access</p>
               </div>
-            )}
+              <button
+                type="button"
+                onClick={() => router.push('/connections')}
+                className="px-4 py-2.5 bg-accent hover:bg-accent text-foreground text-base rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Manage Platform Connections
+              </button>
+            </div>
 
             {state.error && (
               <m.div
@@ -430,6 +396,8 @@ function AccessRequestWizardContent() {
                 onSelectionChange={updatePlatforms}
                 connectedPlatforms={platformConnections}
                 agencyId={agencyId}
+                platformAccessLevels={state.platformAccessLevels}
+                onPlatformAccessLevelChange={updatePlatformAccessLevel}
               />
 
               {/* Info about connecting more platforms */}
@@ -764,33 +732,6 @@ function AccessRequestWizardContent() {
                     </button>
                   </div>
 
-                  {/* Auth Model Section */}
-                  <div className="p-4 flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
-                        <Shield className="h-5 w-5 text-coral" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Authorization Model</p>
-                        <p className="text-base font-semibold text-ink">
-                          {state.authModel === 'delegated_access' ? 'Delegated Access' : 'Client Authorization'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {state.authModel === 'delegated_access'
-                            ? 'Agency grants access using their own platform connections'
-                            : 'Client authorizes their own platform accounts'}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
-                    >
-                      Edit
-                    </button>
-                  </div>
-
                   {/* Platforms Section */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -824,31 +765,46 @@ function AccessRequestWizardContent() {
                     </button>
                   </div>
 
-                  {/* Access Level Section */}
+                  {/* Access Level Section - Per-platform levels */}
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                         <Shield className="h-5 w-5 text-foreground" />
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Access Level</p>
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
-                          state.globalAccessLevel! === 'admin'
-                            ? 'bg-coral/20 text-coral'
-                            : state.globalAccessLevel! === 'standard'
-                            ? 'bg-muted/30 text-foreground'
-                            : state.globalAccessLevel! === 'read_only'
-                            ? 'bg-teal/20 text-teal-90'
-                            : 'bg-accent text-foreground'
-                        }`}>
-                          {state.globalAccessLevel! === 'admin'
-                            ? 'ADMIN'
-                            : state.globalAccessLevel! === 'standard'
-                            ? 'STANDARD'
-                            : state.globalAccessLevel! === 'read_only'
-                            ? 'READ ONLY'
-                            : 'EMAIL ONLY'}
-                        </span>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Access Level</p>
+                        {Object.keys(state.selectedPlatforms).length === 0 ? (
+                          <span className="text-sm text-muted-foreground italic">No platforms selected</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-x-3 gap-y-1">
+                            {Object.entries(state.selectedPlatforms).map(([platformGroup, products]) => {
+                              if (products.length === 0) return null;
+                              const level = state.platformAccessLevels[platformGroup] || state.globalAccessLevel;
+                              return (
+                                <span key={platformGroup} className="flex items-center gap-1.5">
+                                  <span className="text-sm text-foreground">{PLATFORM_NAMES[platformGroup as keyof typeof PLATFORM_NAMES] || platformGroup}:</span>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                    level === 'admin'
+                                      ? 'bg-coral/20 text-coral'
+                                      : level === 'standard'
+                                      ? 'bg-muted/30 text-foreground'
+                                      : level === 'read_only'
+                                      ? 'bg-teal/20 text-teal-90'
+                                      : 'bg-accent text-foreground'
+                                  }`}>
+                                    {level === 'admin'
+                                      ? 'Admin'
+                                      : level === 'standard'
+                                      ? 'Standard'
+                                      : level === 'read_only'
+                                      ? 'Read Only'
+                                      : 'Email Only'}
+                                  </span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button

@@ -13,7 +13,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ChevronDown, Check, Minus, AlertCircle, Link2, Edit, Mail } from 'lucide-react';
 import { m, AnimatePresence } from 'framer-motion';
-import { PLATFORM_HIERARCHY } from '@agency-platform/shared';
+import { PLATFORM_HIERARCHY, AccessLevel, ACCESS_LEVEL_DESCRIPTIONS } from '@agency-platform/shared';
 import Link from 'next/link';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { PlatformIcon } from '@/components/ui';
@@ -34,6 +34,8 @@ interface HierarchicalPlatformSelectorProps {
   connectedPlatforms?: ConnectedPlatform[];
   agencyId?: string; // For manual invitation modal
   showAllPlatforms?: boolean;
+  platformAccessLevels?: Record<string, AccessLevel>;
+  onPlatformAccessLevelChange?: (group: string, level: AccessLevel) => void;
 }
 
 // Platforms that use manual invitation flow instead of OAuth
@@ -86,6 +88,8 @@ export function HierarchicalPlatformSelector({
   connectedPlatforms = [],
   agencyId,
   showAllPlatforms = false,
+  platformAccessLevels,
+  onPlatformAccessLevelChange,
 }: HierarchicalPlatformSelectorProps) {
   const [expandedGroups, setExpandedGroups] = useState<GroupState>({});
 
@@ -413,6 +417,29 @@ export function HierarchicalPlatformSelector({
                             Select all ({group.products.length})
                           </span>
                         </button>
+
+                        {/* Per-platform access level selector (if enabled and products selected) */}
+                        {platformAccessLevels && onPlatformAccessLevelChange && selectionCount > 0 && (
+                          <div className="flex items-center gap-2.5 py-2 mb-1">
+                            <label
+                              htmlFor={`access-level-${groupKey}`}
+                              className="text-xs text-muted-foreground whitespace-nowrap"
+                            >
+                              Access level:
+                            </label>
+                            <select
+                              id={`access-level-${groupKey}`}
+                              value={platformAccessLevels[groupKey] || 'standard'}
+                              onChange={(e) => onPlatformAccessLevelChange(groupKey, e.target.value as AccessLevel)}
+                              className="flex-1 px-2 py-1.5 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="standard">Standard</option>
+                              <option value="read_only">Read Only</option>
+                              <option value="email_only">Email Only</option>
+                            </select>
+                          </div>
+                        )}
 
                         {/* Product grid */}
                         <div className="grid grid-cols-2 gap-1">

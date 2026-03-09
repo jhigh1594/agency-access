@@ -266,16 +266,24 @@ export default function ClientAuthorizationPage() {
     );
   }
 
-  const step = phase === 'intake' ? 1 : phase === 'platforms' ? 2 : 3;
+  // Dynamic step indicator based on authModel
+  // delegated_access flows skip the "Connect" step → 2 steps total
+  // client_authorization flows include "Connect" → 3 steps total
+  const isDelegated = data.authModel === 'delegated_access';
+  const flowSteps = isDelegated ? ['Setup', 'Done'] : ['Setup', 'Connect', 'Done'];
+  const flowTotalSteps = isDelegated ? 2 : 3;
+  const currentStep = isDelegated
+    ? phase === 'complete' ? 2 : 1
+    : phase === 'intake' ? 1 : phase === 'platforms' ? 2 : 3;
   const layoutMode = phase === 'intake' ? 'focused' : 'split';
 
   return (
     <InviteFlowShell
       title={data.agencyName}
       description={`Authorize access for ${data.clientName}`}
-      step={step}
-      totalSteps={3}
-      steps={['Setup', 'Connect', 'Done']}
+      step={currentStep}
+      totalSteps={flowTotalSteps}
+      steps={flowSteps}
       layoutMode={layoutMode}
       rightSlot={
         <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">

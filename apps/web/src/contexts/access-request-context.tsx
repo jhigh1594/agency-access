@@ -47,6 +47,7 @@ export interface AccessRequestFormState {
   // Step 2: Platform & Access Level
   selectedPlatforms: Record<string, string[]>; // { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
   globalAccessLevel: AccessLevel | null;
+  platformAccessLevels: Record<string, AccessLevel>; // Per-platform access level overrides
 
   // Step 3: Intake Form Builder
   intakeFields: IntakeField[];
@@ -65,9 +66,9 @@ interface AccessRequestContextValue {
   updateTemplate: (template: AccessRequestTemplate | null) => void;
   updateClient: (client: Client) => void;
   updateExternalReference: (externalReference: string) => void;
-  updateAuthModel: (authModel: AuthModel) => void;
   updatePlatforms: (platforms: Record<string, string[]>) => void;
   updateAccessLevel: (level: AccessLevel) => void;
+  updatePlatformAccessLevel: (group: string, level: AccessLevel) => void;
   updateIntakeFields: (fields: IntakeField[]) => void;
   updateBranding: (branding: Partial<BrandingConfig>) => void;
   setStep: (step: number) => void;
@@ -94,6 +95,7 @@ const initialState: AccessRequestFormState = {
   authModel: 'delegated_access', // Default to recommended option
   selectedPlatforms: {},
   globalAccessLevel: 'standard', // Smart default: standard access level
+  platformAccessLevels: {}, // Per-platform access level overrides
   intakeFields: [
     {
       id: '1',
@@ -145,6 +147,14 @@ export function AccessRequestProvider({
       if (template) {
         newState.selectedPlatforms = template.platforms || {};
         newState.globalAccessLevel = template.globalAccessLevel || 'standard';
+
+        // Initialize platformAccessLevels from globalAccessLevel for all platforms in the template
+        const templatePlatformAccessLevels: Record<string, AccessLevel> = {};
+        Object.keys(template.platforms || {}).forEach((platformGroup) => {
+          templatePlatformAccessLevels[platformGroup] = template.globalAccessLevel || 'standard';
+        });
+        newState.platformAccessLevels = templatePlatformAccessLevels;
+
         newState.intakeFields = template.intakeFields || [];
         newState.branding = {
           logoUrl: template.branding?.logoUrl || '',
@@ -165,16 +175,60 @@ export function AccessRequestProvider({
     setState((prev) => ({ ...prev, externalReference }));
   }, []);
 
-  const updateAuthModel = useCallback((authModel: AuthModel) => {
-    setState((prev) => ({ ...prev, authModel }));
-  }, []);
-
   const updatePlatforms = useCallback((platforms: Record<string, string[]>) => {
-    setState((prev) => ({ ...prev, selectedPlatforms: platforms }));
+    setState((prev) => {
+      // Identify newly added platform groups
+      const newGroups = Object.keys(platforms).filter(
+        (group) => !Object.keys(prev.selectedPlatforms).includes(group)
+      );
+
+      // Identify removed platform groups
+      const removedGroups = Object.keys(prev.selectedPlatforms).filter(
+        (group) => !Object.keys(platforms).includes(group)
+      );
+
+      // Initialize platformAccessLevels for new groups from globalAccessLevel
+      const newPlatformAccessLevels = { ...prev.platformAccessLevels };
+      newGroups.forEach((group) => {
+        if (!newPlatformAccessLevels[group]) {
+          newPlatformAccessLevels[group] = prev.globalAccessLevel || 'standard';
+        }
+      });
+
+      // Remove platformAccessLevels entries for removed groups
+      removedGroups.forEach((group) => {
+        delete newPlatformAccessLevels[group];
+      });
+
+      return {
+        ...prev,
+        selectedPlatforms: platforms,
+        platformAccessLevels: newPlatformAccessLevels,
+      };
+    });
   }, []);
 
   const updateAccessLevel = useCallback((level: AccessLevel) => {
-    setState((prev) => ({ ...prev, globalAccessLevel: level }));
+    setState((prev) => {
+      // When global access level changes, also update all existing platformAccessLevels entries
+      const updatedPlatformAccessLevels = { ...prev.platformAccessLevels };
+      Object.keys(prev.selectedPlatforms).forEach((group) => {
+        updatedPlatformAccessLevels[group] = level;
+      });
+
+      return {
+        ...prev,
+        globalAccessLevel: level,
+        platformAccessLevels: updatedPlatformAccessLevels,
+      };
+    });
+  }, []);
+
+  const updatePlatformAccessLevel = useCallback((group: string, level: AccessLevel) => {
+    setState((prev) => ({
+      ...prev,
+      platformAccessLevels: { ...prev.platformAccessLevels, [group]: level },
+    }));
   }, []);
 
   const updateIntakeFields = useCallback((fields: IntakeField[]) => {
@@ -278,7 +332,8 @@ export function AccessRequestProvider({
       // Transform platforms to API format
       const platformsConfig = transformPlatformsForAPI(
         state.selectedPlatforms,
-        state.globalAccessLevel!
+        state.platformAccessLevels,
+        state.globalAccessLevel! // Fallback default
       );
 
       // Build payload
@@ -288,7 +343,7 @@ export function AccessRequestProvider({
         clientName: state.client?.name || '',
         clientEmail: state.client?.email || '',
         externalReference: state.externalReference.trim() || undefined,
-        authModel: (state.authModel || 'client_authorization') as 'client_authorization' | 'delegated_access',
+        authModel: 'delegated_access', // Always delegated_access - hardcoded in shared types
         platforms: platformsConfig,
         intakeFields: state.intakeFields.filter((field) => field.label.trim()),
         branding: {
@@ -377,9 +432,9 @@ export function AccessRequestProvider({
     updateTemplate,
     updateClient,
     updateExternalReference,
-    updateAuthModel,
     updatePlatforms,
     updateAccessLevel,
+    updatePlatformAccessLevel,
     updateIntakeFields,
     updateBranding,
     setStep,
