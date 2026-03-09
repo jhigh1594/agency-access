@@ -49,7 +49,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // Variant styles (use NonNullable to exclude undefined from Record key type)
     const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
       primary: 'border-2 border-black dark:border-white bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
-      secondary: 'bg-card text-foreground border-2 border-border hover:bg-accent/20 hover:border-accent hover:translate-y-[-2px] active:scale-95 transition-transform',
+      secondary: 'bg-card text-foreground border-2 border-border hover:border-accent hover:translate-y-[-2px] active:scale-95 transition-transform',
       success: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       warning: 'bg-warning text-white hover:bg-warning/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
       danger: 'bg-primary text-primary-foreground hover:bg-primary/90 hover:translate-y-[-2px] active:scale-95 shadow-brutalist transition-transform',
