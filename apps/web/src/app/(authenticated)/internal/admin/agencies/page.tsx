@@ -60,6 +60,8 @@ export default function InternalAdminAgenciesPage() {
             <a href="/internal/admin" className="text-muted-foreground hover:text-foreground">Overview</a>
             <a href="/internal/admin/agencies" className="text-coral font-semibold">Agencies</a>
             <a href="/internal/admin/subscriptions" className="text-muted-foreground hover:text-foreground">Subscriptions</a>
+            <a href="/internal/admin/webhooks" className="text-muted-foreground hover:text-foreground">Webhooks</a>
+            <a href="/internal/admin/affiliates" className="text-muted-foreground hover:text-foreground">Affiliates</a>
           </nav>
         </header>
 
