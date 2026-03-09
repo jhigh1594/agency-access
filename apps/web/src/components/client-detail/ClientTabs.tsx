@@ -15,14 +15,13 @@ import { OverviewTab } from './OverviewTab';
 import { ActivityTab } from './ActivityTab';
 
 interface ClientTabsProps {
-  clientId: string;
   accessRequests: ClientAccessRequest[];
   activity: ClientActivityItem[];
 }
 
 type TabValue = 'overview' | 'activity';
 
-export function ClientTabs({ clientId, accessRequests, activity }: ClientTabsProps) {
+export function ClientTabs({ accessRequests, activity }: ClientTabsProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('overview');
 
   return (
@@ -73,7 +72,7 @@ export function ClientTabs({ clientId, accessRequests, activity }: ClientTabsPro
         aria-labelledby={activeTab === 'overview' ? 'client-tab-overview' : 'client-tab-activity'}
       >
         {activeTab === 'overview' && (
-          <OverviewTab clientId={clientId} accessRequests={accessRequests} />
+          <OverviewTab accessRequests={accessRequests} />
         )}
         {activeTab === 'activity' && (
           <ActivityTab activity={activity} />

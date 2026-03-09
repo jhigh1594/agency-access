@@ -127,7 +127,6 @@ export default function ClientDetailPage() {
         {/* Tabs */}
         <div className="mt-6">
           <ClientTabs
-            clientId={client.id}
             accessRequests={accessRequests}
             activity={activity}
           />
