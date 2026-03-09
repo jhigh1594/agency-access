@@ -4,13 +4,14 @@
  * Background job processing for token refresh and cleanup tasks.
  */
 
-import { Queue, Worker, QueueEvents } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
+import { getPlatformTokenCapability, type Platform } from '@agency-platform/shared';
 import { env } from './env.js';
-import { connectionService } from '../services/connection.service.js';
 import { accessRequestService } from '../services/access-request.service.js';
 import { auditService } from '../services/audit.service.js';
 import { prisma } from './prisma.js';
-import { getConnector } from '../services/connectors/factory.js';
+import { refreshClientPlatformAuthorization } from '../services/token-lifecycle.service.js';
+import { webhookDeliveryService } from '@/services/webhook-delivery.service';
 
 // Redis connection options for IORedis
 const connectionOptions = {
@@ -45,6 +46,10 @@ export const notificationQueue = new Queue('notification', {
   connection: connectionOptions,
 });
 
+export const webhookDeliveryQueue = new Queue('webhook-delivery', {
+  connection: connectionOptions,
+});
+
 export const onboardingEmailQueue = new Queue('onboarding-email', {
   connection: connectionOptions,
 });
@@ -53,32 +58,43 @@ export const trialExpirationQueue = new Queue('trial-expiration', {
   connection: connectionOptions,
 });
 
+export const TOKEN_REFRESH_SCAN_JOB = 'check-expiring-tokens';
+export const TOKEN_REFRESH_JOB = 'refresh-token';
+export const WEBHOOK_DELIVERY_JOB = 'deliver-webhook-event';
+
 /**
  * Token Refresh Worker
  *
  * Processes token refresh jobs:
- * 1. Finds tokens expiring within 7 days
- * 2. Retrieves refresh token from Infisical
- * 3. Calls connector to refresh
- * 4. Updates Infisical with new token
- * 5. Updates PlatformAuthorization record
- * 6. Logs to AuditLog
+ * 1. Scans for expiring refreshable OAuth tokens
+ * 2. Queues refresh jobs
+ * 3. Refreshes individual authorizations through the lifecycle service
+ * 4. Logs refresh outcomes to AuditLog
  */
 export async function startTokenRefreshWorker() {
   const worker = new Worker(
     'token-refresh',
     async (job) => {
-      const { connectionId, platform } = job.data;
+      if (job.name === TOKEN_REFRESH_SCAN_JOB) {
+        return processExpiringTokens();
+      }
+
+      if (job.name !== TOKEN_REFRESH_JOB) {
+        return { success: false, error: 'UNKNOWN_JOB_TYPE' };
+      }
+
+      const { connectionId, platform } = job.data as {
+        connectionId: string;
+        platform: Platform;
+      };
 
       try {
-        // Get authorization record
         const auth = await prisma.platformAuthorization.findFirst({
           where: { connectionId, platform },
           include: { connection: true },
         });
 
         if (!auth) {
-          console.error(`Authorization not found: ${connectionId}/${platform}`);
           return { success: false, error: 'NOT_FOUND' };
         }
 
@@ -86,64 +102,43 @@ export async function startTokenRefreshWorker() {
           return { success: false, error: 'INACTIVE' };
         }
 
-        // Retrieve tokens from Infisical
-        const { infisical } = await import('../lib/infisical.js');
-        const tokens = await infisical.retrieveOAuthTokens(auth.secretId);
+        const refreshResult = await refreshClientPlatformAuthorization(connectionId, platform);
 
-        if (!tokens || !tokens.refreshToken) {
-          return { success: false, error: 'NO_REFRESH_TOKEN' };
-        }
-
-        // Get platform connector and refresh token
-        const connector = getConnector(platform);
-
-        if (!connector.refreshToken) {
-          // Platform doesn't support refresh (e.g., Meta with 60-day tokens)
-          console.log(`${platform} does not support token refresh, skipping`);
+        if (refreshResult.error) {
           await auditService.createAuditLog({
+            agencyId: auth.connection.agencyId,
             resourceId: connectionId,
             resourceType: 'connection',
-            action: 'REFRESH_NOT_SUPPORTED',
+            action: refreshResult.error.code === 'RECONNECT_REQUIRED'
+              ? 'REFRESH_RECONNECT_REQUIRED'
+              : 'FAILED',
+            userEmail: auth.connection.clientEmail,
             details: {
               platform,
-              reason: 'Platform does not support token refresh via refresh_token',
+              jobId: job.id,
+              error: refreshResult.error.message,
+              code: refreshResult.error.code,
             },
           });
-          return { success: false, error: 'NOT_SUPPORTED' };
+          return { success: false, error: refreshResult.error.code };
         }
 
-        // Call connector to refresh token
-        const newTokens = await connector.refreshToken(tokens.refreshToken);
-
-        // Update tokens in Infisical
-        await infisical.updateOAuthTokens(auth.secretId, newTokens);
-
-        // Update database
-        await prisma.platformAuthorization.update({
-          where: { id: auth.id },
-          data: {
-            expiresAt: newTokens.expiresAt,
-            lastRefreshedAt: new Date(),
-          },
-        });
-
-        // Log the refresh
         await auditService.createAuditLog({
+          agencyId: auth.connection.agencyId,
           resourceId: connectionId,
           resourceType: 'connection',
           action: 'REFRESHED',
+          userEmail: auth.connection.clientEmail,
           details: {
             platform,
             jobId: job.id,
-            expiresAt: newTokens.expiresAt,
+            outcome: refreshResult.data?.outcome,
+            expiresAt: refreshResult.data?.expiresAt,
           },
         });
 
-        return { success: true, expiresAt: newTokens.expiresAt };
+        return { success: true, expiresAt: refreshResult.data?.expiresAt };
       } catch (error) {
-        console.error(`Token refresh failed for ${connectionId}/${platform}:`, error);
-
-        // Log failure
         await auditService.createAuditLog({
           resourceId: connectionId,
           resourceType: 'connection',
@@ -269,6 +264,59 @@ export async function startNotificationWorker() {
 }
 
 /**
+ * Webhook Delivery Worker
+ *
+ * Processes outbound webhook deliveries asynchronously so customer endpoint
+ * latency never blocks product request flows.
+ */
+export async function startWebhookDeliveryWorker() {
+  const worker = new Worker(
+    'webhook-delivery',
+    async (job) => {
+      if (job.name !== WEBHOOK_DELIVERY_JOB) {
+        return { success: false, error: 'UNKNOWN_JOB_TYPE' };
+      }
+
+      const result = await webhookDeliveryService.deliverWebhookEvent({
+        eventId: job.data.eventId,
+        attemptNumber: job.attemptsMade + 1,
+      });
+
+      if (result.error) {
+        if (result.data?.retryable) {
+          throw new Error(result.error.message);
+        }
+
+        return {
+          success: false,
+          deliveryId: result.data?.deliveryId ?? null,
+          error: result.error.code,
+        };
+      }
+
+      return {
+        success: true,
+        deliveryId: result.data?.deliveryId ?? null,
+      };
+    },
+    {
+      connection: connectionOptions,
+      concurrency: 10,
+    }
+  );
+
+  worker.on('completed', (job) => {
+    console.log(`Webhook delivery job completed: ${job.id}`);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`Webhook delivery job failed: ${job?.id}`, err);
+  });
+
+  return worker;
+}
+
+/**
  * Onboarding Email Worker
  *
  * Processes delayed onboarding emails for activation and habit-building.
@@ -337,14 +385,8 @@ export async function startTrialExpirationWorker() {
  * Schedule recurring jobs
  */
 export async function scheduleJobs() {
-  // Token refresh check - runs every 6 hours
-  // This job scans for tokens expiring within 7 days and queues refresh jobs
-  const tokenRefreshQueue = new Queue('token-refresh', {
-    connection: connectionOptions,
-  });
-
   await tokenRefreshQueue.add(
-    'check-expiring-tokens',
+    TOKEN_REFRESH_SCAN_JOB,
     { type: 'check-expiring-tokens' },
     {
       repeat: {
@@ -394,11 +436,29 @@ export async function scheduleJobs() {
  */
 export async function queueTokenRefresh(connectionId: string, platform: string) {
   await tokenRefreshQueue.add(
-    'refresh-token',
+    TOKEN_REFRESH_JOB,
     { connectionId, platform },
     {
       jobId: `refresh-${connectionId}-${platform}`,
       priority: 1, // Higher priority for manual refreshes
+    }
+  );
+}
+
+/**
+ * Add an outbound webhook delivery job to the queue.
+ */
+export async function queueWebhookDelivery(eventId: string) {
+  await webhookDeliveryQueue.add(
+    WEBHOOK_DELIVERY_JOB,
+    { eventId },
+    {
+      attempts: env.WEBHOOK_MAX_ATTEMPTS,
+      backoff: {
+        type: 'exponential',
+        delay: 30000,
+      },
+      jobId: `webhook-${eventId}`,
     }
   );
 }
@@ -430,12 +490,18 @@ export async function processExpiringTokens() {
     },
   });
 
-  console.log(`Found ${expiringAuths.length} tokens expiring soon`);
+  let queued = 0;
 
-  // Queue refresh jobs for each expiring token
   for (const auth of expiringAuths) {
+    const capability = getPlatformTokenCapability(auth.platform as Platform);
+
+    if (capability.connectionMethod !== 'oauth' || capability.refreshStrategy !== 'automatic') {
+      continue;
+    }
+
     await queueTokenRefresh(auth.connectionId, auth.platform);
+    queued += 1;
   }
 
-  return { queued: expiringAuths.length };
+  return { queued };
 }

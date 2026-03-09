@@ -198,4 +198,60 @@ describe('env contract', () => {
 
     expect(module.env.HELPSCOUT_BEACON_SECRET).toBe('hs_secret_test');
   });
+
+  it('defaults affiliate configuration values when unset', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      AFFILIATE_COOKIE_TTL_DAYS: undefined,
+      AFFILIATE_DEFAULT_COMMISSION_BPS: undefined,
+      AFFILIATE_DEFAULT_COMMISSION_MONTHS: undefined,
+      AFFILIATE_HOLD_DAYS: undefined,
+      AFFILIATE_PORTAL_ENABLED: undefined,
+    }));
+
+    expect(module.env.AFFILIATE_COOKIE_TTL_DAYS).toBe(90);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_BPS).toBe(3000);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_MONTHS).toBe(12);
+    expect(module.env.AFFILIATE_HOLD_DAYS).toBe(30);
+    expect(module.env.AFFILIATE_PORTAL_ENABLED).toBe(false);
+  });
+
+  it('parses explicit affiliate configuration overrides', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      AFFILIATE_COOKIE_TTL_DAYS: '120',
+      AFFILIATE_DEFAULT_COMMISSION_BPS: '2500',
+      AFFILIATE_DEFAULT_COMMISSION_MONTHS: '6',
+      AFFILIATE_HOLD_DAYS: '14',
+      AFFILIATE_PORTAL_ENABLED: 'true',
+    }));
+
+    expect(module.env.AFFILIATE_COOKIE_TTL_DAYS).toBe(120);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_BPS).toBe(2500);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_MONTHS).toBe(6);
+    expect(module.env.AFFILIATE_HOLD_DAYS).toBe(14);
+    expect(module.env.AFFILIATE_PORTAL_ENABLED).toBe(true);
+  });
+
+  it('defaults webhook delivery configuration values when unset', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      WEBHOOK_DELIVERY_TIMEOUT_MS: undefined,
+      WEBHOOK_FAILURE_DISABLE_THRESHOLD: undefined,
+      WEBHOOK_MAX_ATTEMPTS: undefined,
+    }));
+
+    expect(module.env.WEBHOOK_DELIVERY_TIMEOUT_MS).toBe(5000);
+    expect(module.env.WEBHOOK_FAILURE_DISABLE_THRESHOLD).toBe(5);
+    expect(module.env.WEBHOOK_MAX_ATTEMPTS).toBe(6);
+  });
+
+  it('parses explicit webhook delivery configuration overrides', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      WEBHOOK_DELIVERY_TIMEOUT_MS: '8000',
+      WEBHOOK_FAILURE_DISABLE_THRESHOLD: '3',
+      WEBHOOK_MAX_ATTEMPTS: '4',
+    }));
+
+    expect(module.env.WEBHOOK_DELIVERY_TIMEOUT_MS).toBe(8000);
+    expect(module.env.WEBHOOK_FAILURE_DISABLE_THRESHOLD).toBe(3);
+    expect(module.env.WEBHOOK_MAX_ATTEMPTS).toBe(4);
+  });
 });

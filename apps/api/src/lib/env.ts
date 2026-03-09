@@ -25,6 +25,15 @@ function parseUrlSafely(value: string): URL | null {
   }
 }
 
+function parseBooleanish(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+  }
+  return undefined;
+}
+
 function isPostgresProtocol(protocol: string): boolean {
   return protocol === 'postgres:' || protocol === 'postgresql:';
 }
@@ -134,6 +143,21 @@ const envSchema = z.object({
   // Internal Admin Access Control (comma-separated allowlists)
   INTERNAL_ADMIN_USER_IDS: z.string().optional(),
   INTERNAL_ADMIN_EMAILS: z.string().optional(),
+
+  // Affiliate program
+  AFFILIATE_COOKIE_TTL_DAYS: z.coerce.number().int().min(1).default(90),
+  AFFILIATE_DEFAULT_COMMISSION_BPS: z.coerce.number().int().min(0).max(10000).default(3000),
+  AFFILIATE_DEFAULT_COMMISSION_MONTHS: z.coerce.number().int().min(1).max(60).default(12),
+  AFFILIATE_HOLD_DAYS: z.coerce.number().int().min(0).default(30),
+  AFFILIATE_PORTAL_ENABLED: z.preprocess(
+    value => parseBooleanish(value) ?? value,
+    z.boolean().default(false)
+  ),
+
+  // Outbound webhook delivery
+  WEBHOOK_DELIVERY_TIMEOUT_MS: z.coerce.number().int().min(1000).default(5000),
+  WEBHOOK_FAILURE_DISABLE_THRESHOLD: z.coerce.number().int().min(1).default(5),
+  WEBHOOK_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(6),
 });
 
 const rawEnv = {

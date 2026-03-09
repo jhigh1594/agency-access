@@ -92,6 +92,58 @@ class InfisicalService {
   }
 
   /**
+   * Store a plain secret value in Infisical (upsert).
+   *
+   * Intended for non-token credentials such as outbound webhook signing secrets.
+   */
+  async storePlainSecret(secretName: string, secretValue: string): Promise<string> {
+    await this.initialize();
+
+    if (!this.client) {
+      throw new Error('Infisical client not initialized');
+    }
+
+    try {
+      await this.client.secrets().createSecret(secretName, {
+        projectId: env.INFISICAL_PROJECT_ID,
+        environment: env.INFISICAL_ENVIRONMENT,
+        secretValue,
+        type: SecretType.Shared,
+      });
+    } catch (error: any) {
+      if (error?.message?.includes('already exists') || error?.statusCode === 400) {
+        await this.client.secrets().updateSecret(secretName, {
+          projectId: env.INFISICAL_PROJECT_ID,
+          environment: env.INFISICAL_ENVIRONMENT,
+          secretValue,
+          type: SecretType.Shared,
+        });
+      } else {
+        throw error;
+      }
+    }
+
+    return secretName;
+  }
+
+  async getPlainSecret(secretName: string): Promise<string> {
+    await this.initialize();
+
+    if (!this.client) {
+      throw new Error('Infisical client not initialized');
+    }
+
+    const secret = await this.client.secrets().getSecret({
+      projectId: env.INFISICAL_PROJECT_ID,
+      environment: env.INFISICAL_ENVIRONMENT,
+      secretName,
+      type: SecretType.Shared,
+    });
+
+    return secret.secretValue;
+  }
+
+  /**
    * Retrieve OAuth tokens from Infisical
    *
    * @param secretName - The secret name (from database secretId field)

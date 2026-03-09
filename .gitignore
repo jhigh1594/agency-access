@@ -52,3 +52,4 @@ apps/api/prisma/migrations/
 Thumbs.db
 .vercel
 .specstory/
+.firecrawl/
