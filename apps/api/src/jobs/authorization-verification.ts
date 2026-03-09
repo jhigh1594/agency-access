@@ -6,16 +6,9 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { env } from '../lib/env.js';
 import { executeVerification } from '../services/authorization-verification.service.js';
 import type { AccessLevel } from '@agency-platform/shared';
-
-const connectionOptions = {
-  host: env.REDIS_HOST || 'localhost',
-  port: env.REDIS_PORT || 6379,
-  password: env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null,
-};
+import { bullMqConnectionOptions, registerWorkerErrorHandler } from '../lib/bullmq.js';
 
 interface VerificationJobData {
   verificationId: string;
@@ -68,7 +61,7 @@ export const authorizationVerificationWorker = new Worker<VerificationJobData>(
     }
   },
   {
-    connection: connectionOptions,
+    connection: bullMqConnectionOptions,
     concurrency: 3, // Process up to 3 verifications concurrently (API rate limits)
     limiter: {
       max: 5, // Max 5 verification jobs per interval
@@ -76,6 +69,8 @@ export const authorizationVerificationWorker = new Worker<VerificationJobData>(
     },
   }
 );
+
+registerWorkerErrorHandler(authorizationVerificationWorker, 'authorization-verification');
 
 // Worker events
 authorizationVerificationWorker.on('completed', (job) => {

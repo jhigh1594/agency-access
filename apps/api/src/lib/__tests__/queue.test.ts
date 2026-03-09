@@ -20,6 +20,7 @@ const { queueAddMock, workerProcessors } = vi.hoisted(() => ({
 vi.mock('bullmq', () => ({
   Queue: class MockQueue {
     add = queueAddMock;
+    on = vi.fn();
   },
   Worker: class MockWorker {
     on = vi.fn();

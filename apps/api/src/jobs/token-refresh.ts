@@ -13,13 +13,7 @@ import { auditService } from '../services/audit.service.js';
 import { infisical } from '../lib/infisical.js';
 import { getConnector } from '../services/connectors/factory.js';
 import type { Platform } from '@agency-platform/shared';
-
-const connectionOptions = {
-  host: env.REDIS_HOST || 'localhost',
-  port: env.REDIS_PORT || 6379,
-  password: env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null,
-};
+import { bullMqConnectionOptions, registerWorkerErrorHandler } from '../lib/bullmq.js';
 
 interface RefreshJobData {
   connectionId: string;
@@ -155,7 +149,7 @@ export const tokenRefreshWorker = new Worker<RefreshJobData>(
     }
   },
   {
-    connection: connectionOptions,
+    connection: bullMqConnectionOptions,
     concurrency: 5, // Process up to 5 jobs concurrently
     limiter: {
       max: 10, // Max 10 jobs per interval
@@ -163,6 +157,8 @@ export const tokenRefreshWorker = new Worker<RefreshJobData>(
     },
   }
 );
+
+registerWorkerErrorHandler(tokenRefreshWorker, 'token-refresh-job');
 
 // Worker events
 tokenRefreshWorker.on('completed', (job) => {

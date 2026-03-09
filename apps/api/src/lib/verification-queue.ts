@@ -6,16 +6,8 @@
  */
 
 import { Queue } from 'bullmq';
-import { env } from './env.js';
 import type { AccessLevel } from '@agency-platform/shared';
-
-// Redis connection options for IORedis
-const connectionOptions = {
-  host: env.REDIS_HOST || 'localhost',
-  port: env.REDIS_PORT || 6379,
-  password: env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null,
-};
+import { bullMqConnectionOptions, registerQueueErrorHandler } from './bullmq.js';
 
 /**
  * Authorization Verification Queue
@@ -23,10 +15,10 @@ const connectionOptions = {
  * Jobs in this queue verify that clients have granted access to agencies
  * by calling platform APIs using the agency's OAuth token.
  */
-export const authorizationVerificationQueue = new Queue(
+export const authorizationVerificationQueue = registerQueueErrorHandler(new Queue(
   'authorization-verification',
   {
-    connection: connectionOptions,
+    connection: bullMqConnectionOptions,
     defaultJobOptions: {
       attempts: 3,
       backoff: {
@@ -43,7 +35,7 @@ export const authorizationVerificationQueue = new Queue(
       },
     },
   }
-);
+), 'authorization-verification');
 
 /**
  * Queue a verification job

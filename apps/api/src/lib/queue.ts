@@ -12,51 +12,36 @@ import { auditService } from '../services/audit.service.js';
 import { prisma } from './prisma.js';
 import { refreshClientPlatformAuthorization } from '../services/token-lifecycle.service.js';
 import { webhookDeliveryService } from '@/services/webhook-delivery.service';
-
-// Redis connection options for IORedis
-const connectionOptions = {
-  host: env.REDIS_HOST || 'localhost',
-  port: env.REDIS_PORT || 6379,
-  password: env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null,
-  lazyConnect: true, // Don't connect immediately
-  enableReadyCheck: false,
-  // Disable reconnection attempts in development when Redis is unavailable
-  retryStrategy: (times: number) => {
-    // Stop retrying after 3 attempts to prevent blocking server startup
-    if (times > 3) {
-      return null;
-    }
-    // Retry with exponential backoff
-    return Math.min(times * 100, 1000);
-  },
-  connectTimeout: 5000, // 5 second connection timeout
-};
+import {
+  bullMqConnectionOptions,
+  registerQueueErrorHandler,
+  registerWorkerErrorHandler,
+} from './bullmq.js';
 
 // Create queues
-export const tokenRefreshQueue = new Queue('token-refresh', {
-  connection: connectionOptions,
-});
+export const tokenRefreshQueue = registerQueueErrorHandler(new Queue('token-refresh', {
+  connection: bullMqConnectionOptions,
+}), 'token-refresh');
 
-export const cleanupQueue = new Queue('cleanup', {
-  connection: connectionOptions,
-});
+export const cleanupQueue = registerQueueErrorHandler(new Queue('cleanup', {
+  connection: bullMqConnectionOptions,
+}), 'cleanup');
 
-export const notificationQueue = new Queue('notification', {
-  connection: connectionOptions,
-});
+export const notificationQueue = registerQueueErrorHandler(new Queue('notification', {
+  connection: bullMqConnectionOptions,
+}), 'notification');
 
-export const webhookDeliveryQueue = new Queue('webhook-delivery', {
-  connection: connectionOptions,
-});
+export const webhookDeliveryQueue = registerQueueErrorHandler(new Queue('webhook-delivery', {
+  connection: bullMqConnectionOptions,
+}), 'webhook-delivery');
 
-export const onboardingEmailQueue = new Queue('onboarding-email', {
-  connection: connectionOptions,
-});
+export const onboardingEmailQueue = registerQueueErrorHandler(new Queue('onboarding-email', {
+  connection: bullMqConnectionOptions,
+}), 'onboarding-email');
 
-export const trialExpirationQueue = new Queue('trial-expiration', {
-  connection: connectionOptions,
-});
+export const trialExpirationQueue = registerQueueErrorHandler(new Queue('trial-expiration', {
+  connection: bullMqConnectionOptions,
+}), 'trial-expiration');
 
 export const TOKEN_REFRESH_SCAN_JOB = 'check-expiring-tokens';
 export const TOKEN_REFRESH_JOB = 'refresh-token';
@@ -154,10 +139,12 @@ export async function startTokenRefreshWorker() {
       }
     },
     {
-      connection: connectionOptions,
+      connection: bullMqConnectionOptions,
       concurrency: 5, // Process up to 5 jobs concurrently
     }
   );
+
+  registerWorkerErrorHandler(worker, 'token-refresh');
 
   worker.on('completed', (job) => {
     console.log(`Token refresh job completed: ${job.id}`);
@@ -196,9 +183,11 @@ export async function startCleanupWorker() {
       return { success: false, error: 'UNKNOWN_JOB_TYPE' };
     },
     {
-      connection: connectionOptions,
+      connection: bullMqConnectionOptions,
     }
   );
+
+  registerWorkerErrorHandler(worker, 'cleanup');
 
   worker.on('completed', (job) => {
     console.log(`Cleanup job completed: ${job.id}`);
@@ -247,10 +236,12 @@ export async function startNotificationWorker() {
       }
     },
     {
-      connection: connectionOptions,
+      connection: bullMqConnectionOptions,
       concurrency: 10, // Process up to 10 notifications concurrently
     }
   );
+
+  registerWorkerErrorHandler(worker, 'notification');
 
   worker.on('completed', (job) => {
     console.log(`Notification job completed: ${job.id}`);
@@ -300,10 +291,12 @@ export async function startWebhookDeliveryWorker() {
       };
     },
     {
-      connection: connectionOptions,
+      connection: bullMqConnectionOptions,
       concurrency: 10,
     }
   );
+
+  registerWorkerErrorHandler(worker, 'webhook-delivery');
 
   worker.on('completed', (job) => {
     console.log(`Webhook delivery job completed: ${job.id}`);
@@ -335,10 +328,12 @@ export async function startOnboardingEmailWorker() {
       return result.data;
     },
     {
-      connection: connectionOptions,
+      connection: bullMqConnectionOptions,
       concurrency: 5,
     }
   );
+
+  registerWorkerErrorHandler(worker, 'onboarding-email');
 
   worker.on('completed', (job) => {
     console.log(`Onboarding email job completed: ${job.id}`);
@@ -366,9 +361,11 @@ export async function startTrialExpirationWorker() {
       return result;
     },
     {
-      connection: connectionOptions,
+      connection: bullMqConnectionOptions,
     }
   );
+
+  registerWorkerErrorHandler(worker, 'trial-expiration');
 
   worker.on('completed', (job) => {
     console.log(`Trial expiration job completed: ${job.id}`);
@@ -397,9 +394,9 @@ export async function scheduleJobs() {
   );
 
   // Cleanup job - runs daily at 2 AM UTC
-  const cleanupQueue = new Queue('cleanup', {
-    connection: connectionOptions,
-  });
+  const cleanupQueue = registerQueueErrorHandler(new Queue('cleanup', {
+    connection: bullMqConnectionOptions,
+  }), 'cleanup-scheduler');
 
   await cleanupQueue.add(
     'delete-expired-requests',
@@ -413,9 +410,9 @@ export async function scheduleJobs() {
   );
 
   // Trial expiration check - runs daily at 3 AM UTC
-  const trialExpQueue = new Queue('trial-expiration', {
-    connection: connectionOptions,
-  });
+  const trialExpQueue = registerQueueErrorHandler(new Queue('trial-expiration', {
+    connection: bullMqConnectionOptions,
+  }), 'trial-expiration-scheduler');
 
   await trialExpQueue.add(
     'check-expired-trials',
