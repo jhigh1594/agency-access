@@ -215,11 +215,15 @@ export type AuthorizationStatus = z.infer<typeof AuthorizationStatusSchema>;
 export const AgencyRoleSchema = z.enum(['admin', 'member', 'viewer']);
 export type AgencyRole = z.infer<typeof AgencyRoleSchema>;
 
-// Authorization models - delegated access only
-export const AuthModelSchema = z.enum(['delegated_access']);
+// Authorization models supported by access requests
+export const AuthModelSchema = z.enum(['client_authorization', 'delegated_access']);
 export type AuthModel = z.infer<typeof AuthModelSchema>;
 
 export const AUTH_MODEL_DESCRIPTIONS: Record<AuthModel, { title: string; description: string }> = {
+  client_authorization: {
+    title: 'Client Authorization',
+    description: 'Send the client a link so they can connect and grant access from their own platform accounts',
+  },
   delegated_access: {
     title: 'Delegated Access',
     description: 'Use your agency\'s platform accounts to manage client campaigns directly in the platform UI',

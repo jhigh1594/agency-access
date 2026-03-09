@@ -182,6 +182,7 @@ describe('Access Request Wizard', () => {
     await waitFor(() => {
       expect(accessRequestsApi.createAccessRequest).toHaveBeenCalledWith(
         expect.objectContaining({
+          authModel: 'client_authorization',
           externalReference: 'crm-123',
         }),
         expect.any(Function)

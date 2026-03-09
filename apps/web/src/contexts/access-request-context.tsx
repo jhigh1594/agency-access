@@ -92,7 +92,7 @@ const initialState: AccessRequestFormState = {
   selectedTemplate: null,
   client: null,
   externalReference: '',
-  authModel: 'delegated_access', // Default to recommended option
+  authModel: 'client_authorization',
   selectedPlatforms: {},
   globalAccessLevel: 'standard', // Smart default: standard access level
   platformAccessLevels: {}, // Per-platform access level overrides
@@ -343,7 +343,7 @@ export function AccessRequestProvider({
         clientName: state.client?.name || '',
         clientEmail: state.client?.email || '',
         externalReference: state.externalReference.trim() || undefined,
-        authModel: 'delegated_access', // Always delegated_access - hardcoded in shared types
+        authModel: state.authModel ?? 'client_authorization',
         platforms: platformsConfig,
         intakeFields: state.intakeFields.filter((field) => field.label.trim()),
         branding: {
