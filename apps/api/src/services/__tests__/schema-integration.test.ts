@@ -467,7 +467,7 @@ describe('Schema Integration Tests', () => {
       expect(requestWithClient?.client?.company).toBe('Request Co');
     });
 
-    it('should set clientId to null if client is deleted (SetNull)', async () => {
+    it('should delete access requests when client is deleted (Cascade)', async () => {
       const accessRequest = await prisma.accessRequest.create({
         data: {
           agencyId: testAgencyId,
@@ -484,13 +484,12 @@ describe('Schema Integration Tests', () => {
       // Delete client
       await prisma.client.delete({ where: { id: testClientId } });
 
-      // Fetch access request - clientId should be null
-      const updatedRequest = await prisma.accessRequest.findUnique({
+      // Access request should be cascade-deleted
+      const deletedRequest = await prisma.accessRequest.findUnique({
         where: { id: accessRequest.id },
       });
 
-      expect(updatedRequest?.clientId).toBeNull();
-      expect(updatedRequest?.clientName).toBe('Request Client'); // Name preserved
+      expect(deletedRequest).toBeNull();
     });
   });
 

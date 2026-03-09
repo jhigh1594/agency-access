@@ -320,8 +320,9 @@ describe('Phase 5: Client Service - TDD Tests', () => {
       vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
         id: 'client-1',
         agencyId: 'agency-1',
-      });
-      vi.mocked(mockPrisma.client.delete).mockResolvedValue({ id: 'client-1' });
+        accessRequests: [], // No connections to clean up
+      } as any);
+      vi.mocked(mockPrisma.client.delete).mockResolvedValue({ id: 'client-1' } as any);
 
       const result = await clientService.deleteClient('client-1', 'agency-1');
 
@@ -337,6 +338,19 @@ describe('Phase 5: Client Service - TDD Tests', () => {
       const result = await clientService.deleteClient('non-existent', 'agency-1');
 
       expect(result).toBe(false);
+    });
+
+    it('should return false when client belongs to different agency', async () => {
+      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
+        id: 'client-1',
+        agencyId: 'other-agency',
+        accessRequests: [],
+      } as any);
+
+      const result = await clientService.deleteClient('client-1', 'agency-1');
+
+      expect(result).toBe(false);
+      expect(mockPrisma.client.delete).not.toHaveBeenCalled();
     });
   });
 });

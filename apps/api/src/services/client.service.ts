@@ -5,6 +5,7 @@
  * Part of Phase 5: Enhanced Access Request Creation.
  */
 
+import { infisical } from '@/lib/infisical';
 import { prisma } from '@/lib/prisma';
 import type { ClientLanguage } from '@agency-platform/shared';
 import type { Prisma } from '@prisma/client';
@@ -211,23 +212,41 @@ export async function findClientByEmail(
 }
 
 /**
- * Delete a client
- * @returns true if deleted, false if not found
+ * Delete a client and all associated access requests.
+ * Cleans up Infisical secrets for any platform authorizations before cascade delete.
+ * @returns true if deleted, false if not found or not in agency
  */
 export async function deleteClient(
   id: string,
   agencyId: string
 ): Promise<boolean> {
-  // Check if client exists
   const existing = await prisma.client.findUnique({
     where: { id },
+    include: {
+      accessRequests: {
+        include: {
+          connection: {
+            include: { authorizations: true },
+          },
+        },
+      },
+    },
   });
 
-  if (!existing) {
+  if (!existing || existing.agencyId !== agencyId) {
     return false;
   }
 
-  // Delete client
+  // Delete Infisical secrets for all platform authorizations before cascade
+  for (const req of existing.accessRequests ?? []) {
+    const conn = req.connection;
+    if (conn?.authorizations) {
+      for (const auth of conn.authorizations) {
+        await infisical.deleteSecret(auth.secretId);
+      }
+    }
+  }
+
   await prisma.client.delete({
     where: { id },
   });

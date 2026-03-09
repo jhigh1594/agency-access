@@ -159,7 +159,7 @@ model AccessRequest {
   authorizedAt DateTime? @map("authorized_at") // When client completed authorization
 
   agency     Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  client     Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  client     Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
   connection ClientConnection?
 
   @@index([agencyId, status])
