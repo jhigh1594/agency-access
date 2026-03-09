@@ -905,8 +905,10 @@ export async function getDashboardAccessRequestSummaries(
 ): Promise<{ data: { items: DashboardRequestSummary[]; total: number } | null; error: any }> {
   try {
     const includeTotal = options.includeTotal ?? true;
+    // Exclude orphaned requests (clientId null) so requests whose client was deleted don't appear
+    const where = { agencyId, clientId: { not: null } };
     const requestsPromise = prisma.accessRequest.findMany({
-      where: { agencyId },
+      where,
       select: {
         id: true,
         clientId: true,
@@ -920,9 +922,7 @@ export async function getDashboardAccessRequestSummaries(
       take: limit,
     });
     const totalPromise = includeTotal
-      ? prisma.accessRequest.count({
-          where: { agencyId },
-        })
+      ? prisma.accessRequest.count({ where })
       : Promise.resolve<number | null>(null);
     const [requests, total] = await Promise.all([requestsPromise, totalPromise]);
 

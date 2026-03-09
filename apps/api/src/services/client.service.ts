@@ -5,6 +5,7 @@
  * Part of Phase 5: Enhanced Access Request Creation.
  */
 
+import { invalidateCache } from '@/lib/cache';
 import { infisical } from '@/lib/infisical';
 import { prisma } from '@/lib/prisma';
 import type { ClientLanguage } from '@agency-platform/shared';
@@ -250,6 +251,8 @@ export async function deleteClient(
   await prisma.client.delete({
     where: { id },
   });
+
+  await invalidateCache(`dashboard:${agencyId}:*`);
 
   return true;
 }
