@@ -6,6 +6,7 @@ import { m } from 'framer-motion';
 interface InviteFlowShellProps {
   title: string;
   description?: string;
+  header?: ReactNode;
   step?: number;
   totalSteps?: number;
   steps?: string[];
@@ -13,12 +14,14 @@ interface InviteFlowShellProps {
   rail?: ReactNode;
   layoutMode?: 'focused' | 'split';
   showProgress?: boolean;
+  mobileRailLabel?: string;
   children: ReactNode;
 }
 
 export function InviteFlowShell({
   title,
   description,
+  header,
   step = 1,
   totalSteps = 3,
   steps = ['Setup', 'Connect', 'Done'],
@@ -26,6 +29,7 @@ export function InviteFlowShell({
   rail,
   layoutMode = 'focused',
   showProgress = true,
+  mobileRailLabel = 'Request details and support',
   children,
 }: InviteFlowShellProps) {
   const safeStep = Math.max(1, Math.min(step, Math.max(1, totalSteps)));
@@ -36,13 +40,17 @@ export function InviteFlowShell({
     <div className="min-h-screen bg-paper">
       <div className={`mx-auto px-4 py-8 sm:px-6 lg:px-8 ${isSplit ? 'max-w-7xl' : 'max-w-5xl'}`}>
         <header className="mb-8 space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-semibold text-ink font-display">{title}</h1>
-              {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+          {header ? (
+            header
+          ) : (
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-semibold text-ink font-display">{title}</h1>
+                {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+              </div>
+              {rightSlot}
             </div>
-            {rightSlot}
-          </div>
+          )}
 
           {showProgress ? (
             <div className="space-y-3">
@@ -93,9 +101,18 @@ export function InviteFlowShell({
 
         {isSplit ? (
           <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
-            {rail ? <div className="lg:hidden">{rail}</div> : null}
-            <aside className="hidden lg:block">{rail}</aside>
-            <div className="min-w-0">{children}</div>
+            <div className="order-1 min-w-0 lg:order-2">{children}</div>
+            {rail ? (
+              <div className="order-2 lg:hidden">
+                <details className="overflow-hidden rounded-2xl border border-border bg-card">
+                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ink">
+                    {mobileRailLabel}
+                  </summary>
+                  <div className="border-t border-border px-4 py-4">{rail}</div>
+                </details>
+              </div>
+            ) : null}
+            <aside className="order-1 hidden lg:block">{rail}</aside>
           </div>
         ) : (
           children

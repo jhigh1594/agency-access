@@ -1,0 +1,27 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { PlatformWizardCard } from '../PlatformWizardCard';
+
+vi.mock('@/components/ui/platform-icon', () => ({
+  PlatformIcon: ({ platform }: { platform: string }) => <div>{platform}</div>,
+}));
+
+vi.mock('../PlatformStepProgress', () => ({
+  PlatformStepProgress: () => <div>Progress</div>,
+}));
+
+describe('PlatformWizardCard', () => {
+  it('does not render the active wizard card hidden on first paint', () => {
+    const { container } = render(
+      <PlatformWizardCard platform="google" platformName="Google" currentStep={1}>
+        <div>Connect Google CTA</div>
+      </PlatformWizardCard>
+    );
+
+    expect(screen.getByText('Connect Google CTA')).toBeInTheDocument();
+
+    const card = container.querySelector('.shadow-brutalist');
+    expect(card).not.toBeNull();
+    expect(card?.getAttribute('style') || '').not.toContain('opacity: 0');
+  });
+});

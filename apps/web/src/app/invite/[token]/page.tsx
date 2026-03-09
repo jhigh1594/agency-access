@@ -6,6 +6,8 @@ import { Check, Lock, RefreshCw } from 'lucide-react';
 import posthog from 'posthog-js';
 import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
 import { InviteHeroHeader } from '@/components/flow/invite-hero-header';
+import { InvitePlatformQueueItem } from '@/components/flow/invite-platform-queue-item';
+import { InvitePlatformStage } from '@/components/flow/invite-platform-stage';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
 import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
 import { InviteTrustNote } from '@/components/flow/invite-trust-note';
@@ -17,6 +19,7 @@ import {
   getInviteSecuritySummary,
   isClientInviteManualCallbackPlatform,
 } from '@/lib/client-invite-platforms';
+import { buildInvitePlatformQueue } from '@/lib/invite-platform-queue';
 import type { ClientAccessRequestPayload, Platform } from '@agency-platform/shared';
 
 type PagePhase = 'intake' | 'platforms' | 'complete';
@@ -83,9 +86,14 @@ export default function ClientAuthorizationPage() {
     if (!data?.platforms?.length) return false;
     return data.platforms.every((group) => completedPlatforms.has(group.platformGroup as Platform));
   }, [data, completedPlatforms]);
-  const incompletePlatforms = useMemo(
-    () => data?.platforms?.filter((group) => !completedPlatforms.has(group.platformGroup as Platform)) || [],
-    [data, completedPlatforms]
+  const platformQueue = useMemo(
+    () =>
+      buildInvitePlatformQueue({
+        platforms: data?.platforms || [],
+        completedPlatforms,
+        returningPlatform: oauthConnectionInfo?.platform ?? null,
+      }),
+    [completedPlatforms, data?.platforms, oauthConnectionInfo?.platform]
   );
 
   const railIdentities = useMemo(() => {
@@ -253,6 +261,10 @@ export default function ClientAuthorizationPage() {
   };
 
   const handlePlatformComplete = (platform: Platform) => {
+    if (oauthConnectionInfo?.platform === platform) {
+      setOauthConnectionInfo(null);
+    }
+
     setCompletedPlatforms((prev) => {
       const updated = new Set(prev);
       updated.add(platform);
@@ -313,7 +325,9 @@ export default function ClientAuthorizationPage() {
                 phase === 'complete'
                   ? 'Review the completed authorization'
                   : phase === 'platforms'
-                  ? 'Connect each requested platform'
+                  ? platformQueue.activePlatform
+                    ? `Complete ${PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}`
+                    : 'Review completion'
                   : 'Confirm what will be shared',
             },
           ]}
@@ -484,56 +498,106 @@ export default function ClientAuthorizationPage() {
         <div className="space-y-6">
           <div className="rounded-[1.5rem] border border-border bg-card px-5 py-4">
             <h2 className="text-lg font-semibold text-ink font-display">
-              {requestedPlatforms.length - completedPlatforms.size === 0
-                ? 'All platforms connected'
-                : `Connect ${requestedPlatforms.length - completedPlatforms.size} more platform${
+              {platformQueue.activePlatform
+                ? `Connect ${requestedPlatforms.length - completedPlatforms.size} more platform${
                     requestedPlatforms.length - completedPlatforms.size !== 1 ? 's' : ''
-                  }`}
+                  }`
+                : 'All platforms connected'}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {completedPlatforms.size} of {requestedPlatforms.length} complete
+              {platformQueue.activePlatform
+                ? `${completedPlatforms.size} of ${requestedPlatforms.length} complete`
+                : 'Everything requested in this invite is complete.'}
             </p>
           </div>
 
-          {data.platforms.map((groupConfig) => {
-            const platform = groupConfig.platformGroup as Platform;
-            const isOAuthReturning = oauthConnectionInfo?.platform === platform;
-            const currentIncompleteIndex = incompletePlatforms.findIndex(
-              (group) => group.platformGroup === groupConfig.platformGroup
-            );
-
-            if (completedPlatforms.has(platform)) {
-              return (
-                <div key={platform} className="rounded-lg border border-teal/40 bg-teal/10 px-5 py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-semibold text-ink font-display">{PLATFORM_NAMES[platform]}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">Connected</p>
-                    </div>
-                    <Check className="h-5 w-5 text-teal" />
-                  </div>
-                </div>
-              );
-            }
-
-            return (
+          {platformQueue.activePlatform ? (
+            <InvitePlatformStage
+              platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}
+              description={
+                platformQueue.nextPlatform
+                  ? `Complete this step, then continue to ${PLATFORM_NAMES[platformQueue.nextPlatform.platformGroup as Platform]}.`
+                  : 'Complete this final platform to finish the request.'
+              }
+              remainingCount={platformQueue.remainingPlatforms.length}
+              completedCount={platformQueue.completedPlatforms.length}
+              totalCount={requestedPlatforms.length}
+              nextPlatformName={
+                platformQueue.nextPlatform
+                  ? PLATFORM_NAMES[platformQueue.nextPlatform.platformGroup as Platform]
+                  : null
+              }
+            >
               <PlatformAuthWizard
-                key={platform}
-                platform={platform}
-                platformName={PLATFORM_NAMES[platform]}
-                products={groupConfig.products}
+                platform={platformQueue.activePlatform.platformGroup as Platform}
+                platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}
+                products={platformQueue.activePlatform.products}
                 accessRequestToken={token}
-                onComplete={() => handlePlatformComplete(platform)}
-                completionActionLabel={
-                  currentIncompleteIndex === incompletePlatforms.length - 1
-                    ? 'Finish request'
-                    : 'Continue to next platform'
+                onComplete={() =>
+                  handlePlatformComplete(platformQueue.activePlatform!.platformGroup as Platform)
                 }
-                initialConnectionId={isOAuthReturning ? oauthConnectionInfo.connectionId : undefined}
-                initialStep={isOAuthReturning ? 2 : undefined}
+                completionActionLabel={
+                  platformQueue.nextPlatform
+                    ? `Continue to ${PLATFORM_NAMES[platformQueue.nextPlatform.platformGroup as Platform]}`
+                    : 'Finish request'
+                }
+                initialConnectionId={
+                  oauthConnectionInfo?.platform === platformQueue.activePlatform.platformGroup
+                    ? oauthConnectionInfo.connectionId
+                    : undefined
+                }
+                initialStep={
+                  oauthConnectionInfo?.platform === platformQueue.activePlatform.platformGroup ? 2 : undefined
+                }
               />
-            );
-          })}
+            </InvitePlatformStage>
+          ) : null}
+
+          {platformQueue.remainingPlatforms.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Remaining in queue
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {platformQueue.remainingPlatforms.length} platform
+                  {platformQueue.remainingPlatforms.length === 1 ? '' : 's'} left after this
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {platformQueue.remainingPlatforms.map((groupConfig) => (
+                  <InvitePlatformQueueItem
+                    key={groupConfig.platformGroup}
+                    platform={groupConfig.platformGroup as Platform}
+                    platformName={PLATFORM_NAMES[groupConfig.platformGroup as Platform]}
+                    description="Queued until the current platform is finished."
+                    status="up-next"
+                    sequenceLabel={`Then ${PLATFORM_NAMES[groupConfig.platformGroup as Platform]}`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {platformQueue.completedPlatforms.length > 0 ? (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Completed
+              </h3>
+              <div className="space-y-3">
+                {platformQueue.completedPlatforms.map((groupConfig) => (
+                  <InvitePlatformQueueItem
+                    key={groupConfig.platformGroup}
+                    platform={groupConfig.platformGroup as Platform}
+                    platformName={PLATFORM_NAMES[groupConfig.platformGroup as Platform]}
+                    description="Access confirmed for this platform."
+                    status="completed"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
 

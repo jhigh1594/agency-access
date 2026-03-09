@@ -21,9 +21,18 @@ vi.mock('posthog-js', () => ({
 }));
 
 vi.mock('@/components/client-auth/PlatformAuthWizard', () => ({
-  PlatformAuthWizard: ({ onComplete, platformName }: any) => (
+  PlatformAuthWizard: ({
+    onComplete,
+    platformName,
+    completionActionLabel,
+    initialConnectionId,
+    initialStep,
+  }: any) => (
     <div>
-      <p>{platformName}</p>
+      <p>{`Active platform: ${platformName}`}</p>
+      {completionActionLabel ? <p>{`Completion action: ${completionActionLabel}`}</p> : null}
+      {initialConnectionId ? <p>{`Initial connection: ${initialConnectionId}`}</p> : null}
+      {initialStep ? <p>{`Initial step: ${initialStep}`}</p> : null}
       <button type="button" onClick={onComplete}>
         Complete Platform
       </button>
@@ -36,6 +45,7 @@ describe('Invite Flow Page', () => {
     vi.clearAllMocks();
     searchParamGetMock.mockImplementation(() => null);
     vi.useRealTimers();
+    sessionStorage.clear();
   });
 
   it('renders explicit error state for invalid token', async () => {
@@ -270,6 +280,153 @@ describe('Invite Flow Page', () => {
     ).toBe(false);
   });
 
+  it('shows only one active platform at a time and collapses the rest of the request', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'meta',
+                products: [{ product: 'meta_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {}, meta: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    const continueButton = await screen.findByRole('button', { name: /continue to connect/i });
+    await userEvent.click(continueButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Active platform: Google')).toBeInTheDocument();
+      expect(screen.queryAllByRole('button', { name: /complete platform/i })).toHaveLength(1);
+    });
+
+    expect(screen.queryByText('Active platform: Meta')).not.toBeInTheDocument();
+  });
+
+  it('passes an explicit next-platform handoff label to the active platform', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'meta',
+                products: [{ product: 'meta_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {}, meta: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    const continueButton = await screen.findByRole('button', { name: /continue to connect/i });
+    await userEvent.click(continueButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Completion action: Continue to Meta')).toBeInTheDocument();
+    });
+  });
+
+  it('restores the returning oauth platform as the active stage', async () => {
+    searchParamGetMock.mockImplementation((key: string) => {
+      if (key === 'step') return '2';
+      if (key === 'platform') return 'meta';
+      if (key === 'connectionId') return 'conn-meta-1';
+      return null;
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'meta',
+                products: [{ product: 'meta_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {}, meta: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Active platform: Meta')).toBeInTheDocument();
+      expect(screen.getByText('Initial connection: conn-meta-1')).toBeInTheDocument();
+      expect(screen.getByText('Initial step: 2')).toBeInTheDocument();
+      expect(screen.queryAllByRole('button', { name: /complete platform/i })).toHaveLength(1);
+    });
+
+    expect(screen.queryByText('Active platform: Google')).not.toBeInTheDocument();
+  });
+
   it('submits completion without JSON content-type header', async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes('/api/client/token-123/complete')) {
@@ -501,6 +658,62 @@ describe('Invite Flow Page', () => {
     });
   });
 
+  it('returns from a manual platform callback into the next active platform in the queue', async () => {
+    searchParamGetMock.mockImplementation((key: string) => {
+      if (key === 'step') return '2';
+      if (key === 'platform') return 'mailchimp';
+      if (key === 'connectionId') return 'conn-mailchimp-1';
+      return null;
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'mailchimp',
+                products: [{ product: 'mailchimp', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: {
+              google: {},
+              mailchimp: { agencyEmail: 'ops@demoagency.com' },
+            },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Active platform: Google')).toBeInTheDocument();
+      expect(screen.getByText('Completion action: Finish request')).toBeInTheDocument();
+      expect(screen.queryAllByRole('button', { name: /complete platform/i })).toHaveLength(1);
+    });
+
+    expect(screen.queryByText('Active platform: Mailchimp')).not.toBeInTheDocument();
+  });
+
   describe('Dynamic step indicator', () => {
     it('should always show setup, connect, and done steps', async () => {
       const fetchMock = vi.fn(async () => ({
@@ -571,8 +784,6 @@ describe('Invite Flow Page', () => {
       render(<InvitePage />);
 
       await waitFor(() => {
-        const stepIndicator = screen.getByText('Step 1 of 3');
-        expect(stepIndicator).toBeInTheDocument();
         expect(screen.getByText(/review request/i)).toBeInTheDocument();
         expect(screen.getByText(/share account access with demo agency/i)).toBeInTheDocument();
         expect(screen.getByText(/request for client/i)).toBeInTheDocument();

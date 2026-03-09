@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import posthog from 'posthog-js';
 import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
+import { ManualInviteHeader } from '@/components/flow/manual-invite-header';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
 import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
 import {
@@ -17,6 +18,7 @@ import type { ClientAccessRequestPayload } from '@agency-platform/shared';
 
 interface ShopifyManualData {
   agencyName: string;
+  clientName?: string;
   clientEmail?: string;
   shopDomain?: string;
   collaboratorCode?: string;
@@ -66,6 +68,7 @@ export default function ShopifyManualPage() {
   const parseManualData = useCallback((payload: ClientAccessRequestPayload): ShopifyManualData => {
     return {
       agencyName: payload.agencyName,
+      clientName: payload.clientName,
       clientEmail: payload.clientEmail,
       shopDomain: payload.manualInviteTargets?.shopify?.shopDomain,
       collaboratorCode: payload.manualInviteTargets?.shopify?.collaboratorCode,
@@ -244,7 +247,7 @@ export default function ShopifyManualPage() {
           requiredMessage: 'Confirm completion before continuing.',
         },
         primaryAction: {
-          label: 'Continue',
+          label: 'Return to request',
           loading: submitting,
           loadingLabel: 'Saving...',
           onClick: submitManualConnection,
@@ -322,21 +325,31 @@ export default function ShopifyManualPage() {
     <InviteFlowShell
       title={data.agencyName}
       description="Connect Shopify in 3 steps: Connect Shopify, Select Store, Connected."
+      header={
+        <ManualInviteHeader
+          agencyName={data.agencyName}
+          platformName="Shopify"
+          clientName={data.clientName}
+          clientEmail={data.clientEmail}
+          logoUrl={data.branding?.logoUrl}
+          securityNote="Use only Shopify-native collaborator screens. Never share credentials."
+          backAction={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              leftIcon={<ArrowLeft className="h-4 w-4" />}
+            >
+              Back
+            </Button>
+          }
+        />
+      }
       layoutMode="split"
       showProgress={true}
       step={Math.min(railState.stepIndex + 1, 3)}
       totalSteps={3}
       steps={['Connect Shopify', 'Select Store', 'Connected']}
-      rightSlot={
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          leftIcon={<ArrowLeft className="h-4 w-4" />}
-        >
-          Back
-        </Button>
-      }
       rail={
         <InviteStickyRail
           objective="Share Shopify collaborator details so your agency can request access."
@@ -345,7 +358,7 @@ export default function ShopifyManualPage() {
             { label: 'Shopify store', value: displayShopDomain },
             { label: 'Collaborator code', value: displayCode },
           ]}
-          completedCount={railState.stepIndex + 1}
+          completedCount={railState.stepIndex}
           totalCount={railState.totalSteps}
           actionStatus={{
             label: railState.label,

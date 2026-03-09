@@ -3,6 +3,7 @@
 import { RefreshCw } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { Button } from '@/components/ui';
+import { InviteSupportCard } from './invite-support-card';
 
 export type InviteLoadState = 'loading' | 'delayed' | 'timeout' | 'error';
 
@@ -17,7 +18,7 @@ export function InviteLoadStateCard({
   phase,
   message,
   onRetry,
-  supportHref = '/help',
+  supportHref = '/contact',
 }: InviteLoadStateCardProps) {
   if (phase === 'loading' || phase === 'delayed') {
     return (
@@ -45,10 +46,14 @@ export function InviteLoadStateCard({
           <Button variant="primary" onClick={onRetry} leftIcon={<RefreshCw className="h-4 w-4" />}>
             Retry
           </Button>
-          <a href={supportHref} className="text-sm font-medium text-coral hover:text-coral/90">
-            Contact support
-          </a>
         </div>
+        <InviteSupportCard
+          href={supportHref}
+          title="Need a new link?"
+          description="Contact your agency or support if this authorization request is still unavailable after retrying."
+          linkLabel="Contact support"
+          className="mt-6 text-left"
+        />
       </div>
     </div>
   );

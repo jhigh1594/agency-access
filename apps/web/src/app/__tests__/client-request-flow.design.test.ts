@@ -8,7 +8,10 @@ const FILES_TO_VALIDATE = [
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/oauth-callback/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/beehiiv/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/kit/manual/page.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/mailchimp/manual/page.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/klaviyo/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/pinterest/manual/page.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/snapchat/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/app/invite/[token]/shopify/manual/page.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/client-selector.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/template-selector.tsx',
@@ -16,10 +19,15 @@ const FILES_TO_VALIDATE = [
   '/Users/jhigh/agency-access-platform/apps/web/src/components/save-as-template-modal.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/flow-shell.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-flow-shell.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-hero-header.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-sticky-rail.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-support-card.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-platform-stage.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-platform-queue-item.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-trust-note.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-load-state-card.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/manual-invite-header.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/manual-checklist-wizard.tsx',
-  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/manual-invite-shell.tsx',
 ];
 
 const GENERIC_COLOR_REGEX = /\b(?:slate|indigo|gray|red|green|yellow|amber|purple|blue)-\d{2,3}\b/;

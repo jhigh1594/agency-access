@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { ManualChecklistWizard } from '../manual-checklist-wizard';
 
 function buildSteps(onFinal: () => void) {
@@ -33,6 +34,35 @@ function buildSteps(onFinal: () => void) {
   };
 }
 
+function StatefulChecklist({ onFinal }: { onFinal: () => void }) {
+  const [checked, setChecked] = useState(false);
+
+  const steps = [
+    {
+      id: 'copy-email',
+      title: 'Copy agency email',
+      description: 'Copy the invite identity.',
+      content: <p>Step 1 content</p>,
+      primaryAction: { label: 'Next' },
+    },
+    {
+      id: 'confirm-complete',
+      title: 'Confirm completion',
+      description: 'Confirm you sent invite.',
+      content: <p>Step 2 content</p>,
+      completionGate: {
+        checked,
+        label: 'I completed this step',
+        onChange: setChecked,
+        requiredMessage: 'Please confirm completion before continuing.',
+      },
+      primaryAction: { label: 'Continue', onClick: onFinal },
+    },
+  ];
+
+  return <ManualChecklistWizard platformName="Beehiiv" steps={steps} />;
+}
+
 describe('ManualChecklistWizard', () => {
   it('advances to the next step when Next is clicked', async () => {
     const user = userEvent.setup();
@@ -41,24 +71,25 @@ describe('ManualChecklistWizard', () => {
     render(<ManualChecklistWizard platformName="Beehiiv" steps={steps} />);
 
     expect(screen.getByText('Step 1 content')).toBeInTheDocument();
+    expect(screen.getByText('0 of 2 completed')).toBeInTheDocument();
     await user.click(screen.getAllByRole('button', { name: 'Next' })[0]);
     expect(screen.getByText('Step 2 content')).toBeInTheDocument();
   });
 
-  it('blocks final action until completion gate is checked', async () => {
+  it('keeps the final action disabled until completion gate is checked', async () => {
     const user = userEvent.setup();
     const onFinal = vi.fn();
-    const { steps, gate } = buildSteps(onFinal);
 
-    render(<ManualChecklistWizard platformName="Beehiiv" steps={steps} />);
+    render(<StatefulChecklist onFinal={onFinal} />);
 
     await user.click(screen.getAllByRole('button', { name: 'Next' })[0]);
-    await user.click(screen.getAllByRole('button', { name: 'Continue' })[0]);
+    const continueButtons = screen.getAllByRole('button', { name: 'Continue' });
+    expect(continueButtons[0]).toBeDisabled();
 
-    expect(screen.getByText('Please confirm completion before continuing.')).toBeInTheDocument();
     expect(onFinal).not.toHaveBeenCalled();
 
-    gate.checked = true;
+    await user.click(screen.getByRole('checkbox', { name: /i completed this step/i }));
+    expect(screen.getAllByRole('button', { name: 'Continue' })[0]).not.toBeDisabled();
     await user.click(screen.getAllByRole('button', { name: 'Continue' })[0]);
     expect(onFinal).toHaveBeenCalledTimes(1);
   });

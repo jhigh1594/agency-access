@@ -87,7 +87,11 @@ export function ManualChecklistWizard({
       totalSteps,
       actionLabel: currentStep.primaryAction.label,
       blockedReason,
-      actionDisabled: Boolean(currentStep.primaryAction.disabled || currentStep.primaryAction.loading),
+      actionDisabled: Boolean(
+        currentStep.primaryAction.disabled ||
+          currentStep.primaryAction.loading ||
+          (currentStep.completionGate && !currentStep.completionGate.checked)
+      ),
     });
   }, [currentStep, onStepStateChange, stepIndex, totalSteps]);
 
@@ -150,7 +154,7 @@ export function ManualChecklistWizard({
   const primaryDisabled = useMemo(() => {
     if (!currentStep) return true;
     if (currentStep.primaryAction.disabled || currentStep.primaryAction.loading) return true;
-    if (currentStep.completionGate && !currentStep.completionGate.checked) return false;
+    if (currentStep.completionGate && !currentStep.completionGate.checked) return true;
     return false;
   }, [currentStep]);
 
@@ -159,7 +163,8 @@ export function ManualChecklistWizard({
   }
 
   const stepStatusLabel = `${stepIndex + 1} of ${totalSteps}`;
-  const progressPercent = Math.max(0, Math.min(100, Math.round(((stepIndex + 1) / Math.max(1, totalSteps)) * 100)));
+  const completedSteps = stepIndex;
+  const progressPercent = Math.max(0, Math.min(100, Math.round((completedSteps / Math.max(1, totalSteps)) * 100)));
 
   return (
     <div className="rounded-lg border-2 border-black bg-card shadow-brutalist overflow-hidden">
@@ -174,7 +179,7 @@ export function ManualChecklistWizard({
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
             <span>Step {stepStatusLabel}</span>
-            <span>{progressPercent}% complete</span>
+            <span>{completedSteps} of {totalSteps} completed</span>
           </div>
           <div className="mt-2 h-2 rounded-full bg-border/70 overflow-hidden">
             <div
@@ -246,7 +251,7 @@ export function ManualChecklistWizard({
         </div>
       </div>
 
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur px-4 py-3">
+      <div className="border-t border-border bg-paper px-4 py-4 lg:hidden">
         <div className="mx-auto max-w-3xl flex items-center gap-3">
           <button
             type="button"
@@ -268,9 +273,6 @@ export function ManualChecklistWizard({
           </button>
         </div>
       </div>
-
-      {/* Mobile spacer so fixed action bar doesn't cover content */}
-      <div className="lg:hidden h-20" aria-hidden="true" />
 
       <div className="border-t border-border bg-paper px-5 py-3 flex items-center gap-2 text-xs text-muted-foreground">
         <Check className="h-4 w-4 text-teal" />

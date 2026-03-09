@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import posthog from 'posthog-js';
-import { CopyCode } from '@/components/client-auth/pinterest/CopyCode';
+import { KitCopyButton } from '@/components/client-auth/kit/KitCopyButton';
 import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
 import { ManualInviteHeader } from '@/components/flow/manual-invite-header';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
@@ -28,7 +28,7 @@ interface ManualPageData {
   };
 }
 
-export default function SnapchatManualPage() {
+export default function KlaviyoManualPage() {
   const params = useParams();
   const router = useRouter();
   const token = params.token as string;
@@ -51,20 +51,15 @@ export default function SnapchatManualPage() {
     return {
       agencyName: payload.agencyName,
       clientName: payload.clientName,
-      agencyEmail: payload.manualInviteTargets?.snapchat?.agencyEmail || 'your agency Snapchat business email',
+      agencyEmail: payload.manualInviteTargets?.klaviyo?.agencyEmail || 'your agency contact email',
       clientEmail: payload.clientEmail,
       branding: payload.branding,
     };
   }, []);
 
-  const {
-    data,
-    error,
-    phase,
-    retry,
-  } = useInviteRequestLoader<ManualPageData>({
+  const { data, error, phase, retry } = useInviteRequestLoader<ManualPageData>({
     endpoint: `${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`,
-    source: 'manual-snapchat',
+    source: 'manual-klaviyo',
     parseData: parseManualData,
   });
 
@@ -75,7 +70,7 @@ export default function SnapchatManualPage() {
     setSubmissionError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}/snapchat/manual-connect`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}/klaviyo/manual-connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,18 +78,18 @@ export default function SnapchatManualPage() {
         body: JSON.stringify({
           agencyEmail: data.agencyEmail,
           clientEmail: data.clientEmail,
-          platform: 'snapchat',
+          platform: 'klaviyo',
         }),
       });
 
       const result = await response.json();
       if (!response.ok || result.error || !result.data?.connectionId) {
-        throw new Error(result.error?.message || 'Failed to create Snapchat connection');
+        throw new Error(result.error?.message || 'Failed to create Klaviyo connection');
       }
 
-      router.push(`/invite/${token}?step=2&platform=snapchat&connectionId=${result.data.connectionId}`);
+      router.push(`/invite/${token}?step=2&platform=klaviyo&connectionId=${result.data.connectionId}`);
     } catch (err) {
-      setSubmissionError(err instanceof Error ? err.message : 'Failed to create Snapchat connection');
+      setSubmissionError(err instanceof Error ? err.message : 'Failed to create Klaviyo connection');
     } finally {
       setSubmitting(false);
     }
@@ -105,84 +100,81 @@ export default function SnapchatManualPage() {
 
     return [
       {
-        id: 'copy-business-email',
-        title: 'Copy business email',
-        description: 'Use this email for both Snapchat Business invites.',
+        id: 'copy-invite-email',
+        title: 'Copy invite email',
+        description: 'Use this email when inviting your agency into Klaviyo.',
         content: (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Snapchat Business Email</p>
-            <CopyCode value={data.agencyEmail} label="Agency Snapchat Business Email" />
+            <p className="text-sm text-muted-foreground">Invite email</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                readOnly
+                value={data.agencyEmail}
+                className="flex-1 rounded-lg border border-border bg-paper px-3 py-2 text-sm font-mono text-ink"
+              />
+              <KitCopyButton text={data.agencyEmail} />
+            </div>
           </div>
         ),
         primaryAction: { label: 'I copied this' },
       },
       {
-        id: 'organization-invite',
-        title: 'Invite at the organization level',
-        description: 'Open Snapchat Ads Manager, go to Members, and invite this email as Organization Admin.',
+        id: 'open-team-settings',
+        title: 'Open Klaviyo team settings',
+        description: 'Sign in to Klaviyo and open your account settings so you can manage users.',
         content: (
           <div className="space-y-3">
             <a
-              href="https://ads.snapchat.com/"
+              href="https://www.klaviyo.com/login"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/20"
             >
-              Open Snapchat Ads Manager
+              Open Klaviyo Login
               <ExternalLink className="h-4 w-4" />
             </a>
-            <div className="rounded-lg border border-border bg-muted/10 px-4 py-3">
-              <ul className="list-disc pl-5 space-y-2 text-sm text-foreground">
-                <li>Open the menu in the top-left corner.</li>
-                <li>Go to Members.</li>
-                <li>Click Invite Members.</li>
-                <li>Paste <span className="font-mono">{data.agencyEmail}</span>.</li>
-                <li>Select the role <span className="font-medium">Organization Admin</span>.</li>
-              </ul>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              From your account settings, open your users or organization settings to invite a new team member.
+            </p>
           </div>
         ),
-        primaryAction: { label: 'I invited the organization admin' },
+        primaryAction: { label: 'I opened settings' },
       },
       {
-        id: 'ad-account-invite',
-        title: 'Invite at the ad account level',
-        description: 'Open the ad account, then Members and Billing, and invite the same email as Account Admin.',
+        id: 'send-invite',
+        title: 'Invite your agency in Klaviyo',
+        description: 'Add a new user, paste the email below, assign the correct role, then send.',
         content: (
           <div className="rounded-lg border border-border bg-muted/10 px-4 py-3">
-            <ul className="list-disc pl-5 space-y-2 text-sm text-foreground">
-              <li>Open Ad Accounts from the Snapchat menu.</li>
-              <li>Select the ad account you want to share.</li>
-              <li>Open Members and Billing.</li>
-              <li>Click Invite Members.</li>
+            <ul className="space-y-2 text-sm text-foreground list-disc pl-5">
+              <li>Select the option to add or invite a new user.</li>
               <li>Paste <span className="font-mono">{data.agencyEmail}</span>.</li>
-              <li>Select the role <span className="font-medium">Account Admin</span>.</li>
+              <li>Choose the role you want your agency to have.</li>
+              <li>Send the invitation from Klaviyo.</li>
             </ul>
           </div>
         ),
-        primaryAction: { label: 'I invited the ad account admin' },
+        primaryAction: { label: 'I sent the invite' },
       },
       {
         id: 'confirm-completion',
         title: 'Confirm and continue',
-        description: 'Confirm completion and return to your authorization request.',
+        description: 'We will return you to the authorization request once confirmed.',
         content: submissionError ? (
           <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
             {submissionError}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Confirm both Snapchat invites were completed before continuing.
-          </p>
+          <p className="text-sm text-muted-foreground">Confirm completion and continue back to the request flow.</p>
         ),
         completionGate: {
-          label: 'I completed Snapchat Business and ad account sharing',
+          label: `I invited ${data.agencyEmail} to my Klaviyo account`,
           checked: completionConfirmed,
           onChange: (checked) => {
             setCompletionConfirmed(checked);
             if (checked) {
               posthog.capture('client_manual_completion_confirmed', {
-                platform: 'snapchat',
+                platform: 'klaviyo',
               });
             }
           },
@@ -238,7 +230,7 @@ export default function SnapchatManualPage() {
         message={
           error ||
           (phase === 'timeout'
-            ? 'Snapchat setup took too long to load. Retry or contact support.'
+            ? 'Klaviyo setup took too long to load. Retry or contact support.'
             : 'This request link is invalid or expired. Contact your agency for a new link.')
         }
         onRetry={retry}
@@ -249,15 +241,15 @@ export default function SnapchatManualPage() {
   return (
     <InviteFlowShell
       title={data.agencyName}
-      description="Connect Snapchat by completing each checklist step."
+      description="Connect Klaviyo by completing each checklist step."
       header={
         <ManualInviteHeader
           agencyName={data.agencyName}
-          platformName="Snapchat"
+          platformName="Klaviyo"
           clientName={data.clientName}
           clientEmail={data.clientEmail}
           logoUrl={data.branding?.logoUrl}
-          securityNote="Use only Snapchat-native invite screens. Never share credentials."
+          securityNote="Use only Klaviyo-native invite screens. Never share credentials."
           backAction={
             <Button variant="ghost" size="sm" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
               Back
@@ -269,9 +261,9 @@ export default function SnapchatManualPage() {
       showProgress={false}
       rail={
         <InviteStickyRail
-          objective="Complete Snapchat Business sharing and return to your authorization request."
-          securityNote="Use only Snapchat Ads Manager and never share credentials."
-          identities={[{ label: 'Snapchat Business Email', value: data.agencyEmail }]}
+          objective="Complete Klaviyo invite setup and return to your authorization request."
+          securityNote="Use only Klaviyo-native invite screens. Never share credentials."
+          identities={[{ label: 'Klaviyo invite email', value: data.agencyEmail }]}
           completedCount={railState.stepIndex}
           totalCount={railState.totalSteps}
           actionStatus={{
@@ -282,11 +274,11 @@ export default function SnapchatManualPage() {
       }
     >
       <ManualChecklistWizard
-        platformName="Snapchat"
+        platformName="Klaviyo"
         steps={steps}
         onStepView={({ stepId, stepIndex, totalSteps }) => {
           posthog.capture('client_manual_step_viewed', {
-            platform: 'snapchat',
+            platform: 'klaviyo',
             step_id: stepId,
             step_index: stepIndex,
             total_steps: totalSteps,
@@ -294,7 +286,7 @@ export default function SnapchatManualPage() {
         }}
         onStepAdvanced={({ fromStepId, toStepId, fromStepIndex, toStepIndex, totalSteps }) => {
           posthog.capture('client_manual_step_advanced', {
-            platform: 'snapchat',
+            platform: 'klaviyo',
             from_step_id: fromStepId,
             to_step_id: toStepId,
             from_step_index: fromStepIndex,

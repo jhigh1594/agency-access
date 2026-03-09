@@ -6,6 +6,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import posthog from 'posthog-js';
 import { KitCopyButton } from '@/components/client-auth/kit/KitCopyButton';
 import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
+import { ManualInviteHeader } from '@/components/flow/manual-invite-header';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
 import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
 import {
@@ -18,6 +19,7 @@ import type { ClientAccessRequestPayload } from '@agency-platform/shared';
 
 interface ManualPageData {
   agencyName: string;
+  clientName?: string;
   agencyEmail: string;
   clientEmail?: string;
   branding?: {
@@ -48,6 +50,7 @@ export default function KitManualPage() {
   const parseManualData = useCallback((payload: ClientAccessRequestPayload): ManualPageData => {
     return {
       agencyName: payload.agencyName,
+      clientName: payload.clientName,
       agencyEmail: payload.manualInviteTargets?.kit?.agencyEmail || 'your agency contact email',
       clientEmail: payload.clientEmail,
       branding: payload.branding,
@@ -184,7 +187,7 @@ export default function KitManualPage() {
           requiredMessage: 'Confirm completion before continuing.',
         },
         primaryAction: {
-          label: 'Continue',
+          label: 'Return to request',
           loading: submitting,
           loadingLabel: 'Connecting...',
           onClick: submitManualConnection,
@@ -245,19 +248,29 @@ export default function KitManualPage() {
     <InviteFlowShell
       title={data.agencyName}
       description="Connect Kit by completing each checklist step."
+      header={
+        <ManualInviteHeader
+          agencyName={data.agencyName}
+          platformName="Kit"
+          clientName={data.clientName}
+          clientEmail={data.clientEmail}
+          logoUrl={data.branding?.logoUrl}
+          securityNote="Use only Kit-native invite screens. Never share credentials."
+          backAction={
+            <Button variant="ghost" size="sm" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+              Back
+            </Button>
+          }
+        />
+      }
       layoutMode="split"
       showProgress={false}
-      rightSlot={
-        <Button variant="ghost" size="sm" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
-          Back
-        </Button>
-      }
       rail={
         <InviteStickyRail
           objective="Complete Kit invite setup and return to your authorization request."
           securityNote="Use only Kit-native invite screens. Never share credentials."
           identities={[{ label: 'Kit invite email', value: data.agencyEmail }]}
-          completedCount={railState.stepIndex + 1}
+          completedCount={railState.stepIndex}
           totalCount={railState.totalSteps}
           actionStatus={{
             label: railState.label,

@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import BeehiivManualPage from '../beehiiv/manual/page';
 import KitManualPage from '../kit/manual/page';
+import KlaviyoManualPage from '../klaviyo/manual/page';
+import MailchimpManualPage from '../mailchimp/manual/page';
 import PinterestManualPage from '../pinterest/manual/page';
 import SnapchatManualPage from '../snapchat/manual/page';
 import ShopifyManualPage from '../shopify/manual/page';
@@ -45,6 +47,8 @@ function buildPayload(overrides?: Partial<any>) {
       manualInviteTargets: {
         beehiiv: { agencyEmail: 'ops@demoagency.com' },
         kit: { agencyEmail: 'ops@demoagency.com' },
+        klaviyo: { agencyEmail: 'ops@demoagency.com' },
+        mailchimp: { agencyEmail: 'ops@demoagency.com' },
         pinterest: { businessId: '123456789' },
         snapchat: { agencyEmail: 'snap@demoagency.com' },
         shopify: { shopDomain: 'store-demo.myshopify.com', collaboratorCode: '1234' },
@@ -95,11 +99,11 @@ describe('Manual invite flows', () => {
     await clickPrimaryAction('I sent the invite');
     await screen.findByRole('heading', { name: /confirm and continue/i });
 
-    await clickPrimaryAction('Continue');
-    expect(screen.getAllByText('Confirm completion before continuing.').length).toBeGreaterThan(0);
+    const returnButtons = screen.getAllByRole('button', { name: 'Return to request' });
+    expect(returnButtons[0]).toBeDisabled();
 
     await userEvent.click(screen.getByRole('checkbox', { name: /i invited ops@demoagency.com/i }));
-    await clickPrimaryAction('Continue');
+    await clickPrimaryAction('Return to request');
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -138,7 +142,7 @@ describe('Manual invite flows', () => {
     await clickPrimaryAction('I sent the invite');
     await screen.findByRole('heading', { name: /confirm and continue/i });
     await userEvent.click(screen.getByRole('checkbox', { name: /i invited ops@demoagency.com/i }));
-    await clickPrimaryAction('Continue');
+    await clickPrimaryAction('Return to request');
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -146,6 +150,104 @@ describe('Manual invite flows', () => {
         expect.objectContaining({ method: 'POST' })
       );
       expect(pushMock).toHaveBeenCalledWith('/invite/token-123?step=2&platform=kit&connectionId=conn-kit-1');
+    });
+  });
+
+  it('Mailchimp flow submits manual connect and redirects', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/mailchimp/manual-connect')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { connectionId: 'conn-mailchimp-1' }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => buildPayload({
+          platforms: [
+            {
+              platformGroup: 'mailchimp',
+              products: [{ product: 'mailchimp', accessLevel: 'admin' }],
+            },
+          ],
+        }),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<MailchimpManualPage />);
+
+    await screen.findByText(/copy invite email/i);
+    expect(screen.getByText(/request for client/i)).toBeInTheDocument();
+    expect(screen.getByText('Requested by')).toBeInTheDocument();
+    expect(screen.getByText('Demo Agency')).toBeInTheDocument();
+    expect(screen.getByText('Platform')).toBeInTheDocument();
+    expect(screen.getByText('Mailchimp')).toBeInTheDocument();
+    expect(screen.getAllByText(/request details/i).length).toBeGreaterThan(0);
+
+    await clickPrimaryAction('I copied this');
+    await screen.findByText(/open mailchimp team settings/i);
+    await clickPrimaryAction('I opened settings');
+    await screen.findByText(/invite your agency in mailchimp/i);
+    await clickPrimaryAction('I sent the invite');
+    await screen.findByRole('heading', { name: /confirm and continue/i });
+    await userEvent.click(screen.getByRole('checkbox', { name: /i invited ops@demoagency.com/i }));
+    await clickPrimaryAction('Return to request');
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/api/client/token-123/mailchimp/manual-connect'),
+        expect.objectContaining({ method: 'POST' })
+      );
+      expect(pushMock).toHaveBeenCalledWith('/invite/token-123?step=2&platform=mailchimp&connectionId=conn-mailchimp-1');
+    });
+  });
+
+  it('Klaviyo flow submits manual connect and redirects', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/klaviyo/manual-connect')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { connectionId: 'conn-klaviyo-1' }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => buildPayload({
+          platforms: [
+            {
+              platformGroup: 'klaviyo',
+              products: [{ product: 'klaviyo', accessLevel: 'admin' }],
+            },
+          ],
+        }),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<KlaviyoManualPage />);
+
+    await screen.findByText(/copy invite email/i);
+
+    await clickPrimaryAction('I copied this');
+    await screen.findByText(/open klaviyo team settings/i);
+    await clickPrimaryAction('I opened settings');
+    await screen.findByText(/invite your agency in klaviyo/i);
+    await clickPrimaryAction('I sent the invite');
+    await screen.findByRole('heading', { name: /confirm and continue/i });
+    await userEvent.click(screen.getByRole('checkbox', { name: /i invited ops@demoagency.com/i }));
+    await clickPrimaryAction('Return to request');
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/api/client/token-123/klaviyo/manual-connect'),
+        expect.objectContaining({ method: 'POST' })
+      );
+      expect(pushMock).toHaveBeenCalledWith('/invite/token-123?step=2&platform=klaviyo&connectionId=conn-klaviyo-1');
     });
   });
 
@@ -201,11 +303,11 @@ describe('Manual invite flows', () => {
     await screen.findByRole('heading', { name: /connected/i });
     expect(screen.getAllByText(/step 3 of 3/i).length).toBeGreaterThan(0);
 
-    await clickPrimaryAction('Continue');
-    expect(screen.getAllByText('Confirm completion before continuing.').length).toBeGreaterThan(0);
+    const returnButtons = screen.getAllByRole('button', { name: 'Return to request' });
+    expect(returnButtons[0]).toBeDisabled();
 
     await userEvent.click(screen.getByRole('checkbox', { name: /i have shared my shop domain and collaborator code/i }));
-    await clickPrimaryAction('Continue');
+    await clickPrimaryAction('Return to request');
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -250,15 +352,15 @@ describe('Manual invite flows', () => {
     await clickPrimaryAction('I invited the ad account admin');
     await screen.findByRole('heading', { name: /confirm and continue/i });
 
-    await clickPrimaryAction('Continue');
-    expect(screen.getAllByText('Confirm completion before continuing.').length).toBeGreaterThan(0);
+    const returnButtons = screen.getAllByRole('button', { name: 'Return to request' });
+    expect(returnButtons[0]).toBeDisabled();
 
     await userEvent.click(
       screen.getByRole('checkbox', {
         name: /i completed snapchat business and ad account sharing/i,
       })
     );
-    await clickPrimaryAction('Continue');
+    await clickPrimaryAction('Return to request');
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(

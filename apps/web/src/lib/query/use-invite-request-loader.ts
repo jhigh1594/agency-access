@@ -7,7 +7,15 @@ export type InviteLoadPhase = 'loading' | 'delayed' | 'timeout' | 'ready' | 'err
 
 interface UseInviteRequestLoaderOptions<TData> {
   endpoint: string;
-  source: 'invite-core' | 'manual-beehiiv' | 'manual-kit' | 'manual-snapchat' | 'manual-pinterest' | 'manual-shopify';
+  source:
+    | 'invite-core'
+    | 'manual-beehiiv'
+    | 'manual-kit'
+    | 'manual-mailchimp'
+    | 'manual-klaviyo'
+    | 'manual-snapchat'
+    | 'manual-pinterest'
+    | 'manual-shopify';
   delayedMs?: number;
   timeoutMs?: number;
   parseData?: (payload: any) => TData;

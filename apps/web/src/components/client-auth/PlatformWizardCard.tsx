@@ -37,7 +37,7 @@ export function PlatformWizardCard({
   return (
     <m.div
       className="bg-card rounded-lg shadow-brutalist border-2 border-black dark:border-white overflow-hidden"
-      initial={{ opacity: 0, y: 20 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
@@ -57,7 +57,7 @@ export function PlatformWizardCard({
 
       {/* Content: Step-specific content with animation */}
       <div className="p-8">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <m.div
             key={currentStep}
             initial={{ opacity: 0, x: 20 }}

@@ -199,4 +199,82 @@ describe('Client Auth Manual Routes', () => {
       })
     );
   });
+
+  it('creates Mailchimp manual connection with pending verification status', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      } as any,
+      error: null,
+    });
+    vi.mocked(prisma.clientConnection.create).mockResolvedValue({
+      id: 'conn-mailchimp-1',
+      status: 'pending_verification',
+    } as any);
+    vi.mocked(auditService.createAuditLog).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-1/mailchimp/manual-connect',
+      payload: {
+        platform: 'mailchimp',
+        agencyEmail: 'ops@agency.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(prisma.clientConnection.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'pending_verification',
+          grantedAssets: expect.objectContaining({
+            platform: 'mailchimp',
+            agencyEmail: 'ops@agency.com',
+            authMethod: 'manual_team_invitation',
+          }),
+        }),
+      })
+    );
+  });
+
+  it('creates Klaviyo manual connection with pending verification status', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      } as any,
+      error: null,
+    });
+    vi.mocked(prisma.clientConnection.create).mockResolvedValue({
+      id: 'conn-klaviyo-1',
+      status: 'pending_verification',
+    } as any);
+    vi.mocked(auditService.createAuditLog).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-1/klaviyo/manual-connect',
+      payload: {
+        platform: 'klaviyo',
+        agencyEmail: 'ops@agency.com',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(prisma.clientConnection.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'pending_verification',
+          grantedAssets: expect.objectContaining({
+            platform: 'klaviyo',
+            agencyEmail: 'ops@agency.com',
+            authMethod: 'manual_team_invitation',
+          }),
+        }),
+      })
+    );
+  });
 });
