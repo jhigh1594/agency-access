@@ -179,6 +179,12 @@ fastify.get('/', async () => {
 // Start server
 const start = async () => {
   try {
+    if (env.NODE_ENV === 'production') {
+      const { assertWebhookSchemaReady } = await import('./lib/webhook-schema-readiness.js');
+      await assertWebhookSchemaReady();
+      fastify.log.info('webhook schema readiness check passed');
+    }
+
     const startOptionalBackgroundTask = async (
       label: string,
       startTask: () => Promise<unknown>,
