@@ -152,7 +152,7 @@ Two steps: (1) OAuth redirect and scope authorization, (2) Asset selection — b
 
 ### Authorization Models
 
-Currently **delegated_access** only: agency uses its own AgencyPlatformConnection to grant client access. AccessRequest.authModel is set to `'delegated_access'` for all requests.
+Two models: **client_authorization** (default) — send client a link to connect and grant access from their own platform accounts; **delegated_access** — agency uses its own AgencyPlatformConnection to manage client campaigns. See AUTH_MODEL_DESCRIPTIONS in shared types.
 
 ### Access Levels
 
@@ -246,7 +246,7 @@ Backend: `apps/api/.env` — see `apps/api/.env.example`. Core (NODE_ENV, PORT, 
 
 ## Current State & Known Issues
 
-- **authModel:** Hardcoded to `delegated_access`. Multi-model support is incomplete/planned — do not treat as a bug.
+- **authModel:** Default is `client_authorization`. `delegated_access` also supported. Backend routing per model may be incomplete — validate flows when changing.
 - **Subdomain / white-label:** Planned but not implemented (e.g. `{subdomain}.accessplatform.com`).
 - **Zapier and Beehiiv:** Use manual invitation flows, not standard OAuth. Intentional.
 
