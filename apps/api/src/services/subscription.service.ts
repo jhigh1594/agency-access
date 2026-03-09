@@ -163,6 +163,15 @@ class SubscriptionService {
         error: { code: 'INVALID_TIER', message: 'Tier is not available for checkout' },
       };
     }
+    // Log Creem request details for debugging
+    console.log('Creem checkout request:', {
+      productId,
+      hasCustomer: !!creemCustomerId,
+      customerEmail: agency.email,
+      tier,
+      billingInterval: billingInterval ?? 'monthly',
+    });
+
     const checkoutResult = await creem.createCheckoutSession({
       ...(creemCustomerId ? { customer: creemCustomerId } : { customerEmail: agency.email }),
       productId,
@@ -183,6 +192,12 @@ class SubscriptionService {
     });
 
     if (checkoutResult.error || !checkoutResult.data) {
+      // Log full Creem error details for debugging
+      console.error('Creem checkout error:', {
+        code: checkoutResult.error?.code,
+        message: checkoutResult.error?.message,
+        details: checkoutResult.error?.details,
+      });
       return {
         data: null,
         error: {
