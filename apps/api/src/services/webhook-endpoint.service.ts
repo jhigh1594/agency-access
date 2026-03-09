@@ -64,26 +64,36 @@ function toEndpointSummary(endpoint: any) {
 }
 
 export async function getWebhookEndpoint(agencyId: string): Promise<ServiceResult<{ endpoint: ReturnType<typeof toEndpointSummary> }>> {
-  const endpoint = await prisma.webhookEndpoint.findUnique({
-    where: { agencyId },
-  });
+  try {
+    const endpoint = await prisma.webhookEndpoint.findUnique({
+      where: { agencyId },
+    });
 
-  if (!endpoint) {
+    if (!endpoint) {
+      return {
+        data: null,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Webhook endpoint not found',
+        },
+      };
+    }
+
+    return {
+      data: {
+        endpoint: toEndpointSummary(endpoint),
+      },
+      error: null,
+    };
+  } catch {
     return {
       data: null,
       error: {
-        code: 'NOT_FOUND',
-        message: 'Webhook endpoint not found',
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch webhook endpoint',
       },
     };
   }
-
-  return {
-    data: {
-      endpoint: toEndpointSummary(endpoint),
-    },
-    error: null,
-  };
 }
 
 export async function createWebhookEndpoint(

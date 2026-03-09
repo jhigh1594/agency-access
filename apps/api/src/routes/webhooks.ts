@@ -118,7 +118,12 @@ export async function webhookRoutes(fastify: FastifyInstance) {
 
     const result = await getWebhookEndpoint(id);
     if (result.error) {
-      const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
+      const statusCode =
+        result.error.code === 'NOT_FOUND'
+          ? 404
+          : result.error.code === 'INTERNAL_ERROR'
+          ? 500
+          : 400;
       return reply.code(statusCode).send({
         data: null,
         error: result.error,
@@ -292,7 +297,8 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     });
 
     if (result.error) {
-      return reply.code(400).send({
+      const statusCode = result.error.code === 'INTERNAL_ERROR' ? 500 : 400;
+      return reply.code(statusCode).send({
         data: null,
         error: result.error,
       });

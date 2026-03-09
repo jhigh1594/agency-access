@@ -118,6 +118,31 @@ describe('Webhook Settings Routes', () => {
     });
   });
 
+  it('returns 500 when fetching the webhook endpoint hits an internal error', async () => {
+    vi.mocked(webhookEndpointService.getWebhookEndpoint).mockResolvedValue({
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch webhook endpoint',
+      },
+    } as any);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/agencies/agency-1/webhook-endpoint',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.json()).toEqual({
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch webhook endpoint',
+      },
+    });
+  });
+
   it('creates a webhook endpoint when none exists', async () => {
     vi.mocked(webhookEndpointService.getWebhookEndpoint).mockResolvedValue({
       data: null,
@@ -318,6 +343,31 @@ describe('Webhook Settings Routes', () => {
     expect(webhookManagementService.listWebhookDeliveries).toHaveBeenCalledWith({
       agencyId: 'agency-1',
       limit: 10,
+    });
+  });
+
+  it('returns 500 when listing webhook deliveries hits an internal error', async () => {
+    vi.mocked(webhookManagementService.listWebhookDeliveries).mockResolvedValue({
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to list webhook deliveries',
+      },
+    } as any);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/agencies/agency-1/webhook-deliveries?limit=8',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.json()).toEqual({
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to list webhook deliveries',
+      },
     });
   });
 

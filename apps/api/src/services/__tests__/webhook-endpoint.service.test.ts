@@ -125,6 +125,18 @@ describe('webhook-endpoint.service', () => {
     expect(result.data?.endpoint.secretLastFour).toBe('nt-1');
   });
 
+  it('returns INTERNAL_ERROR when endpoint lookup fails unexpectedly', async () => {
+    vi.mocked(prisma.webhookEndpoint.findUnique).mockRejectedValue(new Error('relation "webhook_endpoints" does not exist'));
+
+    const result = await getWebhookEndpoint('agency-1');
+
+    expect(result.data).toBeNull();
+    expect(result.error).toEqual({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to fetch webhook endpoint',
+    });
+  });
+
   it('updates the existing endpoint settings for an agency', async () => {
     vi.mocked(prisma.webhookEndpoint.findUnique).mockResolvedValue({
       id: 'endpoint-1',
