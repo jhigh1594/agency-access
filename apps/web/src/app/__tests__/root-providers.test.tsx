@@ -21,8 +21,14 @@ vi.mock('@/components/theme-provider', () => ({
   ),
 }));
 
+const trackAffiliateEventMock = vi.fn();
+vi.mock('@/lib/analytics/affiliate', () => ({
+  trackAffiliateEvent: (...args: any[]) => trackAffiliateEventMock(...args),
+}));
+
 describe('RootProviders', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     Object.defineProperty(globalThis, 'localStorage', {
       configurable: true,
       value: {
@@ -32,6 +38,8 @@ describe('RootProviders', () => {
         clear: vi.fn(),
       },
     });
+    document.cookie = 'ah_aff_click=; Max-Age=0; Path=/';
+    document.cookie = 'ah_aff_click_pending=; Max-Age=0; Path=/';
   });
 
   it('keeps the root shell limited to Clerk so marketing routes avoid app-only hydration work', () => {
@@ -45,5 +53,21 @@ describe('RootProviders', () => {
     expect(screen.getByText('Child')).toBeInTheDocument();
     expect(screen.queryByTestId('query-provider')).not.toBeInTheDocument();
     expect(screen.queryByTestId('theme-provider')).not.toBeInTheDocument();
+  });
+
+  it('tracks a pending affiliate referral click once on load', () => {
+    document.cookie = 'ah_aff_click=click_123; path=/';
+    document.cookie = 'ah_aff_click_pending=1; path=/';
+
+    render(
+      <RootProviders>
+        <div>Child</div>
+      </RootProviders>
+    );
+
+    expect(trackAffiliateEventMock).toHaveBeenCalledWith('affiliate_referral_clicked', {
+      source: 'first_party_redirect',
+    });
+    expect(document.cookie).not.toContain('ah_aff_click_pending=1');
   });
 });

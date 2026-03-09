@@ -35,7 +35,7 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const result = await connectionService.getTokenHealth(targetAgencyId);
+    const result = await connectionService.getAgencyTokenHealth(targetAgencyId);
 
     if (result.error) {
       return reply.code(500).send({

@@ -65,7 +65,7 @@ describe('Invite Flow Page', () => {
         agencyName: 'Demo Agency',
         clientName: 'Client',
         clientEmail: 'client@test.com',
-        authModel: 'delegated_access',
+        authModel: 'client_authorization',
         status: 'pending',
         uniqueToken: 'token-123',
         expiresAt: new Date().toISOString(),
@@ -140,7 +140,7 @@ describe('Invite Flow Page', () => {
             agencyName: 'Demo Agency',
             clientName: 'Client',
             clientEmail: 'client@test.com',
-            authModel: 'delegated_access',
+            authModel: 'client_authorization',
             status: 'pending',
             uniqueToken: 'token-123',
             expiresAt: new Date().toISOString(),
@@ -175,7 +175,7 @@ describe('Invite Flow Page', () => {
     });
   });
 
-  it('submits completion without JSON content-type header', async () => {
+  it('auto-completes delegated_access without showing Connect step', async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes('/api/client/token-123/complete')) {
         return {
@@ -194,6 +194,62 @@ describe('Invite Flow Page', () => {
             clientName: 'Client',
             clientEmail: 'client@test.com',
             authModel: 'delegated_access',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<InvitePage />);
+
+    // delegated_access skips Connect — should show completion screen and auto-call complete API
+    await waitFor(() => {
+      expect(screen.getByText(/all set/i)).toBeInTheDocument();
+      expect(screen.getByText(/no further action needed/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/api/client/token-123/complete'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+  });
+
+  it('submits completion without JSON content-type header', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/complete')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { success: true }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            authModel: 'client_authorization',
             status: 'pending',
             uniqueToken: 'token-123',
             expiresAt: new Date().toISOString(),

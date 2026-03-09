@@ -2,9 +2,32 @@
 
 import { ClerkProvider } from '@clerk/nextjs';
 import { useEffect, useMemo, useState } from 'react';
+import { trackAffiliateEvent } from '@/lib/analytics/affiliate';
+import {
+  clearPendingAffiliateClickFromDocument,
+  getAffiliateClickTokenFromDocument,
+  hasPendingAffiliateClickFromDocument,
+} from '@/lib/affiliate-cookie';
 
 export function RootProviders({ children }: { children: React.ReactNode }) {
   const [selectedPlanName, setSelectedPlanName] = useState('Growth');
+
+  useEffect(() => {
+    if (!hasPendingAffiliateClickFromDocument()) {
+      return;
+    }
+
+    const hasClickToken = Boolean(getAffiliateClickTokenFromDocument());
+    clearPendingAffiliateClickFromDocument();
+
+    if (!hasClickToken) {
+      return;
+    }
+
+    trackAffiliateEvent('affiliate_referral_clicked', {
+      source: 'first_party_redirect',
+    });
+  }, []);
 
   useEffect(() => {
     const handler = (event: Event) => {

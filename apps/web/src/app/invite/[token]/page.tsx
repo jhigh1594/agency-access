@@ -148,6 +148,18 @@ export default function ClientAuthorizationPage() {
       return;
     }
 
+    // For delegated_access, the agency uses their own connections — no client OAuth needed.
+    // Skip the Connect step and treat all platforms as complete.
+    const authModel = (loadedPayload as ClientAccessRequestPayload).authModel;
+    if (authModel === 'delegated_access' && loadedPayload.platforms?.length) {
+      const allPlatforms = new Set(
+        loadedPayload.platforms.map((g) => g.platformGroup as Platform)
+      );
+      setCompletedPlatforms(allPlatforms);
+      setPhase(loadedPayload.intakeFields?.length > 0 ? 'intake' : 'complete');
+      return;
+    }
+
     setCompletedPlatforms(mergedCompleted);
     setPhase(loadedPayload.intakeFields?.length > 0 ? 'intake' : 'platforms');
   }, [loadedPayload, storageKey, token, urlConnectionId, urlPlatform, urlStep]);
@@ -159,10 +171,13 @@ export default function ClientAuthorizationPage() {
 
   useEffect(() => {
     if (!data) return;
-    if (phase !== 'platforms') return;
-    if (!isComplete) return;
-
-    setPhase('complete');
+    // When all platforms complete (platforms phase) or we skipped Connect (delegated_access → complete), submit completion
+    const readyToComplete =
+      phase === 'complete' || (phase === 'platforms' && isComplete);
+    if (!readyToComplete) return;
+    if (phase === 'platforms' && isComplete) {
+      setPhase('complete');
+    }
 
     if (completionSubmittedRef.current) return;
 
@@ -209,7 +224,15 @@ export default function ClientAuthorizationPage() {
 
   const handleIntakeSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    setPhase('platforms');
+    // For delegated_access, skip Connect step — go directly to complete
+    if (data?.authModel === 'delegated_access') {
+      setCompletedPlatforms(
+        new Set((data.platforms || []).map((g) => g.platformGroup as Platform))
+      );
+      setPhase('complete');
+    } else {
+      setPhase('platforms');
+    }
   };
 
   const handlePlatformComplete = (platform: Platform) => {
@@ -417,7 +440,9 @@ export default function ClientAuthorizationPage() {
 
           <h2 className="text-2xl font-semibold text-ink font-display">All set</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {data.agencyName} now has access to the accounts you approved.
+            {data.authModel === 'delegated_access'
+              ? `${data.agencyName} will manage access using their connected accounts. No further action needed.`
+              : `${data.agencyName} now has access to the accounts you approved.`}
           </p>
 
           <div className="mt-6 rounded-lg border border-border bg-muted/10 p-4 text-left">

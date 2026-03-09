@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import {
   RefreshCw,
   Clock,
@@ -33,25 +33,30 @@ type TokenHealth = {
   expiresAt: Date;
   daysUntilExpiry: number;
   lastRefreshedAt: Date | null;
+  canRefresh: boolean;
 };
 
 type HealthFilter = 'all' | 'healthy' | 'expiring' | 'expired';
 
 export default function TokenHealthPage() {
-  const router = useRouter();
+  const { userId } = useAuth();
   const [tokens, setTokens] = useState<TokenHealth[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<HealthFilter>('all');
   const [refreshing, setRefreshing] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchTokenHealth();
-  }, []);
+    if (userId) {
+      fetchTokenHealth();
+    }
+  }, [userId]);
 
   const fetchTokenHealth = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/token-health`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/token-health`, {
+        headers: userId ? { 'x-agency-id': userId } : {},
+      });
       const result = await res.json();
       if (result.data) {
         setTokens(result.data);
@@ -68,7 +73,10 @@ export default function TokenHealthPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/token-refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userId ? { 'x-agency-id': userId } : {}),
+        },
         body: JSON.stringify({ connectionId: tokens.find((t) => t.id === tokenId)?.connectionId, platform }),
       });
 
@@ -89,7 +97,7 @@ export default function TokenHealthPage() {
   };
 
   const handleRefreshAll = async () => {
-    const expiringTokens = tokens.filter((t) => t.health === 'expiring');
+    const expiringTokens = tokens.filter((t) => t.health === 'expiring' && t.canRefresh);
     for (const token of expiringTokens) {
       await handleRefresh(token.id, token.platform);
     }
@@ -278,11 +286,13 @@ export default function TokenHealthPage() {
                     <div className="col-span-1">
                       <button
                         onClick={() => handleRefresh(token.id, token.platform)}
-                        disabled={isRefreshing || token.health === 'expired'}
+                        disabled={isRefreshing || token.health === 'expired' || !token.canRefresh}
                         className={`p-2 rounded-lg transition-colors ${
                           isRefreshing
                             ? 'opacity-50 cursor-not-allowed'
-                            : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+                            : token.canRefresh
+                              ? 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+                              : 'text-slate-300 cursor-not-allowed'
                         }`}
                       >
                         <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
