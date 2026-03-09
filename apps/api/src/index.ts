@@ -11,8 +11,7 @@ import { extractClientIp } from './lib/ip.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
 import { accessRequestRoutes } from './routes/access-requests.js';
-// TODO: Re-enable when Token Health page is restored
-// import { tokenHealthRoutes } from './routes/token-health.js';
+import { tokenHealthRoutes } from './routes/token-health.js';
 import { clientAuthRoutes } from './routes/client-auth.js';
 import { templateRoutes } from './routes/templates.js';
 import { platformAuthorizationRoutes } from './routes/platform-authorization.js';
@@ -27,6 +26,7 @@ import { internalAdminRoutes } from './routes/internal-admin.routes.js';
 import { quotaRoutes } from './routes/quota.routes';
 import { contactRoutes } from './routes/contact.js';
 import { helpScoutRoutes } from './routes/help-scout.js';
+import { affiliateRoutes } from './routes/affiliate.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
@@ -137,8 +137,7 @@ fastify.addHook('onSend', performanceOnSend);
 await fastify.register(oauthTestRoutes);
 await fastify.register(agencyRoutes, { prefix: '/api' });
 await fastify.register(accessRequestRoutes, { prefix: '/api' });
-// TODO: Token Health routes commented out until future state is determined
-// await fastify.register(tokenHealthRoutes, { prefix: '/api' });
+await fastify.register(tokenHealthRoutes, { prefix: '/api' });
 await fastify.register(clientAuthRoutes, { prefix: '/api' });
 await fastify.register(templateRoutes, { prefix: '/api' });
 await fastify.register(platformAuthorizationRoutes, { prefix: '/api' });
@@ -153,6 +152,7 @@ await fastify.register(internalAdminRoutes, { prefix: '/api' });
 await fastify.register(quotaRoutes, { prefix: '/api' });
 await fastify.register(contactRoutes);
 await fastify.register(helpScoutRoutes, { prefix: '/api' });
+await fastify.register(affiliateRoutes, { prefix: '/api' });
 
 // Health check and root routes
 fastify.get('/health', async () => {
@@ -179,39 +179,78 @@ fastify.get('/', async () => {
 // Start server
 const start = async () => {
   try {
-    // Start background workers (optional - graceful degradation if Redis unavailable)
-    // Use a timeout to prevent blocking server startup
-    try {
-      const { startNotificationWorker } = await import('./lib/queue.js');
-      const workerPromise = startNotificationWorker();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Worker startup timeout')), 10000)
-      );
-      await Promise.race([workerPromise, timeoutPromise]);
-      fastify.log.info('Notification worker started');
-    } catch (workerErr) {
-      fastify.log.warn('Failed to start notification worker (Redis may be unavailable)');
-      fastify.log.warn('Notifications will be disabled. To enable, ensure Redis is running.');
-      if (env.NODE_ENV === 'development') {
-        fastify.log.info('To start Redis: brew services start redis (macOS) or docker run -p 6379:6379 redis');
+    const startOptionalBackgroundTask = async (
+      label: string,
+      startTask: () => Promise<unknown>,
+      warning: string
+    ) => {
+      try {
+        const taskPromise = startTask();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Worker startup timeout')), 10000)
+        );
+        await Promise.race([taskPromise, timeoutPromise]);
+        fastify.log.info(`${label} started`);
+      } catch (workerErr) {
+        fastify.log.warn(`Failed to start ${label} (Redis may be unavailable)`);
+        fastify.log.warn(warning);
+        if (env.NODE_ENV === 'development') {
+          fastify.log.info('To start Redis: brew services start redis (macOS) or docker run -p 6379:6379 redis');
+        }
       }
-    }
+    };
 
-    try {
-      const { startOnboardingEmailWorker } = await import('./lib/queue.js');
-      const workerPromise = startOnboardingEmailWorker();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Worker startup timeout')), 10000)
-      );
-      await Promise.race([workerPromise, timeoutPromise]);
-      fastify.log.info('Onboarding email worker started');
-    } catch (workerErr) {
-      fastify.log.warn('Failed to start onboarding email worker (Redis may be unavailable)');
-      fastify.log.warn('Onboarding emails will not be delayed. To enable, ensure Redis is running.');
-      if (env.NODE_ENV === 'development') {
-        fastify.log.info('To start Redis: brew services start redis (macOS) or docker run -p 6379:6379 redis');
-      }
-    }
+    const {
+      scheduleJobs,
+      startCleanupWorker,
+      startNotificationWorker,
+      startOnboardingEmailWorker,
+      startTokenRefreshWorker,
+      startTrialExpirationWorker,
+      startWebhookDeliveryWorker,
+    } = await import('./lib/queue.js');
+
+    await startOptionalBackgroundTask(
+      'token refresh worker',
+      startTokenRefreshWorker,
+      'Automatic token refresh will be disabled until Redis is available.'
+    );
+
+    await startOptionalBackgroundTask(
+      'cleanup worker',
+      startCleanupWorker,
+      'Cleanup jobs will be disabled until Redis is available.'
+    );
+
+    await startOptionalBackgroundTask(
+      'trial expiration worker',
+      startTrialExpirationWorker,
+      'Trial expiration jobs will be disabled until Redis is available.'
+    );
+
+    await startOptionalBackgroundTask(
+      'notification worker',
+      startNotificationWorker,
+      'Notifications will be disabled. To enable, ensure Redis is running.'
+    );
+
+    await startOptionalBackgroundTask(
+      'webhook delivery worker',
+      startWebhookDeliveryWorker,
+      'Outbound webhooks will not be delivered until Redis is available.'
+    );
+
+    await startOptionalBackgroundTask(
+      'onboarding email worker',
+      startOnboardingEmailWorker,
+      'Onboarding emails will not be delayed. To enable, ensure Redis is running.'
+    );
+
+    await startOptionalBackgroundTask(
+      'recurring job scheduler',
+      scheduleJobs,
+      'Recurring background jobs will not be scheduled until Redis is available.'
+    );
 
     await fastify.listen({
       port: env.PORT,
