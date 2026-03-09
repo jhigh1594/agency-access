@@ -72,7 +72,7 @@ export function RequestActionsBar({
         <div className="flex items-center gap-2">
           {revocable && (
             <Button
-              variant="danger"
+              variant="secondary"
               size="sm"
               leftIcon={<Unlink className="h-4 w-4" />}
               onClick={() => setShowCancelModal(true)}
