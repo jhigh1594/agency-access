@@ -12,43 +12,46 @@ datasource db {
 
 // Agencies
 model Agency {
-  id                   String                       @id @default(uuid())
-  clerkUserId          String?                      @unique @map("clerk_user_id")
-  name                 String
-  email                String                       @unique
-  subscriptionTier     String?                      @map("subscription_tier")
-  settings             Json?
-  
+  id               String  @id @default(uuid())
+  clerkUserId      String? @unique @map("clerk_user_id")
+  name             String
+  email            String  @unique
+  subscriptionTier String? @map("subscription_tier")
+  settings         Json?
+
   // Notification settings
-  notificationEmail    String?                      @map("notification_email")
-  notificationEnabled  Boolean                      @default(true) @map("notification_enabled")
+  notificationEmail   String? @map("notification_email")
+  notificationEnabled Boolean @default(true) @map("notification_enabled")
 
-  createdAt            DateTime                     @default(now()) @map("created_at")
-  updatedAt            DateTime                     @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  members              AgencyMember[]
-  accessRequests       AccessRequest[]
-  connections          ClientConnection[]
-  auditLogs            AuditLog[]
-  platformConnections  AgencyPlatformConnection[]
-  clients              Client[]
-  templates            AccessRequestTemplate[]
-  usageCounters        AgencyUsageCounter[]
-  subscription         Subscription?
+  members             AgencyMember[]
+  accessRequests      AccessRequest[]
+  connections         ClientConnection[]
+  auditLogs           AuditLog[]
+  platformConnections AgencyPlatformConnection[]
+  clients             Client[]
+  templates           AccessRequestTemplate[]
+  usageCounters       AgencyUsageCounter[]
+  subscription        Subscription?
+  affiliateReferral   AffiliateReferral?
+  webhookEndpoints    WebhookEndpoint[]
+  webhookEvents       WebhookEvent[]
 
   @@map("agencies")
 }
 
 // Agency team members
 model AgencyMember {
-  id         String    @id @default(uuid())
-  agencyId   String    @map("agency_id")
-  email      String
-  role       String    // 'admin', 'member', 'viewer'
-  invitedAt  DateTime  @default(now()) @map("invited_at")
-  joinedAt   DateTime? @map("joined_at")
+  id        String    @id @default(uuid())
+  agencyId  String    @map("agency_id")
+  email     String
+  role      String // 'admin', 'member', 'viewer'
+  invitedAt DateTime  @default(now()) @map("invited_at")
+  joinedAt  DateTime? @map("joined_at")
 
-  agency     Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   @@unique([agencyId, email])
   @@map("agency_members")
@@ -56,41 +59,41 @@ model AgencyMember {
 
 // Agency platform connections (agency's own OAuth connections OR identity-only connections)
 model AgencyPlatformConnection {
-  id                  String    @id @default(uuid())
-  agencyId            String    @map("agency_id")
-  platform            String    // Platform identifier: group-level ('google', 'meta') or product-level ('google_ads', 'ga4', 'meta_ads', 'linkedin')
+  id       String @id @default(uuid())
+  agencyId String @map("agency_id")
+  platform String // Platform identifier: group-level ('google', 'meta') or product-level ('google_ads', 'ga4', 'meta_ads', 'linkedin')
 
   // Connection mode: 'oauth' (token-based) or 'identity' (email/Business ID only)
-  connectionMode      String    @default("oauth") @map("connection_mode") // 'oauth' | 'identity'
+  connectionMode String @default("oauth") @map("connection_mode") // 'oauth' | 'identity'
 
   // OAuth token storage (nullable for identity mode)
-  secretId            String?   @map("secret_id") // Infisical secret name
-  status              String    // 'active', 'expired', 'invalid', 'revoked'
+  secretId String? @map("secret_id") // Infisical secret name
+  status   String // 'active', 'expired', 'invalid', 'revoked'
 
   // OAuth metadata (nullable for identity mode)
-  expiresAt           DateTime? @map("expires_at")
-  lastRefreshedAt     DateTime? @map("last_refreshed_at")
-  scope               String?   // Comma-separated scopes
+  expiresAt       DateTime? @map("expires_at")
+  lastRefreshedAt DateTime? @map("last_refreshed_at")
+  scope           String? // Comma-separated scopes
 
   // Identity storage (for platform-native authorization flow)
-  agencyEmail         String?   @map("agency_email") // For Google, LinkedIn
-  businessId          String?   @map("business_id")  // For Meta Business Manager
+  agencyEmail String? @map("agency_email") // For Google, LinkedIn
+  businessId  String? @map("business_id") // For Meta Business Manager
 
   // Identity verification status
-  verificationStatus  String?   @map("verification_status") // 'pending' | 'verified' | 'failed'
-  lastVerifiedAt      DateTime? @map("last_verified_at")
-  verificationError   String?   @db.Text @map("verification_error")
+  verificationStatus String?   @map("verification_status") // 'pending' | 'verified' | 'failed'
+  lastVerifiedAt     DateTime? @map("last_verified_at")
+  verificationError  String?   @map("verification_error") @db.Text
 
   // Platform-specific data (Business ID, Ad Account ID, etc.)
-  metadata            Json?
+  metadata Json?
 
   // Audit trail
-  connectedBy         String    @map("connected_by") // Email of user who connected
-  connectedAt         DateTime  @default(now()) @map("connected_at")
-  revokedAt           DateTime? @map("revoked_at")
-  revokedBy           String?   @map("revoked_by")
+  connectedBy String    @map("connected_by") // Email of user who connected
+  connectedAt DateTime  @default(now()) @map("connected_at")
+  revokedAt   DateTime? @map("revoked_at")
+  revokedBy   String?   @map("revoked_by")
 
-  agency              Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   @@unique([agencyId, platform])
   @@index([agencyId, status])
@@ -100,18 +103,18 @@ model AgencyPlatformConnection {
 
 // Clients (reusable client profiles)
 model Client {
-  id              String          @id @default(uuid())
-  agencyId        String          @map("agency_id")
-  name            String          // Contact person name
-  company         String          // Company name
-  email           String
-  website         String?
-  language        String          @default("en") // 'en', 'es', 'nl', etc.
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  agencyId  String   @map("agency_id")
+  name      String // Contact person name
+  company   String // Company name
+  email     String
+  website   String?
+  language  String   @default("en") // 'en', 'es', 'nl', etc.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  agency          Agency          @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  accessRequests  AccessRequest[]
+  agency         Agency          @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  accessRequests AccessRequest[]
 
   @@unique([agencyId, email])
   @@map("clients")
@@ -119,19 +122,19 @@ model Client {
 
 // Access Request Templates - agency-wide reusable templates
 model AccessRequestTemplate {
-  id              String   @id @default(uuid())
-  agencyId        String   @map("agency_id")
-  name            String
-  description     String?  @db.Text
-  platforms       Json     // Hierarchical format: { google: ['google_ads', 'ga4'] }
-  intakeFields    Json     @map("intake_fields")
-  branding        Json?
-  isDefault       Boolean  @default(false) @map("is_default")
-  createdBy       String   @map("created_by")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  agencyId     String   @map("agency_id")
+  name         String
+  description  String?  @db.Text
+  platforms    Json // Hierarchical format: { google: ['google_ads', 'ga4'] }
+  intakeFields Json     @map("intake_fields")
+  branding     Json?
+  isDefault    Boolean  @default(false) @map("is_default")
+  createdBy    String   @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   @@unique([agencyId, name])
   @@index([agencyId, isDefault])
@@ -140,29 +143,97 @@ model AccessRequestTemplate {
 
 // Access requests created by agencies
 model AccessRequest {
-  id           String            @id @default(uuid())
-  agencyId     String            @map("agency_id")
-  clientId     String?           @map("client_id")
-  clientName   String            @map("client_name")
-  clientEmail  String            @map("client_email")
-  platforms    Json              // Platform configuration with groups, products, access levels
-  authModel    String            @default("client_authorization") @map("auth_model") // 'client_authorization' | 'delegated_access'
-  status       String            // 'pending', 'partial', 'completed', 'expired', 'revoked'
-  uniqueToken  String            @unique @map("unique_token")
-  expiresAt    DateTime          @map("expires_at")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  intakeFields Json?             @map("intake_fields") // Custom form fields for client intake
-  branding     Json?             // Custom branding (logo, colors, subdomain)
-  authorizedAt DateTime?         @map("authorized_at") // When client completed authorization
+  id           String    @id @default(uuid())
+  agencyId     String    @map("agency_id")
+  clientId     String?   @map("client_id")
+  clientName   String    @map("client_name")
+  clientEmail  String    @map("client_email")
+  externalReference String? @map("external_reference")
+  platforms    Json // Platform configuration with groups, products, access levels
+  authModel    String    @default("client_authorization") @map("auth_model") // 'client_authorization' | 'delegated_access'
+  status       String // 'pending', 'partial', 'completed', 'expired', 'revoked'
+  uniqueToken  String    @unique @map("unique_token")
+  expiresAt    DateTime  @map("expires_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  intakeFields Json?     @map("intake_fields") // Custom form fields for client intake
+  branding     Json? // Custom branding (logo, colors, subdomain)
+  authorizedAt DateTime? @map("authorized_at") // When client completed authorization
 
-  agency       Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  client       Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  connection   ClientConnection?
+  agency     Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client     Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  connection ClientConnection?
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
   @@index([clientId, createdAt])
   @@map("access_requests")
+}
+
+model WebhookEndpoint {
+  id               String    @id @default(uuid())
+  agencyId         String    @map("agency_id")
+  url              String
+  secretId         String    @map("secret_id")
+  status           String // 'active' | 'disabled'
+  subscribedEvents Json      @map("subscribed_events")
+  failureCount     Int       @default(0) @map("failure_count")
+  lastDeliveredAt  DateTime? @map("last_delivered_at")
+  lastFailedAt     DateTime? @map("last_failed_at")
+  disabledAt       DateTime? @map("disabled_at")
+  createdBy        String    @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  events     WebhookEvent[]
+  deliveries WebhookDelivery[]
+
+  @@unique([agencyId])
+  @@index([agencyId, status])
+  @@map("webhook_endpoints")
+}
+
+model WebhookEvent {
+  id           String   @id @default(uuid())
+  agencyId     String   @map("agency_id")
+  endpointId   String   @map("endpoint_id")
+  type         String
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  payload      Json
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  endpoint   WebhookEndpoint  @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([agencyId, type])
+  @@index([endpointId, createdAt])
+  @@map("webhook_events")
+}
+
+model WebhookDelivery {
+  id                  String    @id @default(uuid())
+  endpointId          String    @map("endpoint_id")
+  eventId             String    @map("event_id")
+  attemptNumber       Int       @default(1) @map("attempt_number")
+  status              String // 'pending' | 'delivered' | 'failed'
+  requestHeaders      Json?     @map("request_headers")
+  responseStatus      Int?      @map("response_status")
+  responseBodySnippet String?   @map("response_body_snippet") @db.Text
+  errorCode           String?   @map("error_code")
+  errorMessage        String?   @map("error_message") @db.Text
+  nextAttemptAt       DateTime? @map("next_attempt_at")
+  deliveredAt         DateTime? @map("delivered_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  event    WebhookEvent    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, attemptNumber])
+  @@index([endpointId, status, createdAt])
+  @@index([eventId, status])
+  @@map("webhook_deliveries")
 }
 
 // Client connections (after authorization)
@@ -171,18 +242,18 @@ model ClientConnection {
   accessRequestId String    @unique @map("access_request_id")
   agencyId        String    @map("agency_id")
   clientEmail     String    @map("client_email")
-  status          String    // 'active', 'revoked', 'expired'
+  status          String // 'active', 'revoked', 'expired'
   createdAt       DateTime  @default(now()) @map("created_at")
   revokedAt       DateTime? @map("revoked_at")
   revokedBy       String?   @map("revoked_by")
 
   // Granted assets from client (for partner access model)
   // Format: { adAccounts: [{id, name}], pages: [{id, name}], instagramAccounts: [{id, username}] }
-  grantedAssets   Json?     @map("granted_assets")
+  grantedAssets Json? @map("granted_assets")
 
-  accessRequest   AccessRequest           @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
-  agency          Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  authorizations  PlatformAuthorization[]
+  accessRequest  AccessRequest           @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
+  agency         Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  authorizations PlatformAuthorization[]
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
@@ -191,17 +262,17 @@ model ClientConnection {
 
 // Platform-specific authorizations
 model PlatformAuthorization {
-  id               String    @id @default(uuid())
-  connectionId     String    @map("connection_id")
-  platform         String    // Platform identifier: group-level ('google', 'meta') or product-level ('google_ads', 'ga4', 'meta_ads', 'linkedin')
-  secretId         String    @map("secret_id") // AWS Secrets Manager ID
-  expiresAt        DateTime? @map("expires_at")
-  lastRefreshedAt  DateTime? @map("last_refreshed_at")
-  status           String    // 'active', 'expired', 'invalid', 'revoked'
-  metadata         Json?     // platform-specific data
-  createdAt        DateTime  @default(now()) @map("created_at")
-  
-  connection       ClientConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  id              String    @id @default(uuid())
+  connectionId    String    @map("connection_id")
+  platform        String // Platform identifier: group-level ('google', 'meta') or product-level ('google_ads', 'ga4', 'meta_ads', 'linkedin')
+  secretId        String    @map("secret_id") // AWS Secrets Manager ID
+  expiresAt       DateTime? @map("expires_at")
+  lastRefreshedAt DateTime? @map("last_refreshed_at")
+  status          String // 'active', 'expired', 'invalid', 'revoked'
+  metadata        Json? // platform-specific data
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  connection ClientConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([connectionId, platform])
   @@index([connectionId, status])
@@ -210,45 +281,45 @@ model PlatformAuthorization {
 
 // Audit logs for security tracking
 model AuditLog {
-  id                   BigInt   @id @default(autoincrement())
-  agencyId             String?  @map("agency_id")
-  userEmail            String?  @map("user_email")
-  action               String   // 'token_viewed', 'access_granted', 'access_revoked', 'AGENCY_CONNECTED', 'AGENCY_DISCONNECTED', 'AGENCY_TOKEN_REFRESHED'
-  resourceType         String?  @map("resource_type")
-  resourceId           String?  @map("resource_id")
-  agencyConnectionId   String?  @map("agency_connection_id")
-  metadata             Json?
-  ipAddress            String?  @map("ip_address")
-  userAgent            String?  @map("user_agent")
-  createdAt            DateTime @default(now()) @map("created_at")
+  id                 BigInt   @id @default(autoincrement())
+  agencyId           String?  @map("agency_id")
+  userEmail          String?  @map("user_email")
+  action             String // 'token_viewed', 'access_granted', 'access_revoked', 'AGENCY_CONNECTED', 'AGENCY_DISCONNECTED', 'AGENCY_TOKEN_REFRESHED'
+  resourceType       String?  @map("resource_type")
+  resourceId         String?  @map("resource_id")
+  agencyConnectionId String?  @map("agency_connection_id")
+  metadata           Json?
+  ipAddress          String?  @map("ip_address")
+  userAgent          String?  @map("user_agent")
+  createdAt          DateTime @default(now()) @map("created_at")
 
-  agency               Agency?  @relation(fields: [agencyId], references: [id])
+  agency Agency? @relation(fields: [agencyId], references: [id])
 
   @@map("audit_logs")
 }
 
 // Authorization verification tracking (for platform-native identity flow)
 model AuthorizationVerification {
-  id                   String   @id @default(uuid())
-  accessRequestId      String   @map("access_request_id")
-  platform             String   // 'meta_ads', 'google_ads', 'ga4', etc.
-  connectionId         String   @map("connection_id") // ClientConnection.id
+  id              String @id @default(uuid())
+  accessRequestId String @map("access_request_id")
+  platform        String // 'meta_ads', 'google_ads', 'ga4', etc.
+  connectionId    String @map("connection_id") // ClientConnection.id
 
   // Verification attempt tracking
-  status               String   // 'pending' | 'verifying' | 'verified' | 'failed'
-  attempts             Int      @default(0)
-  lastAttemptAt        DateTime? @map("last_attempt_at")
-  verifiedAt           DateTime? @map("verified_at")
+  status        String // 'pending' | 'verifying' | 'verified' | 'failed'
+  attempts      Int       @default(0)
+  lastAttemptAt DateTime? @map("last_attempt_at")
+  verifiedAt    DateTime? @map("verified_at")
 
   // Agency connection used for verification (must have OAuth token)
-  agencyConnectionId   String   @map("agency_connection_id")
+  agencyConnectionId String @map("agency_connection_id")
 
   // Verification results
-  verifiedPermissions  Json?    @map("verified_permissions") // { granted: boolean, level: string, accounts: string[] }
-  errorMessage         String?  @db.Text @map("error_message")
+  verifiedPermissions Json?   @map("verified_permissions") // { granted: boolean, level: string, accounts: string[] }
+  errorMessage        String? @map("error_message") @db.Text
 
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([connectionId, platform])
   @@index([accessRequestId, status])
@@ -257,17 +328,17 @@ model AuthorizationVerification {
 
 // Agency usage counters for quota tracking
 model AgencyUsageCounter {
-  id               String    @id @default(uuid())
-  agencyId         String    @map("agency_id")
-  metricType       String    @map("metric_type") // 'client_onboards', 'platform_audits', 'team_seats'
-  period           String    // 'current_year', 'all_time'
-  count            Int       @default(0)
-  resetAt          DateTime? @map("reset_at")
-  lastIncrementedAt DateTime @default(now()) @map("last_incremented_at")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                String    @id @default(uuid())
+  agencyId          String    @map("agency_id")
+  metricType        String    @map("metric_type") // 'client_onboards', 'platform_audits', 'team_seats'
+  period            String // 'current_year', 'all_time'
+  count             Int       @default(0)
+  resetAt           DateTime? @map("reset_at")
+  lastIncrementedAt DateTime  @default(now()) @map("last_incremented_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  agency           Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   @@unique([agencyId, metricType, period])
   @@index([agencyId, metricType])
@@ -279,34 +350,35 @@ model AgencyUsageCounter {
 // ============================================================
 
 model Subscription {
-  id                    String              @id @default(uuid())
-  agencyId              String              @map("agency_id")
+  id       String @id @default(uuid())
+  agencyId String @map("agency_id")
 
   // Creem integration fields
-  creemCustomerId       String?             @map("creem_customer_id")
-  creemSubscriptionId   String?             @map("creem_subscription_id")
+  creemCustomerId     String? @map("creem_customer_id")
+  creemSubscriptionId String? @map("creem_subscription_id")
 
   // Subscription details
-  tier                  String              @default("STARTER") // 'STARTER', 'PRO', 'ENTERPRISE'
-  status                String              @default("active") // 'active', 'canceled', 'past_due', 'incomplete', 'incomplete_expired'
+  tier   String @default("STARTER") // 'STARTER', 'PRO', 'ENTERPRISE'
+  status String @default("active") // 'active', 'canceled', 'past_due', 'incomplete', 'incomplete_expired'
 
   // Billing cycle
-  currentPeriodStart    DateTime?           @map("current_period_start")
-  currentPeriodEnd      DateTime?           @map("current_period_end")
-  cancelAtPeriodEnd     Boolean             @default(false) @map("cancel_at_period_end")
+  currentPeriodStart DateTime? @map("current_period_start")
+  currentPeriodEnd   DateTime? @map("current_period_end")
+  cancelAtPeriodEnd  Boolean   @default(false) @map("cancel_at_period_end")
 
   // Trial and discounts
-  trialStart            DateTime?           @map("trial_start")
-  trialEnd              DateTime?           @map("trial_end")
+  trialStart DateTime? @map("trial_start")
+  trialEnd   DateTime? @map("trial_end")
 
   // Metadata
-  creemData             Json?               @map("creem_data") // Store full Creem subscription object
+  creemData Json? @map("creem_data") // Store full Creem subscription object
 
-  createdAt             DateTime            @default(now()) @map("created_at")
-  updatedAt             DateTime            @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  agency                Agency              @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  invoices              Invoice[]
+  agency               Agency                @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  invoices             Invoice[]
+  affiliateCommissions AffiliateCommission[]
 
   @@unique([agencyId])
   @@index([status])
@@ -314,34 +386,184 @@ model Subscription {
 }
 
 model Invoice {
-  id                    String              @id @default(uuid())
-  subscriptionId        String              @map("subscription_id")
+  id             String @id @default(uuid())
+  subscriptionId String @map("subscription_id")
 
   // Creem integration
-  creemInvoiceId        String              @unique @map("creem_invoice_id")
+  creemInvoiceId String @unique @map("creem_invoice_id")
 
   // Invoice details
-  amount                Int                 // Store in cents
-  currency              String              @default("usd")
-  status                String              // 'draft', 'open', 'paid', 'void', 'uncollectible'
+  amount   Int // Store in cents
+  currency String @default("usd")
+  status   String // 'draft', 'open', 'paid', 'void', 'uncollectible'
 
   // Dates
-  invoiceDate           DateTime?           @map("invoice_date")
-  dueDate               DateTime?           @map("due_date")
-  paidAt                DateTime?           @map("paid_at")
+  invoiceDate DateTime? @map("invoice_date")
+  dueDate     DateTime? @map("due_date")
+  paidAt      DateTime? @map("paid_at")
 
   // Links
-  invoiceUrl            String?             @map("invoice_url")
-  invoicePdfUrl         String?             @map("invoice_pdf_url")
+  invoiceUrl    String? @map("invoice_url")
+  invoicePdfUrl String? @map("invoice_pdf_url")
 
   // Metadata
-  creemData             Json?               @map("creem_data")
+  creemData Json? @map("creem_data")
 
-  createdAt             DateTime            @default(now()) @map("created_at")
-  updatedAt             DateTime            @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  subscription          Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscription        Subscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  affiliateCommission AffiliateCommission?
 
   @@index([subscriptionId, status])
   @@map("invoices")
+}
+
+model AffiliatePartner {
+  id                       String    @id @default(uuid())
+  clerkUserId              String?   @unique @map("clerk_user_id")
+  email                    String    @unique
+  name                     String
+  companyName              String?   @map("company_name")
+  websiteUrl               String?   @map("website_url")
+  audienceSize             String?   @map("audience_size")
+  status                   String    @default("applied")
+  notes                    String?   @db.Text
+  defaultCommissionBps     Int       @default(3000) @map("default_commission_bps")
+  commissionDurationMonths Int       @default(12) @map("commission_duration_months")
+  payoutMethod             String?   @map("payout_method")
+  payoutDetails            Json?     @map("payout_details")
+  appliedAt                DateTime  @default(now()) @map("applied_at")
+  approvedAt               DateTime? @map("approved_at")
+  rejectedAt               DateTime? @map("rejected_at")
+  disabledAt               DateTime? @map("disabled_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  links       AffiliateLink[]
+  clicks      AffiliateClick[]
+  referrals   AffiliateReferral[]
+  commissions AffiliateCommission[]
+
+  @@index([status, appliedAt])
+  @@map("affiliate_partners")
+}
+
+model AffiliateLink {
+  id              String   @id @default(uuid())
+  partnerId       String   @map("partner_id")
+  code            String   @unique
+  destinationPath String   @default("/") @map("destination_path")
+  campaign        String?
+  status          String   @default("active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  partner   AffiliatePartner    @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  clicks    AffiliateClick[]
+  referrals AffiliateReferral[]
+
+  @@index([partnerId, status])
+  @@map("affiliate_links")
+}
+
+model AffiliateClick {
+  id            String   @id @default(uuid())
+  partnerId     String   @map("partner_id")
+  linkId        String   @map("link_id")
+  clickToken    String   @unique @map("click_token")
+  referrer      String?
+  landingPath   String?  @map("landing_path")
+  utmSource     String?  @map("utm_source")
+  utmMedium     String?  @map("utm_medium")
+  utmCampaign   String?  @map("utm_campaign")
+  ipHash        String?  @map("ip_hash")
+  userAgentHash String?  @map("user_agent_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  partner  AffiliatePartner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  link     AffiliateLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  referral AffiliateReferral?
+
+  @@index([partnerId, createdAt])
+  @@index([linkId, createdAt])
+  @@map("affiliate_clicks")
+}
+
+model AffiliateReferral {
+  id                       String    @id @default(uuid())
+  partnerId                String    @map("partner_id")
+  linkId                   String?   @map("link_id")
+  clickId                  String?   @unique @map("click_id")
+  referredAgencyId         String    @unique @map("referred_agency_id")
+  status                   String    @default("attributed")
+  attributionSource        String    @default("link_cookie") @map("attribution_source")
+  commissionBps            Int       @default(3000) @map("commission_bps")
+  commissionDurationMonths Int       @default(12) @map("commission_duration_months")
+  disqualificationReason   String?   @map("disqualification_reason")
+  metadata                 Json?
+  createdAt                DateTime  @default(now()) @map("created_at")
+  qualifiedAt              DateTime? @map("qualified_at")
+  disqualifiedAt           DateTime? @map("disqualified_at")
+
+  partner        AffiliatePartner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  link           AffiliateLink?        @relation(fields: [linkId], references: [id], onDelete: SetNull)
+  click          AffiliateClick?       @relation(fields: [clickId], references: [id], onDelete: SetNull)
+  referredAgency Agency                @relation(fields: [referredAgencyId], references: [id], onDelete: Cascade)
+  commissions    AffiliateCommission[]
+
+  @@index([partnerId, status])
+  @@map("affiliate_referrals")
+}
+
+model AffiliatePayoutBatch {
+  id              String    @id @default(uuid())
+  status          String    @default("draft")
+  currency        String    @default("usd")
+  periodStart     DateTime  @map("period_start")
+  periodEnd       DateTime  @map("period_end")
+  totalAmount     Int       @default(0) @map("total_amount")
+  commissionCount Int       @default(0) @map("commission_count")
+  notes           String?   @db.Text
+  exportedAt      DateTime? @map("exported_at")
+  paidAt          DateTime? @map("paid_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  commissions AffiliateCommission[]
+
+  @@index([status, periodStart])
+  @@map("affiliate_payout_batches")
+}
+
+model AffiliateCommission {
+  id             String    @id @default(uuid())
+  partnerId      String    @map("partner_id")
+  referralId     String    @map("referral_id")
+  subscriptionId String?   @map("subscription_id")
+  invoiceId      String?   @unique @map("invoice_id")
+  payoutBatchId  String?   @map("payout_batch_id")
+  status         String    @default("pending")
+  currency       String    @default("usd")
+  amount         Int
+  revenueAmount  Int       @map("revenue_amount")
+  commissionBps  Int       @map("commission_bps")
+  holdUntil      DateTime  @map("hold_until")
+  notes          String?   @db.Text
+  approvedAt     DateTime? @map("approved_at")
+  paidAt         DateTime? @map("paid_at")
+  voidedAt       DateTime? @map("voided_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  partner      AffiliatePartner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  referral     AffiliateReferral     @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  subscription Subscription?         @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  invoice      Invoice?              @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  payoutBatch  AffiliatePayoutBatch? @relation(fields: [payoutBatchId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId, status])
+  @@index([referralId, status])
+  @@index([payoutBatchId, status])
+  @@map("affiliate_commissions")
 }
