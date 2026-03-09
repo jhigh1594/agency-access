@@ -42,6 +42,12 @@ class CreemClient {
     try {
       const url = `${this.baseURL}${endpoint}`;
 
+      // Log request details for debugging
+      console.log(`Creem API Request: ${options.method || 'GET'} ${url}`, {
+        headers: options.headers,
+        body: options.body ? JSON.parse(options.body as string) : undefined,
+      });
+
       const response = await fetch(url, {
         ...options,
         headers: {
@@ -52,6 +58,12 @@ class CreemClient {
       });
 
       const result = await response.json() as any;
+
+      // Log response details
+      console.log(`Creem API Response: ${response.status} ${response.statusText}`, {
+        status: response.status,
+        body: result,
+      });
 
       if (!response.ok) {
         return {
@@ -67,6 +79,7 @@ class CreemClient {
       // Creem returns data in different formats - normalize to { data, error }
       return { data: result.data || result, error: null };
     } catch (error) {
+      console.error('Creem API Network Error:', error);
       return {
         data: null,
         error: {
