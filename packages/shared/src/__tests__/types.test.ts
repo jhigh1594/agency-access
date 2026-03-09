@@ -8,6 +8,8 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   PLATFORM_HIERARCHY,
+  PLATFORM_TOKEN_CAPABILITIES,
+  getPlatformTokenCapability,
   AccessLevel,
   ACCESS_LEVEL_DESCRIPTIONS,
   PlatformProductConfig,
@@ -30,6 +32,42 @@ import {
 import type { SubscriptionTier, MetricType, UsageSnapshot, MetricUsage, QuotaExceededError } from '../types';
 
 describe('Phase 5: Shared Types - TDD Tests', () => {
+  describe('PLATFORM_TOKEN_CAPABILITIES', () => {
+    it('should classify Google as refreshable OAuth', () => {
+      expect(getPlatformTokenCapability('google')).toMatchObject({
+        connectionMethod: 'oauth',
+        refreshStrategy: 'automatic',
+      });
+    });
+
+    it('should classify Meta as OAuth with reconnect-required refresh strategy', () => {
+      expect(getPlatformTokenCapability('meta')).toMatchObject({
+        connectionMethod: 'oauth',
+        refreshStrategy: 'reconnect',
+      });
+    });
+
+    it('should classify Klaviyo as manual for this sprint', () => {
+      expect(getPlatformTokenCapability('klaviyo')).toMatchObject({
+        connectionMethod: 'manual',
+        refreshStrategy: 'none',
+      });
+    });
+
+    it('should expose capabilities for every platform in the schema', () => {
+      expect(Object.keys(PLATFORM_TOKEN_CAPABILITIES)).toEqual(
+        expect.arrayContaining([
+          'google',
+          'meta',
+          'tiktok',
+          'linkedin',
+          'klaviyo',
+          'shopify',
+        ])
+      );
+    });
+  });
+
   describe('PLATFORM_HIERARCHY', () => {
     it('should have platform groups defined', () => {
       expect(PLATFORM_HIERARCHY).toBeDefined();

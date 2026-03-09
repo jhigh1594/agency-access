@@ -26,6 +26,175 @@ export const PlatformSchema = z.enum([
 ]);
 export type Platform = z.infer<typeof PlatformSchema>;
 
+export const PlatformConnectionMethodSchema = z.enum(['oauth', 'manual', 'api_key']);
+export type PlatformConnectionMethod = z.infer<typeof PlatformConnectionMethodSchema>;
+
+export const PlatformTokenKindSchema = z.enum(['oauth', 'api_key', 'none']);
+export type PlatformTokenKind = z.infer<typeof PlatformTokenKindSchema>;
+
+export const PlatformRefreshStrategySchema = z.enum(['automatic', 'reconnect', 'none']);
+export type PlatformRefreshStrategy = z.infer<typeof PlatformRefreshStrategySchema>;
+
+export const PlatformHealthStrategySchema = z.enum([
+  'live_verify',
+  'expiry_only',
+  'api_key_verify',
+  'manual',
+  'none',
+]);
+export type PlatformHealthStrategy = z.infer<typeof PlatformHealthStrategySchema>;
+
+export const PlatformExpiryBehaviorSchema = z.enum(['expiring', 'non_expiring', 'none']);
+export type PlatformExpiryBehavior = z.infer<typeof PlatformExpiryBehaviorSchema>;
+
+export interface PlatformTokenCapability {
+  connectionMethod: PlatformConnectionMethod;
+  tokenKind: PlatformTokenKind;
+  refreshStrategy: PlatformRefreshStrategy;
+  healthStrategy: PlatformHealthStrategy;
+  expiryBehavior: PlatformExpiryBehavior;
+}
+
+export const PLATFORM_TOKEN_CAPABILITIES: Record<Platform, PlatformTokenCapability> = {
+  google: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'automatic',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  meta: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'reconnect',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  google_ads: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'automatic',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  ga4: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'automatic',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  meta_ads: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'reconnect',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  tiktok: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'reconnect',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  tiktok_ads: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'reconnect',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  linkedin: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'automatic',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  linkedin_ads: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'automatic',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  snapchat: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  snapchat_ads: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  instagram: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'reconnect',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  kit: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  beehiiv: {
+    connectionMethod: 'api_key',
+    tokenKind: 'api_key',
+    refreshStrategy: 'none',
+    healthStrategy: 'api_key_verify',
+    expiryBehavior: 'non_expiring',
+  },
+  mailchimp: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  pinterest: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  klaviyo: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  shopify: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+  zapier: {
+    connectionMethod: 'manual',
+    tokenKind: 'none',
+    refreshStrategy: 'none',
+    healthStrategy: 'manual',
+    expiryBehavior: 'none',
+  },
+};
+
+export function getPlatformTokenCapability(platform: Platform): PlatformTokenCapability {
+  return PLATFORM_TOKEN_CAPABILITIES[platform];
+}
+
 // Health status for token monitoring
 export const HealthStatusSchema = z.enum(['healthy', 'expiring', 'expired', 'unknown']);
 export type HealthStatus = z.infer<typeof HealthStatusSchema>;
@@ -231,7 +400,7 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
 // Platform categorization for UI display
 export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
-  recommended: ['google', 'meta', 'linkedin', 'pinterest'] as const,
+  recommended: ['google', 'meta', 'linkedin'] as const,
   // Product-level platforms (legacy, still supported)
   other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify', 'zapier'] as const,
 } as const;
@@ -719,6 +888,7 @@ export type AccessRequestPlatformUpdate = z.infer<typeof AccessRequestPlatformUp
 
 export const AccessRequestUpdatePayloadSchema = z.object({
   authModel: z.enum(['client_authorization', 'delegated_access']).optional(),
+  externalReference: z.string().max(255).optional(),
   platforms: z.array(AccessRequestPlatformUpdateSchema).min(1).optional(),
   intakeFields: z.array(AccessRequestIntakeFieldSchema).optional(),
   branding: AccessRequestBrandingUpdateSchema.optional(),
@@ -727,6 +897,134 @@ export const AccessRequestUpdatePayloadSchema = z.object({
   message: 'At least one field is required to update an access request',
 });
 export type AccessRequestUpdatePayload = z.infer<typeof AccessRequestUpdatePayloadSchema>;
+
+export const WebhookApiVersionSchema = z.literal('2026-03-08');
+export type WebhookApiVersion = z.infer<typeof WebhookApiVersionSchema>;
+
+export const WebhookEventTypeSchema = z.enum([
+  'webhook.test',
+  'access_request.partial',
+  'access_request.completed',
+]);
+export type WebhookEventType = z.infer<typeof WebhookEventTypeSchema>;
+
+export const WebhookAccessRequestLifecycleEventTypeSchema = z.enum([
+  'access_request.partial',
+  'access_request.completed',
+]);
+export type WebhookAccessRequestLifecycleEventType = z.infer<typeof WebhookAccessRequestLifecycleEventTypeSchema>;
+
+export const WebhookEndpointStatusSchema = z.enum(['active', 'disabled']);
+export type WebhookEndpointStatus = z.infer<typeof WebhookEndpointStatusSchema>;
+
+export const WebhookDeliveryStatusSchema = z.enum(['pending', 'delivered', 'failed']);
+export type WebhookDeliveryStatus = z.infer<typeof WebhookDeliveryStatusSchema>;
+
+export const WebhookEndpointConfigInputSchema = z.object({
+  url: z.string().url(),
+  subscribedEvents: z.array(WebhookEventTypeSchema).min(1).max(3),
+});
+export type WebhookEndpointConfigInput = z.infer<typeof WebhookEndpointConfigInputSchema>;
+
+export const WebhookEndpointSummarySchema = z.object({
+  id: z.string(),
+  agencyId: z.string(),
+  url: z.string().url(),
+  status: WebhookEndpointStatusSchema,
+  subscribedEvents: z.array(WebhookEventTypeSchema),
+  failureCount: z.number().int().min(0),
+  secretLastFour: z.string().length(4).optional().nullable(),
+  lastDeliveredAt: z.string().datetime().optional().nullable(),
+  lastFailedAt: z.string().datetime().optional().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type WebhookEndpointSummary = z.infer<typeof WebhookEndpointSummarySchema>;
+
+export const WebhookDeliverySummarySchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  eventType: WebhookEventTypeSchema,
+  status: WebhookDeliveryStatusSchema,
+  attemptNumber: z.number().int().min(1),
+  responseStatus: z.number().int().min(100).max(599).optional().nullable(),
+  responseBodySnippet: z.string().optional().nullable(),
+  errorMessage: z.string().optional().nullable(),
+  deliveredAt: z.string().datetime().optional().nullable(),
+  createdAt: z.string().datetime(),
+});
+export type WebhookDeliverySummary = z.infer<typeof WebhookDeliverySummarySchema>;
+
+const WebhookAccessRequestSnapshotSchema = z.object({
+  id: z.string(),
+  status: AccessRequestStatusSchema,
+  createdAt: z.string().datetime(),
+  authorizedAt: z.string().datetime().optional().nullable(),
+  expiresAt: z.string().datetime(),
+  requestUrl: z.string().url(),
+  clientPortalUrl: z.string().url().optional(),
+  requestedPlatforms: z.array(z.string()),
+  completedPlatforms: z.array(z.string()),
+  authModel: z.enum(['client_authorization', 'delegated_access']),
+  externalReference: z.string().optional().nullable(),
+});
+
+const WebhookClientSnapshotSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  company: z.string().optional(),
+});
+
+const WebhookConnectionSummarySchema = z.object({
+  connectionId: z.string(),
+  status: ConnectionStatusSchema,
+  platforms: z.array(z.string()),
+  grantedAssetsSummary: z.record(z.unknown()).optional(),
+});
+
+export const WebhookAccessRequestEventDataSchema = z.object({
+  accessRequest: WebhookAccessRequestSnapshotSchema,
+  client: WebhookClientSnapshotSchema,
+  connections: z.array(WebhookConnectionSummarySchema),
+});
+export type WebhookAccessRequestEventData = z.infer<typeof WebhookAccessRequestEventDataSchema>;
+
+export const WebhookTestEventDataSchema = z.object({
+  message: z.string(),
+});
+export type WebhookTestEventData = z.infer<typeof WebhookTestEventDataSchema>;
+
+const WebhookEventEnvelopeBaseSchema = z.object({
+  id: z.string(),
+  apiVersion: WebhookApiVersionSchema,
+  createdAt: z.string().datetime(),
+});
+
+export const WebhookTestEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
+  type: z.literal('webhook.test'),
+  data: WebhookTestEventDataSchema,
+});
+export type WebhookTestEventEnvelope = z.infer<typeof WebhookTestEventEnvelopeSchema>;
+
+export const WebhookAccessRequestPartialEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
+  type: z.literal('access_request.partial'),
+  data: WebhookAccessRequestEventDataSchema,
+});
+export type WebhookAccessRequestPartialEventEnvelope = z.infer<typeof WebhookAccessRequestPartialEventEnvelopeSchema>;
+
+export const WebhookAccessRequestCompletedEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
+  type: z.literal('access_request.completed'),
+  data: WebhookAccessRequestEventDataSchema,
+});
+export type WebhookAccessRequestCompletedEventEnvelope = z.infer<typeof WebhookAccessRequestCompletedEventEnvelopeSchema>;
+
+export const WebhookEventEnvelopeSchema = z.discriminatedUnion('type', [
+  WebhookTestEventEnvelopeSchema,
+  WebhookAccessRequestPartialEventEnvelopeSchema,
+  WebhookAccessRequestCompletedEventEnvelopeSchema,
+]);
+export type WebhookEventEnvelope = z.infer<typeof WebhookEventEnvelopeSchema>;
 
 // Additional agency identity details used for manual invite flows.
 export interface ManualInviteTarget {
@@ -759,6 +1057,7 @@ export interface ClientAccessRequestPayload {
   agencyName: string;
   clientName: string;
   clientEmail: string;
+  externalReference?: string;
   authModel: 'client_authorization' | 'delegated_access';
   status: AccessRequestStatus;
   uniqueToken: string;
@@ -835,6 +1134,333 @@ export interface TemplatesListResponse {
 // ============================================================
 // CLIENT DETAIL PAGE TYPES
 // ============================================================
+
+// ============================================================
+// AFFILIATE PROGRAM TYPES
+// ============================================================
+
+export const AffiliatePartnerStatusSchema = z.enum(['applied', 'approved', 'rejected', 'disabled']);
+export type AffiliatePartnerStatus = z.infer<typeof AffiliatePartnerStatusSchema>;
+
+export const AffiliateReferralStatusSchema = z.enum(['attributed', 'qualified', 'review_required', 'disqualified']);
+export type AffiliateReferralStatus = z.infer<typeof AffiliateReferralStatusSchema>;
+
+export const AffiliateCommissionStatusSchema = z.enum([
+  'pending',
+  'approved',
+  'paid',
+  'void',
+  'review_required',
+]);
+export type AffiliateCommissionStatus = z.infer<typeof AffiliateCommissionStatusSchema>;
+
+export const AffiliatePayoutStatusSchema = z.enum([
+  'draft',
+  'approved',
+  'exported',
+  'paid',
+  'canceled',
+]);
+export type AffiliatePayoutStatus = z.infer<typeof AffiliatePayoutStatusSchema>;
+
+export const AffiliateLinkStatusSchema = z.enum(['active', 'disabled', 'archived']);
+export type AffiliateLinkStatus = z.infer<typeof AffiliateLinkStatusSchema>;
+
+export const AffiliateAudienceSizeSchema = z.enum([
+  'under_1k',
+  '1k_to_10k',
+  '10k_to_50k',
+  '50k_to_250k',
+  '250k_plus',
+]);
+export type AffiliateAudienceSize = z.infer<typeof AffiliateAudienceSizeSchema>;
+
+export const AffiliateApplicationInputSchema = z.object({
+  name: z.string().min(2).max(120),
+  email: z.string().email(),
+  companyName: z.string().min(2).max(160).optional(),
+  websiteUrl: z.string().url().optional(),
+  audienceSize: AffiliateAudienceSizeSchema.optional(),
+  promotionPlan: z.string().min(10).max(2000),
+  termsAccepted: z.literal(true),
+});
+export type AffiliateApplicationInput = z.infer<typeof AffiliateApplicationInputSchema>;
+
+export const AffiliatePartnerSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  status: AffiliatePartnerStatusSchema,
+  defaultCommissionBps: z.number().int().min(0).max(10000),
+  commissionDurationMonths: z.number().int().min(1).max(60),
+});
+export type AffiliatePartnerSummary = z.infer<typeof AffiliatePartnerSummarySchema>;
+
+export const AffiliateLinkSummarySchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  status: AffiliateLinkStatusSchema,
+  destinationPath: z.string(),
+  campaign: z.string().nullable().optional(),
+  url: z.string().url().optional(),
+});
+export type AffiliateLinkSummary = z.infer<typeof AffiliateLinkSummarySchema>;
+
+export const AffiliatePortalLinkCreateInputSchema = z.object({
+  campaign: z.string().min(2).max(80),
+  destinationPath: z.string().startsWith('/'),
+});
+export type AffiliatePortalLinkCreateInput = z.infer<typeof AffiliatePortalLinkCreateInputSchema>;
+
+export const AffiliatePortalMetricsSchema = z.object({
+  clicks: z.number().int().nonnegative(),
+  referrals: z.number().int().nonnegative(),
+  customers: z.number().int().nonnegative(),
+  pendingCommissionCents: z.number().int().nonnegative(),
+  paidCommissionCents: z.number().int().nonnegative(),
+});
+export type AffiliatePortalMetrics = z.infer<typeof AffiliatePortalMetricsSchema>;
+
+export const AffiliatePartnerPortalOverviewSchema = z.object({
+  partner: AffiliatePartnerSummarySchema,
+  metrics: AffiliatePortalMetricsSchema,
+  primaryLink: AffiliateLinkSummarySchema.nullable().optional(),
+  links: z.array(AffiliateLinkSummarySchema).default([]),
+});
+export type AffiliatePartnerPortalOverview = z.infer<typeof AffiliatePartnerPortalOverviewSchema>;
+
+export const AffiliateCommissionLedgerEntrySchema = z.object({
+  id: z.string(),
+  customerName: z.string(),
+  status: AffiliateCommissionStatusSchema,
+  currency: z.string(),
+  amountCents: z.number().int(),
+  revenueAmountCents: z.number().int(),
+  commissionBps: z.number().int().min(0).max(10000),
+  invoiceDate: z.string().datetime().nullable(),
+  holdUntil: z.string().datetime(),
+  approvedAt: z.string().datetime().nullable(),
+  paidAt: z.string().datetime().nullable(),
+  voidedAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+  payoutBatchId: z.string().nullable(),
+  payoutBatchStatus: AffiliatePayoutStatusSchema.nullable(),
+});
+export type AffiliateCommissionLedgerEntry = z.infer<typeof AffiliateCommissionLedgerEntrySchema>;
+
+export const AffiliatePayoutBatchSummarySchema = z.object({
+  id: z.string(),
+  status: AffiliatePayoutStatusSchema,
+  currency: z.string(),
+  totalAmountCents: z.number().int().nonnegative(),
+  commissionCount: z.number().int().nonnegative(),
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+  exportedAt: z.string().datetime().nullable(),
+  paidAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+});
+export type AffiliatePayoutBatchSummary = z.infer<typeof AffiliatePayoutBatchSummarySchema>;
+
+export const AffiliatePartnerCommissionHistorySchema = z.object({
+  commissions: z.array(AffiliateCommissionLedgerEntrySchema).default([]),
+  payouts: z.array(AffiliatePayoutBatchSummarySchema).default([]),
+});
+export type AffiliatePartnerCommissionHistory = z.infer<typeof AffiliatePartnerCommissionHistorySchema>;
+
+export const AffiliateAdminPayoutBatchListItemSchema = z.object({
+  id: z.string(),
+  status: AffiliatePayoutStatusSchema,
+  currency: z.string(),
+  totalAmount: z.number().int().nonnegative(),
+  commissionCount: z.number().int().nonnegative(),
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+  notes: z.string().nullable(),
+  exportedAt: z.string().datetime().nullable(),
+  paidAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+});
+export type AffiliateAdminPayoutBatchListItem = z.infer<typeof AffiliateAdminPayoutBatchListItemSchema>;
+
+export const AffiliateAdminPayoutBatchListSchema = z.object({
+  items: z.array(AffiliateAdminPayoutBatchListItemSchema).default([]),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+});
+export type AffiliateAdminPayoutBatchList = z.infer<typeof AffiliateAdminPayoutBatchListSchema>;
+
+export const AffiliateAdminPayoutBatchExportSchema = z.object({
+  batchId: z.string(),
+  fileName: z.string(),
+  exportedAt: z.string().datetime(),
+  rowCount: z.number().int().nonnegative(),
+  csv: z.string(),
+});
+export type AffiliateAdminPayoutBatchExport = z.infer<typeof AffiliateAdminPayoutBatchExportSchema>;
+
+export const AffiliateAdminFraudReferralQueueItemSchema = z.object({
+  id: z.string(),
+  partnerId: z.string(),
+  partnerName: z.string(),
+  referredAgencyId: z.string(),
+  referredAgencyName: z.string(),
+  status: AffiliateReferralStatusSchema,
+  riskReasons: z.array(z.string()).default([]),
+  createdAt: z.string().datetime(),
+  qualifiedAt: z.string().datetime().nullable(),
+  commissionCount: z.number().int().nonnegative(),
+});
+export type AffiliateAdminFraudReferralQueueItem = z.infer<typeof AffiliateAdminFraudReferralQueueItemSchema>;
+
+export const AffiliateAdminFraudCommissionQueueItemSchema = z.object({
+  id: z.string(),
+  referralId: z.string(),
+  partnerId: z.string(),
+  partnerName: z.string(),
+  customerName: z.string(),
+  status: AffiliateCommissionStatusSchema,
+  amountCents: z.number().int().nonnegative(),
+  holdUntil: z.string().datetime(),
+  createdAt: z.string().datetime(),
+  riskReasons: z.array(z.string()).default([]),
+  notes: z.string().nullable(),
+});
+export type AffiliateAdminFraudCommissionQueueItem = z.infer<typeof AffiliateAdminFraudCommissionQueueItemSchema>;
+
+export const AffiliateAdminFraudQueueSchema = z.object({
+  referrals: z.array(AffiliateAdminFraudReferralQueueItemSchema).default([]),
+  commissions: z.array(AffiliateAdminFraudCommissionQueueItemSchema).default([]),
+  counts: z.object({
+    flaggedReferrals: z.number().int().nonnegative(),
+    flaggedCommissions: z.number().int().nonnegative(),
+  }),
+});
+export type AffiliateAdminFraudQueue = z.infer<typeof AffiliateAdminFraudQueueSchema>;
+
+export const AffiliateAdminPartnerListItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  companyName: z.string().nullable(),
+  websiteUrl: z.string().url().nullable(),
+  audienceSize: AffiliateAudienceSizeSchema.nullable(),
+  status: AffiliatePartnerStatusSchema,
+  applicationNotes: z.string().nullable(),
+  defaultCommissionBps: z.number().int().min(0).max(10000),
+  commissionDurationMonths: z.number().int().min(1).max(60),
+  appliedAt: z.string().datetime(),
+  approvedAt: z.string().datetime().nullable(),
+  rejectedAt: z.string().datetime().nullable(),
+  disabledAt: z.string().datetime().nullable(),
+  referralCount: z.number().int().nonnegative(),
+  commissionCount: z.number().int().nonnegative(),
+  linkCount: z.number().int().nonnegative(),
+});
+export type AffiliateAdminPartnerListItem = z.infer<typeof AffiliateAdminPartnerListItemSchema>;
+
+export const AffiliateAdminPartnerListSchema = z.object({
+  items: z.array(AffiliateAdminPartnerListItemSchema).default([]),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+});
+export type AffiliateAdminPartnerList = z.infer<typeof AffiliateAdminPartnerListSchema>;
+
+export const AffiliateAdminPartnerMetricsSchema = z.object({
+  clicks: z.number().int().nonnegative(),
+  referrals: z.number().int().nonnegative(),
+  commissions: z.number().int().nonnegative(),
+  pendingCommissionCents: z.number().int().nonnegative(),
+  paidCommissionCents: z.number().int().nonnegative(),
+});
+export type AffiliateAdminPartnerMetrics = z.infer<typeof AffiliateAdminPartnerMetricsSchema>;
+
+export const AffiliateAdminLinkDetailSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  status: AffiliateLinkStatusSchema,
+  destinationPath: z.string(),
+  campaign: z.string().nullable(),
+  url: z.string().url(),
+  clickCount: z.number().int().nonnegative(),
+  createdAt: z.string().datetime(),
+});
+export type AffiliateAdminLinkDetail = z.infer<typeof AffiliateAdminLinkDetailSchema>;
+
+export const AffiliateAdminReferralDetailSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  referredAgencyName: z.string(),
+  attributionSource: z.string(),
+  commissionBps: z.number().int().min(0).max(10000),
+  commissionDurationMonths: z.number().int().min(1).max(60),
+  createdAt: z.string().datetime(),
+  qualifiedAt: z.string().datetime().nullable(),
+  disqualifiedAt: z.string().datetime().nullable(),
+  disqualificationReason: z.string().nullable(),
+  riskReasons: z.array(z.string()).default([]),
+});
+export type AffiliateAdminReferralDetail = z.infer<typeof AffiliateAdminReferralDetailSchema>;
+
+export const AffiliateAdminCommissionDetailSchema = z.object({
+  id: z.string(),
+  customerName: z.string(),
+  status: AffiliateCommissionStatusSchema,
+  amountCents: z.number().int(),
+  revenueAmountCents: z.number().int(),
+  commissionBps: z.number().int().min(0).max(10000),
+  holdUntil: z.string().datetime(),
+  approvedAt: z.string().datetime().nullable(),
+  paidAt: z.string().datetime().nullable(),
+  voidedAt: z.string().datetime().nullable(),
+  invoiceDate: z.string().datetime().nullable(),
+  notes: z.string().nullable(),
+  createdAt: z.string().datetime(),
+});
+export type AffiliateAdminCommissionDetail = z.infer<typeof AffiliateAdminCommissionDetailSchema>;
+
+export const AffiliateAdminPartnerDetailSchema = z.object({
+  partner: AffiliateAdminPartnerListItemSchema,
+  metrics: AffiliateAdminPartnerMetricsSchema,
+  links: z.array(AffiliateAdminLinkDetailSchema).default([]),
+  referrals: z.array(AffiliateAdminReferralDetailSchema).default([]),
+  commissions: z.array(AffiliateAdminCommissionDetailSchema).default([]),
+});
+export type AffiliateAdminPartnerDetail = z.infer<typeof AffiliateAdminPartnerDetailSchema>;
+
+export const AffiliateAdminPartnerMutationSchema = z.object({
+  status: AffiliatePartnerStatusSchema.optional(),
+  defaultCommissionBps: z.number().int().min(0).max(10000).optional(),
+  commissionDurationMonths: z.number().int().min(1).max(60).optional(),
+  internalNotes: z.string().max(5000).optional(),
+}).refine((value) => Object.keys(value).length > 0, {
+  message: 'At least one affiliate partner field is required',
+});
+export type AffiliateAdminPartnerMutation = z.infer<typeof AffiliateAdminPartnerMutationSchema>;
+
+export const AffiliateAdminReferralDisqualificationSchema = z.object({
+  reason: z.string().min(2).max(120),
+  internalNotes: z.string().min(2).max(5000),
+});
+export type AffiliateAdminReferralDisqualificationInput = z.infer<typeof AffiliateAdminReferralDisqualificationSchema>;
+
+export const AffiliateAdminReferralReviewResolutionSchema = z.object({
+  resolution: z.enum(['clear', 'keep_review_required', 'disqualify']),
+  reason: z.string().min(2).max(120),
+  internalNotes: z.string().min(2).max(5000),
+});
+export type AffiliateAdminReferralReviewResolutionInput = z.infer<typeof AffiliateAdminReferralReviewResolutionSchema>;
+
+export const AffiliateAdminCommissionAdjustmentSchema = z.object({
+  amountCents: z.number().int().nonnegative().optional(),
+  status: AffiliateCommissionStatusSchema.optional(),
+  internalNotes: z.string().min(2).max(5000),
+}).refine((value) => value.amountCents !== undefined || value.status !== undefined, {
+  message: 'At least one commission adjustment field is required',
+});
+export type AffiliateAdminCommissionAdjustment = z.infer<typeof AffiliateAdminCommissionAdjustmentSchema>;
 
 // ============================================================
 // SUBSCRIPTION TIERS & QUOTA MANAGEMENT
