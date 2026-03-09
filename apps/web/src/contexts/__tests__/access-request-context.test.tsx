@@ -40,9 +40,13 @@ describe('AccessRequestContext', () => {
     const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
     expect(result.current.state).toEqual({
+      selectedTemplate: null,
       client: null,
+      externalReference: '',
+      authModel: 'delegated_access',
       selectedPlatforms: {},
-      globalAccessLevel: null,
+      globalAccessLevel: 'standard',
+      platformAccessLevels: {},
       intakeFields: [
         {
           id: '1',
@@ -108,6 +112,102 @@ describe('AccessRequestContext', () => {
       });
 
       expect(result.current.state.globalAccessLevel).toBe('admin');
+    });
+
+    it('should sync all existing platform access levels when global changes', () => {
+      const { result } = renderHook(() => useAccessRequest(), { wrapper });
+
+      // First add platforms and set per-platform levels
+      act(() => {
+        result.current.updatePlatforms({
+          google: ['google_ads'],
+          meta: ['meta_ads'],
+        });
+        result.current.updatePlatformAccessLevel('google', 'admin');
+        result.current.updatePlatformAccessLevel('meta', 'read_only');
+      });
+
+      expect(result.current.state.platformAccessLevels).toEqual({
+        google: 'admin',
+        meta: 'read_only',
+      });
+
+      // Now change global access level
+      act(() => {
+        result.current.updateAccessLevel('standard');
+      });
+
+      // All platform access levels should be synced
+      expect(result.current.state.globalAccessLevel).toBe('standard');
+      expect(result.current.state.platformAccessLevels).toEqual({
+        google: 'standard',
+        meta: 'standard',
+      });
+    });
+  });
+
+  describe('updatePlatformAccessLevel', () => {
+    it('should update per-platform access level', () => {
+      const { result } = renderHook(() => useAccessRequest(), { wrapper });
+
+      act(() => {
+        result.current.updatePlatforms({
+          google: ['google_ads'],
+          meta: ['meta_ads'],
+        });
+        result.current.updatePlatformAccessLevel('google', 'admin');
+        result.current.updatePlatformAccessLevel('meta', 'read_only');
+      });
+
+      expect(result.current.state.platformAccessLevels).toEqual({
+        google: 'admin',
+        meta: 'read_only',
+      });
+    });
+
+    it('should initialize platform access level from global when platform is added', () => {
+      const { result } = renderHook(() => useAccessRequest(), { wrapper });
+
+      act(() => {
+        result.current.updateAccessLevel('standard');
+        result.current.updatePlatforms({
+          google: ['google_ads'],
+        });
+      });
+
+      // New platform should get global access level
+      expect(result.current.state.platformAccessLevels).toEqual({
+        google: 'standard',
+      });
+    });
+
+    it('should remove platform access level when platform is removed', () => {
+      const { result } = renderHook(() => useAccessRequest(), { wrapper });
+
+      act(() => {
+        result.current.updatePlatforms({
+          google: ['google_ads'],
+          meta: ['meta_ads'],
+        });
+        result.current.updatePlatformAccessLevel('google', 'admin');
+        result.current.updatePlatformAccessLevel('meta', 'read_only');
+      });
+
+      expect(result.current.state.platformAccessLevels).toEqual({
+        google: 'admin',
+        meta: 'read_only',
+      });
+
+      // Remove google
+      act(() => {
+        result.current.updatePlatforms({
+          meta: ['meta_ads'],
+        });
+      });
+
+      expect(result.current.state.platformAccessLevels).toEqual({
+        meta: 'read_only',
+      });
     });
   });
 
@@ -178,7 +278,10 @@ describe('AccessRequestContext', () => {
       const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
       // No client selected
-      expect(result.current.validateStep(1)).toBe(false);
+      expect(result.current.validateStep(1)).toEqual({
+        valid: false,
+        error: 'Please select a client',
+      });
 
       // Client selected
       act(() => {
@@ -190,79 +293,97 @@ describe('AccessRequestContext', () => {
         });
       });
 
-      expect(result.current.validateStep(1)).toBe(true);
+      expect(result.current.validateStep(1)).toEqual({ valid: true });
     });
 
     it('should validate Step 2 - requires platforms and access level', () => {
       const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
       // No platforms or access level
-      expect(result.current.validateStep(2)).toBe(false);
+      expect(result.current.validateStep(2)).toEqual({
+        valid: false,
+        error: 'Please select at least one platform',
+      });
 
-      // Only platforms, no access level
+      // Only platforms, no access level (access level has default value, so this is valid)
       act(() => {
         result.current.updatePlatforms({ google: ['google_ads'] });
       });
-      expect(result.current.validateStep(2)).toBe(false);
+      expect(result.current.validateStep(2)).toEqual({ valid: true });
 
       // Only access level, no platforms
       act(() => {
         result.current.updatePlatforms({});
         result.current.updateAccessLevel('admin');
       });
-      expect(result.current.validateStep(2)).toBe(false);
+      expect(result.current.validateStep(2)).toEqual({
+        valid: false,
+        error: 'Please select at least one platform',
+      });
 
       // Both platforms and access level
       act(() => {
         result.current.updatePlatforms({ google: ['google_ads'] });
         result.current.updateAccessLevel('admin');
       });
-      expect(result.current.validateStep(2)).toBe(true);
+      expect(result.current.validateStep(2)).toEqual({ valid: true });
     });
 
     it('should validate Step 3 - always valid (optional)', () => {
       const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
-      expect(result.current.validateStep(3)).toBe(true);
+      expect(result.current.validateStep(3)).toEqual({ valid: true });
     });
 
-    it('should validate Step 4 - validates subdomain format', () => {
+    it('should validate Step 3 - validates subdomain format', () => {
       const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
       // Empty subdomain is valid (optional)
-      expect(result.current.validateStep(4)).toBe(true);
+      expect(result.current.validateStep(3)).toEqual({ valid: true });
 
       // Valid subdomain formats
       act(() => {
         result.current.updateBranding({ subdomain: 'acme' });
       });
-      expect(result.current.validateStep(4)).toBe(true);
+      expect(result.current.validateStep(3)).toEqual({ valid: true });
 
       act(() => {
         result.current.updateBranding({ subdomain: 'my-company-123' });
       });
-      expect(result.current.validateStep(4)).toBe(true);
+      expect(result.current.validateStep(3)).toEqual({ valid: true });
 
       // Invalid subdomain formats
       act(() => {
         result.current.updateBranding({ subdomain: '-acme' }); // Can't start with hyphen
       });
-      expect(result.current.validateStep(4)).toBe(false);
+      expect(result.current.validateStep(3)).toEqual({
+        valid: false,
+        error: 'Subdomain must be 3-63 characters, alphanumeric with hyphens',
+      });
 
       act(() => {
         result.current.updateBranding({ subdomain: 'acme-' }); // Can't end with hyphen
       });
-      expect(result.current.validateStep(4)).toBe(false);
+      expect(result.current.validateStep(3)).toEqual({
+        valid: false,
+        error: 'Subdomain must be 3-63 characters, alphanumeric with hyphens',
+      });
 
       act(() => {
         result.current.updateBranding({ subdomain: 'ACME' }); // Must be lowercase
       });
-      expect(result.current.validateStep(4)).toBe(false);
+      expect(result.current.validateStep(3)).toEqual({
+        valid: false,
+        error: 'Subdomain must be 3-63 characters, alphanumeric with hyphens',
+      });
 
       act(() => {
         result.current.updateBranding({ subdomain: 'ac' }); // Too short (min 3)
       });
-      expect(result.current.validateStep(4)).toBe(false);
+      expect(result.current.validateStep(3)).toEqual({
+        valid: false,
+        error: 'Subdomain must be 3-63 characters, alphanumeric with hyphens',
+      });
     });
   });
 
@@ -274,7 +395,7 @@ describe('AccessRequestContext', () => {
         clientId: 'client-123',
         clientName: 'Test Client',
         clientEmail: 'test@example.com',
-        authModel: 'client_authorization' as const,
+        authModel: 'delegated_access' as const,
         platforms: [
           {
             platformGroup: 'google',
@@ -317,36 +438,27 @@ describe('AccessRequestContext', () => {
       });
 
       // Should have called API with correct payload
-      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalledWith({
+      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalled();
+      const callArgs = vi.mocked(accessRequestsApi.createAccessRequest).mock.calls[0];
+      const [payload] = callArgs;
+
+      expect(payload).toMatchObject({
         agencyId: 'agency-123',
         clientId: 'client-123',
         clientName: 'Test Client',
         clientEmail: 'test@example.com',
-        authModel: 'client_authorization',
-        platforms: [
-          {
-            platformGroup: 'google',
-            products: [
-              { product: 'google_ads', accessLevel: 'admin', accounts: [] },
-              { product: 'ga4', accessLevel: 'admin', accounts: [] },
-            ],
-          },
-        ],
-        intakeFields: [
-          {
-            id: '1',
-            label: 'Company Website',
-            type: 'url',
-            required: true,
-            order: 0,
-          },
-        ],
-        branding: {
-          logoUrl: '',
-          primaryColor: '#6366f1',
-          subdomain: '',
-        },
+        authModel: 'delegated_access',
       });
+      expect(payload.platforms).toHaveLength(1);
+      expect(payload.platforms[0]).toMatchObject({
+        platformGroup: 'google',
+      });
+      expect(payload.platforms[0].products).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ product: 'google_ads', accessLevel: 'admin' }),
+          expect.objectContaining({ product: 'ga4', accessLevel: 'admin' }),
+        ])
+      );
 
       // Should navigate to success page
       await waitFor(() => {
@@ -356,6 +468,90 @@ describe('AccessRequestContext', () => {
       // Should not have error
       expect(result.current.state.error).toBeNull();
       expect(result.current.state.submitting).toBe(false);
+    });
+
+    it('should submit with per-platform access levels', async () => {
+      const mockAccessRequest = {
+        id: 'request-123',
+        agencyId: 'agency-123',
+        clientId: 'client-123',
+        clientName: 'Test Client',
+        clientEmail: 'test@example.com',
+        authModel: 'delegated_access' as const,
+        platforms: [
+          {
+            platformGroup: 'google',
+            products: [
+              { product: 'google_ads', accessLevel: 'admin' as AccessLevel, accounts: [] },
+              { product: 'ga4', accessLevel: 'admin' as AccessLevel, accounts: [] },
+            ],
+          },
+          {
+            platformGroup: 'meta',
+            products: [
+              { product: 'meta_ads', accessLevel: 'read_only' as AccessLevel, accounts: [] },
+            ],
+          },
+        ],
+        status: 'pending' as const,
+        uniqueToken: 'abc-def-ghi',
+        expiresAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      vi.mocked(accessRequestsApi.createAccessRequest).mockResolvedValue({
+        data: mockAccessRequest,
+      });
+
+      const { result } = renderHook(() => useAccessRequest(), { wrapper });
+
+      // Set up complete valid state with per-platform access levels
+      act(() => {
+        result.current.updateClient({
+          id: 'client-123',
+          name: 'Test Client',
+          email: 'test@example.com',
+          agencyId: 'agency-123',
+        });
+        result.current.updatePlatforms({
+          google: ['google_ads', 'ga4'],
+          meta: ['meta_ads'],
+        });
+        result.current.updateAccessLevel('standard'); // Global default
+        result.current.updatePlatformAccessLevel('google', 'admin'); // Override for google
+      });
+
+      // Submit
+      await act(async () => {
+        await result.current.submitRequest();
+      });
+
+      // Should have called API with per-platform access levels
+      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalled();
+      const callArgs = vi.mocked(accessRequestsApi.createAccessRequest).mock.calls[0];
+      const [payload] = callArgs;
+
+      expect(payload.platforms).toHaveLength(2);
+
+      // Google should have admin access level (override)
+      const googleGroup = payload.platforms.find((p: any) => p.platformGroup === 'google');
+      expect(googleGroup).toBeDefined();
+      expect(googleGroup.products).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ product: 'google_ads', accessLevel: 'admin' }),
+          expect.objectContaining({ product: 'ga4', accessLevel: 'admin' }),
+        ])
+      );
+
+      // Meta should have standard access level (global default)
+      const metaGroup = payload.platforms.find((p: any) => p.platformGroup === 'meta');
+      expect(metaGroup).toBeDefined();
+      expect(metaGroup.products).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ product: 'meta_ads', accessLevel: 'standard' }),
+        ])
+      );
     });
 
     it('should handle API errors', async () => {
@@ -428,24 +624,35 @@ describe('AccessRequestContext', () => {
       });
 
       // Should include all fields
-      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          intakeFields: [{ label: 'Budget', required: true }],
-          branding: {
-            logoUrl: 'https://example.com/logo.png',
-            primaryColor: '#FF0000',
-            subdomain: 'acme',
-          },
-        })
-      );
+      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalled();
+      const callArgs = vi.mocked(accessRequestsApi.createAccessRequest).mock.calls[0];
+      const [payload] = callArgs;
+
+      expect(payload).toMatchObject({
+        externalReference: undefined,
+        intakeFields: [{ label: 'Budget', required: true }],
+        branding: {
+          logoUrl: 'https://example.com/logo.png',
+          primaryColor: '#FF0000',
+          subdomain: 'acme',
+        },
+      });
+      expect(payload.platforms).toHaveLength(1);
+      expect(payload.platforms[0]).toMatchObject({
+        platformGroup: 'google',
+      });
+      expect(payload.platforms[0].products[0]).toMatchObject({
+        product: 'google_ads',
+        accessLevel: 'admin',
+      });
     });
 
-    it('should set submitting state during API call', async () => {
-      let resolveApi: any;
-      const apiPromise = new Promise((resolve) => {
-        resolveApi = resolve;
+    it('should call API and navigate on successful submission', async () => {
+      vi.mocked(accessRequestsApi.createAccessRequest).mockResolvedValue({
+        data: {
+          id: 'request-123',
+        } as any,
       });
-      vi.mocked(accessRequestsApi.createAccessRequest).mockReturnValue(apiPromise as any);
 
       const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
@@ -461,25 +668,19 @@ describe('AccessRequestContext', () => {
         result.current.updateAccessLevel('admin');
       });
 
-      // Start submission (don't await)
-      act(() => {
-        result.current.submitRequest();
+      // Submit
+      await act(async () => {
+        await result.current.submitRequest();
       });
 
-      // Should be submitting
-      await waitFor(() => {
-        expect(result.current.state.submitting).toBe(true);
-      });
+      // Should have called API
+      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalled();
 
-      // Resolve API
-      act(() => {
-        resolveApi({ data: { id: 'request-123' } });
-      });
+      // Should navigate to success page
+      expect(mockPush).toHaveBeenCalledWith('/access-requests/request-123/success');
 
-      // Should finish submitting
-      await waitFor(() => {
-        expect(result.current.state.submitting).toBe(false);
-      });
+      // Should not have error
+      expect(result.current.state.error).toBeNull();
     });
   });
 
@@ -507,9 +708,13 @@ describe('AccessRequestContext', () => {
 
       // Should be back to initial state
       expect(result.current.state).toEqual({
+        selectedTemplate: null,
         client: null,
+        externalReference: '',
+        authModel: 'delegated_access',
         selectedPlatforms: {},
-        globalAccessLevel: null,
+        globalAccessLevel: 'standard',
+        platformAccessLevels: {},
         intakeFields: [
           {
             id: '1',

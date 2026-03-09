@@ -18,9 +18,10 @@ import type { AccessLevel } from '@agency-platform/shared';
 describe('transformPlatformsForAPI', () => {
   it('should transform empty selection to empty array', () => {
     const selection = {};
-    const accessLevel: AccessLevel = 'admin';
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'admin';
 
-    const result = transformPlatformsForAPI(selection, accessLevel);
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
 
     expect(result).toEqual([]);
   });
@@ -29,9 +30,10 @@ describe('transformPlatformsForAPI', () => {
     const selection = {
       google: ['google_ads'],
     };
-    const accessLevel: AccessLevel = 'admin';
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'admin';
 
-    const result = transformPlatformsForAPI(selection, accessLevel);
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
 
     expect(result).toEqual([
       {
@@ -51,9 +53,10 @@ describe('transformPlatformsForAPI', () => {
     const selection = {
       google: ['google_ads', 'ga4', 'google_tag_manager'],
     };
-    const accessLevel: AccessLevel = 'standard';
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'standard';
 
-    const result = transformPlatformsForAPI(selection, accessLevel);
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
 
     expect(result).toEqual([
       {
@@ -73,9 +76,10 @@ describe('transformPlatformsForAPI', () => {
       meta: ['meta_ads', 'instagram'],
       linkedin: ['linkedin_ads'],
     };
-    const accessLevel: AccessLevel = 'read_only';
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'read_only';
 
-    const result = transformPlatformsForAPI(selection, accessLevel);
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
 
     expect(result).toEqual([
       {
@@ -105,9 +109,10 @@ describe('transformPlatformsForAPI', () => {
       meta: [], // Empty - should be filtered
       linkedin: ['linkedin_ads'],
     };
-    const accessLevel: AccessLevel = 'admin';
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'admin';
 
-    const result = transformPlatformsForAPI(selection, accessLevel);
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
 
     expect(result).toHaveLength(2);
     expect(result).toEqual([
@@ -124,17 +129,18 @@ describe('transformPlatformsForAPI', () => {
 
   it('should correctly apply different access levels', () => {
     const selection = { google: ['google_ads'] };
+    const platformAccessLevels: Record<string, AccessLevel> = {};
 
-    const adminResult = transformPlatformsForAPI(selection, 'admin');
+    const adminResult = transformPlatformsForAPI(selection, platformAccessLevels, 'admin');
     expect(adminResult[0].products[0].accessLevel).toBe('admin');
 
-    const standardResult = transformPlatformsForAPI(selection, 'standard');
+    const standardResult = transformPlatformsForAPI(selection, platformAccessLevels, 'standard');
     expect(standardResult[0].products[0].accessLevel).toBe('standard');
 
-    const readOnlyResult = transformPlatformsForAPI(selection, 'read_only');
+    const readOnlyResult = transformPlatformsForAPI(selection, platformAccessLevels, 'read_only');
     expect(readOnlyResult[0].products[0].accessLevel).toBe('read_only');
 
-    const emailOnlyResult = transformPlatformsForAPI(selection, 'email_only');
+    const emailOnlyResult = transformPlatformsForAPI(selection, platformAccessLevels, 'email_only');
     expect(emailOnlyResult[0].products[0].accessLevel).toBe('email_only');
   });
 
@@ -143,15 +149,131 @@ describe('transformPlatformsForAPI', () => {
       google: ['google_ads', 'ga4'],
       meta: ['meta_ads'],
     };
-    const accessLevel: AccessLevel = 'admin';
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'admin';
 
-    const result = transformPlatformsForAPI(selection, accessLevel);
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
 
     result.forEach((group) => {
       group.products.forEach((product) => {
         expect(product.accounts).toEqual([]);
       });
     });
+  });
+
+  // New tests for per-platform access levels
+  it('should use per-platform access level when specified', () => {
+    const selection = {
+      google: ['google_ads', 'ga4'],
+      meta: ['meta_ads'],
+    };
+    const platformAccessLevels: Record<string, AccessLevel> = {
+      meta: 'admin', // Meta has explicit override
+    };
+    const globalAccessLevel: AccessLevel = 'standard'; // Google uses default
+
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
+
+    expect(result).toEqual([
+      {
+        platformGroup: 'google',
+        products: [
+          { product: 'google_ads', accessLevel: 'standard', accounts: [] },
+          { product: 'ga4', accessLevel: 'standard', accounts: [] },
+        ],
+      },
+      {
+        platformGroup: 'meta',
+        products: [
+          { product: 'meta_ads', accessLevel: 'admin', accounts: [] },
+        ],
+      },
+    ]);
+  });
+
+  it('should use global access level as fallback for platforms without explicit override', () => {
+    const selection = {
+      google: ['google_ads'],
+      meta: ['meta_ads'],
+      linkedin: ['linkedin_ads'],
+    };
+    const platformAccessLevels: Record<string, AccessLevel> = {
+      meta: 'read_only', // Only meta has explicit override
+    };
+    const globalAccessLevel: AccessLevel = 'admin'; // Google and LinkedIn use default
+
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
+
+    expect(result).toEqual([
+      {
+        platformGroup: 'google',
+        products: [{ product: 'google_ads', accessLevel: 'admin', accounts: [] }],
+      },
+      {
+        platformGroup: 'meta',
+        products: [{ product: 'meta_ads', accessLevel: 'read_only', accounts: [] }],
+      },
+      {
+        platformGroup: 'linkedin',
+        products: [{ product: 'linkedin_ads', accessLevel: 'admin', accounts: [] }],
+      },
+    ]);
+  });
+
+  it('should apply different per-platform access levels to multiple platforms', () => {
+    const selection = {
+      google: ['google_ads', 'ga4'],
+      meta: ['meta_ads'],
+      linkedin: ['linkedin_ads'],
+    };
+    const platformAccessLevels: Record<string, AccessLevel> = {
+      google: 'admin',
+      meta: 'standard',
+      linkedin: 'read_only',
+    };
+    const globalAccessLevel: AccessLevel = 'email_only'; // Fallback not used
+
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
+
+    expect(result).toEqual([
+      {
+        platformGroup: 'google',
+        products: [
+          { product: 'google_ads', accessLevel: 'admin', accounts: [] },
+          { product: 'ga4', accessLevel: 'admin', accounts: [] },
+        ],
+      },
+      {
+        platformGroup: 'meta',
+        products: [{ product: 'meta_ads', accessLevel: 'standard', accounts: [] }],
+      },
+      {
+        platformGroup: 'linkedin',
+        products: [{ product: 'linkedin_ads', accessLevel: 'read_only', accounts: [] }],
+      },
+    ]);
+  });
+
+  it('should handle empty platformAccessLevels with all platforms using global access level', () => {
+    const selection = {
+      google: ['google_ads'],
+      meta: ['meta_ads'],
+    };
+    const platformAccessLevels: Record<string, AccessLevel> = {};
+    const globalAccessLevel: AccessLevel = 'read_only';
+
+    const result = transformPlatformsForAPI(selection, platformAccessLevels, globalAccessLevel);
+
+    expect(result).toEqual([
+      {
+        platformGroup: 'google',
+        products: [{ product: 'google_ads', accessLevel: 'read_only', accounts: [] }],
+      },
+      {
+        platformGroup: 'meta',
+        products: [{ product: 'meta_ads', accessLevel: 'read_only', accounts: [] }],
+      },
+    ]);
   });
 });
 

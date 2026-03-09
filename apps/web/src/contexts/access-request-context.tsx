@@ -390,6 +390,9 @@ export function AccessRequestProvider({
 
       // Success! Navigate to success page
       if (result.data) {
+        // Reset submitting state before navigation
+        setState((prev) => ({ ...prev, submitting: false }));
+
         // Track access request creation in PostHog
         const platformCount = Object.values(state.selectedPlatforms).reduce(
           (sum, products) => sum + products.length,

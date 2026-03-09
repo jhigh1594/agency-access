@@ -43,9 +43,6 @@ vi.mock('@/components/client-selector', () => ({
   ),
 }));
 
-vi.mock('@/components/auth-model-selector', () => ({
-  AuthModelSelector: () => <div data-testid="auth-model">Delegated Access</div>,
-}));
 
 vi.mock('@/components/access-level-selector', () => ({
   AccessLevelSelector: () => <div data-testid="access-level">Standard</div>,

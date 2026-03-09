@@ -403,4 +403,168 @@ describe('Invite Flow Page', () => {
 
     expect(screen.queryByRole('button', { name: /complete platform/i })).not.toBeInTheDocument();
   });
+
+  // Tests for dynamic step indicator based on authModel
+  describe('Dynamic step indicator', () => {
+    it('should show 2 steps for delegated_access flow', async () => {
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            authModel: 'delegated_access',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: {},
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }));
+
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<InvitePage />);
+
+      await waitFor(() => {
+        // Should show 2 steps: Setup, Done
+        // Step labels are title-case (uppercase CSS makes them display uppercase)
+        expect(screen.getByText('Setup')).toBeInTheDocument();
+        expect(screen.getByText('Done')).toBeInTheDocument();
+        // Should NOT show "Connect" step label
+        expect(screen.queryByText('Connect')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should show 3 steps for client_authorization flow', async () => {
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            authModel: 'client_authorization',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: {},
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }));
+
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<InvitePage />);
+
+      await waitFor(() => {
+        // Should show 3 steps: Setup, Connect, Done
+        // Step labels are title-case (uppercase CSS makes them display uppercase)
+        expect(screen.getByText('Setup')).toBeInTheDocument();
+        expect(screen.getByText('Connect')).toBeInTheDocument();
+        expect(screen.getByText('Done')).toBeInTheDocument();
+      });
+    });
+
+    it('should show step 2 of 2 for delegated_access (auto-completes to Done)', async () => {
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            authModel: 'delegated_access',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin' }] }],
+            manualInviteTargets: {},
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }));
+
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<InvitePage />);
+
+      await waitFor(() => {
+        // delegated_access auto-completes to Done step, showing Step 2 of 2
+        const stepIndicator = screen.getByText('Step 2 of 2');
+        expect(stepIndicator).toBeInTheDocument();
+        // Should show completion message (appears in both rail and card)
+        const completionMessages = screen.getAllByText(/Authorization complete/i);
+        expect(completionMessages.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should show step 2 of 3 for client_authorization (Connect step)', async () => {
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            authModel: 'client_authorization',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin' }] }],
+            manualInviteTargets: {},
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }));
+
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<InvitePage />);
+
+      await waitFor(() => {
+        // client_authorization shows the Connect step (step 2 of 3)
+        const stepIndicator = screen.getByText('Step 2 of 3');
+        expect(stepIndicator).toBeInTheDocument();
+        // Should show platform connection UI
+        expect(screen.getByText(/Connect 1 more platform/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Complete Platform/i })).toBeInTheDocument();
+      });
+    });
+  });
 });
