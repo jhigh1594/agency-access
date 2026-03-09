@@ -107,22 +107,36 @@ class SubscriptionService {
   > {
     const { agencyId, tier, billingInterval, successUrl, cancelUrl } = params;
 
-    // Get agency
-    const agency = await prisma.agency.findUnique({
-      where: { id: agencyId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        affiliateReferral: {
-          select: {
-            id: true,
-            partnerId: true,
-            clickId: true,
+    // Get agency (try to include affiliate referral data if table exists)
+    let agency: any;
+    try {
+      agency = await prisma.agency.findUnique({
+        where: { id: agencyId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          affiliateReferral: {
+            select: {
+              id: true,
+              partnerId: true,
+              clickId: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      // Table might not exist (affiliate_referrals not created in production yet)
+      // Fall back to basic query without affiliate data
+      agency = await prisma.agency.findUnique({
+        where: { id: agencyId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      });
+    }
 
     if (!agency) {
       return {
