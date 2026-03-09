@@ -53,6 +53,7 @@ describe('UnifiedOnboardingContext', () => {
     mockGetToken.mockResolvedValue('token-123');
     (global as any).fetch = fetchMock;
     process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
+    process.env.NEXT_PUBLIC_APP_URL = 'https://authhub.co';
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -197,7 +198,7 @@ describe('UnifiedOnboardingContext', () => {
     expect(response.accessRequestId).toBe('req-1');
     expect(result.current.state.agencyId).toBe('agency-1');
     expect(result.current.state.accessRequestId).toBe('req-1');
-    expect(result.current.state.accessLink).toContain('/authorize/abc123');
+    expect(result.current.state.accessLink).toBe('https://authhub.co/authorize/abc123');
   });
 
   it('passes affiliate click token when present in browser cookies', async () => {

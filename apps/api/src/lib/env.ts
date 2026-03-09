@@ -48,6 +48,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().url(),
   FRONTEND_URL: z.string().url().optional(),
+  CORS_ALLOWED_ORIGINS: z.string().optional(),
   // Backend API URL (for OAuth callbacks)
   API_URL: z.string().url().optional(),
 
@@ -146,8 +147,10 @@ const envSchema = z.object({
 
   // Affiliate program
   AFFILIATE_COOKIE_TTL_DAYS: z.coerce.number().int().min(1).default(90),
-  AFFILIATE_DEFAULT_COMMISSION_BPS: z.coerce.number().int().min(0).max(10000).default(3000),
+  AFFILIATE_DEFAULT_COMMISSION_BPS: z.coerce.number().int().min(0).max(10000).default(5000),
   AFFILIATE_DEFAULT_COMMISSION_MONTHS: z.coerce.number().int().min(1).max(60).default(12),
+  AFFILIATE_DEFAULT_TRAILING_COMMISSION_BPS: z.coerce.number().int().min(0).max(10000).default(3000),
+  AFFILIATE_DEFAULT_TRAILING_COMMISSION_MONTHS: z.coerce.number().int().min(0).max(60).default(6),
   AFFILIATE_HOLD_DAYS: z.coerce.number().int().min(0).default(30),
   AFFILIATE_PORTAL_ENABLED: z.preprocess(
     value => parseBooleanish(value) ?? value,
@@ -209,6 +212,7 @@ if (parsedEnv.NODE_ENV === 'production') {
 }
 
 const FRONTEND_URL = parsedEnv.FRONTEND_URL ?? 'http://localhost:3000';
+const CORS_ALLOWED_ORIGINS = parseCsvList(parsedEnv.CORS_ALLOWED_ORIGINS);
 const API_URL = parsedEnv.API_URL ?? `http://localhost:${parsedEnv.PORT}`;
 const INTERNAL_ADMIN_USER_IDS = parseCsvList(parsedEnv.INTERNAL_ADMIN_USER_IDS);
 const INTERNAL_ADMIN_EMAILS = parseCsvList(parsedEnv.INTERNAL_ADMIN_EMAILS);
@@ -222,6 +226,7 @@ const redisUrl = new URL(parsedEnv.REDIS_URL);
 export const env = {
   ...parsedEnv,
   FRONTEND_URL,
+  CORS_ALLOWED_ORIGINS,
   API_URL,
   REDIS_HOST: redisUrl.hostname,
   REDIS_PORT: parseInt(redisUrl.port || '6379', 10),

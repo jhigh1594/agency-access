@@ -74,10 +74,10 @@ export function AffiliateProgramForm() {
   }
 
   const inputClasses =
-    'w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20';
+    'w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1.5 text-sm text-foreground">
           <span className="font-medium">Name</span>
@@ -123,20 +123,20 @@ export function AffiliateProgramForm() {
       <label className="space-y-1.5 text-sm text-foreground">
         <span className="font-medium">How will you promote AuthHub?</span>
         <textarea
-          className={`${inputClasses} min-h-32`}
+          className={`${inputClasses} min-h-28 resize-y`}
           value={formState.promotionPlan}
           onChange={(event) => setFormState((prev) => ({ ...prev, promotionPlan: event.target.value }))}
           required
         />
       </label>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-muted-foreground">
+      <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-end sm:justify-between">
+        <p className="max-w-[18rem] text-xs leading-relaxed text-muted-foreground">
           By applying, you agree to a manual review and approval process.
         </p>
         <button
           type="submit"
-          className="inline-flex items-center justify-center rounded-lg bg-coral px-5 py-3 text-sm font-semibold text-white transition hover:bg-coral/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-lg bg-coral px-5 py-3 text-sm font-semibold text-white transition hover:bg-coral/90 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[12rem]"
           disabled={status === 'submitting'}
         >
           {status === 'submitting' ? 'Submitting...' : 'Apply to the program'}

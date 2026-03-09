@@ -184,6 +184,49 @@ describe('AffiliateService', () => {
         })
       );
     });
+
+    it('stores the stepped default commission schedule on clean default-plan referrals', async () => {
+      vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.affiliateClick.findUnique).mockResolvedValue({
+        id: 'click_1',
+        partnerId: 'partner_1',
+        linkId: 'link_1',
+        partner: {
+          email: 'partner@growthstudio.com',
+          defaultCommissionBps: 5000,
+          commissionDurationMonths: 12,
+        },
+      } as any);
+      vi.mocked(prisma.affiliateReferral.create).mockResolvedValue({
+        id: 'referral_3',
+        status: 'attributed',
+      } as any);
+
+      const result = await affiliateService.claimReferralForAgency({
+        clickToken: 'click_789',
+        agencyId: 'agency_3',
+        agencyEmail: 'owner@clientco.com',
+      });
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual({
+        id: 'referral_3',
+        status: 'attributed',
+      });
+      expect(prisma.affiliateReferral.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'attributed',
+            metadata: {
+              commissionSchedule: [
+                { commissionBps: 5000, durationMonths: 6 },
+                { commissionBps: 3000, durationMonths: 6 },
+              ],
+            },
+          }),
+        }),
+      );
+    });
   });
 
   describe('resolveAuthenticatedPartner', () => {

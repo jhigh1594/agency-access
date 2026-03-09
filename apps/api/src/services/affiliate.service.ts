@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'crypto';
+import { Prisma } from '@prisma/client';
 
 import {
   AffiliateApplicationInputSchema,
@@ -17,7 +18,10 @@ import {
 import { resolveAffiliatePartnerPrincipal } from '@/lib/affiliate-partner-auth.js';
 import { env } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
-import { evaluateAffiliateReferralRisk } from './affiliate-program.service.js';
+import {
+  buildDefaultAffiliateCommissionScheduleFromEnv,
+  evaluateAffiliateReferralRisk,
+} from './affiliate-program.service.js';
 
 interface ServiceResult<T> {
   data: T | null;
@@ -81,6 +85,26 @@ function slugifyCodePart(value: string): string {
 
 function buildLinkUrl(code: string): string {
   return `${env.FRONTEND_URL}/r/${code}`;
+}
+
+function buildDefaultCommissionMetadataForPartner(partner: {
+  defaultCommissionBps: number;
+  commissionDurationMonths: number;
+}) {
+  const defaultSchedule = buildDefaultAffiliateCommissionScheduleFromEnv();
+  const totalDuration = defaultSchedule.reduce((sum, tier) => sum + tier.durationMonths, 0);
+
+  if (
+    defaultSchedule.length === 0 ||
+    partner.defaultCommissionBps !== env.AFFILIATE_DEFAULT_COMMISSION_BPS ||
+    partner.commissionDurationMonths !== totalDuration
+  ) {
+    return {};
+  }
+
+  return {
+    commissionSchedule: defaultSchedule,
+  };
 }
 
 function extractEmailDomain(value?: string | null): string | null {
@@ -380,6 +404,15 @@ class AffiliateService {
         extractEmailDomain(click.partner.email) === extractEmailDomain(input.agencyEmail),
     });
 
+    const defaultCommissionMetadata = buildDefaultCommissionMetadataForPartner({
+      defaultCommissionBps: click.partner.defaultCommissionBps,
+      commissionDurationMonths: click.partner.commissionDurationMonths,
+    });
+    const metadata = {
+      ...defaultCommissionMetadata,
+      ...(risk.reasons.length > 0 ? { riskReasons: risk.reasons } : {}),
+    };
+
     const referral = await prisma.affiliateReferral.create({
       data: {
         partnerId: click.partnerId,
@@ -390,7 +423,8 @@ class AffiliateService {
         commissionBps: click.partner.defaultCommissionBps,
         commissionDurationMonths: click.partner.commissionDurationMonths,
         disqualificationReason: risk.reasons[0] || null,
-        metadata: risk.reasons.length > 0 ? { riskReasons: risk.reasons } : undefined,
+        metadata:
+          Object.keys(metadata).length > 0 ? (metadata as Prisma.InputJsonValue) : undefined,
       },
       select: {
         id: true,

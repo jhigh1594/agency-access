@@ -3,7 +3,6 @@
  *
  * Complete rewrite integrating:
  * - AccessRequestContext for state management
- * - TemplateSelector for Step 0
  * - ClientSelector for Step 1
  * - HierarchicalPlatformSelector + AccessLevelSelector for Step 2
  * - Framer Motion animations
@@ -22,7 +21,6 @@ import { m, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
 // Phase 5 Components
-import { TemplateSelector } from '@/components/template-selector';
 import { ClientSelector } from '@/components/client-selector';
 import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform-selector';
 import { AccessLevelSelector } from '@/components/access-level-selector';
@@ -48,7 +46,6 @@ function AccessRequestWizardContent() {
   const router = useRouter();
   const {
     state,
-    updateTemplate,
     updateClient,
     updateExternalReference,
     updatePlatforms,
@@ -67,8 +64,8 @@ function AccessRequestWizardContent() {
   // Customize tab state (for Step 3: Form Fields | Branding)
   const [customizeTab, setCustomizeTab] = useState<'fields' | 'branding'>('fields');
 
-  // Template expanded state (for Step 1: Collapsible template section)
-  const [templateExpanded, setTemplateExpanded] = useState(false);
+  // Advanced settings state (for Step 1: Optional downstream configuration)
+  const [advancedSettingsExpanded, setAdvancedSettingsExpanded] = useState(false);
 
   const principalClerkId = orgId || userId;
 
@@ -201,7 +198,7 @@ function AccessRequestWizardContent() {
     >
       <form id="access-request-form" onSubmit={handleSubmit}>
         <AnimatePresence mode="wait">
-          {/* Step 1: Fundamentals (Template + Client + Auth Model) */}
+          {/* Step 1: Fundamentals */}
           {state.currentStep === 1 && (
             <m.div
             key="step-1"
@@ -245,70 +242,57 @@ function AccessRequestWizardContent() {
                   </div>
                 </div>
 
-                {/* Section 2: External Reference (Optional) */}
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-muted-foreground">2</span>
-                    </div>
-                    <div>
-                      <label htmlFor="external-reference" className="block text-base font-semibold text-ink">
-                        External Reference
-                      </label>
-                      <p className="text-sm text-muted-foreground">Optional CRM or internal ID for downstream matching</p>
-                    </div>
-                  </div>
-                  <div className="ml-10">
-                    <input
-                      id="external-reference"
-                      type="text"
-                      value={state.externalReference}
-                      onChange={(event) => updateExternalReference(event.target.value)}
-                      placeholder="crm-123"
-                      maxLength={255}
-                      className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
-                    />
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Included in outbound webhook payloads to correlate events with your CRM or automation system.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Section 3: Template (Optional, Collapsible) */}
+                {/* Section 2: Advanced Settings (Optional) */}
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setTemplateExpanded(!templateExpanded)}
-                    className="flex items-center gap-3 w-full text-left group"
+                    onClick={() => setAdvancedSettingsExpanded(!advancedSettingsExpanded)}
+                    aria-expanded={advancedSettingsExpanded}
+                    className="flex w-full items-center gap-3 text-left group"
                   >
                     <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-muted-foreground">3</span>
+                      <span className="text-sm font-semibold text-muted-foreground">2</span>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-base font-semibold text-ink group-hover:text-coral/90 transition-colors">
-                        Start from Template <span className="text-muted-foreground font-normal">(Optional)</span>
-                      </label>
+                      <span className="block text-base font-semibold text-ink group-hover:text-coral/90 transition-colors">
+                        Advanced Settings <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </span>
                       <p className="text-sm text-muted-foreground">
-                        {templateExpanded ? 'Hide template selector' : 'Skip manually configuring platforms and branding'}
+                        {advancedSettingsExpanded
+                          ? 'Hide optional fields for CRM matching and downstream automation'
+                          : 'Reveal optional fields for CRM matching and downstream automation'}
                       </p>
                     </div>
                     <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${
-                      templateExpanded ? 'rotate-180' : ''
+                      advancedSettingsExpanded ? 'rotate-180' : ''
                     }`} />
                   </button>
 
-                  {templateExpanded && (
+                  {advancedSettingsExpanded && (
                     <m.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="ml-10 mt-4"
                     >
-                      <TemplateSelector
-                        agencyId={agencyId!}
-                        selectedTemplate={state.selectedTemplate}
-                        onSelect={updateTemplate}
+                      <label htmlFor="external-reference" className="block text-base font-semibold text-ink">
+                        External Reference
+                      </label>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Optional CRM or internal ID for downstream matching
+                      </p>
+                      <input
+                        id="external-reference"
+                        type="text"
+                        value={state.externalReference}
+                        onChange={(event) => updateExternalReference(event.target.value)}
+                        placeholder="crm-123"
+                        maxLength={255}
+                        className="mt-4 w-full rounded-lg border border-border bg-card px-4 py-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
                       />
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Included in outbound webhook payloads to correlate events with your CRM or automation system.
+                      </p>
                     </m.div>
                   )}
                 </div>

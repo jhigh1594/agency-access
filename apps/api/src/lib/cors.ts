@@ -1,11 +1,15 @@
 import { FastifyCorsOptions } from '@fastify/cors';
 
-export function getCorsOptions(frontendUrl?: string): FastifyCorsOptions {
+export function getCorsOptions(
+  frontendUrl?: string,
+  additionalOrigins: string[] = []
+): FastifyCorsOptions {
   const allowedOrigins = [
     'http://localhost:3000',
     'https://www.authhub.co',
     'https://authhub.co',
     frontendUrl,
+    ...additionalOrigins,
   ]
     .filter((origin): origin is string => Boolean(origin))
     .filter((origin, index, self) => self.indexOf(origin) === index);

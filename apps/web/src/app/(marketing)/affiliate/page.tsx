@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 const HIGHLIGHTS = [
   {
     label: 'Default Commission',
-    value: '30%',
-    description: 'Recurring for the first 12 months of collected revenue.',
+    value: '50% -> 30%',
+    description: '50% for the first 6 months, then 30% for the next 6 months of collected revenue.',
   },
   {
     label: 'Cookie Window',
@@ -30,8 +30,8 @@ const HIGHLIGHTS = [
 export default function AffiliateProgramPage() {
   return (
     <div className="min-h-screen bg-paper">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8">
-        <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8">
+        <section className="grid gap-8 xl:gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(24rem,28rem)] lg:items-start">
           <div className="space-y-5">
             <span className="inline-flex rounded-full border border-border bg-card px-3 py-1 text-xs font-mono uppercase tracking-wide text-muted-foreground">
               Affiliate Program
@@ -86,6 +86,7 @@ export default function AffiliateProgramPage() {
           <AffiliateSurfaceCard
             title="Apply for the pilot cohort"
             description="Tell us who you reach and how you would promote AuthHub."
+            className="lg:ml-auto lg:w-full lg:max-w-[28rem] xl:max-w-[30rem]"
           >
             <AffiliateProgramForm />
           </AffiliateSurfaceCard>

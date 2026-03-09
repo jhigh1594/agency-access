@@ -68,6 +68,22 @@ describe('webhookService invoice processing', () => {
   });
 
   it('upserts a paid invoice and creates a pending commission for a qualifying referral', async () => {
+    vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue({
+      id: 'referral-1',
+      partnerId: 'partner-1',
+      status: 'attributed',
+      commissionBps: 5000,
+      commissionDurationMonths: 12,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      qualifiedAt: null,
+      metadata: {
+        commissionSchedule: [
+          { commissionBps: 5000, durationMonths: 6 },
+          { commissionBps: 3000, durationMonths: 6 },
+        ],
+      },
+    } as any);
+
     await webhookService.processInvoicePaid({
       id: 'creem-invoice-1',
       customer: 'cus-1',
@@ -99,9 +115,45 @@ describe('webhookService invoice processing', () => {
         status: 'pending',
         currency: 'usd',
         revenueAmount: 10000,
+        amount: 5000,
+        commissionBps: 5000,
+        holdUntil: expect.any(Date),
+      }),
+    });
+  });
+
+  it('uses the trailing commission tier after the first six months of a stepped schedule', async () => {
+    vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue({
+      id: 'referral-1',
+      partnerId: 'partner-1',
+      status: 'qualified',
+      commissionBps: 5000,
+      commissionDurationMonths: 12,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      qualifiedAt: new Date('2026-01-01T00:00:00.000Z'),
+      metadata: {
+        commissionSchedule: [
+          { commissionBps: 5000, durationMonths: 6 },
+          { commissionBps: 3000, durationMonths: 6 },
+        ],
+      },
+    } as any);
+
+    await webhookService.processInvoicePaid({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_paid: 10000,
+      currency: 'usd',
+      status: 'paid',
+      created: '2026-07-01T00:00:00.000Z',
+      paid_at: '2026-07-01T00:00:00.000Z',
+    });
+
+    expect(prisma.affiliateCommission.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
         amount: 3000,
         commissionBps: 3000,
-        holdUntil: expect.any(Date),
       }),
     });
   });

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildDefaultAffiliateCommissionSchedule,
   calculateAffiliateCommissionCents,
   calculateCommissionHoldUntil,
   evaluateAffiliateReferralRisk,
+  resolveAffiliateCommissionTermsForDate,
 } from '../affiliate-program.service';
 
 describe('affiliate-program.service', () => {
@@ -18,6 +20,36 @@ describe('affiliate-program.service', () => {
       revenueCents: 999,
       commissionBps: 3333,
     })).toBe(332);
+  });
+
+  it('builds the stepped default affiliate commission schedule', () => {
+    expect(buildDefaultAffiliateCommissionSchedule({
+      primaryCommissionBps: 5000,
+      primaryDurationMonths: 6,
+      trailingCommissionBps: 3000,
+      trailingDurationMonths: 6,
+    })).toEqual([
+      { commissionBps: 5000, durationMonths: 6 },
+      { commissionBps: 3000, durationMonths: 6 },
+    ]);
+  });
+
+  it('resolves the trailing commission tier after the first six months', () => {
+    const result = resolveAffiliateCommissionTermsForDate({
+      qualifiedAt: new Date('2026-01-01T00:00:00.000Z'),
+      collectedAt: new Date('2026-07-01T00:00:00.000Z'),
+      fallbackCommissionBps: 5000,
+      fallbackDurationMonths: 12,
+      commissionSchedule: [
+        { commissionBps: 5000, durationMonths: 6 },
+        { commissionBps: 3000, durationMonths: 6 },
+      ],
+    });
+
+    expect(result).toEqual({
+      withinWindow: true,
+      commissionBps: 3000,
+    });
   });
 
   it('applies a hold window from the collected date', () => {

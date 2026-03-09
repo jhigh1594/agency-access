@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma.js';
 import {
   calculateAffiliateCommissionCents,
   calculateCommissionHoldUntil,
+  type AffiliateCommissionScheduleTier,
+  resolveAffiliateCommissionTermsForDate,
 } from './affiliate-program.service.js';
 
 interface CreemInvoicePayload {
@@ -57,6 +59,30 @@ function addMonths(date: Date, months: number): Date {
   const next = new Date(date);
   next.setUTCMonth(next.getUTCMonth() + Math.max(0, months));
   return next;
+}
+
+function extractCommissionSchedule(
+  metadata: unknown,
+): AffiliateCommissionScheduleTier[] | null {
+  if (!metadata || typeof metadata !== 'object' || !('commissionSchedule' in metadata)) {
+    return null;
+  }
+
+  const value = (metadata as { commissionSchedule?: unknown }).commissionSchedule;
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const tiers = value
+    .filter((tier): tier is { commissionBps?: unknown; durationMonths?: unknown } =>
+      typeof tier === 'object' && tier !== null)
+    .map((tier) => ({
+      commissionBps: typeof tier.commissionBps === 'number' ? tier.commissionBps : 0,
+      durationMonths: typeof tier.durationMonths === 'number' ? tier.durationMonths : 0,
+    }))
+    .filter((tier) => tier.commissionBps > 0 && tier.durationMonths > 0);
+
+  return tiers.length > 0 ? tiers : null;
 }
 
 class WebhookService {
@@ -157,9 +183,15 @@ class WebhookService {
 
     const paidAt = parseEventDate(invoice.paid_at) ?? parseEventDate(invoice.created) ?? new Date();
     const qualificationStart = referral.qualifiedAt ?? paidAt;
-    const windowEnd = addMonths(qualificationStart, referral.commissionDurationMonths);
+    const commissionTerms = resolveAffiliateCommissionTermsForDate({
+      qualifiedAt: qualificationStart,
+      collectedAt: paidAt,
+      fallbackCommissionBps: referral.commissionBps,
+      fallbackDurationMonths: referral.commissionDurationMonths,
+      commissionSchedule: extractCommissionSchedule(referral.metadata),
+    });
 
-    if (referral.qualifiedAt && paidAt > windowEnd) {
+    if (!commissionTerms.withinWindow || !commissionTerms.commissionBps) {
       return;
     }
 
@@ -190,7 +222,7 @@ class WebhookService {
       normalizeAmount(invoice.amount);
     const commissionAmount = calculateAffiliateCommissionCents({
       revenueCents: revenueAmount,
-      commissionBps: referral.commissionBps,
+      commissionBps: commissionTerms.commissionBps,
     });
 
     if (commissionAmount <= 0) {
@@ -207,7 +239,7 @@ class WebhookService {
         currency: invoice.currency || 'usd',
         amount: commissionAmount,
         revenueAmount,
-        commissionBps: referral.commissionBps,
+        commissionBps: commissionTerms.commissionBps,
         holdUntil: calculateCommissionHoldUntil(paidAt, env.AFFILIATE_HOLD_DAYS),
         notes: requiresReview
           ? 'Commission requires review because the referral includes risk signals.'

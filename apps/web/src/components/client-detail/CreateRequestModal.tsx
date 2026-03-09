@@ -14,6 +14,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type Platform } from '@agency-platform/shared';
 import { Button, PlatformIcon } from '@/components/ui';
+import { buildInviteUrl } from '@/lib/app-url';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { cn } from '@/lib/utils';
@@ -220,14 +221,14 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
   const copyLinkToClipboard = () => {
     if (createdRequest) {
-      const link = `${window.location.origin}/invite/${createdRequest.uniqueToken}`;
+      const link = buildInviteUrl(createdRequest.uniqueToken);
       navigator.clipboard.writeText(link);
       // Could show a brief "copied" indicator here
     }
   };
 
   const inviteLink = createdRequest
-    ? `${window.location.origin}/invite/${createdRequest.uniqueToken}`
+    ? buildInviteUrl(createdRequest.uniqueToken)
     : null;
 
   return (

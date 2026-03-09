@@ -131,6 +131,10 @@ describe('Access Request Wizard', () => {
   it('blocks continue on step 1 until a client is selected', async () => {
     renderWithProviders(<AccessRequestPage />);
 
+    expect(screen.queryByTestId('template-selector')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/external reference/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /advanced settings/i })).toBeInTheDocument();
+
     const continueButton = await screen.findByRole('button', { name: /continue to platforms/i });
     expect(continueButton).toBeDisabled();
 
@@ -167,6 +171,7 @@ describe('Access Request Wizard', () => {
     renderWithProviders(<AccessRequestPage />);
 
     await userEvent.click(await screen.findByRole('button', { name: /pick client/i }));
+    await userEvent.click(screen.getByRole('button', { name: /advanced settings/i }));
     await userEvent.type(screen.getByLabelText(/external reference/i), 'crm-123');
     await userEvent.click(screen.getByRole('button', { name: /continue to platforms/i }));
     await userEvent.click(await screen.findByRole('button', { name: /pick platforms/i }));
@@ -183,6 +188,17 @@ describe('Access Request Wizard', () => {
       );
       expect(mockRouter.push).toHaveBeenCalledWith('/access-requests/request-123/success');
     });
+  });
+
+  it('reveals external reference only after expanding advanced settings', async () => {
+    renderWithProviders(<AccessRequestPage />);
+
+    expect(screen.queryByLabelText(/external reference/i)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /advanced settings/i }));
+
+    expect(await screen.findByLabelText(/external reference/i)).toBeInTheDocument();
+    expect(screen.getByText(/downstream matching/i)).toBeInTheDocument();
   });
 
   it('shows API error message when creation fails', async () => {

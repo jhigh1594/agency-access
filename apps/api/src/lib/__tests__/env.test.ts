@@ -139,6 +139,17 @@ describe('env contract', () => {
     expect(module.env.API_URL).toBe('http://localhost:3001');
   });
 
+  it('parses additional CORS origins as a trimmed array', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      CORS_ALLOWED_ORIGINS: ' https://agency-access-beta.vercel.app, https://staging.authhub.co ,,',
+    }));
+
+    expect(module.env.CORS_ALLOWED_ORIGINS).toEqual([
+      'https://agency-access-beta.vercel.app',
+      'https://staging.authhub.co',
+    ]);
+  });
+
   it('parses INTERNAL_ADMIN_USER_IDS and INTERNAL_ADMIN_EMAILS as trimmed arrays', async () => {
     const module = await importEnvWith(withRequiredBase({
       INTERNAL_ADMIN_USER_IDS: ' user_1, user_2 ,,',
@@ -204,13 +215,17 @@ describe('env contract', () => {
       AFFILIATE_COOKIE_TTL_DAYS: undefined,
       AFFILIATE_DEFAULT_COMMISSION_BPS: undefined,
       AFFILIATE_DEFAULT_COMMISSION_MONTHS: undefined,
+      AFFILIATE_DEFAULT_TRAILING_COMMISSION_BPS: undefined,
+      AFFILIATE_DEFAULT_TRAILING_COMMISSION_MONTHS: undefined,
       AFFILIATE_HOLD_DAYS: undefined,
       AFFILIATE_PORTAL_ENABLED: undefined,
     }));
 
     expect(module.env.AFFILIATE_COOKIE_TTL_DAYS).toBe(90);
-    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_BPS).toBe(3000);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_BPS).toBe(5000);
     expect(module.env.AFFILIATE_DEFAULT_COMMISSION_MONTHS).toBe(12);
+    expect(module.env.AFFILIATE_DEFAULT_TRAILING_COMMISSION_BPS).toBe(3000);
+    expect(module.env.AFFILIATE_DEFAULT_TRAILING_COMMISSION_MONTHS).toBe(6);
     expect(module.env.AFFILIATE_HOLD_DAYS).toBe(30);
     expect(module.env.AFFILIATE_PORTAL_ENABLED).toBe(false);
   });
@@ -218,15 +233,19 @@ describe('env contract', () => {
   it('parses explicit affiliate configuration overrides', async () => {
     const module = await importEnvWith(withRequiredBase({
       AFFILIATE_COOKIE_TTL_DAYS: '120',
-      AFFILIATE_DEFAULT_COMMISSION_BPS: '2500',
-      AFFILIATE_DEFAULT_COMMISSION_MONTHS: '6',
+      AFFILIATE_DEFAULT_COMMISSION_BPS: '5500',
+      AFFILIATE_DEFAULT_COMMISSION_MONTHS: '12',
+      AFFILIATE_DEFAULT_TRAILING_COMMISSION_BPS: '3500',
+      AFFILIATE_DEFAULT_TRAILING_COMMISSION_MONTHS: '9',
       AFFILIATE_HOLD_DAYS: '14',
       AFFILIATE_PORTAL_ENABLED: 'true',
     }));
 
     expect(module.env.AFFILIATE_COOKIE_TTL_DAYS).toBe(120);
-    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_BPS).toBe(2500);
-    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_MONTHS).toBe(6);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_BPS).toBe(5500);
+    expect(module.env.AFFILIATE_DEFAULT_COMMISSION_MONTHS).toBe(12);
+    expect(module.env.AFFILIATE_DEFAULT_TRAILING_COMMISSION_BPS).toBe(3500);
+    expect(module.env.AFFILIATE_DEFAULT_TRAILING_COMMISSION_MONTHS).toBe(9);
     expect(module.env.AFFILIATE_HOLD_DAYS).toBe(14);
     expect(module.env.AFFILIATE_PORTAL_ENABLED).toBe(true);
   });

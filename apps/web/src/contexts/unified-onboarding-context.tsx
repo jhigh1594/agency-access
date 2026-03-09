@@ -27,6 +27,7 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { Client, Platform, AgencyRole, UnifiedOnboardingProgress } from '@agency-platform/shared';
 import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
 import { trackAffiliateEvent } from '@/lib/analytics/affiliate';
+import { buildAuthorizeUrl } from '@/lib/app-url';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { getAffiliateClickTokenFromDocument } from '@/lib/affiliate-cookie';
 import {
@@ -767,7 +768,7 @@ export function UnifiedOnboardingProvider({
 
       const accessRequest = accessRequestJson.data;
       const resolvedAgencyId = accessRequest.agencyId || agencyId;
-      const accessLink = `${window.location.origin}/authorize/${accessRequest.uniqueToken}`;
+      const accessLink = buildAuthorizeUrl(accessRequest.uniqueToken);
 
       const timeToValue = Date.now() - state.startedAt;
       trackOnboardingEvent('first_access_link_generated', {

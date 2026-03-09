@@ -46,7 +46,7 @@ const fastify = Fastify({
 });
 
 // Register plugins
-await fastify.register(cors, getCorsOptions(env.FRONTEND_URL));
+await fastify.register(cors, getCorsOptions(env.FRONTEND_URL, env.CORS_ALLOWED_ORIGINS));
 await fastify.register(fastifyRawBody, {
   field: 'rawBody',
   global: false,
