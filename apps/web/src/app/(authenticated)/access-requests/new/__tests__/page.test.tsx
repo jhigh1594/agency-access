@@ -170,6 +170,7 @@ describe('Access Request Wizard', () => {
     renderWithProviders(<AccessRequestPage />);
 
     await userEvent.click(await screen.findByRole('button', { name: /pick client/i }));
+    await userEvent.type(screen.getByLabelText(/external reference/i), 'crm-123');
     await userEvent.click(screen.getByRole('button', { name: /continue to platforms/i }));
     await userEvent.click(await screen.findByRole('button', { name: /pick platforms/i }));
     await userEvent.click(screen.getByRole('button', { name: /continue to customize/i }));
@@ -177,7 +178,12 @@ describe('Access Request Wizard', () => {
     await userEvent.click(await screen.findByRole('button', { name: /create access request/i }));
 
     await waitFor(() => {
-      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalled();
+      expect(accessRequestsApi.createAccessRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          externalReference: 'crm-123',
+        }),
+        expect.any(Function)
+      );
       expect(mockRouter.push).toHaveBeenCalledWith('/access-requests/request-123/success');
     });
   });

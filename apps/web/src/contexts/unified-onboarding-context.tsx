@@ -26,7 +26,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Client, Platform, AgencyRole, UnifiedOnboardingProgress } from '@agency-platform/shared';
 import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
+import { trackAffiliateEvent } from '@/lib/analytics/affiliate';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
+import { getAffiliateClickTokenFromDocument } from '@/lib/affiliate-cookie';
 import {
   resolveOnboardingResumeStep,
   type AgencyOnboardingStatusData,
@@ -617,6 +619,7 @@ export function UnifiedOnboardingProvider({
       : (getAgencyNameFromEmail(userEmail) || 'My Agency');
     const safeAgencyWebsite = state.agencySettings.website?.trim() || undefined;
     const safeAgencyLogoUrl = state.agencySettings.logoUrl?.trim() || undefined;
+    const affiliateClickToken = getAffiliateClickTokenFromDocument() || undefined;
 
     let agencyId = state.agencyId;
     const agencyResolvedFromState = Boolean(agencyId);
@@ -646,6 +649,7 @@ export function UnifiedOnboardingProvider({
           clerkUserId: principalClerkId || undefined,
           name: safeAgencyName,
           email: userEmail,
+          affiliateClickToken,
           settings: {
             timezone: state.agencySettings.timezone,
             industry: state.agencySettings.industry,
@@ -655,6 +659,13 @@ export function UnifiedOnboardingProvider({
         }),
       });
       agencyId = agencyJson.data.id;
+
+      if (affiliateClickToken) {
+        trackAffiliateEvent('affiliate_signup_claimed', {
+          source: 'affiliate_cookie',
+          surface: 'unified_onboarding',
+        });
+      }
     }
 
     if (agencyId && (agencyResolvedFromExisting || agencyResolvedFromState)) {

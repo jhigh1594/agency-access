@@ -12,9 +12,13 @@ import {
   PlatformSchema,
   type Platform,
   type AccessRequestStatus,
+  type ConnectionStatus,
   type DashboardRequestSummary,
 } from '@agency-platform/shared';
 import { invalidateCache } from '@/lib/cache.js';
+import { env } from '@/lib/env.js';
+import { logger } from '@/lib/logger.js';
+import { webhookEventService } from '@/services/webhook-event.service.js';
 
 const LegacyPlatformSchema = z.enum([
   'whatsapp_business',
@@ -34,6 +38,7 @@ const createAccessRequestSchema = z.object({
   clientId: z.string().optional(),
   clientName: z.string().min(1, 'Client name is required'),
   clientEmail: z.string().email('Invalid email address'),
+  externalReference: z.string().max(255, 'External reference must be 255 characters or less').optional(),
   authModel: z.enum(['client_authorization', 'delegated_access']).optional().default('client_authorization'),
   platforms: z.array(
     z.object({
@@ -60,6 +65,7 @@ const createAccessRequestSchema = z.object({
 
 const updateAccessRequestSchema = z.object({
   authModel: z.enum(['client_authorization', 'delegated_access']).optional(),
+  externalReference: z.string().max(255, 'External reference must be 255 characters or less').optional(),
   platforms: z.array(
     z.object({
       platform: AccessRequestPlatformSchema,
@@ -221,6 +227,7 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         clientId: validated.clientId,
         clientName: validated.clientName,
         clientEmail: validated.clientEmail,
+        externalReference: validated.externalReference,
         authModel: validated.authModel,
         uniqueToken,
         platforms: validated.platforms as any,
@@ -329,6 +336,251 @@ function extractDashboardPlatformGroups(platforms: unknown): string[] {
   }
 
   return Array.from(groups);
+}
+
+type AccessRequestLifecycleEventType = 'access_request.partial' | 'access_request.completed';
+
+function getAccessRequestLifecycleEventType(
+  status: string
+): AccessRequestLifecycleEventType | null {
+  if (status === 'partial') {
+    return 'access_request.partial';
+  }
+
+  if (status === 'completed') {
+    return 'access_request.completed';
+  }
+
+  return null;
+}
+
+function extractCompletedPlatformsAndConnections(
+  connections: Array<{
+    id: string;
+    status: string;
+    grantedAssets: unknown;
+    authorizations?: Array<{
+      platform: string;
+      status: string;
+    }>;
+  }>
+) {
+  const completedPlatformsSet = new Set<string>();
+
+  const connectionSummaries = connections.map((connection) => {
+    const connectionPlatforms = new Set<string>();
+
+    for (const authorization of connection.authorizations || []) {
+      if (authorization.status !== 'revoked') {
+        const normalizedPlatform = normalizePlatformGroup(authorization.platform);
+        completedPlatformsSet.add(normalizedPlatform);
+        connectionPlatforms.add(normalizedPlatform);
+      }
+    }
+
+    const grantedAssets =
+      (connection.grantedAssets as Record<string, unknown> | null) || null;
+    if (grantedAssets && typeof grantedAssets.platform === 'string') {
+      const normalizedPlatform = normalizePlatformGroup(grantedAssets.platform);
+      completedPlatformsSet.add(normalizedPlatform);
+      connectionPlatforms.add(normalizedPlatform);
+    }
+
+    return {
+      connectionId: connection.id,
+      status: connection.status as ConnectionStatus,
+      platforms: Array.from(connectionPlatforms),
+      ...(grantedAssets ? { grantedAssetsSummary: grantedAssets } : {}),
+    };
+  });
+
+  return {
+    completedPlatforms: Array.from(completedPlatformsSet),
+    connections: connectionSummaries,
+  };
+}
+
+async function emitAccessRequestLifecycleWebhook(input: {
+  accessRequestId: string;
+  previousStatus: string;
+  nextStatus: string;
+}) {
+  const eventType = getAccessRequestLifecycleEventType(input.nextStatus);
+  if (!eventType || input.previousStatus === input.nextStatus) {
+    return;
+  }
+
+  try {
+    const accessRequest = await prisma.accessRequest.findUnique({
+      where: { id: input.accessRequestId },
+      select: {
+        id: true,
+        agencyId: true,
+        clientId: true,
+        clientName: true,
+        clientEmail: true,
+        externalReference: true,
+        authModel: true,
+        platforms: true,
+        status: true,
+        uniqueToken: true,
+        createdAt: true,
+        authorizedAt: true,
+        expiresAt: true,
+        client: {
+          select: {
+            id: true,
+            company: true,
+          },
+        },
+      },
+    });
+
+    if (!accessRequest) {
+      return;
+    }
+
+    const endpoint = await prisma.webhookEndpoint.findUnique({
+      where: { agencyId: accessRequest.agencyId },
+    });
+
+    if (!endpoint || endpoint.status !== 'active') {
+      return;
+    }
+
+    const subscribedEvents = Array.isArray(endpoint.subscribedEvents)
+      ? endpoint.subscribedEvents
+      : [];
+    if (!subscribedEvents.includes(eventType)) {
+      return;
+    }
+
+    const clientConnections = await prisma.clientConnection.findMany({
+      where: { accessRequestId: accessRequest.id },
+      select: {
+        id: true,
+        status: true,
+        grantedAssets: true,
+        authorizations: {
+          select: {
+            platform: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    const requestedPlatforms = extractDashboardPlatformGroups(accessRequest.platforms);
+    const { completedPlatforms, connections } =
+      extractCompletedPlatformsAndConnections(clientConnections as any);
+
+    const payload = webhookEventService.buildAccessRequestWebhookEvent({
+      type: eventType,
+      request: {
+        id: accessRequest.id,
+        status: accessRequest.status as AccessRequestStatus,
+        createdAt: accessRequest.createdAt,
+        authorizedAt: accessRequest.authorizedAt,
+        expiresAt: accessRequest.expiresAt,
+        authModel: accessRequest.authModel as 'client_authorization' | 'delegated_access',
+        externalReference: accessRequest.externalReference,
+        uniqueToken: accessRequest.uniqueToken,
+      },
+      client: {
+        id: accessRequest.client?.id ?? accessRequest.clientId ?? accessRequest.id,
+        name: accessRequest.clientName,
+        email: accessRequest.clientEmail,
+        ...(accessRequest.client?.company
+          ? { company: accessRequest.client.company }
+          : {}),
+      },
+      authorizationProgress: {
+        requestedPlatforms,
+        completedPlatforms,
+      },
+      connections,
+      requestUrl: `${env.FRONTEND_URL}/invite/${accessRequest.uniqueToken}`,
+    });
+
+    const eventRecord = await prisma.webhookEvent.create({
+      data: {
+        agencyId: accessRequest.agencyId,
+        endpointId: endpoint.id,
+        type: eventType,
+        resourceType: 'access_request',
+        resourceId: accessRequest.id,
+        payload: payload as any,
+      },
+    });
+
+    const { queueWebhookDelivery } = await import('@/lib/queue');
+    await queueWebhookDelivery(eventRecord.id);
+  } catch (error) {
+    logger.warn('Failed to emit access request lifecycle webhook', {
+      accessRequestId: input.accessRequestId,
+      previousStatus: input.previousStatus,
+      nextStatus: input.nextStatus,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+export async function setAccessRequestLifecycleStatus(
+  requestId: string,
+  nextStatus: 'pending' | 'partial' | 'completed'
+) {
+  const existing = await prisma.accessRequest.findUnique({
+    where: { id: requestId },
+    select: {
+      id: true,
+      status: true,
+      agencyId: true,
+      authorizedAt: true,
+    },
+  });
+
+  if (!existing) {
+    return {
+      data: null,
+      error: {
+        code: 'REQUEST_NOT_FOUND',
+        message: 'Access request not found',
+      },
+    };
+  }
+
+  if (existing.status === nextStatus) {
+    const currentRequest = await prisma.accessRequest.findUnique({
+      where: { id: requestId },
+    });
+
+    return {
+      data: currentRequest,
+      error: null,
+    };
+  }
+
+  const accessRequest = await prisma.accessRequest.update({
+    where: { id: requestId },
+    data: {
+      status: nextStatus,
+      ...(nextStatus === 'completed' && !existing.authorizedAt
+        ? { authorizedAt: new Date() }
+        : {}),
+    },
+  });
+
+  await invalidateCache(`dashboard:${existing.agencyId}:*`);
+  await emitAccessRequestLifecycleWebhook({
+    accessRequestId: requestId,
+    previousStatus: existing.status,
+    nextStatus,
+  });
+
+  return {
+    data: accessRequest,
+    error: null,
+  };
 }
 
 function getIdentityFromConnection(connection: {
@@ -746,6 +998,9 @@ export async function updateAccessRequest(
 
     const validated = updateAccessRequestSchema.parse(input);
     const updateData: Record<string, unknown> = { ...validated };
+    if (validated.status === 'completed') {
+      updateData.authorizedAt = new Date();
+    }
 
     const accessRequest = await prisma.accessRequest.update({
       where: { id },
@@ -753,6 +1008,11 @@ export async function updateAccessRequest(
     });
 
     await invalidateCache(`dashboard:${existing.agencyId}:*`);
+    await emitAccessRequestLifecycleWebhook({
+      accessRequestId: id,
+      previousStatus: existing.status,
+      nextStatus: accessRequest.status,
+    });
 
     return {
       data: {
@@ -798,15 +1058,7 @@ export async function updateAccessRequest(
  */
 export async function markRequestAuthorized(requestId: string) {
   try {
-    const accessRequest = await prisma.accessRequest.update({
-      where: { id: requestId },
-      data: {
-        status: 'completed',
-        authorizedAt: new Date(),
-      },
-    });
-
-    return { data: accessRequest, error: null };
+    return await setAccessRequestLifecycleStatus(requestId, 'completed');
   } catch (error) {
     if (error instanceof Error && error.message.includes('Record to update not found')) {
       return {

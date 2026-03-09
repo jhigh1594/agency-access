@@ -18,6 +18,7 @@ export interface CreateAccessRequestPayload {
   clientId?: string;
   clientName: string;
   clientEmail: string;
+  externalReference?: string;
   authModel: 'client_authorization' | 'delegated_access';
   platforms: PlatformGroupConfig[];
   intakeFields?: IntakeField[];
@@ -34,6 +35,7 @@ export interface AccessRequest {
   clientId?: string;
   clientName: string;
   clientEmail: string;
+  externalReference?: string;
   authModel: 'client_authorization' | 'delegated_access';
   platforms: PlatformGroupConfig[];
   status: 'pending' | 'partial' | 'completed' | 'expired' | 'revoked';
@@ -59,6 +61,7 @@ export interface AccessRequest {
 
 export interface UpdateAccessRequestPayload {
   authModel?: 'client_authorization' | 'delegated_access';
+  externalReference?: string;
   platforms?: PlatformGroupConfig[];
   intakeFields?: IntakeField[];
   branding?: {

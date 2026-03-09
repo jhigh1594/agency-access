@@ -110,6 +110,7 @@ describe('EditAccessRequestPage', () => {
         agencyId: 'agency-1',
         clientName: 'Acme',
         clientEmail: 'owner@acme.com',
+        externalReference: 'crm-initial',
         authModel: 'delegated_access',
         status: 'pending',
         uniqueToken: 'token-3',
@@ -132,6 +133,7 @@ describe('EditAccessRequestPage', () => {
         agencyId: 'agency-1',
         clientName: 'Acme',
         clientEmail: 'owner@acme.com',
+        externalReference: 'crm-updated',
         authModel: 'client_authorization',
         status: 'pending',
         uniqueToken: 'token-3',
@@ -155,6 +157,7 @@ describe('EditAccessRequestPage', () => {
     await screen.findByText('Edit Access Request');
 
     fireEvent.change(screen.getByLabelText('Authorization Model'), { target: { value: 'client_authorization' } });
+    fireEvent.change(screen.getByLabelText('External Reference'), { target: { value: 'crm-updated' } });
     fireEvent.change(screen.getByDisplayValue('Website'), { target: { value: 'Business Website' } });
     fireEvent.change(screen.getByLabelText('Primary Color'), { target: { value: '#00AA55' } });
     await userEvent.click(screen.getByRole('button', { name: /save changes/i }));
@@ -164,6 +167,7 @@ describe('EditAccessRequestPage', () => {
         'request-3',
         expect.objectContaining({
           authModel: 'client_authorization',
+          externalReference: 'crm-updated',
           platforms: expect.any(Array),
           intakeFields: expect.arrayContaining([
             expect.objectContaining({ label: 'Business Website' }),

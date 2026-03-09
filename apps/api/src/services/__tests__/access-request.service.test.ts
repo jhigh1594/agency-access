@@ -6,11 +6,13 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
+import { queueWebhookDelivery } from '@/lib/queue';
 import * as accessRequestService from '@/services/access-request.service';
 
 // Mock crypto for token generation
 var cryptoCallCount = 0;
 vi.mock('crypto', () => ({
+  randomUUID: () => '11111111-1111-4111-8111-111111111111',
   randomBytes: (size: number) => ({
     toString: (encoding: string) => {
       if (encoding === 'hex') {
@@ -49,8 +51,18 @@ vi.mock('@/lib/prisma', () => ({
       create: vi.fn(),
       findMany: vi.fn(),
     },
+    webhookEndpoint: {
+      findUnique: vi.fn(),
+    },
+    webhookEvent: {
+      create: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
+}));
+
+vi.mock('@/lib/queue', () => ({
+  queueWebhookDelivery: vi.fn(),
 }));
 
 describe('AccessRequestService', () => {
@@ -176,6 +188,38 @@ describe('AccessRequestService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data).toBeDefined();
+    });
+
+    it('should persist externalReference when provided', async () => {
+      const mockAgency = {
+        id: 'agency-1',
+        name: 'Test Agency',
+      };
+
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue(mockAgency as any);
+      vi.mocked(prisma.accessRequest.create).mockResolvedValue({
+        id: 'request-1',
+        uniqueToken: 'a1b2c3d4e5f6',
+        externalReference: 'crm-123',
+      } as any);
+
+      const result = await accessRequestService.createAccessRequest({
+        agencyId: 'agency-1',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        intakeFields: [],
+        externalReference: 'crm-123',
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(prisma.accessRequest.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            externalReference: 'crm-123',
+          }),
+        })
+      );
     });
   });
 
@@ -348,7 +392,51 @@ describe('AccessRequestService', () => {
   });
 
   describe('markRequestAuthorized', () => {
-    it('should mark request as completed', async () => {
+    it('should mark request as completed and emit a completed webhook event once', async () => {
+      vi.mocked(prisma.accessRequest.findUnique)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          status: 'pending',
+          agencyId: 'agency-1',
+          authorizedAt: null,
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          agencyId: 'agency-1',
+          clientId: 'client-1',
+          clientName: 'Test Client',
+          clientEmail: 'client@test.com',
+          externalReference: 'crm-123',
+          authModel: 'client_authorization',
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+          status: 'completed',
+          uniqueToken: 'token-complete-1',
+          createdAt: new Date('2026-03-08T00:00:00.000Z'),
+          authorizedAt: new Date('2026-03-08T01:00:00.000Z'),
+          expiresAt: new Date('2026-04-07T00:00:00.000Z'),
+          client: {
+            id: 'client-1',
+            company: 'Acme Inc',
+          },
+        } as any);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'connection-1',
+          status: 'active',
+          grantedAssets: { platform: 'meta_ads', adAccounts: 2 },
+          authorizations: [{ platform: 'meta_ads', status: 'active' }],
+        },
+      ] as any);
+      vi.mocked(prisma.webhookEndpoint.findUnique).mockResolvedValue({
+        id: 'endpoint-1',
+        agencyId: 'agency-1',
+        status: 'active',
+        subscribedEvents: ['access_request.completed'],
+      } as any);
+      vi.mocked(prisma.webhookEvent.create).mockResolvedValue({
+        id: 'event-1',
+      } as any);
+
       const mockRequest = {
         id: 'request-1',
         status: 'completed',
@@ -371,9 +459,23 @@ describe('AccessRequestService', () => {
           authorizedAt: expect.any(Date),
         },
       });
+      expect(prisma.webhookEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          agencyId: 'agency-1',
+          endpointId: 'endpoint-1',
+          type: 'access_request.completed',
+          resourceType: 'access_request',
+          resourceId: 'request-1',
+          payload: expect.objectContaining({
+            type: 'access_request.completed',
+          }),
+        }),
+      });
+      expect(queueWebhookDelivery).toHaveBeenCalledWith('event-1');
     });
 
     it('should return error if request not found', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(null);
       vi.mocked(prisma.accessRequest.update).mockRejectedValue(
         new Error('Record to update not found')
       );
@@ -382,6 +484,26 @@ describe('AccessRequestService', () => {
 
       expect(result.data).toBeNull();
       expect(result.error?.code).toBe('REQUEST_NOT_FOUND');
+    });
+
+    it('should not emit a duplicate completed webhook when request is already completed', async () => {
+      const completedAt = new Date('2026-03-08T01:00:00.000Z');
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        agencyId: 'agency-1',
+        status: 'completed',
+        authorizedAt: completedAt,
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+      } as any);
+
+      const result = await accessRequestService.markRequestAuthorized('request-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data?.status).toBe('completed');
+      expect(prisma.accessRequest.update).not.toHaveBeenCalled();
+      expect(prisma.webhookEvent.create).not.toHaveBeenCalled();
+      expect(queueWebhookDelivery).not.toHaveBeenCalled();
     });
   });
 
@@ -456,6 +578,120 @@ describe('AccessRequestService', () => {
       expect(result.data).toBeNull();
       expect(result.error?.code).toBe('VALIDATION_ERROR');
       expect(prisma.accessRequest.update).not.toHaveBeenCalled();
+    });
+
+    it('should allow updating externalReference on editable requests', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        status: 'pending',
+        agencyId: 'agency-1',
+      } as any);
+      vi.mocked(prisma.accessRequest.update).mockResolvedValue({
+        id: 'request-1',
+        status: 'pending',
+        externalReference: 'crm-456',
+      } as any);
+
+      const result = await accessRequestService.updateAccessRequest('request-1', {
+        externalReference: 'crm-456',
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(prisma.accessRequest.update).toHaveBeenCalledWith({
+        where: { id: 'request-1' },
+        data: expect.objectContaining({
+          externalReference: 'crm-456',
+        }),
+      });
+    });
+
+    it('should emit a partial webhook when request status newly transitions to partial', async () => {
+      vi.mocked(prisma.accessRequest.findUnique)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          status: 'pending',
+          agencyId: 'agency-1',
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          agencyId: 'agency-1',
+          clientId: null,
+          clientName: 'Client Partial',
+          clientEmail: 'partial@test.com',
+          externalReference: null,
+          authModel: 'delegated_access',
+          platforms: [
+            { platform: 'google_ads', accessLevel: 'manage' },
+            { platform: 'meta_ads', accessLevel: 'manage' },
+          ],
+          status: 'partial',
+          uniqueToken: 'token-partial-1',
+          createdAt: new Date('2026-03-08T00:00:00.000Z'),
+          authorizedAt: null,
+          expiresAt: new Date('2026-04-07T00:00:00.000Z'),
+          client: null,
+        } as any);
+      vi.mocked(prisma.accessRequest.update).mockResolvedValue({
+        id: 'request-1',
+        agencyId: 'agency-1',
+        status: 'partial',
+        uniqueToken: 'token-partial-1',
+      } as any);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'connection-1',
+          status: 'active',
+          grantedAssets: null,
+          authorizations: [{ platform: 'google_ads', status: 'active' }],
+        },
+      ] as any);
+      vi.mocked(prisma.webhookEndpoint.findUnique).mockResolvedValue({
+        id: 'endpoint-1',
+        agencyId: 'agency-1',
+        status: 'active',
+        subscribedEvents: ['access_request.partial'],
+      } as any);
+      vi.mocked(prisma.webhookEvent.create).mockResolvedValue({
+        id: 'event-partial-1',
+      } as any);
+
+      const result = await accessRequestService.updateAccessRequest('request-1', {
+        status: 'partial',
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(prisma.webhookEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          agencyId: 'agency-1',
+          endpointId: 'endpoint-1',
+          type: 'access_request.partial',
+          resourceId: 'request-1',
+          payload: expect.objectContaining({
+            type: 'access_request.partial',
+          }),
+        }),
+      });
+      expect(queueWebhookDelivery).toHaveBeenCalledWith('event-partial-1');
+    });
+
+    it('should not emit a duplicate partial webhook when status remains unchanged', async () => {
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
+        id: 'request-1',
+        status: 'partial',
+        agencyId: 'agency-1',
+      } as any);
+      vi.mocked(prisma.accessRequest.update).mockResolvedValue({
+        id: 'request-1',
+        status: 'partial',
+      } as any);
+
+      const result = await accessRequestService.updateAccessRequest('request-1', {
+        status: 'partial',
+      } as any);
+
+      expect(result.error).toBeNull();
+      expect(prisma.webhookEvent.create).not.toHaveBeenCalled();
+      expect(queueWebhookDelivery).not.toHaveBeenCalled();
     });
   });
 

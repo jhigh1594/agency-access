@@ -40,6 +40,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   const checkQuota = useQuotaCheck();
 
   const [globalAccessLevel, setGlobalAccessLevel] = useState<AccessLevel>('standard');
+  const [externalReference, setExternalReference] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -103,7 +104,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   // Transform selected platforms to API format
   const transformPlatformsForAPI = (): SelectedPlatform[] => {
     return Object.entries(selectedPlatforms)
-      .filter(([_, products]) => products.length > 0)
+      .filter(([, products]) => products.length > 0)
       .map(([groupKey, products]) => ({
         platformGroup: groupKey,
         products: products.map(product => ({
@@ -135,6 +136,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           clientId: client.id,
           clientName: client.name,
           clientEmail: client.email,
+          externalReference: externalReference.trim() || undefined,
           authModel: 'client_authorization',
           platforms,
           globalAccessLevel,
@@ -320,6 +322,27 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                       <span className="ml-2 font-medium text-foreground">{client.company}</span>
                     </div>
                   </div>
+                </div>
+
+                <div className="px-6 py-4 border-b border-border">
+                  <label
+                    htmlFor="client-detail-external-reference"
+                    className="block text-sm font-semibold text-foreground mb-1"
+                  >
+                    External Reference
+                  </label>
+                  <input
+                    id="client-detail-external-reference"
+                    type="text"
+                    value={externalReference}
+                    onChange={(event) => setExternalReference(event.target.value)}
+                    maxLength={255}
+                    placeholder="crm-123"
+                    className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-coral"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Optional CRM or internal ID included in webhook payloads.
+                  </p>
                 </div>
 
                 {/* Step 1: Platform Selection */}

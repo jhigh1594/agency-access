@@ -14,7 +14,7 @@
 
 'use client';
 
-import { Fragment, FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Plus, Trash2, Check, Loader2, AlertCircle, Save, Shield, ChevronDown } from 'lucide-react';
@@ -35,7 +35,6 @@ import { AccessRequestProvider, useAccessRequest } from '@/contexts/access-reque
 import type { IntakeField } from '@/contexts/access-request-context';
 import { getPlatformCount } from '@/lib/transform-platforms';
 import { useAuthOrBypass } from '@/lib/dev-auth';
-import type { AccessRequestTemplate } from '@agency-platform/shared';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 
 // ============================================================
@@ -46,13 +45,13 @@ function AccessRequestWizardContent() {
   const clerkAuth = useAuth();
   const { userId, orgId } = useAuthOrBypass(clerkAuth);
   const { getToken } = clerkAuth;
-  const { user } = useUser();
+  useUser();
   const router = useRouter();
   const {
     state,
     updateTemplate,
     updateClient,
-    updateAuthModel,
+    updateExternalReference,
     updatePlatforms,
     updateAccessLevel,
     updateIntakeFields,
@@ -101,7 +100,6 @@ function AccessRequestWizardContent() {
   // Fetch active platform connections from an uncached source for real-time auth model status
   const {
     data: platformConnections = [],
-    isLoading: isLoadingConnections,
   } = useQuery<
     Array<{
       platform: string;
@@ -197,15 +195,6 @@ function AccessRequestWizardContent() {
     await submitRequest();
   };
 
-  // Template selection handler
-  const handleTemplateSelect = (template: AccessRequestTemplate | null) => {
-    updateTemplate(template);
-    // Auto-advance to next step if template selected
-    if (template) {
-      setStep(1);
-    }
-  };
-
   // Step labels (1-4 with new streamlined flow)
   const steps = [
     { number: 1, label: 'Fundamentals' },
@@ -268,11 +257,40 @@ function AccessRequestWizardContent() {
                   </div>
                 </div>
 
-                {/* Section 2: Auth Model (Secondary, Has Default) */}
+                {/* Section 2: External Reference (Optional) */}
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
                       <span className="text-sm font-semibold text-muted-foreground">2</span>
+                    </div>
+                    <div>
+                      <label htmlFor="external-reference" className="block text-base font-semibold text-ink">
+                        External Reference
+                      </label>
+                      <p className="text-sm text-muted-foreground">Optional CRM or internal ID for downstream matching</p>
+                    </div>
+                  </div>
+                  <div className="ml-10">
+                    <input
+                      id="external-reference"
+                      type="text"
+                      value={state.externalReference}
+                      onChange={(event) => updateExternalReference(event.target.value)}
+                      placeholder="crm-123"
+                      maxLength={255}
+                      className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Included in outbound webhook payloads to correlate events with your CRM or automation system.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section 3: Auth Model (Secondary, Has Default) */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
+                      <span className="text-sm font-semibold text-muted-foreground">3</span>
                     </div>
                     <div>
                       <label className="block text-base font-semibold text-ink">
@@ -288,7 +306,7 @@ function AccessRequestWizardContent() {
                   </div>
                 </div>
 
-                {/* Section 3: Template (Optional, Collapsible) */}
+                {/* Section 4: Template (Optional, Collapsible) */}
                 <div className="relative">
                   <button
                     type="button"
@@ -296,7 +314,7 @@ function AccessRequestWizardContent() {
                     className="flex items-center gap-3 w-full text-left group"
                   >
                     <div className="relative z-10 h-9 w-9 rounded-full bg-muted/30 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-muted-foreground">3</span>
+                      <span className="text-sm font-semibold text-muted-foreground">4</span>
                     </div>
                     <div className="flex-1">
                       <label className="block text-base font-semibold text-ink group-hover:text-coral/90 transition-colors">
@@ -729,6 +747,11 @@ function AccessRequestWizardContent() {
                         <p className="text-base font-semibold text-ink">{state.client?.name || 'Not selected'}</p>
                         {state.client?.email && (
                           <p className="text-sm text-muted-foreground">{state.client.email}</p>
+                        )}
+                        {state.externalReference && (
+                          <p className="mt-2 text-xs font-mono text-muted-foreground">
+                            External ref: {state.externalReference}
+                          </p>
                         )}
                       </div>
                     </div>

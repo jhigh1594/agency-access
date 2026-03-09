@@ -39,6 +39,7 @@ export interface AccessRequestFormState {
 
   // Step 1: Client Selection
   client: Client | null;
+  externalReference: string;
 
   // Step 1.5: Auth Model Selection
   authModel: AuthModel | null;
@@ -63,6 +64,7 @@ interface AccessRequestContextValue {
   state: AccessRequestFormState;
   updateTemplate: (template: AccessRequestTemplate | null) => void;
   updateClient: (client: Client) => void;
+  updateExternalReference: (externalReference: string) => void;
   updateAuthModel: (authModel: AuthModel) => void;
   updatePlatforms: (platforms: Record<string, string[]>) => void;
   updateAccessLevel: (level: AccessLevel) => void;
@@ -88,6 +90,7 @@ const AccessRequestContext = createContext<AccessRequestContextValue | undefined
 const initialState: AccessRequestFormState = {
   selectedTemplate: null,
   client: null,
+  externalReference: '',
   authModel: 'delegated_access', // Default to recommended option
   selectedPlatforms: {},
   globalAccessLevel: 'standard', // Smart default: standard access level
@@ -156,6 +159,10 @@ export function AccessRequestProvider({
 
   const updateClient = useCallback((client: Client) => {
     setState((prev) => ({ ...prev, client }));
+  }, []);
+
+  const updateExternalReference = useCallback((externalReference: string) => {
+    setState((prev) => ({ ...prev, externalReference }));
   }, []);
 
   const updateAuthModel = useCallback((authModel: AuthModel) => {
@@ -280,6 +287,7 @@ export function AccessRequestProvider({
         clientId: state.client?.id,
         clientName: state.client?.name || '',
         clientEmail: state.client?.email || '',
+        externalReference: state.externalReference.trim() || undefined,
         authModel: (state.authModel || 'client_authorization') as 'client_authorization' | 'delegated_access',
         platforms: platformsConfig,
         intakeFields: state.intakeFields.filter((field) => field.label.trim()),
@@ -368,6 +376,7 @@ export function AccessRequestProvider({
     state,
     updateTemplate,
     updateClient,
+    updateExternalReference,
     updateAuthModel,
     updatePlatforms,
     updateAccessLevel,

@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { FlowShell } from '@/components/flow/flow-shell';
 import { AccessLevelSelector } from '@/components/access-level-selector';
@@ -105,6 +105,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
   const [requestId, setRequestId] = useState<string>('');
   const [request, setRequest] = useState<AccessRequest | null>(null);
   const [authModel, setAuthModel] = useState<'client_authorization' | 'delegated_access'>('delegated_access');
+  const [externalReference, setExternalReference] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
   const [globalAccessLevel, setGlobalAccessLevel] = useState<AccessLevel>('standard');
   const [intakeFields, setIntakeFields] = useState<IntakeField[]>([]);
@@ -124,12 +125,13 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
     () =>
       JSON.stringify({
         authModel,
+        externalReference,
         selectedPlatforms,
         globalAccessLevel,
         intakeFields,
         branding,
       }),
-    [authModel, selectedPlatforms, globalAccessLevel, intakeFields, branding]
+    [authModel, externalReference, selectedPlatforms, globalAccessLevel, intakeFields, branding]
   );
   const hasUnsavedChanges = initialSnapshot !== '' && initialSnapshot !== snapshot;
 
@@ -161,6 +163,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
 
       setRequest(requestData);
       setAuthModel(requestData.authModel);
+      setExternalReference(requestData.externalReference || '');
       setSelectedPlatforms(selection);
       setGlobalAccessLevel(inferAccessLevel(requestData));
       setIntakeFields(normalizedFields);
@@ -168,6 +171,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
 
       setInitialSnapshot(JSON.stringify({
         authModel: requestData.authModel,
+        externalReference: requestData.externalReference || '',
         selectedPlatforms: selection,
         globalAccessLevel: inferAccessLevel(requestData),
         intakeFields: normalizedFields,
@@ -321,6 +325,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       requestId,
       {
         authModel,
+        externalReference: externalReference.trim() || undefined,
         platforms: transformPlatformsForAPI(selectedPlatforms, globalAccessLevel),
         intakeFields: normalizeIntakeFields(intakeFields),
         branding: {
@@ -397,6 +402,24 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
               <option value="delegated_access">Delegated Access</option>
               <option value="client_authorization">Client Authorization</option>
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="externalReference" className="block text-sm font-medium text-foreground mb-1">
+              External Reference
+            </label>
+            <input
+              id="externalReference"
+              type="text"
+              value={externalReference}
+              onChange={(event) => setExternalReference(event.target.value)}
+              maxLength={255}
+              placeholder="crm-123"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Optional CRM or internal identifier included in webhook payloads.
+            </p>
           </div>
 
           <div className="rounded-lg border border-border bg-paper p-3 text-xs text-muted-foreground">
