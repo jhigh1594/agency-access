@@ -257,13 +257,13 @@ describe('env contract', () => {
 
   it('derives BullMQ Redis connection settings from a rediss URL', async () => {
     const module = await importEnvWith(withRequiredBase({
-      REDIS_URL: 'rediss://default:secret@cache.example.com:6380',
+      REDIS_URL: 'rediss://default:pa%24%24word@cache.example.com:6380',
     }));
 
     expect(module.env.REDIS_HOST).toBe('cache.example.com');
     expect(module.env.REDIS_PORT).toBe(6380);
     expect(module.env.REDIS_USERNAME).toBe('default');
-    expect(module.env.REDIS_PASSWORD).toBe('secret');
+    expect(module.env.REDIS_PASSWORD).toBe('pa$$word');
     expect(module.env.REDIS_TLS).toBe(true);
   });
 });
