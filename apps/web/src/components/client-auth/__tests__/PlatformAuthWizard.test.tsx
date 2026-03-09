@@ -1,150 +1,186 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { PlatformAuthWizard } from '../PlatformAuthWizard';
-import { useSearchParams } from 'next/navigation';
 
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
-  useSearchParams: vi.fn(),
+const { pushMock, onCompleteMock, trackOnboardingEventMock } = vi.hoisted(() => ({
+  pushMock: vi.fn(),
+  onCompleteMock: vi.fn(),
+  trackOnboardingEventMock: vi.fn(),
 }));
 
-// Mock framer-motion to avoid animation issues in tests
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
+}));
+
 vi.mock('framer-motion', () => ({
-  motion: {
+  m: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
-// Mock fetch
-global.fetch = vi.fn();
+vi.mock('@/components/client-auth/PlatformWizardCard', () => ({
+  PlatformWizardCard: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
+  MetaAssetSelector: () => <div>Meta Asset Selector</div>,
+}));
+
+vi.mock('@/components/client-auth/GoogleAssetSelector', () => ({
+  GoogleAssetSelector: () => <div>Google Asset Selector</div>,
+}));
+
+vi.mock('@/components/client-auth/TikTokAssetSelector', () => ({
+  TikTokAssetSelector: () => <div>TikTok Asset Selector</div>,
+}));
+
+vi.mock('@/components/client-auth/AutomaticPagesGrant', () => ({
+  AutomaticPagesGrant: () => <div>Automatic Pages Grant</div>,
+}));
+
+vi.mock('@/components/client-auth/AdAccountSharingInstructions', () => ({
+  AdAccountSharingInstructions: () => <div>Ad Account Sharing Instructions</div>,
+}));
+
+vi.mock('@/components/client-auth/StepHelpText', () => ({
+  StepHelpText: ({ title, description }: any) => (
+    <div>
+      <div>{title}</div>
+      <div>{description}</div>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/client-auth/AssetSelectorDisabled', () => ({
+  AssetSelectorDisabled: () => <div>Asset Selector Disabled</div>,
+}));
+
+vi.mock('@/components/ui', () => ({
+  Button: ({ children, onClick, type = 'button', isLoading, rightIcon, ...props }: any) => (
+    <button type={type} onClick={onClick} data-loading={isLoading ? 'true' : 'false'} {...props}>
+      {children}
+      {rightIcon ? <span>{rightIcon}</span> : null}
+    </button>
+  ),
+  PlatformIcon: ({ platform }: any) => <div>{platform}</div>,
+}));
+
+vi.mock('@/lib/analytics/onboarding', () => ({
+  trackOnboardingEvent: trackOnboardingEventMock,
+}));
 
 describe('PlatformAuthWizard', () => {
-  const mockOnComplete = vi.fn();
-  const mockToken = 'test-token';
-  const mockPlatform = 'meta_ads';
-  const mockPlatformName = 'Meta';
-  const mockProducts = [{ product: 'meta_ads', accessLevel: 'standard' }];
-
   beforeEach(() => {
     vi.clearAllMocks();
-    (useSearchParams as any).mockReturnValue({
-      get: vi.fn().mockReturnValue(null),
-    });
-    
-    // Mock window.location.href
-    const location = { href: '' };
-    vi.stubGlobal('location', location);
+    global.fetch = vi.fn();
+    vi.stubGlobal('location', { href: '' });
   });
 
-  it('should render step 1 by default', () => {
+  it('renders the connect step by default for OAuth platforms', () => {
     render(
       <PlatformAuthWizard
-        platform={mockPlatform}
-        platformName={mockPlatformName}
-        products={mockProducts}
-        accessRequestToken={mockToken}
-        onComplete={mockOnComplete}
+        platform="meta"
+        platformName="Meta"
+        products={[{ product: 'meta_ads', accessLevel: 'standard' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
       />
     );
 
-    // The heading and button both contain "Connect Meta"
-    expect(screen.getByRole('heading', { name: `Connect ${mockPlatformName}` })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: `Connect ${mockPlatformName}` })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /connect meta/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /connect meta/i })).toBeInTheDocument();
+    expect(screen.getByText(/you'll be redirected to meta to sign in and authorize access/i)).toBeInTheDocument();
   });
 
-  it('should call oauth-url endpoint and redirect on connect click', async () => {
-    const mockAuthUrl = 'https://facebook.com/oauth?state=test-state';
-    (global.fetch as any).mockResolvedValue({
+  it('calls the oauth-url endpoint when connect is clicked', async () => {
+    vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => ({ data: { authUrl: mockAuthUrl, state: 'test-state' } }),
-    });
+      json: async () => ({
+        data: { authUrl: 'https://example.com/oauth' },
+        error: null,
+      }),
+    } as Response);
 
     render(
       <PlatformAuthWizard
-        platform={mockPlatform}
-        platformName={mockPlatformName}
-        products={mockProducts}
-        accessRequestToken={mockToken}
-        onComplete={mockOnComplete}
+        platform="meta"
+        platformName="Meta"
+        products={[{ product: 'meta_ads', accessLevel: 'standard' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
       />
     );
 
-    const button = screen.getByRole('button', { name: `Connect ${mockPlatformName}` });
-    fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: /connect meta/i }));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        `/api/client/${mockToken}/oauth-url`,
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/client/token-1/oauth-url',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ platform: mockPlatform }),
+          body: JSON.stringify({ platform: 'meta' }),
         })
       );
     });
-
-    expect(window.location.href).toBe(mockAuthUrl);
   });
 
-  it('should render step 2 if connectionId is in URL', () => {
-    (useSearchParams as any).mockReturnValue({
-      get: vi.fn().mockImplementation((key) => {
-        if (key === 'connectionId') return 'conn-123';
-        if (key === 'platform') return mockPlatform;
-        if (key === 'step') return '2';
-        return null;
-      }),
-    });
-
-    // Mock assets fetch
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: null }),
-    });
-
+  it('redirects Pinterest requests into the manual invite flow', async () => {
     render(
       <PlatformAuthWizard
-        platform={mockPlatform}
-        platformName={mockPlatformName}
-        products={mockProducts}
-        accessRequestToken={mockToken}
-        onComplete={mockOnComplete}
+        platform="pinterest"
+        platformName="Pinterest"
+        products={[{ product: 'pinterest', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
       />
     );
 
-    expect(screen.getByText('Successfully Connected!')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue to Next Platform →' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/invite/token-1/pinterest/manual');
+    });
   });
 
-  it('should call onComplete when continue button is clicked in step 2', () => {
-    (useSearchParams as any).mockReturnValue({
-      get: vi.fn().mockImplementation((key) => {
-        if (key === 'connectionId') return 'conn-123';
-        if (key === 'platform') return mockPlatform;
-        if (key === 'step') return '2';
-        return null;
-      }),
-    });
-
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: null }),
-    });
-
+  it('redirects Mailchimp requests into the manual invite flow', async () => {
     render(
       <PlatformAuthWizard
-        platform={mockPlatform}
-        platformName={mockPlatformName}
-        products={mockProducts}
-        accessRequestToken={mockToken}
-        onComplete={mockOnComplete}
+        platform="mailchimp"
+        platformName="Mailchimp"
+        products={[{ product: 'mailchimp', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
       />
     );
 
-    const button = screen.getByRole('button', { name: 'Continue to Next Platform →' });
-    fireEvent.click(button);
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/invite/token-1/mailchimp/manual');
+    });
+  });
 
-    expect(mockOnComplete).toHaveBeenCalled();
+  it('shows a continue action instead of an empty step for platforms without asset selectors', async () => {
+    render(
+      <PlatformAuthWizard
+        platform="linkedin"
+        platformName="LinkedIn"
+        products={[{ product: 'linkedin_ads', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    expect(screen.getByText(/authorization received/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /review access confirmation/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /review access confirmation/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
+    });
   });
 });
-

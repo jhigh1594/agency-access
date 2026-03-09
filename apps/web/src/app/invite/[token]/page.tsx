@@ -5,18 +5,37 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { Check, Lock, RefreshCw } from 'lucide-react';
 import posthog from 'posthog-js';
 import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
+import { InviteHeroHeader } from '@/components/flow/invite-hero-header';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
 import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
+import { InviteTrustNote } from '@/components/flow/invite-trust-note';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
 import { Button } from '@/components/ui';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
+import {
+  getInviteSecuritySummary,
+  isClientInviteManualCallbackPlatform,
+} from '@/lib/client-invite-platforms';
 import type { ClientAccessRequestPayload, Platform } from '@agency-platform/shared';
 
 type PagePhase = 'intake' | 'platforms' | 'complete';
 
 const SESSION_STORAGE_PREFIX = 'invite-progress:';
-const MANUAL_CALLBACK_PLATFORMS: Platform[] = ['beehiiv', 'kit', 'snapchat', 'pinterest', 'shopify'];
+
+function formatAccessLevelLabel(value: string): string {
+  return value.replace(/_/g, ' ');
+}
+
+function buildPlatformSummary(platforms: Platform[]): string {
+  const uniqueNames = Array.from(new Set(platforms.map((platform) => PLATFORM_NAMES[platform])));
+
+  if (uniqueNames.length <= 3) {
+    return uniqueNames.join(', ');
+  }
+
+  return `${uniqueNames.slice(0, 2).join(', ')}, and ${uniqueNames.length - 2} more`;
+}
 
 export default function ClientAuthorizationPage() {
   const params = useParams();
@@ -51,16 +70,23 @@ export default function ClientAuthorizationPage() {
     endpoint: `${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`,
     source: 'invite-core',
   });
+  const intakeFields = data?.intakeFields ?? [];
 
   const requestedPlatforms = useMemo(
     () => data?.platforms?.map((group) => group.platformGroup as Platform) || [],
     [data]
   );
+  const securitySummary = useMemo(() => getInviteSecuritySummary(requestedPlatforms), [requestedPlatforms]);
+  const platformSummary = useMemo(() => buildPlatformSummary(requestedPlatforms), [requestedPlatforms]);
 
   const isComplete = useMemo(() => {
     if (!data?.platforms?.length) return false;
     return data.platforms.every((group) => completedPlatforms.has(group.platformGroup as Platform));
   }, [data, completedPlatforms]);
+  const incompletePlatforms = useMemo(
+    () => data?.platforms?.filter((group) => !completedPlatforms.has(group.platformGroup as Platform)) || [],
+    [data, completedPlatforms]
+  );
 
   const railIdentities = useMemo(() => {
     if (!data) return [];
@@ -136,7 +162,7 @@ export default function ClientAuthorizationPage() {
     }
 
     if (urlStep === '2' && urlConnectionId && urlPlatform) {
-      if (MANUAL_CALLBACK_PLATFORMS.includes(urlPlatform)) {
+      if (isClientInviteManualCallbackPlatform(urlPlatform)) {
         mergedCompleted = new Set<Platform>([...Array.from(mergedCompleted), urlPlatform]);
         setOauthConnectionInfo(null);
       } else {
@@ -149,7 +175,20 @@ export default function ClientAuthorizationPage() {
     }
 
     setCompletedPlatforms(mergedCompleted);
-    setPhase(loadedPayload.intakeFields?.length > 0 ? 'intake' : 'platforms');
+
+    const allRequestedPlatformsComplete =
+      loadedPayload.platforms?.length > 0 &&
+      loadedPayload.platforms.every((group) => mergedCompleted.has(group.platformGroup as Platform));
+
+    if (allRequestedPlatformsComplete || loadedPayload.authorizationProgress?.isComplete) {
+      setPhase('complete');
+      return;
+    }
+
+    const hasIntakeFields = (loadedPayload.intakeFields?.length || 0) > 0;
+    const hasStartedConnecting = mergedCompleted.size > 0;
+
+    setPhase(hasIntakeFields || !hasStartedConnecting ? 'intake' : 'platforms');
   }, [loadedPayload, storageKey, token, urlConnectionId, urlPlatform, urlStep]);
 
   useEffect(() => {
@@ -253,15 +292,42 @@ export default function ClientAuthorizationPage() {
     <InviteFlowShell
       title={data.agencyName}
       description={`Authorize access for ${data.clientName}`}
+      header={
+        <InviteHeroHeader
+          eyebrow={`Request for ${data.clientName}`}
+          title={`Share account access with ${data.agencyName}`}
+          description={`Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`}
+          badge={securitySummary.badge}
+          logoUrl={data.branding?.logoUrl}
+          logoAlt={`${data.agencyName} logo`}
+          stats={[
+            { label: 'Requested by', value: data.agencyName },
+            {
+              label: 'Recipient',
+              value: data.clientEmail ? `${data.clientName} · ${data.clientEmail}` : data.clientName,
+            },
+            { label: 'Platforms', value: platformSummary || 'No platforms requested' },
+            {
+              label: 'Next',
+              value:
+                phase === 'complete'
+                  ? 'Review the completed authorization'
+                  : phase === 'platforms'
+                  ? 'Connect each requested platform'
+                  : 'Confirm what will be shared',
+            },
+          ]}
+          aside={
+            <div className="rounded-2xl border border-border bg-paper px-4 py-3 text-sm text-muted-foreground">
+              <span className="font-semibold text-ink">Security:</span> {securitySummary.badge}
+            </div>
+          }
+        />
+      }
       step={currentStep}
       totalSteps={flowTotalSteps}
       steps={flowSteps}
       layoutMode={layoutMode}
-      rightSlot={
-        <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-          <span className="font-semibold text-ink">Security:</span> OAuth only, no password sharing
-        </div>
-      }
       rail={
         <InviteStickyRail
           objective={
@@ -269,7 +335,7 @@ export default function ClientAuthorizationPage() {
               ? 'Review your completed authorizations.'
               : 'Finish the remaining platform connection steps.'
           }
-          securityNote="Official OAuth and platform-native invite flows only."
+          securityNote={securitySummary.detail}
           identities={railIdentities}
           completedCount={completedPlatforms.size}
           totalCount={requestedPlatforms.length || 1}
@@ -283,89 +349,140 @@ export default function ClientAuthorizationPage() {
         />
       }
     >
-      {phase === 'intake' && (
-        <form
-          onSubmit={handleIntakeSubmit}
-          className="rounded-lg border-2 border-black bg-card shadow-brutalist overflow-hidden"
-        >
-          <div className="border-b border-border bg-muted/10 px-6 py-5">
-            <h2 className="text-xl font-semibold text-ink font-display">Quick Setup</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Share a few details before authorization.</p>
-          </div>
-
-          <div className="space-y-5 px-6 py-6">
-            {data.intakeFields.map((field) => (
-              <div key={field.id} className="space-y-2">
-                <label className="block text-sm font-semibold text-ink">
-                  {field.label}
-                  {field.required ? <span className="ml-1 text-coral">*</span> : null}
-                </label>
-
-                {field.type === 'textarea' ? (
-                  <textarea
-                    value={intakeResponses[field.id] || ''}
-                    onChange={(e) =>
-                      setIntakeResponses((prev) => ({
-                        ...prev,
-                        [field.id]: e.target.value,
-                      }))
-                    }
-                    required={field.required}
-                    rows={4}
-                    className="w-full"
-                  />
-                ) : field.type === 'dropdown' ? (
-                  <select
-                    value={intakeResponses[field.id] || ''}
-                    onChange={(e) =>
-                      setIntakeResponses((prev) => ({
-                        ...prev,
-                        [field.id]: e.target.value,
-                      }))
-                    }
-                    required={field.required}
-                    className="w-full"
-                  >
-                    <option value="">Select an option</option>
-                    {field.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type={field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
-                    value={intakeResponses[field.id] || ''}
-                    onChange={(e) =>
-                      setIntakeResponses((prev) => ({
-                        ...prev,
-                        [field.id]: e.target.value,
-                      }))
-                    }
-                    required={field.required}
-                    className="w-full"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-border bg-muted/10 px-6 py-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Lock className="h-4 w-4" />
-              Official OAuth only. Credentials are never requested.
+      {phase === 'intake' &&
+        (intakeFields.length > 0 ? (
+          <form
+            onSubmit={handleIntakeSubmit}
+            className="rounded-lg border-2 border-black bg-card shadow-brutalist overflow-hidden"
+          >
+            <div className="border-b border-border bg-muted/10 px-6 py-5">
+              <h2 className="text-xl font-semibold text-ink font-display">Quick Setup</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Share a few details before authorization.</p>
             </div>
-            <Button type="submit" variant="primary">
-              Continue
-            </Button>
+
+            <div className="space-y-5 px-6 py-6">
+              {intakeFields.map((field) => (
+                <div key={field.id} className="space-y-2">
+                  <label className="block text-sm font-semibold text-ink">
+                    {field.label}
+                    {field.required ? <span className="ml-1 text-coral">*</span> : null}
+                  </label>
+
+                  {field.type === 'textarea' ? (
+                    <textarea
+                      value={intakeResponses[field.id] || ''}
+                      onChange={(e) =>
+                        setIntakeResponses((prev) => ({
+                          ...prev,
+                          [field.id]: e.target.value,
+                        }))
+                      }
+                      required={field.required}
+                      rows={4}
+                      className="w-full"
+                    />
+                  ) : field.type === 'dropdown' ? (
+                    <select
+                      value={intakeResponses[field.id] || ''}
+                      onChange={(e) =>
+                        setIntakeResponses((prev) => ({
+                          ...prev,
+                          [field.id]: e.target.value,
+                        }))
+                      }
+                      required={field.required}
+                      className="w-full"
+                    >
+                      <option value="">Select an option</option>
+                      {field.options?.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
+                      value={intakeResponses[field.id] || ''}
+                      onChange={(e) =>
+                        setIntakeResponses((prev) => ({
+                          ...prev,
+                          [field.id]: e.target.value,
+                        }))
+                      }
+                      required={field.required}
+                      className="w-full"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-border bg-muted/10 px-6 py-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                {securitySummary.detail}
+              </div>
+              <Button type="submit" variant="primary">
+                Continue
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="rounded-lg border-2 border-black bg-card shadow-brutalist overflow-hidden">
+            <div className="border-b border-border bg-muted/10 px-6 py-5">
+              <h2 className="text-xl font-semibold text-ink font-display">Review request</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Confirm the platforms below, then continue to authorize access.
+              </p>
+            </div>
+
+            <div className="space-y-6 px-6 py-6">
+              <div className="rounded-lg border border-border bg-paper/60 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Requested platforms
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {data.platforms.map((groupConfig) => {
+                    const platform = groupConfig.platformGroup as Platform;
+
+                    return (
+                      <div key={platform} className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm font-semibold text-ink">{PLATFORM_NAMES[platform]}</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {groupConfig.products.map((product) => (
+                            <span
+                              key={`${platform}:${product.product}`}
+                              className="rounded-full border border-border px-2 py-1 text-xs text-muted-foreground"
+                            >
+                              {`${PLATFORM_NAMES[product.product as Platform] || product.product} · ${formatAccessLevelLabel(product.accessLevel)}`}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <InviteTrustNote description="Your agency only receives access to the accounts you explicitly approve in the next step. You can review the exact selection before anything is shared." />
+            </div>
+
+            <div className="border-t border-border bg-muted/10 px-6 py-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                {securitySummary.detail}
+              </div>
+              <Button type="button" variant="primary" onClick={() => setPhase('platforms')}>
+                Continue to connect
+              </Button>
+            </div>
           </div>
-        </form>
-      )}
+        ))}
 
       {phase === 'platforms' && (
         <div className="space-y-6">
-          <div className="rounded-lg border border-border bg-card px-5 py-4">
+          <div className="rounded-[1.5rem] border border-border bg-card px-5 py-4">
             <h2 className="text-lg font-semibold text-ink font-display">
               {requestedPlatforms.length - completedPlatforms.size === 0
                 ? 'All platforms connected'
@@ -381,6 +498,9 @@ export default function ClientAuthorizationPage() {
           {data.platforms.map((groupConfig) => {
             const platform = groupConfig.platformGroup as Platform;
             const isOAuthReturning = oauthConnectionInfo?.platform === platform;
+            const currentIncompleteIndex = incompletePlatforms.findIndex(
+              (group) => group.platformGroup === groupConfig.platformGroup
+            );
 
             if (completedPlatforms.has(platform)) {
               return (
@@ -404,6 +524,11 @@ export default function ClientAuthorizationPage() {
                 products={groupConfig.products}
                 accessRequestToken={token}
                 onComplete={() => handlePlatformComplete(platform)}
+                completionActionLabel={
+                  currentIncompleteIndex === incompletePlatforms.length - 1
+                    ? 'Finish request'
+                    : 'Continue to next platform'
+                }
                 initialConnectionId={isOAuthReturning ? oauthConnectionInfo.connectionId : undefined}
                 initialStep={isOAuthReturning ? 2 : undefined}
               />

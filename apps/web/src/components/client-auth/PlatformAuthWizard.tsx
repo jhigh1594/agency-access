@@ -31,6 +31,7 @@ import { PlatformIcon, Button } from '@/components/ui';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
+import { getClientInviteManualRoute } from '@/lib/client-invite-platforms';
 
 interface PlatformAuthWizardProps {
   platform: Platform;
@@ -38,6 +39,7 @@ interface PlatformAuthWizardProps {
   products: Array<{ product: string; accessLevel: string }>;
   accessRequestToken: string;
   onComplete: () => void;
+  completionActionLabel?: string;
   // Optional initial values from OAuth callback
   initialConnectionId?: string;
   initialStep?: 1 | 2 | 3;
@@ -61,34 +63,38 @@ interface TikTokShareResponse {
   };
 }
 
+function supportsAssetSelection(product: string): boolean {
+  return (
+    product === 'meta_ads' ||
+    product.startsWith('google_') ||
+    product === 'ga4' ||
+    product === 'tiktok' ||
+    product === 'tiktok_ads'
+  );
+}
+
 export function PlatformAuthWizard({
   platform,
   platformName,
   products,
   accessRequestToken,
   onComplete,
+  completionActionLabel,
   initialConnectionId,
   initialStep,
 }: PlatformAuthWizardProps) {
   const router = useRouter();
-  const isManualPlatform = platform === 'beehiiv' || platform === 'kit' || platform === 'snapchat' || platform === 'shopify';
+  const manualRoute = getClientInviteManualRoute(platform);
+  const isManualPlatform = Boolean(manualRoute);
+  const requiresAssetSelection = products.some((product) => supportsAssetSelection(product.product));
+  const finalActionLabel = completionActionLabel || 'Continue to next platform';
 
   // Redirect platforms to manual flow (no OAuth - uses team invitations)
   useEffect(() => {
-    if (platform === 'beehiiv') {
-      router.push(`/invite/${accessRequestToken}/beehiiv/manual` as any);
+    if (manualRoute) {
+      router.push(`/invite/${accessRequestToken}/${manualRoute}` as any);
     }
-    if (platform === 'kit') {
-      router.push(`/invite/${accessRequestToken}/kit/manual` as any);
-    }
-    if (platform === 'snapchat') {
-      router.push(`/invite/${accessRequestToken}/snapchat/manual` as any);
-    }
-    if (platform === 'shopify') {
-      router.push(`/invite/${accessRequestToken}/shopify/manual` as any);
-    }
-    // TODO: Add mailchimp and klaviyo redirects
-  }, [platform, accessRequestToken, router]);
+  }, [accessRequestToken, manualRoute, router]);
 
   // Initialize with props if returning from OAuth callback
   // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
@@ -407,7 +413,7 @@ export function PlatformAuthWizard({
 
             <StepHelpText
               title="What happens when you click Connect?"
-              description="You'll be redirected to {platformName} to sign in and authorize access."
+              description={`You'll be redirected to ${platformName} to sign in and authorize access.`}
               steps={[
                 `Click "Connect ${platformName}" above`,
                 `Sign in to your ${platformName} account`,
@@ -441,6 +447,39 @@ export function PlatformAuthWizard({
                 size="lg"
               >
                 Go to Step 1
+              </Button>
+            </div>
+          );
+        }
+
+        if (!requiresAssetSelection) {
+          return (
+            <div className="text-center space-y-6 py-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 border-2 border-black dark:border-white bg-[var(--teal)]/10 mb-4">
+                <CheckCircle2 className="w-10 h-10 text-[var(--teal)]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-[var(--ink)] mb-3 font-display">
+                  Authorization received
+                </h3>
+                <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
+                  {platformName} does not require any extra account selection here. Review the confirmation screen to finish this step.
+                </p>
+              </div>
+
+              {error && (
+                <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)]">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                onClick={() => setCurrentStep(3)}
+                size="xl"
+                variant="brutalist-rounded"
+                rightIcon={<CheckCircle2 className="w-6 h-6" />}
+              >
+                Review access confirmation
               </Button>
             </div>
           );
@@ -489,16 +528,7 @@ export function PlatformAuthWizard({
             <div className="space-y-16">
               {/* Show all products that require asset selection */}
               {products
-                .filter((p) => {
-                  // Show Meta products and all Google products
-                  return (
-                    p.product === 'meta_ads' ||
-                    p.product.startsWith('google_') ||
-                    p.product === 'ga4' ||
-                    p.product === 'tiktok' ||
-                    p.product === 'tiktok_ads'
-                  );
-                })
+                .filter((p) => supportsAssetSelection(p.product))
                 .map((p) => {
                   // Map product IDs to display names (some products aren't in PLATFORM_CONFIG)
                   const productNameMap: Record<string, string> = {
@@ -579,7 +609,7 @@ export function PlatformAuthWizard({
                 variant="brutalist-rounded"
                 rightIcon={!isProcessing ? <CheckCircle2 className="w-6 h-6" /> : undefined}
               >
-                Confirm selection
+                Save selected accounts
               </Button>
             </div>
                         )}
@@ -750,7 +780,7 @@ export function PlatformAuthWizard({
                                 variant="brutalist-rounded"
                                 rightIcon={<CheckCircle2 className="w-6 h-6" />}
                               >
-                                Continue
+                                Review access confirmation
                               </Button>
                 </div>
               )}
@@ -824,7 +854,7 @@ export function PlatformAuthWizard({
                                 size="lg"
                                 variant="brutalist-rounded"
                               >
-                                Continue with partial access
+                                Review partial access confirmation
                               </Button>
                             </div>
                           </div>
@@ -866,7 +896,7 @@ export function PlatformAuthWizard({
                                 size="lg"
                                 variant="brutalist-rounded"
                               >
-                                Continue with partial access
+                                Review partial access confirmation
                               </Button>
                             </div>
                           </div>
@@ -972,7 +1002,7 @@ export function PlatformAuthWizard({
               size="lg"
               className="mt-8"
             >
-              Next platform →
+              {finalActionLabel}
             </Button>
           </div>
         );
