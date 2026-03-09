@@ -450,6 +450,24 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
       });
     }
 
+    if (existing.data) {
+      await auditService.createAuditLog({
+        agencyId: (existing.data as any).agencyId,
+        userEmail:
+          ((request as any).user?.email as string | undefined) ||
+          ((request as any).user?.sub as string | undefined) ||
+          'agency',
+        action: 'ACCESS_REQUEST_REVOKED',
+        resourceType: 'access_request',
+        resourceId: id,
+        metadata: {
+          clientName: (existing.data as any).clientName,
+          clientEmail: (existing.data as any).clientEmail,
+        },
+        request,
+      });
+    }
+
     return reply.send({ data: { success: true }, error: null });
   });
 }

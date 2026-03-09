@@ -1,7 +1,16 @@
+import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AccessRequestDetailPage from '../page';
 import * as accessRequestsApi from '@/lib/api/access-requests';
+
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  );
+}
 
 vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({
@@ -18,6 +27,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/api/access-requests', () => ({
   getAccessRequest: vi.fn(),
   getAuthorizationUrl: vi.fn((request: any) => `https://app.authhub.co/invite/${request.uniqueToken}`),
+  cancelAccessRequest: vi.fn().mockResolvedValue({ data: { success: true } }),
 }));
 
 describe('AccessRequestDetailPage', () => {
@@ -49,11 +59,12 @@ describe('AccessRequestDetailPage', () => {
       } as any,
     });
 
-    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-1' })} />);
+    renderWithProviders(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-1' })} />);
 
     expect(await screen.findByText('Access Request Details')).toBeInTheDocument();
     expect(screen.getByText('Acme Client')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /edit request/i })).toHaveAttribute('href', '/access-requests/request-1/edit');
+    expect(screen.getByRole('button', { name: /cancel request/i })).toBeInTheDocument();
   });
 
   it('renders replacement action for completed requests', async () => {
@@ -75,10 +86,11 @@ describe('AccessRequestDetailPage', () => {
       } as any,
     });
 
-    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-2' })} />);
+    renderWithProviders(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-2' })} />);
 
     await screen.findByText('Access Request Details');
     expect(screen.queryByRole('link', { name: /edit request/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /cancel request/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /create new request from this/i })).toBeInTheDocument();
   });
 
@@ -90,7 +102,7 @@ describe('AccessRequestDetailPage', () => {
       },
     } as any);
 
-    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'missing' })} />);
+    renderWithProviders(<AccessRequestDetailPage params={Promise.resolve({ id: 'missing' })} />);
 
     await waitFor(() => {
       expect(screen.getByText('Request Not Found')).toBeInTheDocument();
@@ -126,7 +138,7 @@ describe('AccessRequestDetailPage', () => {
       } as any,
     });
 
-    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-3' })} />);
+    renderWithProviders(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-3' })} />);
 
     expect(await screen.findByText('Shopify Submission')).toBeInTheDocument();
     expect(screen.getByText('littlestore.myshopify.com')).toBeInTheDocument();
@@ -159,7 +171,7 @@ describe('AccessRequestDetailPage', () => {
       } as any,
     });
 
-    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-4' })} />);
+    renderWithProviders(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-4' })} />);
 
     expect(await screen.findByText('Client Re-confirmation Needed')).toBeInTheDocument();
     expect(screen.getByText('legacy-store.myshopify.com')).toBeInTheDocument();
@@ -190,7 +202,7 @@ describe('AccessRequestDetailPage', () => {
       } as any,
     });
 
-    render(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-5' })} />);
+    renderWithProviders(<AccessRequestDetailPage params={Promise.resolve({ id: 'request-5' })} />);
 
     expect(await screen.findByText('Shopify Submission Pending')).toBeInTheDocument();
   });

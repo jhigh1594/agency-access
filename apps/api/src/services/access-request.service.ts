@@ -1085,10 +1085,19 @@ export async function markRequestAuthorized(requestId: string) {
  */
 export async function cancelAccessRequest(id: string) {
   try {
+    const existing = await prisma.accessRequest.findUnique({
+      where: { id },
+      select: { agencyId: true },
+    });
+
     await prisma.accessRequest.update({
       where: { id },
       data: { status: 'revoked' },
     });
+
+    if (existing?.agencyId) {
+      await invalidateCache(`dashboard:${existing.agencyId}:*`);
+    }
 
     return { data: { success: true }, error: null };
   } catch (error) {

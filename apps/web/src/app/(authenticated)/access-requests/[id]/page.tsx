@@ -159,9 +159,13 @@ export default function AccessRequestDetailPage({ params }: AccessRequestDetailP
 
         <RequestActionsBar
           requestId={accessRequest.id}
+          requestName={accessRequest.clientName}
           status={accessRequest.status}
           onAction={(action) => {
             void trackAction(action);
+          }}
+          onRevokeSuccess={() => {
+            setAccessRequest((prev) => (prev ? { ...prev, status: 'revoked' } : null));
           }}
         />
 

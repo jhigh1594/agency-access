@@ -4,24 +4,37 @@
  * OverviewTab Component
  *
  * Displays access requests list with status filtering.
- * Shows each request with platforms, status badge, and dates.
+ * Shows each request with platforms, status badge, dates, and revoke action.
  */
 
 import { useState, useMemo } from 'react';
-import { ExternalLink } from 'lucide-react';
-import { Card, EmptyState, PlatformIcon, StatusBadge } from '@/components/ui';
+import { ExternalLink, Unlink } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
+import { Card, EmptyState, PlatformIcon, StatusBadge, Button } from '@/components/ui';
+import { CancelRequestModal } from '@/components/access-request-detail/CancelRequestModal';
+import { cancelAccessRequest } from '@/lib/api/access-requests';
 import type { ClientAccessRequest } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
 import Link from 'next/link';
 
 interface OverviewTabProps {
+  clientId: string;
   accessRequests: ClientAccessRequest[];
 }
 
 type StatusFilter = 'all' | 'connected' | 'pending' | 'expired' | 'revoked';
 
-export function OverviewTab({ accessRequests }: OverviewTabProps) {
+function isRevocable(status: ClientAccessRequest['status']): boolean {
+  return status === 'pending' || status === 'partial';
+}
+
+export function OverviewTab({ clientId, accessRequests }: OverviewTabProps) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [cancelModalRequest, setCancelModalRequest] = useState<ClientAccessRequest | null>(null);
 
   // Filter access requests based on selected status
   const filteredRequests = useMemo(() => {
@@ -58,6 +71,22 @@ export function OverviewTab({ accessRequests }: OverviewTabProps) {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const handleRevokeConfirm = async () => {
+    if (!cancelModalRequest) return;
+    setRevokingId(cancelModalRequest.id);
+    try {
+      const result = await cancelAccessRequest(cancelModalRequest.id, getToken);
+      if (!result.error) {
+        queryClient.invalidateQueries({ queryKey: ['client-detail', clientId] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['clients-with-connections'] });
+      }
+    } finally {
+      setRevokingId(null);
+      setCancelModalRequest(null);
+    }
   };
 
   return (
@@ -154,18 +183,41 @@ export function OverviewTab({ accessRequests }: OverviewTabProps) {
                   </div>
                 </div>
 
-                {/* Right side: View details link */}
-                <Link
-                  href={`/access-requests/${request.id}` as any}
-                  className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary/90 ml-4 min-h-[44px]"
-                >
-                  View details
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Link>
+                {/* Right side: View details + Revoke */}
+                <div className="flex items-center gap-3 ml-4">
+                  {isRevocable(request.status) && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      leftIcon={<Unlink className="h-3.5 w-3.5" />}
+                      onClick={() => setCancelModalRequest(request)}
+                      disabled={revokingId === request.id}
+                      aria-label={`Revoke ${request.name}`}
+                    >
+                      {revokingId === request.id ? 'Revoking...' : 'Revoke'}
+                    </Button>
+                  )}
+                  <Link
+                    href={`/access-requests/${request.id}` as any}
+                    className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary/90 min-h-[44px]"
+                  >
+                    View details
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
             </Card>
           ))}
         </div>
+      )}
+
+      {cancelModalRequest && (
+        <CancelRequestModal
+          requestName={cancelModalRequest.name}
+          onConfirm={handleRevokeConfirm}
+          onClose={() => setCancelModalRequest(null)}
+          isPending={revokingId === cancelModalRequest.id}
+        />
       )}
     </div>
   );

@@ -230,9 +230,45 @@ export async function updateAccessRequest(
 }
 
 /**
+ * Cancel (revoke) an access request.
+ * The authorization link will stop working.
+ */
+export async function cancelAccessRequest(
+  id: string,
+  getToken?: TokenProvider
+): Promise<{ data?: { success: boolean }; error?: ApiError }> {
+  try {
+    await authorizedApiFetch<{ data: { success: boolean }; error: null }>(
+      `/api/access-requests/${id}/cancel`,
+      {
+        method: 'POST',
+        getToken: getToken ?? (async () => null),
+      }
+    );
+    return { data: { success: true } };
+  } catch (err) {
+    if (err instanceof AuthorizedApiError) {
+      return {
+        error: {
+          code: err.code,
+          message: err.message,
+          details: err.details,
+        },
+      };
+    }
+    return {
+      error: {
+        code: 'NETWORK_ERROR',
+        message: err instanceof Error ? err.message : 'Network error. Please try again.',
+      },
+    };
+  }
+}
+
+/**
  * Get the authorization URL for a client
  */
 export function getAuthorizationUrl(accessRequest: AccessRequest): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://agencyplatform.com';
-  return `${baseUrl}/invite/${accessRequest.uniqueToken}`;
+  return buildInviteUrl(accessRequest.uniqueToken);
 }
+import { buildInviteUrl } from '@/lib/app-url';
