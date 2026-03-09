@@ -8,6 +8,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import * as agencyService from '@/services/agency.service';
 import { onboardingEmailService } from '@/services/onboarding-email.service';
+import { affiliateService } from '@/services/affiliate.service';
+import { creem } from '@/lib/creem';
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
@@ -38,9 +40,25 @@ vi.mock('@/services/onboarding-email.service', () => ({
   },
 }));
 
+vi.mock('@/services/affiliate.service', () => ({
+  affiliateService: {
+    claimReferralForAgency: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/creem', () => ({
+  creem: {
+    createCheckoutSession: vi.fn(),
+  },
+}));
+
 describe('AgencyService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(affiliateService.claimReferralForAgency).mockResolvedValue({
+      data: { id: 'referral-1', status: 'attributed' },
+      error: null,
+    });
   });
 
   describe('createAgency', () => {
@@ -144,6 +162,93 @@ describe('AgencyService', () => {
         data: expect.objectContaining({
           subscriptionTier: null,
         }),
+      });
+    });
+
+    it('claims affiliate referral when an affiliate click token is provided', async () => {
+      const mockAgency = {
+        id: 'agency-1',
+        name: 'Test Agency',
+      };
+
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.agency.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+        return callback({
+          agency: {
+            create: vi.fn().mockResolvedValue(mockAgency),
+          },
+          agencyMember: {
+            create: vi.fn().mockResolvedValue({
+              id: 'member-1',
+              agencyId: 'agency-1',
+              email: 'admin@test.com',
+              role: 'admin',
+            }),
+          },
+        } as any);
+      });
+
+      const result = await agencyService.createAgency({
+        name: 'Test Agency',
+        email: 'admin@test.com',
+        affiliateClickToken: 'click_123',
+      });
+
+      expect(result.error).toBeNull();
+      expect(affiliateService.claimReferralForAgency).toHaveBeenCalledWith({
+        clickToken: 'click_123',
+        agencyId: 'agency-1',
+        agencyEmail: 'admin@test.com',
+      });
+    });
+  });
+
+  describe('createAgencyWithCheckout', () => {
+    it('claims affiliate referral after creating an agency checkout', async () => {
+      const mockAgency = {
+        id: 'agency-1',
+        name: 'Test Agency',
+        email: 'admin@test.com',
+      };
+
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.agency.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+        return callback({
+          agency: {
+            create: vi.fn().mockResolvedValue(mockAgency),
+          },
+          agencyMember: {
+            create: vi.fn().mockResolvedValue({
+              id: 'member-1',
+              agencyId: 'agency-1',
+              email: 'admin@test.com',
+              role: 'admin',
+            }),
+          },
+        } as any);
+      });
+
+      vi.mocked(creem.createCheckoutSession).mockResolvedValue({
+        data: { url: 'https://checkout.creem.io/test' },
+        error: null,
+      } as any);
+
+      const result = await agencyService.createAgencyWithCheckout({
+        clerkUserId: 'user_123',
+        name: 'Test Agency',
+        email: 'admin@test.com',
+        selectedTier: 'STARTER',
+        billingInterval: 'monthly',
+        affiliateClickToken: 'click_123',
+      });
+
+      expect(result.error).toBeNull();
+      expect(affiliateService.claimReferralForAgency).toHaveBeenCalledWith({
+        clickToken: 'click_123',
+        agencyId: 'agency-1',
+        agencyEmail: 'admin@test.com',
       });
     });
   });

@@ -17,6 +17,7 @@ import {
   type UnifiedOnboardingStatus,
 } from '@agency-platform/shared';
 import { onboardingEmailService } from '@/services/onboarding-email.service';
+import { affiliateService } from '@/services/affiliate.service';
 
 // Validation schemas
 const createAgencySchema = z.object({
@@ -25,6 +26,7 @@ const createAgencySchema = z.object({
   clerkUserId: z.string().optional(),
   subscriptionTier: z.enum(['STARTER', 'AGENCY']).optional(),
   settings: z.record(z.any()).optional(),
+  affiliateClickToken: z.string().min(1).optional(),
 });
 
 const inviteMemberSchema = z.object({
@@ -189,6 +191,21 @@ export async function createAgency(input: CreateAgencyInput) {
       });
     }
 
+    if (validated.affiliateClickToken) {
+      const affiliateClaim = await affiliateService.claimReferralForAgency({
+        clickToken: validated.affiliateClickToken,
+        agencyId: result.agency.id,
+        agencyEmail: validated.email,
+      });
+
+      if (affiliateClaim.error) {
+        console.warn('Failed to claim affiliate referral during agency creation', {
+          agencyId: result.agency.id,
+          error: affiliateClaim.error,
+        });
+      }
+    }
+
     return { data: result.agency, error: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -223,6 +240,7 @@ export interface CreateAgencyWithCheckoutInput {
   selectedTier: 'STARTER' | 'AGENCY';
   billingInterval: 'monthly' | 'yearly';
   settings?: Record<string, any>;
+  affiliateClickToken?: string;
 }
 
 export async function createAgencyWithCheckout(input: CreateAgencyWithCheckoutInput) {
@@ -235,6 +253,7 @@ export async function createAgencyWithCheckout(input: CreateAgencyWithCheckoutIn
       selectedTier: z.enum(['STARTER', 'AGENCY']),
       billingInterval: z.enum(['monthly', 'yearly']),
       settings: z.record(z.any()).optional(),
+      affiliateClickToken: z.string().min(1).optional(),
     });
 
     const validated = schema.parse(input);
@@ -320,6 +339,21 @@ export async function createAgencyWithCheckout(input: CreateAgencyWithCheckoutIn
         agencyId: result.agency.id,
         error: queued.error,
       });
+    }
+
+    if (validated.affiliateClickToken) {
+      const affiliateClaim = await affiliateService.claimReferralForAgency({
+        clickToken: validated.affiliateClickToken,
+        agencyId: result.agency.id,
+        agencyEmail: validated.email,
+      });
+
+      if (affiliateClaim.error) {
+        console.warn('Failed to claim affiliate referral during signup checkout', {
+          agencyId: result.agency.id,
+          error: affiliateClaim.error,
+        });
+      }
     }
 
     // 3. Create Creem checkout session (outside transaction - agency is already created)

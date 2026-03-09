@@ -7,11 +7,105 @@
 
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
-import { getConnector } from '@/services/connectors/factory';
 import { auditService } from '@/services/audit.service';
-import type { Platform, DashboardConnectionSummary } from '@agency-platform/shared';
+import { getConnector } from '@/services/connectors/factory';
+import { refreshClientPlatformAuthorization } from '@/services/token-lifecycle.service';
+import {
+  getPlatformTokenCapability,
+  type Platform,
+  type DashboardConnectionSummary,
+  type HealthStatus,
+} from '@agency-platform/shared';
 import { z } from 'zod';
 import { invalidateCache } from '@/lib/cache.js';
+
+function calculateHealthStatus(
+  expiresAt: Date | null,
+  platform: Platform,
+  status?: string
+): { health: HealthStatus; daysUntilExpiry: number } {
+  if (status && status !== 'active') {
+    return { health: 'expired', daysUntilExpiry: -1 };
+  }
+
+  const capability = getPlatformTokenCapability(platform);
+  if (capability.expiryBehavior === 'non_expiring') {
+    return { health: 'healthy', daysUntilExpiry: 0 };
+  }
+
+  if (!expiresAt) {
+    return { health: 'unknown', daysUntilExpiry: 0 };
+  }
+
+  const daysUntilExpiry = Math.ceil(
+    (expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (daysUntilExpiry < 0) {
+    return { health: 'expired', daysUntilExpiry };
+  }
+
+  if (daysUntilExpiry <= 7) {
+    return { health: 'expiring', daysUntilExpiry };
+  }
+
+  return { health: 'healthy', daysUntilExpiry };
+}
+
+async function resolveTokenHealth(input: {
+  authorizationId?: string;
+  connectionId: string;
+  platform: Platform;
+  status: string;
+  expiresAt: Date | null;
+  secretId?: string;
+  agencyId?: string;
+  userEmail?: string;
+}): Promise<{ health: HealthStatus; daysUntilExpiry: number }> {
+  const fallback = calculateHealthStatus(input.expiresAt, input.platform, input.status);
+  const capability = getPlatformTokenCapability(input.platform);
+
+  if (
+    !input.secretId
+    || (capability.healthStrategy !== 'live_verify' && capability.healthStrategy !== 'api_key_verify')
+  ) {
+    return fallback;
+  }
+
+  try {
+    const tokens = await infisical.retrieveOAuthTokens(input.secretId);
+    if (!tokens?.accessToken) {
+      return { health: 'expired', daysUntilExpiry: -1 };
+    }
+
+    await auditService.createAuditLog({
+      agencyId: input.agencyId,
+      userEmail: input.userEmail,
+      resourceId: input.connectionId,
+      resourceType: 'connection',
+      action: 'TOKEN_HEALTH_CHECK',
+      details: {
+        platform: input.platform,
+        authorizationId: input.authorizationId,
+      },
+    });
+
+    const connector = getConnector(input.platform);
+    const isValid = await connector.verifyToken(tokens.accessToken);
+
+    if (!isValid) {
+      return { health: 'expired', daysUntilExpiry: -1 };
+    }
+
+    return fallback;
+  } catch (error) {
+    if (fallback.health === 'expired') {
+      return fallback;
+    }
+
+    return { health: 'unknown', daysUntilExpiry: fallback.daysUntilExpiry };
+  }
+}
 
 /**
  * Create a new client connection with platform authorizations
@@ -313,20 +407,111 @@ export async function getTokenHealth(connectionId: string) {
     const authorizations = await prisma.platformAuthorization.findMany({
       where: { connectionId },
       select: {
+        id: true,
+        connectionId: true,
         platform: true,
         status: true,
         expiresAt: true,
         lastRefreshedAt: true,
+        secretId: true,
       },
     });
 
-    return { data: authorizations, error: null };
+    const healthRows = await Promise.all(authorizations.map(async (authorization) => ({
+      ...authorization,
+      ...(await resolveTokenHealth({
+        authorizationId: authorization.id,
+        connectionId: authorization.connectionId,
+        platform: authorization.platform as Platform,
+        status: authorization.status,
+        expiresAt: authorization.expiresAt,
+        secretId: authorization.secretId,
+      })),
+    })));
+
+    return {
+      data: healthRows,
+      error: null,
+    };
   } catch (error) {
     return {
       data: null,
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to get token health',
+      },
+    };
+  }
+}
+
+/**
+ * Get token health for all client authorizations in an agency
+ */
+export async function getAgencyTokenHealth(agencyId: string) {
+  try {
+    const authorizations = await prisma.platformAuthorization.findMany({
+      where: {
+        connection: {
+          agencyId,
+          status: 'active',
+        },
+      },
+      select: {
+        id: true,
+        connectionId: true,
+        platform: true,
+        status: true,
+        expiresAt: true,
+        lastRefreshedAt: true,
+        secretId: true,
+        connection: {
+          select: {
+            agencyId: true,
+            clientEmail: true,
+          },
+        },
+      },
+      orderBy: {
+        expiresAt: 'asc',
+      },
+    });
+
+    const healthRows = await Promise.all(authorizations.map(async (authorization) => {
+      const capability = getPlatformTokenCapability(authorization.platform as Platform);
+
+      return {
+        id: authorization.id,
+        connectionId: authorization.connectionId,
+        clientName: authorization.connection.clientEmail,
+        platform: authorization.platform,
+        status: authorization.status,
+        expiresAt: authorization.expiresAt,
+        lastRefreshedAt: authorization.lastRefreshedAt,
+        canRefresh: capability.connectionMethod === 'oauth'
+          && capability.refreshStrategy === 'automatic',
+        ...(await resolveTokenHealth({
+          authorizationId: authorization.id,
+          connectionId: authorization.connectionId,
+          platform: authorization.platform as Platform,
+          status: authorization.status,
+          expiresAt: authorization.expiresAt,
+          secretId: authorization.secretId,
+          agencyId: authorization.connection.agencyId,
+          userEmail: authorization.connection.clientEmail,
+        })),
+      };
+    }));
+
+    return {
+      data: healthRows,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to get agency token health',
       },
     };
   }
@@ -470,6 +655,15 @@ export async function refreshPlatformAuthorization(
   platform: Platform
 ) {
   try {
+    const refreshResult = await refreshClientPlatformAuthorization(connectionId, platform);
+
+    if (refreshResult.error) {
+      return {
+        data: null,
+        error: refreshResult.error,
+      };
+    }
+
     const authorization = await prisma.platformAuthorization.findFirst({
       where: { connectionId, platform },
     });
@@ -484,53 +678,7 @@ export async function refreshPlatformAuthorization(
       };
     }
 
-    // Get current tokens
-    const tokens = await infisical.retrieveOAuthTokens(authorization.secretId);
-
-    if (!tokens || !tokens.refreshToken) {
-      return {
-        data: null,
-        error: {
-          code: 'NO_REFRESH_TOKEN',
-          message: 'No refresh token available for this platform',
-        },
-      };
-    }
-
-    // Get platform connector and refresh token
-    const connector = getConnector(platform);
-
-    if (!connector.refreshToken) {
-      return {
-        data: null,
-        error: {
-          code: 'NOT_SUPPORTED',
-          message: `${platform} does not support token refresh via refresh_token`,
-        },
-      };
-    }
-
-    // Call connector to refresh token
-    const newTokens = await connector.refreshToken(tokens.refreshToken);
-
-    // Update Infisical with new tokens
-    await infisical.updateOAuthTokens(authorization.secretId, {
-      accessToken: newTokens.accessToken,
-      refreshToken: newTokens.refreshToken || tokens.refreshToken,
-      expiresAt: newTokens.expiresAt,
-    });
-
-    // Update database with new expiration
-    const updated = await prisma.platformAuthorization.update({
-      where: { id: authorization.id },
-      data: {
-        expiresAt: newTokens.expiresAt,
-        lastRefreshedAt: new Date(),
-        status: 'active',
-      },
-    });
-
-    return { data: updated, error: null };
+    return { data: authorization, error: null };
   } catch (error) {
     return {
       data: null,
@@ -619,6 +767,7 @@ export const connectionService = {
   updatePlatformTokens,
   revokeConnection,
   getTokenHealth,
+  getAgencyTokenHealth,
   getAgencyConnections,
   getAgencyConnectionSummaries,
   getDashboardConnectionSummaries,

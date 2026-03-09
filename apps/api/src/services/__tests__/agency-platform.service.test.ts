@@ -9,11 +9,10 @@ import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import * as agencyPlatformService from '@/services/agency-platform.service';
 
-const { deleteCacheMock, invalidateCacheMock, getConnectorMock, refreshTokenMock } = vi.hoisted(() => ({
+const { deleteCacheMock, invalidateCacheMock, ensureAgencyAccessTokenMock } = vi.hoisted(() => ({
   deleteCacheMock: vi.fn(async () => true),
   invalidateCacheMock: vi.fn(async () => ({ success: true, keysDeleted: 1 })),
-  getConnectorMock: vi.fn(),
-  refreshTokenMock: vi.fn(),
+  ensureAgencyAccessTokenMock: vi.fn(),
 }));
 
 // Mock Prisma
@@ -45,8 +44,8 @@ vi.mock('@/lib/cache', () => ({
   invalidateCache: invalidateCacheMock,
 }));
 
-vi.mock('@/services/connectors/factory', () => ({
-  getConnector: getConnectorMock,
+vi.mock('@/services/token-lifecycle.service', () => ({
+  ensureAgencyAccessToken: ensureAgencyAccessTokenMock,
 }));
 
 // Mock Infisical
@@ -63,9 +62,6 @@ vi.mock('@/lib/infisical', () => ({
 describe('AgencyPlatformService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getConnectorMock.mockReturnValue({
-      refreshToken: refreshTokenMock,
-    });
   });
 
   describe('getConnections', () => {
@@ -429,36 +425,30 @@ describe('AgencyPlatformService', () => {
 
   describe('getValidToken', () => {
     it('should return valid access token without refresh', async () => {
-      const futureExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-      const mockConnection = {
-        id: 'conn-1',
-        agencyId: 'agency-1',
-        platform: 'google',
-        secretId: 'google_agency_agency-1',
-        status: 'active',
-        expiresAt: futureExpiry,
-      };
-
-      const mockTokens = {
-        accessToken: 'valid_access_token',
-        refreshToken: 'refresh_token',
-        expiresAt: futureExpiry,
-      };
-
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(mockConnection as any);
-      vi.mocked(infisical.getOAuthTokens).mockResolvedValue(mockTokens);
+      ensureAgencyAccessTokenMock.mockResolvedValue({
+        data: {
+          outcome: 'still_valid',
+          accessToken: 'valid_access_token',
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        error: null,
+      });
 
       const result = await agencyPlatformService.getValidToken('agency-1', 'google');
 
       expect(result.error).toBeNull();
       expect(result.data).toBe('valid_access_token');
-
-      // Should NOT refresh because token is still valid for >5 days
-      expect(infisical.updateOAuthTokens).not.toHaveBeenCalled();
+      expect(ensureAgencyAccessTokenMock).toHaveBeenCalledWith('agency-1', 'google');
     });
 
     it('should return error if connection not found', async () => {
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(null);
+      ensureAgencyAccessTokenMock.mockResolvedValue({
+        data: null,
+        error: {
+          code: 'CONNECTION_NOT_FOUND',
+          message: 'Platform connection not found',
+        },
+      });
 
       const result = await agencyPlatformService.getValidToken('agency-1', 'google');
 
@@ -467,14 +457,13 @@ describe('AgencyPlatformService', () => {
     });
 
     it('should return error if connection is not active', async () => {
-      const mockConnection = {
-        id: 'conn-1',
-        agencyId: 'agency-1',
-        platform: 'google',
-        status: 'revoked',
-      };
-
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(mockConnection as any);
+      ensureAgencyAccessTokenMock.mockResolvedValue({
+        data: null,
+        error: {
+          code: 'CONNECTION_NOT_ACTIVE',
+          message: 'Platform connection is not active',
+        },
+      });
 
       const result = await agencyPlatformService.getValidToken('agency-1', 'google');
 
@@ -482,28 +471,19 @@ describe('AgencyPlatformService', () => {
       expect(result.error?.code).toBe('CONNECTION_NOT_ACTIVE');
     });
 
-    it('should return INVALID_TOKEN when token is expired and refresh fails', async () => {
-      const expiredAt = new Date(Date.now() - 60 * 60 * 1000);
-      const mockConnection = {
-        id: 'conn-1',
-        agencyId: 'agency-1',
-        platform: 'google',
-        secretId: 'google_agency_agency-1',
-        status: 'active',
-      };
-
-      vi.mocked(prisma.agencyPlatformConnection.findFirst).mockResolvedValue(mockConnection as any);
-      vi.mocked(infisical.getOAuthTokens).mockResolvedValue({
-        accessToken: 'expired_access_token',
-        refreshToken: 'invalid_refresh_token',
-        expiresAt: expiredAt,
+    it('should return reconnect required when expired platform requires reconnect', async () => {
+      ensureAgencyAccessTokenMock.mockResolvedValue({
+        data: null,
+        error: {
+          code: 'RECONNECT_REQUIRED',
+          message: 'meta authorization has expired and requires reconnect',
+        },
       });
-      refreshTokenMock.mockRejectedValue(new Error('invalid_grant'));
 
-      const result = await agencyPlatformService.getValidToken('agency-1', 'google');
+      const result = await agencyPlatformService.getValidToken('agency-1', 'meta');
 
       expect(result.data).toBeNull();
-      expect(result.error?.code).toBe('INVALID_TOKEN');
+      expect(result.error?.code).toBe('RECONNECT_REQUIRED');
     });
   });
 

@@ -164,7 +164,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
       return sendError(reply, 'UNAUTHORIZED', 'Authenticated user context is required', 401);
     }
 
-    const body = request.body as { clerkUserId?: string; [key: string]: any };
+    const body = request.body as { clerkUserId?: string; affiliateClickToken?: string; [key: string]: any };
     if (body.clerkUserId && body.clerkUserId !== principalId) {
       return sendError(reply, 'FORBIDDEN', 'You do not have access to this agency resource', 403);
     }
@@ -202,6 +202,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
         selectedTier: 'STARTER' | 'AGENCY';
         billingInterval: 'monthly' | 'yearly';
         settings?: Record<string, any>;
+        affiliateClickToken?: string;
       };
 
       if (body.clerkUserId && body.clerkUserId !== principalId) {

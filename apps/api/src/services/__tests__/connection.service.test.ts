@@ -9,6 +9,12 @@ import { prisma } from '@/lib/prisma';
 import * as connectionService from '@/services/connection.service';
 import { infisical } from '@/lib/infisical';
 
+const { refreshClientPlatformAuthorizationMock, getConnectorMock, verifyTokenMock } = vi.hoisted(() => ({
+  refreshClientPlatformAuthorizationMock: vi.fn(),
+  getConnectorMock: vi.fn(),
+  verifyTokenMock: vi.fn(),
+}));
+
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -36,6 +42,14 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+vi.mock('@/services/token-lifecycle.service', () => ({
+  refreshClientPlatformAuthorization: refreshClientPlatformAuthorizationMock,
+}));
+
+vi.mock('@/services/connectors/factory', () => ({
+  getConnector: getConnectorMock,
+}));
+
 // Mock Infisical
 vi.mock('@/lib/infisical', () => ({
   infisical: {
@@ -50,6 +64,10 @@ vi.mock('@/lib/infisical', () => ({
 describe('ConnectionService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getConnectorMock.mockReturnValue({
+      verifyToken: verifyTokenMock,
+    });
+    verifyTokenMock.mockResolvedValue(true);
   });
 
   describe('createClientConnection', () => {
@@ -222,6 +240,93 @@ describe('ConnectionService', () => {
     });
   });
 
+  describe('getAgencyTokenHealth', () => {
+    it('should return agency-wide token health with refresh capability', async () => {
+      const expiresAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+      vi.mocked(prisma.platformAuthorization.findMany).mockResolvedValue([
+        {
+          id: 'auth-google',
+          connectionId: 'connection-1',
+          platform: 'google_ads',
+          status: 'active',
+          expiresAt,
+          lastRefreshedAt: null,
+          secretId: 'secret-google',
+          connection: {
+            agencyId: 'agency-1',
+            clientEmail: 'client@example.com',
+          },
+        },
+        {
+          id: 'auth-meta',
+          connectionId: 'connection-2',
+          platform: 'meta_ads',
+          status: 'active',
+          expiresAt,
+          lastRefreshedAt: null,
+          secretId: 'secret-meta',
+          connection: {
+            agencyId: 'agency-1',
+            clientEmail: 'meta@example.com',
+          },
+        },
+      ] as any);
+      vi.mocked(infisical.retrieveOAuthTokens)
+        .mockResolvedValueOnce({ accessToken: 'google-token' } as any)
+        .mockResolvedValueOnce({ accessToken: 'meta-token' } as any);
+      verifyTokenMock.mockResolvedValue(true);
+
+      const result = await connectionService.getAgencyTokenHealth('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual([
+        expect.objectContaining({
+          id: 'auth-google',
+          clientName: 'client@example.com',
+          health: 'expiring',
+          canRefresh: true,
+        }),
+        expect.objectContaining({
+          id: 'auth-meta',
+          clientName: 'meta@example.com',
+          health: 'expiring',
+          canRefresh: false,
+        }),
+      ]);
+    });
+
+    it('should mark tokens expired when live verification fails', async () => {
+      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      vi.mocked(prisma.platformAuthorization.findMany).mockResolvedValue([
+        {
+          id: 'auth-google',
+          connectionId: 'connection-1',
+          platform: 'google_ads',
+          status: 'active',
+          expiresAt,
+          lastRefreshedAt: null,
+          secretId: 'secret-google',
+          connection: {
+            agencyId: 'agency-1',
+            clientEmail: 'client@example.com',
+          },
+        },
+      ] as any);
+      vi.mocked(infisical.retrieveOAuthTokens).mockResolvedValue({ accessToken: 'google-token' } as any);
+      verifyTokenMock.mockResolvedValue(false);
+
+      const result = await connectionService.getAgencyTokenHealth('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual([
+        expect.objectContaining({
+          id: 'auth-google',
+          health: 'expired',
+        }),
+      ]);
+    });
+  });
+
   describe('getPlatformTokens', () => {
     it('should retrieve tokens from Infisical for a platform authorization', async () => {
       const mockAuth = {
@@ -327,6 +432,50 @@ describe('ConnectionService', () => {
       expect(infisical.deleteSecret).toHaveBeenCalledTimes(2);
       expect(infisical.deleteSecret).toHaveBeenCalledWith('oauth_meta_ads_connection-1');
       expect(infisical.deleteSecret).toHaveBeenCalledWith('oauth_google_ads_connection-1');
+    });
+  });
+
+  describe('refreshPlatformAuthorization', () => {
+    it('should refresh a platform authorization through the lifecycle service', async () => {
+      const refreshedAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const updatedAuthorization = {
+        id: 'auth-1',
+        connectionId: 'connection-1',
+        platform: 'google_ads',
+        status: 'active',
+        expiresAt: refreshedAt,
+      };
+
+      refreshClientPlatformAuthorizationMock.mockResolvedValue({
+        data: {
+          outcome: 'refreshed',
+          accessToken: 'new-access-token',
+          expiresAt: refreshedAt,
+        },
+        error: null,
+      });
+      vi.mocked(prisma.platformAuthorization.findFirst).mockResolvedValue(updatedAuthorization as any);
+
+      const result = await connectionService.refreshPlatformAuthorization('connection-1', 'google_ads');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual(updatedAuthorization);
+      expect(refreshClientPlatformAuthorizationMock).toHaveBeenCalledWith('connection-1', 'google_ads');
+    });
+
+    it('should return lifecycle errors unchanged', async () => {
+      refreshClientPlatformAuthorizationMock.mockResolvedValue({
+        data: null,
+        error: {
+          code: 'RECONNECT_REQUIRED',
+          message: 'meta_ads requires reconnect instead of automatic refresh',
+        },
+      });
+
+      const result = await connectionService.refreshPlatformAuthorization('connection-1', 'meta_ads');
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('RECONNECT_REQUIRED');
     });
   });
 });

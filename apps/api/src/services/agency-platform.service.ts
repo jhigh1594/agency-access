@@ -9,7 +9,7 @@
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache';
-import { getConnector } from '@/services/connectors/factory';
+import { ensureAgencyAccessToken } from '@/services/token-lifecycle.service';
 import type { Platform } from '@agency-platform/shared';
 import { z } from 'zod';
 
@@ -370,125 +370,16 @@ export async function refreshConnection(
  */
 export async function getValidToken(agencyId: string, platform: string) {
   try {
-    // Find the connection
-    const connection = await prisma.agencyPlatformConnection.findFirst({
-      where: { agencyId, platform },
-    });
+    const result = await ensureAgencyAccessToken(agencyId, platform as Platform);
 
-    if (!connection) {
+    if (result.error || !result.data) {
       return {
         data: null,
-        error: {
-          code: 'CONNECTION_NOT_FOUND',
-          message: 'Platform connection not found',
-        },
+        error: result.error,
       };
     }
 
-    if (connection.status !== 'active') {
-      return {
-        data: null,
-        error: {
-          code: 'CONNECTION_NOT_ACTIVE',
-          message: 'Platform connection is not active',
-        },
-      };
-    }
-
-    // Get tokens from Infisical
-    if (!connection.secretId) {
-      return {
-        data: null,
-        error: {
-          code: 'TOKEN_NOT_FOUND',
-          message: 'No secret ID associated with this connection',
-        },
-      };
-    }
-    const tokens = await infisical.getOAuthTokens(connection.secretId);
-
-    if (!tokens.accessToken) {
-      return {
-        data: null,
-        error: {
-          code: 'TOKEN_NOT_FOUND',
-          message: 'Access token not found for this connection',
-        },
-      };
-    }
-
-    // Check if token needs refresh (within 5 days of expiry)
-    const now = new Date();
-    const fiveDaysFromNow = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
-    const needsRefresh = tokens.expiresAt && tokens.expiresAt < fiveDaysFromNow;
-    const isExpired = tokens.expiresAt && tokens.expiresAt <= now;
-
-    if (needsRefresh) {
-      if (!tokens.refreshToken) {
-        if (isExpired) {
-          return {
-            data: null,
-            error: {
-              code: 'INVALID_TOKEN',
-              message: 'Access token has expired and cannot be refreshed. Please reconnect the platform.',
-            },
-          };
-        }
-        return { data: tokens.accessToken, error: null };
-      }
-
-      // Get platform connector and attempt refresh
-      const connector = getConnector(connection.platform as Platform);
-
-      if (connector.refreshToken) {
-        try {
-          // Refresh the token
-          const newTokens = await connector.refreshToken(tokens.refreshToken);
-
-          // Update Infisical with new tokens
-          if (connection.secretId) {
-            await infisical.updateOAuthTokens(connection.secretId, {
-              accessToken: newTokens.accessToken,
-              refreshToken: newTokens.refreshToken || tokens.refreshToken,
-              expiresAt: newTokens.expiresAt,
-            });
-          }
-
-          // Update database with new expiration
-          await prisma.agencyPlatformConnection.update({
-            where: { id: connection.id },
-            data: {
-              expiresAt: newTokens.expiresAt,
-              lastRefreshedAt: new Date(),
-            },
-          });
-
-          return { data: newTokens.accessToken, error: null };
-        } catch (error) {
-          console.error(`Token refresh failed for ${connection.platform}:`, error);
-          if (isExpired) {
-            return {
-              data: null,
-              error: {
-                code: 'INVALID_TOKEN',
-                message: 'Access token is expired and refresh failed. Please reconnect the platform.',
-              },
-            };
-          }
-          // Continue to return existing token on refresh failure when current token is still valid.
-        }
-      } else if (isExpired) {
-        return {
-          data: null,
-          error: {
-            code: 'INVALID_TOKEN',
-            message: 'Access token has expired and this platform does not support refresh. Please reconnect.',
-          },
-        };
-      }
-    }
-
-    return { data: tokens.accessToken, error: null };
+    return { data: result.data.accessToken, error: null };
   } catch (error) {
     return {
       data: null,
