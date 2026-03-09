@@ -102,6 +102,9 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Use @tanstack/react-query for server data.
 - Keep UI flows consistent with existing patterns (shadcn/ui components).
 - For UI testing, use the dev-browser skill for automated browser flows.
+- Public Next.js routes behind Clerk must be added to the allowlist in [apps/web/src/proxy.ts](/Users/jhigh/agency-access-platform/apps/web/src/proxy.ts). If you add a new marketing page, invite/token flow, redirect handler, or any route that must work before sign-in, update `isPublicRoute` in the same change.
+- Treat referral and token entry points as public-by-default unless there is a strong reason not to. A missed allowlist entry can make a working page look broken by redirecting into Clerk instead of rendering the route.
+- When changing public-route behavior, add or update a focused proxy test in [apps/web/src/__tests__/proxy.test.ts](/Users/jhigh/agency-access-platform/apps/web/src/__tests__/proxy.test.ts) so Clerk interception regressions are caught quickly.
 
 ## Vercel Build and Next.js
 - **Commit new modules before deploy**: Any file the app imports must be in the repo. Untracked files cause "Module not found" on Vercel.

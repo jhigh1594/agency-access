@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/pricing',
   '/contact',
+  '/affiliate',
   '/blog',
   '/blog/(.*)',
   '/compare',
@@ -23,6 +24,7 @@ const isPublicRoute = createRouteMatcher([
   '/invite/(.*)',
   '/platforms/callback',
   '/onboarding/(.*)',
+  '/r/(.*)',
 ])
 
 /** Marketing pages that should redirect authenticated users to the dashboard. */
