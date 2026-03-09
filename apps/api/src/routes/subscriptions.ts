@@ -98,7 +98,13 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       return sendSuccess(reply, result.data);
     } catch (error) {
       fastify.log.error({ error }, 'Error in POST /subscriptions/checkout');
-      return sendError(reply, 'INTERNAL_ERROR', 'Failed to create checkout session', 500);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return sendError(
+        reply,
+        'INTERNAL_ERROR',
+        `Failed to create checkout session: ${errorMessage}`,
+        500
+      );
     }
   });
 

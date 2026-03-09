@@ -191,18 +191,21 @@ class SubscriptionService {
     }
 
     // Update subscription record with customer ID
+    // Only update creemCustomerId if we have a new value (from checkout response)
     await prisma.$transaction(async (tx) => {
       await tx.subscription.upsert({
         where: { agencyId },
         create: {
           agencyId,
-          creemCustomerId,
           tier: 'STARTER', // Will be updated by webhook
           status: 'incomplete',
+          ...(creemCustomerId && { creemCustomerId }),
         },
-        update: {
-          creemCustomerId,
-        },
+        update: existingSubscription
+          ? {}
+          : {
+              creemCustomerId,
+            },
       });
     });
 

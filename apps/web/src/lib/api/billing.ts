@@ -169,7 +169,10 @@ export async function createCheckoutSession(
     },
     body: JSON.stringify({ agencyId: orgId, tier, billingInterval, successUrl, cancelUrl }),
   });
-  if (!response.ok) throw new Error('Failed to create checkout session');
+  if (!response.ok) {
+    const errorResult = await response.json();
+    throw new Error(errorResult.error?.message || 'Failed to create checkout session');
+  }
   const result = await response.json();
   return result.data;
 }

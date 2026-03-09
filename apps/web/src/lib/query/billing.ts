@@ -305,13 +305,14 @@ export function useCreateCheckout() {
         }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
+        const result = await response.json();
         const message =
           (result?.error?.message as string) || 'Failed to create checkout session';
         throw new Error(message);
       }
+
+      const result = await response.json();
 
       const checkoutUrl = result?.data?.checkoutUrl;
       if (!checkoutUrl || typeof checkoutUrl !== 'string') {

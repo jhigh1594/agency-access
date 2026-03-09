@@ -25,6 +25,7 @@ import {
   type SubscriptionTier,
   type TierLimits,
 } from '@agency-platform/shared';
+import { useCreateCheckout, useOpenPortal } from '@/lib/query/billing';
 
 interface SubscriptionData {
   id: string;
@@ -44,8 +45,12 @@ interface TierDetailsData {
 }
 
 export function BillingSettingsCard() {
-  const { orgId, getToken } = useAuth();
+  const { orgId } = useAuth();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+
+  const openPortalMutation = useOpenPortal();
+  const createCheckoutMutation = useCreateCheckout();
 
   // Fetch subscription details
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
@@ -53,7 +58,7 @@ export function BillingSettingsCard() {
     queryFn: async () => {
       if (!orgId) throw new Error('No organization ID');
 
-      const token = await getToken();
+      const token = await (window as any).Clerk.session.getToken();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/${orgId}`,
         {
@@ -79,7 +84,7 @@ export function BillingSettingsCard() {
     queryFn: async () => {
       if (!orgId) throw new Error('No organization ID');
 
-      const token = await getToken();
+      const token = await (window as any).Clerk.session.getToken();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/${orgId}/tier`,
         {
@@ -104,66 +109,33 @@ export function BillingSettingsCard() {
 
     setIsOpeningPortal(true);
     try {
-      const token = await getToken();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/portal`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            agencyId: orgId,
-            returnUrl: window.location.href,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to open portal');
-      }
-
-      const result = await response.json();
+      const result = await openPortalMutation.mutateAsync(window.location.href);
       // Redirect to Creem portal
-      window.location.href = result.data.portalUrl;
+      window.location.href = result.portalUrl;
     } catch (error) {
       console.error('Failed to open portal:', error);
       setIsOpeningPortal(false);
+      alert(error instanceof Error ? error.message : 'Failed to open portal');
     }
   };
 
   const handleUpgrade = async (tier: SubscriptionTier) => {
     if (!orgId) return;
 
+    setIsCreatingCheckout(true);
     try {
-      const token = await getToken();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/checkout`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            agencyId: orgId,
-            tier,
-            successUrl: `${window.location.origin}/settings?checkout=success`,
-            cancelUrl: `${window.location.origin}/settings?checkout=cancel`,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
-      }
-
-      const result = await response.json();
+      const result = await createCheckoutMutation.mutateAsync({
+        tier,
+        billingInterval: 'monthly',
+        successUrl: `${window.location.origin}/settings?checkout=success`,
+        cancelUrl: `${window.location.origin}/settings?checkout=cancel`,
+      });
       // Redirect to Creem checkout
-      window.location.href = result.data.checkoutUrl;
+      window.location.href = result.checkoutUrl;
     } catch (error) {
       console.error('Failed to create checkout:', error);
+      setIsCreatingCheckout(false);
+      alert(error instanceof Error ? error.message : 'Failed to create checkout session');
     }
   };
 
@@ -406,10 +378,20 @@ export function BillingSettingsCard() {
                 onClick={() =>
                   handleUpgrade(isFree ? 'STARTER' : currentTier === 'STARTER' ? 'PRO' : 'ENTERPRISE')
                 }
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+                disabled={isCreatingCheckout}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
               >
-                <TrendingUp className="h-4 w-4" />
-                Upgrade to {isFree ? 'Growth' : currentTier === 'STARTER' ? 'Pro' : 'Enterprise'}
+                {isCreatingCheckout ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="h-4 w-4" />
+                    Upgrade to {isFree ? 'Growth' : currentTier === 'STARTER' ? 'Pro' : 'Enterprise'}
+                  </>
+                )}
               </button>
             )}
           </>
