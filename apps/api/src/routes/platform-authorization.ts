@@ -123,7 +123,6 @@ export async function platformAuthorizationRoutes(fastify: FastifyInstance) {
           agencyName: agencyResult?.name || 'Agency',
           clientName: accessRequest.clientName,
           expiresAt: accessRequest.expiresAt,
-          authModel: accessRequest.authModel,
         },
         branding: {
           logoUrl: branding?.logoUrl,

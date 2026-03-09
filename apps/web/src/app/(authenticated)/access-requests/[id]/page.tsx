@@ -72,7 +72,6 @@ export default function AccessRequestDetailPage({ params }: AccessRequestDetailP
         posthog.capture('access_request_detail_viewed', {
           access_request_id: accessRequest.id,
           status: accessRequest.status,
-          auth_model: accessRequest.authModel,
         });
       } catch {
         // Ignore analytics failures.

@@ -215,21 +215,6 @@ export type AuthorizationStatus = z.infer<typeof AuthorizationStatusSchema>;
 export const AgencyRoleSchema = z.enum(['admin', 'member', 'viewer']);
 export type AgencyRole = z.infer<typeof AgencyRoleSchema>;
 
-// Authorization models supported by access requests
-export const AuthModelSchema = z.enum(['client_authorization', 'delegated_access']);
-export type AuthModel = z.infer<typeof AuthModelSchema>;
-
-export const AUTH_MODEL_DESCRIPTIONS: Record<AuthModel, { title: string; description: string }> = {
-  client_authorization: {
-    title: 'Client Authorization',
-    description: 'Send the client a link so they can connect and grant access from their own platform accounts',
-  },
-  delegated_access: {
-    title: 'Delegated Access',
-    description: 'Use your agency\'s platform accounts to manage client campaigns directly in the platform UI',
-  },
-};
-
 // Unified onboarding lifecycle (server-persisted progress for re-entry and recovery)
 export const UnifiedOnboardingStatusSchema = z.enum([
   'not_started',
@@ -891,7 +876,6 @@ export const AccessRequestPlatformUpdateSchema = z.object({
 export type AccessRequestPlatformUpdate = z.infer<typeof AccessRequestPlatformUpdateSchema>;
 
 export const AccessRequestUpdatePayloadSchema = z.object({
-  authModel: z.enum(['client_authorization', 'delegated_access']).optional(),
   externalReference: z.string().max(255).optional(),
   platforms: z.array(AccessRequestPlatformUpdateSchema).min(1).optional(),
   intakeFields: z.array(AccessRequestIntakeFieldSchema).optional(),
@@ -969,7 +953,6 @@ const WebhookAccessRequestSnapshotSchema = z.object({
   clientPortalUrl: z.string().url().optional(),
   requestedPlatforms: z.array(z.string()),
   completedPlatforms: z.array(z.string()),
-  authModel: z.enum(['client_authorization', 'delegated_access']),
   externalReference: z.string().optional().nullable(),
 });
 
@@ -1062,7 +1045,6 @@ export interface ClientAccessRequestPayload {
   clientName: string;
   clientEmail: string;
   externalReference?: string;
-  authModel: 'client_authorization' | 'delegated_access';
   status: AccessRequestStatus;
   uniqueToken: string;
   expiresAt: string;

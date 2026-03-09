@@ -427,10 +427,10 @@ Across all platforms, agencies typically request:
 4. **Custom Branding** - White-label for agencies ✅ (your `branding` field)
 5. **Intake Fields** - Custom form questions during authorization ✅ (your `intakeFields`)
 6. **Audit Logging** - Security tracking and compliance ✅ (your `AuditLog` model)
-7. **Delegated Access** - Agency grants access from their own accounts ✅ (your `authModel: 'delegated_access'`)
+7. **Manual Invite Coverage** - Platform-native invite and verification flows for non-OAuth platforms ✅
 
 **Differentiators Over Leadsie**:
-- **Dual authorization models** (client auth + delegated access from agency)
+- **Mixed platform support** (OAuth plus manual invite flows in one product)
 - **Built-in template library** for reusability
 - **Custom intake fields** during authorization (not just platform access)
 - **Multi-language support** (EN, ES, NL)
@@ -983,8 +983,8 @@ Based on research findings, your platform MUST implement:
 **1. The "15 Email Problem" Is Your North Star Metric**
 The research consistently shows agencies exchange 5-15 emails just to get platform access. This isn't a technical problem—it's a *communication breakdown* problem. Your platform's success hinges on collapsing this to **1 email with 1 link**. Every additional step you add (account creation, form filling, email verification) moves you closer to the manual process you're replacing.
 
-**2. Your Dual Authorization Model Is Genuinely Unique**
-Leadsie (the market leader) only handles `client_authorization`. Your `authModel: 'delegated_access'` where agencies grant access from their own accounts is **not available anywhere**. This is crucial for enterprise agencies with master accounts who sublease access to clients. This could be your wedge into the enterprise market that Leadsie hasn't captured.
+**2. Mixed OAuth + Manual Coverage Is Genuinely Useful**
+Leadsie (the market leader) primarily optimizes around client OAuth. Your ability to support both OAuth-capable platforms and manual invite/verification platforms in one request is valuable for agencies that manage access across fragmented ecosystems.
 
 **3. Security Isn't a Feature—It's Your Enterprise Moat**
 While SMB agencies care about speed, enterprise agencies in regulated industries (finance, healthcare, legal) need audit trails and compliance. Your `AuditLog` model and Infisical integration aren't "nice to have"—they're your competitive moat against cheaper competitors who store tokens in plaintext. Lead with security for enterprise, speed for SMB.

@@ -41,7 +41,6 @@ describe('access-requests api client', () => {
         agencyId: 'agency-123',
         clientName: 'Client',
         clientEmail: 'client@example.com',
-        authModel: 'delegated_access',
         platforms: [],
       },
       async () => 'token-123'
@@ -78,7 +77,6 @@ describe('access-requests api client', () => {
     await updateAccessRequest(
       'request-123',
       {
-        authModel: 'delegated_access',
         platforms: [{ platformGroup: 'google', products: [{ product: 'google_ads', accessLevel: 'admin', accounts: [] }] }],
       },
       async () => 'token-123'

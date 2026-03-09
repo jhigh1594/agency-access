@@ -331,7 +331,7 @@ function AccessRequestWizardContent() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                disabled={!state.client || !state.authModel}
+                disabled={!state.client}
                 className="px-8 py-3 bg-coral text-white text-base rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md font-medium"
               >
                 Continue to Platforms

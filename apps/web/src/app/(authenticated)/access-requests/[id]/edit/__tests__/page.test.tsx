@@ -56,7 +56,6 @@ describe('EditAccessRequestPage', () => {
         clientId: 'client-1',
         clientName: 'Acme',
         clientEmail: 'owner@acme.com',
-        authModel: 'delegated_access',
         status: 'pending',
         uniqueToken: 'token-1',
         expiresAt: '2026-03-14T00:00:00.000Z',
@@ -84,7 +83,6 @@ describe('EditAccessRequestPage', () => {
         agencyId: 'agency-1',
         clientName: 'Acme',
         clientEmail: 'owner@acme.com',
-        authModel: 'delegated_access',
         status: 'completed',
         uniqueToken: 'token-2',
         expiresAt: '2026-03-14T00:00:00.000Z',
@@ -111,7 +109,6 @@ describe('EditAccessRequestPage', () => {
         clientName: 'Acme',
         clientEmail: 'owner@acme.com',
         externalReference: 'crm-initial',
-        authModel: 'delegated_access',
         status: 'pending',
         uniqueToken: 'token-3',
         expiresAt: '2026-03-14T00:00:00.000Z',
@@ -134,7 +131,6 @@ describe('EditAccessRequestPage', () => {
         clientName: 'Acme',
         clientEmail: 'owner@acme.com',
         externalReference: 'crm-updated',
-        authModel: 'client_authorization',
         status: 'pending',
         uniqueToken: 'token-3',
         expiresAt: '2026-03-14T00:00:00.000Z',
@@ -156,7 +152,6 @@ describe('EditAccessRequestPage', () => {
 
     await screen.findByText('Edit Access Request');
 
-    fireEvent.change(screen.getByLabelText('Authorization Model'), { target: { value: 'client_authorization' } });
     fireEvent.change(screen.getByLabelText('External Reference'), { target: { value: 'crm-updated' } });
     fireEvent.change(screen.getByDisplayValue('Website'), { target: { value: 'Business Website' } });
     fireEvent.change(screen.getByLabelText('Primary Color'), { target: { value: '#00AA55' } });
@@ -166,7 +161,6 @@ describe('EditAccessRequestPage', () => {
       expect(accessRequestsApi.updateAccessRequest).toHaveBeenCalledWith(
         'request-3',
         expect.objectContaining({
-          authModel: 'client_authorization',
           externalReference: 'crm-updated',
           platforms: expect.any(Array),
           intakeFields: expect.arrayContaining([

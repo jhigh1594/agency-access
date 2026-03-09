@@ -150,7 +150,6 @@ model AccessRequest {
   clientEmail  String    @map("client_email")
   externalReference String? @map("external_reference")
   platforms    Json // Platform configuration with groups, products, access levels
-  authModel    String    @default("client_authorization") @map("auth_model") // 'client_authorization' | 'delegated_access'
   status       String // 'pending', 'partial', 'completed', 'expired', 'revoked'
   uniqueToken  String    @unique @map("unique_token")
   expiresAt    DateTime  @map("expires_at")

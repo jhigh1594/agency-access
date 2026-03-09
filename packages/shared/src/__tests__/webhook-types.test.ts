@@ -67,7 +67,6 @@ describe('Webhook shared contracts', () => {
           requestUrl: 'https://app.example.com/invite/abc123',
           requestedPlatforms: ['google', 'meta'],
           completedPlatforms: ['google', 'meta'],
-          authModel: 'delegated_access',
           externalReference: 'crm-42',
         },
         client: {

@@ -407,7 +407,6 @@ describe('AccessRequestService', () => {
           clientName: 'Test Client',
           clientEmail: 'client@test.com',
           externalReference: 'crm-123',
-          authModel: 'client_authorization',
           platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
           status: 'completed',
           uniqueToken: 'token-complete-1',
@@ -517,7 +516,7 @@ describe('AccessRequestService', () => {
       } as any);
 
       const result = await accessRequestService.updateAccessRequest('request-1', {
-        authModel: 'delegated_access',
+        branding: { primaryColor: '#FF6B35' },
       } as any);
 
       expect(result.data).toBeNull();
@@ -537,11 +536,9 @@ describe('AccessRequestService', () => {
         status: 'pending',
         clientEmail: 'client@test.com',
         uniqueToken: 'tokenold12345',
-        authModel: 'delegated_access',
       } as any);
 
       const result = await accessRequestService.updateAccessRequest('request-1', {
-        authModel: 'delegated_access',
         platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
         intakeFields: [{ id: '1', label: 'Website', type: 'url', required: true, order: 0 }],
         branding: { primaryColor: '#FF6B35' },
@@ -556,7 +553,6 @@ describe('AccessRequestService', () => {
       expect(prisma.accessRequest.update).toHaveBeenCalledWith({
         where: { id: 'request-1' },
         data: expect.objectContaining({
-          authModel: 'delegated_access',
           platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
           intakeFields: [{ id: '1', label: 'Website', type: 'url', required: true, order: 0 }],
           branding: { primaryColor: '#FF6B35' },
@@ -619,7 +615,6 @@ describe('AccessRequestService', () => {
           clientName: 'Client Partial',
           clientEmail: 'partial@test.com',
           externalReference: null,
-          authModel: 'delegated_access',
           platforms: [
             { platform: 'google_ads', accessLevel: 'manage' },
             { platform: 'meta_ads', accessLevel: 'manage' },

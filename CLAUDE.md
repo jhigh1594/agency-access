@@ -125,7 +125,7 @@ Success: `{ data: T }`. Error: `{ error: { code: string; message: string; detail
 
 **Client Authorization Flow:** Agency → AgencyMember, Client, AccessRequestTemplate, AccessRequest (uniqueToken, platforms[]) → ClientConnection → PlatformAuthorization[]; AuditLog append-only.
 
-**Agency Platform Connections:** Agency → AgencyPlatformConnection[] (each has secretId; used for delegated_access).
+**Agency Platform Connections:** Agency → AgencyPlatformConnection[] (each has secretId; used for agency-side OAuth identities and manual invite instructions).
 
 **Key unique constraints:** AccessRequest.uniqueToken; PlatformAuthorization (connectionId + platform); AgencyPlatformConnection (agencyId + platform); AgencyMember (agencyId + email); Client (agencyId + email); AccessRequestTemplate (agencyId + name).
 
@@ -150,9 +150,9 @@ OAuth connectors live in `apps/api/src/services/connectors/`. Configuration-driv
 
 Two steps: (1) OAuth redirect and scope authorization, (2) Asset selection — backend fetches assets (e.g. GET /api/client-assets/:connectionId/:platform), client selects; stored in ClientConnection.grantedAssets and PlatformAuthorization.metadata.selectedAssets.
 
-### Authorization Models
+### Authorization Routing
 
-Two models: **client_authorization** (default) — send client a link to connect and grant access from their own platform accounts; **delegated_access** — agency uses its own AgencyPlatformConnection to manage client campaigns. See AUTH_MODEL_DESCRIPTIONS in shared types.
+Authorization flow is determined per platform. OAuth-capable platforms use client OAuth. Manual-invite platforms use platform-native instructions and verification. There is no separate request-level authorization model.
 
 ### Access Levels
 
@@ -246,7 +246,7 @@ Backend: `apps/api/.env` — see `apps/api/.env.example`. Core (NODE_ENV, PORT, 
 
 ## Current State & Known Issues
 
-- **authModel:** Default is `client_authorization`. `delegated_access` also supported. Backend routing per model may be incomplete — validate flows when changing.
+- **Authorization flow:** Determined from platform capabilities. OAuth platforms run through client authorization; manual platforms use invite/instruction flows.
 - **Subdomain / white-label:** Planned but not implemented (e.g. `{subdomain}.accessplatform.com`).
 - **Zapier and Beehiiv:** Use manual invitation flows, not standard OAuth. Intentional.
 

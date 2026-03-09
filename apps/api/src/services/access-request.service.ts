@@ -39,7 +39,6 @@ const createAccessRequestSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   clientEmail: z.string().email('Invalid email address'),
   externalReference: z.string().max(255, 'External reference must be 255 characters or less').optional(),
-  authModel: z.enum(['client_authorization', 'delegated_access']).optional().default('delegated_access'),
   platforms: z.array(
     z.object({
       platform: AccessRequestPlatformSchema,
@@ -64,7 +63,6 @@ const createAccessRequestSchema = z.object({
 });
 
 const updateAccessRequestSchema = z.object({
-  authModel: z.enum(['client_authorization', 'delegated_access']).optional(),
   externalReference: z.string().max(255, 'External reference must be 255 characters or less').optional(),
   platforms: z.array(
     z.object({
@@ -228,7 +226,6 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         clientName: validated.clientName,
         clientEmail: validated.clientEmail,
         externalReference: validated.externalReference,
-        authModel: validated.authModel,
         uniqueToken,
         platforms: validated.platforms as any,
         intakeFields: normalizedIntakeFields as any,
@@ -420,7 +417,6 @@ async function emitAccessRequestLifecycleWebhook(input: {
         clientName: true,
         clientEmail: true,
         externalReference: true,
-        authModel: true,
         platforms: true,
         status: true,
         uniqueToken: true,
@@ -482,7 +478,6 @@ async function emitAccessRequestLifecycleWebhook(input: {
         createdAt: accessRequest.createdAt,
         authorizedAt: accessRequest.authorizedAt,
         expiresAt: accessRequest.expiresAt,
-        authModel: accessRequest.authModel as 'client_authorization' | 'delegated_access',
         externalReference: accessRequest.externalReference,
         uniqueToken: accessRequest.uniqueToken,
       },

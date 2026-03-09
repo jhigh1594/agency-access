@@ -213,9 +213,9 @@ When a marketing agency needs access to a client's advertising accounts, the cur
 - Use case: Agency manages ads from their own account, gives client view-only access
 
 **Implementation:**
-- `AccessRequest.authModel` field determines which flow to use
-- Frontend and backend handle both flows differently
-- UI adapts based on authorization model
+- Flow is derived from platform capabilities
+- OAuth-capable platforms use client OAuth screens
+- Manual platforms use invite/instruction and verification flows
 
 ### 10. Client Asset Selection
 
@@ -336,7 +336,7 @@ When a marketing agency needs access to a client's advertising accounts, the cur
 3. **AgencyPlatformConnection** - Agency's own OAuth connections
    - Fields: platform, secretId, status, expiresAt, connectionMode (oauth/identity)
    - Unique: agencyId + platform
-   - Used for delegated_access authorization model
+   - Used for agency-side platform identity and manual invite instructions
 
 4. **Client** - Reusable client profiles
    - Fields: name, company, email, website, language (en/es/nl)
@@ -347,7 +347,7 @@ When a marketing agency needs access to a client's advertising accounts, the cur
    - Unique: agencyId + name
 
 6. **AccessRequest** - Access requests sent to clients
-   - Fields: clientName, clientEmail, platforms (JSON), authModel, status, uniqueToken, expiresAt, intakeFields (JSON), branding (JSON)
+   - Fields: clientName, clientEmail, platforms (JSON), status, uniqueToken, expiresAt, intakeFields (JSON), branding (JSON)
    - Unique: uniqueToken
 
 7. **ClientConnection** - Active client connections (after authorization)
@@ -764,14 +764,14 @@ import { Platform, AccessRequestStatus } from '@agency-platform/shared';
 - Larger repository size
 - All packages must use compatible dependency versions
 
-### 3. Two Authorization Models
+### 3. Platform-Driven Authorization Routing
 
-**Decision:** Support both client_authorization and delegated_access
+**Decision:** Determine authorization flow from each requested platform
 
 **Rationale:**
-- Different agency workflows require different models
-- Client authorization: Agency needs access to client's accounts
-- Delegated access: Agency manages from their own account, gives client view access
+- OAuth platforms should go through a standard client OAuth flow
+- Manual platforms should use platform-native invite or instruction flows
+- Requests should not carry a separate top-level authorization model flag
 
 **Trade-offs:**
 - Increased complexity in UI and backend

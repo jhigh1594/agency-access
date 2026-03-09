@@ -760,7 +760,6 @@ export function UnifiedOnboardingProvider({
             clientId,
             clientName: safeClientName,
             clientEmail: safeClientEmail,
-            authModel: 'client_authorization',
             platforms: safeSelectedPlatforms,
           }),
         }

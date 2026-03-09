@@ -17,7 +17,6 @@ const REQUEST_PAYLOAD = {
   agencyName: 'Northstar Growth',
   clientName: 'Acme Co',
   clientEmail: 'marketing@acme.co',
-  authModel: 'delegated_access',
   status: 'pending',
   uniqueToken: TOKEN,
   expiresAt: '2026-03-06T00:00:00.000Z',
@@ -49,7 +48,6 @@ const SUCCESS_PAYLOAD = {
   agencyId: 'agency-123',
   clientName: 'Acme Co',
   clientEmail: 'marketing@acme.co',
-  authModel: 'delegated_access',
   platforms: [
     {
       platformGroup: 'google',

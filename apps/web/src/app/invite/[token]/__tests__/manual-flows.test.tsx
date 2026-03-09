@@ -31,7 +31,6 @@ function buildPayload(overrides?: Partial<any>) {
       agencyName: 'Demo Agency',
       clientName: 'Client',
       clientEmail: 'client@test.com',
-      authModel: 'delegated_access',
       status: 'pending',
       uniqueToken: 'token-123',
       expiresAt: new Date().toISOString(),

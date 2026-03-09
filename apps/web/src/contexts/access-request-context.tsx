@@ -10,7 +10,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { QueryClient } from '@tanstack/react-query';
-import { Client, AccessLevel, AccessRequestTemplate, AuthModel } from '@agency-platform/shared';
+import { Client, AccessLevel, AccessRequestTemplate } from '@agency-platform/shared';
 import type { CreateAccessRequestPayload } from '@/lib/api/access-requests';
 import posthog from 'posthog-js';
 
@@ -40,9 +40,6 @@ export interface AccessRequestFormState {
   // Step 1: Client Selection
   client: Client | null;
   externalReference: string;
-
-  // Step 1.5: Auth Model Selection
-  authModel: AuthModel | null;
 
   // Step 2: Platform & Access Level
   selectedPlatforms: Record<string, string[]>; // { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
@@ -92,7 +89,6 @@ const initialState: AccessRequestFormState = {
   selectedTemplate: null,
   client: null,
   externalReference: '',
-  authModel: 'client_authorization',
   selectedPlatforms: {},
   globalAccessLevel: 'standard', // Smart default: standard access level
   platformAccessLevels: {}, // Per-platform access level overrides
@@ -267,7 +263,6 @@ export function AccessRequestProvider({
           if (!state.client) {
             return { valid: false, error: 'Please select a client' };
           }
-          // Auth model has default value, so always valid
           return { valid: true };
 
         case 2:
@@ -343,7 +338,6 @@ export function AccessRequestProvider({
         clientName: state.client?.name || '',
         clientEmail: state.client?.email || '',
         externalReference: state.externalReference.trim() || undefined,
-        authModel: state.authModel ?? 'client_authorization',
         platforms: platformsConfig,
         intakeFields: state.intakeFields.filter((field) => field.label.trim()),
         branding: {
@@ -402,7 +396,6 @@ export function AccessRequestProvider({
           access_request_id: result.data.id,
           agency_id: agencyId,
           client_id: state.client?.id,
-          auth_model: state.authModel,
           platform_count: platformCount,
           platforms: Object.keys(state.selectedPlatforms),
           access_level: state.globalAccessLevel,

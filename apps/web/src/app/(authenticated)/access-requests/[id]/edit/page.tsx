@@ -104,7 +104,6 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
 
   const [requestId, setRequestId] = useState<string>('');
   const [request, setRequest] = useState<AccessRequest | null>(null);
-  const [authModel, setAuthModel] = useState<'client_authorization' | 'delegated_access'>('delegated_access');
   const [externalReference, setExternalReference] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
   const [globalAccessLevel, setGlobalAccessLevel] = useState<AccessLevel>('standard');
@@ -125,14 +124,13 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
   const snapshot = useMemo(
     () =>
       JSON.stringify({
-        authModel,
         externalReference,
         selectedPlatforms,
         globalAccessLevel,
         intakeFields,
         branding,
       }),
-    [authModel, externalReference, selectedPlatforms, globalAccessLevel, intakeFields, branding]
+    [externalReference, selectedPlatforms, globalAccessLevel, intakeFields, branding]
   );
   const hasUnsavedChanges = initialSnapshot !== '' && initialSnapshot !== snapshot;
 
@@ -163,7 +161,6 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       };
 
       setRequest(requestData);
-      setAuthModel(requestData.authModel);
       setExternalReference(requestData.externalReference || '');
       setSelectedPlatforms(selection);
       setGlobalAccessLevel(inferAccessLevel(requestData));
@@ -171,7 +168,6 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       setBranding(nextBranding);
 
       setInitialSnapshot(JSON.stringify({
-        authModel: requestData.authModel,
         externalReference: requestData.externalReference || '',
         selectedPlatforms: selection,
         globalAccessLevel: inferAccessLevel(requestData),
@@ -388,21 +384,6 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       <form onSubmit={handleSave} className="space-y-6">
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
           <h2 className="text-lg font-semibold text-ink">Fundamentals</h2>
-
-          <div>
-            <label htmlFor="authModel" className="block text-sm font-medium text-foreground mb-1">
-              Authorization Model
-            </label>
-            <select
-              id="authModel"
-              value={authModel}
-              onChange={(event) => setAuthModel(event.target.value as 'client_authorization' | 'delegated_access')}
-              className="w-full rounded-lg border border-border bg-card px-3 py-2"
-            >
-              <option value="delegated_access">Delegated Access</option>
-              <option value="client_authorization">Client Authorization</option>
-            </select>
-          </div>
 
           <div>
             <label htmlFor="externalReference" className="block text-sm font-medium text-foreground mb-1">

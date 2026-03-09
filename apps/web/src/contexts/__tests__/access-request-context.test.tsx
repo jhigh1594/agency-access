@@ -43,7 +43,6 @@ describe('AccessRequestContext', () => {
       selectedTemplate: null,
       client: null,
       externalReference: '',
-      authModel: 'client_authorization',
       selectedPlatforms: {},
       globalAccessLevel: 'standard',
       platformAccessLevels: {},
@@ -395,7 +394,6 @@ describe('AccessRequestContext', () => {
         clientId: 'client-123',
         clientName: 'Test Client',
         clientEmail: 'test@example.com',
-        authModel: 'delegated_access' as const,
         platforms: [
           {
             platformGroup: 'google',
@@ -447,7 +445,6 @@ describe('AccessRequestContext', () => {
         clientId: 'client-123',
         clientName: 'Test Client',
         clientEmail: 'test@example.com',
-        authModel: 'client_authorization',
       });
       expect(payload.platforms).toHaveLength(1);
       expect(payload.platforms[0]).toMatchObject({
@@ -477,7 +474,6 @@ describe('AccessRequestContext', () => {
         clientId: 'client-123',
         clientName: 'Test Client',
         clientEmail: 'test@example.com',
-        authModel: 'delegated_access' as const,
         platforms: [
           {
             platformGroup: 'google',
@@ -711,7 +707,6 @@ describe('AccessRequestContext', () => {
         selectedTemplate: null,
         client: null,
         externalReference: '',
-        authModel: 'client_authorization',
         selectedPlatforms: {},
         globalAccessLevel: 'standard',
         platformAccessLevels: {},

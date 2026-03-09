@@ -610,7 +610,6 @@ describe('Pinterest Connection Metadata - TDD Tests', () => {
 describe('Access Request Update Payload Schema', () => {
   it('accepts update payload with editable request configuration fields', () => {
     const parsed = AccessRequestUpdatePayloadSchema.parse({
-      authModel: 'delegated_access',
       platforms: [
         { platform: 'google_ads', accessLevel: 'manage' },
         { platform: 'ga4', accessLevel: 'view_only' },
@@ -623,7 +622,6 @@ describe('Access Request Update Payload Schema', () => {
       },
     });
 
-    expect(parsed.authModel).toBe('delegated_access');
     expect(parsed.platforms).toHaveLength(2);
     expect(parsed.branding?.primaryColor).toBe('#FF6B35');
   });

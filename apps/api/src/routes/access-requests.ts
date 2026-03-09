@@ -86,32 +86,6 @@ function normalizePlatformsPayload(platforms: any): Array<{ platform: string; ac
   return [];
 }
 
-function getRequestedPlatformGroups(
-  originalPlatforms: any,
-  normalizedPlatforms: Array<{ platform: string; accessLevel: 'manage' | 'view_only' }>
-): string[] {
-  if (Array.isArray(originalPlatforms)) {
-    const groups = originalPlatforms.flatMap((entry: any) => {
-      if (typeof entry?.platformGroup === 'string') return [entry.platformGroup];
-      if (typeof entry?.platform === 'string') return [toPlatformGroup(entry.platform)];
-      if (typeof entry === 'string') return [toPlatformGroup(entry)];
-      return [];
-    });
-    return [...new Set(groups.filter(Boolean))];
-  }
-
-  if (originalPlatforms && typeof originalPlatforms === 'object') {
-    const nonEmptyGroups = Object.entries(originalPlatforms).flatMap(([group, products]) => {
-      if (!Array.isArray(products)) return [];
-      const hasSelections = products.some((product) => typeof product === 'string' && product.trim().length > 0);
-      return hasSelections ? [group] : [];
-    });
-    return [...new Set(nonEmptyGroups.filter(Boolean))];
-  }
-
-  return [...new Set(normalizedPlatforms.map((entry) => toPlatformGroup(entry.platform)).filter(Boolean))];
-}
-
 export async function accessRequestRoutes(fastify: FastifyInstance) {
   const requirePrincipalAgency = async (request: any, reply: any) => {
     const principalResult = await resolvePrincipalAgency(request);
@@ -145,7 +119,6 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
     const requestBody = request.body as any;
-    const { authModel = 'client_authorization' } = requestBody;
     const originalPlatforms = requestBody.platforms ?? [];
     const transformedPlatforms = normalizePlatformsPayload(originalPlatforms);
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -153,57 +126,6 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
     const resolvedAgencyId = principalAgencyId;
     // Update the request body with the resolved agencyId
     requestBody.agencyId = resolvedAgencyId;
-
-    // If delegated access, verify agency has connected the required platforms
-    if (authModel === 'delegated_access') {
-      let connectionsResult = await agencyPlatformService.getConnections(resolvedAgencyId);
-
-      if (connectionsResult.error) {
-        return reply.code(500).send({
-          data: null,
-          error: connectionsResult.error,
-        });
-      }
-
-      // Get list of active platform connections
-      const allConnections = connectionsResult.data || [];
-      const activeConnections = allConnections.filter((c: any) => c.status === 'active');
-      const connectedPlatforms = activeConnections.map((c: any) => c.platform);
-
-      // Extract requested platform groups from the submitted structure
-      const requestedPlatforms = getRequestedPlatformGroups(originalPlatforms, transformedPlatforms);
-
-      // Debug logging
-      fastify.log.info({
-        resolvedAgencyId: resolvedAgencyId,
-        allConnections: allConnections.map((c: any) => ({ platform: c.platform, status: c.status })),
-        activeConnections: activeConnections.map((c: any) => c.platform),
-        connectedPlatforms,
-        requestedPlatforms,
-      });
-
-      // Check for missing platforms
-      const missingPlatforms = requestedPlatforms.filter(
-        (platform: string) => !connectedPlatforms.includes(platform)
-      );
-
-      if (missingPlatforms.length > 0) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'PLATFORMS_NOT_CONNECTED',
-            message: 'Agency must connect platforms before requesting delegated access',
-            missingPlatforms,
-            details: {
-              connectedPlatforms,
-              requestedPlatforms,
-              allConnectionsCount: allConnections.length,
-              activeConnectionsCount: activeConnections.length,
-            },
-          },
-        });
-      }
-    }
 
     // Log transformation for debugging
     fastify.log.info({

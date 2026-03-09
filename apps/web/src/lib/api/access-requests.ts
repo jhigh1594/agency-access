@@ -19,7 +19,6 @@ export interface CreateAccessRequestPayload {
   clientName: string;
   clientEmail: string;
   externalReference?: string;
-  authModel: 'client_authorization' | 'delegated_access';
   platforms: PlatformGroupConfig[];
   intakeFields?: IntakeField[];
   branding?: {
@@ -36,7 +35,6 @@ export interface AccessRequest {
   clientName: string;
   clientEmail: string;
   externalReference?: string;
-  authModel: 'client_authorization' | 'delegated_access';
   platforms: PlatformGroupConfig[];
   status: 'pending' | 'partial' | 'completed' | 'expired' | 'revoked';
   uniqueToken: string;
@@ -60,7 +58,6 @@ export interface AccessRequest {
 }
 
 export interface UpdateAccessRequestPayload {
-  authModel?: 'client_authorization' | 'delegated_access';
   externalReference?: string;
   platforms?: PlatformGroupConfig[];
   intakeFields?: IntakeField[];
@@ -102,7 +99,6 @@ type TokenProvider = () => Promise<string | null>;
  *   agencyId: 'agency-123',
  *   clientName: 'John Doe',
  *   clientEmail: 'john@example.com',
- *   authModel: 'client_authorization',
  *   platforms: [
  *     {
  *       platformGroup: 'google',

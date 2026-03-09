@@ -57,7 +57,7 @@ When `rootDirectory` is set, Vercel runs commands from that directory and can't 
 Next.js 16 with TypeScript strict mode caught several type errors during build:
 - Route type mismatches (`/access-requests` doesn't exist)
 - `useSearchParams()` requires Suspense boundaries
-- Union type mismatches (`authModel` type)
+- Request payload type mismatches
 
 **Solutions:**
 
@@ -96,13 +96,13 @@ function PageContent() {
 }
 ```
 
-#### Union Type Mismatches
+#### Request Payload Type Mismatches
 ```typescript
-// ❌ Wrong - TypeScript infers string, not union type
-authModel: state.authModel || 'client_authorization'
+// ❌ Wrong - send a removed request-level authorization field
+authorizationMode: 'oauth'
 
-// ✅ Fixed - explicit type assertion
-authModel: (state.authModel || 'client_authorization') as 'client_authorization' | 'delegated_access'
+// ✅ Fixed - submit only the supported payload fields
+platforms: transformedPlatforms
 ```
 
 **Key Insight:**

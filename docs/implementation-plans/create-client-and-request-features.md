@@ -220,7 +220,6 @@ fastify.post('/api/access-requests', async (request, reply) => {
 {
   agencyId: string;
   clientId: string;        // Pre-filled from detail page
-  authModel: 'delegated_access';
   platforms: {
     google?: ('google_ads' | 'ga4')[];
     meta?: ('meta_ads')[];

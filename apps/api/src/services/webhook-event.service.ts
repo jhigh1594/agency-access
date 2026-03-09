@@ -13,7 +13,6 @@ interface AccessRequestWebhookEventInput {
     createdAt: Date;
     authorizedAt: Date | null;
     expiresAt: Date;
-    authModel: 'client_authorization' | 'delegated_access';
     externalReference: string | null;
     uniqueToken: string;
   };
@@ -74,7 +73,6 @@ export function buildAccessRequestWebhookEvent(input: AccessRequestWebhookEventI
         ...(input.clientPortalUrl ? { clientPortalUrl: input.clientPortalUrl } : {}),
         requestedPlatforms: input.authorizationProgress.requestedPlatforms,
         completedPlatforms: input.authorizationProgress.completedPlatforms,
-        authModel: input.request.authModel,
         externalReference: input.request.externalReference,
       },
       client: {

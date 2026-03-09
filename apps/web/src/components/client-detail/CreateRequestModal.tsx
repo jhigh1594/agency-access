@@ -138,7 +138,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           clientName: client.name,
           clientEmail: client.email,
           externalReference: externalReference.trim() || undefined,
-          authModel: 'client_authorization',
           platforms,
           globalAccessLevel,
         }),

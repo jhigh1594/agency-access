@@ -425,7 +425,7 @@ describe('Schema Integration Tests', () => {
       testClientId = client.id;
     });
 
-    it('should default authModel to "client_authorization"', async () => {
+    it('should create access requests without an authorization mode field', async () => {
       const accessRequest = await prisma.accessRequest.create({
         data: {
           agencyId: testAgencyId,
@@ -438,24 +438,7 @@ describe('Schema Integration Tests', () => {
         },
       });
 
-      expect(accessRequest.authModel).toBe('client_authorization');
-    });
-
-    it('should support delegated_access authModel', async () => {
-      const accessRequest = await prisma.accessRequest.create({
-        data: {
-          agencyId: testAgencyId,
-          clientName: 'Test Client',
-          clientEmail: 'test@client.com',
-          uniqueToken: `token_${Date.now()}`,
-          platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
-          authModel: 'delegated_access',
-          status: 'pending',
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      });
-
-      expect(accessRequest.authModel).toBe('delegated_access');
+      expect(accessRequest.platforms).toEqual([{ platform: 'meta_ads', accessLevel: 'manage' }]);
     });
 
     it('should link to Client model via clientId', async () => {
