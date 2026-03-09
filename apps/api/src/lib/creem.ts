@@ -151,7 +151,6 @@ class CreemClient {
     const body: Record<string, unknown> = {
       product_id: params.productId,
       success_url: params.successUrl,
-      ...(params.cancelUrl && { cancel_url: params.cancelUrl }),
       ...(params.metadata && { metadata: params.metadata }),
     };
     if (params.customer) {
