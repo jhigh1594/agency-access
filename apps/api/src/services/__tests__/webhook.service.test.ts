@@ -1,272 +1,273 @@
-/**
- * Webhook Service Tests
- *
- * Tests for handling Creem webhook events including signature verification
- * and event processing for subscription updates, invoice payments, and cancellations.
- *
- * Following TDD principles.
- */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { webhookService } from '../webhook.service';
-import { creem } from '@/lib/creem';
-import { subscriptionService } from '../subscription.service';
 import { prisma } from '@/lib/prisma';
-
-vi.mock('@/lib/creem', () => ({
-  creem: {
-    verifyWebhookSignature: vi.fn(),
-  },
-}));
+import { webhookService } from '../webhook.service';
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    subscription: {
+      findFirst: vi.fn(),
+    },
     invoice: {
+      upsert: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    affiliateReferral: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    affiliateCommission: {
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
     },
-    subscription: {
-      findFirst: vi.fn().mockResolvedValue({
-        id: 'test-subscription-id',
-      }),
-    },
   },
 }));
 
-vi.mock('../subscription.service', () => ({
-  subscriptionService: {
-    syncSubscription: vi.fn(),
-  },
-}));
+describe('webhookService invoice processing', () => {
+  const paidAt = new Date(1767225600 * 1000);
 
-describe('WebhookService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    vi.mocked(prisma.subscription.findFirst).mockResolvedValue({
+      id: 'subscription-1',
+      agencyId: 'agency-1',
+      status: 'active',
+    } as any);
+
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue({
+      id: 'invoice-1',
+      subscriptionId: 'subscription-1',
+      creemInvoiceId: 'creem-invoice-1',
+    } as any);
+
+    vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue({
+      id: 'referral-1',
+      partnerId: 'partner-1',
+      status: 'attributed',
+      commissionBps: 3000,
+      commissionDurationMonths: 12,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      qualifiedAt: null,
+      metadata: null,
+    } as any);
+
+    vi.mocked(prisma.affiliateReferral.update).mockResolvedValue({
+      id: 'referral-1',
+      status: 'qualified',
+      qualifiedAt: new Date('2026-02-01T00:00:00.000Z'),
+    } as any);
+
+    vi.mocked(prisma.affiliateCommission.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.affiliateCommission.create).mockResolvedValue({
+      id: 'commission-1',
+    } as any);
+    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(null);
   });
 
-  describe('verifyWebhookSignature', () => {
-    it('should verify valid webhook signature', () => {
-      vi.mocked(creem.verifyWebhookSignature).mockReturnValue(true);
-
-      const result = webhookService.verifyWebhookSignature(
-        '{"test": "payload"}',
-        't=1234567890,v1=abc123'
-      );
-
-      expect(result).toBe(true);
-      expect(creem.verifyWebhookSignature).toHaveBeenCalledWith(
-        '{"test": "payload"}',
-        't=1234567890,v1=abc123'
-      );
+  it('upserts a paid invoice and creates a pending commission for a qualifying referral', async () => {
+    await webhookService.processInvoicePaid({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_paid: 10000,
+      currency: 'usd',
+      status: 'paid',
+      created: 1767225600,
     });
 
-    it('should reject invalid webhook signature', () => {
-      vi.mocked(creem.verifyWebhookSignature).mockReturnValue(false);
-
-      const result = webhookService.verifyWebhookSignature(
-        '{"test": "payload"}',
-        'invalid_signature'
-      );
-
-      expect(result).toBe(false);
-    });
-
-    it('should handle empty signature', () => {
-      const result = webhookService.verifyWebhookSignature(
-        '{"test": "payload"}',
-        ''
-      );
-
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('handleWebhookEvent', () => {
-    const mockPayload = {
-      id: 'evt_test123',
-      type: 'checkout.session.completed',
+    expect(prisma.invoice.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { creemInvoiceId: 'creem-invoice-1' },
+      })
+    );
+    expect(prisma.affiliateReferral.update).toHaveBeenCalledWith({
+      where: { id: 'referral-1' },
       data: {
-        object: {
-          id: 'cs_test123',
-          customer: 'cus_test123',
-          subscription: 'sub_test123',
-          product_id: 'prod_12lDKXew8bJqbUmTGpLZbR', // PRO
-          metadata: { agencyId: 'test-agency-id' },
-        },
+        status: 'qualified',
+        qualifiedAt: paidAt,
       },
-    };
+    });
+    expect(prisma.affiliateCommission.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        partnerId: 'partner-1',
+        referralId: 'referral-1',
+        subscriptionId: 'subscription-1',
+        invoiceId: 'invoice-1',
+        status: 'pending',
+        currency: 'usd',
+        revenueAmount: 10000,
+        amount: 3000,
+        commissionBps: 3000,
+        holdUntil: expect.any(Date),
+      }),
+    });
+  });
 
-    it('should handle checkout.session.completed event', async () => {
-      vi.mocked(subscriptionService.syncSubscription).mockResolvedValue({
-        data: { id: 'sub-id', tier: 'PRO', status: 'active' },
-        error: null,
-      });
+  it('does not create a duplicate commission when the invoice is already linked', async () => {
+    vi.mocked(prisma.affiliateCommission.findUnique).mockResolvedValue({
+      id: 'commission-existing',
+      invoiceId: 'invoice-1',
+    } as any);
 
-      const result = await webhookService.handleWebhookEvent(mockPayload);
-
-      expect(result.error).toBeNull();
-      expect(subscriptionService.syncSubscription).toHaveBeenCalledWith({
-        creemSubscriptionId: 'sub_test123',
-        creemCustomerId: 'cus_test123',
-        productId: 'prod_12lDKXew8bJqbUmTGpLZbR',
-        status: 'active',
-      });
+    await webhookService.processInvoicePaid({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_paid: 10000,
+      currency: 'usd',
+      status: 'paid',
+      created: 1767225600,
     });
 
-    it('should handle customer.subscription.updated event', async () => {
-      const subscriptionUpdatePayload = {
-        id: 'evt_test456',
-        type: 'customer.subscription.updated',
-        data: {
-          object: {
-            id: 'sub_test456',
-            customer: 'cus_test456',
-            product_id: 'prod_79jS6KXv2wilYkPQQjmGVP', // STARTER
-            status: 'past_due',
-            current_period_start: 1704067200,
-            current_period_end: 1706745600,
-            cancel_at_period_end: false,
-          },
-        },
-      };
+    expect(prisma.affiliateCommission.create).not.toHaveBeenCalled();
+  });
 
-      vi.mocked(subscriptionService.syncSubscription).mockResolvedValue({
-        data: { id: 'sub-id', tier: 'STARTER', status: 'past_due' },
-        error: null,
-      });
+  it('skips commission creation for disqualified referrals', async () => {
+    vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue({
+      id: 'referral-1',
+      partnerId: 'partner-1',
+      status: 'disqualified',
+      commissionBps: 3000,
+      commissionDurationMonths: 12,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      qualifiedAt: null,
+      metadata: null,
+    } as any);
 
-      const result = await webhookService.handleWebhookEvent(subscriptionUpdatePayload);
-
-      expect(result.error).toBeNull();
-      expect(subscriptionService.syncSubscription).toHaveBeenCalledWith({
-        creemSubscriptionId: 'sub_test456',
-        creemCustomerId: 'cus_test456',
-        productId: 'prod_79jS6KXv2wilYkPQQjmGVP',
-        status: 'past_due',
-        currentPeriodStart: 1704067200,
-        currentPeriodEnd: 1706745600,
-        cancelAtPeriodEnd: false,
-      });
+    await webhookService.processInvoicePaid({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_paid: 10000,
+      currency: 'usd',
+      status: 'paid',
+      created: 1767225600,
     });
 
-    it('should handle customer.subscription.deleted event (cancellation)', async () => {
-      const cancellationPayload = {
-        id: 'evt_test789',
-        type: 'customer.subscription.deleted',
-        data: {
-          object: {
-            id: 'sub_test789',
-            customer: 'cus_test789',
-            product_id: 'prod_79jS6KXv2wilYkPQQjmGVP', // STARTER
-            status: 'canceled',
-          },
-        },
-      };
+    expect(prisma.affiliateReferral.update).not.toHaveBeenCalled();
+    expect(prisma.affiliateCommission.create).not.toHaveBeenCalled();
+  });
 
-      vi.mocked(subscriptionService.syncSubscription).mockResolvedValue({
-        data: { id: 'sub-id', tier: 'STARTER', status: 'canceled' },
-        error: null,
-      });
+  it('skips commission creation when the referral is outside its commission window', async () => {
+    vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue({
+      id: 'referral-1',
+      partnerId: 'partner-1',
+      status: 'qualified',
+      commissionBps: 3000,
+      commissionDurationMonths: 1,
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+      qualifiedAt: new Date('2025-01-01T00:00:00.000Z'),
+      metadata: null,
+    } as any);
 
-      const result = await webhookService.handleWebhookEvent(cancellationPayload);
-
-      expect(result.error).toBeNull();
-      expect(subscriptionService.syncSubscription).toHaveBeenCalledWith({
-        creemSubscriptionId: 'sub_test789',
-        creemCustomerId: 'cus_test789',
-        productId: 'prod_79jS6KXv2wilYkPQQjmGVP',
-        status: 'canceled',
-      });
+    await webhookService.processInvoicePaid({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_paid: 10000,
+      currency: 'usd',
+      status: 'paid',
+      created: 1767225600,
     });
 
-    it('should handle invoice.paid event', async () => {
-      const invoicePayload = {
-        id: 'evt_invoice123',
-        type: 'invoice.paid',
-        data: {
-          object: {
-            id: 'in_test123',
-            customer: 'cus_test123',
-            subscription: 'sub_test123',
-            amount_paid: 9900,
-            currency: 'usd',
-            status: 'paid',
-            created: 1704067200,
-            hosted_invoice_url: 'https://creem.io/invoices/in_test123',
-            pdf_url: 'https://creem.io/invoices/in_test123.pdf',
-          },
-        },
-      };
+    expect(prisma.affiliateCommission.create).not.toHaveBeenCalled();
+  });
 
-      vi.mocked(prisma.invoice.create).mockResolvedValue({
-        id: 'local-inv-1',
-      });
-      vi.mocked(subscriptionService.syncSubscription).mockResolvedValue({
-        data: { id: 'sub-id', tier: 'PRO', status: 'active' },
-        error: null,
-      });
+  it('preserves review_required referrals and creates review_required commissions without auto-qualifying them', async () => {
+    vi.mocked(prisma.affiliateReferral.findUnique).mockResolvedValue({
+      id: 'referral-1',
+      partnerId: 'partner-1',
+      status: 'review_required',
+      commissionBps: 3000,
+      commissionDurationMonths: 12,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      qualifiedAt: null,
+      metadata: { riskReasons: ['same_company_domain'] },
+    } as any);
 
-      const result = await webhookService.handleWebhookEvent(invoicePayload);
-
-      expect(result.error).toBeNull();
-      expect(prisma.invoice.create).toHaveBeenCalled();
+    await webhookService.processInvoicePaid({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_paid: 10000,
+      currency: 'usd',
+      status: 'paid',
+      created: 1767225600,
     });
 
-    it('should handle invoice.payment_failed event', async () => {
-      const invoiceFailedPayload = {
-        id: 'evt_invoice_failed',
-        type: 'invoice.payment_failed',
-        data: {
-          object: {
-            id: 'in_failed123',
-            customer: 'cus_failed123',
-            subscription: 'sub_failed123',
-            product_id: 'prod_79jS6KXv2wilYkPQQjmGVP',
-            status: 'open',
-            created: 1704067200,
-          },
-        },
-      };
+    expect(prisma.affiliateReferral.update).not.toHaveBeenCalled();
+    expect(prisma.affiliateCommission.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        referralId: 'referral-1',
+        status: 'review_required',
+        notes: 'Commission requires review because the referral includes risk signals.',
+      }),
+    });
+  });
 
-      vi.mocked(subscriptionService.syncSubscription).mockResolvedValue({
-        data: { id: 'sub-id', tier: 'STARTER', status: 'past_due' },
-        error: null,
-      });
+  it('voids pending or approved commissions when invoice payment fails', async () => {
+    vi.mocked(prisma.invoice.findUnique).mockResolvedValue({
+      id: 'invoice-1',
+      affiliateCommission: {
+        id: 'commission-1',
+        status: 'approved',
+        paidAt: null,
+      },
+    } as any);
 
-      const result = await webhookService.handleWebhookEvent(invoiceFailedPayload);
-
-      expect(result.error).toBeNull();
-      expect(subscriptionService.syncSubscription).toHaveBeenCalledWith({
-        creemSubscriptionId: 'sub_failed123',
-        creemCustomerId: 'cus_failed123',
-        productId: 'prod_79jS6KXv2wilYkPQQjmGVP',
-        status: 'past_due',
-      });
+    await webhookService.processInvoicePaymentFailed({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_due: 10000,
+      currency: 'usd',
+      status: 'open',
+      created: 1767225600,
     });
 
-    it('should ignore unknown event types', async () => {
-      const unknownPayload = {
-        id: 'evt_unknown',
-        type: 'unknown.event',
-        data: {},
-      };
+    expect(prisma.invoice.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { creemInvoiceId: 'creem-invoice-1' },
+      })
+    );
+    expect(prisma.affiliateCommission.update).toHaveBeenCalledWith({
+      where: { id: 'commission-1' },
+      data: expect.objectContaining({
+        status: 'void',
+        voidedAt: expect.any(Date),
+      }),
+    });
+  });
 
-      const result = await webhookService.handleWebhookEvent(unknownPayload);
+  it('voids review_required commissions when an invoice reversal event arrives', async () => {
+    vi.mocked(prisma.invoice.findUnique).mockResolvedValue({
+      id: 'invoice-1',
+      affiliateCommission: {
+        id: 'commission-1',
+        status: 'review_required',
+        paidAt: null,
+      },
+    } as any);
 
-      expect(result.error).toBeNull();
-      expect(result.data).toEqual({ received: true });
+    await webhookService.processInvoicePaymentFailed({
+      id: 'creem-invoice-1',
+      customer: 'cus-1',
+      subscription: 'sub-1',
+      amount_due: 10000,
+      currency: 'usd',
+      status: 'void',
+      created: 1767225600,
     });
 
-    it('should handle syncSubscription errors gracefully', async () => {
-      vi.mocked(subscriptionService.syncSubscription).mockResolvedValue({
-        data: null,
-        error: { code: 'SYNC_ERROR', message: 'Failed to sync subscription' },
-      });
-
-      const result = await webhookService.handleWebhookEvent(mockPayload);
-
-      // Webhooks should not fail even if sync fails - just log and return
-      expect(result.error).toBeNull();
+    expect(prisma.affiliateCommission.update).toHaveBeenCalledWith({
+      where: { id: 'commission-1' },
+      data: expect.objectContaining({
+        status: 'void',
+        voidedAt: expect.any(Date),
+      }),
     });
   });
 });

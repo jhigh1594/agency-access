@@ -21,6 +21,24 @@ vi.mock('@/lib/prisma', () => ({
       findFirst: vi.fn(),
       update: vi.fn(),
     },
+    subscription: {
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
+    invoice: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
+    },
+    affiliateReferral: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    affiliateCommission: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
   },
 }));
 
@@ -72,6 +90,22 @@ describe('Webhook Routes - TDD Tests', () => {
       id: 'agency-123',
       clerkUserId: 'clerk_user_123',
       settings: { creemCustomerId: 'cus_123' },
+    });
+    (prisma.subscription.findFirst as any).mockResolvedValue({
+      id: 'subscription-123',
+      agencyId: 'agency-123',
+      status: 'active',
+    });
+    (prisma.invoice.upsert as any).mockResolvedValue({
+      id: 'invoice-123',
+      subscriptionId: 'subscription-123',
+      creemInvoiceId: 'in_123',
+    });
+    (prisma.invoice.findUnique as any).mockResolvedValue(null);
+    (prisma.affiliateReferral.findUnique as any).mockResolvedValue(null);
+    (prisma.affiliateCommission.findUnique as any).mockResolvedValue(null);
+    (prisma.affiliateCommission.create as any).mockResolvedValue({
+      id: 'commission-123',
     });
     (clerkMetadataService.setSubscriptionTier as any).mockResolvedValue({
       data: { tier: 'AGENCY' },
@@ -359,6 +393,131 @@ describe('Webhook Routes - TDD Tests', () => {
           trialEndsAt: expect.any(Date),
         })
       );
+    });
+
+    it('should handle invoice.paid events through the live webhook route', async () => {
+      const invoicePayload = {
+        id: 'evt_invoice_paid',
+        type: 'invoice.paid',
+        data: {
+          object: {
+            id: 'in_123',
+            customer: 'cus_123',
+            subscription: 'sub_123',
+            amount_paid: 9900,
+            currency: 'usd',
+            status: 'paid',
+            created: 1704067200,
+          },
+        },
+      };
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: invoicePayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.payload)).toEqual({
+        received: true,
+        processed: true,
+      });
+      expect(prisma.invoice.upsert).toHaveBeenCalled();
+    });
+
+    it('should handle invoice.payment_failed events through the live webhook route', async () => {
+      const invoicePayload = {
+        id: 'evt_invoice_failed',
+        type: 'invoice.payment_failed',
+        data: {
+          object: {
+            id: 'in_123',
+            customer: 'cus_123',
+            subscription: 'sub_123',
+            amount_due: 9900,
+            currency: 'usd',
+            status: 'open',
+            created: 1704067200,
+          },
+        },
+      };
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: invoicePayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.payload)).toEqual({
+        received: true,
+        processed: true,
+      });
+      expect(prisma.invoice.upsert).toHaveBeenCalled();
+      expect(prisma.affiliateCommission.create).not.toHaveBeenCalled();
+    });
+
+    it('should handle invoice.refunded events through the live webhook route', async () => {
+      const invoicePayload = {
+        id: 'evt_invoice_refunded',
+        type: 'invoice.refunded',
+        data: {
+          object: {
+            id: 'in_123',
+            customer: 'cus_123',
+            subscription: 'sub_123',
+            amount_due: 9900,
+            currency: 'usd',
+            status: 'void',
+            created: 1704067200,
+          },
+        },
+      };
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: invoicePayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.payload)).toEqual({
+        received: true,
+        processed: true,
+      });
+      expect(prisma.invoice.upsert).toHaveBeenCalled();
+    });
+
+    it('should handle invoice.voided events through the live webhook route', async () => {
+      const invoicePayload = {
+        id: 'evt_invoice_voided',
+        type: 'invoice.voided',
+        data: {
+          object: {
+            id: 'in_123',
+            customer: 'cus_123',
+            subscription: 'sub_123',
+            amount_due: 9900,
+            currency: 'usd',
+            status: 'void',
+            created: 1704067200,
+          },
+        },
+      };
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: invoicePayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.payload)).toEqual({
+        received: true,
+        processed: true,
+      });
+      expect(prisma.invoice.upsert).toHaveBeenCalled();
     });
   });
 

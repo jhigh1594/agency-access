@@ -7,28 +7,300 @@
 
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
+import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
+import { authenticate } from '@/middleware/auth.js';
+import {
+  createWebhookEndpoint,
+  disableWebhookEndpoint,
+  getWebhookEndpoint,
+  rotateWebhookEndpointSecret,
+  updateWebhookEndpoint,
+} from '@/services/webhook-endpoint.service';
+import {
+  listWebhookDeliveries,
+  sendWebhookTestEvent,
+} from '@/services/webhook-management.service';
+import { webhookService } from '@/services/webhook.service';
 import { SubscriptionTier } from '@agency-platform/shared';
 import { getTierFromProductId } from '@/config/creem.config';
 import { creem } from '@/lib/creem';
 
 type CreemEvent = {
   id: string;
-  type: 'subscription.created' | 'subscription.updated' | 'subscription.canceled';
-  data: {
-    subscription: {
-      id: string;
-      status: 'active' | 'past_due' | 'canceled' | 'trialing';
-      customer_id: string;
-      price_id: string;
-      current_period_start: string;
-      current_period_end: string;
-      trial_end?: string;
-    };
-  };
+  type: string;
+  data: Record<string, any>;
 };
 
+type CreemSubscriptionPayload = {
+  id: string;
+  status: 'active' | 'past_due' | 'canceled' | 'trialing';
+  customer_id: string;
+  price_id: string;
+  current_period_start: string;
+  current_period_end: string;
+  trial_end?: string;
+};
+
+type CreemInvoicePayload = {
+  id: string;
+  [key: string]: any;
+};
+
+function getSubscriptionPayload(payload: CreemEvent): CreemSubscriptionPayload | null {
+  const candidate = payload.data?.subscription ?? payload.data?.object ?? null;
+
+  if (
+    !candidate ||
+    typeof candidate !== 'object' ||
+    typeof candidate.id !== 'string' ||
+    typeof candidate.customer_id !== 'string' ||
+    typeof candidate.price_id !== 'string'
+  ) {
+    return null;
+  }
+
+  return candidate as CreemSubscriptionPayload;
+}
+
+function getInvoicePayload(payload: CreemEvent): CreemInvoicePayload | null {
+  const candidate = payload.data?.invoice ?? payload.data?.object ?? null;
+
+  if (!candidate || typeof candidate !== 'object' || typeof candidate.id !== 'string') {
+    return null;
+  }
+
+  return candidate as CreemInvoicePayload;
+}
+
+function resolveActorEmail(request: any): string {
+  const user = request.user || {};
+  return (
+    user.email ||
+    user.email_address ||
+    user.emailAddress ||
+    user?.email_addresses?.[0]?.email_address ||
+    user?.email_addresses?.[0]?.emailAddress ||
+    'system@agency-access.local'
+  );
+}
+
 export async function webhookRoutes(fastify: FastifyInstance) {
+  const requirePrincipalAgency = async (request: any, reply: any) => {
+    const principalResult = await resolvePrincipalAgency(request);
+    if (principalResult.error || !principalResult.data) {
+      const code = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
+      return reply.code(code).send({
+        data: null,
+        error: principalResult.error || {
+          code: 'FORBIDDEN',
+          message: 'Unable to resolve agency for authenticated user',
+        },
+      });
+    }
+
+    request.principalAgencyId = principalResult.data.agencyId;
+  };
+
+  fastify.get('/agencies/:id/webhook-endpoint', {
+    onRequest: [authenticate(), requirePrincipalAgency],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(id, principalAgencyId);
+
+    if (accessError) {
+      return reply.code(403).send({
+        data: null,
+        error: accessError,
+      });
+    }
+
+    const result = await getWebhookEndpoint(id);
+    if (result.error) {
+      const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send(result);
+  });
+
+  fastify.put('/agencies/:id/webhook-endpoint', {
+    onRequest: [authenticate(), requirePrincipalAgency],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(id, principalAgencyId);
+
+    if (accessError) {
+      return reply.code(403).send({
+        data: null,
+        error: accessError,
+      });
+    }
+
+    const body = request.body as {
+      url: string;
+      subscribedEvents: string[];
+    };
+    const actorEmail = resolveActorEmail(request);
+    const existing = await getWebhookEndpoint(id);
+
+    const result =
+      existing.data && !existing.error
+        ? await updateWebhookEndpoint({
+            agencyId: id,
+            url: body.url,
+            subscribedEvents: body.subscribedEvents as any,
+            updatedBy: actorEmail,
+          })
+        : await createWebhookEndpoint({
+            agencyId: id,
+            url: body.url,
+            subscribedEvents: body.subscribedEvents as any,
+            createdBy: actorEmail,
+          });
+
+    if (result.error) {
+      const statusCode =
+        result.error.code === 'WEBHOOK_ENDPOINT_EXISTS' ? 409 : 400;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send(result);
+  });
+
+  fastify.post('/agencies/:id/webhook-endpoint/rotate-secret', {
+    onRequest: [authenticate(), requirePrincipalAgency],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(id, principalAgencyId);
+
+    if (accessError) {
+      return reply.code(403).send({
+        data: null,
+        error: accessError,
+      });
+    }
+
+    const result = await rotateWebhookEndpointSecret({
+      agencyId: id,
+      rotatedBy: resolveActorEmail(request),
+    });
+
+    if (result.error) {
+      const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send(result);
+  });
+
+  fastify.post('/agencies/:id/webhook-endpoint/disable', {
+    onRequest: [authenticate(), requirePrincipalAgency],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(id, principalAgencyId);
+
+    if (accessError) {
+      return reply.code(403).send({
+        data: null,
+        error: accessError,
+      });
+    }
+
+    const result = await disableWebhookEndpoint({
+      agencyId: id,
+      disabledBy: resolveActorEmail(request),
+    });
+
+    if (result.error) {
+      const statusCode = result.error.code === 'NOT_FOUND' ? 404 : 400;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send(result);
+  });
+
+  fastify.post('/agencies/:id/webhook-endpoint/test', {
+    onRequest: [authenticate(), requirePrincipalAgency],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(id, principalAgencyId);
+
+    if (accessError) {
+      return reply.code(403).send({
+        data: null,
+        error: accessError,
+      });
+    }
+
+    const result = await sendWebhookTestEvent({
+      agencyId: id,
+      requestedBy: resolveActorEmail(request),
+    });
+
+    if (result.error) {
+      const statusCode = result.error.code === 'NOT_FOUND'
+        ? 404
+        : result.error.code === 'ENDPOINT_DISABLED'
+        ? 409
+        : 400;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send(result);
+  });
+
+  fastify.get('/agencies/:id/webhook-deliveries', {
+    onRequest: [authenticate(), requirePrincipalAgency],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { limit } = request.query as { limit?: string };
+    const principalAgencyId = (request as any).principalAgencyId as string;
+    const accessError = assertAgencyAccess(id, principalAgencyId);
+
+    if (accessError) {
+      return reply.code(403).send({
+        data: null,
+        error: accessError,
+      });
+    }
+
+    const parsedLimit = Number.parseInt(limit || '20', 10);
+    const result = await listWebhookDeliveries({
+      agencyId: id,
+      limit: Number.isFinite(parsedLimit) ? parsedLimit : 20,
+    });
+
+    if (result.error) {
+      return reply.code(400).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send(result);
+  });
+
   /**
    * POST /api/webhooks/creem
    *
@@ -74,37 +346,61 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         },
       });
 
-      // Only process subscription events
-      if (payload.type === 'subscription.created' ||
-          payload.type === 'subscription.updated' ||
-          payload.type === 'subscription.canceled') {
+      if (payload.type === 'invoice.paid') {
+        const invoice = getInvoicePayload(payload);
 
-        const { subscription } = payload.data;
+        if (!invoice) {
+          return reply.code(400).send({ error: 'Invalid invoice payload' });
+        }
 
-      // Use Creem config utility to map product ID to tier
-      let tier: SubscriptionTier;
-      try {
-        tier = getTierFromProductId(subscription.price_id);
-      } catch (err: any) {
-        // Unknown product ID - log and skip
-        fastify.log.warn({ priceId: subscription.price_id, error: err?.message || String(err) }, 'Unknown Creem product ID in webhook');
-        return reply.code(400).send({ error: 'Unknown product ID' });
-      }
+        await webhookService.processInvoicePaid(invoice);
+      } else if (
+        payload.type === 'invoice.payment_failed' ||
+        payload.type === 'invoice.refunded' ||
+        payload.type === 'invoice.voided'
+      ) {
+        const invoice = getInvoicePayload(payload);
 
-      // Find agency by Creem customer ID
-      // Look up via Subscription model which has the creemCustomerId field
-      const agencyWithSubscription = await prisma.agency.findFirst({
-        where: {
-          subscription: {
-            creemCustomerId: subscription.customer_id,
+        if (!invoice) {
+          return reply.code(400).send({ error: 'Invalid invoice payload' });
+        }
+
+        await webhookService.processInvoicePaymentFailed(invoice);
+      } else if (
+        payload.type === 'subscription.created' ||
+        payload.type === 'subscription.updated' ||
+        payload.type === 'subscription.canceled'
+      ) {
+        const subscription = getSubscriptionPayload(payload);
+
+        if (!subscription) {
+          return reply.code(400).send({ error: 'Invalid subscription payload' });
+        }
+
+        // Use Creem config utility to map product ID to tier
+        let tier: SubscriptionTier;
+        try {
+          tier = getTierFromProductId(subscription.price_id);
+        } catch (err: any) {
+          // Unknown product ID - log and skip
+          fastify.log.warn({ priceId: subscription.price_id, error: err?.message || String(err) }, 'Unknown Creem product ID in webhook');
+          return reply.code(400).send({ error: 'Unknown product ID' });
+        }
+
+        // Find agency by Creem customer ID
+        // Look up via Subscription model which has the creemCustomerId field
+        const agencyWithSubscription = await prisma.agency.findFirst({
+          where: {
+            subscription: {
+              creemCustomerId: subscription.customer_id,
+            },
           },
-        },
-        include: {
-          subscription: true,
-        },
-      });
+          include: {
+            subscription: true,
+          },
+        });
 
-      const agency = agencyWithSubscription;
+        const agency = agencyWithSubscription;
 
         if (agency?.clerkUserId) {
           // Update Clerk metadata with new tier
