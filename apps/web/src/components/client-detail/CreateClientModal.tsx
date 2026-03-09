@@ -13,6 +13,8 @@ import { X, Loader2, CheckCircle2, Plus } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientLanguage } from '@agency-platform/shared';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 
 interface CreateClientModalProps {
   onClose: () => void;
@@ -47,7 +49,8 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
     }) => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`, {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/api/clients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,8 +60,8 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to create client');
+        const msg = await extractApiErrorMessage(response, 'Failed to create client');
+        throw new Error(msg);
       }
 
       return response.json();

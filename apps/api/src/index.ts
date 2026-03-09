@@ -130,6 +130,21 @@ await fastify.register(helmet, {
 fastify.addHook('onRequest', performanceOnRequest);
 fastify.addHook('onSend', performanceOnSend);
 
+// Custom error handler: return our standard { error: { code, message } } format
+// so frontend always gets a parseable error.message
+fastify.setErrorHandler((error: unknown, _request, reply) => {
+  const err = error as { statusCode?: number; code?: string; message?: string };
+  const statusCode = err.statusCode ?? 500;
+  const message = err?.message || 'An unexpected error occurred';
+  void reply.code(statusCode).send({
+    data: null,
+    error: {
+      code: err?.code || 'INTERNAL_ERROR',
+      message,
+    },
+  });
+});
+
 // Note: JWT verification is now handled in the authenticate() middleware
 // using Clerk's backend SDK which properly handles RS256 tokens
 

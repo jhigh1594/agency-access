@@ -12,6 +12,8 @@ import { Search, Plus, X, Loader2, AlertCircle, Check, Globe } from 'lucide-reac
 import { useAuth } from '@clerk/nextjs';
 import { Client, ClientLanguage } from '@agency-platform/shared';
 import { useAuthOrBypass } from '@/lib/dev-auth';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { extractMessageFromBody } from '@/lib/api/extract-error';
 
 const SUPPORTED_LANGUAGES: Record<ClientLanguage, { name: string; flag: string }> = {
   en: { name: 'English', flag: '🇬🇧' },
@@ -71,7 +73,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
       params.set('limit', '50');
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/clients?${params.toString()}`,
+        `${getApiBaseUrl()}/api/clients?${params.toString()}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
@@ -116,7 +118,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
     try {
       const token = await getToken();
       if (!token && !auth.isDevelopmentBypass) throw new Error('No auth token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/clients`, {
         method: 'POST',
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -126,15 +128,15 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        // Handle both old format (errorCode) and new format (error.code)
+        const data = await response.json().catch(() => ({}));
         const errorCode = data.errorCode || data.error?.code;
         if (errorCode === 'CLIENT_EMAIL_EXISTS' || errorCode === 'EMAIL_EXISTS') {
           errors.email = 'A client with this email already exists';
           setFormErrors(errors);
           return;
         }
-        throw new Error('Failed to create client');
+        const msg = extractMessageFromBody(data, response.statusText || 'Failed to create client');
+        throw new Error(msg);
       }
 
       const json = await response.json();
