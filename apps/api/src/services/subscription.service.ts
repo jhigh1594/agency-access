@@ -110,7 +110,18 @@ class SubscriptionService {
     // Get agency
     const agency = await prisma.agency.findUnique({
       where: { id: agencyId },
-      select: { id: true, email: true, name: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        affiliateReferral: {
+          select: {
+            id: true,
+            partnerId: true,
+            clickId: true,
+          },
+        },
+      },
     });
 
     if (!agency) {
@@ -143,7 +154,18 @@ class SubscriptionService {
       productId,
       successUrl,
       cancelUrl,
-      metadata: { agencyId, tier, billingInterval: billingInterval ?? 'monthly' },
+      metadata: {
+        agencyId,
+        tier,
+        billingInterval: billingInterval ?? 'monthly',
+        ...(agency.affiliateReferral
+          ? {
+              affiliatePartnerId: agency.affiliateReferral.partnerId,
+              affiliateReferralId: agency.affiliateReferral.id,
+              affiliateClickId: agency.affiliateReferral.clickId,
+            }
+          : {}),
+      },
     });
 
     if (checkoutResult.error || !checkoutResult.data) {

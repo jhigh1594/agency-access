@@ -211,6 +211,47 @@ describe('SubscriptionService', () => {
         })
       );
     });
+
+    it('includes affiliate referral metadata in checkout when agency is attributed', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+        id: mockSubscriptionId,
+        creemCustomerId: 'cus_existing123',
+      } as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: mockAgencyId,
+        email: 'test@example.com',
+        name: 'Test Agency',
+        affiliateReferral: {
+          id: 'referral_1',
+          partnerId: 'partner_1',
+          clickId: 'click_1',
+        },
+      } as any);
+      vi.mocked(creem.createCheckoutSession).mockResolvedValue({
+        data: { url: 'https://checkout.creem.io/test' },
+      });
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+        return callback(prisma);
+      });
+
+      const result = await subscriptionService.createCheckoutSession({
+        agencyId: mockAgencyId,
+        tier: 'STARTER',
+        successUrl: 'https://example.com/success',
+        cancelUrl: 'https://example.com/cancel',
+      });
+
+      expect(result.error).toBeNull();
+      expect(creem.createCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            affiliatePartnerId: 'partner_1',
+            affiliateReferralId: 'referral_1',
+            affiliateClickId: 'click_1',
+          }),
+        })
+      );
+    });
   });
 
   describe('getSubscription', () => {

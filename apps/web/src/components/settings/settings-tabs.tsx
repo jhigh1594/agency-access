@@ -2,24 +2,26 @@
 
 /**
  * Settings Tabs Container
- * 
- * Two-tab layout for settings with URL state sync.
+ *
+ * Three-tab layout for settings with URL state sync.
  * - General: Agency profile, team, notifications
  * - Billing: Subscription, usage, invoices
+ * - Webhooks: Endpoint config, test sends, deliveries
  */
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Settings, CreditCard } from 'lucide-react';
+import { Settings, CreditCard, Webhook } from 'lucide-react';
 import { usePrefetchBillingData } from '@/lib/query/billing';
 
-type SettingsTab = 'general' | 'billing';
+type SettingsTab = 'general' | 'billing' | 'webhooks';
 
 interface SettingsTabsProps {
   generalContent: React.ReactNode;
   billingContent: React.ReactNode;
+  webhooksContent: React.ReactNode;
 }
 
-export function SettingsTabs({ generalContent, billingContent }: SettingsTabsProps) {
+export function SettingsTabs({ generalContent, billingContent, webhooksContent }: SettingsTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefetchBilling = usePrefetchBillingData();
@@ -35,6 +37,7 @@ export function SettingsTabs({ generalContent, billingContent }: SettingsTabsPro
   const tabs = [
     { id: 'general' as const, label: 'General', icon: Settings },
     { id: 'billing' as const, label: 'Billing', icon: CreditCard },
+    { id: 'webhooks' as const, label: 'Webhooks', icon: Webhook },
   ];
 
   return (
@@ -74,6 +77,7 @@ export function SettingsTabs({ generalContent, billingContent }: SettingsTabsPro
         <div className="space-y-6">
           {currentTab === 'general' && generalContent}
           {currentTab === 'billing' && billingContent}
+          {currentTab === 'webhooks' && webhooksContent}
         </div>
       </div>
     </div>

@@ -3,9 +3,10 @@
 /**
  * Settings Page
  *
- * Two-tab structure:
+ * Three-tab structure:
  * - General: Agency Profile, Team Members, Notifications
  * - Billing: Current plan, usage, comparison, payments, invoices
+ * - Webhooks: Endpoint configuration and delivery inspection
  */
 
 import { Suspense } from 'react';
@@ -18,6 +19,7 @@ import {
 } from '@/components/settings/general';
 import { BillingTab } from '@/components/settings/billing';
 import { UsageOverviewCard } from '@/components/settings/usage-overview-card';
+import { WebhookSettingsTab } from '@/components/settings/webhooks';
 
 function GeneralTabContent() {
   return (
@@ -37,6 +39,7 @@ export default function SettingsPage() {
         <SettingsTabs
           generalContent={<GeneralTabContent />}
           billingContent={<BillingTab />}
+          webhooksContent={<WebhookSettingsTab />}
         />
       </Reveal>
     </Suspense>
@@ -52,6 +55,7 @@ function SettingsLoadingSkeleton() {
           <div className="h-4 w-64 bg-card/50 rounded animate-pulse mt-2" />
         </div>
         <div className="flex gap-1 mb-6 border-b border-border pb-3">
+          <div className="h-8 w-24 bg-card/50 rounded animate-pulse" />
           <div className="h-8 w-24 bg-card/50 rounded animate-pulse" />
           <div className="h-8 w-24 bg-card/50 rounded animate-pulse" />
         </div>

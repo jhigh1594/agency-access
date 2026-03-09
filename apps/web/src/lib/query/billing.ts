@@ -8,6 +8,8 @@ import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { BillingInterval, SubscriptionTier, TierLimits } from '@agency-platform/shared';
 import { getApiBaseUrl } from '@/lib/api/api-env';
+import { trackAffiliateEvent } from '@/lib/analytics/affiliate';
+import { getAffiliateClickTokenFromDocument } from '@/lib/affiliate-cookie';
 
 const API_URL = getApiBaseUrl();
 
@@ -277,6 +279,15 @@ export function useCreateCheckout() {
       cancelUrl: string;
     }) => {
       if (!principalId) throw new Error('No authenticated principal ID');
+
+      if (getAffiliateClickTokenFromDocument()) {
+        trackAffiliateEvent('affiliate_checkout_started', {
+          source: 'affiliate_cookie',
+          surface: 'billing_checkout',
+          targetTier: params.tier,
+          interval: params.billingInterval,
+        });
+      }
 
       const token = await getToken();
       const response = await fetch(`${API_URL}/api/subscriptions/checkout`, {
