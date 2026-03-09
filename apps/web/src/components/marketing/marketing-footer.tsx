@@ -78,6 +78,7 @@ export function MarketingFooter() {
                 <li><Link href="#trusted-by-agencies" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
                 <li><Link href="#how-it-works" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
                 <li><Link href="/pricing" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Pricing</Link></li>
+                <li><Link href="/affiliate" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Affiliates</Link></li>
                 <li><Link href="/blog" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Blog</Link></li>
                 <li><a href={getDocsUrl()} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Help Center</a></li>
               </ul>

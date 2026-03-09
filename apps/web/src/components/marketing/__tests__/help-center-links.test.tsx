@@ -40,7 +40,7 @@ describe('help center links', () => {
     process.env.NEXT_PUBLIC_DOCS_URL = 'https://docs.authhub.co';
   });
 
-  it('renders help center links in marketing navigation and footer', () => {
+  it('renders the marketing footer help center and affiliate links', () => {
     const { container } = render(
       <>
         <MarketingNav />
@@ -48,13 +48,8 @@ describe('help center links', () => {
       </>,
     );
 
-    const helpCenterLinks = screen.getAllByRole('link', { name: 'Help Center' });
-    expect(helpCenterLinks.length).toBeGreaterThanOrEqual(2);
-
-    for (const link of helpCenterLinks) {
-      expect(link).toHaveAttribute('href', 'https://docs.authhub.co');
-    }
-
+    expect(screen.getByRole('link', { name: 'Help Center' })).toHaveAttribute('href', 'https://docs.authhub.co');
+    expect(screen.getByRole('link', { name: 'Affiliates' })).toHaveAttribute('href', '/affiliate');
     expect(container).toHaveTextContent('Help Center');
   });
 
