@@ -114,6 +114,25 @@ describe('Manual invite flows', () => {
     });
   });
 
+  it('Beehiiv back button returns to the invite connect step instead of browser history', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => buildPayload(),
+      }))
+    );
+
+    render(<BeehiivManualPage />);
+
+    await screen.findByText(/copy invite email/i);
+    const [headerBackButton] = screen.getAllByRole('button', { name: 'Back' });
+    await userEvent.click(headerBackButton);
+
+    expect(pushMock).toHaveBeenCalledWith('/invite/token-123?view=connect&platform=beehiiv');
+    expect(backMock).not.toHaveBeenCalled();
+  });
+
   it('Kit flow submits manual connect and redirects', async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes('/api/client/token-123/kit/manual-connect')) {

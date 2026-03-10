@@ -14,6 +14,7 @@ import {
   type ManualStepConfig,
 } from '@/components/flow/manual-checklist-wizard';
 import { Button } from '@/components/ui';
+import { buildClientInviteConnectViewUrl } from '@/lib/client-invite-platforms';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
 import type { ClientAccessRequestPayload } from '@agency-platform/shared';
 
@@ -266,7 +267,12 @@ export default function BeehiivManualPage() {
           logoUrl={data.branding?.logoUrl}
           securityNote="Use only Beehiiv-native invite screens. Never share credentials."
           backAction={
-            <Button variant="ghost" size="sm" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(buildClientInviteConnectViewUrl(token, 'beehiiv') as any)}
+              leftIcon={<ArrowLeft className="h-4 w-4" />}
+            >
               Back
             </Button>
           }

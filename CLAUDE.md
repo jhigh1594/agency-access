@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **API responses**: Success `{ data: T }`; Error `{ error: { code, message, details? } }`. Common codes: INVALID_TOKEN, VALIDATION_ERROR, NOT_FOUND, UNAUTHORIZED, FORBIDDEN, PLATFORM_ERROR.
 - **Auth**: Verify Clerk JWT on every API request via backend middleware. Scope all queries to the user's agency.
 - **Env**: Backend `apps/api/src/lib/env.ts` (Zod); `apps/api/.env.example` and `apps/web/.env.local` for required vars.
+- **Session/decisions**: Start: read last 3–5 entries in `docs/SESSION-LOG.md`. End: append to SESSION-LOG, add DECs to `docs/DECISIONS.md`.
 
 ## Non-Negotiable Rules
 
@@ -229,6 +230,12 @@ Backend: `apps/api/.env` — see `apps/api/.env.example`. Core (NODE_ENV, PORT, 
 5. **Demand Elegance (balanced):** For non-trivial changes ask "is there a more elegant way?"; avoid hacky fixes; skip for obvious fixes.
 6. **Autonomous Bug Fixing:** Given a bug, fix it using logs/errors/tests; fix failing CI without being asked.
 
+## Session Protocol
+
+**Start of session:** Read the last 3–5 entries in `docs/SESSION-LOG.md` to get current status and next steps.
+
+**End of session (when wrapping up):** Append a new entry to `docs/SESSION-LOG.md` (newest first) with: what was done, files changed, decisions made, next steps. Add any significant technical decisions to `docs/DECISIONS.md` using the DEC-XXX format there.
+
 ## Task Management
 
 1. Plan First — write plan to `tasks/todo.md` with checkable items.
@@ -237,6 +244,7 @@ Backend: `apps/api/.env` — see `apps/api/.env.example`. Core (NODE_ENV, PORT, 
 4. Explain Changes — high-level summary each step.
 5. Document Results — add review section to `tasks/todo.md`.
 6. Capture Lessons — update `tasks/lessons.md` after corrections.
+7. Significant technical choices — record in `docs/DECISIONS.md` (DEC-XXX); session wrap-up — append to `docs/SESSION-LOG.md`.
 
 ## Core Principles
 

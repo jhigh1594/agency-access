@@ -38,7 +38,7 @@ describe('Client Auth Manual Routes', () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     app = Fastify();
     await registerManualRoutes(app);
   });
@@ -195,6 +195,104 @@ describe('Client Auth Manual Routes', () => {
       expect.objectContaining({
         metadata: expect.objectContaining({
           agencyEmail: 'snap@agency.com',
+        }),
+      })
+    );
+  });
+
+  for (const { platform, agencyEmail } of [
+    { platform: 'beehiiv', agencyEmail: 'ops@agency.com' },
+    { platform: 'kit', agencyEmail: 'ops@agency.com' },
+    { platform: 'mailchimp', agencyEmail: 'ops@agency.com' },
+    { platform: 'klaviyo', agencyEmail: 'ops@agency.com' },
+    { platform: 'snapchat', agencyEmail: 'snap@agency.com' },
+  ] as const) {
+    it(`reuses an existing client connection for ${platform} manual connect instead of creating a duplicate row`, async () => {
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'request-1',
+          agencyId: 'agency-1',
+          clientEmail: 'client@example.com',
+        } as any,
+        error: null,
+      });
+      vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({
+        id: 'conn-existing',
+        grantedAssets: null,
+      } as any);
+      vi.mocked(prisma.clientConnection.update).mockResolvedValue({
+        id: 'conn-existing',
+        status: 'pending_verification',
+      } as any);
+      vi.mocked(auditService.createAuditLog).mockResolvedValue({} as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/client/token-1/${platform}/manual-connect`,
+        payload: {
+          platform,
+          agencyEmail,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(prisma.clientConnection.create).not.toHaveBeenCalled();
+      expect(prisma.clientConnection.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'conn-existing' },
+          data: expect.objectContaining({
+            status: 'pending_verification',
+            grantedAssets: expect.objectContaining({
+              platform,
+              agencyEmail,
+              authMethod: 'manual_team_invitation',
+            }),
+          }),
+        })
+      );
+    });
+  }
+
+  it('reuses an existing client connection for Pinterest manual connect instead of creating a duplicate row', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-1',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      } as any,
+      error: null,
+    });
+    vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({
+      id: 'conn-existing',
+      grantedAssets: null,
+    } as any);
+    vi.mocked(prisma.clientConnection.update).mockResolvedValue({
+      id: 'conn-existing',
+      status: 'pending_verification',
+    } as any);
+    vi.mocked(auditService.createAuditLog).mockResolvedValue({} as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-1/pinterest/manual-connect',
+      payload: {
+        platform: 'pinterest',
+        businessId: '123456789',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(prisma.clientConnection.create).not.toHaveBeenCalled();
+    expect(prisma.clientConnection.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'conn-existing' },
+        data: expect.objectContaining({
+          status: 'pending_verification',
+          grantedAssets: expect.objectContaining({
+            platform: 'pinterest',
+            businessId: '123456789',
+            authMethod: 'manual_partnership',
+          }),
         }),
       })
     );

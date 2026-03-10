@@ -90,3 +90,12 @@ export function getInviteSecuritySummary(platforms: Platform[]): {
 export function getClientInviteManualRoute(platform: Platform): string | null {
   return getClientInvitePlatformCapability(platform).manualRoute;
 }
+
+export function buildClientInviteConnectViewUrl(token: string, platform?: Platform | null): string {
+  const searchParams = new URLSearchParams({ view: 'connect' });
+  if (platform) {
+    searchParams.set('platform', platform);
+  }
+
+  return `/invite/${token}?${searchParams.toString()}`;
+}

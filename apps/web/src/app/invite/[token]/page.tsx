@@ -49,6 +49,7 @@ export default function ClientAuthorizationPage() {
   const urlConnectionId = searchParams.get('connectionId');
   const urlPlatform = searchParams.get('platform') as Platform | null;
   const urlStep = searchParams.get('step');
+  const urlView = searchParams.get('view');
 
   const [phase, setPhase] = useState<PagePhase>('intake');
   const [data, setData] = useState<ClientAccessRequestPayload | null>(null);
@@ -93,9 +94,9 @@ export default function ClientAuthorizationPage() {
       buildInvitePlatformQueue({
         platforms: data?.platforms || [],
         completedPlatforms,
-        returningPlatform: oauthConnectionInfo?.platform ?? null,
+        returningPlatform: oauthConnectionInfo?.platform ?? (urlView === 'connect' ? urlPlatform : null),
       }),
-    [completedPlatforms, data?.platforms, oauthConnectionInfo?.platform]
+    [completedPlatforms, data?.platforms, oauthConnectionInfo?.platform, urlPlatform, urlView]
   );
   const activePlatformName = platformQueue.activePlatform
     ? PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]
@@ -194,6 +195,13 @@ export default function ClientAuthorizationPage() {
       loadedPayload.platforms?.length > 0 &&
       loadedPayload.platforms.every((group) => mergedCompleted.has(group.platformGroup as Platform));
 
+    if (urlView === 'connect') {
+      setOauthConnectionInfo(null);
+      setIsReviewingConnectStatus(allRequestedPlatformsComplete || Boolean(loadedPayload.authorizationProgress?.isComplete));
+      setPhase('platforms');
+      return;
+    }
+
     if (allRequestedPlatformsComplete || loadedPayload.authorizationProgress?.isComplete) {
       setIsReviewingConnectStatus(false);
       setPhase('complete');
@@ -204,7 +212,7 @@ export default function ClientAuthorizationPage() {
     const hasStartedConnecting = mergedCompleted.size > 0;
 
     setPhase(hasIntakeFields || !hasStartedConnecting ? 'intake' : 'platforms');
-  }, [loadedPayload, storageKey, token, urlConnectionId, urlPlatform, urlStep]);
+  }, [loadedPayload, storageKey, token, urlConnectionId, urlPlatform, urlStep, urlView]);
 
   useEffect(() => {
     if (!completedPlatforms.size) return;

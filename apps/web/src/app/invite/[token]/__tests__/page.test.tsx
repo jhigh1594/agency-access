@@ -470,6 +470,55 @@ describe('Invite Flow Page', () => {
     });
   });
 
+  it('supports a direct return to the connect step and focuses the requested platform', async () => {
+    searchParamGetMock.mockImplementation((param: string) => {
+      if (param === 'view') return 'connect';
+      if (param === 'platform') return 'mailchimp';
+      return null;
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'mailchimp',
+                products: [{ product: 'mailchimp', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {}, mailchimp: { agencyEmail: 'ops@demoagency.com' } },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Active platform: Mailchimp')).toBeInTheDocument();
+      expect(screen.getByText('Completion action: Continue to Google')).toBeInTheDocument();
+    });
+  });
+
   it('restores the returning oauth platform as the active stage', async () => {
     searchParamGetMock.mockImplementation((key: string) => {
       if (key === 'step') return '2';

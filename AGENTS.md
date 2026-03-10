@@ -48,6 +48,7 @@ Guidance for agentic coding tools working in this repository. Follow these rules
   { error: { code: string; message: string; details?: any } }
 - In Fastify routes, return 400 for validation errors and throw unexpected errors to Fastify’s error handler.
 - On the frontend, check for error in the response and throw with the error message.
+- Frontend API calls: use getApiBaseUrl() (apps/web/src/lib/api/api-env) for base URL and extractApiErrorMessage() or extractMessageFromBody() (apps/web/src/lib/api/extract-error.ts) so users see actual backend messages; backend uses custom error handler so unhandled errors return { error: { code, message } }.
 
 ## Security and Architecture (Non-Negotiable)
 - NEVER store OAuth tokens in PostgreSQL. Always use Infisical and store only secretId references.
@@ -117,3 +118,4 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Don’t edit or revert unrelated changes in a dirty worktree.
 - Keep refactors behavior-preserving unless explicitly requested.
 - Keep modifications scoped, and add tests when behavior changes.
+- When deleting an entity that appears in list or dashboard views (e.g. client), invalidate relevant caches (e.g. dashboard key) and ensure list queries exclude orphaned rows (e.g. filter where clientId is not null) so the UI updates immediately.

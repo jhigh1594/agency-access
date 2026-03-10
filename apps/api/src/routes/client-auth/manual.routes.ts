@@ -23,6 +23,48 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       .update(`shopify-collaborator-code:${value}`)
       .digest('hex');
 
+  const findExistingConnection = (accessRequestId: string) =>
+    prisma.clientConnection.findUnique({
+      where: { accessRequestId },
+      select: {
+        id: true,
+        grantedAssets: true,
+      },
+    });
+
+  const saveManualConnection = async ({
+    existingConnection,
+    accessRequestId,
+    agencyId,
+    clientEmail,
+    grantedAssets,
+  }: {
+    existingConnection: { id: string; grantedAssets: unknown } | null;
+    accessRequestId: string;
+    agencyId: string;
+    clientEmail: string;
+    grantedAssets: Record<string, unknown>;
+  }) => (
+    existingConnection
+      ? prisma.clientConnection.update({
+          where: { id: existingConnection.id },
+          data: {
+            clientEmail,
+            status: 'pending_verification',
+            grantedAssets,
+          },
+        })
+      : prisma.clientConnection.create({
+          data: {
+            accessRequestId,
+            agencyId,
+            clientEmail,
+            status: 'pending_verification',
+            grantedAssets,
+          },
+        })
+  );
+
   const createEmailManualConnectHandler = (
     platform: EmailManualPlatform,
     successMessage: string,
@@ -73,25 +115,28 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       }
 
       try {
-        const connection = await prisma.clientConnection.create({
-          data: {
-            accessRequestId: accessRequest.data.id,
-            agencyId: accessRequest.data.agencyId,
-            clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
-            status: 'pending_verification',
-            grantedAssets: {
-              platform,
-              agencyEmail,
-              clientEmail: clientEmail || accessRequest.data.clientEmail,
-              invitationSentAt: new Date().toISOString(),
-              authMethod: 'manual_team_invitation',
-            },
-          },
+        const resolvedClientEmail = clientEmail || accessRequest.data.clientEmail || 'unknown';
+        const grantedAssetsPayload = {
+          platform,
+          agencyEmail,
+          clientEmail: clientEmail || accessRequest.data.clientEmail,
+          invitationSentAt: new Date().toISOString(),
+          authMethod: 'manual_team_invitation',
+        };
+
+        const existingConnection = await findExistingConnection(accessRequest.data.id);
+
+        const connection = await saveManualConnection({
+          existingConnection,
+          accessRequestId: accessRequest.data.id,
+          agencyId: accessRequest.data.agencyId,
+          clientEmail: resolvedClientEmail,
+          grantedAssets: grantedAssetsPayload,
         });
 
         await auditService.createAuditLog({
           agencyId: accessRequest.data.agencyId,
-          action: 'MANUAL_INVITATION_INITIATED',
+          action: existingConnection ? 'MANUAL_INVITATION_UPDATED' : 'MANUAL_INVITATION_INITIATED',
           resourceType: 'ClientConnection',
           resourceId: connection.id,
           platform,
@@ -216,26 +261,27 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
   }
 
   try {
-    const connection = await prisma.clientConnection.create({
-      data: {
-        accessRequestId: accessRequest.data.id,
-        agencyId: accessRequest.data.agencyId,
-        clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
-        status: 'pending_verification',
-        grantedAssets: {
-          platform: 'pinterest',
-          businessId,
-          clientEmail: clientEmail || accessRequest.data.clientEmail,
-          setupComplete: true,
-          setupCompletedAt: new Date().toISOString(),
-          authMethod: 'manual_partnership',
-        },
+    const resolvedClientEmail = clientEmail || accessRequest.data.clientEmail || 'unknown';
+    const existingConnection = await findExistingConnection(accessRequest.data.id);
+
+    const connection = await saveManualConnection({
+      existingConnection,
+      accessRequestId: accessRequest.data.id,
+      agencyId: accessRequest.data.agencyId,
+      clientEmail: resolvedClientEmail,
+      grantedAssets: {
+        platform: 'pinterest',
+        businessId,
+        clientEmail: clientEmail || accessRequest.data.clientEmail,
+        setupComplete: true,
+        setupCompletedAt: new Date().toISOString(),
+        authMethod: 'manual_partnership',
       },
     });
 
     await auditService.createAuditLog({
       agencyId: accessRequest.data.agencyId,
-      action: 'MANUAL_INVITATION_INITIATED',
+      action: existingConnection ? 'MANUAL_INVITATION_UPDATED' : 'MANUAL_INVITATION_INITIATED',
       resourceType: 'ClientConnection',
       resourceId: connection.id,
       platform: 'pinterest',
@@ -326,13 +372,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         authMethod: 'manual_collaborator_request',
       };
 
-      const existingConnection = await prisma.clientConnection.findUnique({
-        where: { accessRequestId: accessRequest.data.id },
-        select: {
-          id: true,
-          grantedAssets: true,
-        },
-      });
+      const existingConnection = await findExistingConnection(accessRequest.data.id);
 
       const existingPlatform =
         existingConnection &&
@@ -351,24 +391,13 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const connection = existingConnection
-        ? await prisma.clientConnection.update({
-            where: { id: existingConnection.id },
-            data: {
-              clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
-              status: 'pending_verification',
-              grantedAssets: grantedAssetsPayload,
-            },
-          })
-        : await prisma.clientConnection.create({
-            data: {
-              accessRequestId: accessRequest.data.id,
-              agencyId: accessRequest.data.agencyId,
-              clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
-              status: 'pending_verification',
-              grantedAssets: grantedAssetsPayload,
-            },
-          });
+      const connection = await saveManualConnection({
+        existingConnection,
+        accessRequestId: accessRequest.data.id,
+        agencyId: accessRequest.data.agencyId,
+        clientEmail: clientEmail || accessRequest.data.clientEmail || 'unknown',
+        grantedAssets: grantedAssetsPayload,
+      });
 
       await auditService.createAuditLog({
         agencyId: accessRequest.data.agencyId,
