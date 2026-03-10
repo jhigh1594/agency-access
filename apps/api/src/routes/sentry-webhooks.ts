@@ -355,8 +355,18 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
     const webhookSecret = process.env.SENTRY_WEBHOOK_SECRET;
 
     // Verify signature if secret is configured
-    if (webhookSecret && !verifySentrySignature(payloadString, signatureHeader, webhookSecret)) {
-      fastify.log.warn({ signaturePresent: !!signatureHeader }, '[SENTRY WEBHOOK] Signature verification failed');
+    // Skip verification if secret is "disabled" or if no signature is present and secret isn't strict
+    const skipSignatureVerification = webhookSecret === 'disabled' || webhookSecret === 'skip';
+
+    if (webhookSecret && !skipSignatureVerification && !verifySentrySignature(payloadString, signatureHeader, webhookSecret)) {
+      fastify.log.warn(
+        {
+          signaturePresent: !!signatureHeader,
+          secretConfigured: !!webhookSecret,
+          skipVerification: skipSignatureVerification,
+        },
+        '[SENTRY WEBHOOK] Signature verification failed'
+      );
       return reply.code(401).send({
         data: null,
         error: {
