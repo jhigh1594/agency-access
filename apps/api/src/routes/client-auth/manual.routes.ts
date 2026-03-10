@@ -1,5 +1,6 @@
 import { FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { createHash } from 'crypto';
+import { Prisma } from '@prisma/client';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { auditService } from '../../services/audit.service.js';
 import { prisma } from '../../lib/prisma.js';
@@ -51,7 +52,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
           data: {
             clientEmail,
             status: 'pending_verification',
-            grantedAssets,
+            grantedAssets: grantedAssets as Prisma.InputJsonValue,
           },
         })
       : prisma.clientConnection.create({
@@ -60,7 +61,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
             agencyId,
             clientEmail,
             status: 'pending_verification',
-            grantedAssets,
+            grantedAssets: grantedAssets as Prisma.InputJsonValue,
           },
         })
   );
