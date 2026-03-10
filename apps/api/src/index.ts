@@ -32,6 +32,7 @@ import { contactRoutes } from './routes/contact.js';
 import { helpScoutRoutes } from './routes/help-scout.js';
 import { affiliateRoutes } from './routes/affiliate.js';
 import { sentryWebhooksRoutes } from './routes/sentry-webhooks.js';
+import { sentryTestRoutes } from './routes/sentry-test.routes.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
@@ -180,6 +181,7 @@ await fastify.register(contactRoutes);
 await fastify.register(helpScoutRoutes, { prefix: '/api' });
 await fastify.register(affiliateRoutes, { prefix: '/api' });
 await fastify.register(sentryWebhooksRoutes, { prefix: '/api' });
+await fastify.register(sentryTestRoutes); // No prefix - routes handle their own paths
 
 // Health check and root routes
 fastify.get('/health', async () => {
