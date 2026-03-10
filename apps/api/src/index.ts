@@ -1,5 +1,5 @@
 // Import Sentry instrumentation FIRST (before any other modules)
-import "../instrument.js";
+import "./instrument.js";
 import * as Sentry from "@sentry/node";
 
 import Fastify from 'fastify';

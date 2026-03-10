@@ -30,6 +30,8 @@
     "@fastify/rate-limit": "^10.3.0",
     "@infisical/sdk": "^4.0.6",
     "@prisma/client": "^6.2.1",
+    "@sentry/node": "^10.43.0",
+    "@sentry/profiling-node": "^10.43.0",
     "axios": "^1.13.5",
     "bullmq": "^5.38.2",
     "dotenv": "^16.4.7",

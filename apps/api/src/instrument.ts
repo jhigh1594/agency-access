@@ -6,6 +6,7 @@
  */
 
 import * as Sentry from "@sentry/node";
+import type { ErrorEvent, EventHint } from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
 // Get DSN from environment
@@ -48,7 +49,7 @@ if (!dsn || dsn === "") {
       release: process.env.APP_VERSION || undefined,
 
       // Filter out sensitive data
-      beforeSend(event, hint) {
+      beforeSend(event: ErrorEvent, hint: EventHint) {
         // Filter sensitive headers
         if (event.request?.headers) {
           const {
@@ -68,10 +69,6 @@ if (!dsn || dsn === "") {
 
         return event;
       },
-
-      // Capture unhandled errors and promise rejections
-      // (this is enabled by default)
-      captureUnhandledRejections: true,
     });
 
     console.info("[Sentry] Error tracking initialized");

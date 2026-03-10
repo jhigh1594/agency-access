@@ -6,6 +6,8 @@
  */
 
 import { FastifyInstance } from 'fastify';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export async function sentryTestRoutes(fastify: FastifyInstance) {
   /**
@@ -28,12 +30,11 @@ export async function sentryTestRoutes(fastify: FastifyInstance) {
    * Test async error handling
    */
   fastify.get('/test/sentry/async-error', async () => {
-    await new Promise((resolve) => {
-      // @ts-expect-error - Intentional error for testing
+    await new Promise<void>((resolve) => {
       setTimeout(() => {
         // @ts-expect-error - Intentional error for testing
         nonExistentObject.property.value = 'test';
-        resolve(undefined);
+        resolve();
       }, 100);
     });
     return { message: 'This should never be reached' };
@@ -119,18 +120,25 @@ export async function sentryTestRoutes(fastify: FastifyInstance) {
    * Check if Sentry webhook integration is working
    */
   fastify.get('/test/sentry/health', async () => {
-    const fs = await import('fs/promises');
-    const path = await import('path');
-
     const tasksDir = path.join(process.cwd(), '.claude/tasks/sentry-issues');
 
-    let taskFiles = [];
+    let taskFiles: string[] = [];
     try {
       taskFiles = await fs.readdir(tasksDir);
-      taskFiles = taskFiles.filter(f => f.endsWith('.md')).sort((a, b) =>
-        fs.statSync(path.join(tasksDir, a)).mtimeMs -
-        fs.statSync(path.join(tasksDir, b)).mtimeMs
+      // Filter for markdown files and sort by modification time
+      const mdFiles = taskFiles.filter(f => f.endsWith('.md'));
+
+      // Get file stats and sort
+      const filesWithStats = await Promise.all(
+        mdFiles.map(async (file) => {
+          const filePath = path.join(tasksDir, file);
+          const stat = await fs.stat(filePath);
+          return { file, mtimeMs: stat.mtimeMs };
+        })
       );
+
+      filesWithStats.sort((a, b) => a.mtimeMs - b.mtimeMs);
+      taskFiles = filesWithStats.map(f => f.file);
     } catch {
       // Directory doesn't exist yet
     }
