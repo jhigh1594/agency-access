@@ -14,8 +14,8 @@
  * - Reassurance about the authorization process
  */
 
-import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { useId, useState } from 'react';
+import { m } from 'framer-motion';
 import { Info, ChevronDown } from 'lucide-react';
 
 interface StepHelpTextProps {
@@ -34,14 +34,16 @@ export function StepHelpText({
   defaultOpen = false,
 }: StepHelpTextProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const contentId = useId();
 
   return (
     <div className="bg-muted/20 dark:bg-muted/60/50 border-2 border-black dark:border-white p-4 mt-4">
-      {/* Header - Clickable to Toggle */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 w-full text-left"
         aria-expanded={isOpen}
+        aria-controls={contentId}
       >
         <div className="w-8 h-8 border-2 border-black dark:border-white bg-[var(--paper)] flex items-center justify-center flex-shrink-0">
           <Info className="w-4 h-4 text-[var(--coral)]" />
@@ -56,67 +58,55 @@ export function StepHelpText({
         </m.div>
       </button>
 
-      {/* Collapsible Content */}
-      <AnimatePresence>
-        {isOpen && (
-          <m.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div className="mt-4 pt-4 border-t-2 border-black dark:border-white">
-              {/* Description */}
-              {description && (
-                <p className="text-sm text-foreground dark:text-muted-foreground mb-4">{description}</p>
-              )}
-
-              {/* Steps List */}
-              {steps.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide mb-2">
-                    What happens next:
-                  </p>
-                  <ol className="space-y-2">
-                    {steps.map((step, index) => (
-                      <li
-                        key={index}
-                        className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground"
-                      >
-                        <span className="flex-shrink-0 w-5 h-5 border border-black dark:border-white bg-[var(--coral)] text-white flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </span>
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              {/* Granting Details */}
-              {grantingDetails.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide mb-2">
-                    What you're granting:
-                  </p>
-                  <ul className="space-y-1.5">
-                    {grantingDetails.map((detail, index) => (
-                      <li
-                        key={index}
-                        className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground"
-                      >
-                        <span className="text-[var(--coral)] mt-0.5">•</span>
-                        <span>{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </m.div>
+      <div
+        id={contentId}
+        hidden={!isOpen}
+        className="mt-4 border-t-2 border-black pt-4 dark:border-white"
+      >
+        {description && (
+          <p className="mb-4 text-sm text-foreground dark:text-muted-foreground">{description}</p>
         )}
-      </AnimatePresence>
+
+        {steps.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide mb-2">
+              What happens next:
+            </p>
+            <ol className="space-y-2">
+              {steps.map((step, index) => (
+                <li
+                  key={index}
+                  className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground"
+                >
+                  <span className="flex-shrink-0 w-5 h-5 border border-black dark:border-white bg-[var(--coral)] text-white flex items-center justify-center text-xs font-bold">
+                    {index + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+        {grantingDetails.length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-[var(--ink)] uppercase tracking-wide mb-2">
+              What you're granting:
+            </p>
+            <ul className="space-y-1.5">
+              {grantingDetails.map((detail, index) => (
+                <li
+                  key={index}
+                  className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground"
+                >
+                  <span className="text-[var(--coral)] mt-0.5">•</span>
+                  <span>{detail}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

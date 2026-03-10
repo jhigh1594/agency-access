@@ -265,6 +265,64 @@ describe('Invite Flow Page', () => {
     });
   });
 
+  it('lets the user return to the connect phase from the done step to review platform status', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/complete')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { success: true }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<InvitePage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /continue to connect/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /complete platform/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /back to connect/i })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /back to connect/i }));
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/review connected platforms/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/access confirmed for this platform/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/all set/i)).not.toBeInTheDocument();
+  });
+
   it('keeps the connect step visible until a platform is completed', async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes('/api/client/token-123/complete')) {

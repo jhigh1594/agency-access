@@ -59,6 +59,7 @@ export default function ClientAuthorizationPage() {
     connectionId: string;
     platform: Platform;
   } | null>(null);
+  const [isReviewingConnectStatus, setIsReviewingConnectStatus] = useState(false);
 
   const completionSubmittedRef = useRef(false);
   const startedTrackedRef = useRef(false);
@@ -174,6 +175,7 @@ export default function ClientAuthorizationPage() {
     }
 
     if (urlStep === '2' && urlConnectionId && urlPlatform) {
+      setIsReviewingConnectStatus(false);
       if (isClientInviteManualCallbackPlatform(urlPlatform)) {
         mergedCompleted = new Set<Platform>([...Array.from(mergedCompleted), urlPlatform]);
         setOauthConnectionInfo(null);
@@ -193,6 +195,7 @@ export default function ClientAuthorizationPage() {
       loadedPayload.platforms.every((group) => mergedCompleted.has(group.platformGroup as Platform));
 
     if (allRequestedPlatformsComplete || loadedPayload.authorizationProgress?.isComplete) {
+      setIsReviewingConnectStatus(false);
       setPhase('complete');
       return;
     }
@@ -210,6 +213,7 @@ export default function ClientAuthorizationPage() {
 
   useEffect(() => {
     if (!data) return;
+    if (isReviewingConnectStatus) return;
     const readyToComplete = phase === 'complete' || (phase === 'platforms' && isComplete);
     if (!readyToComplete) return;
     if (phase === 'platforms' && isComplete) {
@@ -250,21 +254,24 @@ export default function ClientAuthorizationPage() {
     };
 
     submitCompletion();
-  }, [data, phase, isComplete, token, completedPlatforms, storageKey]);
+  }, [data, phase, isComplete, token, completedPlatforms, storageKey, isReviewingConnectStatus]);
 
   const handleRetryComplete = async () => {
     setCompletionError(null);
     completionSubmittedRef.current = false;
+    setIsReviewingConnectStatus(false);
     setPhase('platforms');
     setTimeout(() => setPhase('complete'), 0);
   };
 
   const handleIntakeSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    setIsReviewingConnectStatus(false);
     setPhase('platforms');
   };
 
   const handlePlatformComplete = (platform: Platform) => {
+    setIsReviewingConnectStatus(false);
     if (oauthConnectionInfo?.platform === platform) {
       setOauthConnectionInfo(null);
     }
@@ -303,6 +310,7 @@ export default function ClientAuthorizationPage() {
   const flowTotalSteps = 3;
   const currentStep = phase === 'intake' ? 1 : phase === 'platforms' ? 2 : 3;
   const layoutMode = phase === 'intake' ? 'focused' : 'split';
+  const isConnectStatusReview = phase === 'platforms' && isComplete && isReviewingConnectStatus;
 
   return (
     <InviteFlowShell
@@ -315,14 +323,18 @@ export default function ClientAuthorizationPage() {
           eyebrow={`Request for ${data.clientName}`}
           title={
             phase === 'platforms'
-              ? activePlatformName
+              ? isConnectStatusReview
+                ? 'Review connected platforms'
+                : activePlatformName
                 ? `Complete ${activePlatformName} access`
                 : 'Complete account access'
               : `Share account access with ${data.agencyName}`
           }
           description={
             phase === 'platforms'
-              ? activePlatformName
+              ? isConnectStatusReview
+                ? 'Review which platforms are connected or return to the final confirmation.'
+                : activePlatformName
                 ? `Finish ${activePlatformName} first, then continue through the remaining requested platforms.`
                 : 'Finish the remaining platform connection steps.'
               : `Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`
@@ -339,7 +351,11 @@ export default function ClientAuthorizationPage() {
                   { label: 'Platforms', value: platformSummary || 'No platforms requested' },
                   {
                     label: 'Next',
-                    value: activePlatformName ? `Complete ${activePlatformName}` : 'Review completion',
+                    value: isConnectStatusReview
+                      ? 'Return to final confirmation'
+                      : activePlatformName
+                      ? `Complete ${activePlatformName}`
+                      : 'Review completion',
                   },
                 ]
               : [
@@ -369,6 +385,8 @@ export default function ClientAuthorizationPage() {
           objective={
             phase === 'complete'
               ? 'Review your completed authorizations.'
+              : isConnectStatusReview
+              ? 'Review what was connected before closing the request.'
               : 'Finish the remaining platform connection steps.'
           }
           securityNote={securitySummary.detail}
@@ -376,7 +394,11 @@ export default function ClientAuthorizationPage() {
           completedCount={completedPlatforms.size}
           totalCount={requestedPlatforms.length || 1}
           actionStatus={{
-            label: phase === 'complete' ? 'Authorization complete' : 'Complete current platform step',
+            label: phase === 'complete'
+              ? 'Authorization complete'
+              : isConnectStatusReview
+              ? 'Return to final confirmation'
+              : 'Complete current platform step',
             disabledReason:
               phase === 'platforms' && requestedPlatforms.length > completedPlatforms.size
                 ? 'Continue becomes available after platform step completion.'
@@ -521,6 +543,28 @@ export default function ClientAuthorizationPage() {
 
       {phase === 'platforms' && (
         <div className="space-y-6">
+          {isConnectStatusReview ? (
+            <div className="rounded-[1.5rem] border border-border bg-card p-4 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-ink font-display">Review connected platforms</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    All requested platforms are connected. You can review the status below or return to the final confirmation.
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsReviewingConnectStatus(false);
+                    setPhase('complete');
+                  }}
+                >
+                  Return to done
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
           {platformQueue.activePlatform ? (
             <InvitePlatformStage
               platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}
@@ -645,7 +689,18 @@ export default function ClientAuthorizationPage() {
             </div>
           ) : null}
 
-          <p className="mt-6 text-xs text-muted-foreground">You can now close this window.</p>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsReviewingConnectStatus(true);
+                setPhase('platforms');
+              }}
+            >
+              Back to connect
+            </Button>
+            <p className="text-xs text-muted-foreground">You can now close this window.</p>
+          </div>
         </div>
       )}
     </InviteFlowShell>
