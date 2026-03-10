@@ -10,19 +10,27 @@
 import { useState, useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Card, EmptyState, PlatformIcon, StatusBadge } from '@/components/ui';
-import type { ClientAccessRequest, ClientDetailPlatformGroup } from '@agency-platform/shared';
-import type { Platform } from '@agency-platform/shared';
+import type {
+  ClientAccessRequest,
+  ClientDetailPlatformGroup,
+  Platform,
+} from '@agency-platform/shared';
 import Link from 'next/link';
 import { RequestedAccessBoard } from './RequestedAccessBoard';
 
 interface OverviewTabProps {
   platformGroups: ClientDetailPlatformGroup[];
   accessRequests: ClientAccessRequest[];
+  initialExpandedPlatformGroup?: Platform;
 }
 
 type StatusFilter = 'all' | 'connected' | 'pending' | 'expired' | 'revoked';
 
-export function OverviewTab({ platformGroups, accessRequests }: OverviewTabProps) {
+export function OverviewTab({
+  platformGroups,
+  accessRequests,
+  initialExpandedPlatformGroup,
+}: OverviewTabProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // Filter access requests based on selected status
@@ -64,7 +72,10 @@ export function OverviewTab({ platformGroups, accessRequests }: OverviewTabProps
 
   return (
     <div className="space-y-6">
-      <RequestedAccessBoard platformGroups={platformGroups} />
+      <RequestedAccessBoard
+        platformGroups={platformGroups}
+        initialExpandedPlatformGroup={initialExpandedPlatformGroup}
+      />
 
       <section>
         {/* Filter bar */}

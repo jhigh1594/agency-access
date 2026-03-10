@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
@@ -18,6 +18,7 @@ import {
 
 interface RequestedAccessBoardProps {
   platformGroups: ClientDetailPlatformGroup[];
+  initialExpandedPlatformGroup?: Platform;
 }
 
 function renderStatusBadge(
@@ -56,8 +57,26 @@ function ProductRow({ product }: { product: ClientDetailPlatformProduct }) {
   );
 }
 
-export function RequestedAccessBoard({ platformGroups }: RequestedAccessBoardProps) {
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+export function RequestedAccessBoard({
+  platformGroups,
+  initialExpandedPlatformGroup,
+}: RequestedAccessBoardProps) {
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
+    initialExpandedPlatformGroup
+      ? { [initialExpandedPlatformGroup]: true }
+      : {}
+  );
+
+  useEffect(() => {
+    if (!initialExpandedPlatformGroup) {
+      return;
+    }
+
+    setExpandedGroups((current) => ({
+      ...current,
+      [initialExpandedPlatformGroup]: true,
+    }));
+  }, [initialExpandedPlatformGroup]);
 
   const toggleGroup = (platformGroup: string) => {
     setExpandedGroups((current) => ({

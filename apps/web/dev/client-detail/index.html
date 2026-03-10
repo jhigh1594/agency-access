@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client Detail Harness Preview</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      globalThis.process = {
+        env: {
+          NODE_ENV: 'development',
+          NEXT_PUBLIC_BYPASS_AUTH: 'true',
+        },
+      };
+    </script>
+    <script type="module" src="/src/evidence/client-detail-preview.tsx"></script>
+  </body>
+</html>

@@ -14,6 +14,7 @@ import type {
   ClientAccessRequest,
   ClientActivityItem,
   ClientDetailPlatformGroup,
+  Platform,
 } from '@agency-platform/shared';
 import { OverviewTab } from './OverviewTab';
 import { ActivityTab } from './ActivityTab';
@@ -22,11 +23,17 @@ interface ClientTabsProps {
   platformGroups: ClientDetailPlatformGroup[];
   accessRequests: ClientAccessRequest[];
   activity: ClientActivityItem[];
+  initialExpandedPlatformGroup?: Platform;
 }
 
 type TabValue = 'overview' | 'activity';
 
-export function ClientTabs({ platformGroups, accessRequests, activity }: ClientTabsProps) {
+export function ClientTabs({
+  platformGroups,
+  accessRequests,
+  activity,
+  initialExpandedPlatformGroup,
+}: ClientTabsProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('overview');
 
   return (
@@ -77,7 +84,11 @@ export function ClientTabs({ platformGroups, accessRequests, activity }: ClientT
         aria-labelledby={activeTab === 'overview' ? 'client-tab-overview' : 'client-tab-activity'}
       >
         {activeTab === 'overview' && (
-          <OverviewTab platformGroups={platformGroups} accessRequests={accessRequests} />
+          <OverviewTab
+            platformGroups={platformGroups}
+            accessRequests={accessRequests}
+            initialExpandedPlatformGroup={initialExpandedPlatformGroup}
+          />
         )}
         {activeTab === 'activity' && (
           <ActivityTab activity={activity} />

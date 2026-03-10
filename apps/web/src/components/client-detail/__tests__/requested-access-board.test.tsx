@@ -42,4 +42,32 @@ describe('RequestedAccessBoard', () => {
     expect(screen.getByText(/google merchant center/i)).toBeInTheDocument();
     expect(screen.getByText('No assets found')).toBeInTheDocument();
   });
+
+  it('supports an initially expanded platform group', () => {
+    render(
+      <RequestedAccessBoard
+        platformGroups={[
+          {
+            platformGroup: 'meta',
+            status: 'revoked',
+            fulfilledCount: 0,
+            requestedCount: 1,
+            latestRequestId: 'request-2',
+            latestRequestName: 'Meta reconnect',
+            latestRequestedAt: new Date('2026-03-09T00:00:00.000Z'),
+            products: [
+              { product: 'meta_ads', status: 'revoked', note: 'Connection was revoked by the client' },
+            ],
+          },
+        ]}
+        initialExpandedPlatformGroup="meta"
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /collapse meta details/i })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(screen.getByText('Connection was revoked by the client')).toBeInTheDocument();
+  });
 });
