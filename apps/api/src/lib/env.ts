@@ -125,6 +125,17 @@ const envSchema = z.object({
   CREEM_WEBHOOK_SECRET: z.string(),
   CREEM_API_URL: z.string().url().default('https://api.creem.io'),
 
+  // Sentry Error Monitoring
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_SEND_IN_DEV: z.preprocess(
+    value => parseBooleanish(value) ?? value,
+    z.boolean().default(false)
+  ),
+  SENTRY_WEBHOOK_SECRET: z.string().optional(),
+  SENTRY_AUTH_TOKEN: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
+
   LOG_LEVEL: z.string().default('info'),
 
   // Rate Limiting
