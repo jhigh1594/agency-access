@@ -302,15 +302,6 @@ function verifySentrySignature(
 
 export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
   /**
-   * GET /api/webhooks/sentry/ping
-   *
-   * Simple unauthenticated ping to verify route is registered
-   */
-  fastify.get('/webhooks/sentry/ping', async () => {
-    return { pong: true, message: 'sentry-webhooks routes are loaded' };
-  });
-
-  /**
    * POST /api/webhooks/sentry
    *
    * Receives Sentry alert webhooks and creates task files
@@ -323,23 +314,9 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
    * Settings → Alerts → Add Webhook → URL
    */
   fastify.post('/webhooks/sentry', { config: { rawBody: true } }, async (request, reply) => {
-    // LOG IMMEDIATELY - before any processing to confirm receipt
     const payload = request.body as SentryWebhookPayload;
     const signatureHeader = request.headers['x-sentry-signature'] as string | undefined;
     const rawBody = (request as any).rawBody;
-
-    // Always log receipt of webhook for debugging
-    fastify.log.info(
-      {
-        action: payload?.action,
-        issueId: payload?.data?.issue?.id,
-        issueTitle: payload?.data?.issue?.title,
-        hasSignature: !!signatureHeader,
-        hasRawBody: !!rawBody,
-      },
-      '[SENTRY WEBHOOK] Received webhook request'
-    );
-
     const payloadString = typeof rawBody === 'string' ? rawBody : JSON.stringify(payload ?? {});
 
     // Get webhook secret from environment
@@ -347,7 +324,7 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
 
     // Verify signature if secret is configured
     if (webhookSecret && !verifySentrySignature(payloadString, signatureHeader, webhookSecret)) {
-      fastify.log.warn({ signaturePresent: !!signatureHeader }, '[SENTRY WEBHOOK] Signature verification failed');
+      fastify.log.warn({ signaturePresent: !!signatureHeader }, 'Sentry webhook signature verification failed');
       return reply.code(401).send({
         data: null,
         error: {
@@ -358,29 +335,12 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      // Process various action types
-      // 'created' = new issue, 'assigned' = issue assigned, 'fired' = alert rule triggered
-      const processedActions = ['created', 'assigned', 'fired'];
-      if (!processedActions.includes(payload.action)) {
-        fastify.log.info(
-          {
-            action: payload.action,
-            issueId: payload.data?.issue?.id,
-            processedActions,
-          },
-          '[SENTRY WEBHOOK] Action type not processed'
-        );
-        return { received: true, skipped: true, reason: `Action '${payload.action}' not in processed list: ${processedActions.join(', ')}` };
+      // Only process 'created' actions (new issues) by default
+      // Modify this condition to also handle 'assigned' or other actions
+      if (payload.action !== 'created' && payload.action !== 'assigned') {
+        fastify.log.info({ action: payload.action, issueId: payload.data.issue.id }, 'Sentry webhook action skipped (not created/assigned)');
+        return { received: true, skipped: true, reason: `Action '${payload.action}' not processed` };
       }
-
-      fastify.log.info(
-        {
-          action: payload.action,
-          issueId: payload.data?.issue?.id,
-          issueTitle: payload.data?.issue?.title,
-        },
-        '[SENTRY WEBHOOK] Processing action'
-      );
 
       // Check for idempotency via audit log
       const existing = await prisma.auditLog.findFirst({
