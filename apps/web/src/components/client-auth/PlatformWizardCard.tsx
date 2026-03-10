@@ -22,6 +22,7 @@ interface PlatformWizardCardProps {
   platformName: string;
   currentStep: 1 | 2 | 3 | 4;
   totalSteps?: 3 | 4;
+  chrome?: 'full' | 'minimal';
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -31,9 +32,12 @@ export function PlatformWizardCard({
   platformName,
   currentStep,
   totalSteps = 3,
+  chrome = 'full',
   children,
   footer,
 }: PlatformWizardCardProps) {
+  const showFullChrome = chrome === 'full';
+
   return (
     <m.div
       className="bg-card rounded-lg shadow-brutalist border-2 border-black dark:border-white overflow-hidden"
@@ -42,21 +46,23 @@ export function PlatformWizardCard({
       transition={{ duration: 0.4 }}
     >
       {/* Header: Platform branding + progress */}
-      <div className="border-b-2 border-black dark:border-white p-6 bg-[var(--paper)]">
-        <div className="flex items-center gap-4 mb-4">
-          <PlatformIcon platform={platform} size="lg" />
-          <div>
-            <h2 className="text-2xl font-bold text-[var(--ink)] font-display">{platformName}</h2>
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
-              Connect {platformName}
-            </p>
+      {showFullChrome ? (
+        <div className="border-b-2 border-black dark:border-white p-6 bg-[var(--paper)]">
+          <div className="flex items-center gap-4 mb-4">
+            <PlatformIcon platform={platform} size="lg" />
+            <div>
+              <h2 className="text-2xl font-bold text-[var(--ink)] font-display">{platformName}</h2>
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
+                Connect {platformName}
+              </p>
+            </div>
           </div>
+          <PlatformStepProgress currentStep={currentStep} totalSteps={totalSteps} />
         </div>
-        <PlatformStepProgress currentStep={currentStep} totalSteps={totalSteps} />
-      </div>
+      ) : null}
 
       {/* Content: Step-specific content with animation */}
-      <div className="p-8">
+      <div className={showFullChrome ? 'p-8' : 'p-6 sm:p-7'}>
         <AnimatePresence mode="wait" initial={false}>
           <m.div
             key={currentStep}

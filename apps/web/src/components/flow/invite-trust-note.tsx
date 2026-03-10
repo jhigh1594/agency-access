@@ -7,22 +7,28 @@ interface InviteTrustNoteProps {
   title?: string;
   description: string;
   className?: string;
+  density?: 'default' | 'compact';
 }
 
 export function InviteTrustNote({
   title = 'You stay in control',
   description,
   className,
+  density = 'default',
 }: InviteTrustNoteProps) {
+  const isCompact = density === 'compact';
+
   return (
-    <div className={cn('rounded-2xl border border-border bg-paper/80 p-4', className)}>
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
+    <div className={cn(`rounded-2xl border border-border bg-paper/80 ${isCompact ? 'p-3' : 'p-4'}`, className)}>
+      <div className={`flex items-start ${isCompact ? 'gap-2.5' : 'gap-3'}`}>
+        <div
+          className={`mt-0.5 flex shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground ${isCompact ? 'h-8 w-8' : 'h-9 w-9'}`}
+        >
           <Lock className="h-4 w-4" />
         </div>
         <div>
           <p className="text-sm font-semibold text-ink">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
+          <p className={`text-sm text-muted-foreground ${isCompact ? 'mt-0.5 leading-5' : 'mt-1 leading-6'}`}>{description}</p>
         </div>
       </div>
     </div>

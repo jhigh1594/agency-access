@@ -24,6 +24,7 @@ const FILES_TO_VALIDATE = [
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-support-card.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-platform-stage.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-platform-queue-item.tsx',
+  '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-primary-action-dock.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-trust-note.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/invite-load-state-card.tsx',
   '/Users/jhigh/agency-access-platform/apps/web/src/components/flow/manual-invite-header.tsx',

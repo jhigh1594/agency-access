@@ -398,18 +398,18 @@ export function PlatformAuthWizard({
     switch (currentStep) {
       case 1:
         return (
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-4 sm:space-y-6">
             {/* Platform Icon with Brutalist Border */}
-            <div className="inline-flex items-center justify-center w-20 h-20 border-2 border-black dark:border-white bg-[var(--paper)] mb-4">
+            <div className="mb-2 inline-flex h-14 w-14 items-center justify-center border-2 border-black bg-[var(--paper)] dark:border-white sm:mb-4 sm:h-20 sm:w-20">
               <PlatformIcon platform={platform} size="xl" />
             </div>
 
             {/* Bold Typography */}
             <div>
-              <h3 className="text-3xl font-bold text-[var(--ink)] mb-3 font-display">
+              <h3 className="mb-2 text-2xl font-bold text-[var(--ink)] font-display sm:mb-3 sm:text-3xl">
                 Connect {platformName}
               </h3>
-              <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
+              <p className="mx-auto max-w-md text-base text-muted-foreground dark:text-muted-foreground sm:text-lg">
                 Sign in to {platformName} and approve access. You'll choose which accounts to share next.
               </p>
             </div>
@@ -1046,6 +1046,7 @@ export function PlatformAuthWizard({
       platformName={platformName}
       currentStep={currentStep}
       totalSteps={maxSteps}
+      chrome="minimal"
     >
       {renderStepContent()}
     </PlatformWizardCard>

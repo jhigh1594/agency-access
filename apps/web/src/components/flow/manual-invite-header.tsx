@@ -39,19 +39,22 @@ export function ManualInviteHeader({
       {backAction ? <div className="flex justify-end">{backAction}</div> : null}
       <InviteHeroHeader
         eyebrow={eyebrow}
-        title={`Complete ${platformName} access sharing`}
-        description={`${agencyName} asked you to use ${platformName}'s native invite flow. Follow the checklist below, send the requested access, and return to finish this authorization request.`}
+        title={`Complete ${platformName} access`}
+        description={`Use ${platformName}'s native invite flow, finish the checklist, and return to the request.`}
         badge="Manual invite"
         logoUrl={logoUrl}
         logoAlt={`${agencyName} logo`}
         fallbackMark={agencyName.slice(0, 1).toUpperCase()}
+        density="compact"
+        statsLayout="inline"
+        hideInlineStatsOnMobile
         stats={[
           { label: 'Requested by', value: agencyName },
           { label: 'Recipient', value: recipientSummary },
           { label: 'Platform', value: platformName },
           { label: 'Next', value: `Complete the ${platformName} checklist, then return to the request.` },
         ]}
-        aside={<InviteTrustNote description={securityNote} className="max-w-sm" />}
+        aside={<InviteTrustNote description={securityNote} density="compact" className="hidden max-w-sm lg:block" />}
       />
     </div>
   );

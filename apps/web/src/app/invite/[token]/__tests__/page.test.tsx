@@ -168,6 +168,45 @@ describe('Invite Flow Page', () => {
     await waitFor(() => {
       expect(screen.getByText(/review request/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /continue to connect/i })).toBeInTheDocument();
+      expect(screen.getByText(/you will choose which accounts to share next/i)).toBeInTheDocument();
+    });
+  });
+
+  it('shows the security badge only once in the setup hero', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/oauth only/i)).toHaveLength(1);
     });
   });
 
@@ -271,8 +310,8 @@ describe('Invite Flow Page', () => {
     await userEvent.click(continueButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/connect 1 more platform/i)).toBeInTheDocument();
       expect(screen.getByText('Connect')).toBeInTheDocument();
+      expect(screen.queryByText(/connect 1 more platform/i)).not.toBeInTheDocument();
     });
 
     expect(

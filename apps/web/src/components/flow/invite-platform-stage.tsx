@@ -25,42 +25,45 @@ export function InvitePlatformStage({
       layout
       initial={false}
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      className="space-y-4"
+      className="flex flex-col gap-2 sm:gap-3"
       aria-label={`Active platform: ${platformName}`}
     >
-      <div className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-sm">
-        <div className="h-1.5 bg-coral/80" aria-hidden="true" />
+      <m.div
+        layout
+        initial={false}
+        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+        className="order-1 sm:order-2"
+      >
+        {children}
+      </m.div>
 
-        <div className="px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Now connecting
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-ink font-display">{platformName}</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-paper px-4 py-3 text-right text-sm text-muted-foreground">
-              <p className="font-semibold text-ink">
-                {remainingCount === 0
-                  ? 'Last platform in this request'
-                  : `${remainingCount} more platform${remainingCount === 1 ? '' : 's'} after this`}
-              </p>
-              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+      <div className="order-2 rounded-[1.5rem] border border-border bg-card px-4 py-3 shadow-sm sm:order-1 sm:px-5 sm:py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Now connecting
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold text-ink font-display sm:text-2xl">{platformName}</h2>
+              <div className="rounded-full border border-border bg-paper px-3 py-1 text-xs font-semibold text-ink">
                 {completedCount} of {totalCount} complete
-              </p>
+              </div>
             </div>
+            <p className="mt-1.5 max-w-2xl text-sm leading-5 text-muted-foreground sm:mt-2 sm:leading-6">
+              {description}
+            </p>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <div className="rounded-full border border-border bg-paper px-3 py-1 text-xs font-semibold text-ink">
-              Now: {platformName}
-            </div>
+          <div className="hidden flex-wrap gap-2 sm:flex">
             {nextPlatformName ? (
-              <div className="rounded-full border border-border bg-paper px-3 py-1 text-xs font-semibold text-muted-foreground">
-                Then: {nextPlatformName}
-              </div>
+              <>
+                <div className="rounded-full border border-border bg-paper px-3 py-1 text-xs font-semibold text-ink">
+                  Now: {platformName}
+                </div>
+                <div className="rounded-full border border-border bg-paper px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  Then: {nextPlatformName}
+                </div>
+              </>
             ) : (
               <div className="rounded-full border border-teal/40 bg-teal/10 px-3 py-1 text-xs font-semibold text-teal">
                 Final authorization step
@@ -69,14 +72,6 @@ export function InvitePlatformStage({
           </div>
         </div>
       </div>
-
-      <m.div
-        layout
-        initial={false}
-        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      >
-        {children}
-      </m.div>
     </m.section>
   );
 }

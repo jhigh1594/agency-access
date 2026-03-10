@@ -10,6 +10,7 @@ import { InvitePlatformQueueItem } from '@/components/flow/invite-platform-queue
 import { InvitePlatformStage } from '@/components/flow/invite-platform-stage';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
 import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
+import { InvitePrimaryActionDock } from '@/components/flow/invite-primary-action-dock';
 import { InviteTrustNote } from '@/components/flow/invite-trust-note';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
 import { Button } from '@/components/ui';
@@ -95,6 +96,9 @@ export default function ClientAuthorizationPage() {
       }),
     [completedPlatforms, data?.platforms, oauthConnectionInfo?.platform]
   );
+  const activePlatformName = platformQueue.activePlatform
+    ? PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]
+    : null;
 
   const railIdentities = useMemo(() => {
     if (!data) return [];
@@ -304,37 +308,55 @@ export default function ClientAuthorizationPage() {
     <InviteFlowShell
       title={data.agencyName}
       description={`Authorize access for ${data.clientName}`}
+      density="compact"
+      hideStepChipsOnMobile
       header={
         <InviteHeroHeader
           eyebrow={`Request for ${data.clientName}`}
-          title={`Share account access with ${data.agencyName}`}
-          description={`Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`}
+          title={
+            phase === 'platforms'
+              ? activePlatformName
+                ? `Complete ${activePlatformName} access`
+                : 'Complete account access'
+              : `Share account access with ${data.agencyName}`
+          }
+          description={
+            phase === 'platforms'
+              ? activePlatformName
+                ? `Finish ${activePlatformName} first, then continue through the remaining requested platforms.`
+                : 'Finish the remaining platform connection steps.'
+              : `Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`
+          }
           badge={securitySummary.badge}
           logoUrl={data.branding?.logoUrl}
           logoAlt={`${data.agencyName} logo`}
-          stats={[
-            { label: 'Requested by', value: data.agencyName },
-            {
-              label: 'Recipient',
-              value: data.clientEmail ? `${data.clientName} · ${data.clientEmail}` : data.clientName,
-            },
-            { label: 'Platforms', value: platformSummary || 'No platforms requested' },
-            {
-              label: 'Next',
-              value:
-                phase === 'complete'
-                  ? 'Review the completed authorization'
-                  : phase === 'platforms'
-                  ? platformQueue.activePlatform
-                    ? `Complete ${PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}`
-                    : 'Review completion'
-                  : 'Confirm what will be shared',
-            },
-          ]}
-          aside={
-            <div className="rounded-2xl border border-border bg-paper px-4 py-3 text-sm text-muted-foreground">
-              <span className="font-semibold text-ink">Security:</span> {securitySummary.badge}
-            </div>
+          density="compact"
+          statsLayout="inline"
+          hideInlineStatsOnMobile
+          stats={
+            phase === 'platforms'
+              ? [
+                  { label: 'Platforms', value: platformSummary || 'No platforms requested' },
+                  {
+                    label: 'Next',
+                    value: activePlatformName ? `Complete ${activePlatformName}` : 'Review completion',
+                  },
+                ]
+              : [
+                  { label: 'Requested by', value: data.agencyName },
+                  {
+                    label: 'Recipient',
+                    value: data.clientEmail ? `${data.clientName} · ${data.clientEmail}` : data.clientName,
+                  },
+                  { label: 'Platforms', value: platformSummary || 'No platforms requested' },
+                  {
+                    label: 'Next',
+                    value:
+                      phase === 'complete'
+                        ? 'Review the completed authorization'
+                        : 'Confirm what will be shared',
+                  },
+                ]
           }
         />
       }
@@ -443,31 +465,31 @@ export default function ClientAuthorizationPage() {
             </div>
           </form>
         ) : (
-          <div className="rounded-lg border-2 border-black bg-card shadow-brutalist overflow-hidden">
-            <div className="border-b border-border bg-muted/10 px-6 py-5">
+          <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card pb-28 shadow-sm">
+            <div className="border-b border-border bg-muted/10 px-5 py-4 sm:px-6">
               <h2 className="text-xl font-semibold text-ink font-display">Review request</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Confirm the platforms below, then continue to authorize access.
               </p>
             </div>
 
-            <div className="space-y-6 px-6 py-6">
-              <div className="rounded-lg border border-border bg-paper/60 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="space-y-3 px-5 py-4 sm:px-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Requested platforms
                 </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {data.platforms.map((groupConfig) => {
                     const platform = groupConfig.platformGroup as Platform;
 
                     return (
-                      <div key={platform} className="rounded-lg border border-border bg-card p-4">
+                      <div key={platform} className="rounded-xl border border-border bg-paper/70 p-3.5">
                         <p className="text-sm font-semibold text-ink">{PLATFORM_NAMES[platform]}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="mt-2 flex flex-wrap gap-1.5">
                           {groupConfig.products.map((product) => (
                             <span
                               key={`${platform}:${product.product}`}
-                              className="rounded-full border border-border px-2 py-1 text-xs text-muted-foreground"
+                              className="rounded-full border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground"
                             >
                               {`${PLATFORM_NAMES[product.product as Platform] || product.product} · ${formatAccessLevelLabel(product.accessLevel)}`}
                             </span>
@@ -479,38 +501,26 @@ export default function ClientAuthorizationPage() {
                 </div>
               </div>
 
-              <InviteTrustNote description="Your agency only receives access to the accounts you explicitly approve in the next step. You can review the exact selection before anything is shared." />
-            </div>
-
-            <div className="border-t border-border bg-muted/10 px-6 py-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Lock className="h-4 w-4" />
-                {securitySummary.detail}
-              </div>
-              <Button type="button" variant="primary" onClick={() => setPhase('platforms')}>
-                Continue to connect
-              </Button>
+              <InviteTrustNote
+                density="compact"
+                title="Approve only what you want to share"
+                description="Your agency receives access only to the accounts you explicitly approve in the next step."
+              />
             </div>
           </div>
         ))}
 
+      {phase === 'intake' && intakeFields.length === 0 ? (
+        <InvitePrimaryActionDock
+          title="Ready to continue?"
+          description="You will choose which accounts to share next. Passwords are never requested."
+          actionLabel="Continue to connect"
+          onAction={() => setPhase('platforms')}
+        />
+      ) : null}
+
       {phase === 'platforms' && (
         <div className="space-y-6">
-          <div className="rounded-[1.5rem] border border-border bg-card px-5 py-4">
-            <h2 className="text-lg font-semibold text-ink font-display">
-              {platformQueue.activePlatform
-                ? `Connect ${requestedPlatforms.length - completedPlatforms.size} more platform${
-                    requestedPlatforms.length - completedPlatforms.size !== 1 ? 's' : ''
-                  }`
-                : 'All platforms connected'}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {platformQueue.activePlatform
-                ? `${completedPlatforms.size} of ${requestedPlatforms.length} complete`
-                : 'Everything requested in this invite is complete.'}
-            </p>
-          </div>
-
           {platformQueue.activePlatform ? (
             <InvitePlatformStage
               platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}

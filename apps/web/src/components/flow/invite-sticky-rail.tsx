@@ -32,9 +32,9 @@ export function InviteStickyRail({
   return (
     <div className="space-y-4 lg:sticky lg:top-6">
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div className="border-b border-border bg-gradient-to-r from-paper via-paper to-muted/20 px-4 py-4">
+        <div className="bg-gradient-to-r from-paper via-paper to-muted/20 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Request details</p>
-          <p className="mt-3 text-base font-semibold leading-7 text-ink">{objective}</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-ink">{objective}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full border border-border bg-paper px-3 py-1 text-xs font-semibold text-ink">
               {completedCount} of {totalCount} complete
@@ -47,20 +47,7 @@ export function InviteStickyRail({
           </div>
         </div>
 
-        <div className="space-y-4 px-4 py-4">
-          {identities.length > 0 ? (
-            <div className="space-y-3">
-              {identities.map((identity) => (
-                <div key={`${identity.label}:${identity.value}`} className="rounded-xl border border-border bg-paper px-3 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    {identity.label}
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-ink break-all">{identity.value}</p>
-                </div>
-              ))}
-            </div>
-          ) : null}
-
+        <div className="space-y-3 border-t border-border px-4 py-4">
           <div className="rounded-xl border border-border bg-paper px-3 py-3">
             <p className="text-sm leading-6 text-foreground">{securityNote}</p>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -73,13 +60,28 @@ export function InviteStickyRail({
             ) : null}
           </div>
 
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-paper px-3 py-3">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink">Need help?</p>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Reach out if the link expires, the page stalls, or anything in the request looks wrong.
-              </p>
-            </div>
+          {identities.length > 0 ? (
+            <details className="rounded-xl border border-border bg-paper" open={false}>
+              <summary className="cursor-pointer list-none px-3 py-3 text-sm font-semibold text-ink">
+                View invite details
+              </summary>
+              <div className="space-y-3 border-t border-border px-3 py-3">
+                {identities.map((identity) => (
+                  <div key={`${identity.label}:${identity.value}`}>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {identity.label}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-ink break-all">{identity.value}</p>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ) : null}
+
+          <div className="flex items-center justify-between gap-4 px-1 pt-1">
+            <p className="min-w-0 text-sm text-muted-foreground">
+              Need help or something looks wrong?
+            </p>
             <a
               href={supportHref}
               className="shrink-0 text-sm font-semibold text-coral transition-colors hover:text-coral/90"

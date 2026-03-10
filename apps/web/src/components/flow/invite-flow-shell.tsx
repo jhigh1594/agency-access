@@ -15,6 +15,8 @@ interface InviteFlowShellProps {
   layoutMode?: 'focused' | 'split';
   showProgress?: boolean;
   mobileRailLabel?: string;
+  density?: 'default' | 'compact';
+  hideStepChipsOnMobile?: boolean;
   children: ReactNode;
 }
 
@@ -30,16 +32,21 @@ export function InviteFlowShell({
   layoutMode = 'focused',
   showProgress = true,
   mobileRailLabel = 'Request details and support',
+  density = 'default',
+  hideStepChipsOnMobile = false,
   children,
 }: InviteFlowShellProps) {
   const safeStep = Math.max(1, Math.min(step, Math.max(1, totalSteps)));
   const progress = Math.round((safeStep / Math.max(1, totalSteps)) * 100);
   const isSplit = layoutMode === 'split';
+  const isCompact = density === 'compact';
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className={`mx-auto px-4 py-8 sm:px-6 lg:px-8 ${isSplit ? 'max-w-7xl' : 'max-w-5xl'}`}>
-        <header className="mb-8 space-y-4">
+      <div
+        className={`mx-auto px-4 ${isCompact ? 'py-6 sm:px-6 lg:px-8' : 'py-8 sm:px-6 lg:px-8'} ${isSplit ? 'max-w-7xl' : 'max-w-5xl'}`}
+      >
+        <header className={`${isCompact ? 'mb-6 space-y-3' : 'mb-8 space-y-4'}`}>
           {header ? (
             header
           ) : (
@@ -53,7 +60,7 @@ export function InviteFlowShell({
           )}
 
           {showProgress ? (
-            <div className="space-y-3">
+            <div className={isCompact ? 'space-y-2' : 'space-y-3'}>
               <div className="h-2 overflow-hidden rounded-lg bg-muted/30" aria-hidden="true">
                 <m.div
                   className="h-full bg-coral"
@@ -71,7 +78,13 @@ export function InviteFlowShell({
               </div>
 
               {steps.length > 0 ? (
-                <div className={`grid gap-2 ${steps.length <= 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
+                <div
+                  data-hide-on-mobile={hideStepChipsOnMobile ? 'true' : 'false'}
+                  className={[
+                    `grid gap-2 ${steps.length <= 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`,
+                    hideStepChipsOnMobile ? 'hidden sm:grid' : '',
+                  ].join(' ')}
+                >
                   {steps.map((label, index) => {
                     const stepNumber = index + 1;
                     const isActive = stepNumber === safeStep;
@@ -81,7 +94,7 @@ export function InviteFlowShell({
                       <div
                         key={label}
                         className={[
-                          'rounded-lg border px-3 py-2 text-xs font-semibold uppercase tracking-wide',
+                          `rounded-lg border ${isCompact ? 'px-3 py-1.5 text-[11px]' : 'px-3 py-2 text-xs'} font-semibold uppercase tracking-wide`,
                           isActive
                             ? 'border-coral bg-coral/10 text-coral'
                             : isComplete

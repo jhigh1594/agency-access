@@ -24,4 +24,21 @@ describe('PlatformWizardCard', () => {
     expect(card).not.toBeNull();
     expect(card?.getAttribute('style') || '').not.toContain('opacity: 0');
   });
+
+  it('can render without duplicate header chrome when a parent stage already provides context', () => {
+    render(
+      <PlatformWizardCard
+        platform="google"
+        platformName="Google"
+        currentStep={1}
+        chrome="minimal"
+      >
+        <div>Connect Google CTA</div>
+      </PlatformWizardCard>
+    );
+
+    expect(screen.getByText('Connect Google CTA')).toBeInTheDocument();
+    expect(screen.queryByText(/^Google$/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Progress')).not.toBeInTheDocument();
+  });
 });

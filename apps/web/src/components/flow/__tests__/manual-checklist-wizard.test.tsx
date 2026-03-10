@@ -125,4 +125,16 @@ describe('ManualChecklistWizard', () => {
       })
     );
   });
+
+  it('uses compact mobile-only header treatments to bring the step action higher in the viewport', () => {
+    const { container } = render(<ManualChecklistWizard platformName="Beehiiv" steps={buildSteps(vi.fn()).steps} />);
+
+    const mobileDescription = container.querySelector('[data-hide-on-mobile-description="true"]');
+    const mobileProgressBar = container.querySelector('[data-hide-on-mobile-progress="true"]');
+
+    expect(mobileDescription?.className).toContain('hidden');
+    expect(mobileDescription?.className).toContain('sm:block');
+    expect(mobileProgressBar?.className).toContain('hidden');
+    expect(mobileProgressBar?.className).toContain('sm:block');
+  });
 });

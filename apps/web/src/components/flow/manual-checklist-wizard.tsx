@@ -168,20 +168,28 @@ export function ManualChecklistWizard({
 
   return (
     <div className="rounded-lg border-2 border-black bg-card shadow-brutalist overflow-hidden">
-      <div className="border-b border-border bg-paper px-5 py-5">
+      <div className="border-b border-border bg-paper px-4 py-4 sm:px-5 sm:py-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{platformName} Checklist</p>
         <div className="mt-2 flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold text-ink font-display">{currentStep.title}</h2>
+          <h2 className="text-base font-semibold text-ink font-display sm:text-lg">{currentStep.title}</h2>
         </div>
         {currentStep.description ? (
-          <p className="mt-2 text-sm text-muted-foreground">{currentStep.description}</p>
+          <p
+            data-hide-on-mobile-description="true"
+            className="mt-2 hidden text-sm text-muted-foreground sm:block"
+          >
+            {currentStep.description}
+          </p>
         ) : null}
-        <div className="mt-4">
+        <div className="mt-3 sm:mt-4">
           <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
             <span>Step {stepStatusLabel}</span>
             <span>{completedSteps} of {totalSteps} completed</span>
           </div>
-          <div className="mt-2 h-2 rounded-full bg-border/70 overflow-hidden">
+          <div
+            data-hide-on-mobile-progress="true"
+            className="mt-2 hidden h-2 overflow-hidden rounded-full bg-border/70 sm:block"
+          >
             <div
               className="h-full rounded-full bg-coral transition-all duration-200"
               style={{ width: `${progressPercent}%` }}
@@ -190,8 +198,8 @@ export function ManualChecklistWizard({
         </div>
       </div>
 
-      <div className="px-5 py-5 space-y-4">
-        <div className="rounded-lg border border-border bg-paper px-4 py-4">
+      <div className="space-y-3 px-4 py-4 sm:space-y-4 sm:px-5 sm:py-5">
+        <div className="rounded-lg border border-border bg-paper px-3 py-3 sm:px-4 sm:py-4">
           {currentStep.content}
         </div>
 
@@ -251,7 +259,7 @@ export function ManualChecklistWizard({
         </div>
       </div>
 
-      <div className="border-t border-border bg-paper px-4 py-4 lg:hidden">
+      <div className="border-t border-border bg-paper px-4 py-3 lg:hidden">
         <div className="mx-auto max-w-3xl flex items-center gap-3">
           <button
             type="button"
