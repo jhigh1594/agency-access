@@ -192,6 +192,26 @@ describe('PlatformAuthWizard', () => {
     });
   });
 
+  it('lets users review the connect step for manual platforms before resuming setup', async () => {
+    render(
+      <PlatformAuthWizard
+        platform="beehiiv"
+        platformName="Beehiiv"
+        products={[{ product: 'beehiiv', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        deferManualRedirect
+      />
+    );
+
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: /resume beehiiv setup/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /continue in beehiiv/i }));
+
+    expect(pushMock).toHaveBeenCalledWith('/invite/token-1/beehiiv/manual');
+  });
+
   it('shows a continue action instead of an empty step for platforms without asset selectors', async () => {
     render(
       <PlatformAuthWizard

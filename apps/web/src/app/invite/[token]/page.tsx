@@ -595,6 +595,7 @@ export default function ClientAuthorizationPage() {
                 platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}
                 products={platformQueue.activePlatform.products}
                 accessRequestToken={token}
+                deferManualRedirect={urlView === 'connect'}
                 onComplete={() =>
                   handlePlatformComplete(platformQueue.activePlatform!.platformGroup as Platform)
                 }

@@ -42,6 +42,7 @@ interface PlatformAuthWizardProps {
   accessRequestToken: string;
   onComplete: () => void;
   completionActionLabel?: string;
+  deferManualRedirect?: boolean;
   // Optional initial values from OAuth callback
   initialConnectionId?: string;
   initialStep?: 1 | 2 | 3;
@@ -82,6 +83,7 @@ export function PlatformAuthWizard({
   accessRequestToken,
   onComplete,
   completionActionLabel,
+  deferManualRedirect = false,
   initialConnectionId,
   initialStep,
 }: PlatformAuthWizardProps) {
@@ -94,10 +96,10 @@ export function PlatformAuthWizard({
 
   // Redirect platforms to manual flow (no OAuth - uses team invitations)
   useEffect(() => {
-    if (manualRoute) {
+    if (manualRoute && !deferManualRedirect) {
       router.push(`/invite/${accessRequestToken}/${manualRoute}` as any);
     }
-  }, [accessRequestToken, manualRoute, router]);
+  }, [accessRequestToken, deferManualRedirect, manualRoute, router]);
 
   // Initialize with props if returning from OAuth callback
   // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
@@ -397,6 +399,45 @@ export function PlatformAuthWizard({
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
+        if (isManualPlatform) {
+          return (
+            <div className="text-center space-y-4 sm:space-y-6">
+              <div className="mb-2 inline-flex h-14 w-14 items-center justify-center border-2 border-black bg-[var(--paper)] dark:border-white sm:mb-4 sm:h-20 sm:w-20">
+                <PlatformIcon platform={platform} size="xl" />
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-2xl font-bold text-[var(--ink)] font-display sm:mb-3 sm:text-3xl">
+                  Resume {platformName} setup
+                </h3>
+                <p className="mx-auto max-w-md text-base text-muted-foreground dark:text-muted-foreground sm:text-lg">
+                  This platform uses native invite steps instead of OAuth. Resume the checklist when you are ready.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => router.push(`/invite/${accessRequestToken}/${manualRoute}` as any)}
+                size="xl"
+                variant="brutalist-rounded"
+                rightIcon={<ExternalLink className="w-5 h-5" />}
+              >
+                Continue in {platformName}
+              </Button>
+
+              <StepHelpText
+                title={`What happens when you continue in ${platformName}?`}
+                description={`You'll return to the ${platformName} checklist and can come back here afterward to review platform status.`}
+                steps={[
+                  `Open the ${platformName} invite checklist`,
+                  'Complete the native platform steps',
+                  'Return to the request flow when the invite is sent',
+                  'Continue with the next requested platform',
+                ]}
+              />
+            </div>
+          );
+        }
+
         return (
           <div className="text-center space-y-4 sm:space-y-6">
             {/* Platform Icon with Brutalist Border */}
@@ -1032,7 +1073,7 @@ export function PlatformAuthWizard({
     }
   };
 
-  if (isManualPlatform) {
+  if (isManualPlatform && !deferManualRedirect) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-coral" />
