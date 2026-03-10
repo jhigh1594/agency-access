@@ -271,6 +271,9 @@ async function createSentryTaskFile(
 /**
  * Verify Sentry webhook signature
  * Uses HMAC SHA-256 with the webhook secret
+ *
+ * Sentry sends the signature directly in the Sentry-Hook-Signature header
+ * as a base64-encoded HMAC-SHA256 of the request body
  */
 function verifySentrySignature(
   rawBody: string,
@@ -281,23 +284,25 @@ function verifySentrySignature(
     return false;
   }
 
-  // Sentry sends signature as: sentry_timestamp=<timestamp>, sentry_signature=<signature>
-  const signatureMatch = signatureHeader.match(/sentry_signature=([^,]+)/);
-  if (!signatureMatch) {
-    return false;
-  }
+  // The signature is sent directly as base64-encoded HMAC-SHA256
+  // Format: base64-encoded hmac-sha256(secret, body)
+  const providedSignature = signatureHeader;
 
-  const providedSignature = signatureMatch[1];
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(rawBody)
-    .digest();
+    .digest('base64');
 
   // Constant-time comparison to prevent timing attacks
-  return crypto.timingSafeEqual(
-    Buffer.from(providedSignature, 'base64'),
-    expectedSignature
-  );
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(providedSignature, 'base64'),
+      Buffer.from(expectedSignature, 'base64')
+    );
+  } catch {
+    // If signatures are different lengths, timingSafeEqual throws
+    return false;
+  }
 }
 
 export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
@@ -325,12 +330,10 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
   fastify.post('/webhooks/sentry', { config: { rawBody: true } }, async (request, reply) => {
     // LOG IMMEDIATELY - before any processing to confirm receipt
     const payload = request.body as SentryWebhookPayload;
-    const signatureHeader = request.headers['x-sentry-signature'] as string | undefined;
+    // Sentry sends signature in 'Sentry-Hook-Signature' header (case-insensitive in HTTP)
+    const signatureHeader = request.headers['sentry-hook-signature'] as string | undefined;
     const rawBody = (request as any).rawBody;
-
-    // Capture Sentry-specific headers
     const sentryHookResource = request.headers['sentry-hook-resource'] as string | undefined;
-    const sentryHookSignature = request.headers['sentry-hook-signature'] as string | undefined;
 
     // Always log receipt of webhook for debugging
     fastify.log.info(
@@ -341,7 +344,6 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
         issueTitle: payload?.data?.issue?.title,
         triggeredRule: (payload as any)?.triggered_rule,
         hasSignature: !!signatureHeader,
-        hasSentryHookSignature: !!sentryHookSignature,
         hasRawBody: !!rawBody,
       },
       '[SENTRY WEBHOOK] Received webhook request'
@@ -453,12 +455,55 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
    * Health check endpoint for Sentry webhook integration
    */
   fastify.get('/webhooks/sentry/health', async (_request, reply) => {
+    // Check for existing task files
+    let taskFiles: string[] = [];
+    let taskCount = 0;
+    try {
+      taskFiles = await fs.readdir(SENTRY_TASKS_DIR);
+      taskFiles = taskFiles.filter(f => f.endsWith('.md'));
+      taskCount = taskFiles.length;
+    } catch {
+      // Directory doesn't exist yet
+    }
+
     return {
       data: {
         status: 'ok',
         integration: 'sentry-webhooks',
         tasksDirectory: SENTRY_TASKS_DIR,
+        taskCount,
+        recentTasks: taskFiles.slice(-5),
         timestamp: new Date().toISOString(),
+      },
+      error: null,
+    };
+  });
+
+  /**
+   * GET /api/webhooks/sentry/audit
+   *
+   * Show recent webhook audit log entries (for debugging)
+   */
+  fastify.get('/webhooks/sentry/audit', async (_request, reply) => {
+    const recent = await prisma.auditLog.findMany({
+      where: {
+        action: 'SENTRY_WEBHOOK_ISSUE_CREATED',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      data: {
+        count: recent.length,
+        webhooks: recent.map((log) => ({
+          id: log.id,
+          issueId: log.resourceId,
+          title: (log.metadata as any)?.title,
+          shortId: (log.metadata as any)?.issueShortId,
+          filePath: (log.metadata as any)?.filePath,
+          createdAt: log.createdAt,
+        })),
       },
       error: null,
     };
