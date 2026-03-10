@@ -10,18 +10,23 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import type { ClientAccessRequest, ClientActivityItem } from '@agency-platform/shared';
+import type {
+  ClientAccessRequest,
+  ClientActivityItem,
+  ClientDetailPlatformGroup,
+} from '@agency-platform/shared';
 import { OverviewTab } from './OverviewTab';
 import { ActivityTab } from './ActivityTab';
 
 interface ClientTabsProps {
+  platformGroups: ClientDetailPlatformGroup[];
   accessRequests: ClientAccessRequest[];
   activity: ClientActivityItem[];
 }
 
 type TabValue = 'overview' | 'activity';
 
-export function ClientTabs({ accessRequests, activity }: ClientTabsProps) {
+export function ClientTabs({ platformGroups, accessRequests, activity }: ClientTabsProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('overview');
 
   return (
@@ -72,7 +77,7 @@ export function ClientTabs({ accessRequests, activity }: ClientTabsProps) {
         aria-labelledby={activeTab === 'overview' ? 'client-tab-overview' : 'client-tab-activity'}
       >
         {activeTab === 'overview' && (
-          <OverviewTab accessRequests={accessRequests} />
+          <OverviewTab platformGroups={platformGroups} accessRequests={accessRequests} />
         )}
         {activeTab === 'activity' && (
           <ActivityTab activity={activity} />

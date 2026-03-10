@@ -141,7 +141,7 @@ export async function getClients(
  */
 export async function getClientById(
   id: string,
-  agencyId: string
+  _agencyId: string
 ): Promise<Client | null> {
   return prisma.client.findUnique({
     where: { id },
@@ -359,6 +359,21 @@ export interface ClientDetailResponse {
     pendingConnections: number;
     expiredConnections: number;
   };
+  platformGroups: Array<{
+    platformGroup: string;
+    status: 'connected' | 'partial' | 'pending' | 'expired' | 'revoked' | 'needs_follow_up';
+    fulfilledCount: number;
+    requestedCount: number;
+    latestRequestId?: string;
+    latestRequestName?: string;
+    latestRequestedAt?: Date;
+    products: Array<{
+      product: string;
+      status: 'connected' | 'pending' | 'selection_required' | 'no_assets' | 'expired' | 'revoked';
+      note?: string;
+      latestRequestId?: string;
+    }>;
+  }>;
   accessRequests: Array<{
     id: string;
     name: string;
@@ -376,6 +391,397 @@ export interface ClientDetailResponse {
     timestamp: Date;
     metadata?: Record<string, any>;
   }>;
+}
+
+const PLATFORM_GROUP_MAP: Record<string, string> = {
+  google_ads: 'google',
+  ga4: 'google',
+  google_business_profile: 'google',
+  google_tag_manager: 'google',
+  google_search_console: 'google',
+  google_merchant_center: 'google',
+  meta_ads: 'meta',
+  instagram: 'meta',
+  whatsapp_business: 'meta',
+  linkedin_ads: 'linkedin',
+  snapchat_ads: 'snapchat',
+  tiktok_ads: 'tiktok',
+};
+
+const ASSET_SELECTING_PRODUCTS = new Set([
+  'google_ads',
+  'ga4',
+  'google_business_profile',
+  'google_tag_manager',
+  'google_search_console',
+  'google_merchant_center',
+  'meta_ads',
+  'linkedin_ads',
+  'tiktok',
+  'tiktok_ads',
+]);
+
+type ClientDetailRequestedProduct = {
+  product: string;
+  platformGroup: string;
+};
+
+type ClientDetailProductStatus =
+  | 'connected'
+  | 'pending'
+  | 'selection_required'
+  | 'no_assets'
+  | 'expired'
+  | 'revoked';
+
+type ClientDetailPlatformGroupStatus =
+  | 'connected'
+  | 'partial'
+  | 'pending'
+  | 'expired'
+  | 'revoked'
+  | 'needs_follow_up';
+
+type ClientDetailAccessRequestRecord = {
+  id: string;
+  clientName: string;
+  status: string;
+  createdAt: Date;
+  platforms: unknown;
+  connection?: {
+    status?: string | null;
+    grantedAssets?: unknown;
+    authorizations?: Array<{
+      platform: string;
+      status: string;
+      metadata?: unknown;
+    }>;
+  } | null;
+};
+
+function normalizePlatformGroup(platform: string): string {
+  return PLATFORM_GROUP_MAP[platform] || platform;
+}
+
+function isActiveAuthorizationStatus(status?: string | null): boolean {
+  return status === 'active';
+}
+
+function extractRequestedProducts(platforms: unknown): ClientDetailRequestedProduct[] {
+  const requestedProducts: ClientDetailRequestedProduct[] = [];
+
+  if (Array.isArray(platforms)) {
+    for (const entry of platforms) {
+      if (!entry) continue;
+
+      if (typeof entry === 'string') {
+        requestedProducts.push({
+          product: entry,
+          platformGroup: normalizePlatformGroup(entry),
+        });
+        continue;
+      }
+
+      if (typeof entry !== 'object') continue;
+
+      const maybeGroup = (entry as any).platformGroup;
+      const maybeProducts = (entry as any).products;
+      if (typeof maybeGroup === 'string' && Array.isArray(maybeProducts)) {
+        for (const product of maybeProducts) {
+          const maybeProduct =
+            typeof product === 'string' ? product : typeof product?.product === 'string' ? product.product : null;
+          if (maybeProduct) {
+            requestedProducts.push({
+              product: maybeProduct,
+              platformGroup: maybeGroup,
+            });
+          }
+        }
+        continue;
+      }
+
+      const maybePlatform = (entry as any).platform;
+      if (typeof maybePlatform === 'string') {
+        requestedProducts.push({
+          product: maybePlatform,
+          platformGroup: normalizePlatformGroup(maybePlatform),
+        });
+      }
+    }
+
+    return requestedProducts;
+  }
+
+  if (platforms && typeof platforms === 'object') {
+    for (const [platformGroup, products] of Object.entries(platforms as Record<string, unknown>)) {
+      if (!Array.isArray(products)) continue;
+
+      for (const product of products) {
+        if (typeof product !== 'string') continue;
+        requestedProducts.push({
+          product,
+          platformGroup,
+        });
+      }
+    }
+  }
+
+  return requestedProducts;
+}
+
+function getSelectedAssetCount(product: string, assets: Record<string, any>): number {
+  switch (product) {
+    case 'google_ads':
+    case 'meta_ads':
+    case 'linkedin_ads':
+      return (
+        (assets.adAccounts?.length ?? 0) +
+        (assets.pages?.length ?? 0) +
+        (assets.instagramAccounts?.length ?? 0)
+      );
+    case 'ga4':
+      return assets.properties?.length ?? 0;
+    case 'google_business_profile':
+      return assets.businessAccounts?.length ?? 0;
+    case 'google_tag_manager':
+      return assets.containers?.length ?? 0;
+    case 'google_search_console':
+      return assets.sites?.length ?? 0;
+    case 'google_merchant_center':
+      return assets.merchantAccounts?.length ?? 0;
+    case 'tiktok':
+    case 'tiktok_ads':
+      return (
+        (assets.selectedAdvertiserIds?.length ?? 0) ||
+        (assets.adAccounts?.length ?? 0) ||
+        (assets.advertisers?.length ?? 0) ||
+        0
+      );
+    default:
+      return 0;
+  }
+}
+
+function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolean {
+  if (
+    product === 'google_ads' ||
+    product === 'ga4' ||
+    product === 'google_business_profile' ||
+    product === 'google_tag_manager' ||
+    product === 'google_search_console' ||
+    product === 'google_merchant_center' ||
+    product === 'linkedin_ads'
+  ) {
+    return assets.availableAssetCount === 0;
+  }
+
+  if (product === 'tiktok' || product === 'tiktok_ads') {
+    return Array.isArray(assets.availableAdvertisers) && assets.availableAdvertisers.length === 0;
+  }
+
+  return false;
+}
+
+function resolveProductStatus(
+  request: ClientDetailAccessRequestRecord,
+  requestedProduct: ClientDetailRequestedProduct
+): ClientDetailProductStatus {
+  const connectionStatus = request.connection?.status;
+  const authorizations = request.connection?.authorizations || [];
+
+  if (request.status === 'revoked' || connectionStatus === 'revoked') {
+    return 'revoked';
+  }
+
+  if (request.status === 'expired' || connectionStatus === 'expired') {
+    return 'expired';
+  }
+
+  const matchingAuthorization = authorizations.find(
+    (authorization) =>
+      authorization.platform === requestedProduct.product ||
+      normalizePlatformGroup(authorization.platform) === requestedProduct.platformGroup
+  );
+
+  if (!ASSET_SELECTING_PRODUCTS.has(requestedProduct.product)) {
+    if (
+      matchingAuthorization &&
+      isActiveAuthorizationStatus(matchingAuthorization.status)
+    ) {
+      return 'connected';
+    }
+
+    const grantedAssets =
+      (request.connection?.grantedAssets as Record<string, unknown> | null) || null;
+    const grantedPlatform =
+      grantedAssets && typeof grantedAssets.platform === 'string'
+        ? grantedAssets.platform
+        : null;
+
+    if (
+      grantedPlatform &&
+      (grantedPlatform === requestedProduct.product ||
+        normalizePlatformGroup(grantedPlatform) === requestedProduct.platformGroup)
+    ) {
+      return 'connected';
+    }
+
+    return 'pending';
+  }
+
+  const selectedAssets =
+    request.connection?.grantedAssets &&
+    typeof request.connection.grantedAssets === 'object' &&
+    requestedProduct.product in (request.connection.grantedAssets as Record<string, unknown>)
+      ? ((request.connection.grantedAssets as Record<string, unknown>)[requestedProduct.product] as Record<string, any> | null)
+      : null;
+
+  if (selectedAssets) {
+    if (getSelectedAssetCount(requestedProduct.product, selectedAssets) > 0) {
+      return 'connected';
+    }
+
+    if (hasNoAssetsSignal(requestedProduct.product, selectedAssets)) {
+      return 'no_assets';
+    }
+  }
+
+  if (matchingAuthorization && isActiveAuthorizationStatus(matchingAuthorization.status)) {
+    const metadata =
+      matchingAuthorization.metadata && typeof matchingAuthorization.metadata === 'object'
+        ? (matchingAuthorization.metadata as Record<string, any>)
+        : null;
+
+    if (metadata && hasNoAssetsSignal(requestedProduct.product, metadata)) {
+      return 'no_assets';
+    }
+
+    return 'selection_required';
+  }
+
+  return 'pending';
+}
+
+function getProductStatusPriority(status: ClientDetailProductStatus): number {
+  switch (status) {
+    case 'revoked':
+      return 6;
+    case 'expired':
+      return 5;
+    case 'connected':
+      return 4;
+    case 'no_assets':
+      return 3;
+    case 'selection_required':
+      return 2;
+    case 'pending':
+    default:
+      return 1;
+  }
+}
+
+function getProductStatusNote(status: ClientDetailProductStatus): string | undefined {
+  switch (status) {
+    case 'selection_required':
+      return 'Selection required';
+    case 'no_assets':
+      return 'No assets found';
+    default:
+      return undefined;
+  }
+}
+
+function buildClientDetailPlatformGroups(
+  accessRequests: ClientDetailAccessRequestRecord[]
+): ClientDetailResponse['platformGroups'] {
+  const groupedProducts = new Map<
+    string,
+    {
+      latestRequestId?: string;
+      latestRequestName?: string;
+      latestRequestedAt?: Date;
+      products: Map<string, { status: ClientDetailProductStatus; latestRequestId?: string }>;
+    }
+  >();
+
+  for (const request of accessRequests) {
+    const requestedProducts = extractRequestedProducts(request.platforms);
+
+    for (const requestedProduct of requestedProducts) {
+      const groupKey = requestedProduct.platformGroup;
+      const currentGroup =
+        groupedProducts.get(groupKey) ||
+        {
+          latestRequestId: request.id,
+          latestRequestName: request.clientName,
+          latestRequestedAt: request.createdAt,
+          products: new Map<string, { status: ClientDetailProductStatus; latestRequestId?: string }>(),
+        };
+
+      if (!groupedProducts.has(groupKey)) {
+        groupedProducts.set(groupKey, currentGroup);
+      }
+
+      const nextStatus = resolveProductStatus(request, requestedProduct);
+      const existingProduct = currentGroup.products.get(requestedProduct.product);
+
+      if (
+        !existingProduct ||
+        getProductStatusPriority(nextStatus) > getProductStatusPriority(existingProduct.status)
+      ) {
+        currentGroup.products.set(requestedProduct.product, {
+          status: nextStatus,
+          latestRequestId: request.id,
+        });
+      }
+    }
+  }
+
+  return Array.from(groupedProducts.entries()).map(([platformGroup, group]) => {
+    const products = Array.from(group.products.entries())
+      .map(([product, productSummary]) => ({
+        product,
+        status: productSummary.status,
+        note: getProductStatusNote(productSummary.status),
+        latestRequestId: productSummary.latestRequestId,
+      }))
+      .sort((left, right) => left.product.localeCompare(right.product));
+
+    const requestedCount = products.length;
+    const fulfilledCount = products.filter((product) => product.status === 'connected').length;
+    const hasRevoked = products.some((product) => product.status === 'revoked');
+    const hasExpired = products.some((product) => product.status === 'expired');
+    const hasFollowUp = products.some((product) =>
+      product.status === 'selection_required' || product.status === 'no_assets'
+    );
+
+    let status: ClientDetailPlatformGroupStatus = 'pending';
+
+    if (requestedCount > 0 && fulfilledCount === requestedCount) {
+      status = 'connected';
+    } else if (hasRevoked && fulfilledCount === 0) {
+      status = 'revoked';
+    } else if (hasExpired && fulfilledCount === 0 && !hasFollowUp) {
+      status = 'expired';
+    } else if (hasFollowUp && fulfilledCount > 0) {
+      status = 'needs_follow_up';
+    } else if (fulfilledCount > 0) {
+      status = 'partial';
+    } else {
+      status = 'pending';
+    }
+
+    return {
+      platformGroup,
+      status,
+      fulfilledCount,
+      requestedCount,
+      latestRequestId: group.latestRequestId,
+      latestRequestName: group.latestRequestName,
+      latestRequestedAt: group.latestRequestedAt,
+      products,
+    };
+  });
 }
 
 /**
@@ -465,6 +871,9 @@ export async function getClientDetail(
   const expiredConnections = client.accessRequests.filter(
     (r) => r.status === 'expired' || r.connection?.status === 'expired'
   ).length;
+  const platformGroups = buildClientDetailPlatformGroups(
+    client.accessRequests as ClientDetailAccessRequestRecord[]
+  );
 
   // Build activity timeline from request and connection events
   const activity: Array<{
@@ -554,6 +963,7 @@ export async function getClientDetail(
       pendingConnections,
       expiredConnections,
     },
+    platformGroups,
     accessRequests: accessRequestsWithPlatforms,
     activity,
   };

@@ -1996,6 +1996,44 @@ export interface ClientAccessRequest {
   connectionStatus?: 'active' | 'revoked' | 'expired';
 }
 
+export const ClientDetailPlatformGroupStatusSchema = z.enum([
+  'connected',
+  'partial',
+  'pending',
+  'expired',
+  'revoked',
+  'needs_follow_up',
+]);
+export type ClientDetailPlatformGroupStatus = z.infer<typeof ClientDetailPlatformGroupStatusSchema>;
+
+export const ClientDetailProductStatusSchema = z.enum([
+  'connected',
+  'pending',
+  'selection_required',
+  'no_assets',
+  'expired',
+  'revoked',
+]);
+export type ClientDetailProductStatus = z.infer<typeof ClientDetailProductStatusSchema>;
+
+export interface ClientDetailPlatformProduct {
+  product: string;
+  status: ClientDetailProductStatus;
+  note?: string;
+  latestRequestId?: string;
+}
+
+export interface ClientDetailPlatformGroup {
+  platformGroup: Platform;
+  status: ClientDetailPlatformGroupStatus;
+  fulfilledCount: number;
+  requestedCount: number;
+  latestRequestId?: string;
+  latestRequestName?: string;
+  latestRequestedAt?: Date;
+  products: ClientDetailPlatformProduct[];
+}
+
 // Client detail page API response
 export interface ClientDetailResponse {
   client: {
@@ -2009,6 +2047,7 @@ export interface ClientDetailResponse {
     updatedAt: Date;
   };
   stats: ClientStats;
+  platformGroups: ClientDetailPlatformGroup[];
   accessRequests: ClientAccessRequest[];
   activity: ClientActivityItem[];
 }

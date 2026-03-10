@@ -10,6 +10,7 @@ const CLIENT_DETAIL_FILES = [
   'apps/web/src/components/client-detail/ClientStats.tsx',
   'apps/web/src/components/client-detail/ClientTabs.tsx',
   'apps/web/src/components/client-detail/OverviewTab.tsx',
+  'apps/web/src/components/client-detail/RequestedAccessBoard.tsx',
   'apps/web/src/components/client-detail/ActivityTab.tsx',
   'apps/web/src/components/client-detail/CreateRequestModal.tsx',
   'apps/web/src/components/client-detail/EditClientModal.tsx',

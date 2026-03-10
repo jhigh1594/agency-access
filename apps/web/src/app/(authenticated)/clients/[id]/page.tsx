@@ -14,7 +14,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ClientDetailHeader, ClientStats, ClientTabs } from '@/components/client-detail';
 import type { ClientDetailResponse } from '@agency-platform/shared';
@@ -102,7 +102,7 @@ export default function ClientDetailPage() {
     );
   }
 
-  const { client, stats, accessRequests, activity } = data.data;
+  const { client, stats, platformGroups, accessRequests, activity } = data.data;
 
   return (
     <div className="flex-1 bg-paper p-8">
@@ -127,6 +127,7 @@ export default function ClientDetailPage() {
         {/* Tabs */}
         <div className="mt-6">
           <ClientTabs
+            platformGroups={platformGroups}
             accessRequests={accessRequests}
             activity={activity}
           />

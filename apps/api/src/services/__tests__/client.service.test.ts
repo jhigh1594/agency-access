@@ -353,4 +353,120 @@ describe('Phase 5: Client Service - TDD Tests', () => {
       expect(mockPrisma.client.delete).not.toHaveBeenCalled();
     });
   });
+
+  describe('getClientDetail', () => {
+    it('aggregates platform-group progress and product-level statuses', async () => {
+      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
+        id: 'client-1',
+        agencyId: 'agency-1',
+        name: 'Taylor Client',
+        company: 'Acme',
+        email: 'taylor@acme.com',
+        website: null,
+        language: 'en',
+        createdAt: new Date('2026-03-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-03-05T00:00:00.000Z'),
+        accessRequests: [
+          {
+            id: 'request-1',
+            clientName: 'Q1 access refresh',
+            status: 'partial',
+            createdAt: new Date('2026-03-08T00:00:00.000Z'),
+            authorizedAt: new Date('2026-03-08T01:00:00.000Z'),
+            platforms: { google: ['google_ads', 'ga4'] },
+            connection: {
+              id: 'connection-1',
+              status: 'active',
+              createdAt: new Date('2026-03-08T01:00:00.000Z'),
+              grantedAssets: {
+                google_ads: {
+                  adAccounts: [{ id: 'acc-1', name: 'Main Account' }],
+                },
+              },
+              authorizations: [
+                {
+                  platform: 'google',
+                  status: 'active',
+                  metadata: {},
+                },
+              ],
+            },
+          },
+        ],
+      } as any);
+
+      const result = await clientService.getClientDetail({
+        clientId: 'client-1',
+        agencyId: 'agency-1',
+      });
+
+      expect(result?.platformGroups).toEqual([
+        expect.objectContaining({
+          platformGroup: 'google',
+          status: 'needs_follow_up',
+          fulfilledCount: 1,
+          requestedCount: 2,
+          latestRequestId: 'request-1',
+          latestRequestName: 'Q1 access refresh',
+          products: expect.arrayContaining([
+            expect.objectContaining({ product: 'google_ads', status: 'connected' }),
+            expect.objectContaining({ product: 'ga4', status: 'selection_required' }),
+          ]),
+        }),
+      ]);
+    });
+
+    it('marks revoked platform groups when the latest connection is revoked', async () => {
+      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
+        id: 'client-1',
+        agencyId: 'agency-1',
+        name: 'Taylor Client',
+        company: 'Acme',
+        email: 'taylor@acme.com',
+        website: null,
+        language: 'en',
+        createdAt: new Date('2026-03-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-03-05T00:00:00.000Z'),
+        accessRequests: [
+          {
+            id: 'request-2',
+            clientName: 'Meta reconnect',
+            status: 'revoked',
+            createdAt: new Date('2026-03-09T00:00:00.000Z'),
+            authorizedAt: new Date('2026-03-09T01:00:00.000Z'),
+            platforms: { meta: ['meta_ads'] },
+            connection: {
+              id: 'connection-2',
+              status: 'revoked',
+              createdAt: new Date('2026-03-09T01:00:00.000Z'),
+              revokedAt: new Date('2026-03-10T00:00:00.000Z'),
+              grantedAssets: null,
+              authorizations: [
+                {
+                  platform: 'meta',
+                  status: 'revoked',
+                  metadata: {},
+                },
+              ],
+            },
+          },
+        ],
+      } as any);
+
+      const result = await clientService.getClientDetail({
+        clientId: 'client-1',
+        agencyId: 'agency-1',
+      });
+
+      expect(result?.platformGroups).toEqual([
+        expect.objectContaining({
+          platformGroup: 'meta',
+          status: 'revoked',
+          fulfilledCount: 0,
+          requestedCount: 1,
+          products: [expect.objectContaining({ product: 'meta_ads', status: 'revoked' })],
+        }),
+      ]);
+    });
+  });
 });

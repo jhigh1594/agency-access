@@ -26,6 +26,7 @@ import {
   getPricingTierNameFromSubscriptionTier,
   MetricTypeSchema,
   AccessRequestUpdatePayloadSchema,
+  ClientDetailResponse,
 } from '../types';
 
 // Type imports for TypeScript validation
@@ -65,6 +66,61 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
           'shopify',
         ])
       );
+    });
+  });
+
+  describe('Client detail platform status contracts', () => {
+    it('should expose grouped client detail status schemas from the shared types module', async () => {
+      const shared = await import('../types');
+
+      expect(shared).toHaveProperty('ClientDetailPlatformGroupStatusSchema');
+      expect(shared).toHaveProperty('ClientDetailProductStatusSchema');
+      expect(shared.ClientDetailPlatformGroupStatusSchema.parse('partial')).toBe('partial');
+      expect(shared.ClientDetailProductStatusSchema.parse('selection_required')).toBe(
+        'selection_required'
+      );
+    });
+
+    it('should allow client detail responses to include grouped platform progress', () => {
+      const response: ClientDetailResponse = {
+        client: {
+          id: 'client-1',
+          name: 'Taylor Client',
+          company: 'Acme',
+          email: 'taylor@acme.com',
+          website: null,
+          language: 'en',
+          createdAt: new Date('2026-03-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-03-05T00:00:00.000Z'),
+        },
+        stats: {
+          totalRequests: 1,
+          activeConnections: 1,
+          pendingConnections: 0,
+          expiredConnections: 0,
+        },
+        platformGroups: [
+          {
+            platformGroup: 'google',
+            status: 'partial',
+            fulfilledCount: 1,
+            requestedCount: 2,
+            latestRequestId: 'request-1',
+            latestRequestName: 'Q1 access refresh',
+            latestRequestedAt: new Date('2026-03-08T00:00:00.000Z'),
+            products: [
+              { product: 'google_ads', status: 'connected' },
+              { product: 'ga4', status: 'selection_required', note: 'Selection required' },
+            ],
+          },
+        ],
+        accessRequests: [],
+        activity: [],
+      };
+
+      expect(response.platformGroups[0]?.fulfilledCount).toBe(1);
+      expect(response.platformGroups[0]?.requestedCount).toBe(2);
+      expect(response.platformGroups[0]?.products[1]?.status).toBe('selection_required');
     });
   });
 
@@ -584,7 +640,7 @@ describe('Pinterest Connection Metadata - TDD Tests', () => {
     });
 
     it('should allow metadata with only businessId (businessName optional)', () => {
-      const metadata = {
+      const metadata: { businessId?: string; businessName?: string } = {
         businessId: '1234567890'
       };
       expect(metadata.businessId).toBe('1234567890');
@@ -592,13 +648,13 @@ describe('Pinterest Connection Metadata - TDD Tests', () => {
     });
 
     it('should allow empty metadata (all fields optional)', () => {
-      const metadata = {};
+      const metadata: { businessId?: string; businessName?: string } = {};
       expect(metadata.businessId).toBeUndefined();
       expect(metadata.businessName).toBeUndefined();
     });
 
     it('should allow metadata with only businessName', () => {
-      const metadata = {
+      const metadata: { businessId?: string; businessName?: string } = {
         businessName: 'My Business Name'
       };
       expect(metadata.businessName).toBe('My Business Name');
