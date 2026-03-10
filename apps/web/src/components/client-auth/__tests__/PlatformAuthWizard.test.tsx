@@ -77,6 +77,7 @@ describe('PlatformAuthWizard', () => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
     vi.stubGlobal('location', { href: '' });
+    process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com/';
   });
 
   it('renders the connect step by default for OAuth platforms', () => {
@@ -95,9 +96,14 @@ describe('PlatformAuthWizard', () => {
     expect(screen.getByText(/you'll be redirected to meta to sign in and authorize access/i)).toBeInTheDocument();
   });
 
-  it('calls the oauth-url endpoint when connect is clicked', async () => {
+  it('calls the oauth-url endpoint on the configured API host when connect is clicked', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
+      text: async () =>
+        JSON.stringify({
+          data: { authUrl: 'https://example.com/oauth' },
+          error: null,
+        }),
       json: async () => ({
         data: { authUrl: 'https://example.com/oauth' },
         error: null,
@@ -118,12 +124,39 @@ describe('PlatformAuthWizard', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
-        '/api/client/token-1/oauth-url',
+        'https://api.example.com/api/client/token-1/oauth-url',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ platform: 'meta' }),
         })
       );
+    });
+  });
+
+  it('shows a friendly error when the authorization service returns non-JSON', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: async () => '<!doctype html><html><body>Not JSON</body></html>',
+    } as Response);
+
+    render(
+      <PlatformAuthWizard
+        platform="google"
+        platformName="Google"
+        products={[{ product: 'google_ads', accessLevel: 'standard' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /connect google/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/authorization service returned an unexpected response/i)
+      ).toBeInTheDocument();
     });
   });
 

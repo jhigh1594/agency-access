@@ -32,6 +32,8 @@ import { PLATFORM_NAMES } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { getClientInviteManualRoute } from '@/lib/client-invite-platforms';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface PlatformAuthWizardProps {
   platform: Platform;
@@ -84,6 +86,7 @@ export function PlatformAuthWizard({
   initialStep,
 }: PlatformAuthWizardProps) {
   const router = useRouter();
+  const apiBaseUrl = getApiBaseUrl();
   const manualRoute = getClientInviteManualRoute(platform);
   const isManualPlatform = Boolean(manualRoute);
   const requiresAssetSelection = products.some((product) => supportsAssetSelection(product.product));
@@ -139,13 +142,18 @@ export function PlatformAuthWizard({
       setIsProcessing(true);
       setError(null);
       // Get OAuth authorization URL from backend
-      const response = await fetch(`/api/client/${accessRequestToken}/oauth-url`, {
+      const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ platform }),
       });
 
-      const json = await response.json();
+      const json = await parseJsonResponse<{
+        data: { authUrl: string };
+        error: null | { message?: string };
+      }>(response, {
+        fallbackErrorMessage: 'Failed to start authorization',
+      });
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to generate OAuth URL');
@@ -199,9 +207,13 @@ export function PlatformAuthWizard({
         setBusinessIdLoading(true);
         setBusinessIdError(null);
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-          const response = await fetch(`${apiUrl}/api/client/${accessRequestToken}/agency-business-id`);
-          const json = await response.json();
+          const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/agency-business-id`);
+          const json = await parseJsonResponse<{
+            data?: { businessId: string; businessName?: string | null };
+            error?: { message?: string };
+          }>(response, {
+            fallbackErrorMessage: 'Failed to load Business Manager ID',
+          });
           
           if (json.error) {
             setBusinessIdError(json.error.message || 'Failed to load Business Manager ID');
@@ -233,7 +245,7 @@ export function PlatformAuthWizard({
       // We'll iterate through products and save them
       const savePromises = products.map((p) => {
         const selectedAssets = groupAssets[p.product] || {};
-        return fetch(`/api/client/${accessRequestToken}/save-assets`, {
+        return fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -247,7 +259,9 @@ export function PlatformAuthWizard({
       const responses = await Promise.all(savePromises);
       
       for (const response of responses) {
-        const json = await response.json();
+        const json = await parseJsonResponse<{ error?: { message?: string } }>(response, {
+          fallbackErrorMessage: 'Failed to save some selected assets',
+        });
         if (json.error) {
           throw new Error(json.error.message || 'Failed to save some selected assets');
         }
@@ -275,7 +289,7 @@ export function PlatformAuthWizard({
 
         try {
           const selectedAdvertiserIds = tiktokAssets.selectedAdvertiserIds || tiktokAssets.adAccounts || [];
-          const shareResponse = await fetch(`/api/client/${accessRequestToken}/tiktok/share-partner-access`, {
+          const shareResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/tiktok/share-partner-access`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -285,7 +299,12 @@ export function PlatformAuthWizard({
             }),
           });
 
-          const shareJson = await shareResponse.json();
+          const shareJson = await parseJsonResponse<{
+            data: TikTokShareResponse;
+            error?: { message?: string };
+          }>(shareResponse, {
+            fallbackErrorMessage: 'Failed to share TikTok advertiser access',
+          });
           if (!shareResponse.ok || shareJson.error) {
             throw new Error(shareJson.error?.message || 'Failed to share TikTok advertiser access');
           }

@@ -5,10 +5,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 function ClientOAuthCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const apiBaseUrl = getApiBaseUrl();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
@@ -24,13 +27,18 @@ function ClientOAuthCallbackContent() {
       }
 
       try {
-        const response = await fetch(`/api/client/oauth-exchange`, {
+        const response = await fetch(`${apiBaseUrl}/api/client/oauth-exchange`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code, state }),
         });
 
-        const json = await response.json();
+        const json = await parseJsonResponse<{
+          data: { connectionId: string; token: string; platform: string };
+          error?: { message?: string };
+        }>(response, {
+          fallbackErrorMessage: 'Failed to complete authorization',
+        });
         if (!response.ok || json.error) {
           throw new Error(json.error?.message || 'Failed to complete authorization');
         }
