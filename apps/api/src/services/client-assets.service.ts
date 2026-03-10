@@ -42,6 +42,14 @@ export interface GoogleAdsAccount {
   status: string;
 }
 
+export interface LinkedInAdAccount {
+  id: string;
+  name: string;
+  reference?: string;
+  status?: string;
+  type?: string;
+}
+
 export interface GA4Property {
   id: string;
   name: string;
@@ -84,6 +92,7 @@ export interface MetaAssets {
 class ClientAssetsService {
   private readonly GRAPH_API_VERSION = 'v21.0';
   private readonly GRAPH_API_BASE = `https://graph.facebook.com/${this.GRAPH_API_VERSION}`;
+  private readonly LINKEDIN_API_VERSION = '202601';
 
   /**
    * Fetch all Meta assets (ad accounts, pages, Instagram) in parallel
@@ -276,6 +285,39 @@ class ClientAssetsService {
     } catch (error) {
       logger.error('Failed to fetch Google Ads accounts', { error });
       return [];
+    }
+  }
+
+  async fetchLinkedInAdAccounts(accessToken: string): Promise<LinkedInAdAccount[]> {
+    try {
+      const response = await fetch('https://api.linkedin.com/rest/adAccounts', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'LinkedIn-Version': this.LINKEDIN_API_VERSION,
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`LinkedIn API error (ad accounts): ${error}`);
+      }
+
+      const data = (await response.json()) as { elements?: Array<Record<string, unknown>> };
+
+      return (data.elements || []).map((account) => ({
+        id: String(account.id ?? ''),
+        name: String(account.name ?? account.id ?? 'LinkedIn ad account'),
+        ...(account.reference ? { reference: String(account.reference) } : {}),
+        ...(account.status ? { status: String(account.status) } : {}),
+        ...(account.type ? { type: String(account.type) } : {}),
+      }));
+    } catch (error) {
+      logger.error('Failed to fetch LinkedIn ad accounts', { error });
+      throw new Error(
+        `Failed to fetch LinkedIn ad accounts: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 

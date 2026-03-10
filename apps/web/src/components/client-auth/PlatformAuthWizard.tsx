@@ -22,6 +22,7 @@ import { Loader2, ExternalLink, CheckCircle2, ChevronDown } from 'lucide-react';
 import { PlatformWizardCard } from './PlatformWizardCard';
 import { MetaAssetSelector } from './MetaAssetSelector';
 import { GoogleAssetSelector } from './GoogleAssetSelector';
+import { LinkedInAssetSelector } from './LinkedInAssetSelector';
 import { TikTokAssetSelector } from './TikTokAssetSelector';
 import { AutomaticPagesGrant } from './AutomaticPagesGrant';
 import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
@@ -71,9 +72,121 @@ function supportsAssetSelection(product: string): boolean {
     product === 'meta_ads' ||
     product.startsWith('google_') ||
     product === 'ga4' ||
+    product === 'linkedin_ads' ||
     product === 'tiktok' ||
     product === 'tiktok_ads'
   );
+}
+
+function isGoogleProduct(product: string): boolean {
+  return product.startsWith('google_') || product === 'ga4';
+}
+
+function hasNoAssetsFollowUp(product: string, assets: any): boolean {
+  if ((isGoogleProduct(product) || product === 'linkedin_ads') && assets.availableAssetCount === 0) {
+    return true;
+  }
+
+  if (
+    (product === 'tiktok' || product === 'tiktok_ads') &&
+    Array.isArray(assets.availableAdvertisers) &&
+    assets.availableAdvertisers.length === 0
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function getSelectedAssetCount(product: string, assets: any): number {
+  switch (product) {
+    case 'google_ads':
+    case 'meta_ads':
+    case 'linkedin_ads':
+      return (assets.adAccounts?.length ?? 0) + (assets.pages?.length ?? 0) + (assets.instagramAccounts?.length ?? 0);
+    case 'ga4':
+      return assets.properties?.length ?? 0;
+    case 'google_business_profile':
+      return assets.businessAccounts?.length ?? 0;
+    case 'google_tag_manager':
+      return assets.containers?.length ?? 0;
+    case 'google_search_console':
+      return assets.sites?.length ?? 0;
+    case 'google_merchant_center':
+      return assets.merchantAccounts?.length ?? 0;
+    case 'tiktok':
+    case 'tiktok_ads':
+      return (assets.selectedAdvertiserIds?.length ?? 0) || (assets.adAccounts?.length ?? 0) || 0;
+    default:
+      return 0;
+  }
+}
+
+function isProductReadyForSave(product: string, assets: any): boolean {
+  const selectedCount = getSelectedAssetCount(product, assets);
+  if (selectedCount > 0) {
+    return true;
+  }
+
+  if (hasNoAssetsFollowUp(product, assets)) {
+    return true;
+  }
+
+  return false;
+}
+
+function getProductSummaryLines(product: string, assets: any): string[] {
+  switch (product) {
+    case 'google_ads':
+      if ((assets.adAccounts?.length ?? 0) > 0) return [`${assets.adAccounts.length} Ad Account${assets.adAccounts.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No ad accounts found yet'];
+      return [];
+    case 'ga4':
+      if ((assets.properties?.length ?? 0) > 0) return [`${assets.properties.length} Propert${assets.properties.length === 1 ? 'y' : 'ies'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No properties found yet'];
+      return [];
+    case 'google_business_profile':
+      if ((assets.businessAccounts?.length ?? 0) > 0) return [`${assets.businessAccounts.length} Location${assets.businessAccounts.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No locations found yet'];
+      return [];
+    case 'google_tag_manager':
+      if ((assets.containers?.length ?? 0) > 0) return [`${assets.containers.length} Container${assets.containers.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No containers found yet'];
+      return [];
+    case 'google_search_console':
+      if ((assets.sites?.length ?? 0) > 0) return [`${assets.sites.length} Site${assets.sites.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No sites found yet'];
+      return [];
+    case 'google_merchant_center':
+      if ((assets.merchantAccounts?.length ?? 0) > 0) return [`${assets.merchantAccounts.length} Account${assets.merchantAccounts.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No Merchant Center accounts found yet'];
+      return [];
+    case 'meta_ads': {
+      const lines: string[] = [];
+      if ((assets.adAccounts?.length ?? 0) > 0) lines.push(`${assets.adAccounts.length} Ad Account${assets.adAccounts.length === 1 ? '' : 's'} selected`);
+      if ((assets.pages?.length ?? 0) > 0) lines.push(`${assets.pages.length} Page${assets.pages.length === 1 ? '' : 's'} selected`);
+      if ((assets.instagramAccounts?.length ?? 0) > 0) lines.push(`${assets.instagramAccounts.length} IG Account${assets.instagramAccounts.length === 1 ? '' : 's'} selected`);
+      return lines;
+    }
+    case 'linkedin_ads':
+      if ((assets.adAccounts?.length ?? 0) > 0) return [`${assets.adAccounts.length} Ad Account${assets.adAccounts.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No ad accounts found yet'];
+      return [];
+    case 'tiktok':
+    case 'tiktok_ads':
+      if ((assets.selectedAdvertiserIds?.length ?? 0) > 0) {
+        return [`${assets.selectedAdvertiserIds.length} Advertiser${assets.selectedAdvertiserIds.length === 1 ? '' : 's'} selected`];
+      }
+      if ((assets.adAccounts?.length ?? 0) > 0) {
+        return [`${assets.adAccounts.length} Advertiser${assets.adAccounts.length === 1 ? '' : 's'} selected`];
+      }
+      if (Array.isArray(assets.availableAdvertisers) && assets.availableAdvertisers.length === 0) {
+        return ['Follow-up needed: No advertisers found yet'];
+      }
+      return [];
+    default:
+      return [];
+  }
 }
 
 export function PlatformAuthWizard({
@@ -274,6 +387,7 @@ export function PlatformAuthWizard({
 
       if (platform === 'tiktok') {
         const tiktokAssets = groupAssets['tiktok_ads'] || groupAssets['tiktok'] || {};
+        const hasTikTokNoAssets = hasNoAssetsFollowUp('tiktok_ads', tiktokAssets);
         const selectedCount =
           (tiktokAssets.selectedAdvertiserIds?.length ?? 0) ||
           (tiktokAssets.adAccounts?.length ?? 0) ||
@@ -287,56 +401,61 @@ export function PlatformAuthWizard({
 
         setTikTokShareError(null);
         setTikTokShareResult(null);
-        setIsTikTokSharing(true);
 
-        try {
-          const selectedAdvertiserIds = tiktokAssets.selectedAdvertiserIds || tiktokAssets.adAccounts || [];
-          const shareResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/tiktok/share-partner-access`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              connectionId,
-              advertiserIds: selectedAdvertiserIds,
-              selectedBusinessCenterId: tiktokAssets.selectedBusinessCenterId,
-            }),
-          });
+        if (hasTikTokNoAssets) {
+          setCurrentStep(3);
+        } else {
+          setIsTikTokSharing(true);
 
-          const shareJson = await parseJsonResponse<{
-            data: TikTokShareResponse;
-            error?: { message?: string };
-          }>(shareResponse, {
-            fallbackErrorMessage: 'Failed to share TikTok advertiser access',
-          });
-          if (!shareResponse.ok || shareJson.error) {
-            throw new Error(shareJson.error?.message || 'Failed to share TikTok advertiser access');
-          }
+          try {
+            const selectedAdvertiserIds = tiktokAssets.selectedAdvertiserIds || tiktokAssets.adAccounts || [];
+            const shareResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/tiktok/share-partner-access`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                connectionId,
+                advertiserIds: selectedAdvertiserIds,
+                selectedBusinessCenterId: tiktokAssets.selectedBusinessCenterId,
+              }),
+            });
 
-          const shareData = shareJson.data as TikTokShareResponse;
-          setTikTokShareResult(shareData);
+            const shareJson = await parseJsonResponse<{
+              data: TikTokShareResponse;
+              error?: { message?: string };
+            }>(shareResponse, {
+              fallbackErrorMessage: 'Failed to share TikTok advertiser access',
+            });
+            if (!shareResponse.ok || shareJson.error) {
+              throw new Error(shareJson.error?.message || 'Failed to share TikTok advertiser access');
+            }
 
-          trackOnboardingEvent('client_tiktok_partner_share_attempted', {
-            platform: 'tiktok',
-            step: 2,
-            success: shareData.success,
-            resultCount: shareData.results?.length || 0,
-            failedCount: shareData.results?.filter((item) => item.status === 'failed').length || 0,
-          });
+            const shareData = shareJson.data as TikTokShareResponse;
+            setTikTokShareResult(shareData);
 
-          // Keep user on Step 2 when manual follow-up is required.
-          if (shareData.success) {
-            setCurrentStep(3);
-          } else {
+            trackOnboardingEvent('client_tiktok_partner_share_attempted', {
+              platform: 'tiktok',
+              step: 2,
+              success: shareData.success,
+              resultCount: shareData.results?.length || 0,
+              failedCount: shareData.results?.filter((item) => item.status === 'failed').length || 0,
+            });
+
+            // Keep user on Step 2 when manual follow-up is required.
+            if (shareData.success) {
+              setCurrentStep(3);
+            } else {
+              setGrantAccessExpanded(true);
+            }
+          } catch (shareError) {
+            const shareErrorMessage =
+              shareError instanceof Error
+                ? shareError.message
+                : 'Failed to automate TikTok Business Center sharing';
+            setTikTokShareError(shareErrorMessage);
             setGrantAccessExpanded(true);
+          } finally {
+            setIsTikTokSharing(false);
           }
-        } catch (shareError) {
-          const shareErrorMessage =
-            shareError instanceof Error
-              ? shareError.message
-              : 'Failed to automate TikTok Business Center sharing';
-          setTikTokShareError(shareErrorMessage);
-          setGrantAccessExpanded(true);
-        } finally {
-          setIsTikTokSharing(false);
         }
       }
 
@@ -379,21 +498,20 @@ export function PlatformAuthWizard({
   };
 
   // Check if any assets are selected in the group
-  const hasGroupSelections = () => {
-    if (platform === 'tiktok') {
-      return true;
+  const canContinueFromAssetSelection = () => {
+    const selectableProducts = products.filter((product) => supportsAssetSelection(product.product));
+    if (selectableProducts.length === 0) {
+      return false;
     }
 
-    return Object.values(groupAssets).some((assets: any) => {
-      return (
-        (assets.adAccounts?.length ?? 0) > 0 ||
-        (assets.selectedAdvertiserIds?.length ?? 0) > 0 ||
-        (assets.pages?.length ?? 0) > 0 ||
-        (assets.instagramAccounts?.length ?? 0) > 0 ||
-        (assets.properties?.length ?? 0) > 0
-      );
-    });
+    return selectableProducts.every((product) =>
+      isProductReadyForSave(product.product, groupAssets[product.product] || {})
+    );
   };
+
+  const hasZeroAssetFollowUp = Object.entries(groupAssets).some(
+    ([product, assets]) => getSelectedAssetCount(product, assets) === 0 && hasNoAssetsFollowUp(product, assets)
+  );
 
   // Render step content
   const renderStepContent = () => {
@@ -599,6 +717,7 @@ export function PlatformAuthWizard({
                     'google_merchant_center': 'Google Merchant Center',
                     'google_business_profile': 'Google Business Profile',
                     'meta_ads': 'Meta Ads',
+                    'linkedin_ads': 'LinkedIn Ads',
                     'tiktok': 'TikTok Ads',
                     'tiktok_ads': 'TikTok Ads',
                   };
@@ -653,23 +772,36 @@ export function PlatformAuthWizard({
                           {!connectionId && <AssetSelectorDisabled />}
                         </div>
                       )}
+
+                      {p.product === 'linkedin_ads' && (
+                        <div className="relative">
+                          <LinkedInAssetSelector
+                            sessionId={connectionId!}
+                            accessRequestToken={accessRequestToken}
+                            product={p.product}
+                            onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
+                            onError={setError}
+                          />
+                          {!connectionId && <AssetSelectorDisabled />}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
             </div>
 
                         {/* Unified Batch Save Button - only show if assets haven't been saved yet */}
-                        {!assetsSaved && !isProcessing && hasGroupSelections() && (
+                        {!assetsSaved && !isProcessing && canContinueFromAssetSelection() && (
             <div className="sticky bottom-0 bg-card border-t-2 border-black dark:border-white p-8 -mx-6 -mb-6 mt-12 flex justify-center">
               <Button
                 onClick={handleBatchSave}
-                disabled={!hasGroupSelections()}
+                disabled={!canContinueFromAssetSelection()}
                 isLoading={isProcessing}
                 size="xl"
                 variant="brutalist-rounded"
                 rightIcon={!isProcessing ? <CheckCircle2 className="w-6 h-6" /> : undefined}
               >
-                Save selected accounts
+                {hasZeroAssetFollowUp ? 'Continue with follow-up needed' : 'Save selected accounts'}
               </Button>
             </div>
                         )}
@@ -1006,7 +1138,9 @@ export function PlatformAuthWizard({
               <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
                 {hasTikTokPartialShare
                   ? 'Some selected TikTok accounts still require manual sharing in Business Center.'
-                  : 'Access granted to the accounts you selected.'}
+                  : hasZeroAssetFollowUp
+                    ? `Connected successfully, but some requested ${platformName} products still need follow-up.`
+                    : 'Access granted to the accounts you selected.'}
               </p>
             </m.div>
 
@@ -1022,6 +1156,7 @@ export function PlatformAuthWizard({
                   'google_merchant_center': 'Google Merchant Center',
                   'google_business_profile': 'Google Business Profile',
                   'meta_ads': 'Meta Ads',
+                  'linkedin_ads': 'LinkedIn Ads',
                 };
                 const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
 
@@ -1031,25 +1166,29 @@ export function PlatformAuthWizard({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="border-2 border-[var(--teal)] bg-[var(--teal)]/5 p-6 text-left"
+                    className={`p-6 text-left ${
+                      hasNoAssetsFollowUp(product, assets) && getSelectedAssetCount(product, assets) === 0
+                        ? 'border-2 border-[var(--warning)] bg-[var(--warning)]/10'
+                        : 'border-2 border-[var(--teal)] bg-[var(--teal)]/5'
+                    }`}
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <PlatformIcon platform={product as Platform} size="sm" />
                       <h4 className="font-bold text-[var(--teal)] font-display">{productName}</h4>
                     </div>
                     <ul className="space-y-1 text-sm">
-                      {assets.adAccounts?.length > 0 && (
-                        <li className="text-[var(--teal)]">✓ {assets.adAccounts.length} Ad Accounts</li>
-                      )}
-                      {assets.pages?.length > 0 && (
-                        <li className="text-[var(--teal)]">✓ {assets.pages.length} Pages</li>
-                      )}
-                      {assets.instagramAccounts?.length > 0 && (
-                        <li className="text-[var(--teal)]">✓ {assets.instagramAccounts.length} IG Accounts</li>
-                      )}
-                      {assets.properties?.length > 0 && (
-                        <li className="text-[var(--teal)]">✓ {assets.properties.length} Properties</li>
-                      )}
+                      {getProductSummaryLines(product, assets).map((line) => (
+                        <li
+                          key={line}
+                          className={
+                            line.startsWith('Follow-up needed')
+                              ? 'text-[var(--ink)]'
+                              : 'text-[var(--teal)]'
+                          }
+                        >
+                          {line.startsWith('Follow-up needed') ? line : `✓ ${line}`}
+                        </li>
+                      ))}
                     </ul>
                   </m.div>
                 );

@@ -277,7 +277,12 @@ describe('AccessRequestService', () => {
       vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
         {
           id: 'conn-oauth',
-          grantedAssets: null,
+          grantedAssets: {
+            google_ads: {
+              adAccounts: ['customers/123'],
+              availableAssetCount: 1,
+            },
+          },
           authorizations: [{ platform: 'google_ads', status: 'active' }],
         },
         {
@@ -294,6 +299,87 @@ describe('AccessRequestService', () => {
         expect.arrayContaining(['google', 'beehiiv'])
       );
       expect(result.data?.authorizationProgress.isComplete).toBe(true);
+    });
+
+    it('marks LinkedIn Ads unresolved when OAuth exists without any selected accounts', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-linkedin-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [{ platform: 'linkedin_ads', accessLevel: 'manage' }],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-linkedin',
+          grantedAssets: {},
+          authorizations: [{ platform: 'linkedin', status: 'active' }],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken('token-linkedin-123');
+
+      expect(result.error).toBeNull();
+      expect(result.data?.authorizationProgress.completedPlatforms).toEqual([]);
+      expect((result.data as any)?.authorizationProgress.fulfilledProducts).toEqual([]);
+      expect((result.data as any)?.authorizationProgress.unresolvedProducts).toEqual([
+        {
+          product: 'linkedin_ads',
+          platformGroup: 'linkedin',
+          reason: 'selection_required',
+        },
+      ]);
+      expect(result.data?.authorizationProgress.isComplete).toBe(false);
+    });
+
+    it('marks asset-selecting products unresolved with no_assets when saved discovery shows empty inventory', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-google-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [{ platform: 'google_business_profile', accessLevel: 'manage' }],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-google',
+          grantedAssets: {
+            google_business_profile: {
+              businessAccounts: [],
+              availableAssetCount: 0,
+            },
+          },
+          authorizations: [{ platform: 'google', status: 'active' }],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken('token-google-123');
+
+      expect(result.error).toBeNull();
+      expect(result.data?.authorizationProgress.completedPlatforms).toEqual([]);
+      expect((result.data as any)?.authorizationProgress.unresolvedProducts).toEqual([
+        {
+          product: 'google_business_profile',
+          platformGroup: 'google',
+          reason: 'no_assets',
+        },
+      ]);
     });
 
     it('should return error if request not found', async () => {
@@ -396,6 +482,10 @@ describe('AccessRequestService', () => {
       vi.mocked(prisma.accessRequest.findUnique)
         .mockResolvedValueOnce({
           id: 'request-1',
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
           status: 'pending',
           agencyId: 'agency-1',
           authorizedAt: null,
@@ -422,8 +512,13 @@ describe('AccessRequestService', () => {
         {
           id: 'connection-1',
           status: 'active',
-          grantedAssets: { platform: 'meta_ads', adAccounts: 2 },
-          authorizations: [{ platform: 'meta_ads', status: 'active' }],
+          grantedAssets: {
+            meta_ads: {
+              adAccounts: ['act_123'],
+              availableAssetCount: 1,
+            },
+          },
+          authorizations: [{ platform: 'meta', status: 'active' }],
         },
       ] as any);
       vi.mocked(prisma.webhookEndpoint.findUnique).mockResolvedValue({
@@ -473,6 +568,80 @@ describe('AccessRequestService', () => {
       expect(queueWebhookDelivery).toHaveBeenCalledWith('event-1');
     });
 
+    it('should mark request as partial when requested asset-selecting products remain unresolved', async () => {
+      vi.mocked(prisma.accessRequest.findUnique)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          platforms: [{ platform: 'linkedin_ads', accessLevel: 'manage' }],
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          status: 'pending',
+          agencyId: 'agency-1',
+          authorizedAt: null,
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          agencyId: 'agency-1',
+          clientId: 'client-1',
+          clientName: 'Test Client',
+          clientEmail: 'client@test.com',
+          externalReference: 'crm-123',
+          platforms: [{ platform: 'linkedin_ads', accessLevel: 'manage' }],
+          status: 'partial',
+          uniqueToken: 'token-partial-1',
+          createdAt: new Date('2026-03-08T00:00:00.000Z'),
+          authorizedAt: null,
+          expiresAt: new Date('2026-04-07T00:00:00.000Z'),
+          client: {
+            id: 'client-1',
+            company: 'Acme Inc',
+          },
+        } as any);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'connection-1',
+          status: 'active',
+          grantedAssets: {},
+          authorizations: [{ platform: 'linkedin', status: 'active' }],
+        },
+      ] as any);
+      vi.mocked(prisma.webhookEndpoint.findUnique).mockResolvedValue({
+        id: 'endpoint-1',
+        agencyId: 'agency-1',
+        status: 'active',
+        subscribedEvents: ['access_request.partial'],
+      } as any);
+      vi.mocked(prisma.webhookEvent.create).mockResolvedValue({
+        id: 'event-partial-1',
+      } as any);
+      vi.mocked(prisma.accessRequest.update).mockResolvedValue({
+        id: 'request-1',
+        status: 'partial',
+        authorizedAt: null,
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+      } as any);
+
+      const result = await accessRequestService.markRequestAuthorized('request-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data?.status).toBe('partial');
+      expect(prisma.accessRequest.update).toHaveBeenCalledWith({
+        where: { id: 'request-1' },
+        data: {
+          status: 'partial',
+        },
+      });
+      expect(prisma.webhookEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          type: 'access_request.partial',
+          resourceId: 'request-1',
+        }),
+      });
+      expect(queueWebhookDelivery).toHaveBeenCalledWith('event-partial-1');
+    });
+
     it('should return error if request not found', async () => {
       vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(null);
       vi.mocked(prisma.accessRequest.update).mockRejectedValue(
@@ -487,14 +656,38 @@ describe('AccessRequestService', () => {
 
     it('should not emit a duplicate completed webhook when request is already completed', async () => {
       const completedAt = new Date('2026-03-08T01:00:00.000Z');
-      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
-        id: 'request-1',
-        agencyId: 'agency-1',
-        status: 'completed',
-        authorizedAt: completedAt,
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-      } as any);
+      vi.mocked(prisma.accessRequest.findUnique)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          agencyId: 'agency-1',
+          status: 'completed',
+          authorizedAt: completedAt,
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'request-1',
+          agencyId: 'agency-1',
+          status: 'completed',
+          authorizedAt: completedAt,
+          clientName: 'Test Client',
+          clientEmail: 'client@test.com',
+        } as any);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'connection-1',
+          status: 'active',
+          grantedAssets: {
+            meta_ads: {
+              adAccounts: ['act_123'],
+              availableAssetCount: 1,
+            },
+          },
+          authorizations: [{ platform: 'meta', status: 'active' }],
+        },
+      ] as any);
 
       const result = await accessRequestService.markRequestAuthorized('request-1');
 

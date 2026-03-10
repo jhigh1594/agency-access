@@ -53,6 +53,7 @@ export const saveAssetsSchema = z.object({
     merchantAccounts: z.array(z.string()).optional(),
     selectedBusinessCenterId: z.string().optional(),
     selectedAdvertiserIds: z.array(z.string()).optional(),
+    availableAssetCount: z.number().int().nonnegative().optional(),
     availableBusinessCenters: z.array(z.any()).optional(),
     availableAdvertisers: z.array(z.any()).optional(),
   }),

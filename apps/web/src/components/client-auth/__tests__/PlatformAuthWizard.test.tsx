@@ -30,7 +30,49 @@ vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
 }));
 
 vi.mock('@/components/client-auth/GoogleAssetSelector', () => ({
-  GoogleAssetSelector: () => <div>Google Asset Selector</div>,
+  GoogleAssetSelector: ({ product, onSelectionChange }: any) => (
+    <div>
+      <div>{`Google Asset Selector: ${product}`}</div>
+      <button
+        type="button"
+        onClick={() => {
+          if (product === 'google_business_profile') {
+            onSelectionChange({
+              businessAccounts: [],
+              availableAssetCount: 0,
+            });
+            return;
+          }
+
+          onSelectionChange({
+            adAccounts: ['customers/123'],
+            availableAssetCount: 1,
+          });
+        }}
+      >
+        {`Report assets for ${product}`}
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/client-auth/LinkedInAssetSelector', () => ({
+  LinkedInAssetSelector: ({ product, onSelectionChange }: any) => (
+    <div>
+      <div>{`LinkedIn Asset Selector: ${product}`}</div>
+      <button
+        type="button"
+        onClick={() =>
+          onSelectionChange({
+            adAccounts: ['urn:li:sponsoredAccount:123'],
+            availableAssetCount: 1,
+          })
+        }
+      >
+        {`Report assets for ${product}`}
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('@/components/client-auth/TikTokAssetSelector', () => ({
@@ -212,7 +254,20 @@ describe('PlatformAuthWizard', () => {
     expect(pushMock).toHaveBeenCalledWith('/invite/token-1/beehiiv/manual');
   });
 
-  it('shows a continue action instead of an empty step for platforms without asset selectors', async () => {
+  it('requires LinkedIn ad account selection before continuing to confirmation', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          data: { success: true },
+          error: null,
+        }),
+      json: async () => ({
+        data: { success: true },
+        error: null,
+      }),
+    } as Response);
+
     render(
       <PlatformAuthWizard
         platform="linkedin"
@@ -226,14 +281,76 @@ describe('PlatformAuthWizard', () => {
       />
     );
 
-    expect(screen.getByText(/authorization received/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /review access confirmation/i })).toBeInTheDocument();
+    expect(screen.getByText('LinkedIn Asset Selector: linkedin_ads')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /review access confirmation/i })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /review access confirmation/i }));
+    fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_ads/i }));
+    expect(screen.getByRole('button', { name: /save selected accounts/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /save selected accounts/i }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/client/token-1/save-assets',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
     });
+
+    expect(screen.getByText('LinkedIn Ads')).toBeInTheDocument();
+  });
+
+  it('lets Google continue when a requested product has zero assets and shows follow-up summary copy', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          data: null,
+          error: null,
+        }),
+      json: async () => ({
+        data: null,
+        error: null,
+      }),
+    } as Response);
+
+    render(
+      <PlatformAuthWizard
+        platform="google"
+        platformName="Google"
+        products={[{ product: 'google_business_profile', accessLevel: 'standard' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /report assets for google_business_profile/i }));
+
+    expect(
+      await screen.findByRole('button', { name: /continue with follow-up needed/i })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/connected successfully, but some requested google products still need follow-up/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Google Business Profile')).toBeInTheDocument();
+    expect(screen.getByText(/No locations found yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Follow-up needed/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
   });
 });

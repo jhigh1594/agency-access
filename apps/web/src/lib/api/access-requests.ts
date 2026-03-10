@@ -54,6 +54,19 @@ export interface AccessRequest {
     collaboratorCode?: string;
     submittedAt?: string;
   };
+  authorizationProgress?: {
+    completedPlatforms: string[];
+    isComplete: boolean;
+    fulfilledProducts?: Array<{
+      product: string;
+      platformGroup: string;
+    }>;
+    unresolvedProducts?: Array<{
+      product: string;
+      platformGroup: string;
+      reason: 'no_assets' | 'selection_required' | string;
+    }>;
+  };
   authorizationLinkChanged?: boolean;
 }
 

@@ -1022,9 +1022,22 @@ export interface ManualInviteTarget {
 }
 
 // Client-side completion progress for multi-platform authorization.
+export interface ClientFulfilledProduct {
+  product: string;
+  platformGroup: string;
+}
+
+export interface ClientUnresolvedProduct {
+  product: string;
+  platformGroup: string;
+  reason: 'no_assets' | 'selection_required' | string;
+}
+
 export interface ClientAuthorizationProgress {
   completedPlatforms: string[];
   isComplete: boolean;
+  fulfilledProducts?: ClientFulfilledProduct[];
+  unresolvedProducts?: ClientUnresolvedProduct[];
 }
 
 export interface ClientAccessRequestPlatformProduct {

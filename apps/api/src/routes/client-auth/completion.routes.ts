@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { notificationService } from '../../services/notification.service.js';
-import { prisma } from '../../lib/prisma.js';
 
 export async function registerCompletionRoutes(fastify: FastifyInstance) {
   // Complete client authorization
@@ -31,16 +30,15 @@ export async function registerCompletionRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const connection = await prisma.clientConnection.findFirst({
-      where: { accessRequestId: accessRequest.id },
-    });
-
     await notificationService.queueNotification({
       agencyId: accessRequest.agencyId,
       accessRequestId: accessRequest.id,
       clientEmail: accessRequest.clientEmail,
       clientName: accessRequest.clientEmail.split('@')[0],
-      platforms: connection?.grantedAssets ? Object.keys(connection.grantedAssets as any) : [],
+      platforms:
+        accessRequest.authorizationProgress?.fulfilledProducts?.map((item) => item.product) ||
+        accessRequest.authorizationProgress?.completedPlatforms ||
+        [],
       completedAt: new Date(),
     });
 

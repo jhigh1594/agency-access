@@ -8,6 +8,10 @@ interface RequestPlatformsCardProps {
   request: AccessRequest;
 }
 
+type UnresolvedProduct = NonNullable<
+  NonNullable<AccessRequest['authorizationProgress']>['unresolvedProducts']
+>[number];
+
 function formatGroup(group: string): string {
   return group.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
@@ -16,12 +20,24 @@ function formatProduct(product: string): string {
   return product.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function formatUnresolvedReason(reason: string): string {
+  switch (reason) {
+    case 'no_assets':
+      return 'No assets found';
+    case 'selection_required':
+      return 'Selection required';
+    default:
+      return formatProduct(reason);
+  }
+}
+
 export function RequestPlatformsCard({ request }: RequestPlatformsCardProps) {
   const shopifyRequested = request.platforms.some(
     (group) =>
       group.platformGroup === 'shopify' ||
       group.products.some((product) => product.product === 'shopify')
   );
+  const unresolvedProducts = request.authorizationProgress?.unresolvedProducts || [];
 
   return (
     <Card className="border-black/10 shadow-sm">
@@ -52,6 +68,19 @@ export function RequestPlatformsCard({ request }: RequestPlatformsCardProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {unresolvedProducts.length > 0 && (
+          <div className="mt-5 rounded-md border border-[var(--warning)] bg-[var(--warning)]/10 p-4">
+            <p className="text-sm font-semibold text-ink">Still needs follow-up</p>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              {unresolvedProducts.map((item: UnresolvedProduct) => (
+                <li key={`${item.platformGroup}-${item.product}-${item.reason}`}>
+                  {formatProduct(item.product)} · {formatUnresolvedReason(item.reason)}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

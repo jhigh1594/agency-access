@@ -1,12 +1,12 @@
 import { env } from '../../lib/env.js';
-import type { 
+import type {
   AccessLevel,
   GoogleAdsAccount,
   GoogleAnalyticsProperty,
   GoogleBusinessAccount,
   GoogleTagManagerContainer,
   GoogleSearchConsoleSite,
-  GoogleMerchantCenterAccount
+  GoogleMerchantCenterAccount,
 } from '@agency-platform/shared';
 
 /**
@@ -58,6 +58,14 @@ export interface GoogleAccountsResponse {
   hasAccess: boolean;
 }
 
+export type GoogleProduct =
+  | 'google_ads'
+  | 'ga4'
+  | 'google_business_profile'
+  | 'google_tag_manager'
+  | 'google_search_console'
+  | 'google_merchant_center';
+
 export class GoogleConnector {
   private readonly clientId: string;
   private readonly clientSecret: string;
@@ -65,36 +73,32 @@ export class GoogleConnector {
 
   // Combined OAuth scopes for all Google products
   private readonly DEFAULT_SCOPES = [
-    // Google Ads
     'https://www.googleapis.com/auth/adwords',
-    // Google Analytics
     'https://www.googleapis.com/auth/analytics.readonly',
-    // Google Business Profile (optional, requires verification)
     'https://www.googleapis.com/auth/business.manage',
-    // Google Tag Manager
     'https://www.googleapis.com/auth/tagmanager.readonly',
-    // Google Search Console (uses OAuth, no specific scope needed)
-    // Google Merchant Center
+    'https://www.googleapis.com/auth/webmasters',
     'https://www.googleapis.com/auth/content',
   ];
 
   constructor() {
     this.clientId = env.GOOGLE_CLIENT_ID || '';
     this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    // Use backend API URL for OAuth callback (not frontend)
-    // In development: http://localhost:3001/agency-platforms/google/callback
-    // In production: Configure API_URL environment variable
     const backendUrl = env.API_URL || `http://localhost:${env.PORT}`;
     this.redirectUri = `${backendUrl}/agency-platforms/google/callback`;
   }
 
+  private appendPageToken(url: string, pageToken?: string): string {
+    if (!pageToken) {
+      return url;
+    }
+
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}pageToken=${encodeURIComponent(pageToken)}`;
+  }
+
   /**
    * Generate OAuth authorization URL with combined scopes
-   *
-   * @param state - CSRF protection token
-   * @param scopes - OAuth scopes (defaults to all Google products)
-   * @param redirectUri - Optional override for redirect URI (used in client flow)
-   * @returns Authorization URL
    */
   getAuthUrl(state: string, scopes: string[] = this.DEFAULT_SCOPES, redirectUri?: string): string {
     const params = new URLSearchParams({
@@ -103,8 +107,8 @@ export class GoogleConnector {
       state,
       scope: scopes.join(' '),
       response_type: 'code',
-      access_type: 'offline', // Enable refresh tokens
-      prompt: 'consent', // Force consent to get refresh token
+      access_type: 'offline',
+      prompt: 'consent',
     });
 
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -112,10 +116,6 @@ export class GoogleConnector {
 
   /**
    * Exchange authorization code for access token
-   *
-   * @param code - Authorization code from OAuth callback
-   * @param redirectUri - Optional override for redirect URI (must match getAuthUrl)
-   * @returns Access token with refresh token
    */
   async exchangeCode(code: string, redirectUri?: string): Promise<GoogleTokens> {
     const body = new URLSearchParams({
@@ -151,9 +151,6 @@ export class GoogleConnector {
 
   /**
    * Refresh access token using refresh token
-   *
-   * @param refreshToken - Refresh token from initial exchange
-   * @returns New access token
    */
   async refreshToken(refreshToken: string): Promise<GoogleTokens> {
     const body = new URLSearchParams({
@@ -180,7 +177,7 @@ export class GoogleConnector {
 
     return {
       accessToken: data.access_token,
-      refreshToken, // Keep the same refresh token
+      refreshToken,
       expiresIn: data.expires_in,
       expiresAt: new Date(Date.now() + data.expires_in * 1000),
     };
@@ -188,9 +185,6 @@ export class GoogleConnector {
 
   /**
    * Verify token is still valid
-   *
-   * @param accessToken - Token to verify
-   * @returns Whether token is valid
    */
   async verifyToken(accessToken: string): Promise<boolean> {
     try {
@@ -207,9 +201,6 @@ export class GoogleConnector {
 
   /**
    * Get user info from Google OAuth
-   *
-   * @param accessToken - Valid access token
-   * @returns User profile data
    */
   async getUserInfo(accessToken: string): Promise<{
     id: string;
@@ -239,13 +230,6 @@ export class GoogleConnector {
 
   /**
    * Fetch all available Google accounts across all products
-   *
-   * This method queries all supported Google APIs to discover which
-   * accounts the user has access to. Each product API is called independently
-   * and errors are caught per-product so partial failures don't affect the overall result.
-   *
-   * @param accessToken - Valid Google OAuth access token
-   * @returns All available Google accounts across products
    */
   async getAllGoogleAccounts(accessToken: string): Promise<GoogleAccountsResponse> {
     const result: GoogleAccountsResponse = {
@@ -258,7 +242,6 @@ export class GoogleConnector {
       hasAccess: false,
     };
 
-    // Fetch accounts from each Google product in parallel
     const [
       adsResult,
       analyticsResult,
@@ -269,43 +252,37 @@ export class GoogleConnector {
     ] = await Promise.allSettled([
       this.getAdsAccounts(accessToken).catch(() => ({ accounts: [] })),
       this.getAnalyticsProperties(accessToken).catch(() => ({ properties: [] })),
-      this.getBusinessAccounts(accessToken).catch(() => ({ accounts: [] })),
+      this.getBusinessLocations(accessToken).catch(() => ({ accounts: [] })),
       this.getTagManagerContainers(accessToken).catch(() => ({ containers: [] })),
       this.getSearchConsoleSites(accessToken).catch(() => ({ sites: [] })),
       this.getMerchantCenterAccounts(accessToken).catch(() => ({ accounts: [] })),
     ]);
 
-    // Process Google Ads
     if (adsResult.status === 'fulfilled' && adsResult.value.accounts.length > 0) {
       result.adsAccounts = adsResult.value.accounts;
       result.hasAccess = true;
     }
 
-    // Process Google Analytics
     if (analyticsResult.status === 'fulfilled' && analyticsResult.value.properties.length > 0) {
       result.analyticsProperties = analyticsResult.value.properties;
       result.hasAccess = true;
     }
 
-    // Process Google Business Profile
     if (businessResult.status === 'fulfilled' && businessResult.value.accounts.length > 0) {
       result.businessAccounts = businessResult.value.accounts;
       result.hasAccess = true;
     }
 
-    // Process Google Tag Manager
     if (tagManagerResult.status === 'fulfilled' && tagManagerResult.value.containers.length > 0) {
       result.tagManagerContainers = tagManagerResult.value.containers;
       result.hasAccess = true;
     }
 
-    // Process Google Search Console
     if (searchConsoleResult.status === 'fulfilled' && searchConsoleResult.value.sites.length > 0) {
       result.searchConsoleSites = searchConsoleResult.value.sites;
       result.hasAccess = true;
     }
 
-    // Process Google Merchant Center
     if (merchantResult.status === 'fulfilled' && merchantResult.value.accounts.length > 0) {
       result.merchantCenterAccounts = merchantResult.value.accounts;
       result.hasAccess = true;
@@ -314,30 +291,39 @@ export class GoogleConnector {
     return result;
   }
 
+  async getAccountsForProduct(
+    product: GoogleProduct,
+    accessToken: string
+  ): Promise<GoogleProductAccount[]> {
+    switch (product) {
+      case 'google_ads':
+        return (await this.getAdsAccounts(accessToken)).accounts;
+      case 'ga4':
+        return (await this.getAnalyticsProperties(accessToken)).properties;
+      case 'google_business_profile':
+        return (await this.getBusinessLocations(accessToken)).accounts;
+      case 'google_tag_manager':
+        return (await this.getTagManagerContainers(accessToken)).containers;
+      case 'google_search_console':
+        return (await this.getSearchConsoleSites(accessToken)).sites;
+      case 'google_merchant_center':
+        return (await this.getMerchantCenterAccounts(accessToken)).accounts;
+    }
+  }
+
   /**
    * Fetch Google Ads accounts
-   *
-   * The Google Ads API requires:
-   * - Authorization header with Bearer token
-   * - developer-token header for API access
-   *
-   * @param accessToken - Valid access token
-   * @returns Accessible Google Ads accounts
    */
   private async getAdsAccounts(accessToken: string): Promise<{ accounts: GoogleAdsAccount[] }> {
     try {
       console.log('🔍 Starting Google Ads account fetch...');
       const developerToken = env.GOOGLE_ADS_DEVELOPER_TOKEN;
-      
-      // Developer token is required for Google Ads API
+
       if (!developerToken) {
         console.warn('GOOGLE_ADS_DEVELOPER_TOKEN not configured - Google Ads accounts will not be available');
         return { accounts: [] };
       }
 
-      // Google Ads API REST endpoint for listAccessibleCustomers
-      // According to official docs: https://developers.google.com/google-ads/api/docs/account-management/listing-accounts#curl
-      // Using v22 (latest version)
       const response = await fetch(
         'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
@@ -353,25 +339,22 @@ export class GoogleConnector {
       if (!response.ok) {
         const errorText = await response.text();
         let errorMessage = errorText;
-        
-        // Try to parse JSON error response for better error messages
+
         try {
           const errorJson = JSON.parse(errorText);
           if (errorJson.error?.message) {
             errorMessage = errorJson.error.message;
-            
-            // Special handling for API not enabled error
-            if (errorMessage.includes('Google Ads API has not been used') || 
-                errorMessage.includes('it is disabled')) {
+
+            if (errorMessage.includes('Google Ads API has not been used') || errorMessage.includes('it is disabled')) {
               console.error('Google Ads API Error: API not enabled in Google Cloud project');
               console.error('Enable it at: https://console.developers.google.com/apis/api/googleads.googleapis.com/overview');
               console.error('Full error:', errorMessage);
             }
           }
         } catch {
-          // If not JSON, use the raw error text
+          // Ignore JSON parse failures for error payloads.
         }
-        
+
         console.error('Google Ads API error:', {
           status: response.status,
           statusText: response.statusText,
@@ -382,7 +365,7 @@ export class GoogleConnector {
         return { accounts: [] };
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         resourceNames?: string[];
       };
 
@@ -391,30 +374,21 @@ export class GoogleConnector {
         return { accounts: [] };
       }
 
-      // Extract customer IDs from resource names
-      // Format: "customers/1234567890" -> "1234567890"
       const customerIds = data.resourceNames.map((resourceName) => {
         const id = resourceName.split('/').pop() || resourceName;
-        // Remove dashes from customer ID if present (Google Ads IDs can be XXX-XXX-XXXX)
         return id.replace(/-/g, '');
       });
 
       console.log(`📋 Found ${customerIds.length} accessible Google Ads account(s):`, customerIds);
 
-      // Strategy: Use the "Universal" customer_client query
-      // This single query works for BOTH direct accounts and manager accounts
-      // - If it's a direct account: returns 1 row (itself)
-      // - If it's a manager account: returns itself + all client accounts
       const accountMap = new Map<string, { id: string; name: string }>();
 
       if (customerIds.length > 0) {
-        // Query each account using the universal customer_client query
         const accountQueries = customerIds.map(async (customerId) => {
           try {
             console.log(`🔎 Querying account details for customer ${customerId}...`);
-            
-            // Universal query: Works for both direct accounts and manager accounts
-            const response = await fetch(
+
+            const searchResponse = await fetch(
               `https://googleads.googleapis.com/v22/customers/${customerId}/googleAds:search`,
               {
                 method: 'POST',
@@ -422,7 +396,7 @@ export class GoogleConnector {
                   'Authorization': `Bearer ${accessToken}`,
                   'developer-token': developerToken,
                   'Content-Type': 'application/json',
-                  'login-customer-id': customerId, // Required: specifies which account context to use
+                  'login-customer-id': customerId,
                 },
                 body: JSON.stringify({
                   query: 'SELECT customer_client.descriptive_name, customer_client.id, customer_client.status, customer_client.manager FROM customer_client WHERE customer_client.level <= 1',
@@ -430,8 +404,8 @@ export class GoogleConnector {
               }
             );
 
-            if (response.ok) {
-              const data = await response.json() as {
+            if (searchResponse.ok) {
+              const searchData = (await searchResponse.json()) as {
                 results?: Array<{
                   customerClient?: {
                     id?: string;
@@ -441,74 +415,64 @@ export class GoogleConnector {
                   };
                 }>;
               };
-              
-              const results = data.results || [];
-              
-              if (results.length > 0) {
-                // If we got results, this account is accessible
-                // Results include: the account itself (if direct) or the account + its clients (if manager)
-                console.log(`✅ Got ${results.length} result(s) for account ${customerId}`);
-                
-                for (const result of results) {
-                  const client = result.customerClient;
-                  if (!client?.id || !client.descriptiveName) continue;
-                  
-                  // Extract customer ID (handle both formats: "1234567890" or "customers/1234567890")
-                  const clientId = client.id.toString().replace(/^customers\//, '').replace(/-/g, '');
-                  
-                  if (clientId) {
-                    console.log(`  📝 Account: ${clientId} = "${client.descriptiveName}" ${client.manager ? '(Manager)' : ''}`);
-                    accountMap.set(clientId, {
-                      id: clientId,
-                      name: client.descriptiveName,
-                    });
-                  }
+
+              for (const result of searchData.results || []) {
+                const client = result.customerClient;
+                if (!client?.id || !client.descriptiveName) {
+                  continue;
                 }
-              } else {
-                console.log(`ℹ️ Account ${customerId} returned empty results`);
-              }
-            } else {
-              // Handle 403 errors - likely due to Test Access token trying to access Production accounts
-              const errorText = await response.text();
-              let errorMessage = '';
-              try {
-                const errorJson = JSON.parse(errorText);
-                errorMessage = errorJson.error?.message || '';
-              } catch {
-                errorMessage = errorText.substring(0, 200);
-              }
-              
-              if (response.status === 403) {
-                console.warn(`❌ Access denied for ${customerId} (403 Permission Denied)`);
-                console.warn(`   This likely means your Developer Token is "Test Access" but you're trying to query Production accounts.`);
-                console.warn(`   Solution: Apply for "Basic Access" in Google Ads Manager Account > Tools & Settings > API Center`);
-                console.warn(`   Or use Test Accounts for development: https://ads.google.com/aw/billing/testaccountcreate`);
-                
-                // Add fallback entry so UI doesn't break
-                accountMap.set(customerId, {
-                  id: customerId,
-                  name: `Account ${customerId} (Restricted - Check Dev Token Access Level)`,
-                });
-              } else {
-                console.warn(`❌ Failed to query account ${customerId}:`, {
-                  status: response.status,
-                  error: errorMessage,
+
+                const clientId = client.id.toString().replace(/^customers\//, '').replace(/-/g, '');
+                if (!clientId) {
+                  continue;
+                }
+
+                console.log(`  📝 Account: ${clientId} = "${client.descriptiveName}" ${client.manager ? '(Manager)' : ''}`);
+                accountMap.set(clientId, {
+                  id: clientId,
+                  name: client.descriptiveName,
                 });
               }
+
+              return;
             }
+
+            const errorText = await searchResponse.text();
+            let errorMessage = '';
+            try {
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.error?.message || '';
+            } catch {
+              errorMessage = errorText.substring(0, 200);
+            }
+
+            if (searchResponse.status === 403) {
+              console.warn(`❌ Access denied for ${customerId} (403 Permission Denied)`);
+              console.warn('   This likely means your Developer Token is "Test Access" but you are trying to query Production accounts.');
+              console.warn('   Solution: Apply for "Basic Access" in Google Ads Manager Account > Tools & Settings > API Center');
+              console.warn('   Or use Test Accounts for development: https://ads.google.com/aw/billing/testaccountcreate');
+              accountMap.set(customerId, {
+                id: customerId,
+                name: `Account ${customerId} (Restricted - Check Dev Token Access Level)`,
+              });
+              return;
+            }
+
+            console.warn(`❌ Failed to query account ${customerId}:`, {
+              status: searchResponse.status,
+              error: errorMessage,
+            });
           } catch (error) {
             console.error(`❌ Error querying account ${customerId}:`, error);
           }
         });
 
-        // Wait for all queries to complete
         await Promise.all(accountQueries);
       }
 
-      // Build final accounts list using names from map, or fallback to formatted IDs
       const accounts: GoogleAdsAccount[] = customerIds.map((customerId) => {
         const accountInfo = accountMap.get(customerId);
-        
+
         if (accountInfo) {
           return {
             id: customerId,
@@ -518,12 +482,11 @@ export class GoogleConnector {
           };
         }
 
-        // Fallback: Format customer ID nicely if we couldn't get the name
-        // Format: 1234567890 -> 123-456-7890
-        const formattedId = customerId.length === 10
-          ? `${customerId.slice(0, 3)}-${customerId.slice(3, 6)}-${customerId.slice(6)}`
-          : customerId;
-        
+        const formattedId =
+          customerId.length === 10
+            ? `${customerId.slice(0, 3)}-${customerId.slice(3, 6)}-${customerId.slice(6)}`
+            : customerId;
+
         return {
           id: customerId,
           name: `Account ${formattedId}`,
@@ -546,15 +509,11 @@ export class GoogleConnector {
 
   /**
    * Fetch Google Analytics (GA4) properties
-   *
-   * @param accessToken - Valid access token
-   * @returns Accessible GA4 properties
    */
   private async getAnalyticsProperties(
     accessToken: string
   ): Promise<{ properties: GoogleAnalyticsProperty[] }> {
     try {
-      // Use Authorization header (more reliable than access_token query param).
       const response = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
         method: 'GET',
         headers: {
@@ -572,7 +531,7 @@ export class GoogleConnector {
         return { properties: [] };
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         accountSummaries?: Array<{
           account?: string;
           displayName?: string;
@@ -609,57 +568,118 @@ export class GoogleConnector {
   }
 
   /**
-   * Fetch Google Business Profile accounts
-   *
-   * @param accessToken - Valid access token
-   * @returns Accessible Business Profile accounts
+   * Fetch Google Business Profile locations.
    */
-  private async getBusinessAccounts(
+  private async getBusinessLocations(
     accessToken: string
   ): Promise<{ accounts: GoogleBusinessAccount[] }> {
     try {
-      const response = await fetch(
-        'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const businessAccounts: Array<{ name: string; accountName?: string }> = [];
+      let nextAccountsPageToken: string | undefined;
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        
-        // Handle rate limiting (429) - return empty array to avoid blocking other services
-        if (response.status === 429) {
-          console.warn('Google Business Profile API rate limited (429). Will retry on next request.');
+      do {
+        const response = await fetch(
+          this.appendPageToken(
+            'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
+            nextAccountsPageToken
+          ),
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+
+          if (response.status === 429) {
+            console.warn('Google Business Profile API rate limited (429). Will retry on next request.');
+            return { accounts: [] };
+          }
+
+          console.warn('Google Business Profile API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText.substring(0, 200),
+          });
           return { accounts: [] };
         }
 
-        console.warn('Google Business Profile API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText.substring(0, 200),
-        });
-        return { accounts: [] };
-      }
+        const data = (await response.json()) as {
+          accounts?: Array<{
+            name: string;
+            accountName?: string;
+            type?: string;
+          }>;
+          nextPageToken?: string;
+        };
 
-      const data = await response.json() as {
-        accounts?: Array<{
-          name: string;
-          accountName?: string;
-          type?: string;
-        }>;
-      };
+        businessAccounts.push(...(data.accounts || []));
+        nextAccountsPageToken = data.nextPageToken;
+      } while (nextAccountsPageToken);
 
-      const accounts: GoogleBusinessAccount[] = (data.accounts || []).map((account) => ({
-        id: account.name?.split('/').pop() || '',
-        name: account.accountName || account.name,
-        type: 'google_business',
-      }));
+      const locationResponses = await Promise.all(
+        businessAccounts.map(async (account) => {
+          try {
+            const locations: GoogleBusinessAccount[] = [];
+            let nextLocationsPageToken: string | undefined;
 
-      return { accounts };
+            do {
+              const response = await fetch(
+                this.appendPageToken(
+                  `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title`,
+                  nextLocationsPageToken
+                ),
+                {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                  },
+                }
+              );
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.warn('Google Business Profile locations API error:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  error: errorText.substring(0, 200),
+                  account: account.name,
+                });
+                return [];
+              }
+
+              const data = (await response.json()) as {
+                locations?: Array<{
+                  name: string;
+                  title?: string;
+                }>;
+                nextPageToken?: string;
+              };
+
+              locations.push(
+                ...(data.locations || []).map((location) => ({
+                  id: location.name?.split('/').pop() || '',
+                  name: location.title || location.name,
+                  type: 'google_business' as const,
+                  accountName: account.accountName || account.name,
+                }))
+              );
+
+              nextLocationsPageToken = data.nextPageToken;
+            } while (nextLocationsPageToken);
+
+            return locations;
+          } catch (error) {
+            console.warn(`Failed to fetch locations for GBP account ${account.name}:`, error);
+            return [];
+          }
+        })
+      );
+
+      return { accounts: locationResponses.flat() };
     } catch (error) {
       console.error('Failed to fetch Google Business Profile accounts:', error);
       return { accounts: [] };
@@ -668,15 +688,11 @@ export class GoogleConnector {
 
   /**
    * Fetch Google Tag Manager containers
-   *
-   * @param accessToken - Valid access token
-   * @returns Accessible GTM containers
    */
   private async getTagManagerContainers(
     accessToken: string
   ): Promise<{ containers: GoogleTagManagerContainer[] }> {
     try {
-      // First, get all accounts
       const accountsResponse = await fetch(
         'https://www.googleapis.com/tagmanager/v2/accounts',
         {
@@ -697,30 +713,31 @@ export class GoogleConnector {
         return { containers: [] };
       }
 
-      const accountsData = await accountsResponse.json() as {
+      const accountsData = (await accountsResponse.json()) as {
         account?: Array<{
           accountId: string;
           name: string;
         }>;
       };
 
-      const containers: GoogleTagManagerContainer[] = [];
+      const containerArrays = await Promise.all(
+        (accountsData.account || []).map(async (account) => {
+          try {
+            const containersResponse = await fetch(
+              `https://www.googleapis.com/tagmanager/v2/accounts/${account.accountId}/containers`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                },
+              }
+            );
 
-      // For each account, fetch containers in parallel
-      const containerPromises = (accountsData.account || []).map(async (account) => {
-        try {
-          const containersResponse = await fetch(
-            `https://www.googleapis.com/tagmanager/v2/accounts/${account.accountId}/containers`,
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-              },
+            if (!containersResponse.ok) {
+              return [];
             }
-          );
 
-          if (containersResponse.ok) {
-            const containersData = await containersResponse.json() as {
+            const containersData = (await containersResponse.json()) as {
               container?: Array<{
                 containerId: string;
                 name: string;
@@ -734,18 +751,14 @@ export class GoogleConnector {
               accountId: account.accountId,
               accountName: account.name,
             }));
+          } catch (error) {
+            console.warn(`Failed to fetch containers for GTM account ${account.accountId}:`, error);
+            return [];
           }
-          return [];
-        } catch (error) {
-          console.warn(`Failed to fetch containers for GTM account ${account.accountId}:`, error);
-          return [];
-        }
-      });
+        })
+      );
 
-      const containerArrays = await Promise.all(containerPromises);
-      containers.push(...containerArrays.flat());
-
-      return { containers };
+      return { containers: containerArrays.flat() };
     } catch (error) {
       console.error('Failed to fetch Google Tag Manager containers:', error);
       return { containers: [] };
@@ -754,9 +767,6 @@ export class GoogleConnector {
 
   /**
    * Fetch Google Search Console sites
-   *
-   * @param accessToken - Valid access token
-   * @returns Accessible Search Console sites
    */
   private async getSearchConsoleSites(
     accessToken: string
@@ -782,7 +792,7 @@ export class GoogleConnector {
         return { sites: [] };
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         siteEntry?: Array<{
           siteUrl: string;
           permissionLevel?: string;
@@ -805,21 +815,13 @@ export class GoogleConnector {
 
   /**
    * Fetch Google Merchant Center accounts
-   *
-   * Note: Merchant Center API may require different authentication or endpoint
-   * The Content API for Shopping endpoint structure may vary
-   *
-   * @param accessToken - Valid access token
-   * @returns Accessible Merchant Center accounts
    */
   private async getMerchantCenterAccounts(
     accessToken: string
   ): Promise<{ accounts: GoogleMerchantCenterAccount[] }> {
     try {
-      // Try the standard Content API endpoint
-      // If this fails, the API may need to be enabled or use a different endpoint
       const response = await fetch(
-        'https://shoppingcontent.googleapis.com/content/v2.1/accounts',
+        'https://shoppingcontent.googleapis.com/content/v2.1/accounts/authinfo',
         {
           method: 'GET',
           headers: {
@@ -829,38 +831,6 @@ export class GoogleConnector {
       );
 
       if (!response.ok) {
-        // If shoppingcontent fails, try the regular content API
-        if (response.status === 404) {
-          const altResponse = await fetch(
-            'https://www.googleapis.com/content/v2.1/accounts',
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-              },
-            }
-          );
-
-          if (altResponse.ok) {
-            const altData = await altResponse.json() as {
-              resources?: Array<{
-                id: string;
-                name?: string;
-                websiteUrl?: string;
-              }>;
-            };
-
-            const accounts: GoogleMerchantCenterAccount[] = (altData.resources || []).map((account) => ({
-              id: account.id,
-              name: account.name || `Account ${account.id}`,
-              type: 'google_merchant_center',
-              websiteUrl: account.websiteUrl,
-            }));
-
-            return { accounts };
-          }
-        }
-
         const errorText = await response.text();
         console.warn('Google Merchant Center API error:', {
           status: response.status,
@@ -870,22 +840,99 @@ export class GoogleConnector {
         return { accounts: [] };
       }
 
-      const data = await response.json() as {
-        resources?: Array<{
-          id: string;
-          name?: string;
-          websiteUrl?: string;
+      const data = (await response.json()) as {
+        accountIdentifiers?: Array<{
+          merchantId?: string | number;
         }>;
       };
 
-      const accounts: GoogleMerchantCenterAccount[] = (data.resources || []).map((account) => ({
-        id: account.id,
-        name: account.name || `Account ${account.id}`,
-        type: 'google_merchant_center',
-        websiteUrl: account.websiteUrl,
-      }));
+      const merchantIds = (data.accountIdentifiers || [])
+        .map((account) => String(account.merchantId || ''))
+        .filter(Boolean);
 
-      return { accounts };
+      const accountMap = new Map<string, GoogleMerchantCenterAccount>();
+
+      await Promise.all(
+        merchantIds.map(async (merchantId) => {
+          try {
+            const detailResponse = await fetch(
+              `https://shoppingcontent.googleapis.com/content/v2.1/${merchantId}/accounts/${merchantId}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                },
+              }
+            );
+
+            if (detailResponse.ok) {
+              const detail = (await detailResponse.json()) as {
+                id?: string | number;
+                name?: string;
+                websiteUrl?: string;
+              };
+
+              const id = String(detail.id || merchantId);
+              accountMap.set(id, {
+                id,
+                name: detail.name || `Merchant Center ${id}`,
+                type: 'google_merchant_center',
+                websiteUrl: detail.websiteUrl,
+              });
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch Merchant Center account detail for ${merchantId}:`, error);
+          }
+
+          try {
+            const listResponse = await fetch(
+              `https://shoppingcontent.googleapis.com/content/v2.1/${merchantId}/accounts`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                },
+              }
+            );
+
+            if (listResponse.ok) {
+              const listData = (await listResponse.json()) as {
+                resources?: Array<{
+                  id?: string | number;
+                  name?: string;
+                  websiteUrl?: string;
+                }>;
+              };
+
+              for (const account of listData.resources || []) {
+                const id = String(account.id || '');
+                if (!id) {
+                  continue;
+                }
+
+                accountMap.set(id, {
+                  id,
+                  name: account.name || `Merchant Center ${id}`,
+                  type: 'google_merchant_center',
+                  websiteUrl: account.websiteUrl,
+                });
+              }
+            }
+          } catch (error) {
+            console.warn(`Failed to list Merchant Center sub-accounts for ${merchantId}:`, error);
+          }
+
+          if (!accountMap.has(merchantId)) {
+            accountMap.set(merchantId, {
+              id: merchantId,
+              name: `Merchant Center ${merchantId}`,
+              type: 'google_merchant_center',
+            });
+          }
+        })
+      );
+
+      return { accounts: Array.from(accountMap.values()) };
     } catch (error) {
       console.error('Failed to fetch Google Merchant Center accounts:', error);
       return { accounts: [] };

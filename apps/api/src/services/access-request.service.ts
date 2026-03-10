@@ -335,6 +335,254 @@ function extractDashboardPlatformGroups(platforms: unknown): string[] {
   return Array.from(groups);
 }
 
+const ASSET_SELECTING_PRODUCTS = new Set([
+  'google_ads',
+  'ga4',
+  'google_business_profile',
+  'google_tag_manager',
+  'google_search_console',
+  'google_merchant_center',
+  'meta_ads',
+  'linkedin_ads',
+  'tiktok',
+  'tiktok_ads',
+]);
+
+type RequestedProduct = {
+  product: string;
+  platformGroup: string;
+};
+
+type UnresolvedProduct = RequestedProduct & {
+  reason: 'no_assets' | 'selection_required';
+};
+
+function isActiveAuthorizationStatus(status: string): boolean {
+  return status === 'active';
+}
+
+function isAssetSelectingProduct(product: string): boolean {
+  return ASSET_SELECTING_PRODUCTS.has(product);
+}
+
+function extractRequestedProducts(platforms: unknown): RequestedProduct[] {
+  if (!Array.isArray(platforms)) {
+    return [];
+  }
+
+  const requestedProducts: RequestedProduct[] = [];
+
+  for (const entry of platforms) {
+    if (!entry || typeof entry !== 'object') continue;
+
+    const maybeGroup = (entry as any).platformGroup;
+    const maybeProducts = (entry as any).products;
+    if (typeof maybeGroup === 'string' && Array.isArray(maybeProducts)) {
+      for (const product of maybeProducts) {
+        const maybeProduct = product?.product;
+        if (typeof maybeProduct === 'string') {
+          requestedProducts.push({
+            product: maybeProduct,
+            platformGroup: maybeGroup,
+          });
+        }
+      }
+      continue;
+    }
+
+    const maybeProduct = (entry as any).platform;
+    if (typeof maybeProduct === 'string') {
+      requestedProducts.push({
+        product: maybeProduct,
+        platformGroup: normalizePlatformGroup(maybeProduct),
+      });
+    }
+  }
+
+  return requestedProducts;
+}
+
+function getSelectedAssetCount(product: string, assets: Record<string, any>): number {
+  switch (product) {
+    case 'google_ads':
+    case 'meta_ads':
+    case 'linkedin_ads':
+      return (
+        (assets.adAccounts?.length ?? 0) +
+        (assets.pages?.length ?? 0) +
+        (assets.instagramAccounts?.length ?? 0)
+      );
+    case 'ga4':
+      return assets.properties?.length ?? 0;
+    case 'google_business_profile':
+      return assets.businessAccounts?.length ?? 0;
+    case 'google_tag_manager':
+      return assets.containers?.length ?? 0;
+    case 'google_search_console':
+      return assets.sites?.length ?? 0;
+    case 'google_merchant_center':
+      return assets.merchantAccounts?.length ?? 0;
+    case 'tiktok':
+    case 'tiktok_ads':
+      return (
+        (assets.selectedAdvertiserIds?.length ?? 0) ||
+        (assets.adAccounts?.length ?? 0) ||
+        (assets.advertisers?.length ?? 0) ||
+        0
+      );
+    default:
+      return 0;
+  }
+}
+
+function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolean {
+  if (
+    product === 'google_ads' ||
+    product === 'ga4' ||
+    product === 'google_business_profile' ||
+    product === 'google_tag_manager' ||
+    product === 'google_search_console' ||
+    product === 'google_merchant_center' ||
+    product === 'linkedin_ads'
+  ) {
+    return assets.availableAssetCount === 0;
+  }
+
+  if (product === 'tiktok' || product === 'tiktok_ads') {
+    return Array.isArray(assets.availableAdvertisers) && assets.availableAdvertisers.length === 0;
+  }
+
+  return false;
+}
+
+function hasNonSelectingProductAccess(
+  requestedProduct: RequestedProduct,
+  connection: {
+    grantedAssets: unknown;
+    authorizations?: Array<{ platform: string; status: string }>;
+  }
+): boolean {
+  const grantedAssets =
+    (connection.grantedAssets as Record<string, unknown> | null) || null;
+  const grantedPlatform =
+    grantedAssets && typeof grantedAssets.platform === 'string'
+      ? grantedAssets.platform
+      : null;
+
+  if (
+    grantedPlatform &&
+    (grantedPlatform === requestedProduct.product ||
+      normalizePlatformGroup(grantedPlatform) === requestedProduct.platformGroup)
+  ) {
+    return true;
+  }
+
+  return (connection.authorizations || []).some(
+    (authorization) =>
+      isActiveAuthorizationStatus(authorization.status) &&
+      (authorization.platform === requestedProduct.product ||
+        normalizePlatformGroup(authorization.platform) === requestedProduct.platformGroup)
+  );
+}
+
+function evaluateAuthorizationProgress(
+  requestedProducts: RequestedProduct[],
+  connections: Array<{
+    grantedAssets: unknown;
+    authorizations?: Array<{
+      platform: string;
+      status: string;
+    }>;
+  }>
+) {
+  const fulfilledProducts: RequestedProduct[] = [];
+  const unresolvedProducts: UnresolvedProduct[] = [];
+
+  for (const requestedProduct of requestedProducts) {
+    if (!isAssetSelectingProduct(requestedProduct.product)) {
+      if (connections.some((connection) => hasNonSelectingProductAccess(requestedProduct, connection))) {
+        fulfilledProducts.push(requestedProduct);
+      }
+      continue;
+    }
+
+    let hasAuthorization = false;
+    let hasSelectedAssets = false;
+    let hasNoAssets = false;
+
+    for (const connection of connections) {
+      if (
+        (connection.authorizations || []).some(
+          (authorization) =>
+            isActiveAuthorizationStatus(authorization.status) &&
+            normalizePlatformGroup(authorization.platform) === requestedProduct.platformGroup
+        )
+      ) {
+        hasAuthorization = true;
+      }
+
+      const grantedAssets =
+        (connection.grantedAssets as Record<string, unknown> | null) || null;
+      const selectedAssets =
+        grantedAssets && requestedProduct.product in grantedAssets
+          ? grantedAssets[requestedProduct.product]
+          : null;
+
+      if (!selectedAssets || typeof selectedAssets !== 'object') {
+        continue;
+      }
+
+      const typedAssets = selectedAssets as Record<string, any>;
+      if (getSelectedAssetCount(requestedProduct.product, typedAssets) > 0) {
+        hasSelectedAssets = true;
+      }
+
+      if (hasNoAssetsSignal(requestedProduct.product, typedAssets)) {
+        hasNoAssets = true;
+      }
+    }
+
+    if (hasSelectedAssets) {
+      fulfilledProducts.push(requestedProduct);
+      continue;
+    }
+
+    if (hasNoAssets) {
+      unresolvedProducts.push({
+        ...requestedProduct,
+        reason: 'no_assets',
+      });
+      continue;
+    }
+
+    if (hasAuthorization) {
+      unresolvedProducts.push({
+        ...requestedProduct,
+        reason: 'selection_required',
+      });
+    }
+  }
+
+  const fulfilledKeys = new Set(
+    fulfilledProducts.map((product) => `${product.platformGroup}:${product.product}`)
+  );
+  const completedPlatforms = Array.from(
+    new Set(requestedProducts.map((product) => product.platformGroup))
+  ).filter((platformGroup) =>
+    requestedProducts
+      .filter((product) => product.platformGroup === platformGroup)
+      .every((product) => fulfilledKeys.has(`${product.platformGroup}:${product.product}`))
+  );
+
+  return {
+    fulfilledProducts,
+    unresolvedProducts,
+    completedPlatforms,
+    isComplete:
+      requestedProducts.length > 0 && fulfilledProducts.length === requestedProducts.length,
+  };
+}
+
 type AccessRequestLifecycleEventType = 'access_request.partial' | 'access_request.completed';
 
 function getAccessRequestLifecycleEventType(
@@ -351,7 +599,7 @@ function getAccessRequestLifecycleEventType(
   return null;
 }
 
-function extractCompletedPlatformsAndConnections(
+function buildConnectionSummaries(
   connections: Array<{
     id: string;
     status: string;
@@ -362,15 +610,12 @@ function extractCompletedPlatformsAndConnections(
     }>;
   }>
 ) {
-  const completedPlatformsSet = new Set<string>();
-
   const connectionSummaries = connections.map((connection) => {
     const connectionPlatforms = new Set<string>();
 
     for (const authorization of connection.authorizations || []) {
-      if (authorization.status !== 'revoked') {
+      if (isActiveAuthorizationStatus(authorization.status)) {
         const normalizedPlatform = normalizePlatformGroup(authorization.platform);
-        completedPlatformsSet.add(normalizedPlatform);
         connectionPlatforms.add(normalizedPlatform);
       }
     }
@@ -379,7 +624,6 @@ function extractCompletedPlatformsAndConnections(
       (connection.grantedAssets as Record<string, unknown> | null) || null;
     if (grantedAssets && typeof grantedAssets.platform === 'string') {
       const normalizedPlatform = normalizePlatformGroup(grantedAssets.platform);
-      completedPlatformsSet.add(normalizedPlatform);
       connectionPlatforms.add(normalizedPlatform);
     }
 
@@ -391,10 +635,7 @@ function extractCompletedPlatformsAndConnections(
     };
   });
 
-  return {
-    completedPlatforms: Array.from(completedPlatformsSet),
-    connections: connectionSummaries,
-  };
+  return connectionSummaries;
 }
 
 async function emitAccessRequestLifecycleWebhook(input: {
@@ -467,8 +708,9 @@ async function emitAccessRequestLifecycleWebhook(input: {
     });
 
     const requestedPlatforms = extractDashboardPlatformGroups(accessRequest.platforms);
-    const { completedPlatforms, connections } =
-      extractCompletedPlatformsAndConnections(clientConnections as any);
+    const requestedProducts = extractRequestedProducts(accessRequest.platforms);
+    const progress = evaluateAuthorizationProgress(requestedProducts, clientConnections as any);
+    const connections = buildConnectionSummaries(clientConnections as any);
 
     const payload = webhookEventService.buildAccessRequestWebhookEvent({
       type: eventType,
@@ -491,7 +733,7 @@ async function emitAccessRequestLifecycleWebhook(input: {
       },
       authorizationProgress: {
         requestedPlatforms,
-        completedPlatforms,
+        completedPlatforms: progress.completedPlatforms,
       },
       connections,
       requestUrl: `${env.FRONTEND_URL}/invite/${accessRequest.uniqueToken}`,
@@ -637,6 +879,7 @@ export async function getAccessRequestById(id: string) {
           .map((group: any) => group?.platformGroup)
           .filter((group: unknown): group is string => typeof group === 'string')
       : [];
+    const requestedProducts = extractRequestedProducts(hierarchicalPlatforms);
 
     let shopifySubmission:
       | {
@@ -695,10 +938,28 @@ export async function getAccessRequestById(id: string) {
       }
     }
 
+    const clientConnections = await prisma.clientConnection.findMany({
+      where: { accessRequestId: accessRequest.id },
+      select: {
+        grantedAssets: true,
+        authorizations: {
+          select: {
+            platform: true,
+            status: true,
+          },
+        },
+      },
+    });
+    const authorizationProgress = evaluateAuthorizationProgress(
+      requestedProducts,
+      clientConnections as any
+    );
+
     return {
       data: {
         ...accessRequest,
         platforms: hierarchicalPlatforms,
+        authorizationProgress,
         ...(shopifySubmission ? { shopifySubmission } : {}),
       },
       error: null,
@@ -755,6 +1016,7 @@ export async function getAccessRequestByToken(token: string) {
           .map((group: any) => group?.platformGroup)
           .filter((group: unknown): group is string => typeof group === 'string')
       : [];
+    const requestedProducts = extractRequestedProducts(hierarchicalPlatforms);
 
     const [agency, platformConnections, clientConnections] = await Promise.all([
       prisma.agency.findUnique({
@@ -805,25 +1067,10 @@ export async function getAccessRequestByToken(token: string) {
       manualInviteTargets[connection.platform] = getIdentityFromConnection(connection);
     }
 
-    const completedPlatformsSet = new Set<string>();
-
-    for (const connection of clientConnections) {
-      for (const authorization of connection.authorizations || []) {
-        if (authorization.status !== 'revoked') {
-          completedPlatformsSet.add(normalizePlatformGroup(authorization.platform));
-        }
-      }
-
-      const grantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || null;
-      if (grantedAssets && typeof grantedAssets.platform === 'string') {
-        completedPlatformsSet.add(normalizePlatformGroup(grantedAssets.platform));
-      }
-    }
-
-    const completedPlatforms = Array.from(completedPlatformsSet);
-    const isComplete =
-      requestedPlatformGroups.length > 0 &&
-      requestedPlatformGroups.every((platform) => completedPlatformsSet.has(platform));
+    const authorizationProgress = evaluateAuthorizationProgress(
+      requestedProducts,
+      clientConnections as any
+    );
 
     return {
       data: {
@@ -831,10 +1078,7 @@ export async function getAccessRequestByToken(token: string) {
         agencyName: agency?.name || 'Agency',
         platforms: hierarchicalPlatforms,
         manualInviteTargets,
-        authorizationProgress: {
-          completedPlatforms,
-          isComplete,
-        },
+        authorizationProgress,
       },
       error: null,
     };
@@ -1053,7 +1297,47 @@ export async function updateAccessRequest(
  */
 export async function markRequestAuthorized(requestId: string) {
   try {
-    return await setAccessRequestLifecycleStatus(requestId, 'completed');
+    const accessRequest = await prisma.accessRequest.findUnique({
+      where: { id: requestId },
+      select: {
+        id: true,
+        platforms: true,
+      },
+    });
+
+    if (!accessRequest) {
+      return {
+        data: null,
+        error: {
+          code: 'REQUEST_NOT_FOUND',
+          message: 'Access request not found',
+        },
+      };
+    }
+
+    const clientConnections = await prisma.clientConnection.findMany({
+      where: { accessRequestId: requestId },
+      select: {
+        grantedAssets: true,
+        authorizations: {
+          select: {
+            platform: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    const requestedProducts = extractRequestedProducts(accessRequest.platforms);
+    const authorizationProgress = evaluateAuthorizationProgress(
+      requestedProducts,
+      clientConnections as any
+    );
+
+    return await setAccessRequestLifecycleStatus(
+      requestId,
+      authorizationProgress.isComplete ? 'completed' : 'partial'
+    );
   } catch (error) {
     if (error instanceof Error && error.message.includes('Record to update not found')) {
       return {

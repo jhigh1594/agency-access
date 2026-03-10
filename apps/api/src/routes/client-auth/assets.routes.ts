@@ -10,6 +10,7 @@ import {
 import { infisical } from '../../lib/infisical.js';
 import { prisma } from '../../lib/prisma.js';
 import type { Platform } from '@agency-platform/shared';
+import type { GoogleProduct } from '../../services/connectors/google.js';
 import {
   adAccountsSharedSchema,
   grantPagesAccessSchema,
@@ -198,12 +199,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         google_search_console: 'google',
         google_merchant_center: 'google',
         meta_ads: 'meta',
+        linkedin_ads: 'linkedin',
         instagram: 'meta',
         mailchimp: 'mailchimp',
         pinterest: 'pinterest',
         klaviyo: 'klaviyo',
         shopify: 'shopify',
         tiktok: 'tiktok',
+        tiktok_ads: 'tiktok',
       };
       const authPlatform = platformMap[platformStr] || (platform as Platform);
 
@@ -1151,12 +1154,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       google_search_console: 'google',
       google_merchant_center: 'google',
       meta_ads: 'meta',
+      linkedin_ads: 'linkedin',
       instagram: 'meta',
       mailchimp: 'mailchimp',
       pinterest: 'pinterest',
       klaviyo: 'klaviyo',
       shopify: 'shopify',
       tiktok: 'tiktok',
+      tiktok_ads: 'tiktok',
     };
 
     const platform = platformParam as Platform;
@@ -1219,11 +1224,43 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
       }
 
+      if (authPlatform === 'google' && authContext.accessRequest) {
+        await auditService.createAuditLog({
+          agencyId: authContext.accessRequest.agencyId,
+          action: 'GOOGLE_TOKEN_READ',
+          userEmail: authContext.connection?.clientEmail,
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            platform: platformParam,
+            source: 'client_assets_fetch',
+          },
+          request,
+        });
+      }
+
+      if (authPlatform === 'linkedin' && authContext.accessRequest) {
+        await auditService.createAuditLog({
+          agencyId: authContext.accessRequest.agencyId,
+          action: 'LINKEDIN_TOKEN_READ',
+          userEmail: authContext.connection?.clientEmail,
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            platform: platformParam,
+            source: 'client_assets_fetch',
+          },
+          request,
+        });
+      }
+
       let assets;
       const platformStr = String(platform);
 
       if (platform === 'meta_ads') {
         assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken);
+      } else if (platform === 'linkedin_ads') {
+        assets = await clientAssetsService.fetchLinkedInAdAccounts(tokens.accessToken);
       } else if (platform === 'mailchimp') {
         const metadata = (platformAuth.metadata as any) || {};
         const dc = metadata.dc;
@@ -1254,35 +1291,31 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           });
         }
         assets = await clientAssetsService.fetchShopifyAssets(tokens.accessToken, shop);
-      } else if (platform === 'tiktok') {
+      } else if (platform === 'tiktok' || platform === 'tiktok_ads') {
         assets = await clientAssetsService.fetchTikTokAssets(tokens.accessToken);
-      } else if (platform === 'google' || platformStr.startsWith('google_') || platform === 'ga4') {
+      } else if (platform === 'google') {
         const { GoogleConnector } = await import('../../services/connectors/google.js');
         const googleConnector = new GoogleConnector();
         const allAccounts = await googleConnector.getAllGoogleAccounts(tokens.accessToken);
-
-        if (platformStr === 'google_ads') {
-          assets = allAccounts.adsAccounts;
-        } else if (platformStr === 'ga4') {
-          assets = allAccounts.analyticsProperties;
-        } else if (platformStr === 'google_business_profile') {
-          assets = allAccounts.businessAccounts;
-        } else if (platformStr === 'google_tag_manager') {
-          assets = allAccounts.tagManagerContainers;
-        } else if (platformStr === 'google_search_console') {
-          assets = allAccounts.searchConsoleSites;
-        } else if (platformStr === 'google_merchant_center') {
-          assets = allAccounts.merchantCenterAccounts;
-        } else {
-          assets = {
-            adsAccounts: allAccounts.adsAccounts,
-            analyticsProperties: allAccounts.analyticsProperties,
-            businessAccounts: allAccounts.businessAccounts,
-            tagManagerContainers: allAccounts.tagManagerContainers,
-            searchConsoleSites: allAccounts.searchConsoleSites,
-            merchantCenterAccounts: allAccounts.merchantCenterAccounts,
-          };
-        }
+        assets = {
+          adsAccounts: allAccounts.adsAccounts,
+          analyticsProperties: allAccounts.analyticsProperties,
+          businessAccounts: allAccounts.businessAccounts,
+          tagManagerContainers: allAccounts.tagManagerContainers,
+          searchConsoleSites: allAccounts.searchConsoleSites,
+          merchantCenterAccounts: allAccounts.merchantCenterAccounts,
+        };
+      } else if (
+        platformStr === 'google_ads' ||
+        platformStr === 'ga4' ||
+        platformStr === 'google_business_profile' ||
+        platformStr === 'google_tag_manager' ||
+        platformStr === 'google_search_console' ||
+        platformStr === 'google_merchant_center'
+      ) {
+        const { GoogleConnector } = await import('../../services/connectors/google.js');
+        const googleConnector = new GoogleConnector();
+        assets = await googleConnector.getAccountsForProduct(platformStr as GoogleProduct, tokens.accessToken);
       } else {
         return reply.code(400).send({
           data: null,

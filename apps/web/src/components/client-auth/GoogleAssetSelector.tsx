@@ -12,7 +12,7 @@
  * - google_merchant_center: Merchant Center Accounts
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
 
@@ -27,6 +27,7 @@ interface GoogleAssetSelectorProps {
     containers?: string[];
     sites?: string[];
     merchantAccounts?: string[];
+    availableAssetCount?: number;
   }) => void;
   onError?: (error: string) => void;
 }
@@ -51,6 +52,39 @@ const PRODUCT_TO_ASSET_KEY: Record<string, string> = {
   'google_merchant_center': 'merchantAccounts',
 };
 
+const PRODUCT_FOLLOW_UP_COPY: Record<
+  string,
+  {
+    unresolvedName: string;
+    missingEntity: string;
+  }
+> = {
+  'google_ads': {
+    unresolvedName: 'Google Ads',
+    missingEntity: 'an eligible ad account',
+  },
+  'ga4': {
+    unresolvedName: 'Google Analytics',
+    missingEntity: 'a property',
+  },
+  'google_business_profile': {
+    unresolvedName: 'Google Business Profile',
+    missingEntity: 'a location',
+  },
+  'google_tag_manager': {
+    unresolvedName: 'Google Tag Manager',
+    missingEntity: 'a container',
+  },
+  'google_search_console': {
+    unresolvedName: 'Google Search Console',
+    missingEntity: 'a site',
+  },
+  'google_merchant_center': {
+    unresolvedName: 'Google Merchant Center',
+    missingEntity: 'an eligible Merchant Center account',
+  },
+};
+
 export function GoogleAssetSelector({
   sessionId,
   accessRequestToken,
@@ -62,6 +96,7 @@ export function GoogleAssetSelector({
   const [assets, setAssets] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const latestRequestIdRef = useRef(0);
 
   // Get title based on product type (defined early since it's used in early returns)
   const getTitle = () => {
@@ -78,6 +113,9 @@ export function GoogleAssetSelector({
 
   // Fetch assets from backend
   const fetchAssets = async () => {
+    const requestId = latestRequestIdRef.current + 1;
+    latestRequestIdRef.current = requestId;
+
     try {
       setIsLoading(true);
       setError(null);
@@ -95,15 +133,30 @@ export function GoogleAssetSelector({
 
       // Handle both array responses and object responses
       const fetchedAssets = Array.isArray(json.data) ? json.data : [];
+      if (requestId !== latestRequestIdRef.current) {
+        return;
+      }
       setAssets(fetchedAssets);
     } catch (err) {
+      if (requestId !== latestRequestIdRef.current) {
+        return;
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to load accounts';
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
+      if (requestId !== latestRequestIdRef.current) {
+        return;
+      }
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      latestRequestIdRef.current += 1;
+    };
+  }, []);
 
   // Fetch assets on mount
   useEffect(() => {
@@ -115,13 +168,13 @@ export function GoogleAssetSelector({
   // Notify parent of changes
   useEffect(() => {
     const assetKey = PRODUCT_TO_ASSET_KEY[product];
-    if (!assetKey) return;
+    if (!assetKey || isLoading || error) return;
 
     const selection: any = {};
     selection[assetKey] = Array.from(selectedIds);
+    selection.availableAssetCount = assets.length;
     onSelectionChange(selection);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIds]);
+  }, [assets, error, isLoading, onSelectionChange, product, selectedIds]);
 
   if (isLoading) {
     return (
@@ -176,10 +229,11 @@ export function GoogleAssetSelector({
   const totalSelected = selectedIds.size;
 
   if (assetList.length === 0) {
+    const followUpCopy = PRODUCT_FOLLOW_UP_COPY[product];
     return (
       <AssetSelectorEmpty
         title={`No ${getTitle()} found`}
-        description={`We couldn't find any ${getTitle().toLowerCase()} for this Google account. You may need to create one first in your Google ${getTitle().includes('Account') ? 'account' : 'product'} center.`}
+        description={`Connected to Google, but no ${getTitle().toLowerCase()} were found for this login. You can continue with the rest of this request, but ${followUpCopy?.unresolvedName || 'this product'} will stay unresolved until ${followUpCopy?.missingEntity || 'an eligible asset'} is available.`}
       />
     );
   }

@@ -1,0 +1,4 @@
+
+# Sentry environment file (contains secrets)
+.env.sentry
+
