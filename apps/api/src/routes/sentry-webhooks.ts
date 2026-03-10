@@ -328,13 +328,20 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
     const signatureHeader = request.headers['x-sentry-signature'] as string | undefined;
     const rawBody = (request as any).rawBody;
 
+    // Capture Sentry-specific headers
+    const sentryHookResource = request.headers['sentry-hook-resource'] as string | undefined;
+    const sentryHookSignature = request.headers['sentry-hook-signature'] as string | undefined;
+
     // Always log receipt of webhook for debugging
     fastify.log.info(
       {
         action: payload?.action,
+        sentryHookResource,
         issueId: payload?.data?.issue?.id,
         issueTitle: payload?.data?.issue?.title,
+        triggeredRule: (payload as any)?.triggered_rule,
         hasSignature: !!signatureHeader,
+        hasSentryHookSignature: !!sentryHookSignature,
         hasRawBody: !!rawBody,
       },
       '[SENTRY WEBHOOK] Received webhook request'
