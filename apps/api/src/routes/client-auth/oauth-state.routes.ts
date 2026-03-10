@@ -5,6 +5,7 @@ import { getConnector } from '../../services/connectors/factory.js';
 import { env } from '../../lib/env.js';
 import type { Platform } from '@agency-platform/shared';
 import { createOAuthStateSchema } from './schemas.js';
+import { resolveClientInviteCallbackUrl } from './redirect-uri.js';
 
 export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
   // Create OAuth state token for CSRF protection
@@ -91,6 +92,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
     }
 
     const { platform } = validated.data;
+    const redirectUri = resolveClientInviteCallbackUrl(request.headers);
 
     // Create OAuth state token (include token for redirect after OAuth)
     const stateResult = await oauthStateService.createState({
@@ -100,6 +102,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
       accessRequestId: accessRequest.data.id,
       accessRequestToken: token,
       clientEmail: accessRequest.data.clientEmail,
+      redirectUrl: redirectUri,
       timestamp: Date.now(),
     });
 
@@ -118,7 +121,6 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
     // Get connector and generate URL
     try {
       const connector = getConnector(platform as Platform);
-      const redirectUri = `${env.FRONTEND_URL}/invite/oauth-callback`;
 
       // For Google platform group, determine scopes based on requested products
       let scopes: string[] | undefined;

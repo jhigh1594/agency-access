@@ -55,7 +55,7 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
 
     try {
       const connector = getConnector(platform as Platform);
-      const redirectUri = `${env.FRONTEND_URL}/invite/oauth-callback`;
+      const redirectUri = stateData.redirectUrl || `${env.FRONTEND_URL}/invite/oauth-callback`;
       let tokens = await connector.exchangeCode(code, redirectUri);
 
       if ((platform === 'meta' || platform === 'meta_ads') && connector.getLongLivedToken) {
@@ -225,7 +225,7 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
 
     try {
       const connector = getConnector(platform as Platform);
-      const redirectUri = `${env.FRONTEND_URL}/invite/oauth-callback`;
+      const redirectUri = stateData.redirectUrl || `${env.FRONTEND_URL}/invite/oauth-callback`;
       let tokens = await connector.exchangeCode(code, redirectUri);
 
       if ((platform === 'meta' || platform === 'meta_ads') && connector.getLongLivedToken) {

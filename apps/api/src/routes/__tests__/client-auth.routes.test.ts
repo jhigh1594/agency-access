@@ -15,6 +15,7 @@ vi.mock('@/lib/env', () => ({
   env: {
     FRONTEND_URL: 'http://localhost:3000',
     API_URL: 'http://localhost:3001',
+    CORS_ALLOWED_ORIGINS: ['https://app.agencyaccess.example'],
     META_APP_ID: 'test-app-id',
     META_APP_SECRET: 'test-app-secret',
     REDIS_URL: 'redis://localhost:6379',
@@ -84,6 +85,58 @@ describe('Client Auth Routes', () => {
           'pages_read_engagement',
         ],
         'http://localhost:3000/invite/oauth-callback'
+      );
+    });
+
+    it('uses the request origin for the client callback when it is an allowed frontend origin', async () => {
+      const mockToken = 'test-token';
+      const mockState = 'test-state';
+      const mockAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?state=test-state';
+
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          clientEmail: 'client@example.com',
+          platforms: [
+            {
+              platformGroup: 'google',
+              products: [{ product: 'google_ads', accessLevel: 'admin' }],
+            },
+          ],
+        } as any,
+        error: null,
+      });
+
+      vi.mocked(oauthStateService.createState).mockResolvedValue({
+        data: mockState,
+        error: null,
+      });
+
+      const mockConnector = {
+        getAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
+      };
+      vi.mocked(getConnector).mockReturnValue(mockConnector as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/client/${mockToken}/oauth-url`,
+        headers: {
+          origin: 'https://app.agencyaccess.example',
+        },
+        payload: { platform: 'google' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(oauthStateService.createState).toHaveBeenCalledWith(
+        expect.objectContaining({
+          redirectUrl: 'https://app.agencyaccess.example/invite/oauth-callback',
+        })
+      );
+      expect(mockConnector.getAuthUrl).toHaveBeenCalledWith(
+        mockState,
+        ['https://www.googleapis.com/auth/adwords', 'https://www.googleapis.com/auth/userinfo.email'],
+        'https://app.agencyaccess.example/invite/oauth-callback'
       );
     });
 
@@ -192,6 +245,35 @@ describe('Client Auth Routes', () => {
         mockCode,
         'http://localhost:3000/invite/oauth-callback'
       );
+    });
+
+    it('reuses the stored client callback URL during OAuth exchange', async () => {
+      const mockConnector = {
+        exchangeCode: vi.fn().mockRejectedValue(new Error('stop after redirect check')),
+      };
+      vi.mocked(getConnector).mockReturnValue(mockConnector as any);
+      vi.mocked(oauthStateService.validateState).mockResolvedValue({
+        data: {
+          accessRequestId: 'req-1',
+          accessRequestToken: 'token-123',
+          platform: 'google',
+          clientEmail: 'client@example.com',
+          redirectUrl: 'https://app.agencyaccess.example/invite/oauth-callback',
+        } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/client/test-token/oauth-exchange',
+        payload: { code: 'oauth-code', state: 'oauth-state', platform: 'google' },
+      });
+
+      expect(mockConnector.exchangeCode).toHaveBeenCalledWith(
+        'oauth-code',
+        'https://app.agencyaccess.example/invite/oauth-callback'
+      );
+      expect(response.statusCode).toBe(500);
     });
 
     it('should reject snapchat in OAuth exchange payload', async () => {
