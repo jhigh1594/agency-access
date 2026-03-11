@@ -38,6 +38,11 @@ export async function generateMetadata({
       publishedTime: post.publishedAt,
       authors: [post.author.name],
     },
+    ...(post.id === "client-onboarding-checklist" && {
+      alternates: {
+        canonical: "https://authhub.co/blog/client-onboarding-checklist",
+      },
+    }),
   };
 }
 
@@ -61,8 +66,62 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // Get related posts
   const relatedPosts = getRelatedPosts(post.id, 3);
 
+  // Article schema JSON-LD
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    author: {
+      "@type": "Person",
+      name: post.author.name,
+    },
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+  };
+
+  // FAQ schema for client onboarding checklist (delays section)
+  const faqSchema = post.id === "client-onboarding-checklist" ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What causes client onboarding delays?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Common causes include: Business Manager vs personal profile confusion, wrong permission levels granted, multiple Business Managers across platforms, previous agency still has access, and personal email used instead of business email.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "How do I speed up client onboarding?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use automated access request platforms like AuthHub, create standardized templates, use annotated screenshots, and always specify exact permission levels in your requests.",
+        },
+      },
+    ],
+  } : null;
+
   return (
     <div className="min-h-screen bg-paper">
+      {/* Schema JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleSchema),
+        }}
+      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(faqSchema),
+          }}
+        />
+      )}
+
       {/* Article container */}
       <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <BlogContent post={post} />

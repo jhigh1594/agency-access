@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Onboarding Checklist - AuthHub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+      color: #1a1a1a;
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 0.5in;
+    }
+    @media print {
+      body { padding: 0; }
+      .page-break { page-break-before: always; }
+    }
+    h1 {
+      font-family: Arial, sans-serif;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+    h2 {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 20px 0 10px 0;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #1a1a1a;
+    }
+    h3 {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      margin: 15px 0 8px 0;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 15px;
+    }
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .checkbox {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid #1a1a1a;
+      margin-right: 8px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .phase-title {
+      background: #1a1a1a;
+      color: white;
+      padding: 8px 12px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      margin: 15px 0 10px 0;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #ccc;
+      font-size: 10px;
+      color: #666;
+      text-align: center;
+    }
+    .platform-section {
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 10px;
+    }
+    th, td {
+      border: 1px solid #1a1a1a;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      background: #1a1a1a;
+      color: white;
+      font-weight: bold;
+    }
+    .badge {
+      display: inline-block;
+      background: #ff6b6b;
+      color: white;
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page 1: Header and Phase 1 -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h1>CLIENT ONBOARDING CHECKLIST</h1>
+    <p class="subtitle">Agency Edition • authhub.co • Print and use for every new client</p>
+  </div>
+
+  <div class="phase-title">PHASE 1: Before You Send Access Request (Day 0)</div>
+
+  <h3>Gather Essential Client Information</h3>
+  <ul class="checklist">
+    <li><div class="checkbox"></div>Client legal business name (for account setup)</li>
+    <li><div class="checkbox"></div>Primary point of contact (name, email, phone)</li>
+    <li><div class="checkbox"></div>Billing contact (if different from primary)</li>
+    <li><div class="checkbox"></div>Timezone for scheduling</li>
+    <li><div class="checkbox"></div>Existing platforms in use (Meta, Google, GA4, TikTok, LinkedIn, Pinterest)</li>
+    <li><div class="checkbox"></div>Monthly ad spend budget</li>
+    <li><div class="checkbox"></div>Key goals for first 30 days</li>
+  </ul>
+
+  <h3>Prepare Your Agency Side</h3>
+  <ul class="checklist">
+    <li><div class="checkbox"></div>Create client folder in project management system</li>
+    <li><div class="checkbox"></div>Set up dedicated client email alias</li>
+    <li><div class="checkbox"></div>Prepare branded access request template</li>
+    <li><div class="checkbox"></div>Confirm your agency Business ID for Meta</li>
+    <li><div class="checkbox"></div>Create Slack channel or project workspace</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- Page 2: Phase 2 - Platform Access -->
+  <div class="phase-title">PHASE 2: Platform Access Collection (Days 1-2)</div>
+
+  <div class="platform-section">
+    <h3>META ADS (Facebook & Instagram)</h3>
+    <ul class="checklist">
+      <li><div class="checkbox"></div>Send Business Manager access request with Business ID</li>
+      <li><div class="checkbox"></div>Specify permission level (Admin vs Advertiser)</li>
+      <li><div class="checkbox"></div>Request: Ad Accounts, Pages, Instagram, Catalogs</li>
+      <li><div class="checkbox"></div>Client confirms request received</li>
+      <li><div class="checkbox"></div>Agency accepts invitation in Business Suite</li>
+      <li><div class="checkbox"></div>Verify access: Can you see campaigns? Can you edit?</li>
+      <li><div class="checkbox"></div>Screenshot account overview for records</li>
+    </ul>
+  </div>
+
+  <div class="platform-section">
+    <h3>GOOGLE ADS</h3>
+    <ul class="checklist">
+      <li><div class="checkbox"></div>Send Google Ads invitation (email address)</li>
+      <li><div class="checkbox"></div>Specify level: Admin, Standard, or Read-only</li>
+      <li><div class="checkbox"></div>Confirm account or MCC level</li>
+      <li><div class="checkbox"></div>Accept invitation</li>
+      <li><div class="checkbox"></div>Verify conversions & linking</li>
+    </ul>
+  </div>
+
+  <div class="platform-section">
+    <h3>GOOGLE ANALYTICS 4 (GA4)</h3>
+    <ul class="checklist">
+      <li><div class="checkbox"></div>Send property invitation (separate from Google Ads)</li>
+      <li><div class="checkbox"></div>Accept via email or in GA4</li>
+      <li><div class="checkbox"></div>Verify property access</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Page 3: More Platforms -->
+  <div class="phase-title">PHASE 2: Platform Access (Continued)</div>
+
+  <div class="platform-section">
+    <h3>LINKEDIN ADS</h3>
+    <ul class="checklist">
+      <li><div class="checkbox"></div>Send Campaign Manager account ID</li>
+      <li><div class="checkbox"></div>Client selects role in Account Settings</li>
+      <li><div class="checkbox"></div>Accept via email link</li>
+    </ul>
+  </div>
+
+  <div class="platform-section">
+    <h3>TIKTOK ADS</h3>
+    <ul class="checklist">
+      <li><div class="checkbox"></div>Confirm client has TikTok Business Center account</li>
+      <li><div class="checkbox"></div>Send Business Center ID</li>
+      <li><div class="checkbox"></div>Client adds in Member Management</li>
+      <li><div class="checkbox"></div>Accept via email</li>
+      <li><div class="checkbox"></div>QR code authorization for Spark Ads (if needed)</li>
+    </ul>
+  </div>
+
+  <div class="platform-section">
+    <h3>PINTEREST & SNAPCHAT</h3>
+    <ul class="checklist">
+      <li><div class="checkbox"></div>Pinterest: Send Ads account ID, client adds in Account Settings</li>
+      <li><div class="checkbox"></div>Snapchat: Send Business Manager ID, client adds in Members</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Page 4: Phase 3 - Client Intake -->
+  <div class="phase-title">PHASE 3: Client Intake & Information Gathering (Day 1-3)</div>
+
+  <div class="two-column">
+    <div>
+      <h3>Business Details</h3>
+      <ul class="checklist">
+        <li><div class="checkbox"></div>Business website URL</li>
+        <li><div class="checkbox"></div>Industry/niche</li>
+        <li><div class="checkbox"></div>Target customer demographics</li>
+        <li><div class="checkbox"></div>Unique selling proposition</li>
+        <li><div class="checkbox"></div>Key competitors to watch</li>
+        <li><div class="checkbox"></div>Brand guidelines or style guide</li>
+        <li><div class="checkbox"></div>Logo files (PNG, SVG)</li>
+        <li><div class="checkbox"></div>Creative assets: images, videos</li>
+      </ul>
+
+      <h3>Existing Access</h3>
+      <ul class="checklist">
+        <li><div class="checkbox"></div>Previous agency account IDs</li>
+        <li><div class="checkbox"></div>Ad account history</li>
+        <li><div class="checkbox"></div>Conversion tracking setup</li>
+        <li><div class="checkbox"></div>Landing page URLs</li>
+        <li><div class="checkbox"></div>CMS/platform login (Shopify, WP)</li>
+        <li><div class="checkbox"></div>Domain registrar access</li>
+        <li><div class="checkbox"></div>CRM access (HubSpot, Salesforce)</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3>Goals & KPIs</h3>
+      <ul class="checklist">
+        <li><div class="checkbox"></div>Primary objective (awareness/leads/sales)</li>
+        <li><div class="checkbox"></div>Target CPA/CPL goals</li>
+        <li><div class="checkbox"></div>Monthly budget range</li>
+        <li><div class="checkbox"></div>Key geographic targets</li>
+        <li><div class="checkbox"></div>Seasonality or promotional calendar</li>
+        <li><div class="checkbox"></div>Success metrics definition</li>
+      </ul>
+
+      <h3>Meta Permissions Guide</h3>
+      <table>
+        <tr>
+          <th>Permission</th>
+          <th>Create</th>
+          <th>Edit</th>
+          <th>Delete</th>
+        </tr>
+        <tr>
+          <td>Admin</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Advertiser</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Analyst</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+      </table>
+
+      <h3>Google Permissions Guide</h3>
+      <table>
+        <tr>
+          <th>Access Level</th>
+          <th>Create</th>
+          <th>Edit</th>
+          <th>Billing</th>
+        </tr>
+        <tr>
+          <td>Admin</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Standard</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Read-only</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Page 5: Phase 4 - First Week -->
+  <div class="phase-title">PHASE 4: First Week Kickoff (Days 4-7)</div>
+
+  <h3>Schedule Onboarding Call</h3>
+  <ul class="checklist">
+    <li><div class="checkbox"></div>Send calendar invite for kickoff call (30-60 min)</li>
+    <li><div class="checkbox"></div>Include agenda: access verification, goals review, Q&A</li>
+    <li><div class="checkbox"></div>Attendees: Agency lead, account manager, client stakeholders</li>
+    <li><div class="checkbox"></div>Prepare campaign strategy framework</li>
+    <li><div class="checkbox"></div>Prepare onboarding packet (welcome email, expectations)</li>
+  </ul>
+
+  <h3>Verify All Access</h3>
+  <ul class="checklist">
+    <li><div class="checkbox"></div>Log into Meta Business Suite - confirm access</li>
+    <li><div class="checkbox"></div>Log into Google Ads - confirm access</li>
+    <li><div class="checkbox"></div>Log into GA4 - confirm property access</li>
+    <li><div class="checkbox"></div>Log into LinkedIn Ads - confirm access</li>
+    <li><div class="checkbox"></div>Log into TikTok Ads - confirm access</li>
+    <li><div class="checkbox"></div>Log into other platforms as needed</li>
+    <li><div class="checkbox"></div>Document access levels in client folder</li>
+  </ul>
+
+  <h3>Set Up Reporting & Dashboards</h3>
+  <ul class="checklist">
+    <li><div class="checkbox"></div>Create GA4 Looker Studio report</li>
+    <li><div class="checkbox"></div>Set up automated reporting emails</li>
+    <li><div class="checkbox"></div>Configure Slack or email alerts</li>
+    <li><div class="checkbox"></div>Document report delivery schedule</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- Page 6: Common Issues & Notes -->
+  <div class="phase-title">Common Onboarding Issues & Solutions</div>
+
+  <table>
+    <tr>
+      <th style="width: 45%;">Problem</th>
+      <th style="width: 55%;">Solution</th>
+    </tr>
+    <tr>
+      <td>Client doesn't understand Business Manager vs personal profile</td>
+      <td>Send annotated screenshots showing exactly where to click</td>
+    </tr>
+    <tr>
+      <td>Wrong permission levels granted</td>
+      <td>Specify exactly what you need in access request template</td>
+    </tr>
+    <tr>
+      <td>Multiple Business Managers across platforms</td>
+      <td>Ask upfront; have them consolidate or grant from each</td>
+    </tr>
+    <tr>
+      <td>Previous agency still has access</td>
+      <td>Add checklist item: "Remove previous agency partners first"</td>
+    </tr>
+    <tr>
+      <td>Client uses personal email instead of business email</td>
+      <td>Specify in template: "Use your business email address"</td>
+    </tr>
+    <tr>
+      <td>"I don't see your request"</td>
+      <td>Check Partner Requests section; requests expire after 30 days</td>
+    </tr>
+    <tr>
+      <td>Ad account not showing</td>
+      <td>Check that client selected correct ad account before adding partner</td>
+    </tr>
+  </table>
+
+  <h3>Notes</h3>
+  <div style="border: 1px solid #ccc; padding: 15px; min-height: 150px; margin-top: 10px;">
+    <p style="color: #999; font-size: 11px;">Use this space for client-specific notes, special configurations, or workarounds.</p>
+  </div>
+
+  <div class="footer">
+    <p><strong>Client Onboarding Checklist</strong> • © 2026 AuthHub • authhub.co</p>
+    <p style="margin-top: 5px;">Transform 3-day onboarding into 5-minute setup. Learn more at authhub.co</p>
+  </div>
+</body>
+</html>

@@ -222,16 +222,16 @@ export default function GoogleAdsAccessGuidePage() {
             </h2>
             <p className="font-mono text-sm text-foreground mb-4">
               Need access to other platforms? We have guides for{" "}
-              <Link href="/blog/how-to-get-meta-ads-access-from-clients" className="text-coral font-bold hover:underline">
-                Meta Business Manager and Meta Ads access for agencies
+              <Link href="/guides/meta-ads-access" className="text-coral font-bold hover:underline">
+                Meta Ads access for agencies
               </Link>
               ,{" "}
-              <Link href="/blog/google-ads-access-agency" className="text-coral font-bold hover:underline">
-                Google Ads access for agencies
-              </Link>
-              , and{" "}
               <Link href="/blog/ga4-access-agencies" className="text-coral font-bold hover:underline">
                 Google Analytics (GA4) access for agencies
+              </Link>
+              , and{" "}
+              <Link href="/blog/linkedin-ads-access-guide" className="text-coral font-bold hover:underline">
+                LinkedIn Ads access
               </Link>
               .
             </p>
