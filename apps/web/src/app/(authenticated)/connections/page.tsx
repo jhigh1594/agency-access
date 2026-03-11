@@ -507,7 +507,7 @@ function ConnectionsPageContent() {
                   agencyId={agencyId}
                   onDisconnect={() => {
                     setManagingMetaAssets(false);
-                    // Optionally trigger disconnect flow
+                    disconnectPlatform('meta');
                   }}
                 />
               </div>
@@ -550,7 +550,7 @@ function ConnectionsPageContent() {
                   agencyId={agencyId}
                   onDisconnect={() => {
                     setManagingGoogleAssets(false);
-                    // Optionally trigger disconnect flow
+                    disconnectPlatform('google');
                   }}
                 />
               </div>

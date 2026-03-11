@@ -230,8 +230,9 @@ class InfisicalService {
   /**
    * Delete OAuth tokens from Infisical (when connection is revoked)
    *
-   * Idempotent: if the secret doesn't exist (404), treats as success since the
-   * goal (tokens removed) is already achieved.
+   * Best-effort: never throws. If the secret doesn't exist or Infisical fails,
+   * logs and returns so revoke can complete. The DB update is the source of
+   * truth; orphaned secrets in Infisical are harmless.
    *
    * @param secretName - The secret name
    */
@@ -239,7 +240,8 @@ class InfisicalService {
     await this.initialize();
 
     if (!this.client) {
-      throw new Error('Infisical client not initialized');
+      console.warn('[Infisical] deleteOAuthTokens skipped: client not initialized');
+      return;
     }
 
     try {
@@ -249,18 +251,8 @@ class InfisicalService {
         type: SecretType.Shared,
       });
     } catch (error: unknown) {
-      const status =
-        (error as { statusCode?: number })?.statusCode ??
-        (error as { response?: { status?: number } })?.response?.status;
       const message = (error as Error)?.message ?? String(error);
-      const isNotFound =
-        status === 404 ||
-        /not found|404|secret.*does not exist/i.test(message);
-
-      if (isNotFound) {
-        return;
-      }
-      throw error;
+      console.warn(`[Infisical] deleteOAuthTokens failed for ${secretName}: ${message}`);
     }
   }
 
