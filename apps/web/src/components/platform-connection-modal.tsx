@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, RefreshCw, Unlink, Plus, Loader2, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
@@ -51,6 +51,7 @@ export function PlatformConnectionModal({
   agencyId,
 }: PlatformConnectionModalProps) {
   const { orgId: fallbackOrgId, getToken } = useAuth();
+  const { user } = useUser();
   const effectiveAgencyId = agencyId || fallbackOrgId;
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -126,7 +127,10 @@ export function PlatformConnectionModal({
             'Content-Type': 'application/json',
             ...(token && { Authorization: `Bearer ${token}` }),
           },
-          body: JSON.stringify({ agencyId: effectiveAgencyId }),
+          body: JSON.stringify({
+            agencyId: effectiveAgencyId,
+            revokedBy: user?.primaryEmailAddress?.emailAddress || 'user@agency.com',
+          }),
         }
       );
       if (!response.ok) throw new Error('Failed to disconnect');

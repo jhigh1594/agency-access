@@ -8,6 +8,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
+import { logger } from '@/lib/logger.js';
 import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache';
 import { ensureAgencyAccessToken } from '@/services/token-lifecycle.service';
 import type { Platform } from '@agency-platform/shared';
@@ -280,6 +281,12 @@ export async function revokeConnection(
 
     return { data: updatedConnection, error: null };
   } catch (error) {
+    logger.error('Failed to revoke platform connection', {
+      agencyId,
+      platform,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return {
       data: null,
       error: {

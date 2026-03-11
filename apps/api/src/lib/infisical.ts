@@ -230,6 +230,9 @@ class InfisicalService {
   /**
    * Delete OAuth tokens from Infisical (when connection is revoked)
    *
+   * Idempotent: if the secret doesn't exist (404), treats as success since the
+   * goal (tokens removed) is already achieved.
+   *
    * @param secretName - The secret name
    */
   async deleteOAuthTokens(secretName: string): Promise<void> {
@@ -239,11 +242,26 @@ class InfisicalService {
       throw new Error('Infisical client not initialized');
     }
 
-    await this.client.secrets().deleteSecret(secretName, {
-      projectId: env.INFISICAL_PROJECT_ID,
-      environment: env.INFISICAL_ENVIRONMENT,
-      type: SecretType.Shared,
-    });
+    try {
+      await this.client.secrets().deleteSecret(secretName, {
+        projectId: env.INFISICAL_PROJECT_ID,
+        environment: env.INFISICAL_ENVIRONMENT,
+        type: SecretType.Shared,
+      });
+    } catch (error: unknown) {
+      const status =
+        (error as { statusCode?: number })?.statusCode ??
+        (error as { response?: { status?: number } })?.response?.status;
+      const message = (error as Error)?.message ?? String(error);
+      const isNotFound =
+        status === 404 ||
+        /not found|404|secret.*does not exist/i.test(message);
+
+      if (isNotFound) {
+        return;
+      }
+      throw error;
+    }
   }
 
   /**
