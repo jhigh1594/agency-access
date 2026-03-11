@@ -202,9 +202,16 @@ const start = async () => {
     await prisma.$connect();
 
     if (env.NODE_ENV === 'production') {
-      const { ensureRedisReady } = await import('./lib/redis.js');
-      await ensureRedisReady();
-      fastify.log.info('redis readiness check passed');
+      try {
+        const { ensureRedisReady } = await import('./lib/redis.js');
+        await ensureRedisReady();
+        fastify.log.info('redis readiness check passed');
+      } catch (redisErr) {
+        fastify.log.warn(
+          { error: redisErr },
+          'Redis readiness check failed; OAuth state will use stateless fallback and Redis-backed workers may be degraded'
+        );
+      }
 
       const { assertWebhookSchemaReady } = await import('./lib/webhook-schema-readiness.js');
       await assertWebhookSchemaReady();

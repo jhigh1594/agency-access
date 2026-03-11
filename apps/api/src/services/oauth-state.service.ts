@@ -37,6 +37,31 @@ export interface OAuthStateWithSignature extends OAuthState {
   signature?: string;
 }
 
+const STATELESS_TOKEN_PREFIX = 'stateless';
+
+function encodeStatelessStateToken(stateData: OAuthState): string {
+  const payload = Buffer.from(JSON.stringify(stateData)).toString('base64url');
+  const signature = signStateToken(payload);
+  return `${STATELESS_TOKEN_PREFIX}.${payload}.${signature}`;
+}
+
+function decodeStatelessStateToken(stateToken: string): OAuthState | null {
+  const [prefix, payload, signature] = stateToken.split('.');
+  if (prefix !== STATELESS_TOKEN_PREFIX || !payload || !signature) {
+    return null;
+  }
+
+  if (!verifyStateSignature(payload, signature)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as OAuthState;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Generate HMAC SHA-256 signature for state token
  * Prevents tampering with state data
@@ -103,13 +128,14 @@ async function createState(
     logger.error('OAuth state creation failed', {
       error: errorMeta,
     });
-    return {
-      data: null,
-      error: {
-        code: 'STATE_CREATION_FAILED',
-        message: 'Failed to create OAuth state token',
-      },
-    };
+
+    const fallbackToken = encodeStatelessStateToken(stateData);
+    logger.warn('Falling back to stateless OAuth state token', {
+      platform: stateData.platform,
+      agencyId: stateData.agencyId,
+    });
+
+    return { data: fallbackToken, error: null };
   }
 }
 
@@ -136,6 +162,23 @@ async function validateState(
           message: 'State token cannot be empty',
         },
       };
+    }
+
+    const statelessStateData = decodeStatelessStateToken(stateToken);
+    if (statelessStateData) {
+      const age = Date.now() - statelessStateData.timestamp;
+
+      if (age > STATE_MAX_AGE_MS) {
+        return {
+          data: null,
+          error: {
+            code: 'STATE_EXPIRED',
+            message: 'State token has expired',
+          },
+        };
+      }
+
+      return { data: statelessStateData, error: null };
     }
 
     // Get state data from Redis

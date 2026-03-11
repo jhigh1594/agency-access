@@ -34,6 +34,11 @@ describe('OAuthStateService', () => {
     });
   }
 
+  function parseStatelessToken(token: string): Record<string, unknown> {
+    const [, payload] = token.split('.');
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -120,7 +125,7 @@ describe('OAuthStateService', () => {
       expect(storedData.signature).toEqual(expect.any(String));
     });
 
-    it('should handle Redis errors gracefully', async () => {
+    it('should fall back to a stateless token when Redis writes fail', async () => {
       const stateData = {
         agencyId: 'agency-1',
         platform: 'google',
@@ -132,8 +137,13 @@ describe('OAuthStateService', () => {
 
       const result = await oauthStateService.createState(stateData);
 
-      expect(result.data).toBeNull();
-      expect(result.error?.code).toBe('STATE_CREATION_FAILED');
+      expect(result.error).toBeNull();
+      expect(result.data).toMatch(/^stateless\./);
+
+      const payload = parseStatelessToken(result.data!);
+      expect(payload.agencyId).toBe('agency-1');
+      expect(payload.platform).toBe('google');
+      expect(payload.userEmail).toBe('admin@agency.com');
     });
   });
 
@@ -243,6 +253,25 @@ describe('OAuthStateService', () => {
 
       expect(result.data).toBeNull();
       expect(result.error?.code).toBe('STATE_VALIDATION_FAILED');
+    });
+
+    it('should validate stateless fallback tokens without Redis', async () => {
+      vi.mocked(redis.set).mockRejectedValue(new Error('ERR max requests limit exceeded'));
+
+      const stateData = {
+        agencyId: 'agency-1',
+        platform: 'google',
+        userEmail: 'admin@agency.com',
+        timestamp: Date.now(),
+      };
+
+      const created = await oauthStateService.createState(stateData);
+      const result = await oauthStateService.validateState(created.data!);
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual(stateData);
+      expect(vi.mocked(redis.get)).not.toHaveBeenCalled();
+      expect(vi.mocked(redis.del)).not.toHaveBeenCalled();
     });
   });
 
