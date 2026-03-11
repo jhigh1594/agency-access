@@ -121,6 +121,22 @@ describe('HelpScoutBeacon', () => {
     expect(beaconSpy).not.toHaveBeenCalledWith('init', '87caa405-9bd1-440e-9494-37567479c6ee');
   });
 
+  it('does not load the Beacon script in development bypass mode', () => {
+    useAuthOrBypassMock.mockReturnValue({
+      userId: 'dev_user_test_123456789',
+      orgId: 'dev_org_test_987654321',
+      isLoaded: true,
+      isDevelopmentBypass: true,
+    });
+
+    render(<HelpScoutBeacon />);
+
+    expect(document.querySelector('script[data-helpscout-beacon="true"]')).toBeNull();
+    expect(window.Beacon).toBeUndefined();
+    expect(window.__helpScoutBeaconInitialized).toBeUndefined();
+    expect(loadHelpScoutIdentityMock).not.toHaveBeenCalled();
+  });
+
   it('logs out the Beacon identity when the component unmounts', async () => {
     const beaconSpy = vi.fn() as BeaconStub;
     beaconSpy.readyQueue = [];

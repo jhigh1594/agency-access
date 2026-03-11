@@ -9,6 +9,7 @@ export const DEV_USER_ID = 'dev_user_test_123456789';
 const DEV_ORG_ID = 'dev_org_test_987654321';
 
 const DEV_BYPASS_SIGNED_OUT_KEY = 'dev_bypass_signed_out';
+const PERF_HARNESS_TOKEN_KEY = '__perf_auth_token';
 
 export interface DevAuthState {
   userId: string | null;
@@ -70,14 +71,18 @@ export function useAuthOrBypass(clerkAuth: {
 
   const signedOut = envBypass && isDevBypassSignedOut();
   const hasRealAuthIdentity = !!clerkAuth.userId || !!clerkAuth.orgId;
+  const hasPerfHarnessToken =
+    envBypass &&
+    typeof window !== 'undefined' &&
+    !!window.localStorage.getItem(PERF_HARNESS_TOKEN_KEY);
 
-  // Only enable bypass when Clerk has finished loading and no real identity exists.
-  // This prevents dev IDs from overriding valid signed-in sessions.
+  // Allow the local perf harness to activate bypass before Clerk finishes loading.
+  // Real signed-in sessions still win, and an explicit bypass sign-out still disables it.
   const isDevelopmentBypass =
     envBypass &&
     !signedOut &&
-    clerkAuth.isLoaded &&
-    !hasRealAuthIdentity;
+    !hasRealAuthIdentity &&
+    (clerkAuth.isLoaded || hasPerfHarnessToken);
 
   if (isDevelopmentBypass) {
     return {

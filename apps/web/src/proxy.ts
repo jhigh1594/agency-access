@@ -31,6 +31,10 @@ const isPublicRoute = createRouteMatcher([
 const isMarketingRedirectRoute = createRouteMatcher(['/'])
 
 export default clerkMiddleware(async (auth, request) => {
+  const isPerfHarnessRequest =
+    process.env.NODE_ENV === 'development' &&
+    request.headers.get('x-perf-harness') === '1'
+
   // Redirect users with an existing session cookie away from "/" without
   // triggering Clerk auth resolution on every home page request.
   if (isMarketingRedirectRoute(request)) {
@@ -48,6 +52,10 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Skip auth check in development bypass mode
   if (process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true' && process.env.NODE_ENV === 'development') {
+    return
+  }
+
+  if (isPerfHarnessRequest) {
     return
   }
 

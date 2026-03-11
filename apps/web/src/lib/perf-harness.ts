@@ -4,6 +4,7 @@ export interface PerfHarnessContext {
 }
 
 let perfTimerCounter = 0;
+const PERF_HARNESS_DASHBOARD_REDIRECT_MARK = 'perf-harness:dashboard-redirect-start';
 
 /**
  * Development-only helper for perf harness scripts.
@@ -44,4 +45,22 @@ export function startPerfTimer(baseLabel: string): (() => void) | null {
   return () => {
     console.timeEnd(label);
   };
+}
+
+export function markPerfHarnessDashboardRedirectStart(): void {
+  if (typeof performance === 'undefined' || process.env.NODE_ENV === 'production') {
+    return;
+  }
+
+  performance.clearMarks(PERF_HARNESS_DASHBOARD_REDIRECT_MARK);
+  performance.mark(PERF_HARNESS_DASHBOARD_REDIRECT_MARK);
+}
+
+export function readPerfHarnessDashboardRedirectStart(): number | null {
+  if (typeof performance === 'undefined' || process.env.NODE_ENV === 'production') {
+    return null;
+  }
+
+  const [mark] = performance.getEntriesByName(PERF_HARNESS_DASHBOARD_REDIRECT_MARK);
+  return mark ? mark.startTime : null;
 }

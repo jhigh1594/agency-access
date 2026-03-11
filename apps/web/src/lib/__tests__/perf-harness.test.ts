@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { readPerfHarnessContext, startPerfTimer } from '../perf-harness';
+import {
+  markPerfHarnessDashboardRedirectStart,
+  readPerfHarnessContext,
+  readPerfHarnessDashboardRedirectStart,
+  startPerfTimer,
+} from '../perf-harness';
 
 describe('readPerfHarnessContext', () => {
   const originalNodeEnv = process.env.NODE_ENV;
@@ -84,5 +89,30 @@ describe('startPerfTimer', () => {
 
     startSpy.mockRestore();
     endSpy.mockRestore();
+  });
+});
+
+describe('perf harness dashboard redirect mark', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    process.env.NODE_ENV = originalNodeEnv;
+    performance.clearMarks();
+  });
+
+  it('records the dashboard redirect start in development', () => {
+    process.env.NODE_ENV = 'development';
+
+    markPerfHarnessDashboardRedirectStart();
+
+    expect(readPerfHarnessDashboardRedirectStart()).not.toBeNull();
+  });
+
+  it('does not expose a redirect mark in production', () => {
+    process.env.NODE_ENV = 'production';
+
+    markPerfHarnessDashboardRedirectStart();
+
+    expect(readPerfHarnessDashboardRedirectStart()).toBeNull();
   });
 });

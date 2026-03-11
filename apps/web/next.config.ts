@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -6,6 +7,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   typedRoutes: true,
+  turbopack: {
+    root: path.resolve(import.meta.dirname, '..', '..'),
+  },
 
   images: {
     remotePatterns: [

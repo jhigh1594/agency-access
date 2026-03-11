@@ -58,6 +58,10 @@ export function HelpScoutBeacon() {
   const { userId, isLoaded, isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
 
   useEffect(() => {
+    if (isDevelopmentBypass) {
+      return;
+    }
+
     if (window.__helpScoutBeaconInitialized) {
       return;
     }
@@ -66,7 +70,7 @@ export function HelpScoutBeacon() {
     ensureBeaconScript();
     window.Beacon('init', HELPSCOUT_BEACON_ID);
     window.__helpScoutBeaconInitialized = true;
-  }, []);
+  }, [isDevelopmentBypass]);
 
   useEffect(() => {
     if (!isLoaded || !userId || isDevelopmentBypass) {
