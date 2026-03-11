@@ -211,6 +211,10 @@ if (parsedEnv.NODE_ENV === 'production') {
     throw new Error('API_URL cannot point to localhost in production');
   }
 
+  if (isLocalhostUrl(parsedEnv.REDIS_URL)) {
+    throw new Error('REDIS_URL cannot point to localhost in production');
+  }
+
   const databaseUrl = parseUrlSafely(parsedEnv.DATABASE_URL);
   if (!databaseUrl || !isPostgresProtocol(databaseUrl.protocol)) {
     throw new Error('DATABASE_URL must use postgres:// or postgresql:// in production');

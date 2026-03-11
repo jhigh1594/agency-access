@@ -84,6 +84,16 @@ describe('env contract', () => {
     }))).rejects.toThrow();
   });
 
+  it('fails in production when REDIS_URL points to localhost', async () => {
+    await expect(importEnvWith(withRequiredBase({
+      NODE_ENV: 'production',
+      FRONTEND_URL: 'https://app.example.com',
+      API_URL: 'https://api.example.com',
+      REDIS_URL: 'redis://localhost:6379',
+      INFISICAL_ENVIRONMENT: 'production',
+    }))).rejects.toThrow('REDIS_URL cannot point to localhost in production');
+  });
+
   it('fails in production when DATABASE_URL is not a postgres URL', async () => {
     await expect(importEnvWith(withRequiredBase({
       NODE_ENV: 'production',

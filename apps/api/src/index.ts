@@ -202,6 +202,10 @@ const start = async () => {
     await prisma.$connect();
 
     if (env.NODE_ENV === 'production') {
+      const { ensureRedisReady } = await import('./lib/redis.js');
+      await ensureRedisReady();
+      fastify.log.info('redis readiness check passed');
+
       const { assertWebhookSchemaReady } = await import('./lib/webhook-schema-readiness.js');
       await assertWebhookSchemaReady();
       fastify.log.info('webhook schema readiness check passed');

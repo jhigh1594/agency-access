@@ -13,6 +13,19 @@ import { env } from './env.js';
 class RedisService {
   private client: Redis | null = null;
 
+  private shouldUseTls(): boolean {
+    const isLocalhost =
+      env.REDIS_URL.includes('localhost') || env.REDIS_URL.includes('127.0.0.1');
+
+    if (env.REDIS_TLS) {
+      return true;
+    }
+
+    // Preserve the historical production behavior for managed Redis providers that
+    // expose a redis:// URL but still require TLS at the socket layer.
+    return env.NODE_ENV === 'production' && !isLocalhost;
+  }
+
   /**
    * Get or create Redis client instance
    */
@@ -23,7 +36,7 @@ class RedisService {
         enableReadyCheck: false,
         lazyConnect: true, // Don't connect immediately
         // Upstash-specific settings
-        tls: env.REDIS_TLS ? {} : undefined,
+        tls: this.shouldUseTls() ? {} : undefined,
         // Disable reconnection in development when Redis is unavailable
         retryStrategy: (times: number) => {
           if (env.NODE_ENV !== 'production') {
@@ -55,7 +68,8 @@ class RedisService {
 
       // Attempt to connect (will fail silently if unavailable)
       // Don't attempt to connect if REDIS_URL points to localhost (not available in production)
-      const isLocalhost = env.REDIS_URL.includes('localhost') || env.REDIS_URL.includes('127.0.0.1');
+      const isLocalhost =
+        env.REDIS_URL.includes('localhost') || env.REDIS_URL.includes('127.0.0.1');
       
       if (!isLocalhost) {
         this.client.connect().catch(() => {
@@ -79,6 +93,16 @@ class RedisService {
       this.client = null;
     }
   }
+
+  async ensureReady(): Promise<void> {
+    const client = this.getClient();
+
+    if (client.status === 'wait') {
+      await client.connect();
+    }
+
+    await client.ping();
+  }
 }
 
 // Export singleton instance
@@ -87,3 +111,4 @@ export const redis = redisService.getClient();
 
 // Export disconnect method for graceful shutdown
 export const disconnectRedis = () => redisService.disconnect();
+export const ensureRedisReady = () => redisService.ensureReady();
