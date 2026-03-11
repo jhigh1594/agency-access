@@ -135,6 +135,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           error: null,
         });
       } catch (error) {
+        // Log the full error for debugging
+        fastify.log.error({
+          msg: 'Failed to fetch Google accounts',
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          agencyId,
+        });
+
         return reply.code(500).send({
           data: null,
           error: {
