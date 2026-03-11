@@ -205,6 +205,16 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     defaultScopes: ['openid', 'profile', 'email', 'rw_ads', 'r_ads_reporting'],
   },
 
+  linkedin_pages: {
+    name: 'LinkedIn Pages',
+    authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
+    tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
+    scopeSeparator: ' ',
+    userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
+    supportsRefreshTokens: true,
+    defaultScopes: ['openid', 'profile', 'email', 'rw_organization_admin'],
+  },
+
   // ========================================================================
   // KIT PLATFORMS
   // ========================================================================

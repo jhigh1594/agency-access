@@ -13,6 +13,7 @@ export const PlatformSchema = z.enum([
   'tiktok_ads',
   'linkedin',
   'linkedin_ads',
+  'linkedin_pages',
   'snapchat',
   'snapchat_ads',
   'instagram',
@@ -113,6 +114,13 @@ export const PLATFORM_TOKEN_CAPABILITIES: Record<Platform, PlatformTokenCapabili
     expiryBehavior: 'expiring',
   },
   linkedin_ads: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'automatic',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  linkedin_pages: {
     connectionMethod: 'oauth',
     tokenKind: 'oauth',
     refreshStrategy: 'automatic',
@@ -247,8 +255,9 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   ga4: 'Google Analytics',
   tiktok: 'TikTok Ads',
   tiktok_ads: 'TikTok Ads',
-  linkedin: 'LinkedIn Ads',
+  linkedin: 'LinkedIn',
   linkedin_ads: 'LinkedIn Ads',
+  linkedin_pages: 'LinkedIn Pages',
   snapchat: 'Snapchat Ads',
   snapchat_ads: 'Snapchat Ads',
   instagram: 'Instagram',
@@ -275,6 +284,7 @@ export const PLATFORM_DOMAINS: Record<Platform, string> = {
   tiktok: 'tiktok.com',
   tiktok_ads: 'tiktok.com',
   linkedin_ads: 'linkedin.com',
+  linkedin_pages: 'linkedin.com',
   snapchat: 'snapchat.com',
   snapchat_ads: 'snapchat.com',
   instagram: 'instagram.com',
@@ -339,6 +349,12 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     'rw_ads',
     'r_ads_reporting',
   ],
+  linkedin_pages: [
+    'openid',
+    'profile',
+    'email',
+    'rw_organization_admin',
+  ],
   snapchat: [
     'snapchat-marketing-api',
   ],
@@ -391,7 +407,7 @@ export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
   recommended: ['google', 'meta', 'linkedin'] as const,
   // Product-level platforms (legacy, still supported)
-  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify', 'zapier'] as const,
+  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'linkedin_pages', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify', 'zapier'] as const,
 } as const;
 
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
@@ -530,6 +546,7 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
     description: 'LinkedIn Marketing',
     products: [
       { id: 'linkedin_ads', name: 'LinkedIn Ads', icon: 'LinkedInAdsIcon', description: 'Professional network advertising' },
+      { id: 'linkedin_pages', name: 'LinkedIn Pages', icon: 'LinkedInIcon', description: 'Company Pages and organic presence' },
     ],
   },
   tiktok: {

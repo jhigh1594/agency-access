@@ -126,6 +126,7 @@ const connectors: Partial<Record<Platform, PlatformConnector>> = {
   // New pattern connectors (BaseConnector)
   linkedin: linkedinConnector,
   linkedin_ads: linkedinConnector, // Alias for same connector
+  linkedin_pages: linkedinConnector, // Alias for same connector
   kit: kitConnector, // Kit (ConvertKit) - standalone pattern (like Meta)
 
   // API Key authentication connectors (non-OAuth)

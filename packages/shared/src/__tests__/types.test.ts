@@ -62,6 +62,7 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
           'meta',
           'tiktok',
           'linkedin',
+          'linkedin_pages',
           'klaviyo',
           'shopify',
         ])
@@ -146,6 +147,15 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
     it('should have LinkedIn platform group', () => {
       expect(PLATFORM_HIERARCHY.linkedin).toBeDefined();
       expect(PLATFORM_HIERARCHY.linkedin.name).toBe('LinkedIn');
+    });
+
+    it('should include LinkedIn Pages as a LinkedIn product', () => {
+      const linkedinPages = PLATFORM_HIERARCHY.linkedin.products.find(
+        (product) => product.id === 'linkedin_pages'
+      );
+
+      expect(linkedinPages).toBeDefined();
+      expect(linkedinPages?.name).toBe('LinkedIn Pages');
     });
 
     it('should have TikTok platform group', () => {
@@ -396,6 +406,7 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       const { PLATFORM_NAMES } = require('../types');
       expect(PLATFORM_NAMES).toBeDefined();
       expect(PLATFORM_NAMES.meta_ads).toBe('Meta Ads');
+      expect(PLATFORM_NAMES.linkedin_pages).toBe('LinkedIn Pages');
     });
   });
 });
