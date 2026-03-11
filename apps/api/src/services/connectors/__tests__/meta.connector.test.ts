@@ -21,6 +21,51 @@ describe('MetaConnector Asset Discovery', () => {
     global.fetch = vi.fn();
   });
 
+  describe('getBusinessAccounts', () => {
+    it('follows pagination so all businesses are returned', async () => {
+      vi.mocked(fetch)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_1', name: 'Business One', vertical_name: 'Retail' },
+            ],
+            paging: {
+              next: 'https://graph.facebook.com/v21.0/me/businesses?after=cursor-2',
+            },
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_2', name: 'Business Two', verification_status: 'verified' },
+            ],
+          }),
+        } as Response);
+
+      const result = await connector.getBusinessAccounts(accessToken);
+
+      expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('graph.facebook.com/v21.0/me/businesses'),
+        expect.any(Object)
+      );
+      expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        'https://graph.facebook.com/v21.0/me/businesses?after=cursor-2&access_token=test-access-token',
+        expect.any(Object)
+      );
+      expect(result).toEqual({
+        businesses: [
+          { id: 'biz_1', name: 'Business One', verticalName: 'Retail', verificationStatus: undefined },
+          { id: 'biz_2', name: 'Business Two', verticalName: undefined, verificationStatus: 'verified' },
+        ],
+        hasAccess: true,
+      });
+    });
+  });
+
   describe('getAdAccounts', () => {
     it('should fetch ad accounts for a business', async () => {
       const mockResponse = {
@@ -197,4 +242,3 @@ describe('MetaConnector Asset Discovery', () => {
     });
   });
 });
-

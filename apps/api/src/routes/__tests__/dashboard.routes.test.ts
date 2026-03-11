@@ -8,12 +8,16 @@ const {
   getDashboardStatsMock,
   getDashboardAccessRequestSummariesMock,
   getDashboardConnectionSummariesMock,
+  getOnboardingStatusMock,
+  getSubscriptionMock,
   getCachedMock,
 } = vi.hoisted(() => ({
   resolvePrincipalAgencyMock: vi.fn(),
   getDashboardStatsMock: vi.fn(),
   getDashboardAccessRequestSummariesMock: vi.fn(),
   getDashboardConnectionSummariesMock: vi.fn(),
+  getOnboardingStatusMock: vi.fn(),
+  getSubscriptionMock: vi.fn(),
   getCachedMock: vi.fn(),
 }));
 
@@ -37,6 +41,18 @@ vi.mock('@/services/connection.service', () => ({
   connectionService: {
     getDashboardConnectionSummaries: getDashboardConnectionSummariesMock,
     getAgencyConnectionSummaries: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/agency.service', () => ({
+  agencyService: {
+    getOnboardingStatus: getOnboardingStatusMock,
+  },
+}));
+
+vi.mock('@/services/subscription.service', () => ({
+  subscriptionService: {
+    getSubscription: getSubscriptionMock,
   },
 }));
 
@@ -92,6 +108,8 @@ describe('Dashboard Routes', () => {
     getDashboardStatsMock.mockReset();
     getDashboardAccessRequestSummariesMock.mockReset();
     getDashboardConnectionSummariesMock.mockReset();
+    getOnboardingStatusMock.mockReset();
+    getSubscriptionMock.mockReset();
     getCachedMock.mockReset();
 
     const cache = new Map<string, unknown>();
@@ -143,6 +161,34 @@ describe('Dashboard Routes', () => {
       data: {
         items: createItems(14),
         total: 42,
+      },
+      error: null,
+    });
+
+    getOnboardingStatusMock.mockResolvedValue({
+      data: {
+        completed: false,
+        status: 'in_progress',
+        lifecycle: {
+          status: 'in_progress',
+          startedAt: '2026-03-04T10:00:00.000Z',
+        },
+        step: {
+          profile: true,
+          members: false,
+          firstRequest: false,
+        },
+      },
+      error: null,
+    });
+
+    getSubscriptionMock.mockResolvedValue({
+      data: {
+        id: 'sub_123',
+        tier: 'AGENCY',
+        status: 'trialing',
+        cancelAtPeriodEnd: false,
+        trialEnd: new Date('2026-03-20T00:00:00.000Z'),
       },
       error: null,
     });
@@ -269,5 +315,34 @@ describe('Dashboard Routes', () => {
     expect(serverTiming).toContain('resolveAgency;dur=');
     expect(serverTiming).toContain('cache;dur=');
     expect(serverTiming).toContain('dataFetch;dur=');
+  });
+
+  it('includes onboarding status and trial banner bootstrap data in the dashboard payload', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/dashboard',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json();
+    expect(body.data.onboardingStatus).toEqual({
+      completed: false,
+      status: 'in_progress',
+      lifecycle: {
+        status: 'in_progress',
+        startedAt: '2026-03-04T10:00:00.000Z',
+      },
+      step: {
+        profile: true,
+        members: false,
+        firstRequest: false,
+      },
+    });
+    expect(body.data.trialBanner).toEqual({
+      tier: 'AGENCY',
+      trialEnd: '2026-03-20T00:00:00.000Z',
+    });
   });
 });

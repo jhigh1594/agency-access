@@ -68,6 +68,12 @@ vi.mock('@/components/ui', () => ({
   ),
 }));
 
+vi.mock('@/components/trial-banner', () => ({
+  TrialBanner: ({ trialEnd, tierName }: { trialEnd: string; tierName: string }) => (
+    <div>{`Trial banner: ${tierName} ends ${trialEnd}`}</div>
+  ),
+}));
+
 describe('DashboardPage behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -220,6 +226,19 @@ describe('DashboardPage behavior', () => {
           },
           requests: [],
           connections: [],
+          onboardingStatus: {
+            status: 'in_progress',
+            completed: false,
+            lifecycle: {
+              status: 'in_progress',
+              lastVisitedStep: 3,
+            },
+            step: {
+              profile: true,
+              members: false,
+              firstRequest: false,
+            },
+          },
         },
         error: null,
       },
@@ -228,22 +247,11 @@ describe('DashboardPage behavior', () => {
       refetch: vi.fn(),
     });
 
-    useAgencyOnboardingStatusMock.mockReturnValue({
-      data: {
-        status: 'in_progress',
-        completed: false,
-        lifecycle: {
-          status: 'in_progress',
-          lastVisitedStep: 3,
-        },
-      },
-      isLoading: false,
-    });
-
     render(<DashboardPage />);
 
     expect(await screen.findByText('Finish your onboarding setup')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Resume onboarding' })).toHaveAttribute('href', '/onboarding/unified');
+    expect(useAgencyOnboardingStatusMock).not.toHaveBeenCalled();
   });
 
   it('shows only resume and finish actions when lifecycle status is activated', async () => {
@@ -263,25 +271,26 @@ describe('DashboardPage behavior', () => {
           },
           requests: [],
           connections: [],
+          onboardingStatus: {
+            status: 'activated',
+            completed: false,
+            lifecycle: {
+              status: 'activated',
+              lastVisitedStep: 5,
+              activatedAt: '2026-03-01T00:00:00.000Z',
+            },
+            step: {
+              profile: true,
+              members: true,
+              firstRequest: true,
+            },
+          },
         },
         error: null,
       },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
-    });
-
-    useAgencyOnboardingStatusMock.mockReturnValue({
-      data: {
-        status: 'activated',
-        completed: false,
-        lifecycle: {
-          status: 'activated',
-          lastVisitedStep: 5,
-          activatedAt: '2026-03-01T00:00:00.000Z',
-        },
-      },
-      isLoading: false,
     });
 
     render(<DashboardPage />);
@@ -309,6 +318,15 @@ describe('DashboardPage behavior', () => {
           },
           requests: [],
           connections: [],
+          onboardingStatus: {
+            status: 'completed',
+            completed: true,
+            step: {
+              profile: true,
+              members: true,
+              firstRequest: true,
+            },
+          },
         },
         error: null,
       },
@@ -317,17 +335,43 @@ describe('DashboardPage behavior', () => {
       refetch: vi.fn(),
     });
 
-    useAgencyOnboardingStatusMock.mockReturnValue({
+    render(<DashboardPage />);
+
+    expect(screen.queryByText('Finish your onboarding setup')).not.toBeInTheDocument();
+  });
+
+  it('renders the trial banner from dashboard bootstrap data', async () => {
+    useQueryMock.mockReturnValue({
       data: {
-        status: 'completed',
-        completed: true,
+        data: {
+          agency: {
+            id: 'agency_1',
+            name: 'Agency One',
+            email: 'owner@agency.test',
+          },
+          stats: {
+            totalRequests: 0,
+            pendingRequests: 0,
+            activeConnections: 0,
+            totalPlatforms: 0,
+          },
+          requests: [],
+          connections: [],
+          trialBanner: {
+            tier: 'AGENCY',
+            trialEnd: '2026-03-20T00:00:00.000Z',
+          },
+        },
+        error: null,
       },
       isLoading: false,
+      error: null,
+      refetch: vi.fn(),
     });
 
     render(<DashboardPage />);
 
-    expect(screen.queryByText('Finish your onboarding setup')).not.toBeInTheDocument();
+    expect(await screen.findByText('Trial banner: Agency ends 2026-03-20T00:00:00.000Z')).toBeInTheDocument();
   });
 
   it('preserves loading state while initial data request is pending', () => {

@@ -223,10 +223,8 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
-  it('renders a suspense fallback when search params suspend', async () => {
-    useSearchParamsMock.mockImplementation(() => {
-      throw new Promise(() => {});
-    });
+  it('does not run the onboarding gate fetches on the dashboard root path', async () => {
+    usePathnameMock.mockReturnValue('/dashboard');
 
     render(
       <AuthenticatedLayout>
@@ -234,6 +232,11 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
       </AuthenticatedLayout>
     );
 
-    expect(screen.getAllByText('Loading...').length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getByText('Content')).toBeInTheDocument();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 });

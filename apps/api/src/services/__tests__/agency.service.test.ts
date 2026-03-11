@@ -446,6 +446,37 @@ describe('AgencyService', () => {
   });
 
   describe('onboarding lifecycle', () => {
+    it('derives onboarding flags from relation counts without loading relation arrays', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        name: 'Agency One',
+        settings: {
+          onboarding: {
+            unifiedV1: {
+              status: 'in_progress',
+              startedAt: '2026-03-04T10:00:00.000Z',
+            },
+          },
+        },
+        _count: {
+          members: 2,
+          accessRequests: 1,
+        },
+      } as any);
+
+      const result = await agencyService.getOnboardingStatus('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toMatchObject({
+        status: 'activated',
+        completed: true,
+        step: {
+          members: true,
+          firstRequest: true,
+        },
+      });
+    });
+
     it('returns in_progress when no request has been created yet', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
         id: 'agency-1',

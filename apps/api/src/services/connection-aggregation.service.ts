@@ -6,7 +6,6 @@
  */
 
 import { prisma } from '../lib/prisma.js';
-import type { AccessRequestStatus } from '@agency-platform/shared';
 
 export interface DashboardStats {
   totalRequests: number;
@@ -24,44 +23,47 @@ export interface DashboardStats {
  */
 export async function getDashboardStats(agencyId: string): Promise<{ data: DashboardStats | null; error: any }> {
   try {
-    // Use groupBy for more efficient aggregation
-    // This gets all request counts in a single query instead of multiple count() calls
-    const [requestStats, connectionStats, platformCount] = await Promise.all([
-      // Get all request counts by status in one query
-      prisma.accessRequest.groupBy({
-        by: ['status'],
-        where: { agencyId },
-        _count: true,
-      }),
-      // Get all connection counts by status in one query
-      prisma.clientConnection.groupBy({
-        by: ['status'],
-        where: { agencyId },
-        _count: true,
-      }),
-      // Use raw SQL for distinct platform count (more efficient than Prisma's distinct)
-      prisma.$queryRaw<Array<{ count: bigint }>>`
-        SELECT COUNT(DISTINCT pa.platform) as count
-        FROM platform_authorizations pa
-        INNER JOIN client_connections cc ON pa.connection_id = cc.id
-        WHERE cc.agency_id = ${agencyId}
-          AND cc.status = 'active'
-          AND pa.status = 'active'
-      `,
-    ]);
+    const rows = await prisma.$queryRaw<Array<{
+      total_requests: number | bigint;
+      pending_requests: number | bigint;
+      active_connections: number | bigint;
+      total_platforms: number | bigint;
+    }>>`
+      SELECT
+        (SELECT COUNT(*)::int FROM access_requests ar WHERE ar.agency_id = ${agencyId}) AS total_requests,
+        (
+          SELECT COUNT(*)::int
+          FROM access_requests ar
+          WHERE ar.agency_id = ${agencyId}
+            AND ar.status = 'pending'
+        ) AS pending_requests,
+        (
+          SELECT COUNT(*)::int
+          FROM client_connections cc
+          WHERE cc.agency_id = ${agencyId}
+            AND cc.status = 'active'
+        ) AS active_connections,
+        (
+          SELECT COUNT(DISTINCT pa.platform)::int
+          FROM platform_authorizations pa
+          INNER JOIN client_connections cc ON pa.connection_id = cc.id
+          WHERE cc.agency_id = ${agencyId}
+            AND cc.status = 'active'
+            AND pa.status = 'active'
+        ) AS total_platforms
+    `;
+    const row = rows[0];
 
-    // Transform groupBy results into stats
-    const totalRequests = requestStats.reduce((sum, r) => sum + r._count, 0);
-    const pendingRequests = requestStats.find((r) => r.status === 'pending')?._count || 0;
-    const activeConnections = connectionStats.find((c) => c.status === 'active')?._count || 0;
-    const totalPlatforms = Number(platformCount[0]?.count || 0);
+    if (!row) {
+      throw new Error('Dashboard stats query returned no rows');
+    }
 
     return {
       data: {
-        totalRequests,
-        pendingRequests,
-        activeConnections,
-        totalPlatforms,
+        totalRequests: Number(row.total_requests ?? 0),
+        pendingRequests: Number(row.pending_requests ?? 0),
+        activeConnections: Number(row.active_connections ?? 0),
+        totalPlatforms: Number(row.total_platforms ?? 0),
       },
       error: null,
     };

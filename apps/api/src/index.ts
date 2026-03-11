@@ -34,6 +34,7 @@ import { affiliateRoutes } from './routes/affiliate.js';
 import { sentryWebhooksRoutes } from './routes/sentry-webhooks.js';
 import { sentryTestRoutes } from './routes/sentry-test.routes.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
+import { prisma } from './lib/prisma.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
 
@@ -208,6 +209,8 @@ fastify.get('/', async () => {
 // Start server
 const start = async () => {
   try {
+    await prisma.$connect();
+
     if (env.NODE_ENV === 'production') {
       const { assertWebhookSchemaReady } = await import('./lib/webhook-schema-readiness.js');
       await assertWebhookSchemaReady();

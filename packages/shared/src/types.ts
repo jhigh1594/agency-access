@@ -232,7 +232,7 @@ export const UnifiedOnboardingStatusSchema = z.enum([
 ]);
 export type UnifiedOnboardingStatus = z.infer<typeof UnifiedOnboardingStatusSchema>;
 
-export const UnifiedOnboardingProgressSchema = z.object({
+const UnifiedOnboardingProgressFieldsSchema = z.object({
   status: UnifiedOnboardingStatusSchema.optional(),
   lastCompletedStep: z.number().int().min(0).max(6).optional(),
   lastVisitedStep: z.number().int().min(0).max(6).optional(),
@@ -241,7 +241,9 @@ export const UnifiedOnboardingProgressSchema = z.object({
   completedAt: z.string().datetime().optional(),
   dismissedAt: z.string().datetime().optional(),
   accessRequestId: z.string().min(1).optional(),
-}).refine((value) => Object.keys(value).length > 0, {
+});
+
+export const UnifiedOnboardingProgressSchema = UnifiedOnboardingProgressFieldsSchema.refine((value) => Object.keys(value).length > 0, {
   message: 'At least one onboarding progress field is required',
 });
 export type UnifiedOnboardingProgress = z.infer<typeof UnifiedOnboardingProgressSchema>;
@@ -1910,6 +1912,24 @@ export const DashboardSummaryMetaSchema = z.object({
 });
 export type DashboardSummaryMeta = z.infer<typeof DashboardSummaryMetaSchema>;
 
+export const DashboardOnboardingStatusSchema = z.object({
+  completed: z.boolean(),
+  status: UnifiedOnboardingStatusSchema,
+  lifecycle: UnifiedOnboardingProgressFieldsSchema.optional(),
+  step: z.object({
+    profile: z.boolean(),
+    members: z.boolean(),
+    firstRequest: z.boolean(),
+  }),
+});
+export type DashboardOnboardingStatus = z.infer<typeof DashboardOnboardingStatusSchema>;
+
+export const DashboardTrialBannerSchema = z.object({
+  tier: SubscriptionTierSchema,
+  trialEnd: z.string(),
+});
+export type DashboardTrialBanner = z.infer<typeof DashboardTrialBannerSchema>;
+
 export const DashboardPayloadSchema = z.object({
   agency: z.object({
     id: z.string(),
@@ -1925,6 +1945,8 @@ export const DashboardPayloadSchema = z.object({
   requests: z.array(DashboardRequestSummarySchema),
   connections: z.array(DashboardConnectionSummarySchema),
   meta: DashboardSummaryMetaSchema,
+  onboardingStatus: DashboardOnboardingStatusSchema.nullable().optional(),
+  trialBanner: DashboardTrialBannerSchema.nullable().optional(),
 });
 export type DashboardPayload = z.infer<typeof DashboardPayloadSchema>;
 

@@ -906,9 +906,16 @@ export async function getOnboardingStatus(agencyId: string) {
   try {
     const agency = await prisma.agency.findUnique({
       where: { id: agencyId },
-      include: {
-        members: true,
-        accessRequests: true,
+      select: {
+        id: true,
+        name: true,
+        settings: true,
+        _count: {
+          select: {
+            members: true,
+            accessRequests: true,
+          },
+        },
       },
     });
 
@@ -924,8 +931,25 @@ export async function getOnboardingStatus(agencyId: string) {
 
     // Legacy onboarding flags
     const hasProfile = !!(agency.name && agency.settings);
-    const hasMembers = agency.members.length > 1; // More than just the creator
-    const hasRequests = agency.accessRequests.length > 0;
+    const agencyRecord = agency as {
+      _count?: { members?: number; accessRequests?: number };
+      members?: unknown[];
+      accessRequests?: unknown[];
+    };
+    const membersCount =
+      typeof agencyRecord._count?.members === 'number'
+        ? agencyRecord._count.members
+        : Array.isArray(agencyRecord.members)
+          ? agencyRecord.members.length
+          : 0;
+    const accessRequestCount =
+      typeof agencyRecord._count?.accessRequests === 'number'
+        ? agencyRecord._count.accessRequests
+        : Array.isArray(agencyRecord.accessRequests)
+          ? agencyRecord.accessRequests.length
+          : 0;
+    const hasMembers = membersCount > 1; // More than just the creator
+    const hasRequests = accessRequestCount > 0;
     const onboarding = getUnifiedOnboardingSettings(agency.settings);
     const status = resolveOnboardingLifecycleStatus(onboarding, hasProfile, hasRequests);
     const legacyCompleted = hasProfile && hasMembers;

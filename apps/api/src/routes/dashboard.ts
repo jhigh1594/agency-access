@@ -10,6 +10,8 @@ import { performance } from 'node:perf_hooks';
 import { getDashboardStats } from '../services/connection-aggregation.service.js';
 import { accessRequestService } from '../services/access-request.service.js';
 import { connectionService } from '../services/connection.service.js';
+import { agencyService } from '@/services/agency.service.js';
+import { subscriptionService } from '@/services/subscription.service.js';
 import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
 import { createHash } from 'crypto';
 import { authenticate } from '@/middleware/auth.js';
@@ -73,7 +75,13 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         const dataFetchStart = performance.now();
         try {
           // Parallel fetch ALL dashboard data
-          const [statsResult, requestsResult, connectionsResult] = await Promise.all([
+          const [
+            statsResult,
+            requestsResult,
+            connectionsResult,
+            onboardingResult,
+            subscriptionResult,
+          ] = await Promise.all([
             getDashboardStats(agencyId),
             accessRequestService.getDashboardAccessRequestSummaries(
               agencyId,
@@ -85,6 +93,8 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
               connectionsLimit,
               DASHBOARD_SUMMARY_TOTALS_DISABLED
             ),
+            agencyService.getOnboardingStatus(agencyId),
+            subscriptionService.getSubscription(agencyId),
           ]);
 
           // Check for errors in any of the parallel requests
@@ -100,11 +110,27 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
             return { data: null, error: connectionsResult.error };
           }
 
+          if (onboardingResult.error) {
+            return { data: null, error: onboardingResult.error };
+          }
+
+          if (subscriptionResult.error) {
+            return { data: null, error: subscriptionResult.error };
+          }
+
           const requests = (requestsResult.data?.items || []).slice(0, requestsLimit);
           const requestsTotal = statsResult.data?.totalRequests ?? requestsResult.data?.total ?? requests.length;
           const connections = (connectionsResult.data?.items || []).slice(0, connectionsLimit);
           const connectionsTotal =
             statsResult.data?.activeConnections ?? connectionsResult.data?.total ?? connections.length;
+          const subscription = subscriptionResult.data;
+          const trialBanner =
+            subscription?.status === 'trialing' && subscription.trialEnd
+              ? {
+                  tier: subscription.tier,
+                  trialEnd: subscription.trialEnd.toISOString(),
+                }
+              : null;
 
           const payload: DashboardPayload = {
             agency: {
@@ -129,6 +155,8 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
                 hasMore: connectionsTotal > connections.length,
               },
             },
+            onboardingStatus: onboardingResult.data,
+            trialBanner,
           };
 
           const etag = createHash('md5')

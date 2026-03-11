@@ -93,13 +93,18 @@ export interface CancelResponse {
   effectiveDate?: string;
 }
 
+interface UseSubscriptionOptions {
+  enabled?: boolean;
+}
+
 // ============================================================
 // QUERY HOOKS
 // ============================================================
 
-export function useSubscription() {
+export function useSubscription(options: UseSubscriptionOptions = {}) {
   const { orgId, userId, getToken } = useAuth();
   const principalId = resolvePrincipalId(orgId, userId);
+  const enabled = options.enabled ?? true;
 
   return useQuery({
     queryKey: ['subscription', principalId],
@@ -120,7 +125,7 @@ export function useSubscription() {
       const result = await response.json();
       return result.data as SubscriptionData | null;
     },
-    enabled: !!principalId,
+    enabled: enabled && !!principalId,
   });
 }
 

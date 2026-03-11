@@ -2,7 +2,7 @@
 
 import { AppProviders } from '../app-providers';
 import { useAuth, UserButton } from '@clerk/nextjs';
-import { redirect, usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { redirect, usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
@@ -85,9 +85,9 @@ function AuthenticatedLayoutInner({
   const perfHarness = useMemo(() => readPerfHarnessContext(), []);
   const runPerfAgencyCheck = isDevelopmentBypass && !!perfHarness?.token;
   const [open, setOpen] = useState(true);
-  const { data: subscription } = useSubscription();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const isDashboardRootPath = pathname === '/dashboard';
+  const { data: subscription } = useSubscription({ enabled: !isDashboardRootPath });
   const router = useRouter();
 
   // Redirect unauthenticated users (skip in bypass mode)
@@ -99,7 +99,7 @@ function AuthenticatedLayoutInner({
   useEffect(() => {
     const checkAgencyAndRedirect = async () => {
       // Skip if already on onboarding page
-      if (pathname?.startsWith('/onboarding')) {
+      if (!pathname || pathname.startsWith('/onboarding') || isDashboardRootPath) {
         return;
       }
 
@@ -112,18 +112,13 @@ function AuthenticatedLayoutInner({
         return;
       }
 
-      const isOnboardingRecoveryDashboard = pathname === '/dashboard' && searchParams.get('onboardingRecovery') === '1';
-      if (isOnboardingRecoveryDashboard) {
-        return;
-      }
-
       let stopTimer: (() => void) | null = null;
       try {
         stopTimer = startPerfTimer('layout:agency-check');
 
         const principalClerkId = (runPerfAgencyCheck ? perfHarness?.principalId : null) || orgId || userId;
         const token = await clerkAuth.getToken() || perfHarness?.token;
-        if (!token || !principalClerkId || !pathname) {
+        if (!token || !principalClerkId) {
           return;
         }
 
@@ -208,7 +203,18 @@ function AuthenticatedLayoutInner({
     };
 
     checkAgencyAndRedirect();
-  }, [userId, orgId, isLoaded, pathname, searchParams, isDevelopmentBypass, router, clerkAuth, runPerfAgencyCheck, perfHarness]);
+  }, [
+    userId,
+    orgId,
+    isLoaded,
+    pathname,
+    isDevelopmentBypass,
+    router,
+    clerkAuth,
+    runPerfAgencyCheck,
+    perfHarness,
+    isDashboardRootPath,
+  ]);
 
   // Show loading state while auth loads.
   // Agency checks run in the background to avoid blocking initial route render.
@@ -390,7 +396,7 @@ function AuthenticatedLayoutInner({
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-auto bg-background">
-        {subscription?.status === 'trialing' && subscription.trialEnd && (
+        {!isDashboardRootPath && subscription?.status === 'trialing' && subscription.trialEnd && (
           <TrialBanner
             trialEnd={subscription.trialEnd}
             tierName={subscription.tier ? SUBSCRIPTION_TIER_NAMES[subscription.tier] : 'your'}

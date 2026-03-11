@@ -48,7 +48,9 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}`,
+        // Always refresh from Meta when opening Manage Assets so the portfolio dropdown
+        // reflects current Business Manager access instead of stale connection metadata.
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}&refresh=true`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -59,6 +61,8 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
       const result = await response.json();
       return result.data as { businesses: Business[] };
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch current settings and selected business

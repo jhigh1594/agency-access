@@ -114,6 +114,18 @@ export async function agencyRoutes(fastify: FastifyInstance) {
 
       // Parse fields parameter to determine what to include
       const includeMembers = !fields || fields.includes('members');
+      if (clerkUserId === principalId && !email && !includeMembers) {
+        return reply.send({
+          data: [
+            {
+              ...principal.agency,
+              clerkUserId: principalId,
+            },
+          ],
+          error: null,
+        });
+      }
+
       const result = await agencyService.listAgencies(
         {
           email,

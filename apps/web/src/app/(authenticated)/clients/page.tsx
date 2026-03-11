@@ -216,7 +216,7 @@ function ClientsPageContent() {
                 {/* Client Info */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-semibold text-foreground truncate">
+                    <h3 className="font-sans font-semibold text-foreground truncate">
                       {client.name}
                     </h3>
                     <p className="text-sm text-muted-foreground truncate">{client.email}</p>

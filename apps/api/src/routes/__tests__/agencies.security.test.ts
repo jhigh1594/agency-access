@@ -105,6 +105,28 @@ describe('Agency Routes - Security', () => {
     );
   });
 
+  it('returns the principal agency directly for self clerkUserId lookups without members', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/agencies?clerkUserId=user_123&fields=id,name,email,clerkUserId',
+      headers: { authorization: 'Bearer token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      data: [
+        {
+          id: 'agency-owner',
+          name: 'Owner Agency',
+          email: 'owner@example.com',
+          clerkUserId: 'user_123',
+        },
+      ],
+      error: null,
+    });
+    expect(agencyService.listAgencies).not.toHaveBeenCalled();
+  });
+
   it('returns 403 when /agencies email filter does not match principal agency email', async () => {
     const response = await app.inject({
       method: 'GET',

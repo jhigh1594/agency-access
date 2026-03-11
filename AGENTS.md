@@ -122,3 +122,10 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Keep refactors behavior-preserving unless explicitly requested.
 - Keep modifications scoped, and add tests when behavior changes.
 - When deleting an entity that appears in list or dashboard views (e.g. client), invalidate relevant caches (e.g. dashboard key) and ensure list queries exclude orphaned rows (e.g. filter where clientId is not null) so the UI updates immediately.
+
+## Learned User Preferences
+- Prefer atomic commits; when multiple logical changes exist, ask user to choose scope (e.g. A/B/C options) rather than committing everything
+
+## Learned Workspace Facts
+- Skip when committing: next-env.d.ts (auto-generated), __pycache__, .serena, .worktrees
+- gws auth setup requires gcloud; use manual OAuth (Cloud Console → Desktop app client → ~/.config/gws/client_secret.json) when gcloud is not installed

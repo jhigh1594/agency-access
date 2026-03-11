@@ -25,6 +25,18 @@ interface DeleteClientModalProps {
   onClose: () => void;
 }
 
+interface ClientsWithConnectionsCache {
+  data?: {
+    data?: Array<{ id: string }>;
+    pagination?: {
+      total?: number;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
   const { getToken } = useAuth();
   const router = useRouter();
@@ -55,7 +67,42 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
       return null;
     },
     onSuccess: () => {
-      // Invalidate and refetch queries
+      queryClient.setQueriesData<ClientsWithConnectionsCache>(
+        { queryKey: ['clients-with-connections'] },
+        (current) => {
+          const cachedClients = current?.data?.data;
+          if (!cachedClients) {
+            return current;
+          }
+
+          const nextClients = cachedClients.filter(
+            (cachedClient) => cachedClient.id !== client.id,
+          );
+
+          if (nextClients.length === cachedClients.length) {
+            return current;
+          }
+
+          const previousTotal = current.data?.pagination?.total;
+
+          return {
+            ...current,
+            data: {
+              ...current.data,
+              data: nextClients,
+              pagination: current.data?.pagination
+                ? {
+                    ...current.data.pagination,
+                    total: typeof previousTotal === 'number'
+                      ? Math.max(0, previousTotal - (cachedClients.length - nextClients.length))
+                      : previousTotal,
+                  }
+                : current.data?.pagination,
+            },
+          };
+        },
+      );
+
       queryClient.invalidateQueries({ queryKey: ['clients-with-connections'] });
 
       setSuccess(true);

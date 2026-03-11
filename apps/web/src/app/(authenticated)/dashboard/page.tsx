@@ -13,17 +13,19 @@ import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
+import { TrialBanner } from '@/components/trial-banner';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { useEffect, useRef } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
-import { useAgencyOnboardingStatus, useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
+import { useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
-import type {
-  DashboardPayload,
-  DashboardRequestSummary,
-  DashboardConnectionSummary,
+import {
+  SUBSCRIPTION_TIER_NAMES,
+  type DashboardPayload,
+  type DashboardRequestSummary,
+  type DashboardConnectionSummary,
 } from '@agency-platform/shared';
 
 // Simple in-memory ETag cache for conditional requests
@@ -224,9 +226,9 @@ export default function DashboardPage() {
 
   const payload = dashboardData?.data;
   const agency = payload?.agency;
-  const onboardingStatusQuery = useAgencyOnboardingStatus(agency?.id);
   const onboardingProgressMutation = useUpdateAgencyOnboardingProgress(agency?.id);
-  const onboardingStatus = onboardingStatusQuery.data;
+  const onboardingStatus = payload?.onboardingStatus ?? null;
+  const trialBanner = payload?.trialBanner ?? null;
   const showOnboardingChecklist = Boolean(
     onboardingStatus &&
     !onboardingStatus.completed &&
@@ -399,6 +401,15 @@ export default function DashboardPage() {
             Create Request
           </Link>
         </div>
+
+        {trialBanner && (
+          <div className="mb-6">
+            <TrialBanner
+              trialEnd={trialBanner.trialEnd}
+              tierName={SUBSCRIPTION_TIER_NAMES[trialBanner.tier]}
+            />
+          </div>
+        )}
 
         {showOnboardingChecklist && (
           <div className="mb-6 rounded-lg border border-acid/40 bg-acid/10 p-5">

@@ -267,32 +267,56 @@ export class MetaConnector {
     hasAccess: boolean;
   }> {
     try {
-      // Fetch all Business Manager accounts
-      const response = await fetch(
-        `https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status&access_token=${accessToken}`,
-        { method: 'GET' }
-      );
+      const businesses: Array<{
+        id: string;
+        name: string;
+        verticalName?: string;
+        verificationStatus?: string;
+      }> = [];
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to fetch business accounts: ${error}`);
+      let nextUrl: string | null =
+        `https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status&access_token=${accessToken}`;
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl, { method: 'GET' });
+
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(`Failed to fetch business accounts: ${error}`);
+        }
+
+        const data = (await response.json()) as {
+          data?: Array<{
+            id: string;
+            name: string;
+            vertical_name?: string;
+            verification_status?: string;
+          }>;
+          paging?: {
+            next?: string;
+          };
+        };
+
+        businesses.push(
+          ...(data.data || []).map((business) => ({
+            id: business.id,
+            name: business.name,
+            verticalName: business.vertical_name,
+            verificationStatus: business.verification_status,
+          }))
+        );
+
+        if (!data.paging?.next) {
+          nextUrl = null;
+          continue;
+        }
+
+        const parsedNextUrl = new URL(data.paging.next);
+        if (!parsedNextUrl.searchParams.has('access_token')) {
+          parsedNextUrl.searchParams.set('access_token', accessToken);
+        }
+        nextUrl = parsedNextUrl.toString();
       }
-
-      const data = (await response.json()) as {
-        data?: Array<{
-          id: string;
-          name: string;
-          vertical_name?: string;
-          verification_status?: string;
-        }>;
-      };
-
-      const businesses = (data.data || []).map((business) => ({
-        id: business.id,
-        name: business.name,
-        verticalName: business.vertical_name,
-        verificationStatus: business.verification_status,
-      }));
 
       return {
         businesses,
