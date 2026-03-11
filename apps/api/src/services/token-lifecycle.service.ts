@@ -341,6 +341,11 @@ export async function ensureAgencyAccessToken(
   const refreshThresholdDays = options.refreshThresholdDays ?? 5;
   const targetResult = await loadAgencyTarget(agencyId, platform);
   if (targetResult.error || !targetResult.data) {
+    console.error('[ensureAgencyAccessToken] Failed to load agency target:', {
+      agencyId,
+      platform,
+      error: targetResult.error,
+    });
     return {
       data: null,
       error: targetResult.error,
@@ -348,6 +353,11 @@ export async function ensureAgencyAccessToken(
   }
 
   if (targetResult.data.status !== 'active') {
+    console.error('[ensureAgencyAccessToken] Connection not active:', {
+      agencyId,
+      platform,
+      status: targetResult.data.status,
+    });
     return {
       data: null,
       error: {
@@ -357,8 +367,32 @@ export async function ensureAgencyAccessToken(
     };
   }
 
-  const tokens = await infisical.getOAuthTokens(targetResult.data.secretId);
+  let tokens;
+  try {
+    tokens = await infisical.getOAuthTokens(targetResult.data.secretId);
+  } catch (infisicalError) {
+    console.error('[ensureAgencyAccessToken] Failed to get tokens from Infisical:', {
+      agencyId,
+      platform,
+      secretId: targetResult.data.secretId,
+      error: infisicalError instanceof Error ? infisicalError.message : String(infisicalError),
+    });
+    return {
+      data: null,
+      error: {
+        code: 'TOKEN_NOT_FOUND',
+        message: 'Failed to retrieve tokens from secure storage',
+      },
+    };
+  }
+
   if (!tokens?.accessToken) {
+    console.error('[ensureAgencyAccessToken] No access token in Infisical response:', {
+      agencyId,
+      platform,
+      secretId: targetResult.data.secretId,
+      hasTokens: !!tokens,
+    });
     return {
       data: null,
       error: {
