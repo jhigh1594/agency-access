@@ -63,7 +63,14 @@ const envSchema = z.object({
   INFISICAL_ENVIRONMENT: z.string().default('dev'),
 
   // Redis (Upstash)
-  REDIS_URL: z.string().url(),
+  REDIS_URL: z.string().url().refine(value => {
+    try {
+      const protocol = new URL(value).protocol;
+      return protocol === 'redis:' || protocol === 'rediss:';
+    } catch {
+      return false;
+    }
+  }, 'REDIS_URL must use redis:// or rediss://'),
 
   // Meta OAuth
   META_APP_ID: z.string(),

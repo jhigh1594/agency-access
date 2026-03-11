@@ -77,6 +77,7 @@ const mockMetaConnectorInstance = {
   getAuthUrl: vi.fn(),
   exchangeCode: vi.fn(),
   getLongLivedToken: vi.fn(),
+  getBusinessAccounts: vi.fn(),
 };
 
 // Mock MetaConnector class to return shared instance
@@ -438,6 +439,46 @@ describe('Agency Platforms Routes', () => {
         error: {
           code: 'INVALID_TOKEN',
           message: 'Google token is invalid. Please reconnect Google.',
+        },
+      });
+    });
+  });
+
+  describe('GET /agency-platforms/meta/business-accounts', () => {
+    it('returns fetch failure when refreshed Meta portfolio discovery fails', async () => {
+      vi.mocked(agencyPlatformService.getConnection).mockResolvedValue({
+        data: {
+          id: 'conn-1',
+          agencyId: 'agency-1',
+          platform: 'meta',
+          status: 'active',
+          metadata: {
+            metaBusinessAccounts: {
+              businesses: [{ id: 'biz-1', name: 'Cached Biz' }],
+              hasAccess: true,
+            },
+          },
+        } as any,
+        error: null,
+      });
+      vi.mocked(agencyPlatformService.getValidToken).mockResolvedValue({
+        data: 'token-123',
+        error: null,
+      });
+      mockMetaConnectorInstance.getBusinessAccounts.mockRejectedValue(new Error('OAuthException'));
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/agency-platforms/meta/business-accounts?agencyId=agency-1&refresh=true',
+      });
+
+      expect(response.statusCode).toBe(500);
+      expect(response.json()).toEqual({
+        data: null,
+        error: {
+          code: 'FETCH_FAILED',
+          message: 'Failed to fetch Meta business accounts',
+          details: 'OAuthException',
         },
       });
     });

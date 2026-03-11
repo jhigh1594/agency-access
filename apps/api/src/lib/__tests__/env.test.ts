@@ -18,7 +18,7 @@ function withRequiredBase(overrides: Record<string, string | undefined> = {}) {
     INFISICAL_CLIENT_ID: 'infisical-client-id',
     INFISICAL_CLIENT_SECRET: 'infisical-client-secret',
     INFISICAL_PROJECT_ID: 'infisical-project-id',
-    REDIS_URL: 'https://example.com/redis',
+    REDIS_URL: 'rediss://default:password@cache.example.com:6380',
     META_APP_ID: 'meta-app-id',
     META_APP_SECRET: 'meta-app-secret',
     CREEM_API_KEY: 'creem_live_example',
@@ -284,5 +284,11 @@ describe('env contract', () => {
     expect(module.env.REDIS_USERNAME).toBe('default');
     expect(module.env.REDIS_PASSWORD).toBe('pa$$word');
     expect(module.env.REDIS_TLS).toBe(true);
+  });
+
+  it('rejects REDIS_URL values that are not redis or rediss schemes', async () => {
+    await expect(importEnvWith(withRequiredBase({
+      REDIS_URL: 'https://example.com/redis',
+    }))).rejects.toThrow('REDIS_URL must use redis:// or rediss://');
   });
 });

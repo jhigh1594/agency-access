@@ -23,7 +23,7 @@ class RedisService {
         enableReadyCheck: false,
         lazyConnect: true, // Don't connect immediately
         // Upstash-specific settings
-        tls: env.NODE_ENV === 'production' ? {} : undefined,
+        tls: env.REDIS_TLS ? {} : undefined,
         // Disable reconnection in development when Redis is unavailable
         retryStrategy: (times: number) => {
           if (env.NODE_ENV !== 'production') {

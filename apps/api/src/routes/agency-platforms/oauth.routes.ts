@@ -72,6 +72,15 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     });
 
     if (stateResult.error) {
+      fastify.log.error(
+        {
+          error: stateResult.error,
+          agencyId,
+          platform,
+          userEmail,
+        },
+        'Failed to create OAuth state token during agency platform initiation'
+      );
       return reply.code(500).send(stateResult);
     }
 

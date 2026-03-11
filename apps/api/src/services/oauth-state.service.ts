@@ -13,6 +13,7 @@
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 import { redis } from '@/lib/redis';
 import { env } from '@/lib/env.js';
+import { logger } from '@/lib/logger.js';
 
 export interface OAuthState {
   agencyId: string;
@@ -86,6 +87,9 @@ async function createState(
 
     return { data: stateToken, error: null };
   } catch (error) {
+    logger.error('OAuth state creation failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       data: null,
       error: {
@@ -187,8 +191,12 @@ async function validateState(
       };
     }
 
-    return { data: stateData as OAuthState, error: null };
+    const { signature: _signature, ...sanitizedStateData } = stateData;
+    return { data: sanitizedStateData as OAuthState, error: null };
   } catch (error) {
+    logger.error('OAuth state validation failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       data: null,
       error: {

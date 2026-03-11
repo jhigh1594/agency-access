@@ -4,21 +4,11 @@
  * Tests for CSRF protection state token management during OAuth flows.
  */
 
+import { createHmac } from 'crypto';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { oauthStateService } from '@/services/oauth-state.service';
 import { redis } from '@/lib/redis';
-
-// Mock crypto for token generation
-vi.mock('crypto', () => ({
-  randomBytes: (size: number) => ({
-    toString: (encoding: string) => {
-      if (encoding === 'hex') {
-        return 'abc123def456789abc123def456789abc123def456789abc123def456789abc'; // 64 chars (32 bytes * 2)
-      }
-      return '';
-    },
-  }),
-}));
+import { env } from '@/lib/env';
 
 // Mock Redis client (will be created in implementation)
 vi.mock('@/lib/redis', () => ({
@@ -30,6 +20,20 @@ vi.mock('@/lib/redis', () => ({
 }));
 
 describe('OAuthStateService', () => {
+  function signStateToken(stateToken: string): string {
+    return createHmac('sha256', env.OAUTH_STATE_HMAC_SECRET).update(stateToken).digest('hex');
+  }
+
+  function buildStoredState(
+    stateToken: string,
+    stateData: Record<string, unknown>
+  ): string {
+    return JSON.stringify({
+      ...stateData,
+      signature: signStateToken(stateToken),
+    });
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -54,12 +58,15 @@ describe('OAuthStateService', () => {
       expect(result.data).toMatch(/^[a-f0-9]+$/); // Hex string
 
       // Verify Redis was called with correct parameters
+      const storedData = JSON.parse(vi.mocked(redis.set).mock.calls[0][1]);
       expect(vi.mocked(redis.set)).toHaveBeenCalledWith(
         `oauth_state:${result.data}`,
-        JSON.stringify(stateData),
+        expect.any(String),
         'EX',
         600 // 10 minutes in seconds
       );
+      expect(storedData).toMatchObject(stateData);
+      expect(storedData.signature).toEqual(expect.any(String));
     });
 
     it('should generate unique state tokens for different calls', async () => {
@@ -110,6 +117,7 @@ describe('OAuthStateService', () => {
       expect(storedData.userEmail).toBe('user@agency.com');
       expect(storedData.redirectUrl).toBe('https://app.example.com/callback');
       expect(storedData.timestamp).toBe(1234567890);
+      expect(storedData.signature).toEqual(expect.any(String));
     });
 
     it('should handle Redis errors gracefully', async () => {
@@ -141,7 +149,7 @@ describe('OAuthStateService', () => {
 
       const stateToken = 'abc123def456';
 
-      vi.mocked(redis.get).mockResolvedValue(JSON.stringify(stateData));
+      vi.mocked(redis.get).mockResolvedValue(buildStoredState(stateToken, stateData));
       vi.mocked(redis.del).mockResolvedValue(1); // Successfully deleted
 
       const result = await oauthStateService.validateState(stateToken);
@@ -179,7 +187,7 @@ describe('OAuthStateService', () => {
       const stateToken = 'valid-token-123';
 
       // First call: token exists
-      vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify(stateData));
+      vi.mocked(redis.get).mockResolvedValueOnce(buildStoredState(stateToken, stateData));
       vi.mocked(redis.del).mockResolvedValueOnce(1);
 
       const firstResult = await oauthStateService.validateState(stateToken);
@@ -215,7 +223,7 @@ describe('OAuthStateService', () => {
         timestamp: oldTimestamp,
       };
 
-      vi.mocked(redis.get).mockResolvedValue(JSON.stringify(stateData));
+      vi.mocked(redis.get).mockResolvedValue(buildStoredState('expired-token', stateData));
       vi.mocked(redis.del).mockResolvedValue(1);
 
       const result = await oauthStateService.validateState('expired-token');
@@ -262,7 +270,9 @@ describe('OAuthStateService', () => {
         // Missing platform, userEmail, timestamp
       };
 
-      vi.mocked(redis.get).mockResolvedValue(JSON.stringify(incompleteStateData));
+      vi.mocked(redis.get).mockResolvedValue(
+        buildStoredState('incomplete-token', incompleteStateData)
+      );
       vi.mocked(redis.del).mockResolvedValue(1);
 
       const result = await oauthStateService.validateState('incomplete-token');

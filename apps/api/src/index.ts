@@ -10,7 +10,7 @@ import helmet from '@fastify/helmet';
 import fastifyRawBody from 'fastify-raw-body';
 import { env } from './lib/env.js';
 import { getCorsOptions } from './lib/cors.js';
-import { authenticate, verifyAuthToken } from './middleware/auth.js';
+import { authenticate, optionalAuthenticate } from './middleware/auth.js';
 import { extractClientIp } from './lib/ip.js';
 import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
@@ -33,6 +33,7 @@ import { helpScoutRoutes } from './routes/help-scout.js';
 import { affiliateRoutes } from './routes/affiliate.js';
 import { sentryWebhooksRoutes } from './routes/sentry-webhooks.js';
 import { sentryTestRoutes } from './routes/sentry-test.routes.js';
+import { buildAuthenticatedRateLimitAllowList } from './middleware/rate-limit-auth.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 import { prisma } from './lib/prisma.js';
 
@@ -67,36 +68,24 @@ await fastify.register(compress, {
   threshold: 1024, // Only compress responses larger than 1KB
 });
 
+// Register performance monitoring middleware before auth/rate-limit hooks.
+fastify.addHook('onRequest', performanceOnRequest);
+fastify.addHook('onSend', performanceOnSend);
+
 // Register rate limiting middleware (prevents DoS/brute force attacks)
 if (env.RATE_LIMIT_ENABLED) {
+  if (env.RATE_LIMIT_SKIP_AUTHENTICATED) {
+    fastify.addHook('onRequest', optionalAuthenticate());
+  }
+
   await fastify.register(rateLimit, {
     global: true,
     max: env.RATE_LIMIT_MAX_REQUESTS,
     timeWindow: env.RATE_LIMIT_TIME_WINDOW_SECONDS * 1000,
     skipOnError: true,
-    allowList: async (request) => {
-      // Skip rate limiting for authenticated users if configured
-      if (env.RATE_LIMIT_SKIP_AUTHENTICATED) {
-        try {
-          if ((request as any).user) {
-            return true;
-          }
-
-          const authHeader = request.headers.authorization;
-          if (authHeader?.startsWith('Bearer ')) {
-            const token = authHeader.substring(7);
-            const verified = await verifyAuthToken(token);
-            if (verified) {
-              (request as any).user = verified;
-              return true;
-            }
-          }
-        } catch {
-          return false;
-        }
-      }
-      return false;
-    },
+    allowList: env.RATE_LIMIT_SKIP_AUTHENTICATED
+      ? buildAuthenticatedRateLimitAllowList()
+      : async () => false,
     keyGenerator: (request) => {
       // Use IP address as rate limit key
       return extractClientIp(request);
@@ -132,10 +121,6 @@ await fastify.register(helmet, {
     policy: 'strict-origin-when-cross-origin',
   },
 });
-
-// Register performance monitoring middleware
-fastify.addHook('onRequest', performanceOnRequest);
-fastify.addHook('onSend', performanceOnSend);
 
 // Custom error handler: return our standard { error: { code, message } } format
 // so frontend always gets a parseable error.message

@@ -63,6 +63,14 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
     });
 
     if (stateResult.error || !stateResult.data) {
+      fastify.log.error(
+        {
+          accessRequestId: accessRequest.data.id,
+          platform,
+          error: stateResult.error,
+        },
+        'Failed to create OAuth state token for client auth state endpoint'
+      );
       return reply.code(500).send({
         data: null,
         error: stateResult.error || {
@@ -122,6 +130,14 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
     });
 
     if (stateResult.error || !stateResult.data) {
+      fastify.log.error(
+        {
+          accessRequestId: accessRequest.data.id,
+          platform,
+          error: stateResult.error,
+        },
+        'Failed to create OAuth state token for client auth URL endpoint'
+      );
       return reply.code(500).send({
         data: null,
         error: stateResult.error || {
