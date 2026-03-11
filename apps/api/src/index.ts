@@ -2,7 +2,7 @@
 import "./instrument.js";
 import * as Sentry from "@sentry/node";
 
-import Fastify from 'fastify';
+import Fastify, { type FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import compress from '@fastify/compress';
 import rateLimit from '@fastify/rate-limit';
@@ -33,11 +33,16 @@ import { helpScoutRoutes } from './routes/help-scout.js';
 import { affiliateRoutes } from './routes/affiliate.js';
 import { sentryWebhooksRoutes } from './routes/sentry-webhooks.js';
 import { sentryTestRoutes } from './routes/sentry-test.routes.js';
-import { buildAuthenticatedRateLimitAllowList } from './middleware/rate-limit-auth.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 import { prisma } from './lib/prisma.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
+
+function buildAuthenticatedRateLimitAllowList() {
+  return async (request: FastifyRequest, _key: string): Promise<boolean> => {
+    return Boolean((request as FastifyRequest & { user?: unknown }).user);
+  };
+}
 
 const fastify = Fastify({
   trustProxy,
