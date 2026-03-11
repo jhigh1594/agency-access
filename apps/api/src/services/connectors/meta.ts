@@ -332,47 +332,51 @@ export class MetaConnector {
       nextUrl = parsedNextUrl.toString();
     }
 
-    let nextBusinessUserUrl: string | null =
-      `https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,vertical_name,verification_status}&access_token=${accessToken}`;
+    try {
+      let nextBusinessUserUrl: string | null =
+        `https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,vertical_name,verification_status}&access_token=${accessToken}`;
 
-    while (nextBusinessUserUrl) {
-      const response = await fetch(nextBusinessUserUrl, { method: 'GET' });
+      while (nextBusinessUserUrl) {
+        const response = await fetch(nextBusinessUserUrl, { method: 'GET' });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to fetch business users: ${error}`);
-      }
-
-      const data = (await response.json()) as {
-        data?: Array<{
-          business?: {
-            id?: string;
-            name?: string;
-            vertical_name?: string;
-            verification_status?: string;
-          };
-        }>;
-        paging?: {
-          next?: string;
-        };
-      };
-
-      for (const businessUser of data.data || []) {
-        if (businessUser.business) {
-          recordBusiness(businessUser.business);
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(`Failed to fetch business users: ${error}`);
         }
-      }
 
-      if (!data.paging?.next) {
-        nextBusinessUserUrl = null;
-        continue;
-      }
+        const data = (await response.json()) as {
+          data?: Array<{
+            business?: {
+              id?: string;
+              name?: string;
+              vertical_name?: string;
+              verification_status?: string;
+            };
+          }>;
+          paging?: {
+            next?: string;
+          };
+        };
 
-      const parsedNextUrl = new URL(data.paging.next);
-      if (!parsedNextUrl.searchParams.has('access_token')) {
-        parsedNextUrl.searchParams.set('access_token', accessToken);
+        for (const businessUser of data.data || []) {
+          if (businessUser.business) {
+            recordBusiness(businessUser.business);
+          }
+        }
+
+        if (!data.paging?.next) {
+          nextBusinessUserUrl = null;
+          continue;
+        }
+
+        const parsedNextUrl = new URL(data.paging.next);
+        if (!parsedNextUrl.searchParams.has('access_token')) {
+          parsedNextUrl.searchParams.set('access_token', accessToken);
+        }
+        nextBusinessUserUrl = parsedNextUrl.toString();
       }
-      nextBusinessUserUrl = parsedNextUrl.toString();
+    } catch (error) {
+      console.warn('Failed to fetch supplemental Meta business_users data; continuing with primary businesses list.', error);
     }
 
     return {

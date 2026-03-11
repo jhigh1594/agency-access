@@ -396,10 +396,9 @@ export class GoogleConnector {
                   'Authorization': `Bearer ${accessToken}`,
                   'developer-token': developerToken,
                   'Content-Type': 'application/json',
-                  'login-customer-id': customerId,
                 },
                 body: JSON.stringify({
-                  query: 'SELECT customer_client.descriptive_name, customer_client.id, customer_client.status, customer_client.manager FROM customer_client WHERE customer_client.level <= 1',
+                  query: 'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1',
                 }),
               }
             );
@@ -407,30 +406,29 @@ export class GoogleConnector {
             if (searchResponse.ok) {
               const searchData = (await searchResponse.json()) as {
                 results?: Array<{
-                  customerClient?: {
+                  customer?: {
                     id?: string;
                     descriptiveName?: string;
-                    status?: string;
                     manager?: boolean;
                   };
                 }>;
               };
 
               for (const result of searchData.results || []) {
-                const client = result.customerClient;
-                if (!client?.id || !client.descriptiveName) {
+                const customer = result.customer;
+                if (!customer?.id || !customer.descriptiveName) {
                   continue;
                 }
 
-                const clientId = client.id.toString().replace(/^customers\//, '').replace(/-/g, '');
-                if (!clientId) {
+                const normalizedCustomerId = customer.id.toString().replace(/^customers\//, '').replace(/-/g, '');
+                if (!normalizedCustomerId) {
                   continue;
                 }
 
-                console.log(`  📝 Account: ${clientId} = "${client.descriptiveName}" ${client.manager ? '(Manager)' : ''}`);
-                accountMap.set(clientId, {
-                  id: clientId,
-                  name: client.descriptiveName,
+                console.log(`  📝 Account: ${normalizedCustomerId} = "${customer.descriptiveName}" ${customer.manager ? '(Manager)' : ''}`);
+                accountMap.set(normalizedCustomerId, {
+                  id: normalizedCustomerId,
+                  name: customer.descriptiveName,
                 });
               }
 

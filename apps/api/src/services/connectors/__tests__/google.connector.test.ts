@@ -381,4 +381,62 @@ describe('GoogleConnector', () => {
     expect(result.adsAccounts[0]?.name).not.toContain('Restricted');
     expect(result.hasAccess).toBe(true);
   });
+
+  it('uses the customer descriptive name when Google Ads returns direct customer details', async () => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-developer-token';
+    const connector = new GoogleConnector();
+
+    vi.mocked(fetch).mockImplementation(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers:listAccessibleCustomers')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            resourceNames: ['customers/6449142979'],
+          }),
+        } as any;
+      }
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers/6449142979/googleAds:search')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            results: [
+              {
+                customer: {
+                  id: '6449142979',
+                  descriptiveName: 'Pillar AI Agency MCC',
+                  manager: true,
+                },
+              },
+            ],
+          }),
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not Found',
+        json: async () => ({}),
+      } as any;
+    });
+
+    const result = await connector.getAllGoogleAccounts(accessToken);
+
+    expect(result.adsAccounts).toEqual([
+      {
+        id: '6449142979',
+        name: 'Pillar AI Agency MCC',
+        type: 'google_ads',
+        status: 'active',
+      },
+    ]);
+  });
 });

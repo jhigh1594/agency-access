@@ -115,6 +115,33 @@ describe('MetaConnector Asset Discovery', () => {
       });
     });
 
+    it('keeps primary business results when the business_users lookup fails', async () => {
+      vi.mocked(fetch)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_1', name: 'Business One', vertical_name: 'Retail' },
+              { id: 'biz_2', name: 'Business Two' },
+            ],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: false,
+          text: async () => 'Permissions error',
+        } as Response);
+
+      const result = await connector.getBusinessAccounts(accessToken);
+
+      expect(result).toEqual({
+        businesses: [
+          { id: 'biz_1', name: 'Business One', verticalName: 'Retail', verificationStatus: undefined },
+          { id: 'biz_2', name: 'Business Two', verticalName: undefined, verificationStatus: undefined },
+        ],
+        hasAccess: true,
+      });
+    });
+
     it('throws when Meta business discovery fails', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
