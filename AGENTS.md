@@ -7,6 +7,9 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - apps/api: Fastify backend (TypeScript, Prisma, PostgreSQL, BullMQ, Redis)
 - packages/shared: Shared TypeScript types and Zod schemas
 
+## Tools
+- **gws** (Google Workspace CLI): `gws` or `npx gws` — Drive, Gmail, Calendar, Sheets, Docs, etc. One-time auth: `gws auth setup` then `gws auth login`. See [github.com/googleworkspace/cli](https://github.com/googleworkspace/cli).
+
 ## Commands (run from repo root unless noted)
 ### Development
 - npm run dev: start web (3000) + api (3001)

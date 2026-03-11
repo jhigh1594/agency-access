@@ -38,6 +38,9 @@ OAuth aggregation platform for marketing agencies. Agencies create access reques
 - `apps/api/` — Fastify backend (TypeScript, Prisma, PostgreSQL, BullMQ, Redis)
 - `packages/shared/` — Shared TypeScript types and schemas (Zod)
 
+## Tools
+- **gws** (Google Workspace CLI): `gws` or `npx gws` — Drive, Gmail, Calendar, Sheets, Docs, Chat, Admin. Auth: `gws auth setup` then `gws auth login`. [github.com/googleworkspace/cli](https://github.com/googleworkspace/cli)
+
 ## Essential Commands
 
 ### Development
