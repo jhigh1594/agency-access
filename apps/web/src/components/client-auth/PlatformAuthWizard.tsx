@@ -73,6 +73,7 @@ function supportsAssetSelection(product: string): boolean {
     product.startsWith('google_') ||
     product === 'ga4' ||
     product === 'linkedin_ads' ||
+    product === 'linkedin_pages' ||
     product === 'tiktok' ||
     product === 'tiktok_ads'
   );
@@ -83,7 +84,10 @@ function isGoogleProduct(product: string): boolean {
 }
 
 function hasNoAssetsFollowUp(product: string, assets: any): boolean {
-  if ((isGoogleProduct(product) || product === 'linkedin_ads') && assets.availableAssetCount === 0) {
+  if (
+    (isGoogleProduct(product) || product === 'linkedin_ads' || product === 'linkedin_pages') &&
+    assets.availableAssetCount === 0
+  ) {
     return true;
   }
 
@@ -103,6 +107,7 @@ function getSelectedAssetCount(product: string, assets: any): number {
     case 'google_ads':
     case 'meta_ads':
     case 'linkedin_ads':
+    case 'linkedin_pages':
       return (assets.adAccounts?.length ?? 0) + (assets.pages?.length ?? 0) + (assets.instagramAccounts?.length ?? 0);
     case 'ga4':
       return assets.properties?.length ?? 0;
@@ -171,6 +176,10 @@ function getProductSummaryLines(product: string, assets: any): string[] {
     case 'linkedin_ads':
       if ((assets.adAccounts?.length ?? 0) > 0) return [`${assets.adAccounts.length} Ad Account${assets.adAccounts.length === 1 ? '' : 's'} selected`];
       if (assets.availableAssetCount === 0) return ['Follow-up needed: No ad accounts found yet'];
+      return [];
+    case 'linkedin_pages':
+      if ((assets.pages?.length ?? 0) > 0) return [`${assets.pages.length} Page${assets.pages.length === 1 ? '' : 's'} selected`];
+      if (assets.availableAssetCount === 0) return ['Follow-up needed: No pages found yet'];
       return [];
     case 'tiktok':
     case 'tiktok_ads':
@@ -718,6 +727,7 @@ export function PlatformAuthWizard({
                     'google_business_profile': 'Google Business Profile',
                     'meta_ads': 'Meta Ads',
                     'linkedin_ads': 'LinkedIn Ads',
+                    'linkedin_pages': 'LinkedIn Pages',
                     'tiktok': 'TikTok Ads',
                     'tiktok_ads': 'TikTok Ads',
                   };
@@ -773,7 +783,7 @@ export function PlatformAuthWizard({
                         </div>
                       )}
 
-                      {p.product === 'linkedin_ads' && (
+                      {(p.product === 'linkedin_ads' || p.product === 'linkedin_pages') && (
                         <div className="relative">
                           <LinkedInAssetSelector
                             sessionId={connectionId!}
@@ -1157,6 +1167,7 @@ export function PlatformAuthWizard({
                   'google_business_profile': 'Google Business Profile',
                   'meta_ads': 'Meta Ads',
                   'linkedin_ads': 'LinkedIn Ads',
+                  'linkedin_pages': 'LinkedIn Pages',
                 };
                 const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
 

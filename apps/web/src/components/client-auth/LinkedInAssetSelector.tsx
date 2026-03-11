@@ -12,6 +12,8 @@ interface LinkedInAsset {
   id: string;
   name: string;
   reference?: string;
+  urn?: string;
+  vanityName?: string;
   status?: string;
   type?: string;
 }
@@ -21,7 +23,8 @@ interface LinkedInAssetSelectorProps {
   accessRequestToken: string;
   product: string;
   onSelectionChange: (selectedAssets: {
-    adAccounts: string[];
+    adAccounts?: string[];
+    pages?: string[];
     availableAssetCount?: number;
   }) => void;
   onError?: (error: string) => void;
@@ -51,13 +54,22 @@ export function LinkedInAssetSelector({
       const json = await response.json();
 
       if (json.error) {
-        throw new Error(json.error.message || 'Failed to load ad accounts');
+        throw new Error(
+          json.error.message ||
+            (product === 'linkedin_pages'
+              ? 'Failed to load LinkedIn Pages'
+              : 'Failed to load ad accounts')
+        );
       }
 
       setAssets(Array.isArray(json.data) ? json.data : []);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to load ad accounts';
+        err instanceof Error
+          ? err.message
+          : product === 'linkedin_pages'
+            ? 'Failed to load LinkedIn Pages'
+            : 'Failed to load ad accounts';
       setError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -72,20 +84,36 @@ export function LinkedInAssetSelector({
   }, [sessionId, accessRequestToken, product]);
 
   useEffect(() => {
+    if (product === 'linkedin_pages') {
+      onSelectionChange({
+        pages: Array.from(selectedIds),
+        availableAssetCount: assets.length,
+      });
+      return;
+    }
+
     onSelectionChange({
       adAccounts: Array.from(selectedIds),
       availableAssetCount: assets.length,
     });
-  }, [assets.length, onSelectionChange, selectedIds]);
+  }, [assets.length, onSelectionChange, product, selectedIds]);
+
+  const isPagesProduct = product === 'linkedin_pages';
 
   if (isLoading) {
-    return <AssetSelectorLoading message="Loading your LinkedIn ad accounts..." />;
+    return (
+      <AssetSelectorLoading
+        message={
+          isPagesProduct ? 'Loading your LinkedIn Pages...' : 'Loading your LinkedIn ad accounts...'
+        }
+      />
+    );
   }
 
   if (error) {
     return (
       <AssetSelectorError
-        title="Couldn't load LinkedIn ad accounts"
+        title={isPagesProduct ? "Couldn't load LinkedIn Pages" : "Couldn't load LinkedIn ad accounts"}
         message={error}
         onRetry={fetchAssets}
       />
@@ -95,8 +123,12 @@ export function LinkedInAssetSelector({
   if (assets.length === 0) {
     return (
       <AssetSelectorEmpty
-        title="No LinkedIn ad accounts found"
-        description="We couldn't find any Campaign Manager accounts for this LinkedIn login."
+        title={isPagesProduct ? 'No LinkedIn Pages found' : 'No LinkedIn ad accounts found'}
+        description={
+          isPagesProduct
+            ? "We couldn't find any LinkedIn Pages you can administer with this login."
+            : "We couldn't find any Campaign Manager accounts for this LinkedIn login."
+        }
       />
     );
   }
@@ -104,7 +136,7 @@ export function LinkedInAssetSelector({
   const assetList: Asset[] = assets.map((asset) => ({
     id: asset.id,
     name: asset.name,
-    description: asset.status || asset.type || asset.reference || '',
+    description: asset.status || asset.type || asset.vanityName || asset.urn || asset.reference || '',
   }));
 
   return (
@@ -116,7 +148,7 @@ export function LinkedInAssetSelector({
               Selected
             </h3>
             <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
-              LinkedIn ad accounts you're sharing
+              {isPagesProduct ? "LinkedIn Pages you're sharing" : "LinkedIn ad accounts you're sharing"}
             </p>
           </div>
           <div className="flex items-center justify-center w-12 h-12 border-2 border-black dark:border-white bg-[var(--coral)] text-white">
@@ -126,7 +158,7 @@ export function LinkedInAssetSelector({
       </div>
 
       <AssetGroup
-        title="Campaign Manager Accounts"
+        title={isPagesProduct ? 'LinkedIn Pages' : 'Campaign Manager Accounts'}
         assets={assetList}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}

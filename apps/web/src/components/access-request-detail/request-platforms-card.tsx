@@ -2,6 +2,7 @@
 
 import { Card } from '@/components/ui';
 import type { AccessRequest } from '@/lib/api/access-requests';
+import { PLATFORM_NAMES } from '@agency-platform/shared';
 import { ShopifySubmissionPanel } from './shopify-submission-panel';
 
 interface RequestPlatformsCardProps {
@@ -13,11 +14,11 @@ type UnresolvedProduct = NonNullable<
 >[number];
 
 function formatGroup(group: string): string {
-  return group.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+  return PLATFORM_NAMES[group as keyof typeof PLATFORM_NAMES] || group.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatProduct(product: string): string {
-  return product.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+  return PLATFORM_NAMES[product as keyof typeof PLATFORM_NAMES] || product.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatUnresolvedReason(reason: string): string {

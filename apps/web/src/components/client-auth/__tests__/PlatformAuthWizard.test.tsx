@@ -62,12 +62,20 @@ vi.mock('@/components/client-auth/LinkedInAssetSelector', () => ({
       <div>{`LinkedIn Asset Selector: ${product}`}</div>
       <button
         type="button"
-        onClick={() =>
+        onClick={() => {
+          if (product === 'linkedin_pages') {
+            onSelectionChange({
+              pages: [],
+              availableAssetCount: 0,
+            });
+            return;
+          }
+
           onSelectionChange({
             adAccounts: ['urn:li:sponsoredAccount:123'],
             availableAssetCount: 1,
-          })
-        }
+          });
+        }}
       >
         {`Report assets for ${product}`}
       </button>
@@ -304,6 +312,96 @@ describe('PlatformAuthWizard', () => {
     });
 
     expect(screen.getByText('LinkedIn Ads')).toBeInTheDocument();
+  });
+
+  it('lets LinkedIn Pages continue with follow-up when no administered pages are found', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          data: { success: true },
+          error: null,
+        }),
+      json: async () => ({
+        data: { success: true },
+        error: null,
+      }),
+    } as Response);
+
+    render(
+      <PlatformAuthWizard
+        platform="linkedin"
+        platformName="LinkedIn"
+        products={[{ product: 'linkedin_pages', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    expect(screen.getByText('LinkedIn Asset Selector: linkedin_pages')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_pages/i }));
+
+    expect(
+      await screen.findByRole('button', { name: /continue with follow-up needed/i })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('LinkedIn Pages')).toBeInTheDocument();
+    expect(screen.getByText(/No pages found yet/i)).toBeInTheDocument();
+  });
+
+  it('shows both LinkedIn Ads and LinkedIn Pages in mixed LinkedIn requests', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          data: { success: true },
+          error: null,
+        }),
+      json: async () => ({
+        data: { success: true },
+        error: null,
+      }),
+    } as Response);
+
+    render(
+      <PlatformAuthWizard
+        platform="linkedin"
+        platformName="LinkedIn"
+        products={[
+          { product: 'linkedin_ads', accessLevel: 'admin' },
+          { product: 'linkedin_pages', accessLevel: 'admin' },
+        ]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    expect(screen.getByText('LinkedIn Asset Selector: linkedin_ads')).toBeInTheDocument();
+    expect(screen.getByText('LinkedIn Asset Selector: linkedin_pages')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_ads/i }));
+    fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_pages/i }));
+    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('LinkedIn Ads')).toBeInTheDocument();
+    expect(screen.getByText('LinkedIn Pages')).toBeInTheDocument();
   });
 
   it('lets Google continue when a requested product has zero assets and shows follow-up summary copy', async () => {
