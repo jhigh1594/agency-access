@@ -64,6 +64,17 @@ describe('MetaConnector Asset Discovery', () => {
         hasAccess: true,
       });
     });
+
+    it('throws when Meta business discovery fails', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        text: async () => 'OAuthException',
+      } as Response);
+
+      await expect(connector.getBusinessAccounts(accessToken)).rejects.toThrow(
+        /Failed to fetch business accounts/
+      );
+    });
   });
 
   describe('getAdAccounts', () => {
