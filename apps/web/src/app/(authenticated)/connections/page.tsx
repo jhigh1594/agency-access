@@ -273,6 +273,13 @@ function ConnectionsPageContent() {
 
       setSuccessMessage(`Successfully disconnected ${platform}!`);
       setDisconnectingPlatform(null);
+      // Clear localStorage cache so refetch gets fresh data (avoids 304 with stale list)
+      if (typeof window !== 'undefined' && agencyId) {
+        const etagKey = `etag-available-platforms-${agencyId}`;
+        const cachedKey = `cached-platforms-${agencyId}`;
+        window.localStorage.removeItem(etagKey);
+        window.localStorage.removeItem(cachedKey);
+      }
       // Invalidate queries to refresh platform list
       queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
       setTimeout(() => setSuccessMessage(null), 5000);

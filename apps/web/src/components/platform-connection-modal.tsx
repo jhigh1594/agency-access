@@ -140,6 +140,10 @@ export function PlatformConnectionModal({
       setSuccessMessage('Platform disconnected successfully');
       setErrorMessage(null);
       setDisconnectPlatform(null);
+      if (typeof window !== 'undefined' && effectiveAgencyId) {
+        window.localStorage.removeItem(`etag-available-platforms-${effectiveAgencyId}`);
+        window.localStorage.removeItem(`cached-platforms-${effectiveAgencyId}`);
+      }
       queryClient.invalidateQueries({ queryKey: ['available-platforms', effectiveAgencyId] });
       setTimeout(() => setSuccessMessage(null), 3000);
     },
