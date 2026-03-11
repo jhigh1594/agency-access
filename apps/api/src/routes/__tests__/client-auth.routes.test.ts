@@ -140,6 +140,97 @@ describe('Client Auth Routes', () => {
       );
     });
 
+    it('adds LinkedIn page admin scopes for linkedin_pages requests', async () => {
+      const mockToken = 'test-token';
+      const mockState = 'test-state';
+      const mockAuthUrl = 'https://www.linkedin.com/oauth/v2/authorization?state=test-state';
+
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          clientEmail: 'client@example.com',
+          platforms: [
+            {
+              platformGroup: 'linkedin',
+              products: [{ product: 'linkedin_pages', accessLevel: 'admin' }],
+            },
+          ],
+        } as any,
+        error: null,
+      });
+
+      vi.mocked(oauthStateService.createState).mockResolvedValue({
+        data: mockState,
+        error: null,
+      });
+
+      const mockConnector = {
+        getAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
+      };
+      vi.mocked(getConnector).mockReturnValue(mockConnector as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/client/${mockToken}/oauth-url`,
+        payload: { platform: 'linkedin' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockConnector.getAuthUrl).toHaveBeenCalledWith(
+        mockState,
+        ['openid', 'profile', 'email', 'rw_organization_admin'],
+        'http://localhost:3000/invite/oauth-callback'
+      );
+    });
+
+    it('unions LinkedIn ads and page scopes without widening ads-only requests', async () => {
+      const mockToken = 'test-token';
+      const mockState = 'test-state';
+      const mockAuthUrl = 'https://www.linkedin.com/oauth/v2/authorization?state=test-state';
+
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          clientEmail: 'client@example.com',
+          platforms: [
+            {
+              platformGroup: 'linkedin',
+              products: [
+                { product: 'linkedin_ads', accessLevel: 'admin' },
+                { product: 'linkedin_pages', accessLevel: 'admin' },
+              ],
+            },
+          ],
+        } as any,
+        error: null,
+      });
+
+      vi.mocked(oauthStateService.createState).mockResolvedValue({
+        data: mockState,
+        error: null,
+      });
+
+      const mockConnector = {
+        getAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
+      };
+      vi.mocked(getConnector).mockReturnValue(mockConnector as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/client/${mockToken}/oauth-url`,
+        payload: { platform: 'linkedin' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockConnector.getAuthUrl).toHaveBeenCalledWith(
+        mockState,
+        ['openid', 'profile', 'email', 'rw_ads', 'r_ads_reporting', 'rw_organization_admin'],
+        'http://localhost:3000/invite/oauth-callback'
+      );
+    });
+
     it('should return 404 if access request is not found', async () => {
       vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
         data: null,

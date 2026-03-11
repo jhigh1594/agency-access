@@ -50,6 +50,14 @@ export interface LinkedInAdAccount {
   type?: string;
 }
 
+export interface LinkedInPage {
+  id: string;
+  name: string;
+  urn: string;
+  vanityName?: string;
+  type?: string;
+}
+
 export interface GA4Property {
   id: string;
   name: string;
@@ -93,6 +101,14 @@ class ClientAssetsService {
   private readonly GRAPH_API_VERSION = 'v21.0';
   private readonly GRAPH_API_BASE = `https://graph.facebook.com/${this.GRAPH_API_VERSION}`;
   private readonly LINKEDIN_API_VERSION = '202601';
+
+  private getLinkedInHeaders(accessToken: string): Record<string, string> {
+    return {
+      Authorization: `Bearer ${accessToken}`,
+      'LinkedIn-Version': this.LINKEDIN_API_VERSION,
+      'X-Restli-Protocol-Version': '2.0.0',
+    };
+  }
 
   /**
    * Fetch all Meta assets (ad accounts, pages, Instagram) in parallel
@@ -292,11 +308,7 @@ class ClientAssetsService {
     try {
       const response = await fetch('https://api.linkedin.com/rest/adAccounts', {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'LinkedIn-Version': this.LINKEDIN_API_VERSION,
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
+        headers: this.getLinkedInHeaders(accessToken),
       });
 
       if (!response.ok) {
@@ -319,6 +331,136 @@ class ClientAssetsService {
         `Failed to fetch LinkedIn ad accounts: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+  }
+
+  async fetchLinkedInPages(accessToken: string): Promise<LinkedInPage[]> {
+    try {
+      const organizationUrns = await this.fetchLinkedInOrganizationUrns(accessToken);
+      if (organizationUrns.length === 0) {
+        return [];
+      }
+
+      const organizationIds = Array.from(
+        new Set(
+          organizationUrns
+            .map((urn) => urn.split(':').pop() || '')
+            .filter(Boolean)
+        )
+      );
+
+      const pages = await Promise.allSettled(
+        organizationIds.map((organizationId) =>
+          this.fetchLinkedInOrganization(accessToken, organizationId)
+        )
+      );
+
+      const fulfilledPages = pages
+        .filter((result): result is PromiseFulfilledResult<LinkedInPage | null> => result.status === 'fulfilled')
+        .map((result) => result.value)
+        .filter((page): page is LinkedInPage => page !== null);
+
+      if (fulfilledPages.length === 0 && organizationIds.length > 0) {
+        throw new Error('Failed to fetch LinkedIn organization details');
+      }
+
+      const failedCount = pages.filter((result) => result.status === 'rejected').length;
+      if (failedCount > 0) {
+        logger.warn('LinkedIn page discovery completed with partial organization lookup failures', {
+          requestedOrganizationCount: organizationIds.length,
+          returnedPageCount: fulfilledPages.length,
+          failedCount,
+        });
+      }
+
+      return fulfilledPages;
+    } catch (error) {
+      logger.error('Failed to fetch LinkedIn pages', { error });
+      throw new Error(
+        `Failed to fetch LinkedIn pages: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  private async fetchLinkedInOrganizationUrns(accessToken: string): Promise<string[]> {
+    const urns = new Set<string>();
+    let start = 0;
+    const count = 100;
+
+    while (true) {
+      const url = new URL('https://api.linkedin.com/rest/organizationAcls');
+      url.searchParams.set('q', 'roleAssignee');
+      // rw_organization_admin is scoped to organizations where the member is an ADMINISTRATOR.
+      url.searchParams.set('role', 'ADMINISTRATOR');
+      url.searchParams.set('state', 'APPROVED');
+      url.searchParams.set('count', String(count));
+      url.searchParams.set('start', String(start));
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: this.getLinkedInHeaders(accessToken),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`LinkedIn API error (organization ACLs): ${error}`);
+      }
+
+      const data = (await response.json()) as {
+        elements?: Array<Record<string, unknown>>;
+        paging?: { count?: number; start?: number; total?: number };
+      };
+
+      for (const entry of data.elements || []) {
+        const organizationTarget = entry.organizationTarget ?? entry.organization;
+        if (typeof organizationTarget === 'string' && organizationTarget.length > 0) {
+          urns.add(organizationTarget);
+        }
+      }
+
+      const pageCount = data.paging?.count ?? count;
+      const total = data.paging?.total ?? urns.size;
+      start += pageCount;
+
+      if (start >= total || (data.elements?.length ?? 0) < pageCount) {
+        break;
+      }
+    }
+
+    return Array.from(urns);
+  }
+
+  private async fetchLinkedInOrganization(
+    accessToken: string,
+    organizationId: string
+  ): Promise<LinkedInPage> {
+    const response = await fetch(`https://api.linkedin.com/rest/organizations/${organizationId}`, {
+      method: 'GET',
+      headers: this.getLinkedInHeaders(accessToken),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`LinkedIn organization ${organizationId} lookup failed: ${error}`);
+    }
+
+    const organization = (await response.json()) as Record<string, unknown>;
+    const id = String(organization.id ?? organizationId);
+    const name = String(
+      organization.localizedName ??
+        organization.name ??
+        organization.vanityName ??
+        `LinkedIn Page ${id}`
+    );
+
+    return {
+      id,
+      name,
+      urn: `urn:li:organization:${id}`,
+      ...(organization.vanityName ? { vanityName: String(organization.vanityName) } : {}),
+      ...(organization.primaryOrganizationType
+        ? { type: String(organization.primaryOrganizationType) }
+        : {}),
+    };
   }
 
   /**

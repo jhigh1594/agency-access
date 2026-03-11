@@ -200,6 +200,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         google_merchant_center: 'google',
         meta_ads: 'meta',
         linkedin_ads: 'linkedin',
+        linkedin_pages: 'linkedin',
         instagram: 'meta',
         mailchimp: 'mailchimp',
         pinterest: 'pinterest',
@@ -1155,6 +1156,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       google_merchant_center: 'google',
       meta_ads: 'meta',
       linkedin_ads: 'linkedin',
+      linkedin_pages: 'linkedin',
       instagram: 'meta',
       mailchimp: 'mailchimp',
       pinterest: 'pinterest',
@@ -1261,6 +1263,8 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken);
       } else if (platform === 'linkedin_ads') {
         assets = await clientAssetsService.fetchLinkedInAdAccounts(tokens.accessToken);
+      } else if (platform === 'linkedin_pages') {
+        assets = await clientAssetsService.fetchLinkedInPages(tokens.accessToken);
       } else if (platform === 'mailchimp') {
         const metadata = (platformAuth.metadata as any) || {};
         const dc = metadata.dc;

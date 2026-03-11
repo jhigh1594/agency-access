@@ -468,5 +468,62 @@ describe('Phase 5: Client Service - TDD Tests', () => {
         }),
       ]);
     });
+
+    it('marks LinkedIn Pages as no_assets when discovery completed without administered pages', async () => {
+      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
+        id: 'client-1',
+        agencyId: 'agency-1',
+        name: 'Taylor Client',
+        company: 'Acme',
+        email: 'taylor@acme.com',
+        website: null,
+        language: 'en',
+        createdAt: new Date('2026-03-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-03-05T00:00:00.000Z'),
+        accessRequests: [
+          {
+            id: 'request-3',
+            clientName: 'LinkedIn pages access',
+            status: 'partial',
+            createdAt: new Date('2026-03-10T00:00:00.000Z'),
+            authorizedAt: new Date('2026-03-10T01:00:00.000Z'),
+            platforms: { linkedin: ['linkedin_pages'] },
+            connection: {
+              id: 'connection-3',
+              status: 'active',
+              createdAt: new Date('2026-03-10T01:00:00.000Z'),
+              grantedAssets: {
+                linkedin_pages: {
+                  pages: [],
+                  availableAssetCount: 0,
+                },
+              },
+              authorizations: [
+                {
+                  platform: 'linkedin',
+                  status: 'active',
+                  metadata: {},
+                },
+              ],
+            },
+          },
+        ],
+      } as any);
+
+      const result = await clientService.getClientDetail({
+        clientId: 'client-1',
+        agencyId: 'agency-1',
+      });
+
+      expect(result?.platformGroups).toEqual([
+        expect.objectContaining({
+          platformGroup: 'linkedin',
+          status: 'needs_follow_up',
+          fulfilledCount: 0,
+          requestedCount: 1,
+          products: [expect.objectContaining({ product: 'linkedin_pages', status: 'no_assets' })],
+        }),
+      ]);
+    });
   });
 });

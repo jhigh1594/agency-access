@@ -94,3 +94,110 @@ describe('ClientAssetsService - TikTok', () => {
     expect(result.businessCenterAssets).toEqual([]);
   });
 });
+
+describe('ClientAssetsService - LinkedIn', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  it('fetches LinkedIn Pages from organization ACLs and organization details', async () => {
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+
+      if (url.includes('/rest/organizationAcls')) {
+        return {
+          ok: true,
+          json: async () => ({
+            elements: [
+              {
+                role: 'ADMINISTRATOR',
+                state: 'APPROVED',
+                organizationTarget: 'urn:li:organization:789',
+              },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url === 'https://api.linkedin.com/rest/organizations/789') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 789,
+            localizedName: 'Northwind',
+            vanityName: 'northwind',
+            primaryOrganizationType: 'COMPANY',
+          }),
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        text: async () => 'not found',
+      } as Response;
+    });
+
+    const result = await clientAssetsService.fetchLinkedInPages('token-123');
+
+    expect(result).toEqual([
+      {
+        id: '789',
+        name: 'Northwind',
+        urn: 'urn:li:organization:789',
+        vanityName: 'northwind',
+        type: 'COMPANY',
+      },
+    ]);
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('https://api.linkedin.com/rest/organizationAcls'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer token-123',
+          'LinkedIn-Version': '202601',
+          'X-Restli-Protocol-Version': '2.0.0',
+        }),
+      })
+    );
+  });
+
+  it('throws when all LinkedIn organization detail lookups fail', async () => {
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+
+      if (url.includes('/rest/organizationAcls')) {
+        return {
+          ok: true,
+          json: async () => ({
+            elements: [
+              {
+                role: 'ADMINISTRATOR',
+                state: 'APPROVED',
+                organizationTarget: 'urn:li:organization:789',
+              },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url === 'https://api.linkedin.com/rest/organizations/789') {
+        return {
+          ok: false,
+          status: 403,
+          text: async () => 'forbidden',
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        text: async () => 'not found',
+      } as Response;
+    });
+
+    await expect(clientAssetsService.fetchLinkedInPages('token-123')).rejects.toThrow(
+      /failed to fetch linkedin organization details/i
+    );
+  });
+});

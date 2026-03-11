@@ -8,6 +8,21 @@ import { createOAuthStateSchema } from './schemas.js';
 import { resolveClientInviteCallbackUrl } from './redirect-uri.js';
 
 export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
+  function getRequestedGroupProductIds(
+    accessRequestPlatforms: unknown,
+    platformGroup: string
+  ): string[] {
+    if (!Array.isArray(accessRequestPlatforms)) {
+      return [];
+    }
+
+    return accessRequestPlatforms
+      .filter((entry: any) => entry?.platformGroup === platformGroup)
+      .flatMap((entry: any) => entry?.products || [])
+      .map((product: any) => (typeof product === 'string' ? product : product?.product))
+      .filter((productId: unknown): productId is string => typeof productId === 'string');
+  }
+
   // Create OAuth state token for CSRF protection
   fastify.post('/client/:token/oauth-state', async (request, reply) => {
     const { token } = request.params as { token: string };
@@ -125,14 +140,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
       // For Google platform group, determine scopes based on requested products
       let scopes: string[] | undefined;
       if (platform === 'google') {
-        const platforms = accessRequest.data.platforms as any[];
-        const googleProducts = platforms
-          .filter((p: any) => p.platformGroup === 'google')
-          .flatMap((p: any) => p.products || []);
-
-        const productIds = googleProducts.map((p: any) =>
-          typeof p === 'string' ? p : p.product
-        );
+        const productIds = getRequestedGroupProductIds(accessRequest.data.platforms, 'google');
 
         scopes = [];
         if (productIds.includes('google_ads')) {
@@ -154,6 +162,18 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
           scopes.push('https://www.googleapis.com/auth/webmasters');
         }
         scopes.push('https://www.googleapis.com/auth/userinfo.email');
+      }
+
+      if (platform === 'linkedin') {
+        const productIds = getRequestedGroupProductIds(accessRequest.data.platforms, 'linkedin');
+
+        scopes = ['openid', 'profile', 'email'];
+        if (productIds.includes('linkedin_ads')) {
+          scopes.push('rw_ads', 'r_ads_reporting');
+        }
+        if (productIds.includes('linkedin_pages')) {
+          scopes.push('rw_organization_admin');
+        }
       }
 
       if (platform === 'meta' || platform === 'meta_ads') {

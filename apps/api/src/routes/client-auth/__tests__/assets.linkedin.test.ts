@@ -103,6 +103,39 @@ describe('Client Auth Asset Routes - LinkedIn', () => {
         } as any;
       }
 
+      if (url.includes('https://api.linkedin.com/rest/organizationAcls')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            elements: [
+              {
+                role: 'ADMINISTRATOR',
+                state: 'APPROVED',
+                organizationTarget: 'urn:li:organization:456',
+              },
+            ],
+          }),
+          text: async () => '',
+        } as any;
+      }
+
+      if (url === 'https://api.linkedin.com/rest/organizations/456') {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            id: 456,
+            localizedName: 'Acme Company Page',
+            vanityName: 'acme-company',
+            primaryOrganizationType: 'COMPANY',
+          }),
+          text: async () => '',
+        } as any;
+      }
+
       return {
         ok: false,
         status: 404,
@@ -159,6 +192,138 @@ describe('Client Auth Asset Routes - LinkedIn', () => {
         request: expect.anything(),
       })
     );
+  });
+
+  it('returns selector-ready LinkedIn Pages for linkedin_pages', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/client/token-a/assets/linkedin_pages?connectionId=conn-1',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data).toEqual([
+      {
+        id: '456',
+        name: 'Acme Company Page',
+        urn: 'urn:li:organization:456',
+        vanityName: 'acme-company',
+        type: 'COMPANY',
+      },
+    ]);
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('https://api.linkedin.com/rest/organizationAcls'),
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer linkedin-access-token',
+          'LinkedIn-Version': '202601',
+          'X-Restli-Protocol-Version': '2.0.0',
+        }),
+      })
+    );
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      'https://api.linkedin.com/rest/organizations/456',
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer linkedin-access-token',
+          'LinkedIn-Version': '202601',
+          'X-Restli-Protocol-Version': '2.0.0',
+        }),
+      })
+    );
+    expect(auditService.createAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'LINKEDIN_TOKEN_READ',
+        metadata: expect.objectContaining({
+          platform: 'linkedin_pages',
+          source: 'client_assets_fetch',
+        }),
+      })
+    );
+  });
+
+  it('surfaces a route error when LinkedIn page detail hydration fully fails', async () => {
+    vi.mocked(fetch).mockImplementation(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('https://api.linkedin.com/rest/organizationAcls')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            elements: [
+              {
+                role: 'ADMINISTRATOR',
+                state: 'APPROVED',
+                organizationTarget: 'urn:li:organization:456',
+              },
+            ],
+          }),
+          text: async () => '',
+        } as any;
+      }
+
+      if (url === 'https://api.linkedin.com/rest/organizations/456') {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          json: async () => ({}),
+          text: async () => 'forbidden',
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: async () => ({}),
+        text: async () => 'Not Found',
+      } as any;
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/client/token-a/assets/linkedin_pages?connectionId=conn-1',
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.json().error.code).toBe('ASSET_FETCH_ERROR');
+    expect(response.json().error.message).toMatch(/failed to fetch linkedin organization details/i);
+  });
+
+  it('accepts and persists zero-page discovery for linkedin_pages', async () => {
+    vi.mocked(prisma.clientConnection.update).mockResolvedValue({ id: 'conn-1' } as any);
+    vi.mocked(prisma.platformAuthorization.update).mockResolvedValue({ id: 'pa-1' } as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-a/save-assets',
+      payload: {
+        connectionId: 'conn-1',
+        platform: 'linkedin_pages',
+        selectedAssets: {
+          pages: [],
+          availableAssetCount: 0,
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(prisma.clientConnection.update).toHaveBeenCalledWith({
+      where: { id: 'conn-1' },
+      data: {
+        grantedAssets: {
+          linkedin_pages: {
+            pages: [],
+            availableAssetCount: 0,
+          },
+        },
+      },
+    });
   });
 
   it('accepts and persists availableAssetCount in save-assets payloads', async () => {

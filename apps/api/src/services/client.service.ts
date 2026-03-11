@@ -404,6 +404,7 @@ const PLATFORM_GROUP_MAP: Record<string, string> = {
   instagram: 'meta',
   whatsapp_business: 'meta',
   linkedin_ads: 'linkedin',
+  linkedin_pages: 'linkedin',
   snapchat_ads: 'snapchat',
   tiktok_ads: 'tiktok',
 };
@@ -417,6 +418,7 @@ const ASSET_SELECTING_PRODUCTS = new Set([
   'google_merchant_center',
   'meta_ads',
   'linkedin_ads',
+  'linkedin_pages',
   'tiktok',
   'tiktok_ads',
 ]);
@@ -534,6 +536,7 @@ function getSelectedAssetCount(product: string, assets: Record<string, any>): nu
     case 'google_ads':
     case 'meta_ads':
     case 'linkedin_ads':
+    case 'linkedin_pages':
       return (
         (assets.adAccounts?.length ?? 0) +
         (assets.pages?.length ?? 0) +
@@ -570,7 +573,8 @@ function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolea
     product === 'google_tag_manager' ||
     product === 'google_search_console' ||
     product === 'google_merchant_center' ||
-    product === 'linkedin_ads'
+    product === 'linkedin_ads' ||
+    product === 'linkedin_pages'
   ) {
     return assets.availableAssetCount === 0;
   }
@@ -763,7 +767,7 @@ function buildClientDetailPlatformGroups(
       status = 'revoked';
     } else if (hasExpired && fulfilledCount === 0 && !hasFollowUp) {
       status = 'expired';
-    } else if (hasFollowUp && fulfilledCount > 0) {
+    } else if (hasFollowUp) {
       status = 'needs_follow_up';
     } else if (fulfilledCount > 0) {
       status = 'partial';

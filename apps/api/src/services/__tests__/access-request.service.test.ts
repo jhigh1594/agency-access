@@ -340,6 +340,43 @@ describe('AccessRequestService', () => {
       expect(result.data?.authorizationProgress.isComplete).toBe(false);
     });
 
+    it('marks LinkedIn Pages unresolved when OAuth exists without any selected pages', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-linkedin-pages-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [{ platform: 'linkedin_pages', accessLevel: 'manage' }],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-linkedin-pages',
+          grantedAssets: {},
+          authorizations: [{ platform: 'linkedin', status: 'active' }],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken('token-linkedin-pages-123');
+
+      expect(result.error).toBeNull();
+      expect((result.data as any)?.authorizationProgress.unresolvedProducts).toEqual([
+        {
+          product: 'linkedin_pages',
+          platformGroup: 'linkedin',
+          reason: 'selection_required',
+        },
+      ]);
+      expect(result.data?.authorizationProgress.isComplete).toBe(false);
+    });
+
     it('marks asset-selecting products unresolved with no_assets when saved discovery shows empty inventory', async () => {
       const mockRequest = {
         id: 'request-1',
