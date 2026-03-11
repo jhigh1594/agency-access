@@ -447,13 +447,11 @@ export class GoogleConnector {
             }
 
             if (searchResponse.status === 403) {
-              console.warn(`❌ Access denied for ${customerId} (403 Permission Denied)`);
-              console.warn('   This likely means your Developer Token is "Test Access" but you are trying to query Production accounts.');
-              console.warn('   Solution: Apply for "Basic Access" in Google Ads Manager Account > Tools & Settings > API Center');
-              console.warn('   Or use Test Accounts for development: https://ads.google.com/aw/billing/testaccountcreate');
-              accountMap.set(customerId, {
-                id: customerId,
-                name: `Account ${customerId} (Restricted - Check Dev Token Access Level)`,
+              console.warn(`❌ Access denied while querying details for ${customerId} (403 Permission Denied)`);
+              console.warn('   Falling back to the account ID label because the detail lookup is not authorized.');
+              console.warn('   This does not necessarily indicate a developer token access-level problem.', {
+                customerId,
+                error: errorMessage,
               });
               return;
             }

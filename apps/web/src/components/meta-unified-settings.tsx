@@ -9,6 +9,7 @@ import {
   MetaPagePermission
 } from '@agency-platform/shared';
 import { MetaPagePermissionsModal } from './meta-page-permissions-modal';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 import { 
   Loader2, 
   ChevronUp,
@@ -43,7 +44,10 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
 
   // Fetch businesses
-  const { data: businessesData, isLoading: isLoadingBusinesses } = useQuery({
+  const {
+    data: businessesData,
+    error: businessesError,
+  } = useQuery({
     queryKey: ['meta-businesses', agencyId],
     queryFn: async () => {
       const token = await getToken();
@@ -57,12 +61,16 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
           },
         }
       );
-      if (!response.ok) throw new Error('Failed to fetch businesses');
+      if (!response.ok) {
+        throw new Error(await extractApiErrorMessage(response, 'Failed to fetch businesses'));
+      }
       const result = await response.json();
       return result.data as { businesses: Business[] };
     },
+    enabled: !!agencyId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: false,
   });
 
   // Fetch current settings and selected business
@@ -166,8 +174,22 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
     },
   });
 
-  const businesses = businessesData?.businesses || [];
-  const isLoading = isLoadingBusinesses || isLoadingSettings;
+  const cachedBusinesses = (
+    connectionData?.metadata?.metaBusinessAccounts?.businesses as Business[] | undefined
+  ) || [];
+  const refreshedBusinesses = businessesData?.businesses;
+  const baseBusinesses = refreshedBusinesses ?? cachedBusinesses;
+  const businesses = baseBusinesses.some((business) => business.id === selectedBusinessId) || !selectedBusinessId
+    ? baseBusinesses
+    : [
+        ...baseBusinesses,
+        {
+          id: selectedBusinessId,
+          name: selectedBusinessName || selectedBusinessId,
+        },
+      ];
+  const isLoading = isLoadingSettings;
+  const businessRefreshWarning = businessesError instanceof Error ? businessesError.message : null;
 
   if (isLoading) {
     return (
@@ -292,6 +314,12 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
             </div>
+            {businessRefreshWarning && cachedBusinesses.length > 0 && (
+              <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <p>{businessRefreshWarning}</p>
+                <p className="mt-1">Showing last synced portfolios until Meta refresh succeeds.</p>
+              </div>
+            )}
             <p className="text-xs text-slate-500 mt-2">
               The selected portfolio will be used to manage all client assets. Changing this will re-configure your system user access.
             </p>

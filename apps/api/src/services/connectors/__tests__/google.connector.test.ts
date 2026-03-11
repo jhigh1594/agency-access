@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GoogleConnector } from '../google.js';
+import { env } from '../../../lib/env.js';
 
 // Mock env used by GoogleConnector constructor
 vi.mock('../../../lib/env', () => ({
@@ -14,10 +15,15 @@ vi.mock('../../../lib/env', () => ({
 
 describe('GoogleConnector', () => {
   const accessToken = 'test-access-token';
+  const originalDeveloperToken = env.GOOGLE_ADS_DEVELOPER_TOKEN;
 
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
+  });
+
+  afterEach(() => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = originalDeveloperToken;
   });
 
   it('includes Search Console webmasters scope in the default auth URL', () => {
@@ -319,5 +325,60 @@ describe('GoogleConnector', () => {
         }),
       })
     );
+  });
+
+  it('falls back to a neutral Ads account label when account detail lookup returns 403', async () => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-developer-token';
+    const connector = new GoogleConnector();
+
+    vi.mocked(fetch).mockImplementation(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers:listAccessibleCustomers')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            resourceNames: ['customers/6449142979'],
+          }),
+        } as any;
+      }
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers/6449142979/googleAds:search')) {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          text: async () => JSON.stringify({
+            error: {
+              code: 403,
+              message: 'Permission denied',
+            },
+          }),
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not Found',
+        json: async () => ({}),
+      } as any;
+    });
+
+    const result = await connector.getAllGoogleAccounts(accessToken);
+
+    expect(result.adsAccounts).toEqual([
+      {
+        id: '6449142979',
+        name: 'Account 644-914-2979',
+        type: 'google_ads',
+        status: 'active',
+      },
+    ]);
+    expect(result.adsAccounts[0]?.name).not.toContain('Restricted');
+    expect(result.hasAccess).toBe(true);
   });
 });

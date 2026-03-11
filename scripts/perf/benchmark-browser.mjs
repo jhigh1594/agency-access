@@ -18,15 +18,51 @@ function arg(name, fallback) {
   return fallback;
 }
 
+async function waitForPerfSessionReady({ apiBase, auth }) {
+  const deadline = Date.now() + 10000;
+  const readinessUrl = new URL('/api/agencies', apiBase);
+  readinessUrl.searchParams.set('clerkUserId', auth.userId);
+  readinessUrl.searchParams.set('fields', 'id,name,email,clerkUserId');
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(readinessUrl, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+
+      if (response.ok) {
+        return;
+      }
+    } catch {
+      // Retry until the short readiness window expires.
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+
+  throw new Error('Perf session token did not become ready before the browser benchmark started.');
+}
+
 async function main() {
   const appBase = arg('--app-base', process.env.PERF_APP_BASE || 'http://localhost:3000');
+  const apiBase = arg('--api-base', process.env.PERF_API_BASE || 'http://localhost:3001');
   const label = arg('--label', 'baseline');
-  const url = `${appBase}/dashboard`;
+  const captureTrace = arg('--capture-trace', 'false') === 'true';
 
   const auth = await createPerfSessionToken();
+  await waitForPerfSessionReady({ apiBase, auth });
+  const bootstrapUrl = new URL('/perf/dashboard-bootstrap', appBase);
+  bootstrapUrl.searchParams.set('token', auth.token);
+  bootstrapUrl.searchParams.set('userId', auth.userId);
+  const url = bootstrapUrl.toString();
 
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const context = await browser.newContext();
+  await context.setExtraHTTPHeaders({
+    'x-perf-harness': '1',
+  });
   const page = await context.newPage();
 
   const consoleTimings = [];
@@ -68,42 +104,55 @@ async function main() {
     });
   });
 
-  await page.addInitScript((data) => {
-    window.localStorage.setItem('__perf_auth_token', data.token);
-    window.localStorage.setItem('__perf_principal_id', data.userId);
-  }, {
-    token: auth.token,
-    userId: auth.userId,
-  });
-
-  const cdp = await context.newCDPSession(page);
+  let cdp = null;
   const traceEvents = [];
-  cdp.on('Tracing.dataCollected', (payload) => {
-    traceEvents.push(...payload.value);
-  });
-  const tracingDone = new Promise((resolve) => {
-    cdp.once('Tracing.tracingComplete', resolve);
-  });
+  let tracingDone = null;
 
-  await cdp.send('Tracing.start', {
-    categories: [
-      'devtools.timeline',
-      'disabled-by-default-devtools.timeline',
-      'blink.user_timing',
-      'loading',
-      'network',
-      'v8.execute',
-    ].join(','),
-    transferMode: 'ReportEvents',
-  });
+  if (captureTrace) {
+    cdp = await context.newCDPSession(page);
+    cdp.on('Tracing.dataCollected', (payload) => {
+      traceEvents.push(...payload.value);
+    });
+    tracingDone = new Promise((resolve) => {
+      cdp.once('Tracing.tracingComplete', resolve);
+    });
+
+    await cdp.send('Tracing.start', {
+      categories: [
+        'devtools.timeline',
+        'disabled-by-default-devtools.timeline',
+        'blink.user_timing',
+        'loading',
+        'network',
+        'v8.execute',
+      ].join(','),
+      transferMode: 'ReportEvents',
+    });
+  }
 
   const navStartedAt = performance.now();
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 120000 });
-  await page.waitForSelector('text=Dashboard', { timeout: 120000 });
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+  await page.waitForURL((currentUrl) => currentUrl.pathname === '/dashboard', { timeout: 120000 });
+  await page.waitForSelector('h1', { timeout: 120000 });
+  const dashboardHeading = page.getByRole('heading', { name: 'Dashboard', level: 1 });
+  await dashboardHeading.waitFor({ state: 'visible', timeout: 120000 });
+  const errorHeading = page.getByRole('heading', { name: /failed to load dashboard|authenticating session/i });
+  if (await errorHeading.count()) {
+    throw new Error('Dashboard benchmark reached an error state instead of a ready dashboard.');
+  }
   const navDurationMs = performance.now() - navStartedAt;
+
+  // Background analytics/auth traffic can keep the page from becoming truly idle in dev.
+  // Capture a short best-effort idle state without making the benchmark hang indefinitely.
+  try {
+    await page.waitForLoadState('networkidle', { timeout: 3000 });
+  } catch {
+    // Ignore idle timeout and continue with the collected timing data.
+  }
 
   const performanceEntries = await page.evaluate(() => {
     const [nav] = performance.getEntriesByType('navigation');
+    const [redirectMark] = performance.getEntriesByName('perf-harness:dashboard-redirect-start');
     const paints = performance.getEntriesByType('paint').map((entry) => ({
       name: entry.name,
       startTime: entry.startTime,
@@ -120,28 +169,32 @@ async function main() {
         loadEventMs: nav.loadEventEnd,
         transferSize: nav.transferSize,
       } : null,
+      redirectToDashboardReadyMs: redirectMark ? performance.now() - redirectMark.startTime : null,
       paints,
       measures,
     };
   });
 
-  await cdp.send('Tracing.end');
-  await tracingDone;
-  const traceJson = JSON.stringify({ traceEvents });
-
-  const traceFile = path.join(__dirname, 'traces', `dashboard-${label}-${Date.now()}.json`);
+  let traceFile = null;
   const screenshotFile = path.join(__dirname, 'traces', `dashboard-${label}-${Date.now()}.png`);
   const reportFile = path.join(__dirname, 'results', `browser-${label}-${Date.now()}.json`);
 
-  await fs.writeFile(traceFile, traceJson);
+  if (cdp && tracingDone) {
+    await cdp.send('Tracing.end');
+    await tracingDone;
+    traceFile = path.join(__dirname, 'traces', `dashboard-${label}-${Date.now()}.json`);
+    const traceJson = JSON.stringify({ traceEvents });
+    await fs.writeFile(traceFile, traceJson);
+  }
   await page.screenshot({ path: screenshotFile, fullPage: true });
 
   const report = {
     label,
     timestamp: new Date().toISOString(),
     url,
+    finalUrl: page.url(),
     userId: auth.userId,
-    navigationDurationMs: Number(navDurationMs.toFixed(2)),
+    dashboardReadyDurationMs: Number(navDurationMs.toFixed(2)),
     performanceEntries,
     consoleTimings,
     apiRequests,
@@ -154,8 +207,15 @@ async function main() {
   await browser.close();
 
   process.stdout.write(`Saved browser benchmark report: ${reportFile}\n`);
-  process.stdout.write(`Saved trace: ${traceFile}\n`);
-  process.stdout.write(`Navigation duration: ${report.navigationDurationMs}ms\n`);
+  if (traceFile) {
+    process.stdout.write(`Saved trace: ${traceFile}\n`);
+  }
+  process.stdout.write(`Dashboard ready duration: ${report.dashboardReadyDurationMs}ms\n`);
+  if (report.performanceEntries.redirectToDashboardReadyMs !== null) {
+    process.stdout.write(
+      `Redirect-to-dashboard-ready duration: ${Number(report.performanceEntries.redirectToDashboardReadyMs.toFixed(2))}ms\n`
+    );
+  }
 }
 
 main().catch((error) => {

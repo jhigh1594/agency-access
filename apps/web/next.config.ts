@@ -66,6 +66,17 @@ const nextConfig: NextConfig = {
 
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+
+  // Permanent redirects for SEO and content consolidation
+  async redirects() {
+    return [
+      {
+        source: '/blog/how-to-get-meta-ads-access-from-clients',
+        destination: '/guides/meta-ads-access',
+        permanent: true, // 301 redirect
+      },
+    ];
+  },
 };
 
 export default nextConfig;

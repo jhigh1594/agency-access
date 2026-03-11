@@ -273,6 +273,26 @@ export class MetaConnector {
       verificationStatus?: string;
     }> = [];
 
+    const seenBusinessIds = new Set<string>();
+    const recordBusiness = (business: {
+      id?: string;
+      name?: string;
+      vertical_name?: string;
+      verification_status?: string;
+    }) => {
+      if (!business.id || !business.name || seenBusinessIds.has(business.id)) {
+        return;
+      }
+
+      seenBusinessIds.add(business.id);
+      businesses.push({
+        id: business.id,
+        name: business.name,
+        verticalName: business.vertical_name,
+        verificationStatus: business.verification_status,
+      });
+    };
+
     let nextUrl: string | null =
       `https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status&access_token=${accessToken}`;
 
@@ -296,14 +316,9 @@ export class MetaConnector {
         };
       };
 
-      businesses.push(
-        ...(data.data || []).map((business) => ({
-          id: business.id,
-          name: business.name,
-          verticalName: business.vertical_name,
-          verificationStatus: business.verification_status,
-        }))
-      );
+      for (const business of data.data || []) {
+        recordBusiness(business);
+      }
 
       if (!data.paging?.next) {
         nextUrl = null;
@@ -315,6 +330,49 @@ export class MetaConnector {
         parsedNextUrl.searchParams.set('access_token', accessToken);
       }
       nextUrl = parsedNextUrl.toString();
+    }
+
+    let nextBusinessUserUrl: string | null =
+      `https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,vertical_name,verification_status}&access_token=${accessToken}`;
+
+    while (nextBusinessUserUrl) {
+      const response = await fetch(nextBusinessUserUrl, { method: 'GET' });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to fetch business users: ${error}`);
+      }
+
+      const data = (await response.json()) as {
+        data?: Array<{
+          business?: {
+            id?: string;
+            name?: string;
+            vertical_name?: string;
+            verification_status?: string;
+          };
+        }>;
+        paging?: {
+          next?: string;
+        };
+      };
+
+      for (const businessUser of data.data || []) {
+        if (businessUser.business) {
+          recordBusiness(businessUser.business);
+        }
+      }
+
+      if (!data.paging?.next) {
+        nextBusinessUserUrl = null;
+        continue;
+      }
+
+      const parsedNextUrl = new URL(data.paging.next);
+      if (!parsedNextUrl.searchParams.has('access_token')) {
+        parsedNextUrl.searchParams.set('access_token', accessToken);
+      }
+      nextBusinessUserUrl = parsedNextUrl.toString();
     }
 
     return {
