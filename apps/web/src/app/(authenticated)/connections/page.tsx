@@ -150,7 +150,7 @@ function ConnectionsPageContent() {
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`,
-        { headers }
+        { headers, cache: 'no-store' }
       );
 
       // Store new ETag for future requests
@@ -273,15 +273,13 @@ function ConnectionsPageContent() {
 
       setSuccessMessage(`Successfully disconnected ${platform}!`);
       setDisconnectingPlatform(null);
-      // Clear localStorage cache so refetch gets fresh data (avoids 304 with stale list)
+      // Clear localStorage cache and bypass any cached fetch
       if (typeof window !== 'undefined' && agencyId) {
-        const etagKey = `etag-available-platforms-${agencyId}`;
-        const cachedKey = `cached-platforms-${agencyId}`;
-        window.localStorage.removeItem(etagKey);
-        window.localStorage.removeItem(cachedKey);
+        window.localStorage.removeItem(`etag-available-platforms-${agencyId}`);
+        window.localStorage.removeItem(`cached-platforms-${agencyId}`);
       }
-      // Invalidate queries to refresh platform list
-      queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
+      // Force immediate refetch so UI updates (invalidate + refetch; fetch uses cache: 'no-store')
+      void queryClient.refetchQueries({ queryKey: ['available-platforms', agencyId] });
       setTimeout(() => setSuccessMessage(null), 5000);
     },
     onError: (error) => {
