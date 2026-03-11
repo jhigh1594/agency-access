@@ -355,9 +355,11 @@ class ClientAssetsService {
       );
 
       const fulfilledPages = pages
-        .filter((result): result is PromiseFulfilledResult<LinkedInPage | null> => result.status === 'fulfilled')
-        .map((result) => result.value)
-        .filter((page): page is LinkedInPage => page !== null);
+        .filter(
+          (result): result is PromiseFulfilledResult<LinkedInPage> =>
+            result.status === 'fulfilled'
+        )
+        .map((result) => result.value);
 
       if (fulfilledPages.length === 0 && organizationIds.length > 0) {
         throw new Error('Failed to fetch LinkedIn organization details');
