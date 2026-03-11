@@ -96,12 +96,21 @@ class RedisService {
 
   async ensureReady(): Promise<void> {
     const client = this.getClient();
+    const probeKey = `redis_probe:${Date.now()}:${Math.random().toString(16).slice(2)}`;
 
     if (client.status === 'wait') {
       await client.connect();
     }
 
     await client.ping();
+    await client.set(probeKey, 'ok', 'EX', 10);
+
+    const probeValue = await client.get(probeKey);
+    if (probeValue !== 'ok') {
+      throw new Error('Redis write verification failed');
+    }
+
+    await client.del(probeKey);
   }
 }
 

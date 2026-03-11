@@ -5,6 +5,9 @@ const redisClientMocks = {
   on: vi.fn(),
   connect: vi.fn().mockResolvedValue(undefined),
   ping: vi.fn().mockResolvedValue('PONG'),
+  set: vi.fn().mockResolvedValue('OK'),
+  get: vi.fn().mockResolvedValue('ok'),
+  del: vi.fn().mockResolvedValue(1),
   quit: vi.fn().mockResolvedValue('OK'),
   status: 'wait',
 };
@@ -51,9 +54,15 @@ async function importRedisWith(envValues: Record<string, string | undefined>) {
   redisClientMocks.on.mockReset();
   redisClientMocks.connect.mockReset();
   redisClientMocks.ping.mockReset();
+  redisClientMocks.set.mockReset();
+  redisClientMocks.get.mockReset();
+  redisClientMocks.del.mockReset();
   redisClientMocks.quit.mockReset();
   redisClientMocks.connect.mockResolvedValue(undefined);
   redisClientMocks.ping.mockResolvedValue('PONG');
+  redisClientMocks.set.mockResolvedValue('OK');
+  redisClientMocks.get.mockResolvedValue('ok');
+  redisClientMocks.del.mockResolvedValue(1);
   redisClientMocks.quit.mockResolvedValue('OK');
   redisClientMocks.status = 'wait';
 
@@ -115,6 +124,9 @@ describe('redis config', () => {
 
     expect(redisClientMocks.connect.mock.calls.length).toBeGreaterThan(connectCallsBeforeReadyCheck);
     expect(redisClientMocks.ping).toHaveBeenCalledTimes(1);
+    expect(redisClientMocks.set).toHaveBeenCalledTimes(1);
+    expect(redisClientMocks.get).toHaveBeenCalledTimes(1);
+    expect(redisClientMocks.del).toHaveBeenCalledTimes(1);
   });
 
   it('does not force TLS for localhost redis:// URLs outside managed production endpoints', async () => {

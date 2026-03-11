@@ -87,8 +87,21 @@ async function createState(
 
     return { data: stateToken, error: null };
   } catch (error) {
+    const errorWithCode = error as Error & { code?: string };
+    const errorMeta =
+      error instanceof Error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            ...(typeof errorWithCode.code === 'string'
+              ? { code: errorWithCode.code }
+              : {}),
+          }
+        : { message: String(error) };
+
     logger.error('OAuth state creation failed', {
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMeta,
     });
     return {
       data: null,
@@ -194,8 +207,21 @@ async function validateState(
     const { signature: _signature, ...sanitizedStateData } = stateData;
     return { data: sanitizedStateData as OAuthState, error: null };
   } catch (error) {
+    const errorWithCode = error as Error & { code?: string };
+    const errorMeta =
+      error instanceof Error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            ...(typeof errorWithCode.code === 'string'
+              ? { code: errorWithCode.code }
+              : {}),
+          }
+        : { message: String(error) };
+
     logger.error('OAuth state validation failed', {
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMeta,
     });
     return {
       data: null,
