@@ -1,6 +1,15 @@
 import { agencyPlatformService } from './agency-platform.service.js';
 import { MetaConnector } from './connectors/meta.js';
 import type { MetaAssetSelection, MetaAllAssets, MetaAssetSettings } from '@agency-platform/shared';
+import { prisma } from '@/lib/prisma';
+import { createAuditLog } from '@/services/audit.service';
+import { metaSystemUserService } from './meta-system-user.service.js';
+
+const META_PARTNER_ADMIN_SCOPES = ['ads_management', 'ads_read', 'business_management'];
+
+function buildPartnerAdminSystemUserSecretName(agencyId: string, businessId: string): string {
+  return `meta_partner_admin_system_user_${agencyId}_${businessId}`;
+}
 
 /**
  * Meta Assets Service
@@ -48,7 +57,6 @@ export const metaAssetsService = {
         };
       }
 
-      const { prisma } = await import('@/lib/prisma');
       const updatedConnection = await prisma.agencyPlatformConnection.update({
         where: { id: connection.data.id },
         data: {
@@ -56,36 +64,141 @@ export const metaAssetsService = {
         },
       });
 
-      // After business ID is set, create/retrieve system user
-      // We do this even if systemUserId is already present in case they switched business managers
+      // After business ID is set, provision the partner admin system user token source.
+      // We do this even if metadata already exists in case the agency switched business portfolios.
       try {
-        // Get access token for system user creation
         const tokenResult = await agencyPlatformService.getValidToken(agencyId, 'meta');
         if (!tokenResult.error && tokenResult.data) {
-          // @ts-ignore - Dynamic import, module exists at runtime
-          const { metaSystemUserService } = await import('./meta-system-user.service.js');
-          
           const systemUserResult = await metaSystemUserService.getOrCreateSystemUser(
             businessId,
-            tokenResult.data
+            tokenResult.data,
+            {
+              name: metaSystemUserService.getDefaultPartnerAdminSystemUserName(),
+              role: 'ADMIN',
+            }
           );
 
-          if (!systemUserResult.error && systemUserResult.data) {
-            // Update metadata with system user ID
+          if (systemUserResult.error || !systemUserResult.data) {
             const latestMetadata = (updatedConnection.metadata as any) || {};
+            const {
+              partnerAdminSystemUserTokenSecretId,
+              partnerAdminSystemUserScopes,
+              partnerAdminSystemUserProvisionedAt,
+              ...metadataWithoutReadyState
+            } = latestMetadata;
+            const failedAt = new Date().toISOString();
+
             await prisma.agencyPlatformConnection.update({
               where: { id: connection.data.id },
               data: {
                 metadata: {
-                  ...latestMetadata,
-                  systemUserId: systemUserResult.data,
+                  ...metadataWithoutReadyState,
+                  partnerAdminSystemUserStatus: 'failed',
+                  partnerAdminSystemUserLastAttemptAt: failedAt,
+                  partnerAdminSystemUserLastErrorCode: systemUserResult.error?.code,
+                  partnerAdminSystemUserLastErrorMessage: systemUserResult.error?.message,
                 },
               },
             });
+
+            await createAuditLog({
+              agencyId,
+              agencyConnectionId: connection.data.id,
+              action: 'META_PARTNER_SYSTEM_USER_TOKEN_PROVISION_FAILED',
+              userEmail: connection.data.connectedBy,
+              metadata: {
+                businessId,
+                errorCode: systemUserResult.error?.code,
+                errorMessage: systemUserResult.error?.message,
+              },
+            });
+          } else {
+            const tokenSecretResult = await metaSystemUserService.createSystemUserAccessToken({
+              businessId,
+              systemUserId: systemUserResult.data,
+              accessToken: tokenResult.data,
+              secretName: buildPartnerAdminSystemUserSecretName(agencyId, businessId),
+            });
+
+            const latestMetadata = (updatedConnection.metadata as any) || {};
+            if (tokenSecretResult.error || !tokenSecretResult.data) {
+              const {
+                partnerAdminSystemUserTokenSecretId,
+                partnerAdminSystemUserScopes,
+                partnerAdminSystemUserProvisionedAt,
+                ...metadataWithoutReadyState
+              } = latestMetadata;
+              const failedAt = new Date().toISOString();
+
+              await prisma.agencyPlatformConnection.update({
+                where: { id: connection.data.id },
+                data: {
+                  metadata: {
+                    ...metadataWithoutReadyState,
+                    systemUserId: systemUserResult.data,
+                    partnerAdminSystemUserStatus: 'failed',
+                    partnerAdminSystemUserLastAttemptAt: failedAt,
+                    partnerAdminSystemUserLastErrorCode: tokenSecretResult.error?.code,
+                    partnerAdminSystemUserLastErrorMessage: tokenSecretResult.error?.message,
+                  },
+                },
+              });
+
+              await createAuditLog({
+                agencyId,
+                agencyConnectionId: connection.data.id,
+                action: 'META_PARTNER_SYSTEM_USER_TOKEN_PROVISION_FAILED',
+                userEmail: connection.data.connectedBy,
+                metadata: {
+                  businessId,
+                  systemUserId: systemUserResult.data,
+                  errorCode: tokenSecretResult.error?.code,
+                  errorMessage: tokenSecretResult.error?.message,
+                },
+              });
+            } else {
+              const {
+                partnerAdminSystemUserLastAttemptAt,
+                partnerAdminSystemUserLastErrorCode,
+                partnerAdminSystemUserLastErrorMessage,
+                ...metadataWithoutErrorState
+              } = latestMetadata;
+              const provisionedAt = new Date().toISOString();
+
+              await prisma.agencyPlatformConnection.update({
+                where: { id: connection.data.id },
+                data: {
+                  metadata: {
+                    ...metadataWithoutErrorState,
+                    systemUserId: systemUserResult.data,
+                    partnerAdminSystemUserStatus: 'ready',
+                    partnerAdminSystemUserTokenSecretId: tokenSecretResult.data.tokenSecretId,
+                    partnerAdminSystemUserScopes:
+                      tokenSecretResult.data.scopes.length > 0
+                        ? tokenSecretResult.data.scopes
+                        : META_PARTNER_ADMIN_SCOPES,
+                    partnerAdminSystemUserProvisionedAt: provisionedAt,
+                  },
+                },
+              });
+
+              await createAuditLog({
+                agencyId,
+                agencyConnectionId: connection.data.id,
+                action: 'META_PARTNER_SYSTEM_USER_TOKEN_PROVISIONED',
+                userEmail: connection.data.connectedBy,
+                metadata: {
+                  businessId,
+                  systemUserId: systemUserResult.data,
+                  tokenSecretId: tokenSecretResult.data.tokenSecretId,
+                  scopes: tokenSecretResult.data.scopes,
+                },
+              });
+            }
           }
         }
       } catch (error) {
-        // Log but don't fail - system user can be created later
+        // Log but don't fail - token source can be provisioned later
         console.error('Failed to create system user when setting business ID:', error);
       }
 

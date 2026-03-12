@@ -1,7 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { auditService } from '../../services/audit.service.js';
-import { clientAssetsService } from '../../services/client-assets.service.js';
+import {
+  clientAssetsService,
+  MetaBusinessPortfolioUnavailableError,
+} from '../../services/client-assets.service.js';
 import {
   mapAccessLevelToTikTokRole,
   tiktokPartnerService,
@@ -9,15 +12,26 @@ import {
 } from '@/services/tiktok-partner.service';
 import { infisical } from '../../lib/infisical.js';
 import { prisma } from '../../lib/prisma.js';
-import type { Platform } from '@agency-platform/shared';
+import {
+  type MetaAssetKind,
+  MetaClientAuthorizationMetadataSchema,
+  type MetaAssetGrantResult,
+  type MetaClientAuthorizationMetadata,
+  type Platform,
+} from '@agency-platform/shared';
 import type { GoogleProduct } from '../../services/connectors/google.js';
 import {
   adAccountsSharedSchema,
+  grantMetaAccessSchema,
   grantPagesAccessSchema,
+  manualMetaAdAccountShareSchema,
   saveAssetsSchema,
   tiktokPartnerShareSchema,
   tiktokPartnerVerifySchema,
 } from './schemas.js';
+import { metaOBOService } from '@/services/meta-obo.service';
+import { metaPartnerService } from '@/services/meta-partner.service';
+import { MetaConnector } from '@/services/connectors/meta';
 
 type ShareResultWithVerification = TikTokPartnerShareResultItem & { verified?: boolean };
 
@@ -97,6 +111,147 @@ function mergeTikTokShareResults(
 function normalizeStringIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item)).filter(Boolean);
+}
+
+function readMetaClientAuthorizationMetadata(metadata: unknown): {
+  rootMetadata: Record<string, unknown>;
+  metaMetadata: MetaClientAuthorizationMetadata;
+} {
+  const rootMetadata =
+    metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+      ? ({ ...(metadata as Record<string, unknown>) } as Record<string, unknown>)
+      : {};
+  const parsed = MetaClientAuthorizationMetadataSchema.safeParse(rootMetadata.meta);
+
+  return {
+    rootMetadata,
+    metaMetadata: parsed.success ? parsed.data : {},
+  };
+}
+
+const META_PAGE_TASKS = ['MANAGE', 'CREATE_CONTENT', 'MODERATE', 'ADVERTISE'];
+const META_AD_ACCOUNT_TASKS = ['MANAGE', 'ADVERTISE', 'ANALYZE'];
+const META_UNSUPPORTED_INSTAGRAM_MESSAGE =
+  'Instagram account automated grants are not yet supported';
+const META_MANUAL_AD_ACCOUNT_PENDING_MESSAGE =
+  'Ad account has not been shared to the agency business portfolio yet';
+
+type ManualMetaAdAccountSelection = {
+  id: string;
+  name: string;
+};
+
+type ManualMetaAdAccountVerificationResult = {
+  assetId: string;
+  assetName: string;
+  status: 'waiting_for_manual_share' | 'verified' | 'unresolved' | 'failed';
+  verifiedAt?: string;
+  errorCode?: string;
+  errorMessage?: string;
+};
+
+function buildMetaGrantVerificationStatus(
+  assetGrantResults: MetaAssetGrantResult[]
+): 'verified' | 'partial' | 'failed' {
+  const allVerified =
+    assetGrantResults.length > 0 &&
+    assetGrantResults.every((result) => result.status === 'verified');
+
+  if (allVerified) {
+    return 'verified';
+  }
+
+  const hasVerified = assetGrantResults.some((result) => result.status === 'verified');
+  return hasVerified ? 'partial' : 'failed';
+}
+
+function extractSelectedMetaAdAccounts(selectedMetaAssets: Record<string, unknown>): ManualMetaAdAccountSelection[] {
+  const selectedWithNames = Array.isArray(selectedMetaAssets.selectedAdAccountsWithNames)
+    ? selectedMetaAssets.selectedAdAccountsWithNames
+    : [];
+  const selectedIds = normalizeStringIds(
+    selectedMetaAssets.adAccounts ??
+      selectedMetaAssets.selectedAdvertiserIds ??
+      selectedMetaAssets.advertisers
+  );
+
+  if (selectedWithNames.length > 0) {
+    return selectedWithNames
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const id = String((item as Record<string, unknown>).id || '');
+        if (!id) return null;
+
+        return {
+          id,
+          name: String((item as Record<string, unknown>).name || id),
+        };
+      })
+      .filter((item): item is ManualMetaAdAccountSelection => Boolean(item));
+  }
+
+  return selectedIds.map((id) => ({ id, name: id }));
+}
+
+function mergeMetaAssetGrantResults(
+  existingResults: MetaAssetGrantResult[] | undefined,
+  nextResults: MetaAssetGrantResult[],
+  assetType: MetaAssetKind
+): MetaAssetGrantResult[] {
+  const retained = (existingResults || []).filter((result) => result.assetType !== assetType);
+  return [...retained, ...nextResults];
+}
+
+function sortMetaAssetGrantResults(assetGrantResults: MetaAssetGrantResult[]): MetaAssetGrantResult[] {
+  const order: Partial<Record<MetaAssetKind, number>> = {
+    page: 0,
+    ad_account: 1,
+    instagram_account: 2,
+  };
+
+  return [...assetGrantResults].sort(
+    (left, right) => (order[left.assetType] ?? 99) - (order[right.assetType] ?? 99)
+  );
+}
+
+function resolveAgencyMetaBusinessDetails(connection: {
+  businessId?: string | null;
+  metadata?: unknown;
+} | null): { businessId: string | null; businessName: string | null } {
+  if (!connection) {
+    return {
+      businessId: null,
+      businessName: null,
+    };
+  }
+
+  const metadata = (connection.metadata as Record<string, unknown> | null) || {};
+  const businessId =
+    connection.businessId ||
+    (typeof metadata.selectedBusinessId === 'string' ? metadata.selectedBusinessId : null) ||
+    (typeof metadata.businessId === 'string' ? metadata.businessId : null);
+  const businessName =
+    (typeof metadata.selectedBusinessName === 'string' ? metadata.selectedBusinessName : null) ||
+    (typeof metadata.businessName === 'string' ? metadata.businessName : null);
+
+  return {
+    businessId: businessId ? String(businessId) : null,
+    businessName: businessName ? String(businessName) : null,
+  };
+}
+
+function toMetaAdAccountGrantResults(
+  verificationResults: ManualMetaAdAccountVerificationResult[]
+): MetaAssetGrantResult[] {
+  return verificationResults.map((result) => ({
+    assetId: result.assetId,
+    assetType: 'ad_account',
+    requestedTasks: META_AD_ACCOUNT_TASKS,
+    status: result.status === 'waiting_for_manual_share' ? 'pending' : result.status,
+    ...(result.status === 'verified' ? { grantedAt: result.verifiedAt, verifiedAt: result.verifiedAt } : {}),
+    ...(result.errorCode ? { errorCode: result.errorCode } : {}),
+    ...(result.errorMessage ? { errorMessage: result.errorMessage } : {}),
+  }));
 }
 
 export async function registerAssetRoutes(fastify: FastifyInstance) {
@@ -287,10 +442,522 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Grant Pages access automatically via API
-  fastify.post('/client/:token/grant-pages-access', async (request, reply) => {
+  fastify.post('/client/:token/grant-meta-access', async (request, reply) => {
     const { token } = request.params as { token: string };
 
+    const validated = grantMetaAccessSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const {
+      connectionId,
+      businessId: requestedBusinessId,
+      assetTypes,
+    } = validated.data;
+
+    try {
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
+          data: null,
+          error: authContext.error,
+        });
+      }
+      const connection = authContext.connection;
+      const accessRequest = authContext.accessRequest;
+
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'Meta authorization not found',
+          },
+        });
+      }
+
+      const requestedAssetTypes = new Set(assetTypes || ['page', 'ad_account', 'instagram_account']);
+      const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
+      const selectedMetaAssets = ((rootMetadata.selectedAssets as Record<string, unknown> | undefined)?.meta_ads ||
+        {}) as Record<string, unknown>;
+      const selectedPageIds = requestedAssetTypes.has('page')
+        ? normalizeStringIds(selectedMetaAssets.pages)
+        : [];
+      const selectedAdAccountIds = requestedAssetTypes.has('ad_account')
+        ? normalizeStringIds(
+            selectedMetaAssets.adAccounts ??
+              selectedMetaAssets.selectedAdvertiserIds ??
+              selectedMetaAssets.advertisers
+          )
+        : [];
+      const selectedInstagramIds = requestedAssetTypes.has('instagram_account')
+        ? normalizeStringIds(selectedMetaAssets.instagramAccounts)
+        : [];
+
+      if (
+        selectedPageIds.length === 0 &&
+        selectedAdAccountIds.length === 0 &&
+        selectedInstagramIds.length === 0
+      ) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'NO_SELECTED_ASSETS',
+            message: 'No Meta assets have been selected for grant automation',
+          },
+        });
+      }
+
+      const selectedBusinessId = requestedBusinessId || metaMetadata.selection?.clientBusinessId;
+      const selectedBusinessName = metaMetadata.selection?.clientBusinessName;
+
+      if (!selectedBusinessId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'META_BUSINESS_SELECTION_REQUIRED',
+            message: 'Client must select a Meta Business Portfolio before grants can run',
+          },
+        });
+      }
+
+      const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+        where: {
+          agencyId_platform: {
+            agencyId: accessRequest.agencyId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!agencyConnection) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'AGENCY_BUSINESS_ID_MISSING',
+            message:
+              'Agency must set up their Meta Business Manager ID before clients can grant access',
+          },
+        });
+      }
+
+      const agencyMetadata = (agencyConnection.metadata as Record<string, unknown> | null) || {};
+      const partnerBusinessId =
+        agencyConnection.businessId ||
+        (typeof agencyMetadata.selectedBusinessId === 'string'
+          ? agencyMetadata.selectedBusinessId
+          : null);
+
+      if (!partnerBusinessId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'AGENCY_BUSINESS_ID_MISSING',
+            message:
+              'Agency must set up their Meta Business Manager ID before clients can grant access',
+          },
+        });
+      }
+
+      const partnerAdminSystemUserTokenSecretId =
+        typeof agencyMetadata.partnerAdminSystemUserTokenSecretId === 'string'
+          ? agencyMetadata.partnerAdminSystemUserTokenSecretId
+          : null;
+
+      if (!partnerAdminSystemUserTokenSecretId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'AGENCY_PARTNER_SYSTEM_USER_TOKEN_MISSING',
+            message:
+              'Agency must complete their Meta OBO setup before automated Meta grants can run',
+          },
+        });
+      }
+
+      const clientAccessTokenResult = await metaOBOService.getClientAccessTokenForOBO({
+        authorizationId: platformAuth.id,
+        connectionId,
+        agencyId: accessRequest.agencyId,
+        userEmail: connection.clientEmail,
+        ipAddress: request.ip,
+        purpose: 'meta_asset_grant',
+      });
+
+      if (clientAccessTokenResult.error || !clientAccessTokenResult.data) {
+        return reply.code(500).send({
+          data: null,
+          error: clientAccessTokenResult.error || {
+            code: 'TOKEN_READ_FAILED',
+            message: 'Failed to read client Meta token',
+          },
+        });
+      }
+
+      const managedBusinessLinkResult = await metaOBOService.ensureManagedBusinessRelationship({
+        authorizationId: platformAuth.id,
+        connectionId,
+        agencyId: accessRequest.agencyId,
+        userEmail: connection.clientEmail,
+        ipAddress: request.ip,
+        partnerBusinessId,
+        clientBusinessId: selectedBusinessId,
+        clientBusinessAdminAccessToken: clientAccessTokenResult.data.accessToken,
+      });
+
+      if (managedBusinessLinkResult.error || !managedBusinessLinkResult.data) {
+        return reply.code(400).send({
+          data: null,
+          error: managedBusinessLinkResult.error || {
+            code: 'META_OBO_LINK_FAILED',
+            message: 'Failed to establish the Meta OBO relationship',
+          },
+        });
+      }
+
+      const partnerAdminSystemUserTokens = await infisical.getOAuthTokens(
+        partnerAdminSystemUserTokenSecretId
+      );
+
+      await auditService.createAuditLog({
+        agencyId: accessRequest.agencyId,
+        action: 'META_OBO_TOKEN_READ',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          authorizationId: platformAuth.id,
+          platform: 'meta',
+          purpose: 'partner_admin_system_user_token_read',
+          secretId: partnerAdminSystemUserTokenSecretId,
+          source: 'agency_connection',
+        },
+        request,
+      });
+
+      let clientSystemUserState = metaMetadata.obo?.clientSystemUser;
+      if (
+        !clientSystemUserState ||
+        clientSystemUserState.status !== 'ready' ||
+        clientSystemUserState.clientBusinessId !== selectedBusinessId ||
+        !clientSystemUserState.systemUserId ||
+        !clientSystemUserState.tokenSecretId
+      ) {
+        const provisionResult = await metaOBOService.provisionClientBusinessSystemUserToken({
+          authorizationId: platformAuth.id,
+          connectionId,
+          agencyId: accessRequest.agencyId,
+          userEmail: connection.clientEmail,
+          ipAddress: request.ip,
+          clientBusinessId: selectedBusinessId,
+          scopes: ['ads_management', 'ads_read', 'business_management'],
+          partnerBusinessAdminSystemUserAccessToken:
+            partnerAdminSystemUserTokens.accessToken,
+        });
+
+        if (provisionResult.error || !provisionResult.data) {
+          return reply.code(400).send({
+            data: null,
+            error: provisionResult.error || {
+              code: 'META_OBO_SYSTEM_USER_FAILED',
+              message: 'Failed to provision the client Meta system user',
+            },
+          });
+        }
+
+        clientSystemUserState = provisionResult.data;
+      }
+
+      if (!clientSystemUserState.tokenSecretId || !clientSystemUserState.systemUserId) {
+        return reply.code(500).send({
+          data: null,
+          error: {
+            code: 'META_OBO_SYSTEM_USER_INCOMPLETE',
+            message: 'Client Meta system-user state is missing required token metadata',
+          },
+        });
+      }
+
+      const clientSystemUserTokens = await infisical.getOAuthTokens(
+        clientSystemUserState.tokenSecretId
+      );
+
+      await auditService.createAuditLog({
+        agencyId: accessRequest.agencyId,
+        action: 'META_OBO_TOKEN_READ',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          authorizationId: platformAuth.id,
+          platform: 'meta',
+          purpose: 'client_system_user_token_read',
+          secretId: clientSystemUserState.tokenSecretId,
+          source: 'client_system_user',
+        },
+        request,
+      });
+
+      const nextPageGrantResults: MetaAssetGrantResult[] = [];
+      const nextAdAccountGrantResults: MetaAssetGrantResult[] = [];
+      const nextInstagramGrantResults: MetaAssetGrantResult[] = [];
+
+      for (const pageId of selectedPageIds) {
+        const grantedAt = new Date().toISOString();
+        try {
+          await metaPartnerService.grantPageAccess(
+            clientSystemUserTokens.accessToken,
+            pageId,
+            clientSystemUserState.systemUserId,
+            META_PAGE_TASKS
+          );
+          const verification = await metaPartnerService.verifyPageAccess(
+            clientSystemUserTokens.accessToken,
+            pageId,
+            clientSystemUserState.systemUserId,
+            META_PAGE_TASKS
+          );
+
+          if (verification.verified) {
+            nextPageGrantResults.push({
+              assetId: pageId,
+              assetType: 'page',
+              requestedTasks: META_PAGE_TASKS,
+              status: 'verified',
+              grantedAt,
+              verifiedAt: new Date().toISOString(),
+            });
+          } else {
+            nextPageGrantResults.push({
+              assetId: pageId,
+              assetType: 'page',
+              requestedTasks: META_PAGE_TASKS,
+              status: 'failed',
+              grantedAt,
+              errorCode: 'META_ASSET_VERIFICATION_FAILED',
+              errorMessage:
+                'Meta did not report the expected page tasks for the assigned system user',
+            });
+          }
+        } catch (error) {
+          nextPageGrantResults.push({
+            assetId: pageId,
+            assetType: 'page',
+            requestedTasks: META_PAGE_TASKS,
+            status: 'failed',
+            grantedAt,
+            errorCode: 'META_ASSET_GRANT_FAILED',
+            errorMessage: error instanceof Error ? error.message : 'Unknown page grant error',
+          });
+        }
+      }
+
+      for (const adAccountId of selectedAdAccountIds) {
+        const grantedAt = new Date().toISOString();
+        try {
+          await metaPartnerService.grantAdAccountAccess(
+            clientSystemUserTokens.accessToken,
+            adAccountId,
+            clientSystemUserState.systemUserId,
+            META_AD_ACCOUNT_TASKS
+          );
+          const verification = await metaPartnerService.verifyAdAccountAccess(
+            clientSystemUserTokens.accessToken,
+            adAccountId,
+            clientSystemUserState.systemUserId,
+            META_AD_ACCOUNT_TASKS
+          );
+
+          if (verification.verified) {
+            nextAdAccountGrantResults.push({
+              assetId: adAccountId,
+              assetType: 'ad_account',
+              requestedTasks: META_AD_ACCOUNT_TASKS,
+              status: 'verified',
+              grantedAt,
+              verifiedAt: new Date().toISOString(),
+            });
+          } else {
+            nextAdAccountGrantResults.push({
+              assetId: adAccountId,
+              assetType: 'ad_account',
+              requestedTasks: META_AD_ACCOUNT_TASKS,
+              status: 'failed',
+              grantedAt,
+              errorCode: 'META_ASSET_VERIFICATION_FAILED',
+              errorMessage:
+                'Meta did not report the expected ad account tasks for the assigned system user',
+            });
+          }
+        } catch (error) {
+          nextAdAccountGrantResults.push({
+            assetId: adAccountId,
+            assetType: 'ad_account',
+            requestedTasks: META_AD_ACCOUNT_TASKS,
+            status: 'failed',
+            grantedAt,
+            errorCode: 'META_ASSET_GRANT_FAILED',
+            errorMessage:
+              error instanceof Error ? error.message : 'Unknown ad account grant error',
+          });
+        }
+      }
+
+      for (const instagramId of selectedInstagramIds) {
+        nextInstagramGrantResults.push({
+          assetId: instagramId,
+          assetType: 'instagram_account',
+          requestedTasks: [],
+          status: 'unresolved',
+          errorCode: 'UNSUPPORTED_META_ASSET_TYPE',
+          errorMessage: META_UNSUPPORTED_INSTAGRAM_MESSAGE,
+        });
+      }
+
+      const requestedGrantResultsByType: Array<[MetaAssetKind, MetaAssetGrantResult[]]> = [
+        ['page', nextPageGrantResults],
+        ['ad_account', nextAdAccountGrantResults],
+        ['instagram_account', nextInstagramGrantResults],
+      ];
+      const mergedAssetGrantResults = sortMetaAssetGrantResults(
+        requestedGrantResultsByType.reduce(
+          (acc, [assetType, nextResults]) =>
+          requestedAssetTypes.has(assetType)
+            ? mergeMetaAssetGrantResults(acc, nextResults, assetType)
+            : acc,
+          metaMetadata.obo?.assetGrantResults || []
+        )
+      );
+      const verificationStatus = buildMetaGrantVerificationStatus(mergedAssetGrantResults);
+      const verificationCompletedAt = new Date().toISOString();
+
+      await prisma.platformAuthorization.update({
+        where: { id: platformAuth.id },
+        data: {
+          metadata: {
+            ...rootMetadata,
+            meta: {
+              ...metaMetadata,
+              obo: {
+                ...(metaMetadata.obo || {}),
+                managedBusinessLink: managedBusinessLinkResult.data,
+                clientSystemUser: clientSystemUserState,
+                assetGrantResults: mergedAssetGrantResults,
+                lastVerifiedAt: verificationCompletedAt,
+              },
+            },
+          },
+        },
+      });
+
+      const currentGrantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || {};
+      const currentMetaGrantedAssets =
+        (currentGrantedAssets.meta as Record<string, unknown> | undefined) || {};
+      const pageResults = mergedAssetGrantResults.filter((result) => result.assetType === 'page');
+      const adAccountResults = mergedAssetGrantResults.filter(
+        (result) => result.assetType === 'ad_account'
+      );
+      const pagesAccessGranted =
+        pageResults.length > 0 && pageResults.every((result) => result.status === 'verified');
+      const adAccountsAccessGranted =
+        adAccountResults.length > 0 && adAccountResults.every((result) => result.status === 'verified');
+      const pagesAccessGrantedAt =
+        pagesAccessGranted
+          ? requestedAssetTypes.has('page')
+            ? verificationCompletedAt
+            : typeof currentMetaGrantedAssets.pagesAccessGrantedAt === 'string'
+              ? currentMetaGrantedAssets.pagesAccessGrantedAt
+              : verificationCompletedAt
+          : undefined;
+      const adAccountsAccessGrantedAt =
+        adAccountsAccessGranted
+          ? requestedAssetTypes.has('ad_account')
+            ? verificationCompletedAt
+            : typeof currentMetaGrantedAssets.adAccountsAccessGrantedAt === 'string'
+              ? currentMetaGrantedAssets.adAccountsAccessGrantedAt
+              : verificationCompletedAt
+          : undefined;
+
+      await prisma.clientConnection.update({
+        where: { id: connectionId },
+        data: {
+          grantedAssets: {
+            ...currentGrantedAssets,
+            meta: {
+              ...currentMetaGrantedAssets,
+              verifiedMetaAssetGrantStatus: verificationStatus,
+              verifiedMetaAssetGrantResults: mergedAssetGrantResults,
+              verifiedMetaAssetGrantAt: verificationCompletedAt,
+              pagesAccessGranted,
+              pagesAccessGrantedAt,
+              adAccountsAccessGranted,
+              adAccountsAccessGrantedAt,
+            },
+          },
+        },
+      });
+
+      await auditService.createAuditLog({
+        agencyId: accessRequest.agencyId,
+        action: 'META_ASSET_ACCESS_VERIFIED',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          selectedBusinessId,
+          requestedAssetTypes: Array.from(requestedAssetTypes),
+          verificationStatus,
+          assetGrantResults: mergedAssetGrantResults,
+        },
+        request,
+      });
+
+      return reply.send({
+        data: {
+          success: verificationStatus === 'verified',
+          partial: verificationStatus === 'partial',
+          selectedBusinessId,
+          selectedBusinessName,
+          managedBusinessLinkStatus: managedBusinessLinkResult.data.status,
+          clientSystemUserStatus: clientSystemUserState.status,
+          assetGrantResults: mergedAssetGrantResults,
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'META_GRANT_ACCESS_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to grant Meta asset access through OBO',
+        },
+      });
+    }
+  });
+
+  // Legacy Meta page grant endpoint kept only to direct stale clients to the verified OBO route.
+  fastify.post('/client/:token/grant-pages-access', async (request, reply) => {
     const validated = grantPagesAccessSchema.safeParse(request.body);
     if (!validated.success) {
       return reply.code(400).send({
@@ -303,6 +970,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
     }
 
+    return reply.code(410).send({
+      data: null,
+      error: {
+        code: 'LEGACY_META_ROUTE_DISABLED',
+        message:
+          'Legacy Meta page grants are disabled. Use /grant-meta-access with page-only verification instead.',
+      },
+    });
+
+    /*
     const { connectionId, pageIds } = validated.data;
 
     try {
@@ -492,6 +1169,408 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    */
+  });
+
+  fastify.post('/client/:token/meta/manual-ad-account-share/start', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = manualMetaAdAccountShareSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId } = validated.data;
+
+    try {
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (!authContext.error && authContext.connection && authContext.accessRequest) {
+        const connection = authContext.connection;
+        const accessRequest = authContext.accessRequest;
+
+        const platformAuth = await prisma.platformAuthorization.findUnique({
+          where: {
+            connectionId_platform: {
+              connectionId,
+              platform: 'meta',
+            },
+          },
+        });
+
+        if (!platformAuth) {
+          return reply.code(404).send({
+            data: null,
+            error: {
+              code: 'AUTHORIZATION_NOT_FOUND',
+              message: 'Meta authorization not found',
+            },
+          });
+        }
+
+        const { rootMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
+        const selectedMetaAssets = ((rootMetadata.selectedAssets as Record<string, unknown> | undefined)
+          ?.meta_ads || {}) as Record<string, unknown>;
+        const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
+
+        if (selectedAdAccounts.length === 0) {
+          return reply.code(400).send({
+            data: null,
+            error: {
+              code: 'NO_SELECTED_AD_ACCOUNTS',
+              message: 'No Meta ad accounts have been selected for manual sharing',
+            },
+          });
+        }
+
+        const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+          where: {
+            agencyId_platform: {
+              agencyId: accessRequest.agencyId,
+              platform: 'meta',
+            },
+          },
+        });
+
+        const { businessId: partnerBusinessId, businessName: partnerBusinessName } =
+          resolveAgencyMetaBusinessDetails(agencyConnection);
+
+        if (!partnerBusinessId) {
+          return reply.code(400).send({
+            data: null,
+            error: {
+              code: 'AGENCY_BUSINESS_ID_MISSING',
+              message:
+                'Agency must set up their Meta Business Manager ID before clients can share ad accounts',
+            },
+          });
+        }
+
+        const startedAt = new Date().toISOString();
+        const verificationResults: ManualMetaAdAccountVerificationResult[] = selectedAdAccounts.map(
+          (account) => ({
+            assetId: account.id,
+            assetName: account.name,
+            status: 'waiting_for_manual_share',
+          })
+        );
+        const currentGrantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || {};
+
+        await prisma.clientConnection.update({
+          where: { id: connectionId },
+          data: {
+            grantedAssets: {
+              ...currentGrantedAssets,
+              meta: {
+                ...((currentGrantedAssets.meta as Record<string, unknown> | undefined) || {}),
+                manualAdAccountShare: {
+                  status: 'waiting_for_manual_share',
+                  partnerBusinessId,
+                  partnerBusinessName: partnerBusinessName || undefined,
+                  selectedAdAccountIds: selectedAdAccounts.map((account) => account.id),
+                  selectedAdAccounts,
+                  startedAt,
+                  verificationResults,
+                },
+              },
+            },
+          },
+        });
+
+        await auditService.createAuditLog({
+          agencyId: accessRequest.agencyId,
+          action: 'META_MANUAL_AD_ACCOUNT_SHARE_STARTED',
+          userEmail: connection.clientEmail,
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            partnerBusinessId,
+            partnerBusinessName: partnerBusinessName || undefined,
+            selectedAdAccounts,
+          },
+          request,
+        });
+
+        return reply.send({
+          data: {
+            success: true,
+            status: 'waiting_for_manual_share',
+            partnerBusinessId,
+            partnerBusinessName: partnerBusinessName || undefined,
+            selectedAdAccounts,
+            startedAt,
+          },
+          error: null,
+        });
+      }
+
+      const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+      return reply.code(statusCode).send({
+        data: null,
+        error: authContext.error,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'META_MANUAL_SHARE_START_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to start manual Meta ad-account sharing',
+        },
+      });
+    }
+  });
+
+  fastify.post('/client/:token/meta/manual-ad-account-share/verify', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const validated = manualMetaAdAccountShareSchema.safeParse(request.body);
+    if (!validated.success) {
+      return reply.code(400).send({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: validated.error.errors,
+        },
+      });
+    }
+
+    const { connectionId } = validated.data;
+
+    try {
+      const authContext = await resolveAuthorizedConnection(token, connectionId);
+      if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+        const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+        return reply.code(statusCode).send({
+          data: null,
+          error: authContext.error,
+        });
+      }
+      const connection = authContext.connection;
+      const accessRequest = authContext.accessRequest;
+
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return reply.code(404).send({
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'Meta authorization not found',
+          },
+        });
+      }
+
+      const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+        where: {
+          agencyId_platform: {
+            agencyId: accessRequest.agencyId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      const { businessId: partnerBusinessId, businessName: resolvedPartnerBusinessName } =
+        resolveAgencyMetaBusinessDetails(agencyConnection);
+
+      if (!partnerBusinessId || !agencyConnection?.secretId) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'AGENCY_BUSINESS_ID_MISSING',
+            message:
+              'Agency must set up their Meta Business Manager ID before manual ad-account sharing can be verified',
+          },
+        });
+      }
+
+      const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
+      const selectedMetaAssets = ((rootMetadata.selectedAssets as Record<string, unknown> | undefined)
+        ?.meta_ads || {}) as Record<string, unknown>;
+      const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
+
+      if (selectedAdAccounts.length === 0) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'NO_SELECTED_AD_ACCOUNTS',
+            message: 'No Meta ad accounts have been selected for manual sharing',
+          },
+        });
+      }
+
+      const currentGrantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || {};
+      const currentMetaGrantedAssets =
+        (currentGrantedAssets.meta as Record<string, unknown> | undefined) || {};
+      const existingManualShare =
+        (currentMetaGrantedAssets.manualAdAccountShare as Record<string, unknown> | undefined) || {};
+      const partnerBusinessName =
+        (typeof existingManualShare.partnerBusinessName === 'string'
+          ? existingManualShare.partnerBusinessName
+          : null) || resolvedPartnerBusinessName;
+
+      const agencyTokens = await infisical.getOAuthTokens(agencyConnection.secretId);
+
+      await auditService.createAuditLog({
+        agencyId: accessRequest.agencyId,
+        action: 'META_TOKEN_READ',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          platform: 'meta',
+          source: 'manual_ad_account_share_verification',
+          secretId: agencyConnection.secretId,
+          partnerBusinessId,
+        },
+        request,
+      });
+
+      const metaConnector = new MetaConnector();
+      const agencyAssets = await metaConnector.getAllAssets(
+        agencyTokens.accessToken,
+        partnerBusinessId
+      );
+      const visibleAdAccountIds = new Set(
+        (agencyAssets.adAccounts || []).map((account) => String(account.id))
+      );
+      const verifiedAt = new Date().toISOString();
+      const verificationResults: ManualMetaAdAccountVerificationResult[] = selectedAdAccounts.map(
+        (account) =>
+          visibleAdAccountIds.has(account.id)
+            ? {
+                assetId: account.id,
+                assetName: account.name,
+                status: 'verified',
+                verifiedAt,
+              }
+            : {
+                assetId: account.id,
+                assetName: account.name,
+                status: 'unresolved',
+                errorCode: 'MANUAL_SHARE_PENDING',
+                errorMessage: META_MANUAL_AD_ACCOUNT_PENDING_MESSAGE,
+              }
+      );
+
+      const adAccountGrantResults = toMetaAdAccountGrantResults(verificationResults);
+      const mergedGrantResults = sortMetaAssetGrantResults(
+        mergeMetaAssetGrantResults(metaMetadata.obo?.assetGrantResults, adAccountGrantResults, 'ad_account')
+      );
+      const verificationStatus = buildMetaGrantVerificationStatus(mergedGrantResults);
+      const verificationCompletedAt = new Date().toISOString();
+      const pageResults = mergedGrantResults.filter((result) => result.assetType === 'page');
+      const mergedAdAccountResults = mergedGrantResults.filter(
+        (result) => result.assetType === 'ad_account'
+      );
+      const pagesAccessGranted =
+        pageResults.length > 0 && pageResults.every((result) => result.status === 'verified');
+      const adAccountsAccessGranted =
+        mergedAdAccountResults.length > 0 &&
+        mergedAdAccountResults.every((result) => result.status === 'verified');
+
+      await prisma.platformAuthorization.update({
+        where: { id: platformAuth.id },
+        data: {
+          metadata: {
+            ...rootMetadata,
+            meta: {
+              ...metaMetadata,
+              obo: {
+                ...(metaMetadata.obo || {}),
+                assetGrantResults: mergedGrantResults,
+                lastVerifiedAt: verificationCompletedAt,
+              },
+            },
+          } as any,
+        },
+      });
+
+      await prisma.clientConnection.update({
+        where: { id: connectionId },
+        data: {
+          grantedAssets: {
+            ...currentGrantedAssets,
+            meta: {
+              ...currentMetaGrantedAssets,
+              verifiedMetaAssetGrantStatus: verificationStatus,
+              verifiedMetaAssetGrantResults: mergedGrantResults,
+              verifiedMetaAssetGrantAt: verificationCompletedAt,
+              pagesAccessGranted,
+              pagesAccessGrantedAt: pagesAccessGranted ? verificationCompletedAt : undefined,
+              adAccountsAccessGranted,
+              adAccountsAccessGrantedAt: adAccountsAccessGranted
+                ? verificationCompletedAt
+                : undefined,
+              manualAdAccountShare: {
+                ...existingManualShare,
+                status: verificationStatus,
+                partnerBusinessId,
+                partnerBusinessName: partnerBusinessName || undefined,
+                selectedAdAccountIds: selectedAdAccounts.map((account) => account.id),
+                selectedAdAccounts,
+                verificationResults,
+                lastVerifiedAt: verificationCompletedAt,
+              },
+            },
+          },
+        },
+      });
+
+      await auditService.createAuditLog({
+        agencyId: accessRequest.agencyId,
+        action: 'META_MANUAL_AD_ACCOUNT_SHARE_VERIFIED',
+        userEmail: connection.clientEmail,
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          partnerBusinessId,
+          partnerBusinessName: partnerBusinessName || undefined,
+          verificationStatus,
+          verificationResults,
+        },
+        request,
+      });
+
+      return reply.send({
+        data: {
+          success: verificationStatus === 'verified',
+          partial: verificationStatus === 'partial',
+          status: verificationStatus,
+          partnerBusinessId,
+          partnerBusinessName: partnerBusinessName || undefined,
+          verificationResults,
+        },
+        error: null,
+      });
+    } catch (error) {
+      return reply.code(500).send({
+        data: null,
+        error: {
+          code: 'META_MANUAL_SHARE_VERIFY_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to verify manual Meta ad-account sharing',
+        },
+      });
+    }
   });
 
   // Get agency Business Manager ID for manual ad account sharing
@@ -561,7 +1640,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Mark ad account sharing as complete
+  // Legacy Meta ad-account self-attestation endpoint kept only to direct stale clients to manual verification.
   fastify.post('/client/:token/ad-accounts-shared', async (request, reply) => {
     const { token } = request.params as { token: string };
 
@@ -577,6 +1656,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
     }
 
+    return reply.code(410).send({
+      data: null,
+      error: {
+        code: 'LEGACY_META_ROUTE_DISABLED',
+        message:
+          'Legacy Meta ad-account completion is disabled. Use the manual share verification flow instead.',
+      },
+    });
+
+    /*
     const { connectionId, sharedAdAccountIds } = validated.data;
 
     try {
@@ -634,6 +1723,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
       });
     }
+    */
   });
 
   // Run TikTok Business Center partner sharing automation for selected advertisers
@@ -1129,7 +2219,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       token: string;
       platform: string;
     };
-    const { connectionId } = request.query as { connectionId?: string };
+    const { connectionId, businessId } = request.query as {
+      connectionId?: string;
+      businessId?: string;
+    };
 
     if (!connectionId) {
       return reply.code(400).send({
@@ -1256,11 +2349,64 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
       }
 
+      if (authPlatform === 'meta' && authContext.accessRequest) {
+        await auditService.createAuditLog({
+          agencyId: authContext.accessRequest.agencyId,
+          action: 'META_TOKEN_READ',
+          userEmail: authContext.connection?.clientEmail,
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            platform: platformParam,
+            source: 'client_assets_fetch',
+            businessId: businessId || null,
+          },
+          request,
+        });
+      }
+
       let assets;
       const platformStr = String(platform);
 
       if (platform === 'meta_ads') {
-        assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken);
+        const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(
+          platformAuth.metadata
+        );
+        const effectiveBusinessId =
+          businessId || metaMetadata.selection?.clientBusinessId;
+
+        assets = await clientAssetsService.fetchMetaAssets(
+          tokens.accessToken,
+          effectiveBusinessId
+        );
+
+        const discoveryTimestamp = new Date().toISOString();
+        const nextMeta: MetaClientAuthorizationMetadata = {
+          ...metaMetadata,
+          discovery: {
+            availableBusinesses: assets.businesses || [],
+            discoveredAt: discoveryTimestamp,
+          },
+        };
+
+        if (assets.selectedBusinessId) {
+          nextMeta.selection = {
+            clientBusinessId: assets.selectedBusinessId,
+            clientBusinessName: assets.selectedBusinessName,
+            selectedAt: discoveryTimestamp,
+            source: businessId ? 'user_selection' : metaMetadata.selection?.source || 'auto_selected',
+          };
+        }
+
+        await prisma.platformAuthorization.update({
+          where: { id: platformAuth.id },
+          data: {
+            metadata: {
+              ...rootMetadata,
+              meta: nextMeta,
+            } as any,
+          },
+        });
       } else if (platform === 'linkedin_ads') {
         assets = await clientAssetsService.fetchLinkedInAdAccounts(tokens.accessToken);
       } else if (platform === 'linkedin_pages') {
@@ -1335,6 +2481,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
+      if (error instanceof MetaBusinessPortfolioUnavailableError) {
+        return reply.code(error.statusCode).send({
+          data: null,
+          error: {
+            code: error.code,
+            message: error.message,
+          },
+        });
+      }
+
       return reply.code(500).send({
         data: null,
         error: {

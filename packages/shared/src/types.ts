@@ -248,6 +248,115 @@ export const UnifiedOnboardingProgressSchema = UnifiedOnboardingProgressFieldsSc
 });
 export type UnifiedOnboardingProgress = z.infer<typeof UnifiedOnboardingProgressSchema>;
 
+export const MetaAssetKindSchema = z.enum([
+  'ad_account',
+  'page',
+  'instagram_account',
+  'catalog',
+  'dataset',
+  'unknown',
+]);
+export type MetaAssetKind = z.infer<typeof MetaAssetKindSchema>;
+
+export const MetaBusinessPortfolioRefSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  verticalName: z.string().optional(),
+  verificationStatus: z.string().optional(),
+});
+export type MetaBusinessPortfolioRef = z.infer<typeof MetaBusinessPortfolioRefSchema>;
+
+export const MetaClientBusinessSelectionSchema = z.object({
+  clientBusinessId: z.string().min(1),
+  clientBusinessName: z.string().optional(),
+  selectedAt: z.string().datetime(),
+  source: z.enum(['user_selection', 'auto_selected']).optional(),
+});
+export type MetaClientBusinessSelection = z.infer<typeof MetaClientBusinessSelectionSchema>;
+
+export const MetaDiscoverySnapshotSchema = z.object({
+  availableBusinesses: z.array(MetaBusinessPortfolioRefSchema).optional(),
+  discoveredAt: z.string().datetime().optional(),
+});
+export type MetaDiscoverySnapshot = z.infer<typeof MetaDiscoverySnapshotSchema>;
+
+export const MetaManagedBusinessLinkStatusSchema = z.enum([
+  'not_started',
+  'pending',
+  'linked',
+  'failed',
+]);
+export type MetaManagedBusinessLinkStatus = z.infer<typeof MetaManagedBusinessLinkStatusSchema>;
+
+export const MetaManagedBusinessLinkStateSchema = z.object({
+  status: MetaManagedBusinessLinkStatusSchema,
+  partnerBusinessId: z.string().min(1),
+  clientBusinessId: z.string().min(1),
+  establishedAt: z.string().datetime().optional(),
+  lastAttemptAt: z.string().datetime().optional(),
+  lastErrorCode: z.string().optional(),
+  lastErrorMessage: z.string().optional(),
+});
+export type MetaManagedBusinessLinkState = z.infer<typeof MetaManagedBusinessLinkStateSchema>;
+
+export const MetaSystemUserProvisionStatusSchema = z.enum([
+  'not_started',
+  'pending',
+  'ready',
+  'failed',
+]);
+export type MetaSystemUserProvisionStatus = z.infer<typeof MetaSystemUserProvisionStatusSchema>;
+
+export const MetaSystemUserProvisionStateSchema = z.object({
+  status: MetaSystemUserProvisionStatusSchema,
+  clientBusinessId: z.string().min(1),
+  appId: z.string().min(1),
+  scopes: z.array(z.string().min(1)).default([]),
+  systemUserId: z.string().optional(),
+  tokenSecretId: z.string().optional(),
+  provisionedAt: z.string().datetime().optional(),
+  lastAttemptAt: z.string().datetime().optional(),
+  lastErrorCode: z.string().optional(),
+  lastErrorMessage: z.string().optional(),
+});
+export type MetaSystemUserProvisionState = z.infer<typeof MetaSystemUserProvisionStateSchema>;
+
+export const MetaAssetGrantStatusSchema = z.enum([
+  'pending',
+  'granted',
+  'verified',
+  'failed',
+  'unresolved',
+]);
+export type MetaAssetGrantStatus = z.infer<typeof MetaAssetGrantStatusSchema>;
+
+export const MetaAssetGrantResultSchema = z.object({
+  assetId: z.string().min(1),
+  assetType: MetaAssetKindSchema,
+  requestedTasks: z.array(z.string().min(1)).default([]),
+  status: MetaAssetGrantStatusSchema,
+  grantedAt: z.string().datetime().optional(),
+  verifiedAt: z.string().datetime().optional(),
+  errorCode: z.string().optional(),
+  errorMessage: z.string().optional(),
+});
+export type MetaAssetGrantResult = z.infer<typeof MetaAssetGrantResultSchema>;
+
+export const MetaOBOStateSchema = z.object({
+  managedBusinessLink: MetaManagedBusinessLinkStateSchema.optional(),
+  clientSystemUser: MetaSystemUserProvisionStateSchema.optional(),
+  assetGrantResults: z.array(MetaAssetGrantResultSchema).optional(),
+  lastVerifiedAt: z.string().datetime().optional(),
+});
+export type MetaOBOState = z.infer<typeof MetaOBOStateSchema>;
+
+export const MetaClientAuthorizationMetadataSchema = z.object({
+  discovery: MetaDiscoverySnapshotSchema.optional(),
+  selection: MetaClientBusinessSelectionSchema.optional(),
+  obo: MetaOBOStateSchema.optional(),
+});
+export type MetaClientAuthorizationMetadata = z.infer<typeof MetaClientAuthorizationMetadataSchema>;
+
 // Platform display names
 export const PLATFORM_NAMES: Record<Platform, string> = {
   google: 'Google',

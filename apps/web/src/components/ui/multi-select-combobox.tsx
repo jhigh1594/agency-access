@@ -101,7 +101,11 @@ export function MultiSelectCombobox({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedInsideTrigger = containerRef.current?.contains(target);
+      const clickedInsideDropdown = dropdownRef.current?.contains(target);
+
+      if (!clickedInsideTrigger && !clickedInsideDropdown) {
         setIsOpen(false);
         setSearchQuery('');
         setFocusedIndex(-1);
@@ -418,4 +422,3 @@ export function MultiSelectCombobox({
     </div>
   );
 }
-

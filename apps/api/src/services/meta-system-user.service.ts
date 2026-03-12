@@ -1,8 +1,12 @@
-
-import { env } from '../lib/env.js';
+import { env } from '@/lib/env';
+import { infisical } from '@/lib/infisical';
 
 interface CreateSystemUserResponse {
   id: string; // App-scoped System User ID
+}
+
+interface CreateSystemUserAccessTokenResponse {
+  access_token?: string;
 }
 
 interface SystemUser {
@@ -11,9 +15,42 @@ interface SystemUser {
   role: string;
 }
 
+type SystemUserRole = 'EMPLOYEE' | 'ADMIN';
+
+const DEFAULT_SYSTEM_USER_NAME = 'Agency Platform System User';
+const DEFAULT_PARTNER_ADMIN_SYSTEM_USER_NAME = 'Agency Platform Admin System User';
+const DEFAULT_PARTNER_ADMIN_SYSTEM_USER_SCOPES = [
+  'ads_management',
+  'ads_read',
+  'business_management',
+];
+
 class MetaSystemUserService {
   private readonly META_GRAPH_VERSION = 'v21.0';
   private readonly META_GRAPH_URL = `https://graph.facebook.com/${this.META_GRAPH_VERSION}`;
+
+  private async readGraphError(
+    response: Response,
+    fallbackCode: string,
+    fallbackMessage: string
+  ): Promise<{ code: string; message: string }> {
+    try {
+      const errorData: any = await response.json();
+      const errorCode = errorData.error?.code?.toString() || fallbackCode;
+      const errorMessage = errorData.error?.message || fallbackMessage;
+
+      return {
+        code: `${fallbackCode}_${errorCode}`,
+        message: errorMessage,
+      };
+    } catch {
+      const errorText = await response.text();
+      return {
+        code: fallbackCode,
+        message: errorText || fallbackMessage,
+      };
+    }
+  }
 
   /**
    * Create a system user for an agency's Business Manager
@@ -21,19 +58,21 @@ class MetaSystemUserService {
    * @param businessId - Agency's Business Manager ID
    * @param accessToken - Admin user or admin system user access token
    * @param name - Name for the system user
+   * @param role - Role for the system user
    * @returns App-scoped System User ID
    */
   async createSystemUser(
     businessId: string,
     accessToken: string,
-    name: string = 'Agency Platform System User'
+    name: string = DEFAULT_SYSTEM_USER_NAME,
+    role: SystemUserRole = 'EMPLOYEE'
   ): Promise<{ data: string | null; error: { code: string; message: string } | null }> {
     try {
       const url = `${this.META_GRAPH_URL}/${businessId}/system_users`;
 
       const formData = new URLSearchParams();
       formData.append('name', name);
-      formData.append('role', 'EMPLOYEE'); // Use EMPLOYEE role (ADMIN requires special permissions)
+      formData.append('role', role);
       formData.append('access_token', accessToken);
 
       const response = await fetch(url, {
@@ -120,9 +159,14 @@ class MetaSystemUserService {
    */
   async getOrCreateSystemUser(
     businessId: string,
-    accessToken: string
+    accessToken: string,
+    options?: {
+      name?: string;
+      role?: SystemUserRole;
+    }
   ): Promise<{ data: string | null; error: { code: string; message: string } | null }> {
-    const name = 'Agency Platform System User';
+    const name = options?.name ?? DEFAULT_SYSTEM_USER_NAME;
+    const role = options?.role ?? 'EMPLOYEE';
     
     // 1. Try to find existing system user
     const listResult = await this.getSystemUsers(businessId, accessToken);
@@ -134,9 +178,92 @@ class MetaSystemUserService {
     }
 
     // 2. If not found, create new one
-    return this.createSystemUser(businessId, accessToken, name);
+    return this.createSystemUser(businessId, accessToken, name, role);
+  }
+
+  async createSystemUserAccessToken(input: {
+    businessId: string;
+    systemUserId: string;
+    accessToken: string;
+    secretName?: string;
+    scopes?: string[];
+  }): Promise<{
+    data: {
+      tokenSecretId: string;
+      scopes: string[];
+    } | null;
+    error: { code: string; message: string } | null;
+  }> {
+    try {
+      const scopes = input.scopes ?? DEFAULT_PARTNER_ADMIN_SYSTEM_USER_SCOPES;
+      const secretName =
+        input.secretName ??
+        `meta_partner_admin_system_user_${input.businessId}_${input.systemUserId}`;
+      const url = `${this.META_GRAPH_URL}/${input.systemUserId}/access_tokens`;
+
+      const formData = new URLSearchParams();
+      formData.append('app_id', env.META_APP_ID);
+      formData.append('scope', scopes.join(','));
+      formData.append('access_token', input.accessToken);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        const error = await this.readGraphError(
+          response,
+          'SYSTEM_USER_TOKEN_CREATE_FAILED',
+          'Failed to create system user token'
+        );
+
+        return {
+          data: null,
+          error,
+        };
+      }
+
+      const payload = (await response.json()) as CreateSystemUserAccessTokenResponse;
+      if (!payload.access_token) {
+        return {
+          data: null,
+          error: {
+            code: 'SYSTEM_USER_TOKEN_CREATE_FAILED_INVALID_RESPONSE',
+            message: 'Meta did not return a system user access token',
+          },
+        };
+      }
+
+      const tokenSecretId = await infisical.storeOAuthTokens(secretName, {
+        accessToken: payload.access_token,
+      });
+
+      return {
+        data: {
+          tokenSecretId,
+          scopes,
+        },
+        error: null,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          code: 'SYSTEM_USER_TOKEN_CREATE_ERROR',
+          message:
+            error instanceof Error ? error.message : 'Unknown error creating system user token',
+        },
+      };
+    }
+  }
+
+  getDefaultPartnerAdminSystemUserName(): string {
+    return DEFAULT_PARTNER_ADMIN_SYSTEM_USER_NAME;
   }
 }
 
 export const metaSystemUserService = new MetaSystemUserService();
-

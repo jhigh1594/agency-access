@@ -26,6 +26,7 @@ import { LinkedInAssetSelector } from './LinkedInAssetSelector';
 import { TikTokAssetSelector } from './TikTokAssetSelector';
 import { AutomaticPagesGrant } from './AutomaticPagesGrant';
 import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
+import type { ManualMetaShareCompletionResult } from './AdAccountSharingInstructions';
 import { StepHelpText } from './StepHelpText';
 import { AssetSelectorDisabled } from './AssetSelectorDisabled';
 import { PlatformIcon, Button } from '@/components/ui';
@@ -102,6 +103,53 @@ function hasNoAssetsFollowUp(product: string, assets: any): boolean {
   return false;
 }
 
+function getMetaFollowUpLines(assets: any): string[] {
+  const lines: string[] = [];
+  const unresolvedManualResults = Array.isArray(assets.manualAdAccountVerificationResults)
+    ? assets.manualAdAccountVerificationResults.filter(
+        (result: any) => result?.status && result.status !== 'verified'
+      )
+    : [];
+
+  if (unresolvedManualResults.length > 0) {
+    unresolvedManualResults.forEach((result: any) => {
+      const assetName =
+        typeof result.assetName === 'string' && result.assetName.length > 0
+          ? result.assetName
+          : typeof result.assetId === 'string'
+            ? result.assetId
+            : 'Selected ad account';
+      lines.push(`Follow-up needed: ${assetName} still needs manual Meta sharing`);
+    });
+  } else if (assets.manualAdAccountShareStatus === 'partial') {
+    lines.push('Follow-up needed: Some ad accounts still require manual sharing');
+  }
+
+  const selectedInstagramAccounts = Array.isArray(assets.selectedInstagramWithNames)
+    ? assets.selectedInstagramWithNames
+    : Array.isArray(assets.instagramAccounts)
+      ? assets.instagramAccounts.map((id: string) => ({ id, name: id }))
+      : [];
+
+  selectedInstagramAccounts.forEach((account: any) => {
+    const accountName =
+      typeof account?.name === 'string' && account.name.length > 0
+        ? account.name
+        : typeof account?.id === 'string'
+          ? account.id
+          : 'Selected Instagram account';
+    lines.push(
+      `Follow-up needed: ${accountName} requires manual follow-up because Instagram automation is not supported yet`
+    );
+  });
+
+  return lines;
+}
+
+function hasGrantFollowUp(product: string, assets: any): boolean {
+  return product === 'meta_ads' && getMetaFollowUpLines(assets).length > 0;
+}
+
 function getSelectedAssetCount(product: string, assets: any): number {
   switch (product) {
     case 'google_ads':
@@ -171,6 +219,7 @@ function getProductSummaryLines(product: string, assets: any): string[] {
       if ((assets.adAccounts?.length ?? 0) > 0) lines.push(`${assets.adAccounts.length} Ad Account${assets.adAccounts.length === 1 ? '' : 's'} selected`);
       if ((assets.pages?.length ?? 0) > 0) lines.push(`${assets.pages.length} Page${assets.pages.length === 1 ? '' : 's'} selected`);
       if ((assets.instagramAccounts?.length ?? 0) > 0) lines.push(`${assets.instagramAccounts.length} IG Account${assets.instagramAccounts.length === 1 ? '' : 's'} selected`);
+      lines.push(...getMetaFollowUpLines(assets));
       return lines;
     }
     case 'linkedin_ads':
@@ -239,7 +288,9 @@ export function PlatformAuthWizard({
   const [businessIdLoading, setBusinessIdLoading] = useState(false);
   const [businessIdError, setBusinessIdError] = useState<string | null>(null);
   const [pagesGranted, setPagesGranted] = useState(false);
-  const [adAccountsShared, setAdAccountsShared] = useState(false);
+  const [metaAdAccountShareStatus, setMetaAdAccountShareStatus] = useState<
+    'idle' | 'verified' | 'partial'
+  >('idle');
   const [assetsSaved, setAssetsSaved] = useState(false);
   const [chooseAccountsExpanded, setChooseAccountsExpanded] = useState(true);
   const [grantAccessExpanded, setGrantAccessExpanded] = useState(true);
@@ -307,6 +358,11 @@ export function PlatformAuthWizard({
       ...prev,
       [product]: selectedAssets,
     }));
+
+    if (product === 'meta_ads') {
+      setPagesGranted(false);
+      setMetaAdAccountShareStatus('idle');
+    }
 
     if (platform === 'tiktok' || product === 'tiktok' || product === 'tiktok_ads') {
       const selectedCount =
@@ -521,6 +577,8 @@ export function PlatformAuthWizard({
   const hasZeroAssetFollowUp = Object.entries(groupAssets).some(
     ([product, assets]) => getSelectedAssetCount(product, assets) === 0 && hasNoAssetsFollowUp(product, assets)
   );
+  const hasMetaFollowUp =
+    platform === 'meta' && getMetaFollowUpLines(groupAssets['meta_ads'] || {}).length > 0;
 
   // Render step content
   const renderStepContent = () => {
@@ -921,7 +979,11 @@ export function PlatformAuthWizard({
                   onGrantComplete={(results) => {
                     setPagesGranted(results.some((r) => r.status === 'granted'));
                     // If ad accounts also need sharing, wait; otherwise advance
-                    if (!hasAdAccounts || adAccountsShared) {
+                    if (
+                      !hasAdAccounts ||
+                      metaAdAccountShareStatus === 'verified' ||
+                      metaAdAccountShareStatus === 'partial'
+                    ) {
                           setCurrentStep(3);
                     }
                   }}
@@ -937,8 +999,16 @@ export function PlatformAuthWizard({
                     selectedAdAccounts={selectedAdAccounts}
                     accessRequestToken={accessRequestToken}
                         connectionId={connectionId}
-                    onComplete={() => {
-                      setAdAccountsShared(true);
+                    onComplete={(result: ManualMetaShareCompletionResult) => {
+                      setMetaAdAccountShareStatus(result.status);
+                      setGroupAssets((prev) => ({
+                        ...prev,
+                        meta_ads: {
+                          ...(prev.meta_ads || {}),
+                          manualAdAccountShareStatus: result.status,
+                          manualAdAccountVerificationResults: result.verificationResults || [],
+                        },
+                      }));
                       // If pages also need granting, wait; otherwise advance
                       if (!hasPages || pagesGranted) {
                             setCurrentStep(3);
@@ -974,7 +1044,10 @@ export function PlatformAuthWizard({
                   )}
 
                           {/* Continue button when both are complete */}
-                          {(pagesGranted || !hasPages) && (adAccountsShared || !hasAdAccounts) && (
+                          {(pagesGranted || !hasPages) &&
+                          (!hasAdAccounts ||
+                            metaAdAccountShareStatus === 'verified' ||
+                            metaAdAccountShareStatus === 'partial') && (
                             <div className="mt-8 flex justify-center">
                               <Button
                                 onClick={() => setCurrentStep(3)}
@@ -1146,7 +1219,9 @@ export function PlatformAuthWizard({
                 Connected
               </h3>
               <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
-                {hasTikTokPartialShare
+                {hasMetaFollowUp
+                  ? 'Some selected Meta accounts still need follow-up before access is complete.'
+                  : hasTikTokPartialShare
                   ? 'Some selected TikTok accounts still require manual sharing in Business Center.'
                   : hasZeroAssetFollowUp
                     ? `Connected successfully, but some requested ${platformName} products still need follow-up.`
@@ -1178,7 +1253,9 @@ export function PlatformAuthWizard({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                     className={`p-6 text-left ${
-                      hasNoAssetsFollowUp(product, assets) && getSelectedAssetCount(product, assets) === 0
+                      (hasNoAssetsFollowUp(product, assets) &&
+                        getSelectedAssetCount(product, assets) === 0) ||
+                      hasGrantFollowUp(product, assets)
                         ? 'border-2 border-[var(--warning)] bg-[var(--warning)]/10'
                         : 'border-2 border-[var(--teal)] bg-[var(--teal)]/5'
                     }`}

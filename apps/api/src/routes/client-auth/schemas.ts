@@ -64,6 +64,18 @@ export const grantPagesAccessSchema = z.object({
   pageIds: z.array(z.string()),
 });
 
+export const grantMetaAccessSchema = z.object({
+  connectionId: z.string(),
+  businessId: z.string().optional(),
+  assetTypes: z
+    .array(z.enum(['page', 'ad_account', 'instagram_account']))
+    .optional(),
+});
+
+export const manualMetaAdAccountShareSchema = z.object({
+  connectionId: z.string(),
+});
+
 export const adAccountsSharedSchema = z.object({
   connectionId: z.string(),
   sharedAdAccountIds: z.array(z.string()).optional(),

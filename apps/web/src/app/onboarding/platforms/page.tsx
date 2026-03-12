@@ -166,7 +166,7 @@ export default function PlatformsPage() {
     queryKey: ['meta-business-accounts', orgId],
     queryFn: async () => {
       const result = await authorizedApiFetch<{ data: MetaBusinessAccountsResponse; error: null }>(
-        `/agency-platforms/meta/business-accounts?agencyId=${orgId}`,
+        `/agency-platforms/meta/business-accounts?agencyId=${orgId}&refresh=true`,
         { getToken }
       );
       return result.data;

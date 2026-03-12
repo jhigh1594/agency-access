@@ -48,6 +48,18 @@ describe('MetaConnector Asset Discovery', () => {
           json: async () => ({
             data: [],
           }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
         } as Response);
 
       const result = await connector.getBusinessAccounts(accessToken);
@@ -102,6 +114,18 @@ describe('MetaConnector Asset Discovery', () => {
               },
             ],
           }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
         } as Response);
 
       const result = await connector.getBusinessAccounts(accessToken);
@@ -129,6 +153,18 @@ describe('MetaConnector Asset Discovery', () => {
         .mockResolvedValueOnce({
           ok: false,
           text: async () => 'Permissions error',
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
         } as Response);
 
       const result = await connector.getBusinessAccounts(accessToken);
@@ -140,6 +176,66 @@ describe('MetaConnector Asset Discovery', () => {
         ],
         hasAccess: true,
       });
+    });
+
+    it('includes recursively managed businesses so OBO-linked portfolios appear in the list', async () => {
+      vi.mocked(fetch)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_partner', name: 'Partner Business', vertical_name: 'Agency' },
+            ],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_client_1', name: 'Client Business One', verification_status: 'verified' },
+            ],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_client_2', name: 'Client Business Two' },
+            ],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: [],
+          }),
+        } as Response);
+
+      const result = await connector.getBusinessAccounts(accessToken);
+
+      expect(result).toEqual({
+        businesses: [
+          { id: 'biz_partner', name: 'Partner Business', verticalName: 'Agency', verificationStatus: undefined },
+          { id: 'biz_client_1', name: 'Client Business One', verticalName: undefined, verificationStatus: 'verified' },
+          { id: 'biz_client_2', name: 'Client Business Two', verticalName: undefined, verificationStatus: undefined },
+        ],
+        hasAccess: true,
+      });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/biz_partner/managed_businesses'),
+        expect.any(Object)
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/biz_client_1/managed_businesses'),
+        expect.any(Object)
+      );
     });
 
     it('throws when Meta business discovery fails', async () => {

@@ -25,7 +25,13 @@ export const META_AD_ACCOUNT_INSTRUCTIONS = {
       ],
     },
     openBusinessManager: 'Open Business Manager',
-    markComplete: "I've completed these steps",
+    checkAccess: 'Check access',
+    verifiedButton: 'Access verified',
+    starting: 'Preparing ad-account sharing verification...',
+    verifying: 'Checking access...',
+    waiting: 'Waiting for access to be granted... {verifiedCount}/{selectedCount}',
+    verified: 'Access verified for {count} ad account(s).',
+    pending: 'Still pending verification',
   },
   es: {
     title: 'Conceder acceso a tus cuentas de anuncios (Manual)',
@@ -47,7 +53,13 @@ export const META_AD_ACCOUNT_INSTRUCTIONS = {
       ],
     },
     openBusinessManager: 'Abrir Business Manager',
-    markComplete: 'He completado estos pasos',
+    checkAccess: 'Verificar acceso',
+    verifiedButton: 'Acceso verificado',
+    starting: 'Preparando la verificación de acceso...',
+    verifying: 'Verificando acceso...',
+    waiting: 'Esperando que se conceda el acceso... {verifiedCount}/{selectedCount}',
+    verified: 'Acceso verificado para {count} cuenta(s) de anuncios.',
+    pending: 'Aún pendiente de verificación',
   },
   nl: {
     title: 'Geef toegang tot je advertentieaccounts (Handmatig)',
@@ -69,9 +81,14 @@ export const META_AD_ACCOUNT_INSTRUCTIONS = {
       ],
     },
     openBusinessManager: 'Business Manager openen',
-    markComplete: 'Ik heb deze stappen voltooid',
+    checkAccess: 'Toegang controleren',
+    verifiedButton: 'Toegang geverifieerd',
+    starting: 'Verificatie van advertentieaccounttoegang voorbereiden...',
+    verifying: 'Toegang controleren...',
+    waiting: 'Wachten totdat toegang is verleend... {verifiedCount}/{selectedCount}',
+    verified: 'Toegang geverifieerd voor {count} advertentieaccount(s).',
+    pending: 'Nog in afwachting van verificatie',
   },
 } as const;
 
 export type MetaAdAccountInstructionsLanguage = keyof typeof META_AD_ACCOUNT_INSTRUCTIONS;
-

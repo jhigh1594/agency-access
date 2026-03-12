@@ -26,7 +26,44 @@ vi.mock('@/components/client-auth/PlatformWizardCard', () => ({
 }));
 
 vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
-  MetaAssetSelector: () => <div>Meta Asset Selector</div>,
+  MetaAssetSelector: ({ onSelectionChange }: any) => (
+    <div>
+      <div>Meta Asset Selector</div>
+      <button
+        type="button"
+        onClick={() =>
+          onSelectionChange({
+            adAccounts: ['act_1', 'act_2'],
+            pages: [],
+            instagramAccounts: [],
+            selectedAdAccountsWithNames: [
+              { id: 'act_1', name: 'DogTimez' },
+              { id: 'act_2', name: 'Still Pending' },
+            ],
+            selectedBusinessId: 'biz_1',
+            selectedBusinessName: 'Client One',
+          })
+        }
+      >
+        Select Meta Assets
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onSelectionChange({
+            adAccounts: [],
+            pages: [],
+            instagramAccounts: ['ig_1'],
+            selectedInstagramWithNames: [{ id: 'ig_1', name: 'Shop IG' }],
+            selectedBusinessId: 'biz_1',
+            selectedBusinessName: 'Client One',
+          })
+        }
+      >
+        Select Meta Instagram Assets
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('@/components/client-auth/GoogleAssetSelector', () => ({
@@ -88,11 +125,44 @@ vi.mock('@/components/client-auth/TikTokAssetSelector', () => ({
 }));
 
 vi.mock('@/components/client-auth/AutomaticPagesGrant', () => ({
-  AutomaticPagesGrant: () => <div>Automatic Pages Grant</div>,
+  AutomaticPagesGrant: ({ onGrantComplete }: any) => (
+    <button type="button" onClick={() => onGrantComplete([{ id: 'page_1', status: 'granted' }])}>
+      Automatic Pages Grant
+    </button>
+  ),
 }));
 
 vi.mock('@/components/client-auth/AdAccountSharingInstructions', () => ({
-  AdAccountSharingInstructions: () => <div>Ad Account Sharing Instructions</div>,
+  AdAccountSharingInstructions: ({ onComplete }: any) => (
+    <div>
+      <div>Ad Account Sharing Instructions</div>
+      <button
+        type="button"
+        onClick={() =>
+          onComplete({
+            status: 'partial',
+            verificationResults: [
+              {
+                assetId: 'act_1',
+                assetName: 'DogTimez',
+                status: 'verified',
+                verifiedAt: '2026-03-11T12:02:00.000Z',
+              },
+              {
+                assetId: 'act_2',
+                assetName: 'Still Pending',
+                status: 'unresolved',
+                errorMessage:
+                  'Ad account has not been shared to the agency business portfolio yet',
+              },
+            ],
+          })
+        }
+      >
+        Report Partial Meta Share
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('@/components/client-auth/StepHelpText', () => ({
@@ -449,6 +519,119 @@ describe('PlatformAuthWizard', () => {
     expect(screen.getByText('Google Business Profile')).toBeInTheDocument();
     expect(screen.getByText(/No locations found yet/i)).toBeInTheDocument();
     expect(screen.getByText(/Follow-up needed/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
+  });
+
+  it('advances Meta into the confirmation step when manual ad-account verification is partial', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: {
+              businessId: 'partner-bm-1',
+              businessName: 'Agency Access',
+            },
+            error: null,
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: { success: true },
+            error: null,
+          }),
+      } as Response);
+
+    render(
+      <PlatformAuthWizard
+        platform="meta"
+        platformName="Meta"
+        products={[{ product: 'meta_ads', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /select meta assets/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /save selected accounts/i }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/client/token-1/save-assets',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: /report partial meta share/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/some selected meta accounts still need follow-up/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/still pending still needs manual meta sharing/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
+  });
+
+  it('shows Instagram selections as unresolved Meta follow-up work in confirmation', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: {
+              businessId: 'partner-bm-1',
+              businessName: 'Agency Access',
+            },
+            error: null,
+          }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: { success: true },
+            error: null,
+          }),
+      } as Response);
+
+    render(
+      <PlatformAuthWizard
+        platform="meta"
+        platformName="Meta"
+        products={[{ product: 'meta_ads', accessLevel: 'admin' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /select meta instagram assets/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /save selected accounts/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/some selected meta accounts still need follow-up/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/shop ig requires manual follow-up because instagram automation is not supported yet/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
   });
 });

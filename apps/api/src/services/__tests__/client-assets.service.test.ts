@@ -1,6 +1,186 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clientAssetsService } from '../client-assets.service.js';
 
+describe('ClientAssetsService - Meta', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  it('fetches client-selectable Meta business portfolios and scoped assets for the selected business', async () => {
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+
+      if (url.includes('/me/businesses')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'biz_client_1', name: 'Client One', verification_status: 'verified' },
+              { id: 'biz_client_2', name: 'Client Two' },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/me/business_users')) {
+        return {
+          ok: true,
+          json: async () => ({ data: [] }),
+        } as Response;
+      }
+
+      if (url.includes('/biz_client_1/managed_businesses') || url.includes('/biz_client_2/managed_businesses')) {
+        return {
+          ok: true,
+          json: async () => ({ data: [] }),
+        } as Response;
+      }
+
+      if (url.includes('/biz_client_2/owned_ad_accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'act_2a', name: 'Owned Ad Account', account_status: 1, currency: 'USD' },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/biz_client_2/client_ad_accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'act_2b', name: 'Shared Ad Account', account_status: 1, currency: 'USD' },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/biz_client_2/owned_pages')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'page_2a', name: 'Owned Page', category: 'Retail' },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/biz_client_2/client_pages')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'page_2b', name: 'Shared Page', category: 'Agency' },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/biz_client_2/instagram_accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              { id: 'ig_2', username: 'clienttwo' },
+            ],
+          }),
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        text: async () => `not found: ${url}`,
+      } as Response;
+    });
+
+    const result = await clientAssetsService.fetchMetaAssets('token-123', 'biz_client_2');
+
+    expect(result.businesses).toEqual([
+      {
+        id: 'biz_client_1',
+        name: 'Client One',
+        verificationStatus: 'verified',
+      },
+      {
+        id: 'biz_client_2',
+        name: 'Client Two',
+      },
+    ]);
+    expect(result.selectedBusinessId).toBe('biz_client_2');
+    expect(result.selectedBusinessName).toBe('Client Two');
+    expect(result.selectionRequired).toBe(false);
+    expect(result.adAccounts).toEqual([
+      {
+        id: 'act_2a',
+        name: 'Owned Ad Account',
+        account_status: 1,
+        currency: 'USD',
+        ownershipType: 'owned',
+      },
+      {
+        id: 'act_2b',
+        name: 'Shared Ad Account',
+        account_status: 1,
+        currency: 'USD',
+        ownershipType: 'client',
+      },
+    ]);
+    expect(result.pages).toEqual([
+      { id: 'page_2a', name: 'Owned Page', category: 'Retail', ownershipType: 'owned' },
+      { id: 'page_2b', name: 'Shared Page', category: 'Agency', ownershipType: 'client' },
+    ]);
+    expect(result.instagramAccounts).toEqual([
+      { id: 'ig_2', username: 'clienttwo' },
+    ]);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalledWith(
+      expect.stringContaining('/me/adaccounts')
+    );
+    expect(vi.mocked(fetch)).not.toHaveBeenCalledWith(
+      expect.stringContaining('/me/accounts?fields=id,name,picture')
+    );
+  });
+
+  it('throws when the requested Meta business portfolio is not available to the client user', async () => {
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+
+      if (url.includes('/me/businesses')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [{ id: 'biz_client_1', name: 'Client One' }],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/me/business_users') || url.includes('/biz_client_1/managed_businesses')) {
+        return {
+          ok: true,
+          json: async () => ({ data: [] }),
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        text: async () => `not found: ${url}`,
+      } as Response;
+    });
+
+    await expect(
+      clientAssetsService.fetchMetaAssets('token-123', 'biz_missing')
+    ).rejects.toMatchObject({
+      code: 'INVALID_META_BUSINESS_PORTFOLIO',
+    });
+  });
+});
+
 describe('ClientAssetsService - TikTok', () => {
   beforeEach(() => {
     vi.clearAllMocks();

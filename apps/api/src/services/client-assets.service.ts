@@ -12,28 +12,39 @@
  */
 
 import { logger } from '../lib/logger.js';
+import { MetaConnector } from './connectors/meta.js';
 
 export interface MetaAdAccount {
   id: string;
   name: string;
   account_status: number;
   currency?: string;
+  ownershipType?: 'owned' | 'client';
 }
 
 export interface MetaPage {
   id: string;
   name: string;
+  category?: string;
   picture?: {
     data: {
       url: string;
     };
   };
+  ownershipType?: 'owned' | 'client';
 }
 
 export interface MetaInstagramAccount {
   id: string;
   username: string;
   profile_picture_url?: string;
+}
+
+export interface MetaBusinessPortfolio {
+  id: string;
+  name: string;
+  verticalName?: string;
+  verificationStatus?: string;
 }
 
 export interface GoogleAdsAccount {
@@ -95,6 +106,20 @@ export interface MetaAssets {
   adAccounts: MetaAdAccount[];
   pages: MetaPage[];
   instagramAccounts: MetaInstagramAccount[];
+  businesses?: MetaBusinessPortfolio[];
+  selectedBusinessId?: string;
+  selectedBusinessName?: string;
+  selectionRequired?: boolean;
+}
+
+export class MetaBusinessPortfolioUnavailableError extends Error {
+  readonly code = 'INVALID_META_BUSINESS_PORTFOLIO';
+  readonly statusCode = 400;
+
+  constructor(message: string = 'Selected Meta business portfolio is not available for this client user') {
+    super(message);
+    this.name = 'MetaBusinessPortfolioUnavailableError';
+  }
 }
 
 class ClientAssetsService {
@@ -111,21 +136,45 @@ class ClientAssetsService {
   }
 
   /**
-   * Fetch all Meta assets (ad accounts, pages, Instagram) in parallel
+   * Fetch Meta business portfolios and assets using business-scoped edges.
    *
    * @param accessToken - Client's OAuth access token (from Infisical)
+   * @param businessId - Optional selected Business Portfolio ID
    * @returns Object containing arrays of ad accounts, pages, and Instagram accounts
    */
-  async fetchMetaAssets(accessToken: string): Promise<MetaAssets> {
-    logger.info('Fetching Meta assets for client');
+  async fetchMetaAssets(accessToken: string, businessId?: string): Promise<MetaAssets> {
+    logger.info('Fetching Meta assets for client', { businessId: businessId || null });
 
     try {
-      // Fetch all assets in parallel for performance
-      const [adAccounts, pages, instagramAccounts] = await Promise.all([
-        this.fetchAdAccounts(accessToken),
-        this.fetchPages(accessToken),
-        this.fetchInstagramAccounts(accessToken),
-      ]);
+      const connector = new MetaConnector();
+      const businessAccountResult = await connector.getBusinessAccounts(accessToken);
+      const businesses = businessAccountResult.businesses as MetaBusinessPortfolio[];
+
+      const selectedBusiness = businessId
+        ? businesses.find((business) => business.id === businessId)
+        : businesses.length === 1
+          ? businesses[0]
+          : undefined;
+
+      if (businessId && !selectedBusiness) {
+        throw new MetaBusinessPortfolioUnavailableError();
+      }
+
+      const businessIdsToFetch = selectedBusiness
+        ? [selectedBusiness.id]
+        : businesses.map((business) => business.id);
+
+      const scopedAssets = await Promise.all(
+        businessIdsToFetch.map((portfolioId) =>
+          this.fetchMetaAssetsForBusiness(accessToken, portfolioId)
+        )
+      );
+
+      const adAccounts = this.mergeById(scopedAssets.flatMap((assets) => assets.adAccounts));
+      const pages = this.mergeById(scopedAssets.flatMap((assets) => assets.pages));
+      const instagramAccounts = this.mergeById(
+        scopedAssets.flatMap((assets) => assets.instagramAccounts)
+      );
 
       logger.info('Successfully fetched Meta assets', {
         adAccountCount: adAccounts.length,
@@ -137,12 +186,160 @@ class ClientAssetsService {
         adAccounts,
         pages,
         instagramAccounts,
+        businesses,
+        selectedBusinessId: selectedBusiness?.id,
+        selectedBusinessName: selectedBusiness?.name,
+        selectionRequired: !selectedBusiness && businesses.length > 1,
       };
     } catch (error) {
       logger.error('Failed to fetch Meta assets', { error });
+      if (error instanceof MetaBusinessPortfolioUnavailableError) {
+        throw error;
+      }
       throw new Error(
         `Failed to fetch Meta assets: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
+    }
+  }
+
+  private mergeById<T extends { id: string }>(items: T[]): T[] {
+    return Array.from(new Map(items.map((item) => [item.id, item])).values());
+  }
+
+  private async fetchMetaAssetsForBusiness(
+    accessToken: string,
+    businessId: string
+  ): Promise<Pick<MetaAssets, 'adAccounts' | 'pages' | 'instagramAccounts'>> {
+    const [adAccounts, pages, instagramAccounts] = await Promise.all([
+      this.fetchBusinessAdAccounts(accessToken, businessId),
+      this.fetchBusinessPages(accessToken, businessId),
+      this.fetchBusinessInstagramAccounts(accessToken, businessId),
+    ]);
+
+    return {
+      adAccounts,
+      pages,
+      instagramAccounts,
+    };
+  }
+
+  private async fetchBusinessCollection<T>(
+    accessToken: string,
+    businessId: string,
+    edge: string
+  ): Promise<T[]> {
+    const url = `${this.GRAPH_API_BASE}/${businessId}/${edge}&access_token=${accessToken}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Meta API error (${edge}): ${error}`);
+    }
+
+    const data = (await response.json()) as { data?: T[] };
+    return data.data || [];
+  }
+
+  private async fetchOptionalBusinessCollection<T>(
+    accessToken: string,
+    businessId: string,
+    edge: string
+  ): Promise<T[]> {
+    try {
+      return await this.fetchBusinessCollection<T>(accessToken, businessId, edge);
+    } catch (error) {
+      logger.warn(`Failed to fetch Meta ${edge} for business ${businessId}`, { error });
+      return [];
+    }
+  }
+
+  private async fetchBusinessAdAccounts(
+    accessToken: string,
+    businessId: string
+  ): Promise<MetaAdAccount[]> {
+    try {
+      const [ownedAccounts, clientAccounts] = await Promise.all([
+        this.fetchBusinessCollection<{
+          id: string;
+          name: string;
+          account_status: number;
+          currency?: string;
+        }>(
+          accessToken,
+          businessId,
+          'owned_ad_accounts?fields=id,name,account_status,currency'
+        ),
+        this.fetchOptionalBusinessCollection<{
+          id: string;
+          name: string;
+          account_status: number;
+          currency?: string;
+        }>(
+          accessToken,
+          businessId,
+          'client_ad_accounts?fields=id,name,account_status,currency'
+        ),
+      ]);
+
+      return this.mergeById([
+        ...ownedAccounts.map((account) => ({ ...account, ownershipType: 'owned' as const })),
+        ...clientAccounts.map((account) => ({ ...account, ownershipType: 'client' as const })),
+      ]);
+    } catch (error) {
+      logger.error('Failed to fetch business-scoped ad accounts', { error, businessId });
+      return [];
+    }
+  }
+
+  private async fetchBusinessPages(
+    accessToken: string,
+    businessId: string
+  ): Promise<MetaPage[]> {
+    try {
+      const [ownedPages, clientPages] = await Promise.all([
+        this.fetchBusinessCollection<{
+          id: string;
+          name: string;
+          category?: string;
+        }>(
+          accessToken,
+          businessId,
+          'owned_pages?fields=id,name,category'
+        ),
+        this.fetchOptionalBusinessCollection<{
+          id: string;
+          name: string;
+          category?: string;
+        }>(
+          accessToken,
+          businessId,
+          'client_pages?fields=id,name,category'
+        ),
+      ]);
+
+      return this.mergeById([
+        ...ownedPages.map((page) => ({ ...page, ownershipType: 'owned' as const })),
+        ...clientPages.map((page) => ({ ...page, ownershipType: 'client' as const })),
+      ]);
+    } catch (error) {
+      logger.error('Failed to fetch business-scoped pages', { error, businessId });
+      return [];
+    }
+  }
+
+  private async fetchBusinessInstagramAccounts(
+    accessToken: string,
+    businessId: string
+  ): Promise<MetaInstagramAccount[]> {
+    try {
+      return await this.fetchBusinessCollection<MetaInstagramAccount>(
+        accessToken,
+        businessId,
+        'instagram_accounts?fields=id,username,profile_picture_url'
+      );
+    } catch (error) {
+      logger.warn(`Failed to fetch Instagram accounts for business ${businessId}`, { error });
+      return [];
     }
   }
 

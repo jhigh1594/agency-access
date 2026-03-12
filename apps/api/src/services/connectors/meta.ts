@@ -279,9 +279,9 @@ export class MetaConnector {
       name?: string;
       vertical_name?: string;
       verification_status?: string;
-    }) => {
+    }): boolean => {
       if (!business.id || !business.name || seenBusinessIds.has(business.id)) {
-        return;
+        return false;
       }
 
       seenBusinessIds.add(business.id);
@@ -291,92 +291,122 @@ export class MetaConnector {
         verticalName: business.vertical_name,
         verificationStatus: business.verification_status,
       });
+      return true;
     };
 
-    let nextUrl: string | null =
-      `https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status&access_token=${accessToken}`;
-
-    while (nextUrl) {
-      const response = await fetch(nextUrl, { method: 'GET' });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to fetch business accounts: ${error}`);
+    const withAccessToken = (url: string): string => {
+      const parsedUrl = new URL(url);
+      if (!parsedUrl.searchParams.has('access_token')) {
+        parsedUrl.searchParams.set('access_token', accessToken);
       }
+      return parsedUrl.toString();
+    };
 
-      const data = (await response.json()) as {
-        data?: Array<{
-          id: string;
-          name: string;
-          vertical_name?: string;
-          verification_status?: string;
-        }>;
-        paging?: {
-          next?: string;
-        };
-      };
+    const fetchBusinessCollection = async (
+      url: string,
+      extractBusinesses: (payload: any) => Array<{
+        id?: string;
+        name?: string;
+        vertical_name?: string;
+        verification_status?: string;
+      }>
+    ): Promise<string[]> => {
+      let nextUrl: string | null = withAccessToken(url);
+      const discoveredBusinessIds: string[] = [];
 
-      for (const business of data.data || []) {
-        recordBusiness(business);
-      }
-
-      if (!data.paging?.next) {
-        nextUrl = null;
-        continue;
-      }
-
-      const parsedNextUrl = new URL(data.paging.next);
-      if (!parsedNextUrl.searchParams.has('access_token')) {
-        parsedNextUrl.searchParams.set('access_token', accessToken);
-      }
-      nextUrl = parsedNextUrl.toString();
-    }
-
-    try {
-      let nextBusinessUserUrl: string | null =
-        `https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,vertical_name,verification_status}&access_token=${accessToken}`;
-
-      while (nextBusinessUserUrl) {
-        const response = await fetch(nextBusinessUserUrl, { method: 'GET' });
+      while (nextUrl) {
+        const response = await fetch(nextUrl, { method: 'GET' });
 
         if (!response.ok) {
           const error = await response.text();
-          throw new Error(`Failed to fetch business users: ${error}`);
+          throw new Error(`Failed to fetch business accounts: ${error}`);
         }
 
-        const data = (await response.json()) as {
-          data?: Array<{
+        const data = await response.json() as {
+          data?: unknown[];
+          paging?: {
+            next?: string;
+          };
+        };
+
+        for (const business of extractBusinesses(data)) {
+          if (recordBusiness(business) && business.id) {
+            discoveredBusinessIds.push(business.id);
+          }
+        }
+
+        nextUrl = data.paging?.next ? withAccessToken(data.paging.next) : null;
+      }
+
+      return discoveredBusinessIds;
+    };
+
+    const queuedBusinessIds = await fetchBusinessCollection(
+      'https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status',
+      (payload) => (payload.data || []) as Array<{
+        id: string;
+        name: string;
+        vertical_name?: string;
+        verification_status?: string;
+      }>
+    );
+
+    try {
+      const businessUserBusinessIds = await fetchBusinessCollection(
+        'https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,vertical_name,verification_status}',
+        (payload) =>
+          ((payload.data || []) as Array<{
             business?: {
               id?: string;
               name?: string;
               vertical_name?: string;
               verification_status?: string;
             };
-          }>;
-          paging?: {
-            next?: string;
-          };
-        };
+          }>)
+            .map((entry) => entry.business)
+            .filter((business): business is {
+              id?: string;
+              name?: string;
+              vertical_name?: string;
+              verification_status?: string;
+            } => Boolean(business))
+      );
 
-        for (const businessUser of data.data || []) {
-          if (businessUser.business) {
-            recordBusiness(businessUser.business);
-          }
-        }
-
-        if (!data.paging?.next) {
-          nextBusinessUserUrl = null;
-          continue;
-        }
-
-        const parsedNextUrl = new URL(data.paging.next);
-        if (!parsedNextUrl.searchParams.has('access_token')) {
-          parsedNextUrl.searchParams.set('access_token', accessToken);
-        }
-        nextBusinessUserUrl = parsedNextUrl.toString();
-      }
+      queuedBusinessIds.push(...businessUserBusinessIds);
     } catch (error) {
       console.warn('Failed to fetch supplemental Meta business_users data; continuing with primary businesses list.', error);
+    }
+
+    // OBO and partner setups can expose additional client portfolios under managed_businesses.
+    const pendingBusinessIds = [...queuedBusinessIds];
+    const traversedBusinessIds = new Set<string>();
+
+    while (pendingBusinessIds.length > 0) {
+      const currentBusinessId = pendingBusinessIds.shift();
+      if (!currentBusinessId || traversedBusinessIds.has(currentBusinessId)) {
+        continue;
+      }
+
+      traversedBusinessIds.add(currentBusinessId);
+
+      try {
+        const managedBusinessIds = await fetchBusinessCollection(
+          `https://graph.facebook.com/v21.0/${currentBusinessId}/managed_businesses?fields=id,name,vertical_name,verification_status`,
+          (payload) => (payload.data || []) as Array<{
+            id: string;
+            name: string;
+            vertical_name?: string;
+            verification_status?: string;
+          }>
+        );
+
+        pendingBusinessIds.push(...managedBusinessIds);
+      } catch (error) {
+        console.warn(
+          `Failed to fetch managed businesses for ${currentBusinessId}; continuing with directly accessible businesses only.`,
+          error
+        );
+      }
     }
 
     return {

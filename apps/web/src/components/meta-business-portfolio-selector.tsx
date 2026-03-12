@@ -31,7 +31,7 @@ export function MetaBusinessPortfolioSelector({
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}&refresh=true`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),

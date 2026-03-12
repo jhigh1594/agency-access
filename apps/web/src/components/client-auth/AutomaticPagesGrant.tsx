@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Loader2, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { META_GRANT_ACCESS } from '@/lib/content/meta-grant-access';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface Page {
   id: string;
@@ -13,6 +15,18 @@ interface GrantResult {
   id: string;
   status: 'granted' | 'failed';
   error?: string;
+}
+
+interface MetaGrantAccessResponse {
+  data?: {
+    assetGrantResults?: Array<{
+      assetId: string;
+      assetType: 'page' | 'ad_account' | 'instagram_account';
+      status: 'pending' | 'granted' | 'verified' | 'failed' | 'unresolved';
+      errorMessage?: string;
+    }>;
+  };
+  error?: { message?: string };
 }
 
 interface AutomaticPagesGrantProps {
@@ -52,32 +66,36 @@ export function AutomaticPagesGrant({
       setIsGranting(true);
       setGrantResults(null); // Clear previous results
       setLocalError(null); // Clear previous errors
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = getApiBaseUrl();
 
-      const response = await fetch(`${apiUrl}/api/client/${accessRequestToken}/grant-pages-access`, {
+      const response = await fetch(`${apiUrl}/api/client/${accessRequestToken}/grant-meta-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           connectionId,
-          pageIds: displayPages.map((p) => p.id),
+          assetTypes: ['page'],
         }),
       });
 
-      const json = await response.json();
+      const json = await parseJsonResponse<MetaGrantAccessResponse>(response, {
+        fallbackErrorMessage: 'Failed to grant access',
+      });
 
       if (json.error) {
         // Show the error message from the API
         const errorMessage = json.error.message || 'Failed to grant access';
         setLocalError(errorMessage);
         onError?.(errorMessage);
-        // Still set results so we can show which pages failed
-        if (json.data?.grantedPages) {
-          setGrantResults(json.data.grantedPages);
-        }
         return;
       }
 
-      const results: GrantResult[] = json.data?.grantedPages || [];
+      const results: GrantResult[] = (json.data?.assetGrantResults || [])
+        .filter((result) => result.assetType === 'page')
+        .map((result) => ({
+          id: result.assetId,
+          status: result.status === 'verified' ? 'granted' : 'failed',
+          error: result.status === 'verified' ? undefined : result.errorMessage,
+        }));
       setGrantResults(results);
       
       // Check if any pages failed

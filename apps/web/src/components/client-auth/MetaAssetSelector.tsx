@@ -18,13 +18,22 @@
 import { useState, useEffect, useRef } from 'react';
 import posthog from 'posthog-js';
 import { AssetGroup, type Asset } from './AssetGroup';
-import { MultiSelectCombobox, type MultiSelectOption } from '@/components/ui/multi-select-combobox';
-import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import { AssetSelectorLoading, AssetSelectorError } from './AssetSelectorStates';
 import { MetaAssetCreator } from './MetaAssetCreator';
 import { GuidedRedirectCard } from './GuidedRedirectModal';
-import { Plus, ExternalLink } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface MetaAssets {
+  businesses?: Array<{
+    id: string;
+    name: string;
+  }>;
+  selectedBusinessId?: string | null;
+  selectedBusinessName?: string | null;
+  selectionRequired?: boolean;
   adAccounts: Array<{
     id: string;
     name: string;
@@ -48,11 +57,15 @@ interface MetaAssets {
 interface MetaAssetSelectorProps {
   sessionId: string;
   accessRequestToken: string;
-  businessId?: string; // Business Manager ID for creating assets
+  businessId?: string;
   onSelectionChange: (selectedAssets: {
     adAccounts: string[];
     pages: string[];
     instagramAccounts: string[];
+    selectedBusinessId?: string;
+    selectedBusinessName?: string;
+    businesses?: Array<{ id: string; name: string }>;
+    selectionRequired?: boolean;
     // Extended properties for grant step
     selectedPagesWithNames?: Array<{ id: string; name: string }>;
     selectedAdAccountsWithNames?: Array<{ id: string; name: string }>;
@@ -74,6 +87,9 @@ export function MetaAssetSelector({
   const [isLoading, setIsLoading] = useState(true);
   const [assets, setAssets] = useState<MetaAssets | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
+  const [selectedBusinessName, setSelectedBusinessName] = useState<string | null>(null);
+  const [pendingBusinessId, setPendingBusinessId] = useState('');
 
   // Selection state
   const [selectedAdAccounts, setSelectedAdAccounts] = useState<Set<string>>(new Set());
@@ -86,33 +102,47 @@ export function MetaAssetSelector({
 
   // Track if we've already captured the event (to avoid duplicates)
   const hasTrackedSelection = useRef(false);
+  const activeBusinessId = selectedBusinessId || businessId || undefined;
 
   // Handle successful ad account creation - auto-select and refresh
   const handleAdAccountCreated = (newAccount: { id: string; name: string }) => {
     // Refresh assets to get the updated list
-    fetchAssets().then(() => {
+    fetchAssets(activeBusinessId).then(() => {
       // Auto-select the newly created account
-      setSelectedAdAccounts(prev => new Set([...prev, newAccount.id]));
+      setSelectedAdAccounts((prev) => new Set([...prev, newAccount.id]));
       setShowAdAccountCreator(false);
     });
   };
 
   // Handle page creation - refresh list
   const handlePageCreated = () => {
-    fetchAssets().then(() => {
+    fetchAssets(activeBusinessId).then(() => {
       setShowPageCreator(false);
     });
   };
-  const fetchAssets = async () => {
+  const fetchAssets = async (requestedBusinessId?: string) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = getApiBaseUrl();
+      const query = new URLSearchParams({
+        connectionId: sessionId,
+      });
+
+      if (requestedBusinessId) {
+        query.set('businessId', requestedBusinessId);
+      }
+
       const response = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/assets/meta_ads?connectionId=${encodeURIComponent(sessionId)}`
+        `${apiUrl}/api/client/${accessRequestToken}/assets/meta_ads?${query.toString()}`
       );
-      const json = await response.json();
+      const json = await parseJsonResponse<{ data?: MetaAssets; error?: { message?: string } }>(
+        response,
+        {
+          fallbackErrorMessage: 'Failed to load accounts',
+        }
+      );
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to load accounts');
@@ -120,6 +150,9 @@ export function MetaAssetSelector({
 
       const fetchedAssets = json.data || { adAccounts: [], pages: [], instagramAccounts: [] };
       setAssets(fetchedAssets);
+      setSelectedBusinessId(fetchedAssets.selectedBusinessId || requestedBusinessId || null);
+      setSelectedBusinessName(fetchedAssets.selectedBusinessName || null);
+      setPendingBusinessId(fetchedAssets.selectedBusinessId || requestedBusinessId || '');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load accounts';
       setError(errorMessage);
@@ -132,8 +165,9 @@ export function MetaAssetSelector({
   // Fetch assets on mount
   useEffect(() => {
     if (sessionId) {
-      fetchAssets();
+      fetchAssets(selectedBusinessId || undefined);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, accessRequestToken]);
 
   // Notify parent of changes
@@ -156,9 +190,11 @@ export function MetaAssetSelector({
 
     // Track meta_assets_selected when selection changes (debounced)
     const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
+    let selectionTrackingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
     if (totalSelected > 0 && !hasTrackedSelection.current) {
       // Debounce the tracking to avoid spamming events
-      const timeoutId = setTimeout(() => {
+      selectionTrackingTimeoutId = setTimeout(() => {
         posthog.capture('meta_assets_selected', {
           session_id: sessionId,
           ad_accounts_selected: selectedAdAccounts.size,
@@ -171,14 +207,16 @@ export function MetaAssetSelector({
         });
         hasTrackedSelection.current = true;
       }, 2000); // Wait 2 seconds after last selection change
-
-      return () => clearTimeout(timeoutId);
     }
 
     onSelectionChange({
       adAccounts: Array.from(selectedAdAccounts),
       pages: Array.from(selectedPages),
       instagramAccounts: Array.from(selectedInstagram),
+      selectedBusinessId: selectedBusinessId || undefined,
+      selectedBusinessName: selectedBusinessName || undefined,
+      businesses: assets?.businesses || [],
+      selectionRequired: assets?.selectionRequired,
       // Include full objects for grant step
       selectedPagesWithNames,
       selectedAdAccountsWithNames,
@@ -188,6 +226,12 @@ export function MetaAssetSelector({
       allAdAccounts: assets?.adAccounts || [],
       allInstagramAccounts: assets?.instagramAccounts || [],
     });
+
+    return () => {
+      if (selectionTrackingTimeoutId) {
+        clearTimeout(selectionTrackingTimeoutId);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAdAccounts, selectedPages, selectedInstagram, assets]);
 
@@ -234,9 +278,117 @@ export function MetaAssetSelector({
   }));
 
   const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
+  const availableBusinesses = assets?.businesses || [];
+  const requiresBusinessSelection = Boolean(
+    assets?.selectionRequired && !selectedBusinessId && availableBusinesses.length > 0
+  );
+  const creationBusinessId = selectedBusinessId || businessId;
+
+  const handleBusinessSelectionLoad = () => {
+    if (!pendingBusinessId) return;
+    setSelectedAdAccounts(new Set());
+    setSelectedPages(new Set());
+    setSelectedInstagram(new Set());
+    void fetchAssets(pendingBusinessId);
+  };
+
+  const handleSwitchBusiness = () => {
+    setSelectedBusinessId(null);
+    setSelectedBusinessName(null);
+    setPendingBusinessId('');
+    setSelectedAdAccounts(new Set());
+    setSelectedPages(new Set());
+    setSelectedInstagram(new Set());
+    setShowAdAccountCreator(false);
+    setShowPageCreator(false);
+    setAssets((currentAssets) =>
+      currentAssets
+        ? {
+            ...currentAssets,
+            selectedBusinessId: null,
+            selectedBusinessName: null,
+            selectionRequired: true,
+            adAccounts: [],
+            pages: [],
+            instagramAccounts: [],
+          }
+        : currentAssets
+    );
+  };
 
   return (
     <div className="space-y-6">
+      {requiresBusinessSelection ? (
+        <div className="border-2 border-black dark:border-white bg-[var(--sand)]/20 p-6 space-y-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--ink)] font-display">
+              Select Business Portfolio
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Choose the client Business Portfolio that owns the Meta assets you want to share.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <label
+              htmlFor="meta-business-portfolio"
+              className="block text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground"
+            >
+              Business Portfolio
+            </label>
+            <select
+              id="meta-business-portfolio"
+              className="w-full border-2 border-black dark:border-white bg-card px-4 py-3 text-[var(--ink)]"
+              value={pendingBusinessId}
+              onChange={(event) => setPendingBusinessId(event.target.value)}
+            >
+              <option value="">Select a portfolio...</option>
+              {availableBusinesses.map((business) => (
+                <option key={business.id} value={business.id}>
+                  {business.name} ({business.id})
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleBusinessSelectionLoad}
+              disabled={!pendingBusinessId || isLoading}
+              className="inline-flex min-h-[48px] items-center justify-center bg-[var(--ink)] px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground"
+            >
+              Load accounts
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedBusinessName ? (
+        <div className="border-2 border-black dark:border-white bg-card px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-[var(--ink)]">
+                Sharing from {selectedBusinessName}
+              </p>
+              {availableBusinesses.length > 1 ? (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Switch to another client Business Portfolio before continuing if these assets are not the right ones.
+                </p>
+              ) : null}
+            </div>
+            {availableBusinesses.length > 1 ? (
+              <button
+                type="button"
+                onClick={handleSwitchBusiness}
+                className="inline-flex min-h-[44px] items-center justify-center border-2 border-black dark:border-white bg-[var(--paper)] px-4 py-2 text-sm font-bold text-[var(--ink)] hover:bg-muted/20"
+              >
+                Switch business
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {requiresBusinessSelection ? null : (
+        <>
       {/* Selection Summary - Brutalist Style */}
       <div className="bg-[var(--coral)]/10 border-2 border-black dark:border-white p-4">
         <div className="flex items-center justify-between">
@@ -271,7 +423,7 @@ export function MetaAssetSelector({
           </div>
 
           {/* Show creator if empty and user clicked "Create New" */}
-          {showAdAccountCreator && businessId ? (
+          {showAdAccountCreator && creationBusinessId ? (
             <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/5 p-4 rounded-lg mb-3">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-bold text-[var(--ink)]">Create New Ad Account</h4>
@@ -284,7 +436,7 @@ export function MetaAssetSelector({
               </div>
               <MetaAssetCreator
                 connectionId={sessionId}
-                businessId={businessId}
+                businessId={creationBusinessId}
                 accessRequestToken={accessRequestToken}
                 onSuccess={handleAdAccountCreated}
                 onError={onError}
@@ -318,7 +470,7 @@ export function MetaAssetSelector({
               </p>
 
               {/* Create button */}
-              {businessId ? (
+              {creationBusinessId ? (
                 <button
                   onClick={() => setShowAdAccountCreator(true)}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
@@ -328,7 +480,7 @@ export function MetaAssetSelector({
                 </button>
               ) : (
                 <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-sm text-[var(--warning)] max-w-sm mx-auto">
-                  Business Manager ID is required to create ad accounts. Please contact support.
+                  Select a Business Portfolio before creating ad accounts.
                 </div>
               )}
             </div>
@@ -366,7 +518,7 @@ export function MetaAssetSelector({
             <GuidedRedirectCard
               title="Create a Facebook Page"
               description="Pages must be created in Meta Business Manager. Follow these steps:"
-              businessManagerUrl={`https://business.facebook.com/settings/${businessId}/pages`}
+              businessManagerUrl={`https://business.facebook.com/settings/${creationBusinessId}/pages`}
               instructions={[
                 { title: 'Click the button below to open Meta Business Manager', description: 'A new tab will open' },
                 { title: 'Click "Add a Page" or "Create a New Page"', description: 'Choose to create a new page or add an existing one' },
@@ -392,13 +544,19 @@ export function MetaAssetSelector({
               </p>
 
               {/* Create button */}
-              <button
-                onClick={() => setShowPageCreator(true)}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
-              >
-                <Plus className="w-5 h-5" />
-                Create Page
-              </button>
+              {creationBusinessId ? (
+                <button
+                  onClick={() => setShowPageCreator(true)}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create Page
+                </button>
+              ) : (
+                <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-sm text-[var(--warning)] max-w-sm mx-auto">
+                  Select a Business Portfolio before creating pages.
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -417,6 +575,8 @@ export function MetaAssetSelector({
           defaultExpanded={instagramAssets.length > 0}
         />
       </div>
+        </>
+      )}
     </div>
   );
 }
