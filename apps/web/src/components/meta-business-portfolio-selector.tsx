@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { Loader2, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 
 interface Business {
   id: string;
@@ -24,7 +25,10 @@ export function MetaBusinessPortfolioSelector({
   selectedBusinessId,
 }: MetaBusinessPortfolioSelectorProps) {
   const [selectedId, setSelectedId] = useState<string>(selectedBusinessId || '');
+  const [reauthError, setReauthError] = useState<string | null>(null);
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
   const { getToken } = useAuth();
+  const { user } = useUser();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['meta-businesses', agencyId],
@@ -59,6 +63,40 @@ export function MetaBusinessPortfolioSelector({
       setSelectedId(selectedBusinessId);
     }
   }, [selectedBusinessId, businesses, selectedId]);
+
+  const handleReauthenticate = async () => {
+    const userEmail =
+      user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
+    if (!userEmail) {
+      setReauthError('Unable to resolve your account email.');
+      return;
+    }
+
+    setReauthError(null);
+    setIsReauthenticating(true);
+
+    try {
+      const authPayload = await launchMetaBusinessLogin({
+        appId: process.env.NEXT_PUBLIC_META_APP_ID || '',
+        configId: process.env.NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID || '',
+      });
+
+      await finalizeMetaBusinessLogin({
+        agencyId,
+        userEmail,
+        getToken,
+        authPayload,
+      });
+
+      await refetch();
+    } catch (err) {
+      setReauthError(
+        err instanceof Error ? err.message : 'Failed to refresh Meta Business Portfolios.'
+      );
+    } finally {
+      setIsReauthenticating(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -96,12 +134,14 @@ export function MetaBusinessPortfolioSelector({
         <p className="text-slate-600 text-sm max-w-xs mx-auto mb-6">
           Don't see your Business Portfolio? To refresh this list{' '}
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={() => void handleReauthenticate()}
             className="text-indigo-600 font-semibold hover:underline px-1"
+            disabled={isReauthenticating}
           >
-            log in again
+            {isReauthenticating ? 'logging in again…' : 'log in again'}
           </button>
         </p>
+        {reauthError && <p className="text-sm text-red-700">{reauthError}</p>}
       </div>
     );
   }
@@ -159,7 +199,14 @@ export function MetaBusinessPortfolioSelector({
 
           <div className="pt-4 flex items-center justify-between">
             <p className="text-xs text-slate-500">
-              Don't see your portfolio? <button onClick={() => window.location.reload()} className="text-indigo-600 font-medium hover:underline">Log in again</button>
+              Don't see your portfolio?{' '}
+              <button
+                onClick={() => void handleReauthenticate()}
+                className="text-indigo-600 font-medium hover:underline"
+                disabled={isReauthenticating}
+              >
+                {isReauthenticating ? 'Logging in again…' : 'Log in again'}
+              </button>
             </p>
             <button
               onClick={handleConnect}
@@ -185,6 +232,9 @@ export function MetaBusinessPortfolioSelector({
               )}
             </button>
           </div>
+          {reauthError && (
+            <p className="text-xs text-red-700 pt-2">{reauthError}</p>
+          )}
         </div>
       </div>
     </div>

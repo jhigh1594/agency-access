@@ -22,6 +22,7 @@ import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { m, AnimatePresence } from 'framer-motion';
 import { useAuthOrBypass } from '@/lib/dev-auth';
+import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 
 function ConnectionsPageContent() {
   const router = useRouter();
@@ -298,6 +299,8 @@ function ConnectionsPageContent() {
       // Open manual invitation modal in create mode
       setManualInvitationPlatform(platform);
       setIsManualModalOpen(true);
+    } else if (platform === 'meta') {
+      void handleMetaConnect();
     } else {
       // Use OAuth flow
       initiateOAuth(platform);
@@ -324,6 +327,44 @@ function ConnectionsPageContent() {
     // Refetch platforms to update the UI
     if (agencyId) {
       queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
+    }
+  };
+
+  const handleMetaConnect = async () => {
+    if (!agencyId) {
+      setErrorMessage('Agency not found. Please complete onboarding first.');
+      return;
+    }
+
+    const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
+    setConnectingPlatform('meta');
+
+    try {
+      const authPayload = await launchMetaBusinessLogin({
+        appId: process.env.NEXT_PUBLIC_META_APP_ID || '',
+        configId: process.env.NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID || '',
+      });
+
+      await finalizeMetaBusinessLogin({
+        agencyId,
+        userEmail,
+        getToken: async () => (isDevelopmentBypass ? null : await getToken()),
+        authPayload,
+      });
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(`etag-available-platforms-${agencyId}`);
+        window.localStorage.removeItem(`cached-platforms-${agencyId}`);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
+      setSuccessMessage('Successfully connected Meta!');
+      setTimeout(() => setSuccessMessage(null), 5000);
+    } catch (error) {
+      setErrorMessage((error as Error).message);
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setConnectingPlatform(null);
     }
   };
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { 
   MetaAssetSettings, 
   MetaPermissionLevel,
@@ -10,6 +10,7 @@ import {
 } from '@agency-platform/shared';
 import { MetaPagePermissionsModal } from './meta-page-permissions-modal';
 import { extractApiErrorMessage } from '@/lib/api/extract-error';
+import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 import { 
   Loader2, 
   ChevronUp,
@@ -37,16 +38,20 @@ interface Business {
 export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSettingsProps) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { user } = useUser();
   const [isExpanded, setIsExpanded] = useState(true);
   const [settings, setSettings] = useState<MetaAssetSettings | null>(null);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
   const [selectedBusinessName, setSelectedBusinessName] = useState<string>('');
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [reauthError, setReauthError] = useState<string | null>(null);
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
 
   // Fetch businesses
   const {
     data: businessesData,
     error: businessesError,
+    refetch: refetchBusinesses,
   } = useQuery({
     queryKey: ['meta-businesses', agencyId],
     queryFn: async () => {
@@ -244,6 +249,42 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
     setSelectedBusinessName('');
   };
 
+  const handleReauthenticate = async () => {
+    const userEmail =
+      user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress;
+    if (!userEmail) {
+      setReauthError('Unable to resolve your account email.');
+      return;
+    }
+
+    setReauthError(null);
+    setIsReauthenticating(true);
+
+    try {
+      const authPayload = await launchMetaBusinessLogin({
+        appId: process.env.NEXT_PUBLIC_META_APP_ID || '',
+        configId: process.env.NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID || '',
+      });
+
+      await finalizeMetaBusinessLogin({
+        agencyId,
+        userEmail,
+        getToken,
+        authPayload,
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['meta-businesses', agencyId] }),
+        queryClient.invalidateQueries({ queryKey: ['platform-connections', agencyId] }),
+      ]);
+      await refetchBusinesses();
+    } catch (error) {
+      setReauthError((error as Error).message);
+    } finally {
+      setIsReauthenticating(false);
+    }
+  };
+
   return (
     <div className="bg-card rounded-lg border border-slate-200 overflow-hidden">
       {/* Header */}
@@ -298,6 +339,14 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
                   </span>
                 )}
               </h3>
+              <button
+                type="button"
+                onClick={() => void handleReauthenticate()}
+                disabled={isReauthenticating}
+                className="text-xs font-medium text-indigo-600 hover:underline disabled:text-slate-400 disabled:no-underline"
+              >
+                {isReauthenticating ? 'Logging in again…' : 'Log in again'}
+              </button>
             </div>
             <div className="relative">
               <select
@@ -318,6 +367,11 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
               <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                 <p>{businessRefreshWarning}</p>
                 <p className="mt-1">Showing last synced portfolios until Meta refresh succeeds.</p>
+              </div>
+            )}
+            {reauthError && (
+              <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900">
+                {reauthError}
               </div>
             )}
             <p className="text-xs text-slate-500 mt-2">

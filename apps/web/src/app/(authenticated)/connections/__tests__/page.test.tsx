@@ -10,6 +10,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ConnectionsPage from '../page';
 
+const mockLaunchMetaBusinessLogin = vi.fn();
+const mockFinalizeMetaBusinessLogin = vi.fn();
+
 // Mock next/navigation
 const mockReplace = vi.fn();
 const mockSearchParams = new URLSearchParams();
@@ -42,6 +45,11 @@ vi.mock('@clerk/nextjs', () => ({
       },
     },
   }),
+}));
+
+vi.mock('@/lib/meta-business-login', () => ({
+  launchMetaBusinessLogin: (...args: any[]) => mockLaunchMetaBusinessLogin(...args),
+  finalizeMetaBusinessLogin: (...args: any[]) => mockFinalizeMetaBusinessLogin(...args),
 }));
 
 // Mock fetch
@@ -89,6 +97,17 @@ describe('ConnectionsPage', () => {
     mockSearchParams.delete('platform');
     // Ensure env for API URLs
     process.env.NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    process.env.NEXT_PUBLIC_META_APP_ID = 'meta-app-123';
+    process.env.NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID = 'meta-config-123';
+    mockLaunchMetaBusinessLogin.mockResolvedValue({
+      accessToken: 'meta-token',
+      userId: 'meta-user-1',
+      expiresIn: 3600,
+    });
+    mockFinalizeMetaBusinessLogin.mockResolvedValue({
+      id: 'conn-meta-1',
+      platform: 'meta',
+    });
   });
 
   const renderPage = () => {
@@ -127,7 +146,7 @@ describe('ConnectionsPage', () => {
     expect(screen.getByText('Meta Ads')).toBeInTheDocument();
     expect(screen.getByText('Google Ads')).toBeInTheDocument();
     expect(screen.getByText('Google Analytics')).toBeInTheDocument();
-    expect(screen.getByText('LinkedIn Ads')).toBeInTheDocument();
+    expect(screen.getByText('LinkedIn')).toBeInTheDocument();
 
     // Check other platforms
     expect(screen.getByText('TikTok Ads')).toBeInTheDocument();
@@ -307,6 +326,80 @@ describe('ConnectionsPage', () => {
           body: expect.stringContaining('test-agency-id'),
         })
       );
+    });
+  });
+
+  it('uses Meta Business Login instead of the legacy initiate endpoint for Meta', async () => {
+    (global.fetch as any)
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          data: [
+            { platform: 'meta', name: 'Meta', category: 'recommended', connected: false },
+            { platform: 'google', name: 'Google', category: 'recommended', connected: false },
+          ],
+        })
+      );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Meta')).toBeInTheDocument();
+    });
+
+    const connectButtons = screen.getAllByRole('button', { name: /connect/i });
+    fireEvent.click(connectButtons[0]);
+
+    await waitFor(() => {
+      expect(mockLaunchMetaBusinessLogin).toHaveBeenCalledWith({
+        appId: 'meta-app-123',
+        configId: 'meta-config-123',
+      });
+      expect(mockFinalizeMetaBusinessLogin).toHaveBeenCalledWith({
+        agencyId: 'test-agency-id',
+        userEmail: 'admin@test.com',
+        getToken: expect.any(Function),
+        authPayload: expect.objectContaining({
+          accessToken: 'meta-token',
+          userId: 'meta-user-1',
+        }),
+      });
+    });
+
+    expect(global.fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining('/agency-platforms/meta/initiate'),
+      expect.anything()
+    );
+  });
+
+  it('shows actionable Meta Business Login errors when the SDK launch fails', async () => {
+    mockLaunchMetaBusinessLogin.mockRejectedValueOnce(
+      new Error('Failed to load Meta Business Login. Please try again.')
+    );
+
+    (global.fetch as any)
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          data: [
+            { platform: 'meta', name: 'Meta', category: 'recommended', connected: false },
+            { platform: 'google', name: 'Google', category: 'recommended', connected: false },
+          ],
+        })
+      );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Meta')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /connect/i })[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Failed to load Meta Business Login. Please try again.')
+      ).toBeInTheDocument();
     });
   });
 

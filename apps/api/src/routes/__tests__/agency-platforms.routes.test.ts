@@ -14,6 +14,8 @@ import { metaAssetsService } from '../../services/meta-assets.service.js';
 import { MetaConnector } from '../../services/connectors/meta.js';
 import * as authorization from '../../lib/authorization.js';
 import { prisma } from '../../lib/prisma.js';
+import { infisical } from '../../lib/infisical.js';
+import { createAuditLog } from '../../services/audit.service.js';
 
 // Mock services
 vi.mock('../../services/agency-platform.service.js', () => ({
@@ -39,8 +41,20 @@ vi.mock('../../lib/prisma.js', () => ({
     agencyPlatformConnection: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      update: vi.fn(),
+    },
+    auditLog: {
+      create: vi.fn(),
     },
   },
+}));
+vi.mock('../../lib/infisical.js', () => ({
+  infisical: {
+    storeOAuthTokens: vi.fn(),
+  },
+}));
+vi.mock('../../services/audit.service.js', () => ({
+  createAuditLog: vi.fn(),
 }));
 
 vi.mock('../../services/oauth-state.service.js', () => ({
@@ -78,6 +92,9 @@ const mockMetaConnectorInstance = {
   exchangeCode: vi.fn(),
   getLongLivedToken: vi.fn(),
   getBusinessAccounts: vi.fn(),
+  verifyToken: vi.fn(),
+  getUserInfo: vi.fn(),
+  getTokenMetadata: vi.fn(),
 };
 
 // Mock MetaConnector class to return shared instance
@@ -485,7 +502,29 @@ describe('Agency Platforms Routes', () => {
   });
 
   describe('POST /agency-platforms/:platform/initiate', () => {
-    it('should initiate OAuth flow and return auth URL', async () => {
+    it('rejects Meta legacy OAuth initiation unless an explicit fallback flag is provided', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/agency-platforms/meta/initiate',
+        payload: {
+          agencyId: 'agency-1',
+          userEmail: 'admin@agency.com',
+          redirectUrl: 'https://app.example.com/settings/platforms',
+        },
+      });
+
+      expect(response.statusCode).toBe(410);
+      expect(response.json()).toEqual({
+        data: null,
+        error: {
+          code: 'LEGACY_META_OAUTH_DISABLED',
+          message: 'Meta now uses Business Login via the JS SDK. Reconnect from the app UI or pass useLegacyFallback=true only for rollback.',
+        },
+      });
+      expect(oauthStateService.createState).not.toHaveBeenCalled();
+    });
+
+    it('should initiate OAuth flow and return auth URL when Meta legacy fallback is explicitly enabled', async () => {
       const mockStateToken = 'state-token-123';
       const mockAuthUrl = 'https://facebook.com/oauth?state=state-token-123';
 
@@ -503,6 +542,7 @@ describe('Agency Platforms Routes', () => {
           agencyId: 'agency-1',
           userEmail: 'admin@agency.com',
           redirectUrl: 'https://app.example.com/settings/platforms',
+          useLegacyFallback: true,
         },
       });
 
@@ -521,6 +561,7 @@ describe('Agency Platforms Routes', () => {
         platform: 'meta',
         userEmail: 'admin@agency.com',
         redirectUrl: 'https://app.example.com/settings/platforms',
+        useLegacyFallback: true,
         timestamp: expect.any(Number),
       });
     });
@@ -566,10 +607,128 @@ describe('Agency Platforms Routes', () => {
         payload: {
           agencyId: 'agency-1',
           userEmail: 'admin@agency.com',
+          useLegacyFallback: true,
         },
       });
 
       expect(response.statusCode).toBe(500);
+    });
+  });
+
+  describe('POST /agency-platforms/meta/business-login/finalize', () => {
+    it('returns 400 when required Meta Business Login payload is missing', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/agency-platforms/meta/business-login/finalize',
+        payload: {
+          agencyId: 'agency-1',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'agencyId, accessToken, and userEmail are required',
+        },
+      });
+    });
+
+    it('stores a Meta connection from Business Login payload without exposing secretId in the response', async () => {
+      mockMetaConnectorInstance.verifyToken.mockResolvedValue(true);
+      mockMetaConnectorInstance.getUserInfo.mockResolvedValue({
+        id: 'meta-user-1',
+        name: 'Jon High',
+      });
+      mockMetaConnectorInstance.getTokenMetadata.mockResolvedValue({
+        scopes: ['ads_management', 'ads_read', 'business_management'],
+        dataAccessExpiresAt: new Date('2026-07-01T00:00:00.000Z'),
+      });
+      mockMetaConnectorInstance.getLongLivedToken.mockResolvedValue({
+        accessToken: 'long-lived-token',
+        tokenType: 'bearer',
+        expiresAt: new Date('2026-05-10T00:00:00.000Z'),
+      });
+      mockMetaConnectorInstance.getBusinessAccounts.mockResolvedValue({
+        businesses: [
+          { id: 'biz-1', name: 'Jon High', verificationStatus: 'not_verified' },
+          { id: 'biz-2', name: 'Outdoor DIY', verificationStatus: 'verified' },
+        ],
+        hasAccess: true,
+      });
+
+      vi.mocked(agencyPlatformService.getConnection).mockResolvedValue({
+        data: null,
+        error: null,
+      });
+      vi.mocked(agencyPlatformService.createConnection).mockResolvedValue({
+        data: {
+          id: 'conn-meta-1',
+          agencyId: 'agency-1',
+          platform: 'meta',
+          status: 'active',
+          secretId: 'meta_agency_agency-1',
+          metadata: {},
+          connectedBy: 'jon.highmu@gmail.com',
+        } as any,
+        error: null,
+      });
+      vi.mocked(createAuditLog).mockResolvedValue({
+        data: {} as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/agency-platforms/meta/business-login/finalize',
+        payload: {
+          agencyId: 'agency-1',
+          userEmail: 'jon.highmu@gmail.com',
+          accessToken: 'short-lived-token',
+          userId: 'meta-user-1',
+          expiresIn: 3600,
+          dataAccessExpirationTime: 1781044454,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(agencyPlatformService.createConnection).toHaveBeenCalledWith({
+        agencyId: 'agency-1',
+        platform: 'meta',
+        accessToken: 'long-lived-token',
+        refreshToken: undefined,
+        expiresAt: new Date('2026-05-10T00:00:00.000Z'),
+        scope: 'ads_management,ads_read,business_management',
+        connectedBy: 'jon.highmu@gmail.com',
+        metadata: {
+          tokenType: 'bearer',
+          metaBusinessLogin: {
+            authSource: 'js_sdk',
+            userId: 'meta-user-1',
+            userName: 'Jon High',
+            expiresIn: 3600,
+            dataAccessExpirationTime: 1781044454,
+            dataAccessExpiresAt: '2026-07-01T00:00:00.000Z',
+            grantedScopes: ['ads_management', 'ads_read', 'business_management'],
+          },
+          metaBusinessAccounts: {
+            businesses: [
+              { id: 'biz-1', name: 'Jon High', verificationStatus: 'not_verified' },
+              { id: 'biz-2', name: 'Outdoor DIY', verificationStatus: 'verified' },
+            ],
+            hasAccess: true,
+          },
+        },
+      });
+      expect(createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agencyId: 'agency-1',
+          userEmail: 'jon.highmu@gmail.com',
+          action: 'META_BUSINESS_LOGIN_FINALIZED',
+        })
+      );
+      expect(response.json().data.secretId).toBeUndefined();
     });
   });
 

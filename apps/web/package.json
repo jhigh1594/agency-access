@@ -15,7 +15,8 @@
     "evidence:client-detail": "node ./scripts/capture-client-detail-evidence.mjs",
     "evidence:internal-admin": "node ./scripts/capture-internal-admin-evidence.mjs",
     "evidence:affiliate-program": "node ./scripts/capture-affiliate-program-evidence.mjs",
-    "evidence:meta-invite": "node ./scripts/capture-meta-invite-evidence.mjs"
+    "evidence:meta-invite": "node ./scripts/capture-meta-invite-evidence.mjs",
+    "evidence:meta-business-login": "node ./scripts/capture-meta-business-login-evidence.mjs"
   },
   "dependencies": {
     "@agency-platform/shared": "^0.1.0",
