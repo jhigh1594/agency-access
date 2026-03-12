@@ -1202,85 +1202,108 @@ export function PlatformAuthWizard({
           platform === 'tiktok' && Boolean(tiktokShareResult?.partialFailure || tiktokShareError);
 
         return (
-          <div className="text-center space-y-4 py-5">
-            {/* Success Icon with Brutalist Border */}
+          <div className="space-y-4 py-3">
+            {/* Compact success header */}
             <m.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5, type: 'spring' }}
-              className="inline-flex items-center justify-center w-24 h-24 border-2 border-[var(--teal)] bg-[var(--teal)]/10 mb-2"
-            >
-              <CheckCircle2 className="w-16 h-16 text-[var(--teal)]" />
-            </m.div>
-
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3"
             >
-              <h3 className="text-4xl font-bold text-[var(--ink)] mb-2 font-display">
-                Connected
-              </h3>
-              <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
-                {hasMetaFollowUp
-                  ? 'Some selected Meta accounts still need follow-up before access is complete.'
-                  : hasTikTokPartialShare
-                  ? 'Some selected TikTok accounts still require manual sharing in Business Center.'
-                  : hasZeroAssetFollowUp
-                    ? `Connected successfully, but some requested ${platformName} products still need follow-up.`
-                    : 'Access granted to the accounts you selected.'}
-              </p>
+              <m.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.4, type: 'spring' }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--teal)] bg-[var(--teal)]/10"
+              >
+                <CheckCircle2 className="w-5 h-5 text-[var(--teal)]" />
+              </m.div>
+              <div>
+                <h3 className="text-lg font-bold text-[var(--ink)] font-display">
+                  Connected
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {hasMetaFollowUp
+                    ? 'Some Meta accounts still need follow-up.'
+                    : hasTikTokPartialShare
+                    ? 'Some TikTok accounts require manual sharing.'
+                    : hasZeroAssetFollowUp
+                      ? `Some ${platformName} products still need follow-up.`
+                      : 'Access granted to the accounts you selected.'}
+                </p>
+              </div>
             </m.div>
 
-            {/* Connected Assets - Brutalist Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+            {/* Compact product summary list */}
+            <div className="space-y-2">
               {Object.entries(groupAssets).map(([product, assets]) => {
-                // Map product IDs to display names (some products aren't in PLATFORM_CONFIG)
                 const productNameMap: Record<string, string> = {
                   'google_ads': 'Google Ads',
                   'ga4': 'Google Analytics',
-                  'google_tag_manager': 'Google Tag Manager',
-                  'google_search_console': 'Google Search Console',
-                  'google_merchant_center': 'Google Merchant Center',
-                  'google_business_profile': 'Google Business Profile',
+                  'google_tag_manager': 'Tag Manager',
+                  'google_search_console': 'Search Console',
+                  'google_merchant_center': 'Merchant Center',
+                  'google_business_profile': 'Business Profile',
                   'meta_ads': 'Meta Ads',
                   'linkedin_ads': 'LinkedIn Ads',
                   'linkedin_pages': 'LinkedIn Pages',
                 };
                 const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
+                const isWarning =
+                  (hasNoAssetsFollowUp(product, assets) &&
+                    getSelectedAssetCount(product, assets) === 0) ||
+                  hasGrantFollowUp(product, assets);
+                const summaryLines = getProductSummaryLines(product, assets);
+                const assetNames: string[] = assets.selectedAssetNames || [];
 
                 return (
                   <m.div
                     key={product}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className={`p-6 text-left ${
-                      (hasNoAssetsFollowUp(product, assets) &&
-                        getSelectedAssetCount(product, assets) === 0) ||
-                      hasGrantFollowUp(product, assets)
-                        ? 'border-2 border-[var(--warning)] bg-[var(--warning)]/10'
-                        : 'border-2 border-[var(--teal)] bg-[var(--teal)]/5'
+                    transition={{ delay: 0.2 }}
+                    className={`rounded-lg border px-3 py-2.5 text-left ${
+                      isWarning
+                        ? 'border-[var(--warning)]/60 bg-[var(--warning)]/5'
+                        : 'border-[var(--teal)]/40 bg-[var(--teal)]/5'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2">
                       <PlatformIcon platform={product as Platform} size="sm" />
-                      <h4 className="font-bold text-[var(--teal)] font-display">{productName}</h4>
+                      <span className="text-sm font-semibold text-[var(--ink)]">{productName}</span>
+                      {summaryLines.length > 0 && !summaryLines[0].startsWith('Follow-up') && (
+                        <span className="ml-auto text-xs font-medium text-[var(--teal)]">
+                          {summaryLines[0]}
+                        </span>
+                      )}
                     </div>
-                    <ul className="space-y-1 text-sm">
-                      {getProductSummaryLines(product, assets).map((line) => (
-                        <li
-                          key={line}
-                          className={
-                            line.startsWith('Follow-up needed')
-                              ? 'text-[var(--ink)]'
-                              : 'text-[var(--teal)]'
-                          }
-                        >
-                          {line.startsWith('Follow-up needed') ? line : `✓ ${line}`}
-                        </li>
+
+                    {/* Show selected asset names */}
+                    {assetNames.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {assetNames.slice(0, 4).map((name) => (
+                          <span
+                            key={name}
+                            className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                        {assetNames.length > 4 && (
+                          <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
+                            +{assetNames.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Follow-up warnings */}
+                    {summaryLines
+                      .filter((line) => line.startsWith('Follow-up needed'))
+                      .map((line) => (
+                        <p key={line} className="mt-1 text-xs text-[var(--warning)]">
+                          {line}
+                        </p>
                       ))}
-                    </ul>
                   </m.div>
                 );
               })}
@@ -1290,7 +1313,7 @@ export function PlatformAuthWizard({
               onClick={onComplete}
               variant="brutalist-rounded"
               size="lg"
-              className="mt-5"
+              className="w-full"
             >
               {finalActionLabel}
             </Button>

@@ -36,6 +36,7 @@ interface TikTokAssetSelectorProps {
     selectedBusinessCenterId?: string;
     availableAdvertisers: TikTokAdvertiser[];
     availableBusinessCenters: TikTokBusinessCenter[];
+    selectedAssetNames?: string[];
   }) => void;
   onError?: (error: string) => void;
 }
@@ -114,6 +115,9 @@ export function TikTokAssetSelector({
       selectedBusinessCenterId: selectedBusinessCenterId || undefined,
       availableAdvertisers: assets.advertisers,
       availableBusinessCenters: assets.businessCenters,
+      selectedAssetNames: assets.advertisers
+        .filter((a) => selectedAdvertisers.has(a.id))
+        .map((a) => a.name),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAdvertisers, selectedBusinessCenterId, assets]);
@@ -152,21 +156,24 @@ export function TikTokAssetSelector({
     },
   }));
 
+  const selectedNames = visibleAdvertisers
+    .filter((a) => selectedAdvertisers.has(a.id))
+    .map((a) => a.name);
+
   return (
-    <div className="space-y-6">
-      <div className="bg-[var(--coral)]/10 border-2 border-black dark:border-white p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">Selected</h3>
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
-              TikTok ad accounts you're sharing
-            </p>
-          </div>
-          <div className="flex items-center justify-center w-12 h-12 border-2 border-black dark:border-white bg-[var(--coral)] text-white">
-            <span className="text-xl font-bold">{selectedAdvertisers.size}</span>
-          </div>
+    <div className="space-y-3">
+      {selectedAdvertisers.size > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-coral text-xs font-bold text-white">
+            {selectedAdvertisers.size}
+          </span>
+          <p className="min-w-0 truncate text-sm text-ink">
+            {selectedNames.length <= 2
+              ? selectedNames.join(', ')
+              : `${selectedNames.slice(0, 2).join(', ')} +${selectedNames.length - 2} more`}
+          </p>
         </div>
-      </div>
+      )}
 
       {assets.businessCenters.length > 0 && (
         <div className="space-y-2">

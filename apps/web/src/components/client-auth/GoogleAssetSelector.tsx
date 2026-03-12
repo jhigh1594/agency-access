@@ -173,6 +173,10 @@ export function GoogleAssetSelector({
     const selection: any = {};
     selection[assetKey] = Array.from(selectedIds);
     selection.availableAssetCount = assets.length;
+    // Include selected asset names so Step 3 can display them
+    selection.selectedAssetNames = assets
+      .filter((a) => selectedIds.has(a.id))
+      .map((a) => a.displayName || a.name || a.username || a.url || `Account ${a.id}`);
     onSelectionChange(selection);
   }, [assets, error, isLoading, onSelectionChange, product, selectedIds]);
 
@@ -239,22 +243,7 @@ export function GoogleAssetSelector({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Selection Summary - Brutalist Style */}
-      <div className="bg-[var(--coral)]/10 border-2 border-black dark:border-white p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">Selected</h3>
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
-              {getTitle()} you're sharing
-            </p>
-          </div>
-          <div className="flex items-center justify-center w-12 h-12 border-2 border-black dark:border-white bg-[var(--coral)] text-white">
-            <span className="text-xl font-bold">{totalSelected}</span>
-          </div>
-        </div>
-      </div>
-
+    <div>
       <AssetGroup
         title={getTitle()}
         assets={assetList}

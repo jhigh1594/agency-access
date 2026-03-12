@@ -70,6 +70,7 @@ interface MetaAssetSelectorProps {
     selectedPagesWithNames?: Array<{ id: string; name: string }>;
     selectedAdAccountsWithNames?: Array<{ id: string; name: string }>;
     selectedInstagramWithNames?: Array<{ id: string; name: string }>;
+    selectedAssetNames?: string[];
     allPages?: MetaAssets['pages'];
     allAdAccounts?: MetaAssets['adAccounts'];
     allInstagramAccounts?: MetaAssets['instagramAccounts'];
@@ -209,6 +210,13 @@ export function MetaAssetSelector({
       }, 2000); // Wait 2 seconds after last selection change
     }
 
+    // Build flat list of selected asset names for Step 3 summary
+    const selectedAssetNames = [
+      ...selectedAdAccountsWithNames.map((a) => a.name),
+      ...selectedPagesWithNames.map((p) => p.name),
+      ...selectedInstagramWithNames.map((ig) => ig.name),
+    ];
+
     onSelectionChange({
       adAccounts: Array.from(selectedAdAccounts),
       pages: Array.from(selectedPages),
@@ -221,6 +229,7 @@ export function MetaAssetSelector({
       selectedPagesWithNames,
       selectedAdAccountsWithNames,
       selectedInstagramWithNames,
+      selectedAssetNames,
       // Store all assets for lookup
       allPages: assets?.pages || [],
       allAdAccounts: assets?.adAccounts || [],
@@ -389,25 +398,8 @@ export function MetaAssetSelector({
 
       {requiresBusinessSelection ? null : (
         <>
-      {/* Selection Summary - Brutalist Style */}
-      <div className="bg-[var(--coral)]/10 border-2 border-black dark:border-white p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">
-              Selected
-            </h3>
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
-              Accounts you're sharing
-            </p>
-          </div>
-          <div className="flex items-center justify-center w-12 h-12 border-2 border-black dark:border-white bg-[var(--coral)] text-white">
-            <span className="text-xl font-bold">{totalSelected}</span>
-          </div>
-        </div>
-      </div>
-
       {/* Asset Groups */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Ad Accounts - Multi-select Combobox or Creator */}
         <div>
           <div className="flex items-center gap-3 mb-3">
