@@ -735,6 +735,7 @@ export function PlatformAuthWizard({
             {/* Choose Accounts Section - Brutalist Card */}
             <div className="border-2 border-black dark:border-white overflow-hidden">
               <button
+                type="button"
                 onClick={() => setChooseAccountsExpanded(!chooseAccountsExpanded)}
                 className="w-full px-6 py-4 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors"
               >
@@ -927,6 +928,7 @@ export function PlatformAuthWizard({
           return (
                 <div className="border-2 border-black dark:border-white overflow-hidden">
                   <button
+                    type="button"
                     onClick={() => setGrantAccessExpanded(!grantAccessExpanded)}
                     className="w-full px-6 py-4 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors"
                   >
@@ -1070,6 +1072,7 @@ export function PlatformAuthWizard({
             {platform === 'tiktok' && connectionId && assetsSaved && (
               <div className="border-2 border-black dark:border-white overflow-hidden">
                 <button
+                  type="button"
                   onClick={() => setGrantAccessExpanded(!grantAccessExpanded)}
                   className="w-full px-6 py-4 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors"
                 >
