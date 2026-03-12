@@ -77,23 +77,20 @@ export function AssetGroup({
   };
 
   return (
-    <div className="border-t-2 border-black dark:border-white pt-6 first:border-t-0 first:pt-0">
+    <div className="border-t border-border pt-2 first:border-t-0 first:pt-0">
       {/* Header with Select All */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-2">
           {icon}
-          <div>
-            <h3 className="text-lg font-bold text-[var(--ink)] font-display">{title}</h3>
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
-              {selectedCount} of {assets.length} selected
-            </p>
-          </div>
+          <span className="text-sm font-medium text-[var(--ink)]">
+            {selectedCount} of {assets.length} selected
+          </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Select All Checkbox - Brutalist Style */}
+        <div className="flex items-center gap-2">
+          {/* Select All Checkbox */}
           {assets.length > 0 && (
-            <label className="flex items-center gap-2 cursor-pointer group">
+            <label className="flex items-center gap-1.5 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -107,7 +104,7 @@ export function AssetGroup({
               />
               <div
                 className={`
-                  w-6 h-6 border-2 border-black dark:border-white flex items-center justify-center
+                  w-5 h-5 border-2 border-black dark:border-white flex items-center justify-center
                   transition-all duration-200
                   ${
                     allSelected || someSelected
@@ -117,7 +114,7 @@ export function AssetGroup({
                 `}
               >
                 {allSelected && (
-                  <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path
                       fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -126,13 +123,13 @@ export function AssetGroup({
                   </svg>
                 )}
                 {someSelected && !allSelected && (
-                  <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
                   </svg>
                 )}
               </div>
-              <span className="text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--coral)]">
-                Select All
+              <span className="text-xs font-semibold text-[var(--ink)] group-hover:text-[var(--coral)]">
+                All
               </span>
             </label>
           )}
@@ -140,14 +137,14 @@ export function AssetGroup({
           {/* Expand/Collapse Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 border-2 border-black dark:border-white hover:bg-muted/30 dark:hover:bg-muted/60 transition-colors"
+            className="p-1 border border-border rounded hover:bg-muted/30 dark:hover:bg-muted/60 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <m.div
               animate={{ rotate: isExpanded ? 0 : -90 }}
               transition={{ duration: 0.2 }}
             >
-              <ChevronDown className="w-5 h-5 text-[var(--ink)]" />
+              <ChevronDown className="w-4 h-4 text-[var(--ink)]" />
             </m.div>
           </button>
         </div>
@@ -163,13 +160,13 @@ export function AssetGroup({
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-1.5 ${assets.length > 8 ? 'max-h-[320px] overflow-y-auto pr-1' : ''}`}>
               {assets.map((asset, index) => (
                 <m.div
                   key={asset.id}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.2 }}
+                  transition={{ delay: index * 0.03, duration: 0.15 }}
                 >
                   <AssetCheckbox
                     id={asset.id}
@@ -185,14 +182,14 @@ export function AssetGroup({
         )}
       </AnimatePresence>
 
-      {/* Empty State - Brutalist Style */}
+      {/* Empty State */}
       {assets.length === 0 && isExpanded && (
-        <div className="py-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 mb-3">
-            <span className="text-2xl">📭</span>
+        <div className="py-2 text-center">
+          <div className="inline-flex items-center justify-center w-10 h-10 border border-border bg-muted/30 dark:bg-muted/60 mb-2 rounded">
+            <span className="text-lg">📭</span>
           </div>
-          <p className="text-[var(--ink)] font-bold font-display">No {title.toLowerCase()} available</p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm font-semibold text-[var(--ink)]">No {title.toLowerCase()} available</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
             This account has no {title.toLowerCase()} to share
           </p>
         </div>

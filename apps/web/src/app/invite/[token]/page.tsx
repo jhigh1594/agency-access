@@ -550,7 +550,7 @@ export default function ClientAuthorizationPage() {
       ) : null}
 
       {phase === 'platforms' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {isConnectStatusReview ? (
             <div className="rounded-[1.5rem] border border-border bg-card p-4 shadow-sm">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -617,7 +617,7 @@ export default function ClientAuthorizationPage() {
           ) : null}
 
           {platformQueue.remainingPlatforms.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Remaining in queue
@@ -628,7 +628,7 @@ export default function ClientAuthorizationPage() {
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {platformQueue.remainingPlatforms.map((groupConfig) => (
                   <InvitePlatformQueueItem
                     key={groupConfig.platformGroup}

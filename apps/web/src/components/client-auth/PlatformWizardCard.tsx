@@ -47,8 +47,8 @@ export function PlatformWizardCard({
     >
       {/* Header: Platform branding + progress */}
       {showFullChrome ? (
-        <div className="border-b-2 border-black dark:border-white p-6 bg-[var(--paper)]">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="border-b-2 border-black dark:border-white p-4 sm:p-5 bg-[var(--paper)]">
+          <div className="flex items-center gap-3 mb-3">
             <PlatformIcon platform={platform} size="lg" />
             <div>
               <h2 className="text-2xl font-bold text-[var(--ink)] font-display">{platformName}</h2>
@@ -62,7 +62,7 @@ export function PlatformWizardCard({
       ) : null}
 
       {/* Content: Step-specific content with animation */}
-      <div className={showFullChrome ? 'p-8' : 'p-6 sm:p-7'}>
+      <div className={showFullChrome ? 'p-5 sm:p-6' : 'p-4 sm:p-5'}>
         <AnimatePresence mode="wait" initial={false}>
           <m.div
             key={currentStep}
@@ -78,7 +78,7 @@ export function PlatformWizardCard({
 
       {/* Footer: Navigation (optional) */}
       {footer && (
-        <div className="border-t-2 border-black dark:border-white p-6 bg-muted/20 dark:bg-muted/60/50">
+        <div className="border-t-2 border-black dark:border-white p-4 bg-muted/20 dark:bg-muted/60/50">
           {footer}
         </div>
       )}

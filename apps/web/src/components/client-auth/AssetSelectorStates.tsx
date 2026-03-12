@@ -23,7 +23,7 @@ export function AssetSelectorLoading({
   message = 'Loading your accounts...',
 }: AssetSelectorLoadingProps) {
   return (
-    <div className="space-y-4 py-8">
+    <div className="space-y-3 py-4">
       {/* Animated skeleton items - Brutalist Style */}
       <div className="space-y-3 animate-pulse">
         <div className="h-4 bg-muted/40 dark:bg-muted/50 w-3/4" />
@@ -57,17 +57,17 @@ export function AssetSelectorEmpty({
   onAction,
 }: AssetSelectorEmptyProps) {
   return (
-    <div className="py-12 text-center px-6">
-      {/* Empty state icon - Brutalist Square */}
-      <div className="w-20 h-20 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-4">
-        <span className="text-4xl" role="img" aria-label="Empty">
+    <div className="py-2 text-center px-4">
+      {/* Empty state icon */}
+      <div className="w-9 h-9 border border-border bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-1.5 rounded">
+        <span className="text-xl" role="img" aria-label="Empty">
           📭
         </span>
       </div>
 
       {/* Message */}
-      <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">{title}</h3>
-      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4 max-w-sm mx-auto">{description}</p>
+      <h3 className="text-sm font-bold text-[var(--ink)] mb-1 font-display">{title}</h3>
+      <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-2 max-w-xs mx-auto">{description}</p>
 
       {/* Optional action button */}
       {actionLabel && onAction && (
@@ -96,17 +96,17 @@ export function AssetSelectorError({
   retryLabel = 'Try again',
 }: AssetSelectorErrorProps) {
   return (
-    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-6 my-4">
+    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 my-3">
       <div className="flex items-start gap-3">
         {/* Error icon - Brutalist Square */}
-        <div className="w-10 h-10 border-2 border-[var(--coral)] bg-[var(--coral)]/20 flex items-center justify-center flex-shrink-0">
-          <AlertCircle className="w-6 h-6 text-[var(--coral)]" />
+        <div className="w-8 h-8 border-2 border-[var(--coral)] bg-[var(--coral)]/20 flex items-center justify-center flex-shrink-0">
+          <AlertCircle className="w-5 h-5 text-[var(--coral)]" />
         </div>
 
         {/* Error message */}
         <div className="flex-1">
           <h3 className="font-bold text-[var(--coral)] mb-1 font-display">{title}</h3>
-          <p className="text-sm text-[var(--coral)] mb-3">{message}</p>
+          <p className="text-sm text-[var(--coral)] mb-2">{message}</p>
 
           {/* Retry button */}
           {onRetry && (
@@ -131,9 +131,9 @@ interface NoSearchResultsProps {
 
 export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
   return (
-    <div className="py-8 text-center px-6">
+    <div className="py-4 text-center px-4">
       {/* Search icon - Brutalist Square */}
-      <div className="w-16 h-16 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-3">
+      <div className="w-12 h-12 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-2">
         <span className="text-2xl" role="img" aria-label="Search">
           🔍
         </span>
@@ -143,7 +143,7 @@ export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
       <h3 className="text-base font-bold text-[var(--ink)] mb-1 font-display">
         No accounts match "{query}"
       </h3>
-      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">Try adjusting your search terms</p>
+      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-3">Try adjusting your search terms</p>
 
       {/* Clear search button */}
       <button

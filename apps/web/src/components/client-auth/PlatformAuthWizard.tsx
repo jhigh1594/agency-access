@@ -586,7 +586,7 @@ export function PlatformAuthWizard({
       case 1:
         if (isManualPlatform) {
           return (
-            <div className="text-center space-y-4 sm:space-y-6">
+            <div className="text-center space-y-3 sm:space-y-5">
               <div className="mb-2 inline-flex h-14 w-14 items-center justify-center border-2 border-black bg-[var(--paper)] dark:border-white sm:mb-4 sm:h-20 sm:w-20">
                 <PlatformIcon platform={platform} size="xl" />
               </div>
@@ -624,7 +624,7 @@ export function PlatformAuthWizard({
         }
 
         return (
-          <div className="text-center space-y-4 sm:space-y-6">
+          <div className="text-center space-y-3 sm:space-y-5">
             {/* Platform Icon with Brutalist Border */}
             <div className="mb-2 inline-flex h-14 w-14 items-center justify-center border-2 border-black bg-[var(--paper)] dark:border-white sm:mb-4 sm:h-20 sm:w-20">
               <PlatformIcon platform={platform} size="xl" />
@@ -731,7 +731,7 @@ export function PlatformAuthWizard({
         }
 
         return (
-          <div className="space-y-12">
+          <div className="space-y-4">
             {/* Choose Accounts Section - Brutalist Card */}
             <div className="border-2 border-black dark:border-white overflow-hidden">
               <button
@@ -764,14 +764,14 @@ export function PlatformAuthWizard({
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="p-6 space-y-6">
+                    <div className="p-3 space-y-3">
             {error && (
-                        <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)]">
+                        <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-3 text-[var(--coral)] text-sm">
                 {error}
               </div>
             )}
 
-            <div className="space-y-16">
+            <div className="space-y-3">
               {/* Show all products that require asset selection */}
               {products
                 .filter((p) => supportsAssetSelection(p.product))
@@ -793,10 +793,10 @@ export function PlatformAuthWizard({
                   const productName = PLATFORM_NAMES[p.product as Platform] || productNameMap[p.product] || p.product;
 
                   return (
-                    <div key={p.product} className="space-y-6">
-                      <div className="flex items-center gap-3 pb-2 border-b-2 border-black dark:border-white">
+                    <div key={p.product} className="space-y-2">
+                      <div className="flex items-center gap-2">
                         <PlatformIcon platform={p.product as Platform} size="sm" />
-                        <h4 className="text-lg font-bold text-[var(--ink)] font-display">{productName}</h4>
+                        <h4 className="text-sm font-semibold text-[var(--ink)] font-display">{productName}</h4>
                       </div>
 
                       {p.product === 'meta_ads' && (
@@ -861,7 +861,7 @@ export function PlatformAuthWizard({
 
                         {/* Unified Batch Save Button - only show if assets haven't been saved yet */}
                         {!assetsSaved && !isProcessing && canContinueFromAssetSelection() && (
-            <div className="sticky bottom-0 bg-card border-t-2 border-black dark:border-white p-8 -mx-6 -mb-6 mt-12 flex justify-center">
+            <div className="sticky bottom-0 bg-card border-t-2 border-black dark:border-white p-3 -mx-3 -mb-3 mt-4 flex justify-center">
               <Button
                 onClick={handleBatchSave}
                 disabled={!canContinueFromAssetSelection()}
@@ -891,7 +891,7 @@ export function PlatformAuthWizard({
             }
 
             return (
-              <div className="relative my-8">
+              <div className="relative my-5">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t-2 border-black dark:border-white" />
                 </div>
@@ -957,17 +957,17 @@ export function PlatformAuthWizard({
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >
-                        <div className="p-6">
+                        <div className="p-4">
 
                   {/* Show error banner if Business Manager ID is missing */}
                   {businessIdError && (
-                    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)] mb-6">
+                    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)] mb-4">
                       <p className="font-semibold">{businessIdError}</p>
                     </div>
                   )}
 
               {error && (
-                    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)] mb-6">
+                    <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/10 p-4 text-[var(--coral)] mb-4">
                   {error}
                 </div>
               )}
@@ -1050,7 +1050,7 @@ export function PlatformAuthWizard({
                           (!hasAdAccounts ||
                             metaAdAccountShareStatus === 'verified' ||
                             metaAdAccountShareStatus === 'partial') && (
-                            <div className="mt-8 flex justify-center">
+                            <div className="mt-5 flex justify-center">
                               <Button
                                 onClick={() => setCurrentStep(3)}
                                 size="xl"
@@ -1101,7 +1101,7 @@ export function PlatformAuthWizard({
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
                       className="overflow-hidden"
                     >
-                      <div className="p-6 space-y-5">
+                      <div className="p-4 space-y-4">
                         {isTikTokSharing && (
                           <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
                             <p className="font-semibold flex items-center gap-2">
@@ -1202,13 +1202,13 @@ export function PlatformAuthWizard({
           platform === 'tiktok' && Boolean(tiktokShareResult?.partialFailure || tiktokShareError);
 
         return (
-          <div className="text-center space-y-6 py-8">
+          <div className="text-center space-y-4 py-5">
             {/* Success Icon with Brutalist Border */}
             <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, type: 'spring' }}
-              className="inline-flex items-center justify-center w-24 h-24 border-2 border-[var(--teal)] bg-[var(--teal)]/10 mb-4"
+              className="inline-flex items-center justify-center w-24 h-24 border-2 border-[var(--teal)] bg-[var(--teal)]/10 mb-2"
             >
               <CheckCircle2 className="w-16 h-16 text-[var(--teal)]" />
             </m.div>
@@ -1218,7 +1218,7 @@ export function PlatformAuthWizard({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h3 className="text-4xl font-bold text-[var(--ink)] mb-3 font-display">
+              <h3 className="text-4xl font-bold text-[var(--ink)] mb-2 font-display">
                 Connected
               </h3>
               <p className="text-lg text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
@@ -1233,7 +1233,7 @@ export function PlatformAuthWizard({
             </m.div>
 
             {/* Connected Assets - Brutalist Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
               {Object.entries(groupAssets).map(([product, assets]) => {
                 // Map product IDs to display names (some products aren't in PLATFORM_CONFIG)
                 const productNameMap: Record<string, string> = {
@@ -1290,7 +1290,7 @@ export function PlatformAuthWizard({
               onClick={onComplete}
               variant="brutalist-rounded"
               size="lg"
-              className="mt-8"
+              className="mt-5"
             >
               {finalActionLabel}
             </Button>

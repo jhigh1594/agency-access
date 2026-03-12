@@ -38,7 +38,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
   return (
     <div className="w-full">
       {/* Step Numbers Row - Brutalist Style */}
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-1">
         {steps.map((step, index) => {
           const isCompleted = currentStep > step.number;
           const isCurrent = currentStep === step.number;
@@ -48,7 +48,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
               {/* Step Box */}
               <m.div
                 className={`
-                  w-10 h-10 flex items-center justify-center
+                  w-8 h-8 flex items-center justify-center
                   border-2 font-bold text-sm
                   transition-colors duration-200
                   ${
@@ -85,7 +85,7 @@ export function PlatformStepProgress({ currentStep, totalSteps = 3 }: PlatformSt
       </div>
 
       {/* Step Labels Row */}
-      <div className="flex items-center justify-center gap-2 mt-3">
+      <div className="flex items-center justify-center gap-1 mt-2">
         {steps.map((step, index) => {
           const isCompleted = currentStep > step.number;
           const isCurrent = currentStep === step.number;
