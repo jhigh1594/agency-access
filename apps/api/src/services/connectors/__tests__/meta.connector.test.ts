@@ -1,13 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MetaConnector } from '../meta.js';
 
-// Mock env
-vi.mock('../../../lib/env', () => ({
-  env: {
+const { mockEnv } = vi.hoisted(() => ({
+  mockEnv: {
     META_APP_ID: 'test-app-id',
     META_APP_SECRET: 'test-app-secret',
+    META_LOGIN_FOR_BUSINESS_CONFIG_ID: undefined as string | undefined,
     API_URL: 'http://localhost:3001',
   },
+}));
+
+// Mock env
+vi.mock('../../../lib/env', () => ({
+  env: mockEnv,
 }));
 
 describe('MetaConnector Asset Discovery', () => {
@@ -16,9 +21,34 @@ describe('MetaConnector Asset Discovery', () => {
   const businessId = 'test-business-id';
 
   beforeEach(() => {
+    mockEnv.META_LOGIN_FOR_BUSINESS_CONFIG_ID = undefined;
     connector = new MetaConnector();
     vi.clearAllMocks();
     global.fetch = vi.fn();
+  });
+
+  describe('getAuthUrl', () => {
+    it('includes config_id when Meta Login for Business configuration is present', () => {
+      mockEnv.META_LOGIN_FOR_BUSINESS_CONFIG_ID = '1436589444014622';
+      connector = new MetaConnector();
+
+      const authUrl = new URL(connector.getAuthUrl('state-123'));
+
+      expect(`${authUrl.origin}${authUrl.pathname}`).toBe('https://www.facebook.com/v21.0/dialog/oauth');
+      expect(authUrl.searchParams.get('client_id')).toBe('test-app-id');
+      expect(authUrl.searchParams.get('redirect_uri')).toBe('http://localhost:3001/agency-platforms/meta/callback');
+      expect(authUrl.searchParams.get('state')).toBe('state-123');
+      expect(authUrl.searchParams.get('response_type')).toBe('code');
+      expect(authUrl.searchParams.get('config_id')).toBe('1436589444014622');
+      expect(authUrl.searchParams.get('scope')).toBeNull();
+    });
+
+    it('falls back to scope-based OAuth when Meta Login for Business configuration is absent', () => {
+      const authUrl = new URL(connector.getAuthUrl('state-123'));
+
+      expect(authUrl.searchParams.get('config_id')).toBeNull();
+      expect(authUrl.searchParams.get('scope')).toBe('ads_management,ads_read,business_management');
+    });
   });
 
   describe('getBusinessAccounts', () => {

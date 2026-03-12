@@ -28,9 +28,23 @@ interface MetaTokens {
   expiresAt?: Date;
 }
 
+interface MetaDebugTokenResponse {
+  data?: {
+    app_id?: string;
+    type?: string;
+    application?: string;
+    data_access_expires_at?: number;
+    expires_at?: number;
+    is_valid?: boolean;
+    scopes?: string[];
+    user_id?: string;
+  };
+}
+
 export class MetaConnector {
   private readonly appId: string;
   private readonly appSecret: string;
+  private readonly loginForBusinessConfigId?: string;
   private readonly redirectUri: string;
 
   /**
@@ -54,6 +68,7 @@ export class MetaConnector {
   constructor() {
     this.appId = env.META_APP_ID;
     this.appSecret = env.META_APP_SECRET;
+    this.loginForBusinessConfigId = env.META_LOGIN_FOR_BUSINESS_CONFIG_ID;
     // Use agency-platforms callback for production (redirects to frontend)
     // For testing, use /api/oauth/meta/callback in Meta app settings
     this.redirectUri = `${env.API_URL}/agency-platforms/meta/callback`;
@@ -71,15 +86,19 @@ export class MetaConnector {
    * @returns Authorization URL to redirect user to
    */
   getAuthUrl(state: string, scopes?: string[], redirectUri?: string): string {
-    // Use default scopes if none provided
-    const scopesToUse = scopes ?? MetaConnector.DEFAULT_SCOPES;
     const params = new URLSearchParams({
       client_id: this.appId,
       redirect_uri: redirectUri ?? this.redirectUri,
       state,
-      scope: scopesToUse.join(','),
       response_type: 'code',
     });
+
+    if (this.loginForBusinessConfigId) {
+      params.set('config_id', this.loginForBusinessConfigId);
+    } else {
+      const scopesToUse = scopes ?? MetaConnector.DEFAULT_SCOPES;
+      params.set('scope', scopesToUse.join(','));
+    }
 
     return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
   }
@@ -229,6 +248,42 @@ export class MetaConnector {
     } catch {
       return false;
     }
+  }
+
+  async getTokenMetadata(accessToken: string): Promise<{
+    scopes: string[];
+    expiresAt?: Date;
+    dataAccessExpiresAt?: Date;
+    userId?: string;
+    isValid: boolean;
+  }> {
+    const params = new URLSearchParams({
+      input_token: accessToken,
+      access_token: `${this.appId}|${this.appSecret}`,
+    });
+
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/debug_token?${params.toString()}`,
+      { method: 'GET' }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Meta debug_token fetch failed: ${error}`);
+    }
+
+    const data = (await response.json()) as MetaDebugTokenResponse;
+    const payload = data.data;
+
+    return {
+      scopes: payload?.scopes || [],
+      expiresAt: payload?.expires_at ? new Date(payload.expires_at * 1000) : undefined,
+      dataAccessExpiresAt: payload?.data_access_expires_at
+        ? new Date(payload.data_access_expires_at * 1000)
+        : undefined,
+      userId: payload?.user_id,
+      isValid: payload?.is_valid === true,
+    };
   }
 
   /**

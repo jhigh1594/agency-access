@@ -75,6 +75,7 @@ const envSchema = z.object({
   // Meta OAuth
   META_APP_ID: z.string(),
   META_APP_SECRET: z.string(),
+  META_LOGIN_FOR_BUSINESS_CONFIG_ID: z.string().optional(),
 
   // Kit (ConvertKit) OAuth
   KIT_CLIENT_ID: z.string().optional(),
