@@ -12,7 +12,7 @@
  */
 
 import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { AssetCheckbox } from './AssetCheckbox';
 
@@ -90,18 +90,11 @@ export function AssetGroup({
         <div className="flex items-center gap-2">
           {/* Select All Checkbox */}
           {assets.length > 0 && (
-            <label className="flex items-center gap-1.5 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                ref={(input) => {
-                  if (input) {
-                    input.indeterminate = someSelected;
-                  }
-                }}
-                onChange={handleSelectAll}
-                className="sr-only"
-              />
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="flex items-center gap-1.5 cursor-pointer group"
+            >
               <div
                 className={`
                   w-5 h-5 border-2 border-black dark:border-white flex items-center justify-center
@@ -131,11 +124,12 @@ export function AssetGroup({
               <span className="text-xs font-semibold text-[var(--ink)] group-hover:text-[var(--coral)]">
                 All
               </span>
-            </label>
+            </button>
           )}
 
           {/* Expand/Collapse Button */}
           <button
+            type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-1 border border-border rounded hover:bg-muted/30 dark:hover:bg-muted/60 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
@@ -151,36 +145,20 @@ export function AssetGroup({
       </div>
 
       {/* Asset List (Collapsible) */}
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <m.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-1.5 ${assets.length > 8 ? 'max-h-[320px] overflow-y-auto pr-1' : ''}`}>
-              {assets.map((asset, index) => (
-                <m.div
-                  key={asset.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03, duration: 0.15 }}
-                >
-                  <AssetCheckbox
-                    id={asset.id}
-                    name={asset.name}
-                    metadata={asset.metadata}
-                    checked={selectedIds.has(asset.id)}
-                    onChange={(checked) => handleAssetToggle(asset.id, checked)}
-                  />
-                </m.div>
-              ))}
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
+      {isExpanded && (
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-1.5 ${assets.length > 8 ? 'max-h-[320px] overflow-y-auto pr-1' : ''}`}>
+          {assets.map((asset) => (
+            <AssetCheckbox
+              key={asset.id}
+              id={asset.id}
+              name={asset.name}
+              metadata={asset.metadata}
+              checked={selectedIds.has(asset.id)}
+              onChange={(checked) => handleAssetToggle(asset.id, checked)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Empty State */}
       {assets.length === 0 && isExpanded && (
