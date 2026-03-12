@@ -97,12 +97,12 @@ export function AssetGroup({
             >
               <div
                 className={`
-                  w-5 h-5 border-2 border-black dark:border-white flex items-center justify-center
+                  w-5 h-5 border-2 flex items-center justify-center
                   transition-all duration-200
                   ${
                     allSelected || someSelected
-                      ? 'bg-[var(--coral)] border-[var(--coral)]'
-                      : 'bg-card group-hover:border-[var(--coral)]'
+                      ? 'bg-coral border-coral'
+                      : 'border-black dark:border-white bg-card group-hover:border-coral'
                   }
                 `}
               >
