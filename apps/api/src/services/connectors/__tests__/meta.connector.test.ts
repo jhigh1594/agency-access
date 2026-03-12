@@ -130,6 +130,13 @@ describe('MetaConnector Asset Discovery', () => {
 
       const result = await connector.getBusinessAccounts(accessToken);
 
+      const secondCallUrl = new URL(String(vi.mocked(fetch).mock.calls[1]?.[0]));
+      expect(`${secondCallUrl.origin}${secondCallUrl.pathname}`).toBe(
+        'https://graph.facebook.com/v21.0/me/business_users'
+      );
+      expect(secondCallUrl.searchParams.get('fields')).toBe('business{id,name,verification_status}');
+      expect(secondCallUrl.searchParams.get('access_token')).toBe(accessToken);
+
       expect(result).toEqual({
         businesses: [
           { id: 'biz_1', name: 'Business One', verticalName: 'Retail', verificationStatus: undefined },

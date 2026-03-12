@@ -353,7 +353,7 @@ export class MetaConnector {
 
     try {
       const businessUserBusinessIds = await fetchBusinessCollection(
-        'https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,vertical_name,verification_status}',
+        'https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,verification_status}',
         (payload) =>
           ((payload.data || []) as Array<{
             business?: {
