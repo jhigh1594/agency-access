@@ -771,7 +771,7 @@ export function PlatformAuthWizard({
               </div>
             )}
 
-            <div className="space-y-5">
+            <div className="space-y-7">
               {/* Show all products that require asset selection */}
               {products
                 .filter((p) => supportsAssetSelection(p.product))
@@ -793,9 +793,9 @@ export function PlatformAuthWizard({
                   const productName = PLATFORM_NAMES[p.product as Platform] || productNameMap[p.product] || p.product;
 
                   return (
-                    <div key={p.product} className="space-y-2">
+                    <div key={p.product} className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <PlatformIcon platform={p.product as Platform} size="sm" />
+                        <PlatformIcon platform={p.product as Platform} size="xs" />
                         <h4 className="text-sm font-semibold text-[var(--ink)] font-display">{productName}</h4>
                       </div>
 
