@@ -771,7 +771,7 @@ export function PlatformAuthWizard({
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-5">
               {/* Show all products that require asset selection */}
               {products
                 .filter((p) => supportsAssetSelection(p.product))
