@@ -444,12 +444,16 @@ export class GoogleConnector {
         unresolvedErrors.set(customerId, errs);
       };
 
+      // Google Ads customer status values that are usable (not inactive).
+      const ACTIVE_STATUSES = new Set(['ENABLED', 'UNKNOWN']);
+
       // Allow upgrading a fallback-named entry to a real name discovered in a later phase.
       const recordAccount = (
         customerId: string,
         descriptiveName: string | null | undefined,
         isManager: boolean,
-        nameSource: 'hierarchy' | 'direct' | 'fallback'
+        nameSource: 'hierarchy' | 'direct' | 'fallback',
+        customerStatus?: string | null
       ): boolean => {
         if (!customerId) return false;
         const existing = accountMap.get(customerId);
@@ -458,6 +462,7 @@ export class GoogleConnector {
         if (existing && existing.nameSource !== 'fallback') return false;
         if (existing && !resolvedName) return false;
         const formattedId = this.formatGoogleAdsCustomerId(customerId);
+        const normalizedStatus = customerStatus?.toUpperCase() || 'UNKNOWN';
         accountMap.set(customerId, {
           id: customerId,
           name: resolvedName || `Google Ads account • ${formattedId}`,
@@ -465,7 +470,7 @@ export class GoogleConnector {
           isManager,
           nameSource: resolvedName ? nameSource : 'fallback',
           type: 'google_ads',
-          status: 'active',
+          status: normalizedStatus,
         });
         if (isManager) {
           managerIds.add(customerId);
@@ -474,9 +479,9 @@ export class GoogleConnector {
       };
 
       const directCustomerQuery =
-        'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1';
+        'SELECT customer.id, customer.descriptive_name, customer.manager, customer.status FROM customer LIMIT 1';
       const hierarchyCustomerQuery =
-        'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1';
+        'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level, customer_client.status FROM customer_client WHERE customer_client.level <= 1';
       const managerLinkQuery =
         'SELECT customer_manager_link.manager_customer, customer_manager_link.status FROM customer_manager_link WHERE customer_manager_link.status = ACTIVE';
 
@@ -521,7 +526,7 @@ export class GoogleConnector {
       const getCustomerRest = async (
         customerId: string,
         loginCustomerId?: string
-      ): Promise<{ descriptiveName?: string; manager?: boolean } | null> => {
+      ): Promise<{ descriptiveName?: string; manager?: boolean; status?: string } | null> => {
         try {
           const resp = await fetch(
             `https://googleads.googleapis.com/v22/customers/${customerId}`,
@@ -539,28 +544,12 @@ export class GoogleConnector {
             );
             return null;
           }
-          return (await resp.json()) as { descriptiveName?: string; manager?: boolean };
+          return (await resp.json()) as { descriptiveName?: string; manager?: boolean; status?: string };
         } catch (err) {
           appendError(customerId, `REST-GET exception: ${err instanceof Error ? err.message : String(err)}`);
           return null;
         }
       };
-
-      // ── Phase 0: REST GET customer resource (no GAQL) ───────────────────────
-      // GET /v22/customers/{id} uses CustomerService.GetCustomer, a simpler read
-      // path with potentially different access semantics than GAQL search. Try
-      // without login-customer-id first, then with self as login.
-      await Promise.all(
-        customerIds.map(async (customerId) => {
-          let data = await getCustomerRest(customerId);
-          if (!data) {
-            data = await getCustomerRest(customerId, customerId);
-          }
-          if (data) {
-            recordAccount(customerId, data.descriptiveName, Boolean(data.manager), 'direct');
-          }
-        })
-      );
 
       // ── Phase 0b: Discover parent managers via customer_manager_link ─────────
       // For accounts still unresolved, query the manager link resource to find the
@@ -595,13 +584,26 @@ export class GoogleConnector {
         );
       }
 
+      // ── Phase 0: REST GET — also pass through Phase 0 REST handler ─────────
+      await Promise.all(
+        customerIds.map(async (customerId) => {
+          let data = await getCustomerRest(customerId);
+          if (!data) {
+            data = await getCustomerRest(customerId, customerId);
+          }
+          if (data) {
+            recordAccount(customerId, data.descriptiveName, Boolean(data.manager), 'direct', data.status);
+          }
+        })
+      );
+
       // ── Phase 1: Direct parallel GAQL queries (no login-customer-id) ─────────
       await Promise.all(
         customerIds.map(async (customerId) => {
           if (accountMap.get(customerId)?.nameSource !== 'fallback' && accountMap.has(customerId)) return;
 
           const results = await runGaqlSearch<{
-            customer?: { id?: string | number; descriptiveName?: string; manager?: boolean };
+            customer?: { id?: string | number; descriptiveName?: string; manager?: boolean; status?: string };
           }>(customerId, directCustomerQuery);
 
           if (!results) return;
@@ -611,7 +613,33 @@ export class GoogleConnector {
             if (!c) continue;
             const id = this.normalizeGoogleAdsCustomerId(c.id);
             if (id && accessibleCustomerIds.has(id)) {
-              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct');
+              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct', c.status);
+            }
+          }
+        })
+      );
+
+      // ── Phase 1.5: Direct GAQL query with self-as-login ─────────────────────
+      // For manager accounts and standalone accounts, using the account's OWN ID
+      // as login-customer-id unlocks customer.descriptive_name even when querying
+      // without any login fails silently with empty results.
+      await Promise.all(
+        customerIds.map(async (customerId) => {
+          const current = accountMap.get(customerId);
+          if (current && current.nameSource !== 'fallback') return;
+
+          const results = await runGaqlSearch<{
+            customer?: { id?: string | number; descriptiveName?: string; manager?: boolean; status?: string };
+          }>(customerId, directCustomerQuery, customerId); // login = self
+
+          if (!results) return;
+
+          for (const result of results) {
+            const c = result.customer;
+            if (!c) continue;
+            const id = this.normalizeGoogleAdsCustomerId(c.id);
+            if (id && accessibleCustomerIds.has(id)) {
+              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct', c.status);
             }
           }
         })
@@ -633,6 +661,7 @@ export class GoogleConnector {
               descriptiveName?: string;
               manager?: boolean;
               level?: number;
+              status?: string;
             };
           }>(candidateId, hierarchyCustomerQuery, candidateId);
 
@@ -643,7 +672,7 @@ export class GoogleConnector {
             if (!c) continue;
             const id = this.normalizeGoogleAdsCustomerId(c.id);
             if (id && accessibleCustomerIds.has(id)) {
-              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'hierarchy');
+              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'hierarchy', c.status);
             }
           }
         })
@@ -678,7 +707,7 @@ export class GoogleConnector {
               if (loginId === targetId) continue;
 
               const results = await runGaqlSearch<{
-                customer?: { id?: string | number; descriptiveName?: string; manager?: boolean };
+                customer?: { id?: string | number; descriptiveName?: string; manager?: boolean; status?: string };
               }>(targetId, directCustomerQuery, loginId);
 
               if (!results) continue;
@@ -688,7 +717,7 @@ export class GoogleConnector {
                 if (!c) continue;
                 const id = this.normalizeGoogleAdsCustomerId(c.id);
                 if (id && accessibleCustomerIds.has(id)) {
-                  recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct');
+                  recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct', c.status);
                 }
               }
             }
@@ -696,8 +725,10 @@ export class GoogleConnector {
         );
       }
 
-      // ── Build final accounts list ─────────────────────────────────────────────
-      const accounts: GoogleAdsAccount[] = customerIds.map((customerId) => {
+      // ── Build final accounts list (active only) ───────────────────────────────
+      // Exclude CANCELLED and SUSPENDED accounts — these are inaccessible and
+      // should not appear in either the agency asset manager or the client wizard.
+      const allResolved: GoogleAdsAccount[] = customerIds.map((customerId) => {
         const existing = accountMap.get(customerId);
         if (existing) return existing;
 
@@ -715,12 +746,14 @@ export class GoogleConnector {
           isManager: false,
           nameSource: 'fallback' as const,
           type: 'google_ads' as const,
-          status: 'active' as const,
+          status: 'UNKNOWN',
         };
       });
 
-      console.log(`✅ Google Ads fetch complete: ${accounts.length} account(s) found`);
-      accounts.forEach((a) => console.log(`  📦 ${a.id}: "${a.name}" [${a.nameSource}]`));
+      const accounts = allResolved.filter((a) => ACTIVE_STATUSES.has(a.status.toUpperCase()));
+
+      console.log(`✅ Google Ads fetch complete: ${accounts.length} active account(s) (${allResolved.length - accounts.length} inactive filtered out)`);
+      accounts.forEach((a) => console.log(`  📦 ${a.id}: "${a.name}" [${a.nameSource}] [${a.status}]`));
 
       return { accounts };
     } catch (error) {

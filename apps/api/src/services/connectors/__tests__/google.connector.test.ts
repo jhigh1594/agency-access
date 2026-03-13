@@ -381,7 +381,7 @@ describe('GoogleConnector', () => {
         isManager: false,
         nameSource: 'fallback',
         type: 'google_ads',
-        status: 'active',
+        status: 'UNKNOWN',
       },
     ]);
     expect(result.adsAccounts[0]?.name).not.toContain('Restricted');
@@ -418,6 +418,7 @@ describe('GoogleConnector', () => {
                   id: '6449142979',
                   descriptiveName: 'Pillar AI Agency MCC',
                   manager: true,
+                  status: 'ENABLED',
                 },
               },
             ],
@@ -444,7 +445,7 @@ describe('GoogleConnector', () => {
         isManager: true,
         nameSource: 'direct',
         type: 'google_ads',
-        status: 'active',
+        status: 'ENABLED',
       },
     ]);
   });
@@ -470,7 +471,7 @@ describe('GoogleConnector', () => {
 
       if (
         url.includes('https://googleads.googleapis.com/v22/customers/6449142979/googleAds:search') &&
-        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1'
+        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level, customer_client.status FROM customer_client WHERE customer_client.level <= 1'
       ) {
         return {
           ok: true,
@@ -484,6 +485,7 @@ describe('GoogleConnector', () => {
                   descriptiveName: 'Pillar AI Agency MCC',
                   manager: true,
                   level: 0,
+                  status: 'ENABLED',
                 },
               },
               {
@@ -492,6 +494,7 @@ describe('GoogleConnector', () => {
                   descriptiveName: 'Client Alpha',
                   manager: false,
                   level: 1,
+                  status: 'ENABLED',
                 },
               },
             ],
@@ -499,7 +502,7 @@ describe('GoogleConnector', () => {
         } as any;
       }
 
-      if (url.includes('https://googleads.googleapis.com/v22/customers/') && body?.query === 'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1') {
+      if (url.includes('https://googleads.googleapis.com/v22/customers/') && body?.query === 'SELECT customer.id, customer.descriptive_name, customer.manager, customer.status FROM customer LIMIT 1') {
         return {
           ok: false,
           status: 403,
@@ -532,7 +535,7 @@ describe('GoogleConnector', () => {
         isManager: true,
         nameSource: 'hierarchy',
         type: 'google_ads',
-        status: 'active',
+        status: 'ENABLED',
       },
       {
         id: '5497559774',
@@ -541,7 +544,7 @@ describe('GoogleConnector', () => {
         isManager: false,
         nameSource: 'hierarchy',
         type: 'google_ads',
-        status: 'active',
+        status: 'ENABLED',
       },
     ]);
   });
@@ -570,7 +573,7 @@ describe('GoogleConnector', () => {
 
       if (
         url.includes('https://googleads.googleapis.com/v22/customers/1111111111/googleAds:search') &&
-        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1'
+        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level, customer_client.status FROM customer_client WHERE customer_client.level <= 1'
       ) {
         if (loginCustomerId === '9999999999') {
           return {
@@ -599,6 +602,7 @@ describe('GoogleConnector', () => {
                     descriptiveName: 'Agency MCC',
                     manager: true,
                     level: 0,
+                    status: 'ENABLED',
                   },
                 },
                 {
@@ -607,6 +611,7 @@ describe('GoogleConnector', () => {
                     descriptiveName: 'Client Bravo',
                     manager: false,
                     level: 1,
+                    status: 'ENABLED',
                   },
                 },
               ],
@@ -632,7 +637,7 @@ describe('GoogleConnector', () => {
         } as any;
       }
 
-      if (url.includes('https://googleads.googleapis.com/v22/customers/') && body?.query === 'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1') {
+      if (url.includes('https://googleads.googleapis.com/v22/customers/') && body?.query === 'SELECT customer.id, customer.descriptive_name, customer.manager, customer.status FROM customer LIMIT 1') {
         return {
           ok: false,
           status: 403,
@@ -665,7 +670,7 @@ describe('GoogleConnector', () => {
         isManager: true,
         nameSource: 'hierarchy',
         type: 'google_ads',
-        status: 'active',
+        status: 'ENABLED',
       },
       {
         id: '2222222222',
@@ -674,7 +679,7 @@ describe('GoogleConnector', () => {
         isManager: false,
         nameSource: 'hierarchy',
         type: 'google_ads',
-        status: 'active',
+        status: 'ENABLED',
       },
     ]);
 
