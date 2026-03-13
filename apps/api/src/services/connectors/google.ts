@@ -544,7 +544,11 @@ export class GoogleConnector {
             );
             return null;
           }
-          return (await resp.json()) as { descriptiveName?: string; manager?: boolean; status?: string };
+          const body = (await resp.json()) as { descriptiveName?: string; manager?: boolean; status?: string };
+          console.log(
+            `[REST-GET ${customerId}(login=${loginCustomerId || 'none'})] 200 → ${JSON.stringify(body).substring(0, 300)}`
+          );
+          return body;
         } catch (err) {
           appendError(customerId, `REST-GET exception: ${err instanceof Error ? err.message : String(err)}`);
           return null;
@@ -606,6 +610,12 @@ export class GoogleConnector {
             customer?: { id?: string | number; descriptiveName?: string; manager?: boolean; status?: string };
           }>(customerId, directCustomerQuery);
 
+          if (results !== null && results.length === 0) {
+            console.log(`[Phase1-GAQL ${customerId}(no-login)] 200 OK but empty results`);
+          } else if (results && results.length > 0) {
+            console.log(`[Phase1-GAQL ${customerId}(no-login)] 200 OK → ${JSON.stringify(results[0]).substring(0, 200)}`);
+          }
+
           if (!results) return;
 
           for (const result of results) {
@@ -631,6 +641,12 @@ export class GoogleConnector {
           const results = await runGaqlSearch<{
             customer?: { id?: string | number; descriptiveName?: string; manager?: boolean; status?: string };
           }>(customerId, directCustomerQuery, customerId); // login = self
+
+          if (results !== null && results.length === 0) {
+            console.log(`[Phase1.5-GAQL ${customerId}(self-login)] 200 OK but empty results`);
+          } else if (results && results.length > 0) {
+            console.log(`[Phase1.5-GAQL ${customerId}(self-login)] 200 OK → ${JSON.stringify(results[0]).substring(0, 200)}`);
+          }
 
           if (!results) return;
 
