@@ -20,25 +20,33 @@ vi.mock('posthog-js', () => ({
   },
 }));
 
-vi.mock('@/components/client-auth/PlatformAuthWizard', () => ({
-  PlatformAuthWizard: ({
-    onComplete,
-    platformName,
-    completionActionLabel,
-    initialConnectionId,
-    initialStep,
-  }: any) => (
-    <div>
-      <p>{`Active platform: ${platformName}`}</p>
-      {completionActionLabel ? <p>{`Completion action: ${completionActionLabel}`}</p> : null}
-      {initialConnectionId ? <p>{`Initial connection: ${initialConnectionId}`}</p> : null}
-      {initialStep ? <p>{`Initial step: ${initialStep}`}</p> : null}
-      <button type="button" onClick={onComplete}>
-        Complete Platform
-      </button>
-    </div>
-  ),
-}));
+vi.mock('@/components/client-auth/PlatformAuthWizard', async () => {
+  const React = await vi.importActual<typeof import('react')>('react');
+
+  return {
+    PlatformAuthWizard: ({
+      onComplete,
+      platformName,
+      completionActionLabel,
+      initialConnectionId,
+      initialStep,
+    }: any) => {
+      const [mountedPlatformName] = React.useState(platformName);
+
+      return (
+        <div>
+          <p>{`Active platform: ${mountedPlatformName}`}</p>
+          {completionActionLabel ? <p>{`Completion action: ${completionActionLabel}`}</p> : null}
+          {initialConnectionId ? <p>{`Initial connection: ${initialConnectionId}`}</p> : null}
+          {initialStep ? <p>{`Initial step: ${initialStep}`}</p> : null}
+          <button type="button" onClick={onComplete}>
+            Complete Platform
+          </button>
+        </div>
+      );
+    },
+  };
+});
 
 describe('Invite Flow Page', () => {
   beforeEach(() => {
@@ -468,6 +476,60 @@ describe('Invite Flow Page', () => {
     await waitFor(() => {
       expect(screen.getByText('Completion action: Continue to Meta')).toBeInTheDocument();
     });
+  });
+
+  it('remounts the platform wizard when advancing to the next queued platform', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'meta',
+                products: [{ product: 'meta_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {}, meta: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /continue to connect/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Active platform: Google')).toBeInTheDocument();
+      expect(screen.getByText('Completion action: Continue to Meta')).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /complete platform/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Active platform: Meta')).toBeInTheDocument();
+      expect(screen.getByText('Completion action: Finish request')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Active platform: Google')).not.toBeInTheDocument();
   });
 
   it('supports a direct return to the connect step and focuses the requested platform', async () => {

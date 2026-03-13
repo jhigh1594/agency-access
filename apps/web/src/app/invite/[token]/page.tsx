@@ -591,6 +591,7 @@ export default function ClientAuthorizationPage() {
               }
             >
               <PlatformAuthWizard
+                key={platformQueue.activePlatform.platformGroup}
                 platform={platformQueue.activePlatform.platformGroup as Platform}
                 platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}
                 products={platformQueue.activePlatform.products}
