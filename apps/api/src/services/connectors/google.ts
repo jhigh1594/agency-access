@@ -438,17 +438,26 @@ export class GoogleConnector {
       const managerIds = new Set<string>();
       const unresolvedErrors = new Map<string, string[]>();
 
+      const appendError = (customerId: string, msg: string) => {
+        const errs = unresolvedErrors.get(customerId) || [];
+        errs.push(msg);
+        unresolvedErrors.set(customerId, errs);
+      };
+
+      // Allow upgrading a fallback-named entry to a real name discovered in a later phase.
       const recordAccount = (
         customerId: string,
         descriptiveName: string | null | undefined,
         isManager: boolean,
         nameSource: 'hierarchy' | 'direct' | 'fallback'
       ): boolean => {
-        if (!customerId || accountMap.has(customerId)) {
-          return false;
-        }
-        const formattedId = this.formatGoogleAdsCustomerId(customerId);
+        if (!customerId) return false;
+        const existing = accountMap.get(customerId);
         const resolvedName = descriptiveName?.trim();
+        // Skip if we already have a real name, or if we have any entry and new name is also empty.
+        if (existing && existing.nameSource !== 'fallback') return false;
+        if (existing && !resolvedName) return false;
+        const formattedId = this.formatGoogleAdsCustomerId(customerId);
         accountMap.set(customerId, {
           id: customerId,
           name: resolvedName || `Google Ads account • ${formattedId}`,
@@ -464,16 +473,12 @@ export class GoogleConnector {
         return true;
       };
 
-      const appendError = (customerId: string, msg: string) => {
-        const errs = unresolvedErrors.get(customerId) || [];
-        errs.push(msg);
-        unresolvedErrors.set(customerId, errs);
-      };
-
       const directCustomerQuery =
         'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1';
       const hierarchyCustomerQuery =
         'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1';
+      const managerLinkQuery =
+        'SELECT customer_manager_link.manager_customer, customer_manager_link.status FROM customer_manager_link WHERE customer_manager_link.status = ACTIVE';
 
       // Helper: run a GAQL search, returning parsed results or null on failure.
       const runGaqlSearch = async <T>(
@@ -510,9 +515,91 @@ export class GoogleConnector {
         }
       };
 
-      // ── Phase 1: Direct parallel queries (no login-customer-id) ─────────────
+      // Helper: REST GET /v22/customers/{id} — different access path from GAQL search.
+      // For accounts where the user is a direct member, this endpoint may succeed even
+      // when GAQL fails due to missing login-customer-id context.
+      const getCustomerRest = async (
+        customerId: string,
+        loginCustomerId?: string
+      ): Promise<{ descriptiveName?: string; manager?: boolean } | null> => {
+        try {
+          const resp = await fetch(
+            `https://googleads.googleapis.com/v22/customers/${customerId}`,
+            {
+              method: 'GET',
+              headers: this.getGoogleAdsHeaders(accessToken, developerToken, loginCustomerId),
+            }
+          );
+          if (!resp.ok) {
+            const errText = await resp.text().catch(() => '');
+            const parsed = this.parseGoogleAdsError(errText);
+            appendError(
+              customerId,
+              `REST-GET(login=${loginCustomerId || 'none'}) ${resp.status}: ${parsed.message.substring(0, 200)}`
+            );
+            return null;
+          }
+          return (await resp.json()) as { descriptiveName?: string; manager?: boolean };
+        } catch (err) {
+          appendError(customerId, `REST-GET exception: ${err instanceof Error ? err.message : String(err)}`);
+          return null;
+        }
+      };
+
+      // ── Phase 0: REST GET customer resource (no GAQL) ───────────────────────
+      // GET /v22/customers/{id} uses CustomerService.GetCustomer, a simpler read
+      // path with potentially different access semantics than GAQL search. Try
+      // without login-customer-id first, then with self as login.
       await Promise.all(
         customerIds.map(async (customerId) => {
+          let data = await getCustomerRest(customerId);
+          if (!data) {
+            data = await getCustomerRest(customerId, customerId);
+          }
+          if (data) {
+            recordAccount(customerId, data.descriptiveName, Boolean(data.manager), 'direct');
+          }
+        })
+      );
+
+      // ── Phase 0b: Discover parent managers via customer_manager_link ─────────
+      // For accounts still unresolved, query the manager link resource to find the
+      // parent MCC ID. This GAQL query may fail with the same 403, but if it
+      // succeeds it gives us external manager IDs to use as login candidates.
+      const externalManagerIds = new Set<string>();
+      const needsManagerDiscovery = customerIds.filter(
+        (id) => !accountMap.has(id) || accountMap.get(id)?.nameSource === 'fallback'
+      );
+
+      if (needsManagerDiscovery.length > 0) {
+        await Promise.all(
+          needsManagerDiscovery.map(async (customerId) => {
+            const results = await runGaqlSearch<{
+              customerManagerLink?: { managerCustomer?: string; status?: string };
+            }>(customerId, managerLinkQuery);
+
+            if (!results) return;
+
+            for (const result of results) {
+              const managerResource = result.customerManagerLink?.managerCustomer;
+              if (!managerResource) continue;
+              const managerId = this.normalizeGoogleAdsCustomerId(
+                managerResource.split('/').pop() || managerResource
+              );
+              if (managerId && !accessibleCustomerIds.has(managerId)) {
+                externalManagerIds.add(managerId);
+                console.log(`🔗 Discovered external manager ${managerId} for account ${customerId}`);
+              }
+            }
+          })
+        );
+      }
+
+      // ── Phase 1: Direct parallel GAQL queries (no login-customer-id) ─────────
+      await Promise.all(
+        customerIds.map(async (customerId) => {
+          if (accountMap.get(customerId)?.nameSource !== 'fallback' && accountMap.has(customerId)) return;
+
           const results = await runGaqlSearch<{
             customer?: { id?: string | number; descriptiveName?: string; manager?: boolean };
           }>(customerId, directCustomerQuery);
@@ -531,11 +618,10 @@ export class GoogleConnector {
       );
 
       // ── Phase 2: Hierarchy queries (self-as-login) ───────────────────────────
-      // Run customer_client hierarchy queries for all accounts not yet resolved by
-      // Phase 1. If an account is a manager, this will also resolve its sub-accounts.
-      // We also run for the configured login customer if not yet discovered.
+      // Run customer_client hierarchy queries for all accounts not yet fully resolved.
+      // If an account is a manager, this will also resolve its sub-accounts.
       const hierarchyCandidates = new Set<string>([
-        ...customerIds.filter((id) => !accountMap.has(id)),
+        ...customerIds.filter((id) => !accountMap.has(id) || accountMap.get(id)?.nameSource === 'fallback'),
         ...(configuredLoginCustomerId ? [configuredLoginCustomerId] : []),
       ]);
 
@@ -564,21 +650,31 @@ export class GoogleConnector {
       );
 
       // ── Phase 3: Cross-login fallback ────────────────────────────────────────
-      // For any still-unresolved accounts, cycle through every accessible customer
-      // ID (including discovered managers) as a potential login-customer-id.
-      const stillUnresolved = customerIds.filter((id) => !accountMap.has(id));
+      // For any still-unresolved (or fallback-named) accounts, try every login
+      // candidate: discovered external managers (the most likely fix), then known
+      // accessible IDs and the configured agency MCC.
+      const stillUnresolved = customerIds.filter(
+        (id) => !accountMap.has(id) || accountMap.get(id)?.nameSource === 'fallback'
+      );
 
       if (stillUnresolved.length > 0) {
         const loginCandidates = Array.from(
           new Set(
-            [configuredLoginCustomerId, ...Array.from(managerIds), ...customerIds].filter(Boolean)
+            [
+              // External managers discovered via customer_manager_link — highest priority
+              ...Array.from(externalManagerIds),
+              configuredLoginCustomerId,
+              ...Array.from(managerIds),
+              ...customerIds,
+            ].filter(Boolean)
           )
         );
 
         await Promise.all(
           stillUnresolved.map(async (targetId) => {
             for (const loginId of loginCandidates) {
-              if (accountMap.has(targetId)) break;
+              const current = accountMap.get(targetId);
+              if (current && current.nameSource !== 'fallback') break;
               if (loginId === targetId) continue;
 
               const results = await runGaqlSearch<{
@@ -591,7 +687,7 @@ export class GoogleConnector {
                 const c = result.customer;
                 if (!c) continue;
                 const id = this.normalizeGoogleAdsCustomerId(c.id);
-                if (id && accessibleCustomerIds.has(id) && !accountMap.has(id)) {
+                if (id && accessibleCustomerIds.has(id)) {
                   recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct');
                 }
               }
