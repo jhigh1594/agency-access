@@ -503,7 +503,7 @@ describe('Agency Platforms Routes', () => {
           },
           {
             id: '5497559774',
-            name: 'Unnamed Google Ads account • 549-755-9774',
+            name: 'Google Ads account • 549-755-9774',
             formattedId: '549-755-9774',
             isManager: false,
             nameSource: 'fallback',

@@ -376,7 +376,7 @@ describe('GoogleConnector', () => {
     expect(result.adsAccounts).toEqual([
       {
         id: '6449142979',
-        name: 'Unnamed Google Ads account • 644-914-2979',
+        name: 'Google Ads account • 644-914-2979',
         formattedId: '644-914-2979',
         isManager: false,
         nameSource: 'fallback',

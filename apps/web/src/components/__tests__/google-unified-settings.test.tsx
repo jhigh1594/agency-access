@@ -263,7 +263,7 @@ describe('GoogleUnifiedSettings', () => {
                 },
                 {
                   id: '5497559774',
-                  name: 'Unnamed Google Ads account • 549-755-9774',
+                  name: 'Google Ads account • 549-755-9774',
                   formattedId: '549-755-9774',
                   nameSource: 'fallback',
                   isManager: false,
@@ -307,7 +307,7 @@ describe('GoogleUnifiedSettings', () => {
 
     await waitFor(() => {
       expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
-      expect(container.textContent).toContain('Unnamed Google Ads account • 549-755-9774');
+      expect(container.textContent).toContain('Google Ads account • 549-755-9774');
     });
   });
 });

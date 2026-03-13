@@ -365,7 +365,21 @@ export class GoogleConnector {
   }
 
   /**
-   * Fetch Google Ads accounts
+   * Fetch Google Ads accounts with names using a 3-phase parallel strategy:
+   *
+   * Phase 1 — Direct parallel queries (no login-customer-id):
+   *   For each accessible customer, query its own customer resource. Works for
+   *   accounts the authenticated user has direct OAuth access to.
+   *
+   * Phase 2 — Hierarchy queries (self-as-login):
+   *   For each account not yet resolved by Phase 1, run a customer_client
+   *   hierarchy query with that account's own ID as login-customer-id. This
+   *   resolves sub-accounts when the queried customer is a manager (MCC).
+   *
+   * Phase 3 — Cross-login fallback:
+   *   For any still-unresolved accounts, cycle through every accessible customer
+   *   ID as a potential login-customer-id and retry the direct query. This handles
+   *   sub-accounts that are only reachable through a specific manager.
    */
   private async getAdsAccounts(accessToken: string): Promise<{ accounts: GoogleAdsAccount[] }> {
     try {
@@ -378,7 +392,7 @@ export class GoogleConnector {
         return { accounts: [] };
       }
 
-      const response = await fetch(
+      const listResponse = await fetch(
         'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           method: 'GET',
@@ -386,410 +400,231 @@ export class GoogleConnector {
         }
       );
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!listResponse.ok) {
+        const errorText = await listResponse.text();
         let errorMessage = errorText;
 
         try {
           const errorJson = JSON.parse(errorText);
           if (errorJson.error?.message) {
             errorMessage = errorJson.error.message;
-
-            if (errorMessage.includes('Google Ads API has not been used') || errorMessage.includes('it is disabled')) {
-              console.error('Google Ads API Error: API not enabled in Google Cloud project');
-              console.error('Enable it at: https://console.developers.google.com/apis/api/googleads.googleapis.com/overview');
-              console.error('Full error:', errorMessage);
-            }
           }
         } catch {
-          // Ignore JSON parse failures for error payloads.
+          // Ignore JSON parse failures.
         }
 
-        console.error('Google Ads API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          url: 'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
+        console.error('Google Ads API error (listAccessibleCustomers):', {
+          status: listResponse.status,
           error: errorMessage.substring(0, 500),
-          hasDeveloperToken: !!developerToken,
         });
         return { accounts: [] };
       }
 
-      const data = (await response.json()) as {
-        resourceNames?: string[];
-      };
+      const listData = (await listResponse.json()) as { resourceNames?: string[] };
 
-      if (!data.resourceNames || data.resourceNames.length === 0) {
-        console.log('⚠️ No accessible Google Ads accounts found');
+      if (!listData.resourceNames || listData.resourceNames.length === 0) {
+        console.log('No accessible Google Ads accounts found');
         return { accounts: [] };
       }
 
-      const customerIds = data.resourceNames.map((resourceName) => {
-        const id = resourceName.split('/').pop() || resourceName;
-        return id.replace(/-/g, '');
-      });
+      const customerIds = listData.resourceNames.map((resourceName) =>
+        this.normalizeGoogleAdsCustomerId(resourceName.split('/').pop() || resourceName)
+      );
       const accessibleCustomerIds = new Set(customerIds);
 
       console.log(`📋 Found ${customerIds.length} accessible Google Ads account(s):`, customerIds);
 
       const accountMap = new Map<string, GoogleAdsAccount>();
-      const discoveredManagerIds = new Set<string>();
-      const attemptedHierarchyContexts = new Set<string>();
-      const attemptedDirectContexts = new Map<string, Set<string>>();
-      const unresolvedErrors = new Map<
-        string,
-        Array<{
-          stage: 'hierarchy' | 'direct';
-          queryCustomerId: string;
-          loginCustomerId?: string;
-          status?: number;
-          errorCode?: string;
-          message: string;
-        }>
-      >();
+      const managerIds = new Set<string>();
+      const unresolvedErrors = new Map<string, string[]>();
+
+      const recordAccount = (
+        customerId: string,
+        descriptiveName: string | null | undefined,
+        isManager: boolean,
+        nameSource: 'hierarchy' | 'direct' | 'fallback'
+      ): boolean => {
+        if (!customerId || accountMap.has(customerId)) {
+          return false;
+        }
+        const formattedId = this.formatGoogleAdsCustomerId(customerId);
+        const resolvedName = descriptiveName?.trim();
+        accountMap.set(customerId, {
+          id: customerId,
+          name: resolvedName || `Google Ads account • ${formattedId}`,
+          formattedId,
+          isManager,
+          nameSource: resolvedName ? nameSource : 'fallback',
+          type: 'google_ads',
+          status: 'active',
+        });
+        if (isManager) {
+          managerIds.add(customerId);
+        }
+        return true;
+      };
+
+      const appendError = (customerId: string, msg: string) => {
+        const errs = unresolvedErrors.get(customerId) || [];
+        errs.push(msg);
+        unresolvedErrors.set(customerId, errs);
+      };
+
       const directCustomerQuery =
         'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1';
       const hierarchyCustomerQuery =
         'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1';
-      const buildContextLabel = (queryCustomerId: string, loginCustomerId?: string) =>
-        `${queryCustomerId}|${loginCustomerId || 'none'}`;
 
-      const recordAccount = (
-        customerId: string,
-        name: string,
-        isManager: boolean,
-        nameSource: 'hierarchy' | 'direct'
-      ) => {
-        if (!customerId || !name || accountMap.has(customerId)) {
-          return;
-        }
-
-        accountMap.set(customerId, {
-          id: customerId,
-          name,
-          formattedId: this.formatGoogleAdsCustomerId(customerId),
-          isManager,
-          nameSource,
-          type: 'google_ads',
-          status: 'active',
-        });
-
-        if (isManager) {
-          discoveredManagerIds.add(customerId);
-        }
-      };
-
-      const recordDirectAttempt = (customerId: string, loginCustomerId?: string) => {
-        const attempts = attemptedDirectContexts.get(customerId) || new Set<string>();
-        attempts.add(loginCustomerId || 'none');
-        attemptedDirectContexts.set(customerId, attempts);
-      };
-
-      const recordResolutionError = (
-        customerId: string,
-        error: {
-          stage: 'hierarchy' | 'direct';
-          queryCustomerId: string;
-          loginCustomerId?: string;
-          status?: number;
-          errorCode?: string;
-          message: string;
-        }
-      ) => {
-        const errors = unresolvedErrors.get(customerId) || [];
-        errors.push(error);
-        unresolvedErrors.set(customerId, errors);
-      };
-
-      const hierarchyQueue: Array<{ queryCustomerId: string; loginCustomerId?: string }> = [];
-      const seenHierarchyContexts = new Set<string>();
-      const enqueueHierarchyContext = (queryCustomerId?: string, loginCustomerId?: string) => {
-        const normalizedQueryCustomerId = this.normalizeGoogleAdsCustomerId(queryCustomerId);
-        const normalizedLoginCustomerId = this.normalizeGoogleAdsCustomerId(loginCustomerId);
-
-        if (!normalizedQueryCustomerId) {
-          return;
-        }
-
-        const contextKey = buildContextLabel(normalizedQueryCustomerId, normalizedLoginCustomerId || undefined);
-        if (seenHierarchyContexts.has(contextKey)) {
-          return;
-        }
-
-        seenHierarchyContexts.add(contextKey);
-        hierarchyQueue.push({
-          queryCustomerId: normalizedQueryCustomerId,
-          ...(normalizedLoginCustomerId ? { loginCustomerId: normalizedLoginCustomerId } : {}),
-        });
-      };
-
-      if (configuredLoginCustomerId) {
-        enqueueHierarchyContext(configuredLoginCustomerId, configuredLoginCustomerId);
-      }
-
-      for (const customerId of customerIds) {
-        if (configuredLoginCustomerId) {
-          enqueueHierarchyContext(customerId, configuredLoginCustomerId);
-        }
-        enqueueHierarchyContext(customerId, customerId);
-        enqueueHierarchyContext(customerId);
-      }
-
-      const runHierarchyQuery = async (
+      // Helper: run a GAQL search, returning parsed results or null on failure.
+      const runGaqlSearch = async <T>(
         queryCustomerId: string,
+        query: string,
         loginCustomerId?: string
-      ): Promise<void> => {
-        attemptedHierarchyContexts.add(buildContextLabel(queryCustomerId, loginCustomerId));
-
+      ): Promise<T[] | null> => {
         try {
-          console.log(
-            `🌳 Querying account hierarchy for customer ${queryCustomerId}${loginCustomerId ? ` using login ${loginCustomerId}` : ''}...`
-          );
-
-          const searchResponse = await fetch(
+          const resp = await fetch(
             `https://googleads.googleapis.com/v22/customers/${queryCustomerId}/googleAds:search`,
             {
               method: 'POST',
               headers: this.getGoogleAdsHeaders(accessToken, developerToken, loginCustomerId),
-              body: JSON.stringify({
-                query: hierarchyCustomerQuery,
-              }),
+              body: JSON.stringify({ query }),
             }
           );
-
-          if (searchResponse.ok) {
-            const searchData = (await searchResponse.json()) as {
-              results?: Array<{
-                customerClient?: {
-                  id?: string;
-                  descriptiveName?: string;
-                  manager?: boolean;
-                  level?: number;
-                };
-              }>;
-            };
-
-            for (const result of searchData.results || []) {
-              const customer = result.customerClient;
-              if (!customer?.id || !customer.descriptiveName) {
-                continue;
-              }
-
-              const normalizedCustomerId = this.normalizeGoogleAdsCustomerId(customer.id);
-              if (!accessibleCustomerIds.has(normalizedCustomerId)) {
-                continue;
-              }
-
-              console.log(
-                `  🌿 Account: ${normalizedCustomerId} = "${customer.descriptiveName}" ${customer.manager ? '(Manager)' : ''}`
-              );
-              recordAccount(
-                normalizedCustomerId,
-                customer.descriptiveName,
-                Boolean(customer.manager),
-                'hierarchy'
-              );
-            }
-
-            for (const managerId of Array.from(discoveredManagerIds)) {
-              enqueueHierarchyContext(managerId, managerId);
-            }
-
-            return;
-          }
-
-          const parsedError = this.parseGoogleAdsError(await searchResponse.text());
-
-          if (searchResponse.status === 403) {
-            console.warn(
-              `❌ Access denied while querying hierarchy for ${queryCustomerId}${loginCustomerId ? ` with login ${loginCustomerId}` : ''} (403 Permission Denied)`
+          if (!resp.ok) {
+            const errText = await resp.text();
+            const parsed = this.parseGoogleAdsError(errText);
+            appendError(
+              queryCustomerId,
+              `GAQL(login=${loginCustomerId || 'none'}) ${resp.status}: ${parsed.message.substring(0, 200)}`
             );
-          } else {
-            console.warn(`❌ Failed to query account hierarchy for ${queryCustomerId}:`, {
-              status: searchResponse.status,
-              error: parsedError.message,
-            });
+            return null;
           }
-
-          if (accessibleCustomerIds.has(queryCustomerId)) {
-            recordResolutionError(queryCustomerId, {
-              stage: 'hierarchy',
-              queryCustomerId,
-              ...(loginCustomerId ? { loginCustomerId } : {}),
-              status: searchResponse.status,
-              ...(parsedError.code ? { errorCode: parsedError.code } : {}),
-              message: parsedError.message,
-            });
-          }
-        } catch (error) {
-          console.error(`❌ Error querying hierarchy for ${queryCustomerId}:`, error);
-
-          if (accessibleCustomerIds.has(queryCustomerId)) {
-            recordResolutionError(queryCustomerId, {
-              stage: 'hierarchy',
-              queryCustomerId,
-              ...(loginCustomerId ? { loginCustomerId } : {}),
-              message: error instanceof Error ? error.message : String(error),
-            });
-          }
+          const data = (await resp.json()) as { results?: T[] };
+          return data.results || [];
+        } catch (err) {
+          appendError(
+            queryCustomerId,
+            `GAQL exception: ${err instanceof Error ? err.message : String(err)}`
+          );
+          return null;
         }
       };
 
-      while (hierarchyQueue.length > 0) {
-        if (customerIds.every((customerId) => accountMap.has(customerId))) {
-          break;
-        }
+      // ── Phase 1: Direct parallel queries (no login-customer-id) ─────────────
+      await Promise.all(
+        customerIds.map(async (customerId) => {
+          const results = await runGaqlSearch<{
+            customer?: { id?: string | number; descriptiveName?: string; manager?: boolean };
+          }>(customerId, directCustomerQuery);
 
-        const nextContext = hierarchyQueue.shift();
-        if (!nextContext) {
-          break;
-        }
+          if (!results) return;
 
-        await runHierarchyQuery(nextContext.queryCustomerId, nextContext.loginCustomerId);
-      }
+          for (const result of results) {
+            const c = result.customer;
+            if (!c) continue;
+            const id = this.normalizeGoogleAdsCustomerId(c.id);
+            if (id && accessibleCustomerIds.has(id)) {
+              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct');
+            }
+          }
+        })
+      );
 
-      for (const customerId of customerIds) {
-        if (accountMap.has(customerId)) {
-          continue;
-        }
+      // ── Phase 2: Hierarchy queries (self-as-login) ───────────────────────────
+      // Run customer_client hierarchy queries for all accounts not yet resolved by
+      // Phase 1. If an account is a manager, this will also resolve its sub-accounts.
+      // We also run for the configured login customer if not yet discovered.
+      const hierarchyCandidates = new Set<string>([
+        ...customerIds.filter((id) => !accountMap.has(id)),
+        ...(configuredLoginCustomerId ? [configuredLoginCustomerId] : []),
+      ]);
 
-        const directLoginCandidates = Array.from(
+      await Promise.all(
+        Array.from(hierarchyCandidates).map(async (candidateId) => {
+          const results = await runGaqlSearch<{
+            customerClient?: {
+              id?: string | number;
+              descriptiveName?: string;
+              manager?: boolean;
+              level?: number;
+            };
+          }>(candidateId, hierarchyCustomerQuery, candidateId);
+
+          if (!results) return;
+
+          for (const result of results) {
+            const c = result.customerClient;
+            if (!c) continue;
+            const id = this.normalizeGoogleAdsCustomerId(c.id);
+            if (id && accessibleCustomerIds.has(id)) {
+              recordAccount(id, c.descriptiveName, Boolean(c.manager), 'hierarchy');
+            }
+          }
+        })
+      );
+
+      // ── Phase 3: Cross-login fallback ────────────────────────────────────────
+      // For any still-unresolved accounts, cycle through every accessible customer
+      // ID (including discovered managers) as a potential login-customer-id.
+      const stillUnresolved = customerIds.filter((id) => !accountMap.has(id));
+
+      if (stillUnresolved.length > 0) {
+        const loginCandidates = Array.from(
           new Set(
-            [
-              configuredLoginCustomerId,
-              ...Array.from(discoveredManagerIds),
-              customerId,
-              '',
-            ]
-              .map((candidate) => this.normalizeGoogleAdsCustomerId(candidate))
-              .filter((candidate, index, candidates) => candidates.indexOf(candidate) === index)
+            [configuredLoginCustomerId, ...Array.from(managerIds), ...customerIds].filter(Boolean)
           )
         );
 
-        for (const loginCustomerId of directLoginCandidates) {
-          const normalizedLoginCustomerId = loginCustomerId || undefined;
-          recordDirectAttempt(customerId, normalizedLoginCustomerId);
+        await Promise.all(
+          stillUnresolved.map(async (targetId) => {
+            for (const loginId of loginCandidates) {
+              if (accountMap.has(targetId)) break;
+              if (loginId === targetId) continue;
 
-          try {
-            console.log(
-              `🔎 Querying account details for customer ${customerId}${normalizedLoginCustomerId ? ` using login ${normalizedLoginCustomerId}` : ''}...`
-            );
+              const results = await runGaqlSearch<{
+                customer?: { id?: string | number; descriptiveName?: string; manager?: boolean };
+              }>(targetId, directCustomerQuery, loginId);
 
-            const searchResponse = await fetch(
-              `https://googleads.googleapis.com/v22/customers/${customerId}/googleAds:search`,
-              {
-                method: 'POST',
-                headers: this.getGoogleAdsHeaders(accessToken, developerToken, normalizedLoginCustomerId),
-                body: JSON.stringify({
-                  query: directCustomerQuery,
-                }),
-              }
-            );
+              if (!results) continue;
 
-            if (searchResponse.ok) {
-              const searchData = (await searchResponse.json()) as {
-                results?: Array<{
-                  customer?: {
-                    id?: string;
-                    descriptiveName?: string;
-                    manager?: boolean;
-                  };
-                }>;
-              };
-
-              for (const result of searchData.results || []) {
-                const customer = result.customer;
-                if (!customer?.id || !customer.descriptiveName) {
-                  continue;
+              for (const result of results) {
+                const c = result.customer;
+                if (!c) continue;
+                const id = this.normalizeGoogleAdsCustomerId(c.id);
+                if (id && accessibleCustomerIds.has(id) && !accountMap.has(id)) {
+                  recordAccount(id, c.descriptiveName, Boolean(c.manager), 'direct');
                 }
-
-                const normalizedCustomerId = this.normalizeGoogleAdsCustomerId(customer.id);
-                if (!normalizedCustomerId) {
-                  continue;
-                }
-
-                console.log(
-                  `  📝 Account: ${normalizedCustomerId} = "${customer.descriptiveName}" ${customer.manager ? '(Manager)' : ''}`
-                );
-                recordAccount(
-                  normalizedCustomerId,
-                  customer.descriptiveName,
-                  Boolean(customer.manager),
-                  'direct'
-                );
               }
-
-              if (accountMap.has(customerId)) {
-                break;
-              }
-
-              continue;
             }
-
-            const parsedError = this.parseGoogleAdsError(await searchResponse.text());
-
-            if (searchResponse.status === 403) {
-              console.warn(
-                `❌ Access denied while querying details for ${customerId}${normalizedLoginCustomerId ? ` with login ${normalizedLoginCustomerId}` : ''} (403 Permission Denied)`
-              );
-            } else {
-              console.warn(`❌ Failed to query account details for ${customerId}:`, {
-                status: searchResponse.status,
-                error: parsedError.message,
-              });
-            }
-
-            recordResolutionError(customerId, {
-              stage: 'direct',
-              queryCustomerId: customerId,
-              ...(normalizedLoginCustomerId ? { loginCustomerId: normalizedLoginCustomerId } : {}),
-              status: searchResponse.status,
-              ...(parsedError.code ? { errorCode: parsedError.code } : {}),
-              message: parsedError.message,
-            });
-          } catch (error) {
-            console.error(`❌ Error querying account ${customerId}:`, error);
-            recordResolutionError(customerId, {
-              stage: 'direct',
-              queryCustomerId: customerId,
-              ...(normalizedLoginCustomerId ? { loginCustomerId: normalizedLoginCustomerId } : {}),
-              message: error instanceof Error ? error.message : String(error),
-            });
-          }
-        }
+          })
+        );
       }
 
+      // ── Build final accounts list ─────────────────────────────────────────────
       const accounts: GoogleAdsAccount[] = customerIds.map((customerId) => {
-        const accountInfo = accountMap.get(customerId);
-
-        if (accountInfo) {
-          return accountInfo;
-        }
+        const existing = accountMap.get(customerId);
+        if (existing) return existing;
 
         const formattedId = this.formatGoogleAdsCustomerId(customerId);
-        console.warn('Google Ads account name unresolved after all discovery attempts', {
+        console.warn('Google Ads account name unresolved after all discovery phases', {
           customerId,
           formattedId,
-          attemptedHierarchyContexts: Array.from(attemptedHierarchyContexts),
-          attemptedDirectContexts: Array.from(attemptedDirectContexts.get(customerId) || []),
           errors: unresolvedErrors.get(customerId) || [],
         });
 
         return {
           id: customerId,
-          name: `Unnamed Google Ads account • ${formattedId}`,
+          name: `Google Ads account • ${formattedId}`,
           formattedId,
           isManager: false,
-          nameSource: 'fallback',
+          nameSource: 'fallback' as const,
           type: 'google_ads' as const,
           status: 'active' as const,
         };
       });
 
       console.log(`✅ Google Ads fetch complete: ${accounts.length} account(s) found`);
-      accounts.forEach((account) => {
-        console.log(`  📦 ${account.id}: "${account.name}"`);
-      });
+      accounts.forEach((a) => console.log(`  📦 ${a.id}: "${a.name}" [${a.nameSource}]`));
 
       return { accounts };
     } catch (error) {

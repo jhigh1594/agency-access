@@ -3,7 +3,20 @@ import { act, render, waitFor, screen } from '@testing-library/react';
 import { GoogleAssetSelector } from '../GoogleAssetSelector';
 
 vi.mock('../AssetGroup', () => ({
-  AssetGroup: ({ title }: { title: string }) => <div>{title}</div>,
+  AssetGroup: ({
+    title,
+    assets,
+  }: {
+    title: string;
+    assets: Array<{ id: string; name: string; description?: string }>;
+  }) => (
+    <div>
+      <div>{title}</div>
+      {assets.map((asset) => (
+        <div key={asset.id}>{asset.name}</div>
+      ))}
+    </div>
+  ),
 }));
 
 vi.mock('../AssetSelectorStates', () => ({
@@ -52,6 +65,7 @@ describe('GoogleAssetSelector', () => {
       expect(onSelectionChange).toHaveBeenLastCalledWith({
         adAccounts: [],
         availableAssetCount: 2,
+        selectedAssetNames: [],
       });
     });
   });
@@ -143,6 +157,7 @@ describe('GoogleAssetSelector', () => {
       expect(onSelectionChange).toHaveBeenLastCalledWith({
         businessAccounts: [],
         availableAssetCount: 0,
+        selectedAssetNames: [],
       });
     });
 
@@ -164,7 +179,48 @@ describe('GoogleAssetSelector', () => {
     expect(onSelectionChange).toHaveBeenLastCalledWith({
       businessAccounts: [],
       availableAssetCount: 0,
+      selectedAssetNames: [],
     });
     expect(screen.getByText(/No Business Profile Locations found/i)).toBeInTheDocument();
+  });
+
+  it('formats Google Ads asset labels with account title and formatted ID', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({
+        data: [
+          {
+            id: '6449142979',
+            name: 'Pillar AI Agency MCC',
+            formattedId: '644-914-2979',
+            nameSource: 'hierarchy',
+            type: 'google_ads',
+            status: 'active',
+          },
+          {
+            id: '5497559774',
+            name: 'Google Ads account • 549-755-9774',
+            formattedId: '549-755-9774',
+            nameSource: 'fallback',
+            type: 'google_ads',
+            status: 'active',
+          },
+        ],
+        error: null,
+      }),
+    } as any);
+
+    render(
+      <GoogleAssetSelector
+        sessionId="conn-1"
+        accessRequestToken="token-1"
+        product="google_ads"
+        onSelectionChange={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Pillar AI Agency MCC • 644-914-2979')).toBeInTheDocument();
+      expect(screen.getByText('Google Ads account • 549-755-9774')).toBeInTheDocument();
+    });
   });
 });

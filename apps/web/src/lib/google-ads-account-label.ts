@@ -12,7 +12,7 @@ export function getGoogleAdsAccountLabel(account: Pick<GoogleAdsAccount, 'id' | 
   const formattedId = account.formattedId || formatGoogleAdsAccountId(account.id);
 
   if (account.nameSource === 'fallback') {
-    return account.name || `Unnamed Google Ads account • ${formattedId}`;
+    return account.name || `Google Ads account • ${formattedId}`;
   }
 
   return `${account.name} • ${formattedId}`;

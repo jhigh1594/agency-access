@@ -319,7 +319,7 @@ describe('Onboarding Platforms Page', () => {
                 },
                 {
                   id: '5497559774',
-                  name: 'Unnamed Google Ads account • 549-755-9774',
+                  name: 'Google Ads account • 549-755-9774',
                   formattedId: '549-755-9774',
                   nameSource: 'fallback',
                   isManager: false,
@@ -353,7 +353,7 @@ describe('Onboarding Platforms Page', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Pillar AI Agency MCC • 644-914-2979')).toBeInTheDocument();
-        expect(screen.getByText('Unnamed Google Ads account • 549-755-9774')).toBeInTheDocument();
+        expect(screen.getByText('Google Ads account • 549-755-9774')).toBeInTheDocument();
       });
     });
   });
