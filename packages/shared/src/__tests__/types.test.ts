@@ -27,6 +27,7 @@ import {
   MetricTypeSchema,
   AccessRequestUpdatePayloadSchema,
   ClientDetailResponse,
+  GoogleAdsAccount,
 } from '../types';
 
 // Type imports for TypeScript validation
@@ -218,6 +219,24 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       };
       expect(portfolio.id).toBe('biz-123');
       expect(portfolio.name).toBe('My Business');
+    });
+  });
+
+  describe('GoogleAdsAccount Interface', () => {
+    it('supports additive account label metadata for Google Ads discovery', () => {
+      const account: GoogleAdsAccount = {
+        id: '6449142979',
+        name: 'Pillar AI Agency MCC',
+        formattedId: '644-914-2979',
+        isManager: true,
+        nameSource: 'hierarchy',
+        type: 'google_ads',
+        status: 'active',
+      };
+
+      expect(account.formattedId).toBe('644-914-2979');
+      expect(account.isManager).toBe(true);
+      expect(account.nameSource).toBe('hierarchy');
     });
   });
 

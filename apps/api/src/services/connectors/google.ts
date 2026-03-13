@@ -97,6 +97,59 @@ export class GoogleConnector {
     return `${url}${separator}pageToken=${encodeURIComponent(pageToken)}`;
   }
 
+  private normalizeGoogleAdsCustomerId(value: string | number | undefined | null): string {
+    if (value === undefined || value === null) {
+      return '';
+    }
+
+    return String(value).replace(/^customers\//, '').replace(/-/g, '');
+  }
+
+  private getGoogleAdsHeaders(
+    accessToken: string,
+    developerToken: string,
+    loginCustomerId?: string
+  ): Record<string, string> {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+      'developer-token': developerToken,
+      'Content-Type': 'application/json',
+    };
+
+    if (loginCustomerId) {
+      headers['login-customer-id'] = loginCustomerId;
+    }
+
+    return headers;
+  }
+
+  private formatGoogleAdsCustomerId(customerId: string): string {
+    if (customerId.length !== 10) {
+      return customerId;
+    }
+
+    return `${customerId.slice(0, 3)}-${customerId.slice(3, 6)}-${customerId.slice(6)}`;
+  }
+
+  private parseGoogleAdsError(errorText: string): { message: string; code?: string } {
+    try {
+      const errorJson = JSON.parse(errorText);
+      const googleAdsError = errorJson.error?.details?.[0]?.errors?.[0];
+      const errorCode = googleAdsError?.errorCode
+        ? Object.values(googleAdsError.errorCode).find(Boolean)
+        : undefined;
+      const detailMessage = googleAdsError?.message;
+      const message = detailMessage || errorJson.error?.message || errorText.substring(0, 200);
+
+      return {
+        message,
+        ...(typeof errorCode === 'string' ? { code: errorCode } : {}),
+      };
+    } catch {
+      return { message: errorText.substring(0, 200) };
+    }
+  }
+
   /**
    * Generate OAuth authorization URL with combined scopes
    */
@@ -318,6 +371,7 @@ export class GoogleConnector {
     try {
       console.log('🔍 Starting Google Ads account fetch...');
       const developerToken = env.GOOGLE_ADS_DEVELOPER_TOKEN;
+      const configuredLoginCustomerId = this.normalizeGoogleAdsCustomerId(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID);
 
       if (!developerToken) {
         console.warn('GOOGLE_ADS_DEVELOPER_TOKEN not configured - Google Ads accounts will not be available');
@@ -328,11 +382,7 @@ export class GoogleConnector {
         'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'developer-token': developerToken,
-            'Content-Type': 'application/json',
-          },
+          headers: this.getGoogleAdsHeaders(accessToken, developerToken, configuredLoginCustomerId || undefined),
         }
       );
 
@@ -378,27 +428,260 @@ export class GoogleConnector {
         const id = resourceName.split('/').pop() || resourceName;
         return id.replace(/-/g, '');
       });
+      const accessibleCustomerIds = new Set(customerIds);
 
       console.log(`📋 Found ${customerIds.length} accessible Google Ads account(s):`, customerIds);
 
-      const accountMap = new Map<string, { id: string; name: string }>();
+      const accountMap = new Map<string, GoogleAdsAccount>();
+      const discoveredManagerIds = new Set<string>();
+      const attemptedHierarchyContexts = new Set<string>();
+      const attemptedDirectContexts = new Map<string, Set<string>>();
+      const unresolvedErrors = new Map<
+        string,
+        Array<{
+          stage: 'hierarchy' | 'direct';
+          queryCustomerId: string;
+          loginCustomerId?: string;
+          status?: number;
+          errorCode?: string;
+          message: string;
+        }>
+      >();
+      const directCustomerQuery =
+        'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1';
+      const hierarchyCustomerQuery =
+        'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1';
+      const buildContextLabel = (queryCustomerId: string, loginCustomerId?: string) =>
+        `${queryCustomerId}|${loginCustomerId || 'none'}`;
 
-      if (customerIds.length > 0) {
-        const accountQueries = customerIds.map(async (customerId) => {
+      const recordAccount = (
+        customerId: string,
+        name: string,
+        isManager: boolean,
+        nameSource: 'hierarchy' | 'direct'
+      ) => {
+        if (!customerId || !name || accountMap.has(customerId)) {
+          return;
+        }
+
+        accountMap.set(customerId, {
+          id: customerId,
+          name,
+          formattedId: this.formatGoogleAdsCustomerId(customerId),
+          isManager,
+          nameSource,
+          type: 'google_ads',
+          status: 'active',
+        });
+
+        if (isManager) {
+          discoveredManagerIds.add(customerId);
+        }
+      };
+
+      const recordDirectAttempt = (customerId: string, loginCustomerId?: string) => {
+        const attempts = attemptedDirectContexts.get(customerId) || new Set<string>();
+        attempts.add(loginCustomerId || 'none');
+        attemptedDirectContexts.set(customerId, attempts);
+      };
+
+      const recordResolutionError = (
+        customerId: string,
+        error: {
+          stage: 'hierarchy' | 'direct';
+          queryCustomerId: string;
+          loginCustomerId?: string;
+          status?: number;
+          errorCode?: string;
+          message: string;
+        }
+      ) => {
+        const errors = unresolvedErrors.get(customerId) || [];
+        errors.push(error);
+        unresolvedErrors.set(customerId, errors);
+      };
+
+      const hierarchyQueue: Array<{ queryCustomerId: string; loginCustomerId?: string }> = [];
+      const seenHierarchyContexts = new Set<string>();
+      const enqueueHierarchyContext = (queryCustomerId?: string, loginCustomerId?: string) => {
+        const normalizedQueryCustomerId = this.normalizeGoogleAdsCustomerId(queryCustomerId);
+        const normalizedLoginCustomerId = this.normalizeGoogleAdsCustomerId(loginCustomerId);
+
+        if (!normalizedQueryCustomerId) {
+          return;
+        }
+
+        const contextKey = buildContextLabel(normalizedQueryCustomerId, normalizedLoginCustomerId || undefined);
+        if (seenHierarchyContexts.has(contextKey)) {
+          return;
+        }
+
+        seenHierarchyContexts.add(contextKey);
+        hierarchyQueue.push({
+          queryCustomerId: normalizedQueryCustomerId,
+          ...(normalizedLoginCustomerId ? { loginCustomerId: normalizedLoginCustomerId } : {}),
+        });
+      };
+
+      if (configuredLoginCustomerId) {
+        enqueueHierarchyContext(configuredLoginCustomerId, configuredLoginCustomerId);
+      }
+
+      for (const customerId of customerIds) {
+        if (configuredLoginCustomerId) {
+          enqueueHierarchyContext(customerId, configuredLoginCustomerId);
+        }
+        enqueueHierarchyContext(customerId, customerId);
+        enqueueHierarchyContext(customerId);
+      }
+
+      const runHierarchyQuery = async (
+        queryCustomerId: string,
+        loginCustomerId?: string
+      ): Promise<void> => {
+        attemptedHierarchyContexts.add(buildContextLabel(queryCustomerId, loginCustomerId));
+
+        try {
+          console.log(
+            `🌳 Querying account hierarchy for customer ${queryCustomerId}${loginCustomerId ? ` using login ${loginCustomerId}` : ''}...`
+          );
+
+          const searchResponse = await fetch(
+            `https://googleads.googleapis.com/v22/customers/${queryCustomerId}/googleAds:search`,
+            {
+              method: 'POST',
+              headers: this.getGoogleAdsHeaders(accessToken, developerToken, loginCustomerId),
+              body: JSON.stringify({
+                query: hierarchyCustomerQuery,
+              }),
+            }
+          );
+
+          if (searchResponse.ok) {
+            const searchData = (await searchResponse.json()) as {
+              results?: Array<{
+                customerClient?: {
+                  id?: string;
+                  descriptiveName?: string;
+                  manager?: boolean;
+                  level?: number;
+                };
+              }>;
+            };
+
+            for (const result of searchData.results || []) {
+              const customer = result.customerClient;
+              if (!customer?.id || !customer.descriptiveName) {
+                continue;
+              }
+
+              const normalizedCustomerId = this.normalizeGoogleAdsCustomerId(customer.id);
+              if (!accessibleCustomerIds.has(normalizedCustomerId)) {
+                continue;
+              }
+
+              console.log(
+                `  🌿 Account: ${normalizedCustomerId} = "${customer.descriptiveName}" ${customer.manager ? '(Manager)' : ''}`
+              );
+              recordAccount(
+                normalizedCustomerId,
+                customer.descriptiveName,
+                Boolean(customer.manager),
+                'hierarchy'
+              );
+            }
+
+            for (const managerId of Array.from(discoveredManagerIds)) {
+              enqueueHierarchyContext(managerId, managerId);
+            }
+
+            return;
+          }
+
+          const parsedError = this.parseGoogleAdsError(await searchResponse.text());
+
+          if (searchResponse.status === 403) {
+            console.warn(
+              `❌ Access denied while querying hierarchy for ${queryCustomerId}${loginCustomerId ? ` with login ${loginCustomerId}` : ''} (403 Permission Denied)`
+            );
+          } else {
+            console.warn(`❌ Failed to query account hierarchy for ${queryCustomerId}:`, {
+              status: searchResponse.status,
+              error: parsedError.message,
+            });
+          }
+
+          if (accessibleCustomerIds.has(queryCustomerId)) {
+            recordResolutionError(queryCustomerId, {
+              stage: 'hierarchy',
+              queryCustomerId,
+              ...(loginCustomerId ? { loginCustomerId } : {}),
+              status: searchResponse.status,
+              ...(parsedError.code ? { errorCode: parsedError.code } : {}),
+              message: parsedError.message,
+            });
+          }
+        } catch (error) {
+          console.error(`❌ Error querying hierarchy for ${queryCustomerId}:`, error);
+
+          if (accessibleCustomerIds.has(queryCustomerId)) {
+            recordResolutionError(queryCustomerId, {
+              stage: 'hierarchy',
+              queryCustomerId,
+              ...(loginCustomerId ? { loginCustomerId } : {}),
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
+        }
+      };
+
+      while (hierarchyQueue.length > 0) {
+        if (customerIds.every((customerId) => accountMap.has(customerId))) {
+          break;
+        }
+
+        const nextContext = hierarchyQueue.shift();
+        if (!nextContext) {
+          break;
+        }
+
+        await runHierarchyQuery(nextContext.queryCustomerId, nextContext.loginCustomerId);
+      }
+
+      for (const customerId of customerIds) {
+        if (accountMap.has(customerId)) {
+          continue;
+        }
+
+        const directLoginCandidates = Array.from(
+          new Set(
+            [
+              configuredLoginCustomerId,
+              ...Array.from(discoveredManagerIds),
+              customerId,
+              '',
+            ]
+              .map((candidate) => this.normalizeGoogleAdsCustomerId(candidate))
+              .filter((candidate, index, candidates) => candidates.indexOf(candidate) === index)
+          )
+        );
+
+        for (const loginCustomerId of directLoginCandidates) {
+          const normalizedLoginCustomerId = loginCustomerId || undefined;
+          recordDirectAttempt(customerId, normalizedLoginCustomerId);
+
           try {
-            console.log(`🔎 Querying account details for customer ${customerId}...`);
+            console.log(
+              `🔎 Querying account details for customer ${customerId}${normalizedLoginCustomerId ? ` using login ${normalizedLoginCustomerId}` : ''}...`
+            );
 
             const searchResponse = await fetch(
               `https://googleads.googleapis.com/v22/customers/${customerId}/googleAds:search`,
               {
                 method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${accessToken}`,
-                  'developer-token': developerToken,
-                  'Content-Type': 'application/json',
-                },
+                headers: this.getGoogleAdsHeaders(accessToken, developerToken, normalizedLoginCustomerId),
                 body: JSON.stringify({
-                  query: 'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1',
+                  query: directCustomerQuery,
                 }),
               }
             );
@@ -420,72 +703,84 @@ export class GoogleConnector {
                   continue;
                 }
 
-                const normalizedCustomerId = customer.id.toString().replace(/^customers\//, '').replace(/-/g, '');
+                const normalizedCustomerId = this.normalizeGoogleAdsCustomerId(customer.id);
                 if (!normalizedCustomerId) {
                   continue;
                 }
 
-                console.log(`  📝 Account: ${normalizedCustomerId} = "${customer.descriptiveName}" ${customer.manager ? '(Manager)' : ''}`);
-                accountMap.set(normalizedCustomerId, {
-                  id: normalizedCustomerId,
-                  name: customer.descriptiveName,
-                });
+                console.log(
+                  `  📝 Account: ${normalizedCustomerId} = "${customer.descriptiveName}" ${customer.manager ? '(Manager)' : ''}`
+                );
+                recordAccount(
+                  normalizedCustomerId,
+                  customer.descriptiveName,
+                  Boolean(customer.manager),
+                  'direct'
+                );
               }
 
-              return;
+              if (accountMap.has(customerId)) {
+                break;
+              }
+
+              continue;
             }
 
-            const errorText = await searchResponse.text();
-            let errorMessage = '';
-            try {
-              const errorJson = JSON.parse(errorText);
-              errorMessage = errorJson.error?.message || '';
-            } catch {
-              errorMessage = errorText.substring(0, 200);
-            }
+            const parsedError = this.parseGoogleAdsError(await searchResponse.text());
 
             if (searchResponse.status === 403) {
-              console.warn(`❌ Access denied while querying details for ${customerId} (403 Permission Denied)`);
-              console.warn('   Falling back to the account ID label because the detail lookup is not authorized.');
-              console.warn('   This does not necessarily indicate a developer token access-level problem.', {
-                customerId,
-                error: errorMessage,
+              console.warn(
+                `❌ Access denied while querying details for ${customerId}${normalizedLoginCustomerId ? ` with login ${normalizedLoginCustomerId}` : ''} (403 Permission Denied)`
+              );
+            } else {
+              console.warn(`❌ Failed to query account details for ${customerId}:`, {
+                status: searchResponse.status,
+                error: parsedError.message,
               });
-              return;
             }
 
-            console.warn(`❌ Failed to query account ${customerId}:`, {
+            recordResolutionError(customerId, {
+              stage: 'direct',
+              queryCustomerId: customerId,
+              ...(normalizedLoginCustomerId ? { loginCustomerId: normalizedLoginCustomerId } : {}),
               status: searchResponse.status,
-              error: errorMessage,
+              ...(parsedError.code ? { errorCode: parsedError.code } : {}),
+              message: parsedError.message,
             });
           } catch (error) {
             console.error(`❌ Error querying account ${customerId}:`, error);
+            recordResolutionError(customerId, {
+              stage: 'direct',
+              queryCustomerId: customerId,
+              ...(normalizedLoginCustomerId ? { loginCustomerId: normalizedLoginCustomerId } : {}),
+              message: error instanceof Error ? error.message : String(error),
+            });
           }
-        });
-
-        await Promise.all(accountQueries);
+        }
       }
 
       const accounts: GoogleAdsAccount[] = customerIds.map((customerId) => {
         const accountInfo = accountMap.get(customerId);
 
         if (accountInfo) {
-          return {
-            id: customerId,
-            name: accountInfo.name,
-            type: 'google_ads' as const,
-            status: 'active' as const,
-          };
+          return accountInfo;
         }
 
-        const formattedId =
-          customerId.length === 10
-            ? `${customerId.slice(0, 3)}-${customerId.slice(3, 6)}-${customerId.slice(6)}`
-            : customerId;
+        const formattedId = this.formatGoogleAdsCustomerId(customerId);
+        console.warn('Google Ads account name unresolved after all discovery attempts', {
+          customerId,
+          formattedId,
+          attemptedHierarchyContexts: Array.from(attemptedHierarchyContexts),
+          attemptedDirectContexts: Array.from(attemptedDirectContexts.get(customerId) || []),
+          errors: unresolvedErrors.get(customerId) || [],
+        });
 
         return {
           id: customerId,
-          name: `Account ${formattedId}`,
+          name: `Unnamed Google Ads account • ${formattedId}`,
+          formattedId,
+          isManager: false,
+          nameSource: 'fallback',
           type: 'google_ads' as const,
           status: 'active' as const,
         };

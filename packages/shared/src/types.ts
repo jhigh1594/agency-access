@@ -835,6 +835,9 @@ export interface MetaAssetSelection {
 export interface GoogleAdsAccount {
   id: string;
   name: string;
+  formattedId?: string;
+  isManager?: boolean;
+  nameSource?: 'hierarchy' | 'direct' | 'fallback';
   type: 'google_ads';
   status: string;
 }

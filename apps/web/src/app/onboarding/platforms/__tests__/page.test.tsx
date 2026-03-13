@@ -283,6 +283,79 @@ describe('Onboarding Platforms Page', () => {
       expect(mutateFn).not.toHaveBeenCalled();
       expect(screen.getByText(/snapchat business email/i)).toBeInTheDocument();
     });
+
+    it('shows Google Ads account titles with formatted IDs in the account list', async () => {
+      const user = userEvent.setup();
+
+      mockUseQuery.mockImplementation((options: any) => {
+        if (options.queryKey?.[0] === 'agency-platforms') {
+          return {
+            data: [
+              {
+                platform: 'google',
+                name: 'Google',
+                connected: true,
+                status: 'active',
+                connectedAt: new Date().toISOString(),
+              },
+            ],
+            isLoading: false,
+            error: null,
+          };
+        }
+
+        if (options.queryKey?.[0] === 'google-accounts') {
+          return {
+            data: {
+              adsAccounts: [
+                {
+                  id: '6449142979',
+                  name: 'Pillar AI Agency MCC',
+                  formattedId: '644-914-2979',
+                  nameSource: 'hierarchy',
+                  isManager: true,
+                  type: 'google_ads',
+                  status: 'active',
+                },
+                {
+                  id: '5497559774',
+                  name: 'Unnamed Google Ads account • 549-755-9774',
+                  formattedId: '549-755-9774',
+                  nameSource: 'fallback',
+                  isManager: false,
+                  type: 'google_ads',
+                  status: 'active',
+                },
+              ],
+              analyticsProperties: [],
+              businessAccounts: [],
+              tagManagerContainers: [],
+              searchConsoleSites: [],
+              merchantCenterAccounts: [],
+              hasAccess: true,
+            },
+            isLoading: false,
+            refetch: vi.fn(),
+          };
+        }
+
+        return {
+          data: undefined,
+          isLoading: false,
+          error: null,
+          refetch: vi.fn(),
+        };
+      });
+
+      render(<PlatformsPage />);
+
+      await user.click(screen.getByRole('button', { name: /view accounts/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Pillar AI Agency MCC • 644-914-2979')).toBeInTheDocument();
+        expect(screen.getByText('Unnamed Google Ads account • 549-755-9774')).toBeInTheDocument();
+      });
+    });
   });
 
   describe('OAuth Flow Initiation', () => {

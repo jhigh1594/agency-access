@@ -16,12 +16,16 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
+import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 
 // Google account types
 interface GoogleAdsAccount {
   id: string;
   name: string;
+  formattedId?: string;
+  isManager?: boolean;
+  nameSource?: 'hierarchy' | 'direct' | 'fallback';
   type: 'google_ads';
   status: string;
 }
@@ -417,7 +421,7 @@ export default function PlatformsPage() {
                       <div className="space-y-2">
                         {googleAccounts.adsAccounts.map((account) => (
                           <div key={account.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium">{account.name}</p>
+                            <p className="font-medium">{getGoogleAdsAccountLabel(account)}</p>
                             <p className="text-sm text-gray-600">ID: {account.id}</p>
                             <span className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs mt-1">
                               {account.status}

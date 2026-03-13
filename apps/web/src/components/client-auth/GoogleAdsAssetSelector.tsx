@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { Loader2 } from 'lucide-react';
+import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 
 interface GoogleAdsAccount {
   id: string;
@@ -111,7 +112,7 @@ export function GoogleAdsAssetSelector({
   // Convert accounts to Asset format
   const adAccountAssets: Asset[] = accounts.map((account) => ({
     id: account.id,
-    name: account.name,
+    name: getGoogleAdsAccountLabel(account as any),
     description: account.status,
   }));
 

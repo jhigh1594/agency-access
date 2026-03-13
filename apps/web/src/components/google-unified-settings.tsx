@@ -5,14 +5,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { 
   GoogleAssetSettings,
-  GoogleAdsAccount,
-  GoogleAnalyticsProperty,
-  GoogleBusinessAccount,
-  GoogleTagManagerContainer,
-  GoogleSearchConsoleSite,
-  GoogleMerchantCenterAccount,
   GoogleAccountsResponse
 } from '@agency-platform/shared';
+import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { PlatformIcon } from './ui/platform-icon';
 import { Button } from './ui/button';
 import { 
@@ -20,7 +15,6 @@ import {
   ChevronUp,
   ChevronDown,
   Trash2,
-  X,
   AlertCircle,
   Info,
   CircleDollarSign,
@@ -384,11 +378,30 @@ interface ProductCardProps {
 }
 
 function getAccountDisplayName(account: any): string {
+  if (account?.type === 'google_ads') {
+    return getGoogleAdsAccountLabel(account);
+  }
+
   return account?.displayName || account?.name || account?.url || '';
 }
 
 function getAccountId(account: any): string {
   return account?.id || account?.url || '';
+}
+
+function getAccountOptionLabel(account: any): string {
+  const id = getAccountId(account);
+  const name = getAccountDisplayName(account);
+
+  if (!id) {
+    return name;
+  }
+
+  if (account?.type === 'google_ads') {
+    return name;
+  }
+
+  return `${name} (${id})`;
 }
 
 function ProductCard({
@@ -436,10 +449,9 @@ function ProductCard({
                   <option value="">{placeholder}</option>
                   {accounts.map((account) => {
                     const id = getAccountId(account);
-                    const name = getAccountDisplayName(account);
                     return (
                       <option key={id} value={id}>
-                        {name} ({id})
+                        {getAccountOptionLabel(account)}
                       </option>
                     );
                   })}

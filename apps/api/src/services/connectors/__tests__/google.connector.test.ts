@@ -10,12 +10,14 @@ vi.mock('../../../lib/env', () => ({
     API_URL: 'http://localhost:3001',
     PORT: 3001,
     GOOGLE_ADS_DEVELOPER_TOKEN: undefined,
+    GOOGLE_ADS_LOGIN_CUSTOMER_ID: undefined,
   },
 }));
 
 describe('GoogleConnector', () => {
   const accessToken = 'test-access-token';
   const originalDeveloperToken = env.GOOGLE_ADS_DEVELOPER_TOKEN;
+  const originalLoginCustomerId = env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -24,6 +26,7 @@ describe('GoogleConnector', () => {
 
   afterEach(() => {
     env.GOOGLE_ADS_DEVELOPER_TOKEN = originalDeveloperToken;
+    env.GOOGLE_ADS_LOGIN_CUSTOMER_ID = originalLoginCustomerId;
   });
 
   it('includes Search Console webmasters scope in the default auth URL', () => {
@@ -373,7 +376,10 @@ describe('GoogleConnector', () => {
     expect(result.adsAccounts).toEqual([
       {
         id: '6449142979',
-        name: 'Account 644-914-2979',
+        name: 'Unnamed Google Ads account • 644-914-2979',
+        formattedId: '644-914-2979',
+        isManager: false,
+        nameSource: 'fallback',
         type: 'google_ads',
         status: 'active',
       },
@@ -434,9 +440,251 @@ describe('GoogleConnector', () => {
       {
         id: '6449142979',
         name: 'Pillar AI Agency MCC',
+        formattedId: '644-914-2979',
+        isManager: true,
+        nameSource: 'direct',
         type: 'google_ads',
         status: 'active',
       },
     ]);
+  });
+
+  it('falls back to customer_client hierarchy names when direct customer lookups are not accessible', async () => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-developer-token';
+    const connector = new GoogleConnector();
+
+    vi.mocked(fetch).mockImplementation(async (input: any, init?: any) => {
+      const url = String(input);
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers:listAccessibleCustomers')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            resourceNames: ['customers/6449142979', 'customers/5497559774'],
+          }),
+        } as any;
+      }
+
+      if (
+        url.includes('https://googleads.googleapis.com/v22/customers/6449142979/googleAds:search') &&
+        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1'
+      ) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            results: [
+              {
+                customerClient: {
+                  id: '6449142979',
+                  descriptiveName: 'Pillar AI Agency MCC',
+                  manager: true,
+                  level: 0,
+                },
+              },
+              {
+                customerClient: {
+                  id: '5497559774',
+                  descriptiveName: 'Client Alpha',
+                  manager: false,
+                  level: 1,
+                },
+              },
+            ],
+          }),
+        } as any;
+      }
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers/') && body?.query === 'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1') {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          text: async () => JSON.stringify({
+            error: {
+              code: 403,
+              message: 'Permission denied',
+            },
+          }),
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not Found',
+        json: async () => ({}),
+      } as any;
+    });
+
+    const result = await connector.getAllGoogleAccounts(accessToken);
+
+    expect(result.adsAccounts).toEqual([
+      {
+        id: '6449142979',
+        name: 'Pillar AI Agency MCC',
+        formattedId: '644-914-2979',
+        isManager: true,
+        nameSource: 'hierarchy',
+        type: 'google_ads',
+        status: 'active',
+      },
+      {
+        id: '5497559774',
+        name: 'Client Alpha',
+        formattedId: '549-755-9774',
+        isManager: false,
+        nameSource: 'hierarchy',
+        type: 'google_ads',
+        status: 'active',
+      },
+    ]);
+  });
+
+  it('retries hierarchy discovery with alternate login customer contexts when the configured login customer is invalid', async () => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-developer-token';
+    env.GOOGLE_ADS_LOGIN_CUSTOMER_ID = '9999999999';
+    const connector = new GoogleConnector();
+
+    vi.mocked(fetch).mockImplementation(async (input: any, init?: any) => {
+      const url = String(input);
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      const headers = init?.headers as Record<string, string> | undefined;
+      const loginCustomerId = headers?.['login-customer-id'];
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers:listAccessibleCustomers')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            resourceNames: ['customers/1111111111', 'customers/2222222222'],
+          }),
+        } as any;
+      }
+
+      if (
+        url.includes('https://googleads.googleapis.com/v22/customers/1111111111/googleAds:search') &&
+        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1'
+      ) {
+        if (loginCustomerId === '9999999999') {
+          return {
+            ok: false,
+            status: 403,
+            statusText: 'Forbidden',
+            text: async () => JSON.stringify({
+              error: {
+                code: 403,
+                message: 'Permission denied',
+              },
+            }),
+          } as any;
+        }
+
+        if (loginCustomerId === '1111111111') {
+          return {
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            json: async () => ({
+              results: [
+                {
+                  customerClient: {
+                    id: '1111111111',
+                    descriptiveName: 'Agency MCC',
+                    manager: true,
+                    level: 0,
+                  },
+                },
+                {
+                  customerClient: {
+                    id: '2222222222',
+                    descriptiveName: 'Client Bravo',
+                    manager: false,
+                    level: 1,
+                  },
+                },
+              ],
+            }),
+          } as any;
+        }
+      }
+
+      if (
+        url.includes('https://googleads.googleapis.com/v22/customers/2222222222/googleAds:search') &&
+        body?.query === 'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level FROM customer_client WHERE customer_client.level <= 1'
+      ) {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          text: async () => JSON.stringify({
+            error: {
+              code: 403,
+              message: 'Permission denied',
+            },
+          }),
+        } as any;
+      }
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers/') && body?.query === 'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1') {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          text: async () => JSON.stringify({
+            error: {
+              code: 403,
+              message: 'Permission denied',
+            },
+          }),
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not Found',
+        json: async () => ({}),
+      } as any;
+    });
+
+    const result = await connector.getAllGoogleAccounts(accessToken);
+
+    expect(result.adsAccounts).toEqual([
+      {
+        id: '1111111111',
+        name: 'Agency MCC',
+        formattedId: '111-111-1111',
+        isManager: true,
+        nameSource: 'hierarchy',
+        type: 'google_ads',
+        status: 'active',
+      },
+      {
+        id: '2222222222',
+        name: 'Client Bravo',
+        formattedId: '222-222-2222',
+        isManager: false,
+        nameSource: 'hierarchy',
+        type: 'google_ads',
+        status: 'active',
+      },
+    ]);
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      'https://googleads.googleapis.com/v22/customers/1111111111/googleAds:search',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'login-customer-id': '1111111111',
+        }),
+      })
+    );
   });
 });

@@ -26,6 +26,7 @@ vi.mock('../../services/agency-platform.service.js', () => ({
     revokeConnection: vi.fn(),
     refreshConnection: vi.fn(),
     getValidToken: vi.fn(),
+    updateConnectionMetadata: vi.fn(),
   },
 }));
 
@@ -97,10 +98,20 @@ const mockMetaConnectorInstance = {
   getTokenMetadata: vi.fn(),
 };
 
+const mockGoogleConnectorInstance = {
+  getAllGoogleAccounts: vi.fn(),
+};
+
 // Mock MetaConnector class to return shared instance
 vi.mock('../../services/connectors/meta.js', () => ({
   MetaConnector: vi.fn(function() {
     return mockMetaConnectorInstance;
+  }),
+}));
+
+vi.mock('../../services/connectors/google.js', () => ({
+  GoogleConnector: vi.fn(function() {
+    return mockGoogleConnectorInstance;
   }),
 }));
 
@@ -142,7 +153,7 @@ describe('Agency Platforms Routes', () => {
       }
       return null;
     });
-  });
+  }, 20000);
 
   afterEach(async () => {
     await app.close();
@@ -457,6 +468,92 @@ describe('Agency Platforms Routes', () => {
           code: 'INVALID_TOKEN',
           message: 'Google token is invalid. Please reconnect Google.',
         },
+      });
+    });
+
+    it('returns enriched Google Ads metadata and persists it during refresh', async () => {
+      vi.mocked(agencyPlatformService.getConnection).mockResolvedValue({
+        data: {
+          id: 'conn-1',
+          agencyId: 'agency-1',
+          platform: 'google',
+          status: 'active',
+          metadata: {},
+        } as any,
+        error: null,
+      });
+      vi.mocked(agencyPlatformService.getValidToken).mockResolvedValue({
+        data: 'google-access-token',
+        error: null,
+      });
+      vi.mocked(agencyPlatformService.updateConnectionMetadata).mockResolvedValue({
+        data: { success: true },
+        error: null,
+      });
+      mockGoogleConnectorInstance.getAllGoogleAccounts.mockResolvedValue({
+        adsAccounts: [
+          {
+            id: '6449142979',
+            name: 'Pillar AI Agency MCC',
+            formattedId: '644-914-2979',
+            isManager: true,
+            nameSource: 'hierarchy',
+            type: 'google_ads',
+            status: 'active',
+          },
+          {
+            id: '5497559774',
+            name: 'Unnamed Google Ads account • 549-755-9774',
+            formattedId: '549-755-9774',
+            isManager: false,
+            nameSource: 'fallback',
+            type: 'google_ads',
+            status: 'active',
+          },
+        ],
+        analyticsProperties: [],
+        businessAccounts: [],
+        tagManagerContainers: [],
+        searchConsoleSites: [],
+        merchantCenterAccounts: [],
+        hasAccess: true,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/agency-platforms/google/accounts?agencyId=agency-1&refresh=true',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data.adsAccounts).toEqual([
+        expect.objectContaining({
+          id: '6449142979',
+          formattedId: '644-914-2979',
+          isManager: true,
+          nameSource: 'hierarchy',
+        }),
+        expect.objectContaining({
+          id: '5497559774',
+          formattedId: '549-755-9774',
+          nameSource: 'fallback',
+        }),
+      ]);
+      expect(agencyPlatformService.updateConnectionMetadata).toHaveBeenCalledWith('agency-1', 'google', {
+        googleAccounts: expect.objectContaining({
+          adsAccounts: expect.arrayContaining([
+            expect.objectContaining({
+              id: '6449142979',
+              formattedId: '644-914-2979',
+              isManager: true,
+              nameSource: 'hierarchy',
+            }),
+            expect.objectContaining({
+              id: '5497559774',
+              formattedId: '549-755-9774',
+              nameSource: 'fallback',
+            }),
+          ]),
+        }),
       });
     });
   });

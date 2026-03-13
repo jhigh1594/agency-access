@@ -241,4 +241,73 @@ describe('GoogleUnifiedSettings', () => {
       expect(checkbox).not.toBeChecked();
     }
   });
+
+  it('renders Google Ads dropdown labels with account title and formatted ID, including fallback labels', async () => {
+    const fetchMock = vi.fn(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('/agency-platforms/google/accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              adsAccounts: [
+                {
+                  id: '6449142979',
+                  name: 'Pillar AI Agency MCC',
+                  formattedId: '644-914-2979',
+                  nameSource: 'hierarchy',
+                  isManager: true,
+                  type: 'google_ads',
+                  status: 'active',
+                },
+                {
+                  id: '5497559774',
+                  name: 'Unnamed Google Ads account • 549-755-9774',
+                  formattedId: '549-755-9774',
+                  nameSource: 'fallback',
+                  isManager: false,
+                  type: 'google_ads',
+                  status: 'active',
+                },
+              ],
+              analyticsProperties: [],
+              businessAccounts: [],
+              tagManagerContainers: [],
+              searchConsoleSites: [],
+              merchantCenterAccounts: [],
+              hasAccess: true,
+            },
+          }),
+        } as any;
+      }
+
+      if (url.includes('/agency-platforms/google/asset-settings')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              googleAds: { enabled: true, requestManageUsers: false },
+              googleAnalytics: { enabled: false, requestManageUsers: false },
+              googleBusinessProfile: { enabled: false, requestManageUsers: false },
+              googleTagManager: { enabled: false, requestManageUsers: false },
+              googleSearchConsole: { enabled: false, requestManageUsers: false },
+              googleMerchantCenter: { enabled: false, requestManageUsers: false },
+            },
+          }),
+        } as any;
+      }
+
+      return { ok: true, json: async () => ({ data: null }) } as any;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
+      expect(container.textContent).toContain('Unnamed Google Ads account • 549-755-9774');
+    });
+  });
 });

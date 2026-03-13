@@ -89,6 +89,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   // Legacy: Google Ads-specific credentials (optional, for API access)
   GOOGLE_ADS_DEVELOPER_TOKEN: z.string().optional(),
+  GOOGLE_ADS_LOGIN_CUSTOMER_ID: z.string().optional(),
 
   // TikTok OAuth
   TIKTOK_CLIENT_ID: z.string().optional(),

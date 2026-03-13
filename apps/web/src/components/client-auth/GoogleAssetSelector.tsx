@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
+import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 
 interface GoogleAssetSelectorProps {
   sessionId: string; // connectionId
@@ -176,7 +177,11 @@ export function GoogleAssetSelector({
     // Include selected asset names so Step 3 can display them
     selection.selectedAssetNames = assets
       .filter((a) => selectedIds.has(a.id))
-      .map((a) => a.displayName || a.name || a.username || a.url || `Account ${a.id}`);
+      .map((a) =>
+        product === 'google_ads'
+          ? getGoogleAdsAccountLabel(a)
+          : a.displayName || a.name || a.username || a.url || `Account ${a.id}`
+      );
     onSelectionChange(selection);
   }, [assets, error, isLoading, onSelectionChange, product, selectedIds]);
 
@@ -209,6 +214,9 @@ export function GoogleAssetSelector({
       // Tag Manager: Show container name, description as account name
       name = asset.name || `Container ${asset.id}`;
       description = asset.accountName ? `Account: ${asset.accountName}` : '';
+    } else if (product === 'google_ads') {
+      name = getGoogleAdsAccountLabel(asset);
+      description = asset.status || '';
     } else if (product === 'google_search_console') {
       // Search Console: Show clean URL, description as permission level
       const url = asset.url || asset.id || '';
