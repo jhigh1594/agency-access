@@ -362,7 +362,7 @@ export function MetaAssetSelector({
               type="button"
               onClick={handleBusinessSelectionLoad}
               disabled={!pendingBusinessId || isLoading}
-              className="inline-flex min-h-[48px] items-center justify-center bg-[var(--ink)] px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground"
+              className="inline-flex min-h-[48px] items-center justify-center bg-ink px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground"
             >
               Load accounts
             </button>
