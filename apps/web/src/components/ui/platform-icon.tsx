@@ -16,12 +16,11 @@ const BRANDFETCH_CLIENT_ID = process.env.NEXT_PUBLIC_BRANDFETCH_CLIENT_ID;
 
 interface PlatformIconProps {
   platform: Platform | string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showLabel?: boolean;
 }
 
 const SIZE_CONFIG = {
-  xs: { width: 20, height: 20, textSize: 'text-xs' },
   sm: { width: 24, height: 24, textSize: 'text-xs' },
   md: { width: 32, height: 32, textSize: 'text-sm' },
   lg: { width: 48, height: 48, textSize: 'text-base' },

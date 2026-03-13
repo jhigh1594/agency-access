@@ -250,8 +250,8 @@ export function GoogleAssetSelector({
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         icon={
-          <div className="w-10 h-10 border-2 border-black dark:border-white bg-coral flex items-center justify-center">
-            <span className="text-white text-lg">📊</span>
+          <div className="h-8 w-8 border-2 border-black bg-coral flex items-center justify-center dark:border-white">
+            <span className="text-base text-white">📊</span>
           </div>
         }
       />

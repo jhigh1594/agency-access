@@ -771,7 +771,7 @@ export function PlatformAuthWizard({
               </div>
             )}
 
-            <div className="space-y-7">
+            <div className="space-y-10">
               {/* Show all products that require asset selection */}
               {products
                 .filter((p) => supportsAssetSelection(p.product))
@@ -795,7 +795,7 @@ export function PlatformAuthWizard({
                   return (
                     <div key={p.product} className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <PlatformIcon platform={p.product as Platform} size="xs" />
+                        <PlatformIcon platform={p.product as Platform} size="sm" />
                         <h4 className="text-sm font-semibold text-[var(--ink)] font-display">{productName}</h4>
                       </div>
 
