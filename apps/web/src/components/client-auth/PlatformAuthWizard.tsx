@@ -509,6 +509,7 @@ export function PlatformAuthWizard({
             if (shareData.success) {
               setCurrentStep(3);
             } else {
+              setChooseAccountsExpanded(false);
               setGrantAccessExpanded(true);
             }
           } catch (shareError) {
@@ -517,6 +518,7 @@ export function PlatformAuthWizard({
                 ? shareError.message
                 : 'Failed to automate TikTok Business Center sharing';
             setTikTokShareError(shareErrorMessage);
+            setChooseAccountsExpanded(false);
             setGrantAccessExpanded(true);
           } finally {
             setIsTikTokSharing(false);
@@ -524,14 +526,13 @@ export function PlatformAuthWizard({
         }
       }
 
-      // Collapse "Choose Accounts" section after saving
-      setChooseAccountsExpanded(false);
       // Expand "Grant Access" section if needed
       if (metaNeedsGrantStep) {
         const metaAssets = groupAssets['meta_ads'] || {};
         const hasPages = (metaAssets.pages?.length ?? 0) > 0;
         const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
         if (hasPages || hasAdAccounts) {
+          setChooseAccountsExpanded(false);
           setGrantAccessExpanded(true);
         }
       }
