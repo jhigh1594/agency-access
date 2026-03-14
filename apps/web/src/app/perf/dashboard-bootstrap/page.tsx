@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { markPerfHarnessDashboardRedirectStart } from '@/lib/perf-harness';
 
-export default function PerfDashboardBootstrapPage() {
+function PerfDashboardBootstrapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -30,5 +30,22 @@ export default function PerfDashboardBootstrapPage() {
         <p className="mt-4 text-sm text-muted-foreground">Initializing dashboard benchmark...</p>
       </div>
     </div>
+  );
+}
+
+export default function PerfDashboardBootstrapPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="text-center">
+            <LogoSpinner size="lg" className="mx-auto" />
+            <p className="mt-4 text-sm text-muted-foreground">Initializing dashboard benchmark...</p>
+          </div>
+        </div>
+      }
+    >
+      <PerfDashboardBootstrapContent />
+    </Suspense>
   );
 }
