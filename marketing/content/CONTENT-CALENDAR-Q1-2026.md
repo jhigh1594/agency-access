@@ -18,25 +18,25 @@
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /guides/google-ads-access | Guide | - | P0 |
-| Tue | /guides/facebook-business-manager-access | Guide | - | P0 |
+| Mon | /guides/google-ads-access | Guide | - | Published (2026-03-14) |
+| Tue | /guides/facebook-business-manager-access | Guide | - | Published (2026-03-14) |
 | Thu | Social: LinkedIn - "Google Ads access in 5 min" | Social | - | Planned |
-| Fri | /blog/flat-rate-vs-credit-pricing | Blog | - | P0 |
+| Fri | /blog/flat-rate-vs-credit-pricing | Blog | - | Published (2026-03-14) |
 
 ### Week 3 (Feb 24 - Mar 2)
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /blog/client-onboarding-checklist | Blog + PDF | - | P0 |
-| Wed | /guides/meta-ads-access | Guide | - | P0 |
+| Mon | /blog/client-onboarding-checklist | Blog + PDF | - | Published (2026-03-14) |
+| Wed | /guides/meta-ads-access | Guide | - | Published (2026-03-14) |
 | Fri | Social: Twitter thread - Client onboarding tips | Social | - | Planned |
 
 ### Week 4 (Mar 3-9)
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /compare/authhub-vs-leadsie | Comparison | - | P0 |
-| Wed | /guides/google-analytics-access | Guide | - | P1 |
+| Mon | /compare/authhub-vs-leadsie | Comparison | - | Published (2026-03-14) |
+| Wed | /guides/google-analytics-access | Guide | - | Published (2026-03-14) |
 | Fri | Email: Monthly roundup | Email | - | Planned |
 
 ---
@@ -47,24 +47,24 @@
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /guides/tiktok-ads-access | Guide | - | P1 |
+| Mon | /guides/tiktok-ads-access | Guide | - | Published (2026-03-14) |
 | Tue | Social: LinkedIn - "TikTok for agencies" | Social | - | Planned |
-| Thu | /blog/how-to-onboard-clients-faster | Blog | - | P1 |
-| Fri | /blog/onboarding-roi-calculator | Interactive | - | P1 |
+| Thu | /blog/how-to-onboard-clients-faster | Blog | - | Published (2026-03-14) |
+| Fri | /blog/onboarding-roi-calculator | Interactive | - | Published (2026-03-14) |
 
 ### Week 6 (Mar 17-23)
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /guides/linkedin-ads-access | Guide | - | P1 |
-| Wed | /blog/what-to-ask-new-clients | Blog + template | - | P1 |
+| Mon | /guides/linkedin-ads-access | Guide | - | Published (2026-03-14) |
+| Wed | /blog/what-to-ask-new-clients | Blog + template | - | Published (2026-03-14) |
 | Fri | Social: Case study teaser | Social | - | Planned |
 
 ### Week 7 (Mar 24-30)
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /compare/agencyaccess-alternative | Comparison | - | P1 |
+| Mon | /compare/agencyaccess-alternative | Comparison | - | Published (2026-03-14) |
 | Wed | /guides/microsoft-ads-access | Guide | - | P2 |
 | Fri | Email: Product update + content roundup | Email | - | Planned |
 
@@ -72,7 +72,7 @@
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /blog/intake-forms-vs-separate-tools | Blog | - | P1 |
+| Mon | /blog/intake-forms-vs-separate-tools | Blog | - | Published (2026-03-14) |
 | Wed | Social: Customer spotlight | Social | - | Planned |
 | Fri | Q1 content audit | Internal | - | Planned |
 
@@ -84,9 +84,9 @@
 
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
-| Mon | /templates/client-intake-form | Template | - | P1 |
-| Tue | /templates/onboarding-checklist | Template | - | P1 |
-| Thu | /blog/agency-onboarding-automation | Blog | - | P1 |
+| Mon | /templates/client-intake-form | Template | - | Published (2026-03-14) |
+| Tue | /templates/onboarding-checklist | Template | - | Published (2026-03-14) |
+| Thu | /blog/agency-onboarding-automation | Blog | - | Published (2026-03-14) |
 | Fri | Social: Free template announcement | Social | - | Planned |
 
 ### Week 10 (Apr 14-20)
@@ -94,7 +94,7 @@
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
 | Mon | /guides/pinterest-ads-access | Guide | - | P2 |
-| Wed | /blog/reducing-onboarding-time-case-study | Case study | - | P1 |
+| Wed | /blog/reducing-onboarding-time-case-study | Case study | - | Published (2026-03-14) |
 | Fri | Email: Case study feature | Email | - | Planned |
 
 ### Week 11 (Apr 21-27)
@@ -102,7 +102,7 @@
 | Day | Content | Type | Assignee | Status |
 |-----|---------|------|----------|--------|
 | Mon | /guides/snapchat-ads-access | Guide | - | P2 |
-| Wed | /compare/client-onboarding-tools | Comparison | - | P1 |
+| Wed | /compare/client-onboarding-tools | Comparison | - | Published (2026-03-14) |
 | Fri | Social: Platform guide roundup | Social | - | Planned |
 
 ### Week 12 (Apr 28 - May 4)
@@ -117,8 +117,8 @@
 
 ## Content Status Legend
 
-- **P0**: Must have - ship this quarter
-- **P1**: Should have - ship if time permits
+- **Published (2026-03-14)**: Must have - ship this quarter
+- **Published (2026-03-14)**: Should have - ship if time permits
 - **P2**: Nice to have - backlog
 - **In Progress**: Currently being written
 - **Review**: Awaiting feedback
