@@ -70,6 +70,32 @@ export default function MetaAdsAccessGuidePage() {
     ],
   };
 
+  // Breadcrumb schema for navigation
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://authhub.co",
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Guides",
+        "item": "https://authhub.co/guides",
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Meta Ads Access Guide",
+        "item": "https://authhub.co/guides/meta-ads-access",
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-paper">
       {/* HowTo Schema JSON-LD */}
@@ -77,6 +103,13 @@ export default function MetaAdsAccessGuidePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(howToSchema),
+        }}
+      />
+      {/* Breadcrumb Schema JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
 

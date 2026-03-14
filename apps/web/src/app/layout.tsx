@@ -76,6 +76,43 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','${GTM_ID}');`;
 
+// Organization JSON-LD structured data for SEO
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AuthHub",
+  "url": "https://authhub.co",
+  "logo": "https://authhub.co/authhub.png",
+  "description": "Client access platform for marketing agencies. Replace weeks of OAuth setup with a single 5-minute link.",
+  "sameAs": [
+    "https://twitter.com/authhubco",
+    "https://linkedin.com/company/authhub-platform",
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "sales",
+    "email": "hello@authhub.co",
+    "url": "https://authhub.co/contact",
+  },
+};
+
+// WebSite JSON-LD structured data for site search and potential actions
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "AuthHub",
+  "url": "https://authhub.co",
+  "description": "Client access platform for marketing agencies",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://authhub.co/search?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -86,6 +123,20 @@ export default function RootLayout({
       <head>
         {/* Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: gtmHeadScript }} />
+        {/* Organization Schema JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        {/* WebSite Schema JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(webSiteSchema),
+          }}
+        />
       </head>
       <body suppressHydrationWarning>
         {/* Google Tag Manager (noscript) */}

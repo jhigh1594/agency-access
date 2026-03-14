@@ -67,7 +67,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // Get related posts
   const relatedPosts = getRelatedPosts(post.id, 3);
 
-  // Article schema JSON-LD
+  // Article schema JSON-LD with publisher
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -77,8 +77,46 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       "@type": "Person",
       name: post.author.name,
     },
+    publisher: {
+      "@type": "Organization",
+      "name": "AuthHub",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://authhub.co/authhub.png",
+      },
+    },
     datePublished: post.publishedAt,
     dateModified: post.publishedAt,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://authhub.co/blog/${slug}`,
+    },
+  };
+
+  // Breadcrumb schema for navigation
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://authhub.co",
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "https://authhub.co/blog",
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": post.title,
+        "item": `https://authhub.co/blog/${slug}`,
+      },
+    ],
   };
 
   // FAQ schema for client onboarding checklist (delays section)
@@ -112,6 +150,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(articleSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       {faqSchema && (

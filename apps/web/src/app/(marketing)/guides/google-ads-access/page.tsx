@@ -30,8 +30,41 @@ export const metadata: Metadata = {
 };
 
 export default function GoogleAdsAccessGuidePage() {
+  // Breadcrumb schema for navigation
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://authhub.co",
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Guides",
+        "item": "https://authhub.co/guides",
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Google Ads Access Guide",
+        "item": "https://authhub.co/guides/google-ads-access",
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-paper">
+      {/* Breadcrumb Schema JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
+        }}
+      />
       {/* Hero */}
       <section className="border-b-2 border-black bg-coral/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
