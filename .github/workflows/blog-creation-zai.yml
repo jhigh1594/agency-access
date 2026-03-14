@@ -1,0 +1,195 @@
+name: Daily Blog Creation with z.ai API
+
+on:
+  schedule:
+    # Runs every day at 7:00 AM PST (15:00 UTC)
+    - cron: '0 15 * * *'
+  workflow_dispatch:  # Allows manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-blog-post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read blog creation workflow prompt
+        id: read-prompt
+        run: |
+          # Read the workflow prompt
+          WORKFLOW_PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
+          echo "prompt_length=$(echo "$WORKFLOW_PROMPT" | wc -c)"
+
+          # Save to file for next step
+          echo "$WORKFLOW_PROMPT" > /tmp/workflow_prompt.md
+
+      - name: Read content strategy files
+        run: |
+          # Read content strategy files for context
+          echo "=== Content Strategy ===" > /tmp/context.md
+          cat marketing/CONTENT-STRATEGY-2026.md >> /tmp/context.md
+          echo "" >> /tmp/context.md
+          echo "=== Content Calendar ===" >> /tmp/context.md
+          cat marketing/content/CONTENT-CALENDAR-Q1-2026.md >> /tmp/context.md
+          echo "" >> /tmp/context.md
+          echo "=== Keyword Tracker ===" >> /tmp/context.md
+          cat marketing/content/KEYWORD-TRACKER.md >> /tmp/context.md
+
+      - name: Generate blog post with z.ai API
+        id: generate
+        run: |
+          # Prepare the prompt
+          PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
+
+          echo "Calling z.ai API..."
+
+          # Call z.ai API (Anthropic-compatible endpoint)
+          RESPONSE=$(curl -X POST "https://api.z.ai/api/anthropic/v1/messages" \
+            -H "x-api-key: ${{ secrets.ZAI_API_KEY }}" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$(cat <<EOF
+          {
+            "model": "glm-4.7",
+            "max_tokens": 8000,
+            "system": "You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly.",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Read the blog creation workflow at .claude/prompts/blog-creation-workflow.md and execute all 7 phases:\n\n1. Research - Read marketing/CONTENT-STRATEGY-2026.md, marketing/content/CONTENT-CALENDAR-Q1-2026.md, marketing/content/KEYWORD-TRACKER.md, apps/web/src/lib/blog-data.ts\n\n2. Select a topic autonomously based on: P0/P1 priorities, keyword gaps, strategic alignment\n\n3. Outline - Follow TikTok Ads Access guide structure with H2/H3 hierarchy, tables, step-by-step instructions, common issues, pro tips\n\n4. Create - Write complete blog post (2000-3000 words) with all metadata fields (id, slug, title, excerpt, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription, relatedPosts)\n\n5. SEO - Include primary keyword in title/slug/H1/first paragraph/meta description. Add 3-5 internal links, 2-3 external links. Target featured snippet.\n\n6. Review - Check brand voice (professional, approachable, helpful). Verify content checklist.\n\n7. Output - Present final blog post in TypeScript BlogPost format, ready to add to apps/web/src/lib/blog-data.ts\n\nIMPORTANT: Output ONLY the TypeScript code for the BlogPost object. No explanations, no markdown outside the code block."
+              }
+            ]
+          }
+          EOF
+          )")
+
+          # Save response
+          echo "$RESPONSE" > /tmp/zai_response.json
+
+          # Extract content from response
+          CONTENT=$(echo "$RESPONSE" | jq -r '.content[0].text' 2>/dev/null || echo "$RESPONSE")
+          echo "$CONTENT" > /tmp/blog_post.ts
+
+          echo "Blog post generated!"
+
+      - name: Extract and validate blog post content
+        id: extract
+        run: |
+          # Try to extract TypeScript BlogPost object from response
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          import re
+
+          with open('/tmp/zai_response.json', 'r') as f:
+              response = json.load(f)
+
+          # Extract content from z.ai response
+          if 'content' in response and len(response['content']) > 0:
+              content_text = response['content'][0]['text']
+
+              # Look for TypeScript code block
+              ts_match = re.search(r'```typescript\n(.*?)\n```', content_text, re.DOTALL)
+              if ts_match:
+                  ts_code = ts_match.group(1)
+                  print(f"FOUND_TYPESCRIPT_CODE_BLOCK")
+                  print(f"Length: {len(ts_code)} characters")
+
+                  # Save to file
+                  with open('/tmp/blog_post.ts', 'w') as out:
+                      out.write(ts_code)
+
+                  # Also save full response for debugging
+                  with open('/tmp/blog_post_full.txt', 'w') as debug:
+                      debug.write(content_text)
+
+                  print("EXTRACTION_SUCCESS")
+              else:
+                  print("NO_TYPESCRIPT_BLOCK_FOUND")
+                  print(f"Content preview: {content_text[:500]}")
+                  with open('/tmp/blog_post_raw.txt', 'w') as raw:
+                      raw.write(content_text)
+          else:
+              print("NO_CONTENT_IN_RESPONSE")
+              print(json.dumps(response, indent=2))
+          PYTHON_SCRIPT
+
+      - name: Validate blog post was created
+        id: validate
+        run: |
+          # Check if we got valid TypeScript
+          if [ -f /tmp/blog_post.ts ] && [ -s /tmp/blog_post.ts ]; then
+            echo "✅ Blog post TypeScript generated successfully"
+            cat /tmp/blog_post.ts
+          else
+            echo "❌ Failed to extract blog post"
+            echo "Raw response:"
+            cat /tmp/zai_response.json
+            exit 1
+          fi
+
+      - name: Update blog-data.ts with new post
+        id: update-blog
+        run: |
+          # Read the generated blog post
+          NEW_POST=$(cat /tmp/blog_post.ts)
+
+          # Add to blog-data.ts
+          # This inserts the new post before the closing bracket
+          sed -i.bak '/^export const BLOG_POSTS: BlogPost\[\] = \[$/a\
+          \
+  '"$NEW_POST"',\
+          ' apps/web/src/lib/blog-data.ts
+
+          # Clean up backup
+          rm -f apps/web/src/lib/blog-data.ts.bak
+
+          echo "✅ Updated blog-data.ts"
+
+      - name: Update content calendar
+        run: |
+          # Update the content calendar status
+          # Mark the first P0/P1 item as "Published"
+          TODAY=$(date +'%Y-%m-%d')
+          sed -i.bak "s/\(P0\|P1\)/Published ($TODAY)/1" marketing/content/CONTENT-CALENDAR-Q1-2026.md
+          rm -f marketing/content/CONTENT-CALENDAR-Q1-2026.md.bak
+
+          echo "✅ Updated content calendar"
+
+      - name: Update keyword tracker
+        run: |
+          # This would need more sophisticated parsing
+          # For now, just note that a post was published
+          echo "# Blog Post Published $TODAY" >> marketing/content/KEYWORD-TRACKER.md
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "📝 Blog Post: AI Generated ($(date +'%Y-%m-%d'))"
+          body: |
+            ## AI-Generated Blog Post
+
+            This blog post was automatically generated using the z.ai API workflow.
+
+            ### Changes
+            - ✅ Added new blog post to `apps/web/src/lib/blog-data.ts`
+            - ✅ Updated content calendar status
+            - ✅ Updated keyword tracker
+
+            ### Review Checklist
+            - [ ] Blog post follows TikTok Ads Access template structure
+            - [ ] SEO optimized (keyword in title, slug, H1, first paragraph)
+            - [ ] Internal links included (3-5 minimum)
+            - [ ] External links to authoritative sources (2-3 minimum)
+            - [ ] Brand voice consistent (professional, approachable)
+            - [ ] All metadata fields complete
+            - [ ] Read time calculated correctly
+
+            ---
+            🤖 Generated by z.ai API (GLM-4.7 model)
+          branch: "blog-post-$(date +%Y%m%d)"
+          delete-branch: true
+          draft: false

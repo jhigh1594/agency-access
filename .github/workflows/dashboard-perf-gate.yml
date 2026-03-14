@@ -1,0 +1,123 @@
+name: Dashboard Perf Gate
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/routes/dashboard.ts'
+      - 'apps/api/src/services/**'
+      - 'apps/api/src/lib/authorization.ts'
+      - 'apps/api/src/middleware/**'
+      - 'apps/web/src/app/(authenticated)/dashboard/**'
+      - 'packages/shared/src/**'
+      - 'scripts/perf/**'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/src/routes/dashboard.ts'
+      - 'apps/api/src/services/**'
+      - 'apps/api/src/lib/authorization.ts'
+      - 'apps/api/src/middleware/**'
+      - 'apps/web/src/app/(authenticated)/dashboard/**'
+      - 'packages/shared/src/**'
+      - 'scripts/perf/**'
+      - 'package.json'
+  workflow_dispatch:
+
+jobs:
+  dashboard-perf-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PERF_DATABASE_URL: ${{ secrets.PERF_DATABASE_URL }}
+      PERF_CLERK_SECRET_KEY: ${{ secrets.PERF_CLERK_SECRET_KEY }}
+      PERF_CLERK_PUBLISHABLE_KEY: ${{ secrets.PERF_CLERK_PUBLISHABLE_KEY }}
+      PERF_USER_ID: ${{ secrets.PERF_USER_ID }}
+      PERF_WARM_P95_BUDGET_MS: ${{ vars.PERF_WARM_P95_BUDGET_MS }}
+      PERF_COLD_MAX_BUDGET_MS: ${{ vars.PERF_COLD_MAX_BUDGET_MS }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Validate perf secrets
+        run: |
+          missing=0
+          for key in PERF_DATABASE_URL PERF_CLERK_SECRET_KEY PERF_CLERK_PUBLISHABLE_KEY PERF_USER_ID; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write API env file
+        run: |
+          cat > apps/api/.env <<ENV
+          NODE_ENV=production
+          PORT=3001
+          DATABASE_URL=${PERF_DATABASE_URL}
+          FRONTEND_URL=http://localhost:3000
+          API_URL=http://localhost:3001
+          CLERK_PUBLISHABLE_KEY=${PERF_CLERK_PUBLISHABLE_KEY}
+          CLERK_SECRET_KEY=${PERF_CLERK_SECRET_KEY}
+          INFISICAL_CLIENT_ID=dummy
+          INFISICAL_CLIENT_SECRET=dummy
+          INFISICAL_PROJECT_ID=dummy
+          INFISICAL_ENVIRONMENT=prod
+          REDIS_URL=redis://localhost:6379
+          META_APP_ID=dummy
+          META_APP_SECRET=dummy
+          CREEM_API_KEY=dummy
+          CREEM_WEBHOOK_SECRET=dummy
+          ENV
+
+      - name: Build API
+        run: npm run build --workspace=packages/shared && npm run build --workspace=apps/api
+
+      - name: Start API
+        run: |
+          node apps/api/dist/index.js > /tmp/dashboard-perf-api.log 2>&1 &
+          echo $! > /tmp/dashboard-perf-api.pid
+
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3001/health > /dev/null; then
+              echo "API is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to become healthy"
+          cat /tmp/dashboard-perf-api.log
+          exit 1
+
+      - name: Run dashboard perf gate
+        env:
+          PERF_ENFORCE_BUDGET: 'true'
+          PERF_RUNS: '20'
+          PERF_API_BASE: 'http://localhost:3001'
+        run: npm run perf:dashboard:gate -- --label ci-dashboard-gate
+
+      - name: Print API log on failure
+        if: failure()
+        run: cat /tmp/dashboard-perf-api.log
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f /tmp/dashboard-perf-api.pid ]; then
+            kill "$(cat /tmp/dashboard-perf-api.pid)" || true
+          fi
