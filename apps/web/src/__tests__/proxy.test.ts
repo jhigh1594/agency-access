@@ -27,6 +27,7 @@ vi.mock('@clerk/nextjs/server', () => {
 vi.mock('next/server', () => ({
   NextResponse: {
     redirect: (url: URL) => ({ redirectedTo: url.toString() }),
+    next: () => ({ passedThrough: true }),
   },
 }));
 
