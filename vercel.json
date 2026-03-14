@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install",
+  "installCommand": "npm ci --no-audit",
   "buildCommand": "npm run build:web",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
