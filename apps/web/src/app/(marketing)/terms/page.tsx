@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service | AuthHub",
   description: "Read the terms and conditions for using AuthHub's OAuth aggregation platform.",
+  alternates: {
+    canonical: 'https://authhub.co/terms',
+  },
 };
 
 export default function TermsOfServicePage() {

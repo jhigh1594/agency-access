@@ -7,10 +7,14 @@ import { getDocsUrl } from '@/lib/docs-url';
 export const metadata: Metadata = {
   title: 'Contact Us | AuthHub',
   description: 'Get in touch with our team. We typically respond within 24 hours.',
+  alternates: {
+    canonical: 'https://authhub.co/contact',
+  },
   openGraph: {
     title: 'Contact Us | AuthHub',
     description: 'Get in touch with our team. We typically respond within 24 hours.',
     type: 'website',
+    url: 'https://authhub.co/contact',
   },
 };
 

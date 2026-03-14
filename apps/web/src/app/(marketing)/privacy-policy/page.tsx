@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy | AuthHub",
   description: "Learn how AuthHub collects, uses, and protects your personal information.",
+  alternates: {
+    canonical: 'https://authhub.co/privacy-policy',
+  },
 };
 
 export default function PrivacyPolicyPage() {

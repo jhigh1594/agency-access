@@ -27,22 +27,23 @@ export async function generateMetadata({
     };
   }
 
+  const canonicalUrl = `https://authhub.co/blog/${slug}`;
+
   return {
     title: post.metaTitle || post.title,
     description: post.metaDescription || post.excerpt,
     keywords: post.tags,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: "article",
       publishedTime: post.publishedAt,
       authors: [post.author.name],
+      url: canonicalUrl,
     },
-    ...(post.id === "client-onboarding-checklist" && {
-      alternates: {
-        canonical: "https://authhub.co/blog/client-onboarding-checklist",
-      },
-    }),
   };
 }
 

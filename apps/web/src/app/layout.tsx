@@ -42,18 +42,21 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.authhub.co'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://authhub.co'),
   title: "AuthHub - Client Access in 5 Minutes",
   description: "One link replaces weeks of OAuth setup. Connect to Meta, Google Ads, GA4, LinkedIn, and more.",
   icons: {
     icon: "/authhub.png",
     apple: "/authhub.png",
   },
+  alternates: {
+    canonical: 'https://authhub.co',
+  },
   openGraph: {
     title: "AuthHub - Client Access in 5 Minutes",
     description: "One link replaces weeks of OAuth setup.",
     images: ["/authhub.png"],
-    url: "https://www.authhub.co",
+    url: "https://authhub.co",
   },
   twitter: {
     card: "summary_large_image",

@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: "How to Get Google Ads Access for Agencies (2026 Guide)",
   description:
     "How to request Google Ads access: client signs in, goes to Tools & Settings → Access and security, adds your email, chooses a role. Or use one link and get access in 5 minutes.",
+  alternates: {
+    canonical: 'https://authhub.co/guides/google-ads-access',
+  },
   keywords: [
     "how to request google ads access",
     "give google ads access to agency",
@@ -22,6 +25,7 @@ export const metadata: Metadata = {
     description:
       "Step-by-step guide to request Google Ads access from clients. Manual process or one-link option that takes 5 minutes.",
     type: "article",
+    url: 'https://authhub.co/guides/google-ads-access',
   },
 };
 

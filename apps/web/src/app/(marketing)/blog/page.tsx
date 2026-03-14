@@ -2,6 +2,7 @@
  * Blog listing page - displays all blog posts with filtering
  */
 
+import type { Metadata } from "next";
 import { BlogHeader } from "@/components/blog/blog-header";
 import { BlogCard } from "@/components/blog/blog-card";
 import { getBlogPosts, getBlogPostsByCategory } from "@/lib/blog-data";
@@ -11,6 +12,20 @@ import { Suspense } from "react";
 interface BlogPageProps {
   searchParams: Promise<{ category?: string }>;
 }
+
+export const metadata: Metadata = {
+  title: 'Blog | AuthHub - Agency Growth Resources',
+  description: 'Expert guides, tutorials, and strategies for marketing agencies on client onboarding, platform access, and scaling your agency.',
+  alternates: {
+    canonical: 'https://authhub.co/blog',
+  },
+  openGraph: {
+    title: 'Blog | AuthHub - Agency Growth Resources',
+    description: 'Expert guides, tutorials, and strategies for marketing agencies.',
+    type: 'website',
+    url: 'https://authhub.co/blog',
+  },
+};
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const { category } = await searchParams;
