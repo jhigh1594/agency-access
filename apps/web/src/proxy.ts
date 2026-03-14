@@ -67,8 +67,8 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals, static files, and API routes
-    // API routes are proxied to backend and should not be intercepted by Clerk
-    '/((?!_next|api|agency-platforms|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals, static files, API routes, and crawler discovery files
+    // sitemap.xml and robots.txt excluded so they are served without proxy (avoids redirect loops)
+    '/((?!_next|api|agency-platforms|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|xml|txt)).*)',
   ],
 }
