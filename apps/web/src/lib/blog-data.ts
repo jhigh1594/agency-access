@@ -23,8 +23,6 @@ With platform policies tightening and data privacy scandals making headlines, th
 
 This guide is designed to move your agency from the chaotic \"spreadsheet method\" to a secure, scalable, and professional access management workflow. We will cover why the old methods are failing, the specific protocols for major ad platforms, and how to automate the entire process.
 
----
-
 ## Part 1: The High Cost of \"Access Chaos\"
 
 Before we dive into the *how*, we need to address the *why*. Why does access management matter so much?
@@ -47,8 +45,6 @@ Beyond security, shared logins are operationally inefficient.
 
 Clients trust you with their budgets. If they ask for an audit of who has access to their data and you can't provide one, you lose credibility. Professional agencies operate with transparency and control.
 
----
-
 ## Part 2: The Golden Rules of Modern Access Management
 
 To achieve true operational excellence, your agency needs to adopt three non-negotiable rules for **ad account access management**.
@@ -70,8 +66,6 @@ Granting the lowest level of access required to do the job minimizes risk.
 ### Rule 3: Centralized Auditing
 
 You must have a single source of truth for who has access to what. This list should be reviewed quarterly to remove ghost users.
-
----
 
 ## Part 3: Platform-Specific Access Workflows
 
@@ -109,9 +103,7 @@ The newest major platform has the most fluid permissions.
 1.  **Client Action:** The client goes to **Account Settings > Members**.
 2.  **Role:** They invite your agency email with the **“Agency”** role. This allows you to manage ads without touching the client's payment settings directly (unless they enable it).
 
-**Caution:** TikTok’s spam filters are aggressive. If an invite doesn't arrive, ask the client to check their “Pending Requests” tab immediately.
-
----
+**Caution:** TikTok’s spam filters are aggressive. If an invite doesn’t arrive, ask the client to check their “Pending Requests” tab immediately.
 
 ## Part 4: Automating the Process
 
@@ -122,8 +114,6 @@ Using a tool like **AuthHub** allows you to:
 1.  **Generate Secure Links:** Send the client one link to connect their account, rather than chasing them via email.
 2.  **Auto-Configure Roles:** Automatically assign the right permission levels to your team members when a client is connected.
 3.  **Instant Offboarding:** When you remove a user from AuthHub, their access to *all* connected client accounts is revoked instantly. This is the ultimate security blanket for agencies.
-
----
 
 ## Part 5: The Onboarding & Offboarding Checklist
 
@@ -142,8 +132,6 @@ Print this out and put it on your wall. This is your standard operating procedur
 *   [ ] Go to **AuthHub Dashboard** -> Team Members -> Revoke All Access.
 *   [ ] **If NOT using AuthHub:** Log into every client Business Manager individually and remove the user. (This takes hours, which is why Rule #3 exists).
 *   [ ] Change passwords on any shared agency accounts the employee had access to.
-
----
 
 ## Conclusion: Scaling Safely
 
@@ -182,8 +170,6 @@ In the high-stakes world of digital advertising, access issues aren't just admin
 
 At **AuthHub**, we’ve analyzed the access workflows of thousands of agencies. We’ve found that 90% of access failures stem from just three root causes. This guide identifies those causes and provides the technical fixes you need to regain control of your ad accounts today.
 
----
-
 ## Phase 1: Diagnosing the Root Cause
 
 Before you reset passwords or revoke permissions, you must identify *why* the access failure is occurring. Applying the wrong fix can sometimes lock you out further.
@@ -202,8 +188,6 @@ The fastest way to diagnose the issue is the **Test Card Method**. This involves
 *   **The Account is Greyed Out:** This is a *Permissions* issue. The Business Manager (BM) sees the account, but you don't have the specific role assigned.
 *   **The Account Doesn't Appear:** This is an *Ownership* issue. The account isn't actually verified in the BM yet; it's just pending.
 *   **Error Message \"You can't use this account\":** This is a *Policy/Payment* issue. The account is banned or has an expired payment method.
-
----
 
 ## Scenario A: The \"Pending Request\" Loop (Meta)
 
@@ -232,8 +216,6 @@ This is almost always a **Global Page vs. Business Account** confusion.
 3.  Navigate to **Requests** (often hidden under the \"Notices\" bell icon).
 4.  Approve the request specifically within the Business context.
 
----
-
 ## Scenario B: The 2FA Authentication Wall
 
 **Symptom:** You log in, but the platform immediately asks for a code. You don't have the code because the client set it up. Or, you try to invite a freelancer, but they can't get in because the client's phone is required.
@@ -258,8 +240,6 @@ If you must log in directly:
 1.  Ensure the client generates a **Recovery Code** within their 2FA settings.
 2.  Store this code securely in your agency password manager (e.g., 1Password).
 3.  Use this code only when setting up a new employee's device.
-
----
 
 ## Scenario C: The \"Assigned Partner\" Confusion
 
@@ -289,8 +269,6 @@ When onboarding a client who wants full visibility (or partial control), verify 
     *   *Go to:* Business Settings > Accounts > Pages.
     *   *Action:* Ensure the user has **Admin** or **Editor** status on the page connected to the ad account.
 
----
-
 ## Scenario D: TikTok Ads Specific Errors
 
 **Symptom:** \"Account ID does not exist\" or \"Invalid Access.\"
@@ -305,8 +283,6 @@ TikTok’s structure is rigid. Unlike Meta, where you can claim an account, TikT
 
 If you are seeing \"Access Denied\" on TikTok, it is usually because the user was invited as an \"Advertiser\" but not an \"Admin.\" Only Admins can manage payment methods.
 
----
-
 ## Prevention: The Golden Rules of Access
 
 To avoid spending hours troubleshooting, implement these **Golden Rules** at your agency:
@@ -320,8 +296,6 @@ To avoid spending hours troubleshooting, implement these **Golden Rules** at you
 Access issues are the silent killer of agency productivity. By understanding the difference between *ownership* issues and *permissions* issues—and by leveraging specialized tools to manage the friction—you can turn a 3-day onboarding process into a 30-minute task.
 
 If you're tired of being the 'reset password' middleman, explore how **AuthHub** automates client access provisioning, so your team can focus on scaling ads, not resetting logins.
-
----
 
 **Related Resources:**
 *   [How to structure your Agency's Business Manager for 2026](/blog/agency-business-manager-structure)

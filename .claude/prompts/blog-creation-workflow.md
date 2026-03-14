@@ -23,6 +23,7 @@ Your content targets **growing agency owners** (10-50 employees, 3-10 new client
 - Use hype language like "revolutionary" or "game-changing"
 - Make claims about AuthHub without tying to specific features
 - Forget to update the content calendar after completion
+- **Use dashed line dividers (---) between sections** - use heading hierarchy instead
 
 **ALWAYS:**
 - Choose the appropriate template structure based on blog category (see Category Templates below)
@@ -56,6 +57,117 @@ with newlines and special characters`,
 
 **Remember:** The `content` field value must start and end with a backtick character (`` ` ``), not a quote character.
 </typescript_format>
+
+<visual_content_requirements>
+**CRITICAL: Visual Content Requirements**
+
+Every blog post MUST include at least 2-3 of the following visual elements to improve scannability and engagement:
+
+### 1. Tables - For Structured Data
+
+Use markdown tables for:
+- **Platform/Feature comparisons:** Side-by-side platform differences
+- **Permission levels or role definitions:** Who can do what
+- **Checklists:** Checkbox-formatted items for action items
+- **Issue/Solution pairs:** Problem and resolution format
+- **Step-by-step workflows:** Clear process documentation
+
+**Table Format Examples:**
+
+| Role | Permissions | Best For |
+|------|-------------|----------|
+| **Admin** | Full permissions including financial management | Campaign managers, account leads |
+| **Operator** | Create/edit ads, no financial access | Media buyers, creative teams |
+
+| Platform | Limit | Notes |
+|----------|-------|-------|
+| TikTok | 3 Business Centers per user | Plan strategy carefully |
+
+| Problem | Solution | Prevention |
+|---------|----------|------------|
+| Request pending | Client approves in Business Settings | Send correct entity link |
+
+### 2. Code Blocks & Diagrams - For Visual Hierarchy
+
+Use code blocks for:
+- **ASCII art diagrams:** Account hierarchies, process flows
+- **Technical examples:** Code snippets, configuration examples
+- **Structured lists:** Numbered steps with sub-items
+
+**Diagram Example:**
+```
+Business Center (max 3 per user)
+    |
+    +-- Ad Account 1
+    |   |
+    |   +-- Campaign Group
+    |       |
+    |       +-- Campaign
+    +-- Ad Account 2
+```
+
+**Numbered List Example:**
+1. **Primary Step:**
+   *   Sub-step A
+   *   Sub-step B
+2. **Secondary Step:**
+   *   Sub-step C
+
+### 3. Structured Sections - For Scannability
+
+Use these patterns throughout:
+- **Issue/Solution format:** "### Issue X: Problem Title" followed by "**Cause:**" and "**Solution:**"
+- **Pro Tip callouts:** "**Pro Tip:**" for practical advice
+- **Why This Matters boxes:** "**Why This Matters:**" for context on unusual requirements
+- **Key Takeaway summaries:** "**Key Takeaway:**" for important points
+
+### 4. Section Structure - NO Dashed Dividers
+
+**❌ WRONG - Don't use:**
+```markdown
+## Section 1
+Content...
+
+---
+
+## Section 2
+Content...
+```
+
+**✅ CORRECT - Use heading hierarchy:**
+```markdown
+## Section 1
+Content...
+
+## Section 2
+Content...
+```
+
+Let H2 (##) and H3 (###) headings provide structure. Use white space for visual separation.
+
+### Visual Content by Category
+
+**Tutorials (Platform Access Guides):**
+- Permission level/role tables
+- Step-by-step workflow tables
+- Platform comparison tables (if mentioning multiple platforms)
+- Common issues table (Problem | Solution)
+
+**Onboarding (Client Onboarding Best Practices):**
+- Checklist tables with checkbox formatting ([ ] item)
+- Timeline tables (Phase | Day | Action)
+- Tool comparison tables
+
+**Comparisons (Competitive Alternatives):**
+- Feature comparison tables
+- Pricing tables
+- Side-by-side platform comparisons
+
+**Security & Operations:**
+- Risk assessment tables
+- Permission level tables
+- Access control matrices
+</visual_content_requirements>
 
 <context_info>
 **Content Pillars:**
