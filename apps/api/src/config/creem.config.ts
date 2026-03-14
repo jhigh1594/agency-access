@@ -9,8 +9,8 @@
  * - Starter (Annual): prod_6Hyydvn6jh0numRxJecMol
  * - Agency (Monthly): prod_11NeEMY6WtGEkdnvdd7obj
  * - Agency (Annual): prod_4vNvJn99RTRwhkMeHgkBT7
- * - Pro (Monthly): TBD (contact Creem support)
- * - Pro (Annual): TBD (contact Creem support)
+ * - Pro (Monthly): prod_5FEs6qBlwvbMWHHun95wkk
+ * - Pro (Annual): prod_6w78r7ZbTUjkJl7mTkNfFr
  */
 
 import type { SubscriptionTier } from '@agency-platform/shared';
@@ -32,8 +32,8 @@ const CREEM_PRODUCT_IDS: Record<Exclude<SubscriptionTier, 'ENTERPRISE'>, CreemPr
     yearly: 'prod_4vNvJn99RTRwhkMeHgkBT7',
   },
   PRO: {
-    monthly: 'prod_tbd', // TODO: Contact Creem support for Pro product ID
-    yearly: 'prod_tbd', // TODO: Contact Creem support for Pro product ID
+    monthly: 'prod_5FEs6qBlwvbMWHHun95wkk',
+    yearly: 'prod_6w78r7ZbTUjkJl7mTkNfFr',
   },
 };
 

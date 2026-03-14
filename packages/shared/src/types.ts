@@ -1938,8 +1938,8 @@ export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
 /** Tier order for upgrade sequencing (lowest to highest). */
 const SUBSCRIPTION_TIER_ORDER: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
 
-/** Tiers that have Creem checkout configured (STARTER, AGENCY). PRO has prod_tbd; ENTERPRISE has no product. */
-const CREEM_CHECKOUT_TIERS: SubscriptionTier[] = ['STARTER', 'AGENCY'];
+/** Tiers that have Creem checkout configured (STARTER, AGENCY, PRO). ENTERPRISE has no product. */
+const CREEM_CHECKOUT_TIERS: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
 
 /**
  * Returns the next tier up from the current tier that has Creem checkout.
