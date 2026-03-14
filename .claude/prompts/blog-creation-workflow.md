@@ -35,6 +35,28 @@ Your content targets **growing agency owners** (10-50 employees, 3-10 new client
 - **USE THE ELITE-COPYWRITER SKILL** for all outlining and content creation phases
 </hard_constraints>
 
+<typescript_format>
+**CRITICAL: TypeScript Template Literal Syntax**
+
+When generating blog post entries for `apps/web/src/lib/blog-data.ts`, the `content` field MUST use **template literal backticks**, NOT regular string quotes.
+
+**❌ WRONG - This causes build errors:**
+```typescript
+content: "# Your markdown content
+with newlines and special characters",
+```
+
+**✅ CORRECT - Use template literals:**
+```typescript
+content: `# Your markdown content
+with newlines and special characters`,
+```
+
+**Why:** Markdown content contains newlines, special characters, and backticks. TypeScript requires template literals (enclosed in backticks `` ` ``) for multiline strings. Regular quotes (single or double) only work for single-line strings.
+
+**Remember:** The `content` field value must start and end with a backtick character (`` ` ``), not a quote character.
+</typescript_format>
+
 <context_info>
 **Content Pillars:**
 1. Competitive Alternatives (e.g., "Leadsie alternative")
