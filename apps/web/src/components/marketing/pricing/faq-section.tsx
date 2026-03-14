@@ -13,11 +13,11 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: "How does the 14-day free trial work?",
-    answer: "The Growth plan includes a 14-day free trial with full access to all features—no credit card required. After the trial, you can subscribe to Growth, upgrade to Scale, or continue with our Free tier (1 active client).",
+    answer: "All plans include a 14-day free trial with full access to features—no credit card required. After the trial, you can subscribe to Starter, Growth, or Agency based on your needs.",
   },
   {
-    question: "What's the difference between Free, Growth, and Scale?",
-    answer: "Free is for solo freelancers testing the platform with 1 client and core platforms (Meta, Google, LinkedIn). Growth ($30/mo yearly) is for small teams with 5 clients/month, white-label branding, and 3 team seats. Scale ($70/mo yearly) is for established teams with 15 clients/month, custom domain, API access, 10 team seats, and multi-brand support.",
+    question: "What's the difference between Starter, Growth, and Agency?",
+    answer: "Starter ($29/mo, $24/mo yearly) is for small agencies with 5 clients/month, unlimited team seats, and all platforms. Growth ($79/mo, $66/mo yearly) adds webhooks, API access, and custom domain for 20 clients/month. Agency ($149/mo, $124/mo yearly) is for established teams with 50 clients/month, multi-brand support (up to 3 brands), and priority support.",
   },
   {
     question: "Can I change plans later?",
@@ -29,7 +29,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Do you offer discounts for annual billing?",
-    answer: "Yes! Annual billing saves you ~25% compared to monthly. Growth drops from $40/mo to $30/mo, and Scale drops from $93/mo to $70/mo. Most teams choose annual for the savings.",
+    answer: "Yes! Annual billing gives you 2 months free (pay for 10 months, get 12). Starter drops from $29/mo to $24/mo, Growth from $79/mo to $66/mo, and Agency from $149/mo to $124/mo. Most teams choose annual for the savings.",
   },
   {
     question: "How secure is my OAuth data?",
@@ -37,11 +37,11 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Can I use my own domain with white-label?",
-    answer: "Scale plan includes custom domain support (e.g., access.yourbrand.com). Both Growth and Scale include white-label branding with your logo, colors, and styling. Free tier has basic branding only.",
+    answer: "Growth and Agency plans include custom domain support (e.g., access.yourbrand.com). All plans include white-label branding with your logo, colors, and styling.",
   },
   {
     question: "What platforms do you support?",
-    answer: "Free tier includes core platforms: Meta, Google, and LinkedIn. Growth and Scale plans unlock all integrations including TikTok, Snapchat, Instagram, Beehiiv, Kit, and Zapier—plus custom integrations on Scale.",
+    answer: "All plans include access to 15+ platforms including Meta, Google, LinkedIn, TikTok, Snapchat, Instagram, Beehiiv, Kit, Zapier, Pinterest, Klaviyo, Shopify, and Mailchimp. Agency plan also includes custom integrations for your specific needs.",
   },
 ];
 

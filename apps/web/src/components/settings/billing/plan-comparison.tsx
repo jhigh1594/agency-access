@@ -25,52 +25,52 @@ import { resolveBillingLifecycle } from './billing-lifecycle';
 
 // Tier pricing configuration (yearly price, monthly price)
 const tierPricing: Record<PricingDisplayTier, { yearly: number; monthly: number }> = {
-  FREE: {
-    yearly: PRICING_DISPLAY_TIER_DETAILS.FREE.yearlyPrice,
-    monthly: PRICING_DISPLAY_TIER_DETAILS.FREE.monthlyPrice,
+  STARTER: {
+    yearly: PRICING_DISPLAY_TIER_DETAILS.STARTER.yearlyPrice,
+    monthly: PRICING_DISPLAY_TIER_DETAILS.STARTER.monthlyPrice,
   },
   GROWTH: {
     yearly: PRICING_DISPLAY_TIER_DETAILS.GROWTH.yearlyPrice,
     monthly: PRICING_DISPLAY_TIER_DETAILS.GROWTH.monthlyPrice,
   },
-  SCALE: {
-    yearly: PRICING_DISPLAY_TIER_DETAILS.SCALE.yearlyPrice,
-    monthly: PRICING_DISPLAY_TIER_DETAILS.SCALE.monthlyPrice,
+  AGENCY: {
+    yearly: PRICING_DISPLAY_TIER_DETAILS.AGENCY.yearlyPrice,
+    monthly: PRICING_DISPLAY_TIER_DETAILS.AGENCY.monthlyPrice,
   },
 };
 
 // Feature inclusion matrix for each tier - ONE value metric (clients/month)
 const tierFeatures: Record<PricingDisplayTier, { name: string; included: boolean; value?: string }[]> = {
-  FREE: [
-    { name: '1 active client', included: true, value: 'Test the full flow' },
-    { name: 'Core platforms (Meta, Google, LinkedIn)', included: true, value: 'The essentials' },
-    { name: 'Basic branding (logo upload)', included: true },
+  STARTER: [
+    { name: '5 clients/month', included: true, value: '60 onboards/year' },
+    { name: 'All platform integrations', included: true, value: 'Meta, Google, LinkedIn, TikTok, more' },
+    { name: 'White-label branding', included: true, value: 'Your brand, not ours' },
+    { name: 'Unlimited team seats', included: true, value: 'Share the work' },
     { name: 'Email support', included: true },
-    { name: 'Team access', included: false },
-    { name: 'White-label branding', included: false },
     { name: 'Custom domain', included: false },
     { name: 'Webhooks & API', included: false },
     { name: 'Priority support', included: false },
   ],
   GROWTH: [
-    { name: '5 clients/month', included: true, value: '60 onboards/year' },
-    { name: 'All platform integrations', included: true, value: 'Meta, Google, LinkedIn, TikTok, more' },
-    { name: 'White-label branding', included: true, value: 'Your brand, not ours' },
-    { name: 'Team access (3 seats)', included: true, value: 'Share the work' },
-    { name: 'Email support', included: true },
-    { name: 'Custom domain', included: false },
-    { name: 'Webhooks & API', included: false },
-    { name: 'Priority support', included: false },
-  ],
-  SCALE: [
-    { name: '15 clients/month', included: true, value: '180 onboards/year' },
+    { name: '20 clients/month', included: true, value: '240 onboards/year' },
     { name: 'All platform integrations', included: true },
     { name: 'White-label branding', included: true },
     { name: 'Custom domain', included: true, value: 'Your URL, your brand' },
-    { name: 'Team access (10 seats)', included: true, value: 'Full team collaboration' },
+    { name: 'Unlimited team seats', included: true, value: 'Full team collaboration' },
     { name: 'Webhooks & API', included: true, value: 'Connect your stack' },
     { name: 'Priority support', included: true, value: 'Faster response time' },
-    { name: 'Multi-brand accounts', included: true, value: 'Manage multiple brands' },
+    { name: 'Multi-brand accounts', included: false },
+    { name: 'Custom integrations', included: false },
+  ],
+  AGENCY: [
+    { name: '50 clients/month', included: true, value: '600 onboards/year' },
+    { name: 'All platform integrations', included: true },
+    { name: 'White-label branding', included: true },
+    { name: 'Custom domain', included: true, value: 'Your URL, your brand' },
+    { name: 'Unlimited team seats', included: true, value: 'Full team collaboration' },
+    { name: 'Webhooks & API', included: true, value: 'Connect your stack' },
+    { name: 'Priority support', included: true, value: 'Faster response time' },
+    { name: 'Multi-brand accounts', included: true, value: 'Manage up to 3 brands' },
     { name: 'Custom integrations', included: true, value: 'We build what you need' },
   ],
 };
@@ -106,7 +106,7 @@ export function PlanComparison() {
 
   const handleUpgrade = async (displayTier: PricingDisplayTier) => {
     const subscriptionTier = PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER[displayTier];
-    if (!subscriptionTier) return; // FREE tier has no checkout
+    if (!subscriptionTier) return;
     const billingInterval: BillingInterval = isYearly ? 'yearly' : 'monthly';
 
     setErrorMessage(null);
@@ -193,15 +193,15 @@ export function PlanComparison() {
             <span className="inline-flex items-center gap-2">
               Yearly
               <span className="rounded-full border border-black/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral">
-                Save 25%
+                2 Months Free
               </span>
             </span>
           </button>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
           {isYearly
-            ? 'Save 25% with annual billing. Cancel anytime.'
-            : 'Billed monthly. Switch to yearly for 25% off.'}
+            ? 'Pay for 10 months, get 12. Cancel anytime.'
+            : 'Billed monthly. Switch to yearly and get 2 months free.'}
         </p>
       </div>
 
@@ -213,7 +213,7 @@ export function PlanComparison() {
         </span>
         <span className="flex items-center gap-1.5">
           <Check size={14} color="rgb(var(--teal))" />
-          Growth plan has 14-day trial
+          14-day free trial on all plans
         </span>
         <span className="flex items-center gap-1.5">
           <Check size={14} color="rgb(var(--teal))" />
@@ -231,28 +231,28 @@ export function PlanComparison() {
           <div className="space-y-3 font-mono text-sm">
             <div className="flex justify-between items-center py-2 border-b border-gray-200">
               <div>
-                <span className="font-bold text-ink">Free</span>
+                <span className="font-bold text-ink">Starter</span>
                 <span className="block text-xs text-gray-500">
-                  {PRICING_DISPLAY_TIER_DETAILS.FREE.persona}
+                  {PRICING_DISPLAY_TIER_DETAILS.STARTER.persona}
                 </span>
               </div>
-              <span className="text-gray-600">1 client</span>
+              <span className="text-gray-600">{isYearly ? '$24/mo' : '$29/mo'}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-coral/5 -mx-2 px-2 rounded">
               <div>
                 <span className="font-bold text-coral">Growth</span>
                 <span className="text-xs text-coral/70 block">Most Popular</span>
               </div>
-              <span className="text-gray-600">{isYearly ? '$30/mo' : '$40/mo'}</span>
+              <span className="text-gray-600">{isYearly ? '$66/mo' : '$79/mo'}</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <div>
-                <span className="font-bold text-ink">Scale</span>
+                <span className="font-bold text-ink">Agency</span>
                 <span className="block text-xs text-gray-500">
-                  {PRICING_DISPLAY_TIER_DETAILS.SCALE.persona}
+                  {PRICING_DISPLAY_TIER_DETAILS.AGENCY.persona}
                 </span>
               </div>
-              <span className="text-gray-600">{isYearly ? '$70/mo' : '$93/mo'}</span>
+              <span className="text-gray-600">{isYearly ? '$124/mo' : '$149/mo'}</span>
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-4 text-center font-mono">
@@ -270,18 +270,15 @@ export function PlanComparison() {
           const description = PRICING_DISPLAY_TIER_DETAILS[tier].description;
           const features = tierFeatures[tier];
           const isCurrentTier = tier === currentTier;
-          const isFree = tier === 'FREE';
-          const isRecommended = tier === 'GROWTH';
+          const isRecommended = tier === 'GROWTH'; // Growth is the most popular tier
           const canUpgrade = index > tierIndex;
 
           // Calculate display price based on billing period
-          const yearlyDiscountedPrice = Math.round(pricing.yearly * 0.75);
+          const yearlyPrice = pricing.yearly;
           const monthlyDisplayPrice = Math.round(pricing.monthly);
-          const yearlyMonthlyEquivalent = Math.round(yearlyDiscountedPrice / 12);
+          const yearlyMonthlyEquivalent = Math.round(yearlyPrice / 12);
           const displayPrice = isYearly ? yearlyMonthlyEquivalent : monthlyDisplayPrice;
-          const alternatePrice = isFree
-            ? 'Free forever'
-            : (isYearly ? `$${yearlyDiscountedPrice} billed yearly` : 'billed monthly');
+          const alternatePrice = isYearly ? `$${yearlyPrice} billed yearly` : 'billed monthly';
 
           return (
             <div
@@ -291,8 +288,6 @@ export function PlanComparison() {
                   ? 'border-indigo-500 bg-indigo-50/50 shadow-brutalist-sm'
                   : isRecommended
                   ? 'border-coral bg-card shadow-brutalist'
-                  : isFree
-                  ? '!bg-white !border-black dark:!bg-card'
                   : 'border-slate-300 bg-card hover:shadow-brutalist-sm'
               }`}
             >
@@ -315,23 +310,15 @@ export function PlanComparison() {
                 <p className="text-xs text-muted-foreground font-mono mb-3">
                   {description}
                 </p>
-                {isFree ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-dela text-3xl text-ink">Free</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-dela text-3xl text-ink">
-                        ${displayPrice}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-mono">/mo</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground font-mono mt-1">
-                      {alternatePrice}
-                    </p>
-                  </>
-                )}
+                <div className="flex items-baseline gap-1">
+                  <span className="font-dela text-3xl text-ink">
+                    ${displayPrice}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-mono">/mo</span>
+                </div>
+                <p className="text-xs text-muted-foreground font-mono mt-1">
+                  {alternatePrice}
+                </p>
               </div>
 
               {/* Features List */}
@@ -376,10 +363,6 @@ export function PlanComparison() {
                 {isCurrentTier ? (
                   <div className="text-center py-2 text-sm font-medium text-indigo-600 bg-indigo-100 rounded-lg border border-indigo-300">
                     Current Plan
-                  </div>
-                ) : isFree ? (
-                  <div className="text-center py-2 text-sm text-muted-foreground">
-                    —
                   </div>
                 ) : canUpgrade ? (
                   <Button

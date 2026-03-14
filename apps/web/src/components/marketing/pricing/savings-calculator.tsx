@@ -29,8 +29,8 @@ const platforms: Platform[] = [
 
 const clientVolumeOptions = [
   { id: '1-5', label: '1-5 clients', midPoint: 3 },
-  { id: '6-15', label: '6-15 clients', midPoint: 10 },
-  { id: '16-50', label: '16-50 clients', midPoint: 33 },
+  { id: '6-20', label: '6-20 clients', midPoint: 13 },
+  { id: '21-50', label: '21-50 clients', midPoint: 35 },
   { id: '50+', label: '50+ clients', midPoint: 75 },
 ];
 

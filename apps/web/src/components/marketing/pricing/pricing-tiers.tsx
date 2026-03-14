@@ -14,36 +14,36 @@ interface Feature {
 }
 
 const tierFeatures = {
-  free: [
-    { name: '1 active client', included: true, value: 'Test the full flow' },
-    { name: 'Core platforms (Meta, Google, LinkedIn)', included: true, value: 'The essentials' },
-    { name: 'Basic branding (logo upload)', included: true },
+  starter: [
+    { name: '5 clients/month', included: true, value: '60 onboards/year' },
+    { name: 'All platform integrations', included: true, value: 'Meta, Google, LinkedIn, TikTok, more' },
+    { name: 'White-label branding', included: true, value: 'Your brand, not ours' },
+    { name: 'Unlimited team seats', included: true, value: 'Share the work' },
     { name: 'Email support', included: true },
-    { name: 'Team access', included: false },
-    { name: 'White-label branding', included: false },
     { name: 'Custom domain', included: false },
     { name: 'Webhooks & API', included: false },
     { name: 'Priority support', included: false },
   ],
   growth: [
-    { name: '5 clients/month', included: true, value: '60 onboards/year' },
-    { name: 'All platform integrations', included: true, value: 'Meta, Google, LinkedIn, TikTok, more' },
-    { name: 'White-label branding', included: true, value: 'Your brand, not ours' },
-    { name: 'Team access (3 seats)', included: true, value: 'Share the work' },
-    { name: 'Email support', included: true },
-    { name: 'Custom domain', included: false },
-    { name: 'Webhooks & API', included: false },
-    { name: 'Priority support', included: false },
-  ],
-  scale: [
-    { name: '15 clients/month', included: true, value: '180 onboards/year' },
+    { name: '20 clients/month', included: true, value: '240 onboards/year' },
     { name: 'All platform integrations', included: true },
     { name: 'White-label branding', included: true },
     { name: 'Custom domain', included: true, value: 'Your URL, your brand' },
-    { name: 'Team access (10 seats)', included: true, value: 'Full team collaboration' },
+    { name: 'Unlimited team seats', included: true, value: 'Full team collaboration' },
     { name: 'Webhooks & API', included: true, value: 'Connect your stack' },
     { name: 'Priority support', included: true, value: 'Faster response time' },
-    { name: 'Multi-brand accounts', included: true, value: 'Manage multiple brands' },
+    { name: 'Multi-brand accounts', included: false },
+    { name: 'Custom integrations', included: false },
+  ],
+  agency: [
+    { name: '50 clients/month', included: true, value: '600 onboards/year' },
+    { name: 'All platform integrations', included: true },
+    { name: 'White-label branding', included: true },
+    { name: 'Custom domain', included: true, value: 'Your URL, your brand' },
+    { name: 'Unlimited team seats', included: true, value: 'Full team collaboration' },
+    { name: 'Webhooks & API', included: true, value: 'Connect your stack' },
+    { name: 'Priority support', included: true, value: 'Faster response time' },
+    { name: 'Multi-brand accounts', included: true, value: 'Manage up to 3 brands' },
     { name: 'Custom integrations', included: true, value: 'We build what you need' },
   ],
 };
@@ -78,7 +78,7 @@ export function PricingTiers() {
               <span className="text-coral italic">fits your team</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
-              Start free, upgrade when you're ready. Paid plans include a 14-day free trial.
+              All plans include a 14-day free trial. Choose the plan that fits your agency's needs.
             </p>
           </div>
 
@@ -91,16 +91,16 @@ export function PricingTiers() {
           <div className="border-2 border-black bg-card p-4 shadow-brutalist-sm">
             <div className="space-y-3 font-mono text-sm">
               <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                <span className="font-bold text-ink">Free</span>
-                <span className="text-gray-600">1 client</span>
+                <span className="font-bold text-ink">Starter</span>
+                <span className="text-gray-600">{isYearly ? '$24/mo' : '$29/mo'}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-coral/5 -mx-2 px-2">
                 <span className="font-bold text-coral">Growth → Most Popular</span>
-                <span className="text-gray-600">{isYearly ? '$30/mo' : '$40/mo'}</span>
+                <span className="text-gray-600">{isYearly ? '$66/mo' : '$79/mo'}</span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="font-bold text-ink">Scale</span>
-                <span className="text-gray-600">{isYearly ? '$70/mo' : '$93/mo'}</span>
+                <span className="font-bold text-ink">Agency</span>
+                <span className="text-gray-600">{isYearly ? '$124/mo' : '$149/mo'}</span>
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-4 text-center font-mono">
@@ -111,28 +111,21 @@ export function PricingTiers() {
 
         {/* Bento Grid Layout - Now visible on all screens */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
-          {/* Free Tier */}
+          {/* Starter Tier - Has Free Trial */}
           <div className="md:col-span-1">
             <PricingTierCard
-              name="Free"
-              description="Solo freelancers testing OAuth automation"
-              persona="For individuals"
-              yearlyPrice={0}
-              monthlyPrice={0}
+              tier="STARTER"
+              name="Starter"
+              description="Agencies getting started with access automation"
+              persona="For small agencies"
+              yearlyPrice={290}
+              monthlyPrice={29}
               isYearly={isYearly}
-              isFree={true}
-              hasTrial={false}
-              features={tierFeatures.free}
-              buttonText="Get Started Free"
-              buttonVariant="brutalist-ghost"
+              hasTrial={true}
+              features={tierFeatures.starter}
+              buttonText="Start Free Trial"
+              buttonVariant="brutalist-rounded"
               billingInterval={isYearly ? 'yearly' : 'monthly'}
-              onUpgradeClick={() => {
-                // Scroll to Growth tier and trigger signup
-                const growthCard = document.querySelector('[data-tier="GROWTH"]');
-                if (growthCard) {
-                  growthCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }}
             />
           </div>
 
@@ -141,10 +134,10 @@ export function PricingTiers() {
             <PricingTierCard
               tier="GROWTH"
               name="Growth"
-              description="Growing teams with 3-5 new clients/month"
-              persona="For small teams"
-              yearlyPrice={480}
-              monthlyPrice={40}
+              description="Agencies scaling their client operations"
+              persona="For growing agencies"
+              yearlyPrice={790}
+              monthlyPrice={79}
               isYearly={isYearly}
               isPopular={true}
               hasTrial={true}
@@ -155,18 +148,19 @@ export function PricingTiers() {
             />
           </div>
 
-          {/* Scale Tier - Has Free Trial */}
+          {/* Agency Tier - Has Free Trial */}
           <div className="md:col-span-1">
             <PricingTierCard
-              tier="SCALE"
-              name="Scale"
-              description="Established teams onboarding 10+ clients/month"
-              persona="For scaling teams"
-              yearlyPrice={1120}
-              monthlyPrice={93.33}
+              tier="AGENCY"
+              name="Agency"
+              description="High-volume agencies with advanced needs"
+              persona="For established agencies"
+              yearlyPrice={1490}
+              monthlyPrice={149}
               isYearly={isYearly}
+              isPro={true}
               hasTrial={true}
-              features={tierFeatures.scale}
+              features={tierFeatures.agency}
               buttonText="Start Free Trial"
               buttonVariant="brutalist-rounded"
               billingInterval={isYearly ? 'yearly' : 'monthly'}

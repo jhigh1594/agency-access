@@ -22,7 +22,6 @@ interface PricingTierCardProps {
   isYearly: boolean;
   isPopular?: boolean;
   isPro?: boolean;
-  isFree?: boolean;
   hasTrial?: boolean; // Whether this tier has a free trial (default: true for paid tiers)
   features: Feature[];
   buttonText: string;
@@ -41,7 +40,6 @@ export function PricingTierCard({
   isYearly,
   isPopular = false,
   isPro = false,
-  isFree = false,
   hasTrial = true, // Default to true for paid tiers
   features,
   buttonText,
@@ -50,37 +48,33 @@ export function PricingTierCard({
   onUpgradeClick,
 }: PricingTierCardProps) {
   // Normalize display aliases to backend tiers expected by onboarding/subscriptions.
-  const DISPLAY_TO_BACKEND: Record<'GROWTH' | 'SCALE', 'STARTER' | 'AGENCY'> = {
-    GROWTH: 'STARTER',
-    SCALE: 'AGENCY',
+  const DISPLAY_TO_BACKEND: Record<'STARTER' | 'GROWTH' | 'AGENCY' | 'SCALE', 'STARTER' | 'AGENCY' | 'PRO'> = {
+    STARTER: 'STARTER',
+    GROWTH: 'AGENCY',
+    AGENCY: 'PRO',
+    SCALE: 'AGENCY', // Legacy support
   };
 
   // Store selected tier and billing interval when user clicks CTA
   const handleTierSelect = () => {
     if (tier) {
-      const backendTier = tier === 'GROWTH' || tier === 'SCALE'
-        ? DISPLAY_TO_BACKEND[tier]
-        : tier;
+      const backendTier = DISPLAY_TO_BACKEND[tier] ?? tier;
       localStorage.setItem('selectedSubscriptionTier', backendTier);
       localStorage.setItem('selectedBillingInterval', billingInterval);
       // Notify providers to update Clerk sign-up subtitle dynamically
       window.dispatchEvent(new CustomEvent('tierSelected', { detail: { tier: backendTier, displayName: name } }));
     }
   };
-  const yearlyDiscountedPrice = Math.round(yearlyPrice * 0.75);
+  const yearlyDiscountedPrice = yearlyPrice;
   const monthlyDisplayPrice = Math.round(monthlyPrice);
   const yearlyMonthlyEquivalent = Math.round(yearlyDiscountedPrice / 12);
-  const displayPrice = isFree ? 0 : (isYearly ? yearlyMonthlyEquivalent : monthlyDisplayPrice);
-  const period = isFree ? '' : '/mo';
-  const alternatePrice = isFree
-    ? 'Free forever'
-    : (isYearly ? `$${yearlyDiscountedPrice} billed yearly` : 'billed monthly');
+  const displayPrice = isYearly ? yearlyMonthlyEquivalent : monthlyDisplayPrice;
+  const period = '/mo';
+  const alternatePrice = isYearly ? `$${yearlyDiscountedPrice} billed yearly` : 'billed monthly';
 
   const cardBaseClasses = `relative border-2 ${
     isPro
       ? 'bg-ink border-teal text-paper'
-      : isFree
-      ? '!bg-white !border-black dark:!bg-card'
       : 'bg-card border-black'
   }`;
 
@@ -126,22 +120,12 @@ export function PricingTierCard({
       {/* Price */}
       <div className="mb-6">
         <div className="flex items-baseline gap-2">
-          {isFree ? (
-            <>
-              <span className={`font-dela text-4xl sm:text-5xl ${textColorClass}`}>
-                Free
-              </span>
-            </>
-          ) : (
-            <>
-              <span className={`font-dela text-4xl sm:text-5xl ${textColorClass}`}>
-                ${displayPrice}
-              </span>
-              <span className={`font-mono text-sm ${textColorMutedClass}`}>
-                {period}
-              </span>
-            </>
-          )}
+          <span className={`font-dela text-4xl sm:text-5xl ${textColorClass}`}>
+            ${displayPrice}
+          </span>
+          <span className={`font-mono text-sm ${textColorMutedClass}`}>
+            {period}
+          </span>
         </div>
         <div className={`font-mono text-xs ${textColorMutedClass} mt-1`}>
           {alternatePrice}
@@ -204,8 +188,8 @@ export function PricingTierCard({
         </ul>
       </div>
 
-      {/* Trust Badges - Only show for paid tiers with trial */}
-      {!isFree && hasTrial && (
+      {/* Trust Badges - Show for paid tiers with trial */}
+      {hasTrial && (
         <div className={`mt-6 pt-6 border-t-2 ${isPro ? 'border-gray-700' : 'border-black'} space-y-2`}>
         <div className={`flex items-center gap-2 text-xs font-mono ${textColorMutedClass}`}>
           <Check
@@ -229,21 +213,6 @@ export function PricingTierCard({
           <span>No credit card required</span>
         </div>
       </div>
-      )}
-
-      {/* Upsell CTA - Only show for Free tier */}
-      {isFree && onUpgradeClick && (
-        <div className="mt-6 pt-4 border-t-2 border-gray-200">
-          <button
-            onClick={onUpgradeClick}
-            className="w-full p-3 bg-coral/5 border-2 border-coral/20 hover:border-coral/40 hover:bg-coral/10 transition-all text-center group"
-          >
-            <p className="text-xs font-mono text-gray-600 group-hover:text-gray-700">
-              Need white-label or team access?{' '}
-              <span className="text-coral font-bold">Try Growth free →</span>
-            </p>
-          </button>
-        </div>
       )}
     </m.div>
   );

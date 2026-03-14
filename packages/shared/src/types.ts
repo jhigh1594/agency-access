@@ -1605,21 +1605,21 @@ export type BillingInterval = z.infer<typeof BillingIntervalSchema>;
 
 export const SUBSCRIPTION_TIER_NAMES: Record<SubscriptionTier, string> = {
   STARTER: 'Starter',
-  AGENCY: 'Agency',
-  PRO: 'Pro',
+  AGENCY: 'Growth',
+  PRO: 'Agency',
   ENTERPRISE: 'Enterprise',
 };
 
 // Pricing display tiers shown in billing UIs and Clerk metadata
-export const PricingDisplayTierSchema = z.enum(['FREE', 'GROWTH', 'SCALE']);
+export const PricingDisplayTierSchema = z.enum(['STARTER', 'GROWTH', 'AGENCY']);
 export type PricingDisplayTier = z.infer<typeof PricingDisplayTierSchema>;
 
-export const PRICING_DISPLAY_TIER_ORDER: PricingDisplayTier[] = ['FREE', 'GROWTH', 'SCALE'];
+export const PRICING_DISPLAY_TIER_ORDER: PricingDisplayTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
 
 export const PRICING_DISPLAY_TIER_NAMES: Record<PricingDisplayTier, string> = {
-  FREE: 'Free',
+  STARTER: 'Starter',
   GROWTH: 'Growth',
-  SCALE: 'Scale',
+  AGENCY: 'Agency',
 };
 
 export const PRICING_DISPLAY_TIER_DETAILS: Record<PricingDisplayTier, {
@@ -1629,46 +1629,46 @@ export const PRICING_DISPLAY_TIER_DETAILS: Record<PricingDisplayTier, {
   monthlyPrice: number;
   yearlyPrice: number;
 }> = {
-  FREE: {
-    name: 'Free',
-    persona: 'For individuals',
-    description: 'Solo freelancers testing OAuth automation',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
+  STARTER: {
+    name: 'Starter',
+    persona: 'For small agencies',
+    description: 'Agencies getting started with access automation',
+    monthlyPrice: 29,
+    yearlyPrice: 290,
   },
   GROWTH: {
     name: 'Growth',
-    persona: 'For small teams',
-    description: 'Growing agencies with 3-5 new clients/month',
-    monthlyPrice: 40,
-    yearlyPrice: 480,
-  },
-  SCALE: {
-    name: 'Scale',
     persona: 'For growing agencies',
-    description: 'Established agencies onboarding 10+ clients/month',
-    monthlyPrice: 93.33,
-    yearlyPrice: 1120,
+    description: 'Agencies scaling their client operations',
+    monthlyPrice: 79,
+    yearlyPrice: 790,
+  },
+  AGENCY: {
+    name: 'Agency',
+    persona: 'For established agencies',
+    description: 'High-volume agencies with advanced needs',
+    monthlyPrice: 149,
+    yearlyPrice: 1490,
   },
 };
 
 export const SUBSCRIPTION_TIER_TO_PRICING_DISPLAY_TIER: Record<SubscriptionTier, PricingDisplayTier> = {
-  STARTER: 'GROWTH',
-  AGENCY: 'SCALE',
-  PRO: 'SCALE',
-  ENTERPRISE: 'SCALE',
+  STARTER: 'STARTER',
+  AGENCY: 'GROWTH',
+  PRO: 'AGENCY',
+  ENTERPRISE: 'AGENCY',
 };
 
 export const PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER: Record<PricingDisplayTier, SubscriptionTier | null> = {
-  FREE: null,
-  GROWTH: 'STARTER',
-  SCALE: 'AGENCY',
+  STARTER: 'STARTER',
+  GROWTH: 'AGENCY',
+  AGENCY: 'PRO',
 };
 
 export function getPricingDisplayTierFromSubscriptionTier(
   tier: SubscriptionTier | null | undefined
 ): PricingDisplayTier {
-  if (!tier) return 'FREE';
+  if (!tier) return 'STARTER';
   return SUBSCRIPTION_TIER_TO_PRICING_DISPLAY_TIER[tier];
 }
 
@@ -1766,42 +1766,42 @@ export const TIER_LIMITS: Record<SubscriptionTier, {
   description: string;
 }> = {
   STARTER: {
-    accessRequests: 10,
+    accessRequests: 5,
     clients: 5,
-    members: 2,
+    members: -1,
     templates: 3,
     clientOnboards: 36,
     platformAudits: 120,
-    teamSeats: 1,
+    teamSeats: -1,
     features: ['all_platforms', 'email_support'],
-    priceMonthly: 40,
-    priceYearly: 480,
+    priceMonthly: 29,
+    priceYearly: 290,
     description: 'Perfect for small agencies getting started',
   },
   AGENCY: {
-    accessRequests: 50,
-    clients: 25,
-    members: 5,
+    accessRequests: 20,
+    clients: 20,
+    members: -1,
     templates: 10,
     clientOnboards: 120,
     platformAudits: 600,
-    teamSeats: 5,
+    teamSeats: -1,
     features: ['all_platforms', 'priority_support', 'custom_branding', 'api_access', 'white_label'],
-    priceMonthly: 93,
-    priceYearly: 1120,
+    priceMonthly: 79,
+    priceYearly: 790,
     description: 'For established agencies scaling fast',
   },
   PRO: {
-    accessRequests: 100,
+    accessRequests: 50,
     clients: 50,
-    members: 10,
+    members: -1,
     templates: 20,
     clientOnboards: 600,
     platformAudits: 3000,
     teamSeats: -1,
     features: ['all_platforms', 'priority_support', 'custom_branding', 'api_access', 'multi_brand'],
-    priceMonthly: 187,
-    priceYearly: 2240,
+    priceMonthly: 149,
+    priceYearly: 1490,
     description: 'For growing agencies with more clients',
   },
   ENTERPRISE: {

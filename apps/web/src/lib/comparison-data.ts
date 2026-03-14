@@ -14,7 +14,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
   slug: "leadsie-alternative",
   title: "Leadsie Alternative | Why Agencies Switch to AuthHub",
   metaTitle: "Leadsie Alternative | Why Agencies Switch to AuthHub",
-  metaDescription: "Looking for a Leadsie alternative? AuthHub combines access + intake in one link, flat-rate pricing at $79/mo, and US-based support. See why agencies made the switch.",
+  metaDescription: "Looking for a Leadsie alternative? AuthHub combines access + intake in one link, flat-rate pricing starting at $29/mo, and US-based support. See why agencies made the switch.",
 
   competitor: {
     name: "Leadsie",
@@ -85,37 +85,36 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     tagline: "Access + Intake in One Professional Link",
     logo: "/logo.png",
     pricing: {
-      starting: 79,
+      starting: 29,
       currency: "USD",
       billing: "monthly",
       starter: {
-        price: 79,
+        price: 29,
         features: [
-          "Unlimited clients",
+          "5 clients/month",
           "15+ platforms",
-          "Access + Intake forms",
+          "Unlimited team seats",
+          "White-label branding",
           "US-based support",
-          "API access",
-          "Audit logging",
         ],
       },
       pro: {
-        price: 149,
+        price: 79,
         features: [
           "Everything in Starter",
-          "Custom branding",
-          "Reusable templates",
-          "Priority support",
-          "Multi-language (EN, ES, NL)",
+          "20 clients/month",
+          "API access",
+          "Custom domain",
+          "Webhooks",
         ],
       },
       enterprise: {
         price: "Custom",
         features: [
-          "Full white-label",
-          "SSO",
-          "Dedicated CSM",
-          "SLA guarantee",
+          "Everything in Pro",
+          "50 clients/month",
+          "Multi-brand (3 brands)",
+          "Priority support",
           "Custom integrations",
         ],
       },
@@ -147,7 +146,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     ],
   },
 
-  excerpt: "Stop juggling separate tools for access and intake. Get both in one professional link—at a predictable flat rate. Save $240/year compared to Leadsie's Agency tier.",
+  excerpt: "Stop juggling separate tools for access and intake. Get both in one professional link—at a predictable flat rate starting at $29/mo. Save $840/year compared to Leadsie's Agency tier.",
 
   content: "", // Rendered by component from structured data
 
@@ -160,7 +159,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
       quote: "I never know what my bill will be each month.",
       description:
         "Usage-based pricing creates unpredictable costs. One busy month throws your budget. Growing agencies need predictable expenses they can plan around.",
-      solution: "Flat-rate $79/mo with unlimited clients",
+      solution: "Flat-rate pricing starting at $29/mo",
     },
     {
       title: "Two-Step Onboarding",
@@ -195,7 +194,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     { feature: "Onboarding Templates", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
     { feature: "API Access (All Tiers)", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
     { feature: "Flat-Rate Pricing", competitor: false, authhub: true, winner: "authhub" },
-    { feature: "Starting Price", competitor: "$99/mo", authhub: "$79/mo", winner: "authhub" },
+    { feature: "Starting Price", competitor: "$99/mo", authhub: "$29/mo", winner: "authhub" },
   ],
 
   detailedComparison: [
@@ -386,7 +385,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     primaryLink: "/signup",
     secondaryButton: "View Pricing",
     secondaryLink: "/pricing",
-    guarantee: "✓ Access + Intake in one link  ✓ $79/mo flat rate  ✓ US-based support",
+    guarantee: "✓ Access + Intake in one link  ✓ $29/mo flat rate  ✓ US-based support",
   },
 
   isProgrammatic: true,
@@ -496,15 +495,15 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     tagline: "Enterprise-grade client access with automation built-in",
     logo: "/logo.png",
     pricing: {
-      starting: 30,
+      starting: 24,
       currency: "USD",
       billing: "monthly",
       starter: {
-        price: 30,
+        price: 24,
         features: [
-          "Unlimited clients",
-          "White-label + custom domain",
-          "API + webhooks included",
+          "5 clients/month",
+          "Unlimited team seats",
+          "White-label branding",
           "Automatic token refresh",
           "Complete audit logs",
           "SOC 2 Type II security",
@@ -512,21 +511,22 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
         ],
       },
       pro: {
-        price: 79,
+        price: 66,
         features: [
-          "Everything in Growth",
+          "Everything in Starter",
+          "20 clients/month",
+          "API + webhooks",
+          "Custom domain",
           "Priority support",
-          "Advanced automation",
-          "Multi-language (EN, ES, NL)",
         ],
       },
       enterprise: {
         price: "Custom",
         features: [
-          "Full white-label",
-          "SSO",
-          "Dedicated CSM",
-          "SLA guarantee",
+          "Everything in Pro",
+          "50 clients/month",
+          "Multi-brand (3 brands)",
+          "Priority support",
           "Custom integrations",
         ],
       },
@@ -583,8 +583,8 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
       title: "Invite Limits on Starter",
       icon: "Users",
       quote: "I hit the 5-invite limit on Starter and now I'm stuck until next month.",
-      description: "AgencyAccess caps Starter at 5 invites/month. Growing agencies can blow through that in one busy week. You need Premium ($74/mo) for unlimited invites.",
-      solution: "AuthHub Growth includes unlimited clients at $30/mo—no invite caps, no upgrade pressure.",
+      description: "AgencyAccess caps Starter at 5 invites/month. Growing agencies can blow through that in one busy week. You need Premium ($74/mo) for more invites.",
+      solution: "AuthHub Growth includes 20 clients/month at $66/mo—no invite caps, no upgrade pressure.",
     },
   ],
 
@@ -629,7 +629,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     {
       category: "Pricing & Limits",
       features: [
-        { name: "Starting Price", competitor: "$33/mo (annual)", authhub: "$30/mo" },
+        { name: "Starting Price", competitor: "$33/mo (annual)", authhub: "$24/mo" },
         { name: "Unlimited Clients", competitor: "Premium only", authhub: "All plans", notes: "AuthHub advantage" },
         { name: "Starter Invite Limit", competitor: "5/month", authhub: "Unlimited" },
         { name: "Free Trial", competitor: "30 days", authhub: "14 days" },
@@ -764,7 +764,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     },
     {
       question: "Is AuthHub more expensive than AgencyAccess?",
-      answer: "AuthHub Growth starts at $30/month with unlimited clients and API access. AgencyAccess Starter is $33/month (annual) but limits you to 5 invites. For equivalent features (unlimited invites, automation), AgencyAccess Premium costs $74/month. AuthHub delivers better value for automation-focused teams.",
+      answer: "AuthHub Growth starts at $66/month ($79 yearly) with 20 clients/month and API access. AgencyAccess Starter is $33/month (annual) but limits you to 5 invites. For equivalent features (more invites, automation), AgencyAccess Premium costs $74/month. AuthHub delivers better value for automation-focused teams.",
     },
     {
       question: "What security certifications does AuthHub have?",

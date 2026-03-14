@@ -14,52 +14,15 @@ import {
 } from 'lucide-react';
 import { useSubscription, useOpenPortal } from '@/lib/query/billing';
 import type { SubscriptionTier } from '@agency-platform/shared';
+import { SUBSCRIPTION_TIER_NAMES, TIER_LIMITS } from '@agency-platform/shared';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 
-type DisplayTier = SubscriptionTier | 'FREE';
-
-const DISPLAY_TIER_DETAILS: Record<DisplayTier, {
-  name: string;
-  description: string;
-  monthlyPrice: number;
-  priceSuffix: string;
-}> = {
-  FREE: {
-    name: 'Free',
-    description: 'Solo freelancers testing OAuth automation',
-    monthlyPrice: 0,
-    priceSuffix: 'forever',
-  },
-  STARTER: {
-    name: 'Growth',
-    description: 'Growing agencies with 3-5 new clients/month',
-    monthlyPrice: 40,
-    priceSuffix: '/month',
-  },
-  AGENCY: {
-    name: 'Scale',
-    description: 'Established agencies onboarding 10+ clients/month',
-    monthlyPrice: 93.33,
-    priceSuffix: '/month',
-  },
-  PRO: {
-    name: 'Pro',
-    description: 'For growing agencies with more clients',
-    monthlyPrice: 187,
-    priceSuffix: '/month',
-  },
-  ENTERPRISE: {
-    name: 'Enterprise',
-    description: 'Unlimited everything for large agencies',
-    monthlyPrice: 299,
-    priceSuffix: '/month',
-  },
-};
-
-function formatMonthlyPrice(price: number): string {
-  if (price === 0) return 'Free';
-  return Number.isInteger(price) ? `$${price}` : `$${price.toFixed(2)}`;
+function formatMonthlyPrice(tier: SubscriptionTier | null): string {
+  if (!tier) return 'Free';
+  const limits = TIER_LIMITS[tier];
+  if (!limits) return 'Free';
+  return `$${limits.priceMonthly}`;
 }
 
 export function CurrentPlanCard() {
@@ -90,8 +53,9 @@ export function CurrentPlanCard() {
     );
   }
 
-  const currentTier: DisplayTier = subscription?.tier ?? 'FREE';
-  const tierInfo = DISPLAY_TIER_DETAILS[currentTier];
+  const currentTier: SubscriptionTier | null = subscription?.tier ?? null;
+  const tierName = currentTier ? SUBSCRIPTION_TIER_NAMES[currentTier] : 'Free';
+  const monthlyPrice = formatMonthlyPrice(currentTier);
 
   const getStatusBadge = () => {
     if (!subscription) return null;
@@ -125,14 +89,22 @@ export function CurrentPlanCard() {
       <div className="p-4 bg-card rounded-lg border border-border">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h3 className="text-lg font-semibold text-ink">{tierInfo.name} Plan</h3>
-            <p className="text-sm text-muted-foreground">{tierInfo.description}</p>
+            <h3 className="text-lg font-semibold text-ink">{tierName} Plan</h3>
+            <p className="text-sm text-muted-foreground">
+              {currentTier === 'STARTER' && 'Agencies getting started with access automation'}
+              {currentTier === 'AGENCY' && 'Agencies scaling their client operations'}
+              {currentTier === 'PRO' && 'High-volume agencies with advanced needs'}
+              {currentTier === 'ENTERPRISE' && 'Unlimited everything for large agencies'}
+              {!currentTier && 'Try before you commit'}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-ink">
-              {formatMonthlyPrice(tierInfo.monthlyPrice)}
+              {monthlyPrice}
             </p>
-            <p className="text-sm text-muted-foreground">{tierInfo.priceSuffix}</p>
+            <p className="text-sm text-muted-foreground">
+              {!currentTier ? 'forever' : '/month'}
+            </p>
           </div>
         </div>
 
