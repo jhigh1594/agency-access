@@ -1850,10 +1850,26 @@ export const FREE_TIER_LIMITS: {
 /**
  * Get tier limits config for a given subscription tier.
  * Returns FREE_TIER_LIMITS when tier is null/undefined (no subscription).
+ * Handles legacy 'FREE' tier by mapping to STARTER (pre-launch defensive coding).
  */
-export function getTierLimitsConfig(tier: SubscriptionTier | null | undefined) {
+export function getTierLimitsConfig(tier: SubscriptionTier | null | undefined | string) {
+  // Handle null/undefined (no subscription)
   if (!tier) return FREE_TIER_LIMITS;
-  return TIER_LIMITS[tier];
+
+  // Handle legacy FREE tier (pre-launch defensive coding)
+  // Maps legacy FREE tier to STARTER limits
+  if (tier === 'FREE') {
+    console.warn('[LEGACY_TIER] Encountered deprecated FREE tier. Mapping to STARTER tier limits.');
+    return TIER_LIMITS.STARTER;
+  }
+
+  // Handle unknown tiers gracefully
+  if (!(tier in TIER_LIMITS)) {
+    console.error(`[UNKNOWN_TIER] Encountered unknown tier: ${tier}. Defaulting to STARTER tier limits.`);
+    return TIER_LIMITS.STARTER;
+  }
+
+  return TIER_LIMITS[tier as SubscriptionTier];
 }
 
 // Detailed tier information for UI display

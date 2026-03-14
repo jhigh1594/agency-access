@@ -169,7 +169,7 @@ export class QuotaService {
         limit: 'unlimited',
         used: await this.getActualUsage(agencyId, metric),
         remaining: 'unlimited',
-        currentTier: tier || ('FREE' as any),
+        currentTier: (tier || 'STARTER') as SubscriptionTier,
         upgradeUrl: undefined,
       };
     }
@@ -195,7 +195,7 @@ export class QuotaService {
       limit: limit as number,
       used,
       remaining,
-      currentTier: tier || ('FREE' as any),
+      currentTier: (tier || 'STARTER') as SubscriptionTier,
       suggestedTier,
       upgradeUrl: `/checkout?tier=${suggestedTier}`,
     };
@@ -369,7 +369,7 @@ export class QuotaService {
       ];
 
       const usage: Partial<UsageSnapshot> = {
-        currentTier: tier || ('FREE' as any),
+        currentTier: (tier || 'STARTER') as SubscriptionTier,
         updatedAt: new Date(),
       };
 

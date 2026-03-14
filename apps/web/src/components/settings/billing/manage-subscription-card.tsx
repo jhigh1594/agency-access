@@ -41,9 +41,14 @@ const TIER_RANK: Record<CurrentTier, number> = {
 };
 
 function normalizeCurrentTier(tier: SubscriptionTier | null | undefined): CurrentTier {
-  if (!tier) return 'FREE';
+  // Default to STARTER for null/undefined (defensive coding for pre-launch)
+  if (!tier) return 'STARTER';
   if (tier === 'STARTER') return 'STARTER';
-  return 'AGENCY';
+  // Map PRO to AGENCY for UI display (PRO maps to "Agency" pricing tier)
+  // This is a temporary mapping due to dual-tier system
+  if (tier === 'PRO') return 'AGENCY';
+  // Enterprise not manageable in this UI
+  return 'STARTER';
 }
 
 export function ManageSubscriptionCard() {

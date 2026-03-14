@@ -171,7 +171,7 @@ export default function InternalAdminAgenciesPage() {
                 </div>
                 <div className="border border-border rounded-md p-3 bg-background">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscription</p>
-                  <p className="mt-2 text-ink">Tier: {selectedAgency.subscription?.tier || 'FREE'}</p>
+                  <p className="mt-2 text-ink">Tier: {selectedAgency.subscription?.tier || 'STARTER'}</p>
                   <p className="text-ink">Status: {selectedAgency.subscription?.status || 'none'}</p>
                 </div>
                 <div className="border border-border rounded-md p-3 bg-background">

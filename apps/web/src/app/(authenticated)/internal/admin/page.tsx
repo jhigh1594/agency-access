@@ -101,7 +101,7 @@ export default function InternalAdminOverviewPage() {
                         <p className="text-ink font-medium">{agency.name}</p>
                         <p className="text-xs text-muted-foreground">{agency.email}</p>
                       </td>
-                      <td className="py-3 text-ink">{agency.tier || 'FREE'}</td>
+                      <td className="py-3 text-ink">{agency.tier || 'STARTER'}</td>
                       <td className="py-3 text-right text-ink tabular-nums">{agency.clientOnboards}</td>
                       <td className="py-3 text-right text-ink tabular-nums">{agency.platformAudits}</td>
                       <td className="py-3 text-right text-ink tabular-nums">{agency.teamSeats}</td>
