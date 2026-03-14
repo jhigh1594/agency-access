@@ -44,16 +44,21 @@ jobs:
       - name: Generate blog post with z.ai API
         id: generate
         run: |
-          # Prepare the prompt
+          echo "📖 Reading workflow prompt..."
           PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
+          echo "✅ Workflow prompt read ($(echo "$PROMPT" | wc -c) characters)"
 
-          echo "Calling z.ai API..."
+          echo "🤖 Calling z.ai API..."
+          echo "🔑 API Endpoint: https://api.z.ai/api/anthropic/v1/messages"
+          echo "📦 Model: glm-4.7"
+          echo "🎯 Max tokens: 8000"
 
           # Call z.ai API (Anthropic-compatible endpoint)
           RESPONSE=$(curl -X POST "https://api.z.ai/api/anthropic/v1/messages" \
             -H "x-api-key: ${{ secrets.ZAI_API_KEY }}" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
+            -s \
             -d '{
               "model": "glm-4.7",
               "max_tokens": 8000,
@@ -61,19 +66,33 @@ jobs:
               "messages": [
                 {
                   "role": "user",
-                  "content": "Read the blog creation workflow at .claude/prompts/blog-creation-workflow.md and execute all 7 phases:\n\n1. Research - Read marketing/CONTENT-STRATEGY-2026.md, marketing/content/CONTENT-CALENDAR-Q1-2026.md, marketing/content/KEYWORD-TRACKER.md, apps/web/src/lib/blog-data.ts\n\n2. Select a topic autonomously based on: P0/P1 priorities, keyword gaps, strategic alignment\n\n3. Outline - Follow TikTok Ads Access guide structure with H2/H3 hierarchy, tables, step-by-step instructions, common issues, pro tips\n\n4. Create - Write complete blog post (2000-3000 words) with all metadata fields (id, slug, title, excerpt, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription, relatedPosts)\n\n5. SEO - Include primary keyword in title/slug/H1/first paragraph/meta description. Add 3-5 internal links, 2-3 external links. Target featured snippet.\n\n6. Review - Check brand voice (professional, approachable, helpful). Verify content checklist.\n\n7. Output - Present final blog post in TypeScript BlogPost format, ready to add to apps/web/src/lib/blog-data.ts\n\nIMPORTANT: Output ONLY the TypeScript code for the BlogPost object. No explanations, no markdown outside the code block. Start with { and end with }."
+                  "content": "Read the blog creation workflow at .claude/prompts/blog-creation-workflow.md and execute all 7 phases:\n\n1. Research - Read marketing/CONTENT-STRATEGY-2026.md, marketing/content/CONTENT-CALENDAR-Q1-2026.md, marketing/content/KEYWORD-TRACKER.md, apps/web/src/lib/blog-data.ts\n\n2. Select a topic autonomously based on: P0/P1 priorities, keyword gaps, strategic alignment\n\n3. Outline - Follow TikTok Ads Access guide structure with H2/H3 hierarchy, tables, step-by-step instructions, common issues, pro tips\n\n4. Create - Write complete blog post (2000-3000 words) with all metadata fields (id, slug, title, excerpt, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription, relatedPosts)\n\n5. SEO - Include primary keyword in title/slug/H1/first paragraph/meta description. Add 3-5 internal links, 2-3 external links. Target featured snippet.\n\n6. Review - Check brand voice (professional, approachable, helpful). Verify content checklist.\n\n7. Output - Present final blog post in TypeScript BlogPost format, ready to add to apps/web/lib/blog-data.ts\n\nCRITICAL REQUIREMENTS:\n- Output ONLY the TypeScript code for the BlogPost object\n- Start with { and end with }\n- No explanations, no markdown outside the code block\n- Include all required fields: id, slug, title, excerpt, content, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription\n\nExample format:\n{\n  id: \"your-blog-post-id\",\n  slug: \"url-slug\",\n  title: \"Compelling Headline (2026)\",\n  excerpt: \"150-char summary\",\n  content: \"Full markdown content...\",\n  category: \"tutorials\",\n  stage: \"awareness\",\n  publishedAt: \"2026-03-13\",\n  readTime: 5,\n  author: { name: \"AuthHub Team\", role: \"Agency Operations Experts\" },\n  tags: [\"tag1\", \"tag2\", \"tag3\"],\n  metaTitle: \"SEO title\",\n  metaDescription: \"SEO description\"\n}"
                 }
               ]
             }')
 
-          # Save response
+          # Check if API call was successful
+          if [ $? -ne 0 ]; then
+            echo "❌ API call failed!"
+            exit 1
+          fi
+
+          # Save response for debugging
           echo "$RESPONSE" > /tmp/zai_response.json
+          echo "📄 Response saved to /tmp/zai_response.json"
 
           # Extract content from response
-          CONTENT=$(echo "$RESPONSE" | jq -r '.content[0].text' 2>/dev/null || echo "$RESPONSE")
-          echo "$CONTENT" > /tmp/blog_post.ts
+          CONTENT=$(echo "$RESPONSE" | jq -r '.content[0].text' 2>/dev/null)
 
-          echo "Blog post generated!"
+          if [ -z "$CONTENT" ]; then
+            echo "❌ Failed to extract content from response"
+            echo "📄 Raw response:"
+            echo "$RESPONSE" | head -c 500
+            exit 1
+          fi
+
+          echo "$CONTENT" > /tmp/blog_post.ts
+          echo "✅ Blog post content extracted ($(echo "$CONTENT" | wc -c) characters)"
 
       - name: Extract and validate blog post content
         id: extract
@@ -170,6 +189,43 @@ jobs:
 
       - name: Update keyword tracker
         run: |
+          # This would need more sophisticated parsing
+          # For now, just note that a post was published
+          echo "# Blog Post Published $TODAY" >> marketing/content/KEYWORD-TRACKER.md
+
+      - name: Generate branch name
+        id: branch-name
+        run: |
+          BRANCH_NAME="blog-post-$(date +%Y%m%d)"
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "🌿 Branch name: $BRANCH_NAME"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "📝 Blog Post: AI Generated (${{ steps.branch-name.outputs.branch }})"
+          body: |
+            ## AI-Generated Blog Post
+
+            This blog post was automatically generated using the z.ai API workflow.
+
+            ### Changes
+            - ✅ Added new blog post to `apps/web/src/lib/blog-data.ts`
+            - ✅ Updated content calendar status
+            - ✅ Updated keyword tracker
+
+            ### Review Checklist
+            - [ ] Blog post follows TikTok Ads Access template structure
+            - [ ] SEO optimized (keyword in title, slug, H1, first paragraph)
+            - [ ] Internal links included (3-5 minimum)
+            - [ ] External links to authoritative sources (2-3 minimum)
+            - [ ] Brand voice consistent (professional, approachable)
+            - [ ] All metadata fields complete
+            - [ ] Read time calculated correctly
+
+            ---
+            🤖 Generated by z.ai API (GLM-4.7 model)
+          branch: ${{ steps.branch-name.outputs.branch }}|
           # This would need more sophisticated parsing
           # For now, just note that a post was published
           echo "# Blog Post Published $TODAY" >> marketing/content/KEYWORD-TRACKER.md
