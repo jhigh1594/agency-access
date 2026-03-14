@@ -59,6 +59,28 @@ describe('proxy public route handling', () => {
     expect(protectMock).not.toHaveBeenCalled();
   });
 
+  it('does not protect sitemap.xml (required for Google Search Console)', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/sitemap.xml'),
+    );
+
+    expect(protectMock).not.toHaveBeenCalled();
+  });
+
+  it('does not protect robots.txt (required for crawler discovery)', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/robots.txt'),
+    );
+
+    expect(protectMock).not.toHaveBeenCalled();
+  });
+
   it('still protects partner portal routes', async () => {
     const { default: proxy } = await import('../proxy');
 

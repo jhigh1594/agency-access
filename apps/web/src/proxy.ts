@@ -25,6 +25,8 @@ const isPublicRoute = createRouteMatcher([
   '/platforms/callback',
   '/onboarding/(.*)',
   '/r/(.*)',
+  '/sitemap.xml',
+  '/robots.txt',
 ])
 
 /** Marketing pages that should redirect authenticated users to the dashboard. */
