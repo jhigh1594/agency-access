@@ -133,16 +133,30 @@ jobs:
       - name: Update blog-data.ts with new post
         id: update-blog
         run: |
+          # Use Python to reliably update blog-data.ts
+          python3 << 'PYTHON_UPDATE'
+          import re
+
           # Read the generated blog post
-          NEW_POST=$(cat /tmp/blog_post.ts)
+          with open('/tmp/blog_post.ts', 'r') as f:
+              new_post = f.read()
 
-          # Add to blog-data.ts - insert new post before closing bracket
-          sed -i.bak '/^export const BLOG_POSTS: BlogPost\[\] = \[$/a  '"$NEW_POST",' ' apps/web/src/lib/blog-data.ts
+          # Read the current blog-data.ts
+          with open('apps/web/src/lib/blog-data.ts', 'r') as f:
+              content = f.read()
 
-          # Clean up backup
-          rm -f apps/web/src/lib/blog-data.ts.bak
+          # Insert new post before the closing bracket of the BLOG_POSTS array
+          pattern = r'(export const BLOG_POSTS: BlogPost\[\] = \[)'
+          replacement = rf'\1\n  {new_post},'
 
-          echo "✅ Updated blog-data.ts"
+          content = re.sub(pattern, replacement, content)
+
+          # Write back
+          with open('apps/web/src/lib/blog-data.ts', 'w') as f:
+              f.write(content)
+
+          print("✅ Updated blog-data.ts")
+          PYTHON_UPDATE
 
       - name: Update content calendar
         run: |
