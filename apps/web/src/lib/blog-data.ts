@@ -11,7 +11,7 @@ export const BLOG_POSTS: BlogPost[] = [
   slug: "agency-ad-account-access-management-guide",
   title: "The Ultimate Guide to Agency Ad Account Access Management in 2026",
   excerpt: "Stop losing clients to credential chaos. Master the modern workflow for securing, managing, and auditing ad access across Facebook, Google, and TikTok without the security risks.",
-  content: "# The Ultimate Guide to Agency Ad Account Access Management in 2026
+  content: `# The Ultimate Guide to Agency Ad Account Access Management in 2026
 
 **Client onboarding is supposed to be the start of a beautiful partnership. But for many agency owners, it’s the start of a security nightmare.**
 
@@ -151,7 +151,7 @@ Agencies often view **ad account access management** as a boring administrative 
 
 By implementing the workflows and rules outlined above, you transform a chaotic liability into a streamlined competitive advantage. You protect your clients, you empower your team, and you ensure that when your agency scales, you scale safely.
 
-**Ready to stop the spreadsheet madness?** Streamline your agency's access control today.",
+**Ready to stop the spreadsheet madness?** Streamline your agency's access control today.`,
   category: "tutorials",
   stage: "consideration",
   publishedAt: "2026-03-13",
@@ -174,7 +174,7 @@ By implementing the workflows and rules outlined above, you transform a chaotic 
   slug: "troubleshooting-guide-how-to-fix-common-ad-account-access-issues",
   title: "Troubleshooting Guide: How to Fix Common Ad Account Access Issues (2026)",
   excerpt: "Resolve 'Request Access' loops and permission errors instantly. Our technical guide helps you fix Ad Account access issues on Meta, TikTok, and Google without losing campaign data.",
-  content: "# Troubleshooting Guide: How to Fix Common Ad Account Access Issues
+  content: `# Troubleshooting Guide: How to Fix Common Ad Account Access Issues
 
 **Nothing halts momentum faster than clicking 'Request Access' and receiving... silence.** Or worse, successfully inviting a client, only to be locked out of the very ad account you need to manage.
 
@@ -326,7 +326,7 @@ If you're tired of being the 'reset password' middleman, explore how **AuthHub**
 **Related Resources:**
 *   [How to structure your Agency's Business Manager for 2026](/blog/agency-business-manager-structure)
 *   [The Client Offboarding Checklist: Revoking Access Securely](/blog/client-offboarding-checklist)
-*   [Meta Business Suite vs. Business Manager: What's the Difference?](/blog/meta-business-suite-vs-manager)",
+*   [Meta Business Suite vs. Business Manager: What's the Difference?](/blog/meta-business-suite-vs-manager)`,
   category: "tutorials",
   stage: "consideration",
   publishedAt: "2026-03-13",
