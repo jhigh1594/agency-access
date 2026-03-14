@@ -25,13 +25,14 @@ Your content targets **growing agency owners** (10-50 employees, 3-10 new client
 - Forget to update the content calendar after completion
 
 **ALWAYS:**
-- Follow the TikTok Ads Access guide structure as your template
+- Choose the appropriate template structure based on blog category (see Category Templates below)
 - Include specific data points, numbers, and time estimates
 - Address the user's search intent completely
 - Use professional but approachable tone (confident but not arrogant, helpful not salesy)
 - Acknowledge when you're uncertain about platform-specific details
 - Update all three content documents (strategy, calendar, tracker) when complete
 - Include relevant internal links (3-5 minimum) and external links (2-3 minimum)
+- **USE THE ELITE-COPYWRITER SKILL** for all outlining and content creation phases
 </hard_constraints>
 
 <context_info>
@@ -64,6 +65,90 @@ Your content targets **growing agency owners** (10-50 employees, 3-10 new client
 - copy-editing: For grammar and clarity review
 - programmatic-seo: For search intent analysis
 </context_info>
+
+<category_templates>
+**IMPORTANT:** Different blog categories require different structures. Always select the appropriate template based on your chosen category:
+
+### Tutorials (Platform Access Guides)
+**Use for:** Step-by-step platform setup guides (e.g., "How to get Google Ads access")
+**Structure:**
+1. Hook with data point (time lost, frustration metric)
+2. Why this platform matters for agencies
+3. Platform-specific structure/limits overview
+4. Step-by-step: Manual process
+5. Step-by-step: Using AuthHub
+6. Common problems & solutions table
+7. Comparison with other platforms (if relevant)
+8. Pro tips for agency teams
+9. Security best practices (if applicable)
+10. AuthHub CTA
+
+### Onboarding (Client Onboarding Best Practices)
+**Use for:** Agency operations, onboarding processes, checklists
+**Structure:**
+1. Problem statement (time drain, operational burden)
+2. Impact on agency growth/scaling
+3. Framework or methodology
+4. Step-by-step implementation guide
+5. Tools and templates
+6. Common pitfalls to avoid
+7. ROI or efficiency gains
+8. AuthHub's role in streamlining
+
+### Comparisons (Competitive Alternatives)
+**Use for:** Tool comparisons (e.g., "AuthHub vs Leadsie")
+**Structure:**
+1. Quick comparison table (key differentiators)
+2. Deep dive by category (pricing, features, support, etc.)
+3. Who should choose AuthHub
+4. Who should choose the competitor (be honest)
+5. Customer stories or testimonials
+6. Migration guide (if applicable)
+7. Clear CTA with trial offer
+
+### Security (Security & Compliance)
+**Use for:** Security best practices, compliance guidance
+**Structure:**
+1. Security threat or compliance requirement
+2. Consequences of non-compliance
+3. Framework or standards overview
+4. Implementation checklist
+5. Common vulnerabilities and fixes
+6. Audit considerations
+7. How AuthHub addresses security
+
+### Operations (Agency Business & Growth)
+**Use for:** Business strategy, pricing models, growth tactics
+**Structure:**
+1. Business challenge or opportunity
+2. Market context or trend
+3. Strategic framework
+4. Implementation steps
+5. Metrics and measurement
+6. Case examples or scenarios
+7. Resource recommendations
+
+### Case Studies (Real Results)
+**Use for:** Customer success stories, agency transformations
+**Structure:**
+1. Customer profile (agency size, focus)
+2. Challenge before AuthHub
+3. Solution implementation
+4. Results (specific metrics, timeframes)
+5. Key learnings or quotes
+6. How to replicate success
+
+### Research (Original Research & Surveys)
+**Use for:** Industry benchmarks, survey findings, proprietary data
+**Structure:**
+1. Research methodology
+2. Key findings at a glance
+3. Deep dive into insights
+4. Industry comparisons
+5. Actionable recommendations
+6. Data visualizations (tables/charts)
+7. Implications for agencies
+</category_templates>
 
 <task_instructions>
 Your job is to autonomously create a complete blog post by following these 7 phases:
@@ -106,7 +191,23 @@ State your chosen topic with:
 
 ## PHASE 2: OUTLINE (Structure Before Writing)
 
-**Step 2.1** - Use the `elite-copywriter` skill to create a detailed outline following this structure:
+**Step 2.1** - **MANDATORY:** INVOKE THE ELITE-COPYWRITER SKILL
+
+Use the Skill tool to invoke the `elite-copywriter` skill with the following context:
+
+```
+You are creating a blog post outline for [TOPIC] in the [CATEGORY] category.
+
+Category Template: [Select from <category_templates> above]
+
+Target Keyword: [From Phase 1]
+Search Intent: [From Phase 1]
+Content Pillar: [From Phase 1]
+
+Create a detailed outline following the structure for [CATEGORY] posts.
+```
+
+**Step 2.2** - The elite-copywriter skill will generate a detailed outline based on the category template. Review and refine as needed.
 
 ```
 # [Topic Title: Platform/Concept] (2026 Guide)
@@ -168,13 +269,29 @@ State your chosen topic with:
 
 ## PHASE 3: CREATION (Write Full Content)
 
-**Step 3.1** - Write the complete blog post following your outline:
-- Match the style of the TikTok Ads Access guide
-- Use short paragraphs (2-3 sentences max)
-- Include bolding for emphasis
-- Add specific numbers, time estimates, data points
-- Use tables for comparisons and structured data
-- Include code blocks or visual hierarchy where helpful
+**Step 3.1** - **MANDATORY:** INVOKE THE ELITE-COPYWRITER SKILL FOR CONTENT CREATION
+
+Use the Skill tool to invoke the `elite-copywriter` skill again with your approved outline:
+
+```
+Write the complete blog post based on this outline:
+
+[Insert your outline from Phase 2]
+
+Requirements:
+- Category: [CATEGORY]
+- Target Keyword: [KEYWORD]
+- Brand Voice: Professional, approachable, helpful
+- Length: 2000-3000 words
+- Format: Markdown with proper H2/H3 hierarchy
+- Style: Short paragraphs (2-3 sentences), bold for emphasis, specific numbers/data points
+```
+
+**Step 3.2** - The elite-copywriter skill will generate the full content. Review for:
+- Consistency with approved outline
+- Proper use of category template structure
+- Brand voice alignment
+- completeness of all sections
 
 **Step 3.2** - Create all required metadata fields:
 ```typescript
@@ -408,15 +525,16 @@ Files Updated: blog-data.ts, calendar, tracker
 <success_criteria>
 **A blog post is considered complete when:**
 1. ✅ All 7 phases executed in order
-2. ✅ Content follows TikTok Ads Access guide structure
-3. ✅ SEO checklist passed (keyword placement, internal/external links)
-4. ✅ Brand voice consistent (professional, approachable, helpful)
-5. ✅ All 3 content files updated (blog-data, calendar, tracker)
-6. ✅ Read time calculated correctly
-7. ✅ Meta title/description within character limits
-8. ✅ No duplicate content with existing posts
-9. ✅ Featured snippet opportunity identified and targeted
-10. ✅ Final output presented in required format
+2. ✅ **elite-copywriter skill invoked** for both outline and content creation
+3. ✅ Content follows the appropriate **category template structure** (not just TikTok Ads Access)
+4. ✅ SEO checklist passed (keyword placement, internal/external links)
+5. ✅ Brand voice consistent (professional, approachable, helpful)
+6. ✅ All 3 content files updated (blog-data, calendar, tracker)
+7. ✅ Read time calculated correctly
+8. ✅ Meta title/description within character limits
+9. ✅ No duplicate content with existing posts
+10. ✅ Featured snippet opportunity identified and targeted
+11. ✅ Final output presented in required format
 </success_criteria>
 
 ---
