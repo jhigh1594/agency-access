@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function summarize(values) {
   if (values.length === 0) {
     return {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
@@ -8,6 +9,11 @@ import { createPerfSessionToken } from './lib/auth.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * @param {string} name
+ * @param {string} fallback
+ * @returns {string}
+ */
 function arg(name, fallback) {
   const direct = process.argv.find((entry) => entry.startsWith(`${name}=`));
   if (direct) return direct.slice(name.length + 1);
@@ -18,6 +24,10 @@ function arg(name, fallback) {
   return fallback;
 }
 
+/**
+ * @param {{apiBase: string, auth: {token: string, userId: string}}} opts
+ * @returns {Promise<void>}
+ */
 async function waitForPerfSessionReady({ apiBase, auth }) {
   const deadline = Date.now() + 10000;
   const readinessUrl = new URL('/api/agencies', apiBase);
@@ -69,6 +79,9 @@ async function main() {
   const trackedRequests = new WeakMap();
   const apiRequests = [];
 
+  /**
+   * @param {import('playwright').ConsoleMessage} message
+   */
   page.on('console', (message) => {
     const text = message.text();
     if (text.includes('dashboard:') || text.includes('layout:')) {
@@ -79,6 +92,9 @@ async function main() {
     }
   });
 
+  /**
+   * @param {import('playwright').Request} request
+   */
   page.on('request', (request) => {
     const url = request.url();
     if (!url.includes('/api/agencies') && !url.includes('/api/dashboard')) {
@@ -88,6 +104,9 @@ async function main() {
     trackedRequests.set(request, performance.now());
   });
 
+  /**
+   * @param {import('playwright').Response} response
+   */
   page.on('response', async (response) => {
     const request = response.request();
     const startedAt = trackedRequests.get(request);
@@ -110,6 +129,9 @@ async function main() {
 
   if (captureTrace) {
     cdp = await context.newCDPSession(page);
+    /**
+     * @param {{value: unknown[]}} payload
+     */
     cdp.on('Tracing.dataCollected', (payload) => {
       traceEvents.push(...payload.value);
     });

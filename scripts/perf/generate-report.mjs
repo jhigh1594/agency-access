@@ -1,6 +1,12 @@
+// @ts-nocheck
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+/**
+ * @param {string} name
+ * @param {string} fallback
+ * @returns {string}
+ */
 function arg(name, fallback) {
   const direct = process.argv.find((entry) => entry.startsWith(`${name}=`));
   if (direct) return direct.slice(name.length + 1);
@@ -11,10 +17,19 @@ function arg(name, fallback) {
   return fallback;
 }
 
+/**
+ * @param {string} filePath
+ * @returns {Promise<unknown>}
+ */
 function readJson(filePath) {
   return fs.readFile(filePath, 'utf8').then((raw) => JSON.parse(raw));
 }
 
+/**
+ * @param {number} before
+ * @param {number} after
+ * @returns {number}
+ */
 function percentChange(before, after) {
   if (before === 0) return 0;
   return ((after - before) / before) * 100;
@@ -24,6 +39,10 @@ function fmtMs(value) {
   return `${value.toFixed(2)} ms`;
 }
 
+/**
+ * @param {Array<{url: string, durationMs: number}>} apiRequests
+ * @returns {{url: string, count: number, meanMs: number}[]}
+ */
 function toRequestSummary(apiRequests) {
   const grouped = new Map();
   for (const req of apiRequests || []) {

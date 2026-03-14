@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
@@ -8,6 +9,11 @@ import { summarize, round } from './lib/stats.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * @param {string} name
+ * @param {string} fallback
+ * @returns {string}
+ */
 function arg(name, fallback) {
   const direct = process.argv.find((entry) => entry.startsWith(`${name}=`));
   if (direct) return direct.slice(name.length + 1);
@@ -18,6 +24,11 @@ function arg(name, fallback) {
   return fallback;
 }
 
+/**
+ * @param {string} url
+ * @param {RequestInit} init
+ * @returns {Promise<{durationMs: number, status: number, bodyBytes: number, etag: string | null, cache: string | null, responseTime: string | null, body: string}>}
+ */
 async function timedFetch(url, init) {
   const startedAt = performance.now();
   const response = await fetch(url, init);
