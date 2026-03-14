@@ -1,0 +1,40 @@
+{
+  "id": "index",
+  "title": "AuthHub Help Center",
+  "description": "Learn how to create client requests, send secure authorization links, troubleshoot blockers, and manage access with confidence.",
+  "source": "@site/docs/index.mdx",
+  "sourceDirName": ".",
+  "slug": "/",
+  "permalink": "/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/index.mdx",
+  "tags": [
+    {
+      "inline": true,
+      "label": "overview",
+      "permalink": "/tags/overview"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "AuthHub Help Center",
+    "description": "Learn how to create client requests, send secure authorization links, troubleshoot blockers, and manage access with confidence.",
+    "slug": "/",
+    "sidebar_position": 1,
+    "keywords": [
+      "authhub help center",
+      "client onboarding docs",
+      "marketing agency knowledge base"
+    ],
+    "tags": [
+      "overview"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "next": {
+    "title": "Create Your First Request",
+    "permalink": "/getting-started/create-your-first-request"
+  }
+}

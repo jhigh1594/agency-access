@@ -1,0 +1,44 @@
+{
+  "id": "client-experience/agency-branding-basics",
+  "title": "Agency Branding Basics",
+  "description": "Keep the client authorization flow on-brand without delaying onboarding or over-customizing the first request.",
+  "source": "@site/docs/client-experience/agency-branding-basics.md",
+  "sourceDirName": "client-experience",
+  "slug": "/client-experience/agency-branding-basics",
+  "permalink": "/client-experience/agency-branding-basics",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/client-experience/agency-branding-basics.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "branding",
+      "permalink": "/tags/branding"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Agency Branding Basics",
+    "description": "Keep the client authorization flow on-brand without delaying onboarding or over-customizing the first request.",
+    "slug": "/client-experience/agency-branding-basics",
+    "sidebar_position": 2,
+    "keywords": [
+      "white label onboarding",
+      "agency branding",
+      "client trust signals"
+    ],
+    "tags": [
+      "branding"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "What Clients See",
+    "permalink": "/client-experience/what-clients-see"
+  },
+  "next": {
+    "title": "Supported Platforms Overview",
+    "permalink": "/client-experience/supported-platforms"
+  }
+}

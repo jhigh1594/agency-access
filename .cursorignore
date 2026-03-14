@@ -1,0 +1,27 @@
+# Cursor indexing exclusions — reduce IDE freezes
+
+# Dependencies (main offender: 10k+ files, 1.4GB)
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+**/.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Skill/docs (530+ files rarely needed during coding)
+.agents/
+.claude/
+.codex/
+.aipmos/
+
+# Testing & coverage
+coverage/
+.nyc_output/
+
+# Misc
+.specstory/
+.firecrawl/

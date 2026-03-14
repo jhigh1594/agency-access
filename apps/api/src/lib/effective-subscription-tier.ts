@@ -9,7 +9,7 @@ type AgencySubscriptionContext = {
   subscription?: SubscriptionSnapshot;
 };
 
-const VALID_TIERS: readonly SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+const VALID_TIERS: readonly SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
 function isValidTier(tier: string | null | undefined): tier is SubscriptionTier {

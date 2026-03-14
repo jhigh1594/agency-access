@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkedIn Page Support Preview</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      globalThis.process = {
+        env: {
+          NODE_ENV: 'development',
+          NEXT_PUBLIC_BYPASS_AUTH: 'true',
+          NEXT_PUBLIC_BRANDFETCH_CLIENT_ID: '',
+          NEXT_PUBLIC_API_URL: 'http://127.0.0.1:4174',
+        },
+      };
+    </script>
+    <script type="module" src="/evidence/linkedin-page-support-preview.tsx"></script>
+  </body>
+</html>

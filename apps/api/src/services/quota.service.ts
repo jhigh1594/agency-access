@@ -182,7 +182,7 @@ export class QuotaService {
     const allowed = remaining >= (requestedAmount || 1);
 
     // Calculate next tier for upgrade suggestion
-    const tierOrder: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+    const tierOrder: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
     const suggestedTier = tier
       ? (tierOrder.indexOf(tier) < tierOrder.length - 1
           ? tierOrder[tierOrder.indexOf(tier) + 1]

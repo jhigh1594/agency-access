@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "reddit": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/adhikasp/mcp-reddit.git", "mcp-reddit"],
+      "env": {}
+    }
+  }
+}

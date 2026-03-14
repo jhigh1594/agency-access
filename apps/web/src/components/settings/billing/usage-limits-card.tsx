@@ -148,9 +148,10 @@ export function UsageLimitsCard() {
     );
   };
 
+  const isAgencyTier = currentTier === 'AGENCY';
   const showUpgradeNudge =
     limits &&
-    currentTier !== 'ENTERPRISE' &&
+    !isAgencyTier &&
     ((limits.accessRequests.limit !== 'unlimited' &&
       limits.accessRequests.used / (limits.accessRequests.limit as number) >= 0.8) ||
       (limits.clients.limit !== 'unlimited' &&
@@ -199,7 +200,7 @@ export function UsageLimitsCard() {
                 Upgrade to get more capacity and unlock premium features.
               </p>
             </div>
-            {currentTier === 'AGENCY' || currentTier === 'PRO' ? (
+            {isAgencyTier ? (
               <Button
                 variant="secondary"
                 size="sm"

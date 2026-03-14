@@ -1,0 +1,44 @@
+{
+  "id": "requests-and-links/send-your-link",
+  "title": "Send Your Link",
+  "description": "Share an AuthHub request link with the right client contact and reduce the back-and-forth that slows onboarding.",
+  "source": "@site/docs/requests-and-links/send-your-link.md",
+  "sourceDirName": "requests-and-links",
+  "slug": "/requests-and-links/send-your-link",
+  "permalink": "/requests-and-links/send-your-link",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/requests-and-links/send-your-link.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "requests",
+      "permalink": "/tags/requests"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Send Your Link",
+    "description": "Share an AuthHub request link with the right client contact and reduce the back-and-forth that slows onboarding.",
+    "slug": "/requests-and-links/send-your-link",
+    "sidebar_position": 1,
+    "keywords": [
+      "send authhub link",
+      "client request email",
+      "onboarding link delivery"
+    ],
+    "tags": [
+      "requests"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Create Your First Request",
+    "permalink": "/getting-started/create-your-first-request"
+  },
+  "next": {
+    "title": "Check Request Status",
+    "permalink": "/requests-and-links/check-request-status"
+  }
+}

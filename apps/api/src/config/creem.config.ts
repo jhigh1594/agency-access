@@ -7,10 +7,10 @@
  * Production Products:
  * - Starter (Monthly): prod_4SUPfON3XwTo5SKOJzN2dH
  * - Starter (Annual): prod_6Hyydvn6jh0numRxJecMol
- * - Agency (Monthly): prod_11NeEMY6WtGEkdnvdd7obj
- * - Agency (Annual): prod_4vNvJn99RTRwhkMeHgkBT7
- * - Pro (Monthly): prod_5FEs6qBlwvbMWHHun95wkk
- * - Pro (Annual): prod_6w78r7ZbTUjkJl7mTkNfFr
+ * - Growth (Monthly): prod_11NeEMY6WtGEkdnvdd7obj
+ * - Growth (Annual): prod_4vNvJn99RTRwhkMeHgkBT7
+ * - Agency (Monthly): prod_5FEs6qBlwvbMWHHun95wkk
+ * - Agency (Annual): prod_6w78r7ZbTUjkJl7mTkNfFr
  */
 
 import type { SubscriptionTier } from '@agency-platform/shared';
@@ -22,16 +22,16 @@ interface CreemProductConfig {
   yearly: string;
 }
 
-const CREEM_PRODUCT_IDS: Record<Exclude<SubscriptionTier, 'ENTERPRISE'>, CreemProductConfig> = {
+const CREEM_PRODUCT_IDS: Record<SubscriptionTier, CreemProductConfig> = {
   STARTER: {
     monthly: 'prod_4SUPfON3XwTo5SKOJzN2dH',
     yearly: 'prod_6Hyydvn6jh0numRxJecMol',
   },
-  AGENCY: {
+  GROWTH: {
     monthly: 'prod_11NeEMY6WtGEkdnvdd7obj',
     yearly: 'prod_4vNvJn99RTRwhkMeHgkBT7',
   },
-  PRO: {
+  AGENCY: {
     monthly: 'prod_5FEs6qBlwvbMWHHun95wkk',
     yearly: 'prod_6w78r7ZbTUjkJl7mTkNfFr',
   },
@@ -41,10 +41,6 @@ const CREEM_PRODUCT_IDS: Record<Exclude<SubscriptionTier, 'ENTERPRISE'>, CreemPr
  * Get the Creem product ID for a given subscription tier and billing interval
  */
 export function getProductId(tier: SubscriptionTier, interval: BillingInterval = 'monthly'): string {
-  if (tier === 'ENTERPRISE') {
-    throw new Error('Enterprise tier does not have a Creem product ID');
-  }
-
   const productId = CREEM_PRODUCT_IDS[tier][interval];
 
   if (productId.startsWith('prod_tbd')) {
@@ -58,9 +54,6 @@ export function getProductId(tier: SubscriptionTier, interval: BillingInterval =
  * Get all Creem product IDs for a given subscription tier
  */
 export function getTierProductIds(tier: SubscriptionTier): CreemProductConfig {
-  if (tier === 'ENTERPRISE') {
-    throw new Error('Enterprise tier does not have Creem product IDs');
-  }
   return CREEM_PRODUCT_IDS[tier];
 }
 

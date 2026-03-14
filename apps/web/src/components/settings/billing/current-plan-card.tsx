@@ -92,9 +92,8 @@ export function CurrentPlanCard() {
             <h3 className="text-lg font-semibold text-ink">{tierName} Plan</h3>
             <p className="text-sm text-muted-foreground">
               {currentTier === 'STARTER' && 'Agencies getting started with access automation'}
-              {currentTier === 'AGENCY' && 'Agencies scaling their client operations'}
-              {currentTier === 'PRO' && 'High-volume agencies with advanced needs'}
-              {currentTier === 'ENTERPRISE' && 'Unlimited everything for large agencies'}
+              {currentTier === 'GROWTH' && 'Agencies scaling their client operations'}
+              {currentTier === 'AGENCY' && 'High-volume agencies with advanced needs'}
               {!currentTier && 'Try before you commit'}
             </p>
           </div>

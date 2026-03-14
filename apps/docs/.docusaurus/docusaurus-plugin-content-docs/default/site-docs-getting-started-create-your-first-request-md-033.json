@@ -1,0 +1,44 @@
+{
+  "id": "getting-started/create-your-first-request",
+  "title": "Create Your First Request",
+  "description": "Launch your first AuthHub client authorization request in minutes and focus on the minimum setup needed for activation.",
+  "source": "@site/docs/getting-started/create-your-first-request.md",
+  "sourceDirName": "getting-started",
+  "slug": "/getting-started/create-your-first-request",
+  "permalink": "/getting-started/create-your-first-request",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/getting-started/create-your-first-request.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "onboarding",
+      "permalink": "/tags/onboarding"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Create Your First Request",
+    "description": "Launch your first AuthHub client authorization request in minutes and focus on the minimum setup needed for activation.",
+    "slug": "/getting-started/create-your-first-request",
+    "sidebar_position": 1,
+    "keywords": [
+      "first authhub request",
+      "create onboarding link",
+      "agency activation"
+    ],
+    "tags": [
+      "onboarding"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "AuthHub Help Center",
+    "permalink": "/"
+  },
+  "next": {
+    "title": "Send Your Link",
+    "permalink": "/requests-and-links/send-your-link"
+  }
+}

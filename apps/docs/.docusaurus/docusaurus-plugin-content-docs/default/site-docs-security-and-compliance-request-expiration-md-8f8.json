@@ -1,0 +1,44 @@
+{
+  "id": "security-and-compliance/request-expiration",
+  "title": "Request Expiration Behavior",
+  "description": "Learn how expiration affects access requests, how to recover from expired links, and how to keep agency workflows from stalling.",
+  "source": "@site/docs/security-and-compliance/request-expiration.md",
+  "sourceDirName": "security-and-compliance",
+  "slug": "/security-and-compliance/request-expiration",
+  "permalink": "/security-and-compliance/request-expiration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/security-and-compliance/request-expiration.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "security",
+      "permalink": "/tags/security"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Request Expiration Behavior",
+    "description": "Learn how expiration affects access requests, how to recover from expired links, and how to keep agency workflows from stalling.",
+    "slug": "/security-and-compliance/request-expiration",
+    "sidebar_position": 2,
+    "keywords": [
+      "request expiration",
+      "expired access link",
+      "authhub link lifecycle"
+    ],
+    "tags": [
+      "security"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Audit Logs and Security",
+    "permalink": "/security-and-compliance/audit-logs-and-security"
+  },
+  "next": {
+    "title": "Team and Account Basics",
+    "permalink": "/security-and-compliance/team-and-account-basics"
+  }
+}

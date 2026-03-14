@@ -1597,7 +1597,7 @@ export type AffiliateAdminCommissionAdjustment = z.infer<typeof AffiliateAdminCo
 // ============================================================
 
 // Subscription tiers - updated for Creem integration
-export const SubscriptionTierSchema = z.enum(['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE']);
+export const SubscriptionTierSchema = z.enum(['STARTER', 'GROWTH', 'AGENCY']);
 export type SubscriptionTier = z.infer<typeof SubscriptionTierSchema>;
 
 export const BillingIntervalSchema = z.enum(['monthly', 'yearly']);
@@ -1605,9 +1605,8 @@ export type BillingInterval = z.infer<typeof BillingIntervalSchema>;
 
 export const SUBSCRIPTION_TIER_NAMES: Record<SubscriptionTier, string> = {
   STARTER: 'Starter',
-  AGENCY: 'Growth',
-  PRO: 'Agency',
-  ENTERPRISE: 'Enterprise',
+  GROWTH: 'Growth',
+  AGENCY: 'Agency',
 };
 
 // Pricing display tiers shown in billing UIs and Clerk metadata
@@ -1654,15 +1653,14 @@ export const PRICING_DISPLAY_TIER_DETAILS: Record<PricingDisplayTier, {
 
 export const SUBSCRIPTION_TIER_TO_PRICING_DISPLAY_TIER: Record<SubscriptionTier, PricingDisplayTier> = {
   STARTER: 'STARTER',
-  AGENCY: 'GROWTH',
-  PRO: 'AGENCY',
-  ENTERPRISE: 'AGENCY',
+  GROWTH: 'GROWTH',
+  AGENCY: 'AGENCY',
 };
 
 export const PRICING_DISPLAY_TIER_TO_SUBSCRIPTION_TIER: Record<PricingDisplayTier, SubscriptionTier | null> = {
   STARTER: 'STARTER',
-  GROWTH: 'AGENCY',
-  AGENCY: 'PRO',
+  GROWTH: 'GROWTH',
+  AGENCY: 'AGENCY',
 };
 
 export function getPricingDisplayTierFromSubscriptionTier(
@@ -1778,7 +1776,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, {
     priceYearly: 290,
     description: 'Perfect for small agencies getting started',
   },
-  AGENCY: {
+  GROWTH: {
     accessRequests: 20,
     clients: 20,
     members: -1,
@@ -1791,7 +1789,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, {
     priceYearly: 790,
     description: 'For established agencies scaling fast',
   },
-  PRO: {
+  AGENCY: {
     accessRequests: 50,
     clients: 50,
     members: -1,
@@ -1803,19 +1801,6 @@ export const TIER_LIMITS: Record<SubscriptionTier, {
     priceMonthly: 149,
     priceYearly: 1490,
     description: 'For growing agencies with more clients',
-  },
-  ENTERPRISE: {
-    accessRequests: -1, // unlimited
-    clients: -1,
-    members: -1,
-    templates: -1,
-    clientOnboards: -1,
-    platformAudits: -1,
-    teamSeats: -1,
-    features: ['all_platforms', 'dedicated_support', 'custom_branding', 'api_access', 'white_label', 'sso'],
-    priceMonthly: 299,
-    priceYearly: 2990,
-    description: 'Unlimited everything for large agencies',
   },
 };
 
@@ -1883,40 +1868,36 @@ export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
   STARTER: {
     title: 'Starter',
     description: 'For growing agencies getting started',
-    price: { monthly: 40, yearly: 480 },
+    price: { monthly: 29, yearly: 288 },
     features: [
-      '36 client onboards/year',
-      '120 platform audits',
+      '60 client onboards/year',
+      '300 platform audits',
       'All platform integrations',
       'Email support',
-      'White-label branding',
-      'Custom domain/subdomain',
       'Team access',
       'Webhooks & API',
-      'Priority support',
     ],
   },
-  AGENCY: {
-    title: 'Agency',
+  GROWTH: {
+    title: 'Growth',
     description: 'For established agencies scaling fast',
-    price: { monthly: 93.33, yearly: 1120 },
+    price: { monthly: 79, yearly: 768 },
     features: [
       '120 client onboards/year',
       '600 platform audits',
       'White-label branding',
       'Custom domain/subdomain',
-      'Team access (5 seats)',
+      'Unlimited team seats',
       'Webhooks & API',
       'Priority support',
       'Multi-brand accounts',
       'Custom integrations',
-      'SLA guarantee',
     ],
   },
-  PRO: {
-    title: 'Pro',
+  AGENCY: {
+    title: 'Agency',
     description: 'For large agencies with multi-brand needs',
-    price: { monthly: 186.67, yearly: 2240 },
+    price: { monthly: 149, yearly: 1440 },
     features: [
       '600 client onboards/year',
       '3,000 platform audits',
@@ -1931,31 +1912,13 @@ export const SUBSCRIPTION_TIER_DESCRIPTIONS: Record<SubscriptionTier, {
       'SLA guarantee',
     ],
   },
-  ENTERPRISE: {
-    title: 'Enterprise',
-    description: 'Unlimited everything for large agencies',
-    price: { monthly: 299, yearly: 2990 },
-    features: [
-      'Unlimited client onboards',
-      'Unlimited platform audits',
-      'Dedicated support',
-      'Custom integrations',
-      'Unlimited client onboarding',
-      'White-label branding',
-      'Custom domain/subdomain',
-      'SLA guarantee',
-      'Multi-brand accounts (unlimited)',
-      'Unlimited team seats',
-      'Webhooks & API access',
-    ],
-  },
 };
 
 /** Tier order for upgrade sequencing (lowest to highest). */
-const SUBSCRIPTION_TIER_ORDER: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+const SUBSCRIPTION_TIER_ORDER: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
 
-/** Tiers that have Creem checkout configured (STARTER, AGENCY, PRO). ENTERPRISE has no product. */
-const CREEM_CHECKOUT_TIERS: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
+/** Tiers that have Creem checkout configured (STARTER, GROWTH, AGENCY). */
+const CREEM_CHECKOUT_TIERS: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
 
 /**
  * Returns the next tier up from the current tier that has Creem checkout.

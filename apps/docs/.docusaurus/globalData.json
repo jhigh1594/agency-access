@@ -1,0 +1,98 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/",
+          "mainDocId": "index",
+          "docs": [
+            {
+              "id": "automation/webhooks",
+              "path": "/automation/webhooks",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "client-experience/agency-branding-basics",
+              "path": "/client-experience/agency-branding-basics",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "client-experience/supported-platforms",
+              "path": "/client-experience/supported-platforms",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "client-experience/what-clients-see",
+              "path": "/client-experience/what-clients-see",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "getting-started/create-your-first-request",
+              "path": "/getting-started/create-your-first-request",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "index",
+              "path": "/",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "requests-and-links/check-request-status",
+              "path": "/requests-and-links/check-request-status",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "requests-and-links/resend-or-revoke",
+              "path": "/requests-and-links/resend-or-revoke",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "requests-and-links/send-your-link",
+              "path": "/requests-and-links/send-your-link",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "security-and-compliance/audit-logs-and-security",
+              "path": "/security-and-compliance/audit-logs-and-security",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "security-and-compliance/request-expiration",
+              "path": "/security-and-compliance/request-expiration",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "security-and-compliance/team-and-account-basics",
+              "path": "/security-and-compliance/team-and-account-basics",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "troubleshooting/client-auth-issues",
+              "path": "/troubleshooting/client-auth-issues",
+              "sidebar": "kbSidebar"
+            },
+            {
+              "id": "troubleshooting/common-client-blockers",
+              "path": "/troubleshooting/common-client-blockers",
+              "sidebar": "kbSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "kbSidebar": {
+              "link": {
+                "path": "/",
+                "label": "index"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

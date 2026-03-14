@@ -1,0 +1,44 @@
+{
+  "id": "troubleshooting/client-auth-issues",
+  "title": "Fix Client Authorization Issues",
+  "description": "Troubleshoot cases where a client starts the flow but cannot finish due to platform errors, permission gaps, or expired request state.",
+  "source": "@site/docs/troubleshooting/client-auth-issues.md",
+  "sourceDirName": "troubleshooting",
+  "slug": "/troubleshooting/client-auth-issues",
+  "permalink": "/troubleshooting/client-auth-issues",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/troubleshooting/client-auth-issues.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "troubleshooting",
+      "permalink": "/tags/troubleshooting"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Fix Client Authorization Issues",
+    "description": "Troubleshoot cases where a client starts the flow but cannot finish due to platform errors, permission gaps, or expired request state.",
+    "slug": "/troubleshooting/client-auth-issues",
+    "sidebar_position": 2,
+    "keywords": [
+      "client authorization failed",
+      "oauth onboarding issue",
+      "request troubleshooting"
+    ],
+    "tags": [
+      "troubleshooting"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Common Client Blockers",
+    "permalink": "/troubleshooting/common-client-blockers"
+  },
+  "next": {
+    "title": "Audit Logs and Security",
+    "permalink": "/security-and-compliance/audit-logs-and-security"
+  }
+}

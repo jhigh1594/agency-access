@@ -138,11 +138,6 @@ class TierLimitsService {
     const tier = resolveEffectiveSubscriptionTier(agency);
     const tierConfig = getTierLimitsConfig(tier);
 
-    // Enterprise has all features
-    if (tier === 'ENTERPRISE') {
-      return true;
-    }
-
     return tierConfig.features.includes(feature);
   }
 

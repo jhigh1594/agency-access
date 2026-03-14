@@ -60,3 +60,4 @@ scripts/perf/traces/
 
 # Stale Next.js builds
 .next.stale-*
+.worktrees

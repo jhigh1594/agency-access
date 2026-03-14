@@ -1,0 +1,88 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0\froman\fcharset0 Times New Roman;}{\f1\fswiss\fcharset0 Arial;}{\f2\fmodern\fcharset0 Courier New;}}
+{\colortbl;\red0\green0\blue0;\red0\green70\blue127;}
+
+\f1\fs28\b\cf2 AuthHub \endash  Google Ads API Integration Design Documentation\cf0\b0\fs20
+\par\par
+
+\f1\fs22\b 1. Product Overview\b0\fs20
+\par\par
+AuthHub is a client onboarding platform for digital marketing agencies. Its primary function is to eliminate the manual, error-prone process of requesting advertising platform access from clients. An agency creates an access request, sends a single AuthHub link to their client, and the client grants access to all required platforms (Google Ads, Meta, LinkedIn, Google Analytics 4, and others) in one guided flow. AuthHub acts solely as an access-management intermediary \endash  it does not create, manage, modify, or report on advertisements on behalf of any party.
+\par\par
+
+\f1\fs22\b 2. How AuthHub Uses the Google Ads API\b0\fs20
+\par\par
+AuthHub integrates with the Google Ads API for two narrow, read-only purposes:
+\par\par
+\b 2.1 Account Enumeration (Agency Setup)\b0
+\par
+When an agency owner connects their Google account to AuthHub, we call \f2\fs18 CustomerService.ListAccessibleCustomers\f1\fs20  to retrieve the list of Google Ads account IDs associated with their OAuth token. We then query \f2\fs18 GoogleAdsService.Search\f1\fs20  with a minimal GAQL statement to retrieve \f2\fs18 customer.id\f1\fs20 , \f2\fs18 customer.descriptive_name\f1\fs20 , \f2\fs18 customer.manager\f1\fs20 , and \f2\fs18 customer.status\f1\fs20  for each accessible account. This information is stored in the agency\rquote s connection metadata so they can configure which accounts to request from their clients.
+\par\par
+\b 2.2 Account Selection (Client Authorization Flow)\b0
+\par
+When a client follows an AuthHub access-request link, they authorize their Google account via OAuth. AuthHub then calls \f2\fs18 CustomerService.ListAccessibleCustomers\f1\fs20  and \f2\fs18 GoogleAdsService.Search\f1\fs20  on the client\rquote s behalf to enumerate their accessible Google Ads accounts by name. The client selects which account(s) to grant the agency access to. AuthHub stores the resulting OAuth refresh token (in a secrets manager, never in plain database storage) and the selected account IDs, then surfaces them to the agency.
+\par\par
+
+\f1\fs22\b 3. Data Flow Diagram\b0\fs20
+\par\par
+\b Agency Setup Flow:\b0
+\par
+Agency authenticates via Google OAuth \f2\fs18 (scope: https://www.googleapis.com/auth/adwords)\f1\fs20
+\par
+\f2\fs18 \u8594? AuthHub API \u8594? ListAccessibleCustomers \u8594? GoogleAdsService.Search (read-only)\f1\fs20
+\par
+Account names and IDs stored in agency connection metadata
+\par\par
+\b Client Authorization Flow:\b0
+\par
+Client follows AuthHub link \u8594? Client authenticates via Google OAuth
+\par
+\f2\fs18 \u8594? AuthHub API \u8594? ListAccessibleCustomers \u8594? GoogleAdsService.Search (read-only)\f1\fs20
+\par
+Client selects account(s) \u8594? OAuth token stored securely (Infisical secrets manager)
+\par
+Agency receives access notification with selected account IDs
+\par\par
+
+\f1\fs22\b 4. API Usage Scope and Limitations\b0\fs20
+\par\par
+AuthHub\rquote s Google Ads API usage is strictly limited to:
+\par\par
+{\pard\li360
+\b\u8226?\b0  \b Read-only GAQL queries:\b0  \f2\fs18 customer.id\f1\fs20 , \f2\fs18 customer.descriptive_name\f1\fs20 , \f2\fs18 customer.manager\f1\fs20 , \f2\fs18 customer.status\f1\fs20 , \f2\fs18 customer_client\f1\fs20  hierarchy fields\par
+\b\u8226?\b0  \b Account discovery:\b0  \f2\fs18 CustomerService.ListAccessibleCustomers\f1\fs20  and \f2\fs18 CustomerService.GetCustomer\f1\fs20\par
+\b\u8226?\b0  \b No write operations:\b0  AuthHub never creates, modifies, pauses, or deletes campaigns, ad groups, ads, keywords, budgets, or any other Google Ads resource\par
+\b\u8226?\b0  \b No reporting:\b0  AuthHub does not query performance data, impressions, clicks, spend, or conversion data\par
+\b\u8226?\b0  \b No bidding or targeting:\b0  AuthHub has no access to or interaction with bid strategies, audience targeting, or creative assets\par
+\pard\par\par
+
+\f1\fs22\b 5. Authentication and Security Architecture\b0\fs20
+\par\par
+\b OAuth 2.0:\b0  All Google API calls are made using the end user\rquote s own OAuth 2.0 access and refresh tokens. AuthHub uses the authorization code flow with offline access. Tokens are stored exclusively in Infisical (a secrets management service) \endash  only a non-sensitive secret reference ID is stored in the application database.
+\par\par
+\b Developer Token:\b0  AuthHub holds a single developer token registered under its own Google Ads manager account. This token is used for quota tracking as required by the Google Ads API Terms of Service.
+\par\par
+\b Scopes Requested:\b0  \f2\fs18 https://www.googleapis.com/auth/adwords\f1\fs20  (required for Google Ads API access)
+\par\par
+\b Token Handling:\b0  OAuth tokens are never logged, never stored in plaintext, and never exposed to agency users or third parties. All token access is logged in an immutable audit log.
+\par\par
+
+\f1\fs22\b 6. User Consent\b0\fs20
+\par\par
+Both agency owners and clients explicitly consent to Google account authorization through Google\rquote s standard OAuth consent screen before AuthHub makes any API call. Clients are informed within the AuthHub flow that they are granting access to their Google Ads account(s) and which agency will receive that access. Users may revoke access at any time through Google Account settings or through the AuthHub dashboard.
+\par\par
+
+\f1\fs22\b 7. Multi-Tenant Architecture\b0\fs20
+\par\par
+AuthHub is a multi-tenant SaaS platform. Each agency and each client have isolated credentials. There is no sharing of OAuth tokens between tenants. API calls made on behalf of one user\rquote s Google account cannot access another user\rquote s data. All database queries are scoped to the authenticated agency\rquote s ID.
+\par\par
+
+\f1\fs22\b 8. Contact\b0\fs20
+\par\par
+Product: AuthHub (\f2\fs18 authhub.co\f1\fs20 )
+\par
+Purpose: Agency-client access management for digital marketing platforms
+\par
+API Usage Category: Account enumeration and access facilitation (read-only)
+\par\par
+}

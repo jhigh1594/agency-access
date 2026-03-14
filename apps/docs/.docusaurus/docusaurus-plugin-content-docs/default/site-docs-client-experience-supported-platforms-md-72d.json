@@ -1,0 +1,44 @@
+{
+  "id": "client-experience/supported-platforms",
+  "title": "Supported Platforms Overview",
+  "description": "Review the major platforms AuthHub supports today and know when to send clients to a platform-specific guide instead of generic support copy.",
+  "source": "@site/docs/client-experience/supported-platforms.md",
+  "sourceDirName": "client-experience",
+  "slug": "/client-experience/supported-platforms",
+  "permalink": "/client-experience/supported-platforms",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/client-experience/supported-platforms.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "platforms",
+      "permalink": "/tags/platforms"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "title": "Supported Platforms Overview",
+    "description": "Review the major platforms AuthHub supports today and know when to send clients to a platform-specific guide instead of generic support copy.",
+    "slug": "/client-experience/supported-platforms",
+    "sidebar_position": 3,
+    "keywords": [
+      "supported platforms",
+      "authhub integrations",
+      "marketing platform onboarding"
+    ],
+    "tags": [
+      "platforms"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Agency Branding Basics",
+    "permalink": "/client-experience/agency-branding-basics"
+  },
+  "next": {
+    "title": "Webhooks",
+    "permalink": "/automation/webhooks"
+  }
+}

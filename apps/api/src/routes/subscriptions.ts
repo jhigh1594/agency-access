@@ -65,7 +65,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       const agencyId = (request as any).principalAgencyId as string;
 
       // Validate tier
-      const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
+      const validTiers: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
       if (!validTiers.includes(body.tier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }
@@ -403,7 +403,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       }
 
       // Validate tier
-      const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO'];
+      const validTiers: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
       if (!validTiers.includes(body.newTier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }

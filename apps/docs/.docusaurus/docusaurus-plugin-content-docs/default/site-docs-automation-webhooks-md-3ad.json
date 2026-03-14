@@ -1,0 +1,51 @@
+{
+  "id": "automation/webhooks",
+  "title": "Webhooks",
+  "description": "Send signed AgencyAccess lifecycle events to your CRM, automation stack, or internal systems.",
+  "source": "@site/docs/automation/webhooks.md",
+  "sourceDirName": "automation",
+  "slug": "/automation/webhooks",
+  "permalink": "/automation/webhooks",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/automation/webhooks.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "automation",
+      "permalink": "/tags/automation"
+    },
+    {
+      "inline": true,
+      "label": "webhooks",
+      "permalink": "/tags/webhooks"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Webhooks",
+    "description": "Send signed AgencyAccess lifecycle events to your CRM, automation stack, or internal systems.",
+    "slug": "/automation/webhooks",
+    "sidebar_position": 1,
+    "keywords": [
+      "agencyaccess webhooks",
+      "signed webhooks",
+      "access request automation",
+      "crm webhook integration"
+    ],
+    "tags": [
+      "automation",
+      "webhooks"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Supported Platforms Overview",
+    "permalink": "/client-experience/supported-platforms"
+  },
+  "next": {
+    "title": "Common Client Blockers",
+    "permalink": "/troubleshooting/common-client-blockers"
+  }
+}

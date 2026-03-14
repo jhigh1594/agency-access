@@ -1,0 +1,44 @@
+{
+  "id": "troubleshooting/common-client-blockers",
+  "title": "Common Client Blockers",
+  "description": "Diagnose the most frequent reasons a client request stalls and decide whether the fix is education, a different contact, or a replacement request.",
+  "source": "@site/docs/troubleshooting/common-client-blockers.md",
+  "sourceDirName": "troubleshooting",
+  "slug": "/troubleshooting/common-client-blockers",
+  "permalink": "/troubleshooting/common-client-blockers",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/troubleshooting/common-client-blockers.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "troubleshooting",
+      "permalink": "/tags/troubleshooting"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Common Client Blockers",
+    "description": "Diagnose the most frequent reasons a client request stalls and decide whether the fix is education, a different contact, or a replacement request.",
+    "slug": "/troubleshooting/common-client-blockers",
+    "sidebar_position": 1,
+    "keywords": [
+      "client onboarding blockers",
+      "stalled authorization",
+      "authhub troubleshooting"
+    ],
+    "tags": [
+      "troubleshooting"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Webhooks",
+    "permalink": "/automation/webhooks"
+  },
+  "next": {
+    "title": "Fix Client Authorization Issues",
+    "permalink": "/troubleshooting/client-auth-issues"
+  }
+}

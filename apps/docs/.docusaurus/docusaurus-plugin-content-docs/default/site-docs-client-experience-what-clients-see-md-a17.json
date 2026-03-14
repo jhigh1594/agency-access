@@ -1,0 +1,44 @@
+{
+  "id": "client-experience/what-clients-see",
+  "title": "What Clients See",
+  "description": "Understand the customer-facing AuthHub flow so your agency can set expectations before a client opens the authorization link.",
+  "source": "@site/docs/client-experience/what-clients-see.md",
+  "sourceDirName": "client-experience",
+  "slug": "/client-experience/what-clients-see",
+  "permalink": "/client-experience/what-clients-see",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/client-experience/what-clients-see.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "client-experience",
+      "permalink": "/tags/client-experience"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "What Clients See",
+    "description": "Understand the customer-facing AuthHub flow so your agency can set expectations before a client opens the authorization link.",
+    "slug": "/client-experience/what-clients-see",
+    "sidebar_position": 1,
+    "keywords": [
+      "client auth flow",
+      "authhub client experience",
+      "authorization journey"
+    ],
+    "tags": [
+      "client-experience"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Resend or Revoke a Request",
+    "permalink": "/requests-and-links/resend-or-revoke"
+  },
+  "next": {
+    "title": "Agency Branding Basics",
+    "permalink": "/client-experience/agency-branding-basics"
+  }
+}

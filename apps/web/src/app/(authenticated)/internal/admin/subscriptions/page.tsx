@@ -12,7 +12,7 @@ import {
 } from '@/lib/query/internal-admin';
 
 const PAGE_SIZE = 20;
-const TIER_OPTIONS: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+const TIER_OPTIONS: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
 
 export default function InternalAdminSubscriptionsPage() {
   const [status, setStatus] = useState('');

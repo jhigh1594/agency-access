@@ -546,14 +546,29 @@ import { Reveal } from '@/components/marketing/reveal';
 | Library | Usage | Examples |
 |---------|-------|----------|
 | `lucide-react` | UI icons | Menu, search, close, chevron |
-| `simple-icons` | Platform logos | Meta, Google, LinkedIn, TikTok |
+| **Brandfetch API** | Platform logos | Meta, Google, LinkedIn, TikTok |
 | Custom SVGs | Brand elements | AuthHub logo, custom graphics |
 
 ### PlatformIcon Component
 
+Platform icons use the **Brandfetch Logo API** for consistent, high-quality platform logos:
+
 ```tsx
-<PlatformIcon platform="meta" size={32} />
-<PlatformIcon platform="google_ads" size={24} variant="square" />
+<PlatformIcon platform="meta" size="md" />
+<PlatformIcon platform="google_ads" size="lg" showLabel />
+<PlatformIcon platform="linkedin" size="xl" />
+```
+
+**Features:**
+- Next.js Image optimization with client-side caching
+- Fallback to initials if logo unavailable
+- Configurable sizes: `sm` (24px), `md` (32px), `lg` (48px), `xl` (64px)
+- Optional label display
+- Automatic error handling
+
+**Environment Variable Required:**
+```bash
+NEXT_PUBLIC_BRANDFETCH_CLIENT_ID=your_client_id_here
 ```
 
 ### Icon Sizing

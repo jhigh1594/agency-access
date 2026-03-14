@@ -195,7 +195,7 @@ touch apps/api/src/services/__tests__/new-feature.test.ts
 The only exceptions to TDD are:
 - **Configuration files** (tsconfig, vite.config, etc.)
 - **Type definitions** (without runtime validation logic)
-- **Styling/CSS files** (use visual regression testing via dev-browser skill instead)
+- **Styling/CSS files** (use visual regression testing via /browse command instead)
 
 **Everything else MUST follow TDD:**
 - Services, utilities, helpers

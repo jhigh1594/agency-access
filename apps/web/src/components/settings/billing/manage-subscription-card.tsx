@@ -30,24 +30,24 @@ import { Button } from '@/components/ui/button';
 import { readBillingIntervalPreference } from './billing-interval';
 import { resolveBillingLifecycle } from './billing-lifecycle';
 
-type ManageableTier = 'STARTER' | 'AGENCY';
+type ManageableTier = 'STARTER' | 'GROWTH' | 'AGENCY';
 type CurrentTier = 'FREE' | ManageableTier;
 
-const MANAGEABLE_TIERS: ManageableTier[] = ['STARTER', 'AGENCY'];
+const MANAGEABLE_TIERS: ManageableTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
 const TIER_RANK: Record<CurrentTier, number> = {
   FREE: -1,
   STARTER: 0,
-  AGENCY: 1,
+  GROWTH: 1,
+  AGENCY: 2,
 };
 
 function normalizeCurrentTier(tier: SubscriptionTier | null | undefined): CurrentTier {
   // Default to STARTER for null/undefined (defensive coding for pre-launch)
   if (!tier) return 'STARTER';
-  if (tier === 'STARTER') return 'STARTER';
-  // Map PRO to AGENCY for UI display (PRO maps to "Agency" pricing tier)
-  // This is a temporary mapping due to dual-tier system
-  if (tier === 'PRO') return 'AGENCY';
-  // Enterprise not manageable in this UI
+  if (tier === 'STARTER' || tier === 'GROWTH' || tier === 'AGENCY') return tier;
+  // Legacy FREE tier maps to STARTER for UI
+  if (tier === 'FREE') return 'STARTER';
+  // Fallback for any other tier
   return 'STARTER';
 }
 

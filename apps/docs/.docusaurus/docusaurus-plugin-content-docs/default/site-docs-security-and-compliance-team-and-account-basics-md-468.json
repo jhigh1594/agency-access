@@ -1,0 +1,40 @@
+{
+  "id": "security-and-compliance/team-and-account-basics",
+  "title": "Team and Account Basics",
+  "description": "Set expectations for how agency members should work inside AuthHub so access workflows stay attributable and operationally clean.",
+  "source": "@site/docs/security-and-compliance/team-and-account-basics.md",
+  "sourceDirName": "security-and-compliance",
+  "slug": "/security-and-compliance/team-and-account-basics",
+  "permalink": "/security-and-compliance/team-and-account-basics",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/security-and-compliance/team-and-account-basics.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "security",
+      "permalink": "/tags/security"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "title": "Team and Account Basics",
+    "description": "Set expectations for how agency members should work inside AuthHub so access workflows stay attributable and operationally clean.",
+    "slug": "/security-and-compliance/team-and-account-basics",
+    "sidebar_position": 3,
+    "keywords": [
+      "team access",
+      "agency member roles",
+      "operational hygiene"
+    ],
+    "tags": [
+      "security"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Request Expiration Behavior",
+    "permalink": "/security-and-compliance/request-expiration"
+  }
+}

@@ -235,7 +235,7 @@ export async function internalAdminRoutes(
         return sendValidationError(reply, 'newTier is required');
       }
 
-      const validTiers: SubscriptionTier[] = ['STARTER', 'AGENCY', 'PRO', 'ENTERPRISE'];
+      const validTiers: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
       if (!validTiers.includes(body.newTier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }

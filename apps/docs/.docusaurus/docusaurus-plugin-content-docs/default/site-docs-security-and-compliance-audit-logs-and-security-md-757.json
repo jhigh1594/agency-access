@@ -1,0 +1,44 @@
+{
+  "id": "security-and-compliance/audit-logs-and-security",
+  "title": "Audit Logs and Security",
+  "description": "Understand how AuthHub handles client authorization activity, audit visibility, and the security expectations around platform access workflows.",
+  "source": "@site/docs/security-and-compliance/audit-logs-and-security.md",
+  "sourceDirName": "security-and-compliance",
+  "slug": "/security-and-compliance/audit-logs-and-security",
+  "permalink": "/security-and-compliance/audit-logs-and-security",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/security-and-compliance/audit-logs-and-security.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "security",
+      "permalink": "/tags/security"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "title": "Audit Logs and Security",
+    "description": "Understand how AuthHub handles client authorization activity, audit visibility, and the security expectations around platform access workflows.",
+    "slug": "/security-and-compliance/audit-logs-and-security",
+    "sidebar_position": 1,
+    "keywords": [
+      "audit logs",
+      "authhub security",
+      "client access compliance"
+    ],
+    "tags": [
+      "security"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Fix Client Authorization Issues",
+    "permalink": "/troubleshooting/client-auth-issues"
+  },
+  "next": {
+    "title": "Request Expiration Behavior",
+    "permalink": "/security-and-compliance/request-expiration"
+  }
+}

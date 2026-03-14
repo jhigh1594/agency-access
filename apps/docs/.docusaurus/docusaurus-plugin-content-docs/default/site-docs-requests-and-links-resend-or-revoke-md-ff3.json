@@ -1,0 +1,44 @@
+{
+  "id": "requests-and-links/resend-or-revoke",
+  "title": "Resend or Revoke a Request",
+  "description": "Decide when to resend an AuthHub request versus revoking it and creating a clean replacement for the client.",
+  "source": "@site/docs/requests-and-links/resend-or-revoke.md",
+  "sourceDirName": "requests-and-links",
+  "slug": "/requests-and-links/resend-or-revoke",
+  "permalink": "/requests-and-links/resend-or-revoke",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/requests-and-links/resend-or-revoke.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "requests",
+      "permalink": "/tags/requests"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "title": "Resend or Revoke a Request",
+    "description": "Decide when to resend an AuthHub request versus revoking it and creating a clean replacement for the client.",
+    "slug": "/requests-and-links/resend-or-revoke",
+    "sidebar_position": 3,
+    "keywords": [
+      "resend access request",
+      "revoke authhub request",
+      "replace onboarding link"
+    ],
+    "tags": [
+      "requests"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Check Request Status",
+    "permalink": "/requests-and-links/check-request-status"
+  },
+  "next": {
+    "title": "What Clients See",
+    "permalink": "/client-experience/what-clients-see"
+  }
+}

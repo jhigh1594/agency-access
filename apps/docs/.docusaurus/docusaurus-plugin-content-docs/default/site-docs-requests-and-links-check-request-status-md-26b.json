@@ -1,0 +1,44 @@
+{
+  "id": "requests-and-links/check-request-status",
+  "title": "Check Request Status",
+  "description": "Use AuthHub request status to understand whether a client has opened, started, completed, or stalled a platform authorization flow.",
+  "source": "@site/docs/requests-and-links/check-request-status.md",
+  "sourceDirName": "requests-and-links",
+  "slug": "/requests-and-links/check-request-status",
+  "permalink": "/requests-and-links/check-request-status",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/jhigh1594/agency-access/tree/main/apps/docs/docs/requests-and-links/check-request-status.md",
+  "tags": [
+    {
+      "inline": true,
+      "label": "requests",
+      "permalink": "/tags/requests"
+    }
+  ],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "title": "Check Request Status",
+    "description": "Use AuthHub request status to understand whether a client has opened, started, completed, or stalled a platform authorization flow.",
+    "slug": "/requests-and-links/check-request-status",
+    "sidebar_position": 2,
+    "keywords": [
+      "authhub request status",
+      "authorization progress",
+      "pending client request"
+    ],
+    "tags": [
+      "requests"
+    ]
+  },
+  "sidebar": "kbSidebar",
+  "previous": {
+    "title": "Send Your Link",
+    "permalink": "/requests-and-links/send-your-link"
+  },
+  "next": {
+    "title": "Resend or Revoke a Request",
+    "permalink": "/requests-and-links/resend-or-revoke"
+  }
+}
