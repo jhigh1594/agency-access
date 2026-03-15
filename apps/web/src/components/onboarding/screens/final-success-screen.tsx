@@ -97,10 +97,10 @@ export function FinalSuccessScreen({
           <CheckCircle2 className="w-12 h-12 text-white" strokeWidth={3} />
         </motion.div>
 
-        <h2 className="text-4xl font-bold text-gray-900 mb-2">
+        <h2 className="text-4xl font-bold text-ink mb-2">
           You're all set!
         </h2>
-        <p className="text-xl text-gray-600">
+        <p className="text-xl text-muted-foreground">
           Welcome to {agencyName}
         </p>
       </motion.div>
@@ -134,7 +134,7 @@ export function FinalSuccessScreen({
         className="max-w-3xl mx-auto mb-8"
         variants={staggerItem}
       >
-        <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+        <h3 className="text-2xl font-bold text-ink mb-4 text-center">
           From your dashboard you can:
         </h3>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -146,8 +146,8 @@ export function FinalSuccessScreen({
               whileHover={{ scale: 1.02 }}
             >
               <feature.icon className="w-6 h-6 text-coral mb-2" />
-              <h4 className="font-semibold text-gray-900 mb-1">{feature.title}</h4>
-              <p className="text-sm text-gray-600">{feature.description}</p>
+              <h4 className="font-semibold text-ink mb-1">{feature.title}</h4>
+              <p className="text-sm text-muted-foreground">{feature.description}</p>
             </motion.div>
           ))}
         </div>
@@ -188,14 +188,14 @@ export function FinalSuccessScreen({
           <ArrowRight className="w-5 h-5" />
         </motion.button>
 
-        <p className="mt-4 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-muted-foreground">
           Your first access request is waiting in your dashboard
         </p>
       </motion.div>
 
       {/* Final Celebration */}
       <motion.div
-        className="mt-12 text-center text-sm text-gray-400"
+        className="mt-12 text-center text-sm text-muted-foreground"
         variants={staggerItem}
       >
         <p>Thanks for choosing AuthHub 🚀</p>

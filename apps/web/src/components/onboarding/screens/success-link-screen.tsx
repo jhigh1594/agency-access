@@ -56,11 +56,11 @@ export function SuccessLinkScreen({
     >
       {/* Step Header */}
       <div className="mb-8 text-center">
-        <div className="text-sm font-semibold text-green-600 mb-2">Step 4 of 6</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-sm font-semibold text-teal mb-2">Step 4 of 6</div>
+        <h2 className="text-3xl font-bold text-ink mb-2">
           Your access link is ready!
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Time to celebrate 🎉
         </p>
       </div>
@@ -76,23 +76,23 @@ export function SuccessLinkScreen({
 
       {/* Next Steps */}
       <div className="mt-8 max-w-4xl mx-auto">
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h3 className="font-semibold text-blue-900 mb-3">What's next?</h3>
-          <div className="space-y-2 text-sm text-blue-800">
+        <div className="bg-electric/10 border border-electric/30 rounded-xl p-6">
+          <h3 className="font-semibold text-ink mb-3">What's next?</h3>
+          <div className="space-y-2 text-sm text-foreground">
             <div className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">1.</span>
+              <span className="text-electric font-bold">1.</span>
               <span>Copy the link above and send it to {clientName}</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">2.</span>
+              <span className="text-electric font-bold">2.</span>
               <span>They'll click it and authorize each platform (takes ~2 minutes)</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">3.</span>
+              <span className="text-electric font-bold">3.</span>
               <span>You'll get instant access to their OAuth tokens</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">4.</span>
+              <span className="text-electric font-bold">4.</span>
               <span>Track the authorization status from your dashboard</span>
             </div>
           </div>
@@ -101,7 +101,7 @@ export function SuccessLinkScreen({
 
       {/* Pro Tip */}
       <div className="mt-6 max-w-4xl mx-auto">
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-muted-foreground">
           <span className="font-semibold">💡 Pro tip:</span>{' '}
           You can create more access requests from your dashboard anytime.
         </div>

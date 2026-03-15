@@ -15,6 +15,7 @@ import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import { TrialBanner } from '@/components/trial-banner';
 import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { useEffect, useRef } from 'react';
@@ -338,12 +339,9 @@ export default function DashboardPage() {
                   ? error.message
                   : 'An error occurred while loading the dashboard.'}
             </p>
-            <button
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
-            >
+            <Button variant="brutalist-rounded" size="md" onClick={() => refetch()}>
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -361,12 +359,11 @@ export default function DashboardPage() {
             <p className="text-acid/90 mb-4">
               We couldn&apos;t find an agency associated with your account. Let&apos;s set one up.
             </p>
-            <Link
-              href="/onboarding/unified"
-              className="inline-flex px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
-            >
-              Complete Onboarding
-            </Link>
+            <Button variant="brutalist-rounded" size="md" asChild>
+              <Link href="/onboarding/unified">
+                Complete Onboarding
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -393,13 +390,12 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
-          <Link
-            href="/access-requests/new"
-            className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
-          >
-            <Plus className="h-4 w-4" />
-            Create Request
-          </Link>
+          <Button variant="brutalist-rounded" size="md" asChild>
+            <Link href="/access-requests/new">
+              <Plus className="h-4 w-4" />
+              Create Request
+            </Link>
+          </Button>
         </div>
 
         {trialBanner && (
@@ -421,18 +417,19 @@ export default function DashboardPage() {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href="/onboarding/unified"
-                onClick={() => {
-                  trackOnboardingEvent('checklist_resume_clicked', {
-                    agencyId: agency?.id,
-                    status: onboardingStatus?.status,
-                  });
-                }}
-                className="inline-flex min-h-[40px] items-center rounded-lg bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral/90"
-              >
-                Resume onboarding
-              </Link>
+              <Button variant="brutalist-rounded" size="md" asChild>
+                <Link
+                  href="/onboarding/unified"
+                  onClick={() => {
+                    trackOnboardingEvent('checklist_resume_clicked', {
+                      agencyId: agency?.id,
+                      status: onboardingStatus?.status,
+                    });
+                  }}
+                >
+                  Resume onboarding
+                </Link>
+              </Button>
 
               {isActivatedChecklist && (
                 <button
@@ -483,13 +480,12 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <Link
-              href="/access-requests/new"
-              className="inline-flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
-            >
-              <Plus className="h-4 w-4" />
-              Create Request
-            </Link>
+            <Button variant="brutalist-rounded" size="md" asChild>
+              <Link href="/access-requests/new">
+                <Plus className="h-4 w-4" />
+                Create Request
+              </Link>
+            </Button>
           </div>
 
           {requests.length === 0 ? (
@@ -522,7 +518,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </span>
                     <StatusBadge status={request.status as any} />

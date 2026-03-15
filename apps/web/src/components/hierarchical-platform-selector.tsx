@@ -269,7 +269,7 @@ export function HierarchicalPlatformSelector({
             className={cn(
               'border rounded-xl overflow-hidden transition-all duration-200',
               selectionState !== 'none'
-                ? 'border-[rgb(var(--coral))]/40 bg-[rgb(var(--coral))]/[0.03] shadow-sm'
+                ? 'border-coral/40 bg-coral/[0.03]'
                 : 'border-border bg-card'
             )}
           >
@@ -286,14 +286,14 @@ export function HierarchicalPlatformSelector({
                 className={cn(
                   'flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200',
                   selectionState === 'all'
-                    ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                    ? 'bg-coral border-coral'
                     : selectionState === 'partial'
-                      ? 'bg-[rgb(var(--coral))]/15 border-[rgb(var(--coral))]'
-                      : 'bg-background border-border hover:border-[rgb(var(--coral))]/50'
+                      ? 'bg-coral/15 border-coral'
+                      : 'bg-background border-border hover:border-coral/50'
                 )}
               >
                 {selectionState === 'all' && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
-                {selectionState === 'partial' && <Minus className="h-3.5 w-3.5 text-[rgb(var(--coral))]" strokeWidth={3} />}
+                {selectionState === 'partial' && <Minus className="h-3.5 w-3.5 text-coral" strokeWidth={3} />}
               </button>
 
               {/* Clickable header area */}
@@ -314,7 +314,7 @@ export function HierarchicalPlatformSelector({
                 </div>
 
                 {selectionCount > 0 && (
-                  <span className="flex-shrink-0 text-xs font-semibold text-[rgb(var(--coral))]">
+                  <span className="flex-shrink-0 text-xs font-semibold text-coral">
                     {selectionCount} selected
                   </span>
                 )}
@@ -347,8 +347,8 @@ export function HierarchicalPlatformSelector({
                       return (
                         <div className="border-t border-border/50 p-4 bg-muted/10">
                           <div className="flex items-start gap-3 p-4 bg-card border border-border rounded-xl">
-                            <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-[rgb(var(--coral))]/10 border border-border flex items-center justify-center">
-                              <Mail className="h-5 w-5 text-[rgb(var(--coral))]" />
+                            <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-coral/10 border border-border flex items-center justify-center">
+                              <Mail className="h-5 w-5 text-coral" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-semibold text-foreground mb-1">Invitation Email</h4>
@@ -404,14 +404,14 @@ export function HierarchicalPlatformSelector({
                             className={cn(
                               'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150',
                               selectionState === 'all'
-                                ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                                ? 'bg-coral border-coral'
                                 : selectionState === 'partial'
-                                  ? 'bg-[rgb(var(--coral))]/15 border-[rgb(var(--coral))]'
+                                  ? 'bg-coral/15 border-coral'
                                   : 'bg-background border-border'
                             )}
                           >
                             {selectionState === 'all' && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                            {selectionState === 'partial' && <Minus className="h-3 w-3 text-[rgb(var(--coral))]" strokeWidth={3} />}
+                            {selectionState === 'partial' && <Minus className="h-3 w-3 text-coral" strokeWidth={3} />}
                           </div>
                           <span className="text-sm font-medium text-foreground">
                             Select all ({group.products.length})
@@ -453,7 +453,7 @@ export function HierarchicalPlatformSelector({
                                 className={cn(
                                   'flex items-center gap-2.5 cursor-pointer rounded-lg px-3 py-2.5 transition-all duration-150 min-h-[44px]',
                                   isSelected
-                                    ? 'bg-[rgb(var(--coral))]/8'
+                                    ? 'bg-coral/8'
                                     : 'hover:bg-muted/40'
                                 )}
                               >
@@ -461,7 +461,7 @@ export function HierarchicalPlatformSelector({
                                   className={cn(
                                     'flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-150 pointer-events-none',
                                     isSelected
-                                      ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
+                                      ? 'bg-coral border-coral'
                                       : 'bg-background border-border'
                                   )}
                                 >
@@ -477,12 +477,12 @@ export function HierarchicalPlatformSelector({
                                 <PlatformIcon platform={product.id as Platform} size="sm" />
                                 <span className={cn(
                                   'text-sm font-medium leading-tight',
-                                  isSelected ? 'text-[rgb(var(--coral))]' : 'text-foreground'
+                                  isSelected ? 'text-coral' : 'text-foreground'
                                 )}>
                                   {product.name}
                                 </span>
                                 {isSelected && (
-                                  <Check className="h-3.5 w-3.5 text-[rgb(var(--coral))] ml-auto flex-shrink-0" />
+                                  <Check className="h-3.5 w-3.5 text-coral ml-auto flex-shrink-0" />
                                 )}
                               </label>
                             );

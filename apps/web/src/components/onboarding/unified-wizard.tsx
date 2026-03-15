@@ -173,16 +173,16 @@ export function UnifiedWizard({
         <div className="max-w-6xl mx-auto px-4 py-6 md:px-6">
           {/* Step Indicators */}
           <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-gray-700">
+            <div className="text-sm font-medium text-foreground">
               Step {currentStep + 1} of {totalSteps}
             </div>
-            <div className="text-sm font-medium text-gray-700">
+            <div className="text-sm font-medium text-foreground">
               {progressPercentage}% Complete
             </div>
           </div>
 
           {/* Linear Progress Bar */}
-          <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-muted/30 rounded-full overflow-hidden">
             <motion.div
               className="absolute inset-y-0 left-0 bg-teal rounded-full"
               initial={{ width: `${((currentStep) / totalSteps) * 100}%` }}
@@ -208,13 +208,13 @@ export function UnifiedWizard({
                     className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold border ${
                       isCompleted || isCurrent
                         ? 'bg-ink text-white border-ink'
-                        : 'bg-transparent text-gray-700 border-gray-300'
+                        : 'bg-transparent text-foreground border-border'
                     }`}
                   >
                     {isCompleted ? '✓' : index + 1}
                   </div>
                   {index < totalSteps - 1 && (
-                    <div className="flex-1 h-px bg-gray-300 mx-1" />
+                    <div className="flex-1 h-px bg-border mx-1" />
                   )}
                 </div>
               );
@@ -251,10 +251,10 @@ export function UnifiedWizard({
                 {showClose && onClose && (
                   <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-muted/20 hover:bg-muted/20 transition-colors"
                     aria-label="Close"
                   >
-                    <X className="w-5 h-5 text-gray-600" />
+                    <X className="w-5 h-5 text-muted-foreground" />
                   </button>
                 )}
 
@@ -274,7 +274,7 @@ export function UnifiedWizard({
               <button
                 onClick={handleBack}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card hover:bg-gray-100 text-gray-900 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card hover:bg-muted/10 text-ink font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-border"
                 aria-label="Go back to previous step"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -289,7 +289,7 @@ export function UnifiedWizard({
               <button
                 onClick={handleSkip}
                 disabled={loading}
-                className="px-4 py-2 rounded-lg bg-transparent hover:bg-gray-100 text-gray-600 hover:text-gray-900 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg bg-transparent hover:bg-muted/10 text-muted-foreground hover:text-ink font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Skip for now →
               </button>
@@ -322,12 +322,12 @@ export function UnifiedWizard({
           </div>
 
           {/* Keyboard Shortcuts Hint */}
-          <div className="mt-4 text-center text-xs text-gray-500">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 font-mono text-gray-700">Enter</kbd> to continue
+          <div className="mt-4 text-center text-xs text-muted-foreground">
+            Press <kbd className="px-1.5 py-0.5 rounded bg-muted/20 border border-border font-mono text-foreground">Enter</kbd> to continue
             {canSkip && (
               <>
                 {' • '}
-                <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 font-mono text-gray-700">Esc</kbd> to skip
+                <kbd className="px-1.5 py-0.5 rounded bg-muted/20 border border-border font-mono text-foreground">Esc</kbd> to skip
               </>
             )}
           </div>

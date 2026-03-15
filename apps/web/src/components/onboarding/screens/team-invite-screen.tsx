@@ -103,19 +103,19 @@ export function TeamInviteScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-indigo-600 mb-2">Step 5 of 6 (Optional)</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Want to invite your team?</h2>
-        <p className="text-gray-600">
+        <div className="text-sm font-semibold text-coral mb-2">Step 5 of 6 (Optional)</div>
+        <h2 className="text-3xl font-bold text-ink mb-2">Want to invite your team?</h2>
+        <p className="text-muted-foreground">
           Team members can help manage access requests. You can also do this later from Settings.
         </p>
       </div>
 
       <div className="max-w-4xl space-y-6">
         {/* Add Team Member Input */}
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6">
+        <div className="bg-paper border-2 border-dashed border-border rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Plus className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-semibold text-gray-900">Add team member</h3>
+            <Plus className="w-5 h-5 text-coral" />
+            <h3 className="font-semibold text-ink">Add team member</h3>
           </div>
 
           <div className="space-y-4">
@@ -133,7 +133,7 @@ export function TeamInviteScreen({
 
             {/* Role Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label className="block text-sm font-semibold text-foreground mb-1.5">
                 Role
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -145,13 +145,13 @@ export function TeamInviteScreen({
                     className={`
                       p-3 rounded-lg border-2 text-left transition-all
                       ${newRole === role.value
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-card'
+                        ? 'border-coral bg-coral/10'
+                        : 'border-border hover:border-border bg-card'
                       }
                     `}
                   >
-                    <div className="font-semibold text-gray-900 text-sm">{role.label}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{role.description}</div>
+                    <div className="font-semibold text-ink text-sm">{role.label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{role.description}</div>
                   </button>
                 ))}
               </div>
@@ -162,7 +162,7 @@ export function TeamInviteScreen({
               type="button"
               onClick={handleAddInvite}
               disabled={!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)}
-              className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2"
+              className="w-full px-4 py-3 bg-coral hover:bg-coral/90 disabled:bg-muted/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Add Team Member
@@ -173,28 +173,28 @@ export function TeamInviteScreen({
         {/* Invites List */}
         {teamInvites.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-semibold text-ink">
               {teamInvites.length} team member{teamInvites.length > 1 ? 's' : ''} to invite
             </h3>
             {teamInvites.map((invite) => (
               <motion.div
                 key={invite.email}
-                className="flex items-center justify-between p-4 bg-card border-2 border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-4 bg-card border-2 border-border rounded-lg"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-indigo-600" />
+                  <div className="w-10 h-10 bg-coral/15 rounded-full flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-coral" />
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">{invite.email}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="font-medium text-ink">{invite.email}</div>
+                    <div className="text-sm text-muted-foreground">
                       Role:{' '}
                       <select
                         value={invite.role}
                         onChange={(e) => handleUpdateRole(invite.email, e.target.value as AgencyRole)}
-                        className="ml-1 px-2 py-0.5 rounded border border-gray-300 text-gray-700 text-xs"
+                        className="ml-1 px-2 py-0.5 rounded border border-border text-foreground text-xs"
                       >
                         {ROLE_OPTIONS.map((role) => (
                           <option key={role.value} value={role.value}>
@@ -208,7 +208,7 @@ export function TeamInviteScreen({
                 <button
                   type="button"
                   onClick={() => handleRemoveInvite(invite.email)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                  className="p-2 text-muted-foreground hover:text-coral hover:bg-coral/10 rounded-lg transition-all"
                   aria-label="Remove invite"
                 >
                   <X className="w-5 h-5" />
@@ -219,10 +219,10 @@ export function TeamInviteScreen({
         )}
 
         {/* Reassurance */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="p-4 bg-warning/10 border border-warning/30 rounded-lg">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-warning mt-0.5 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -232,7 +232,7 @@ export function TeamInviteScreen({
                 clipRule="evenodd"
               />
             </svg>
-            <div className="flex-1 text-sm text-amber-900">
+            <div className="flex-1 text-sm text-ink">
               <span className="font-semibold">No pressure!</span>{' '}
               You can invite team members anytime from Settings. This step is completely optional.
             </div>
@@ -241,7 +241,7 @@ export function TeamInviteScreen({
 
         {/* What's Next Tease */}
         {teamInvites.length === 0 && (
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-muted-foreground">
             Click "Continue" to finish onboarding and go to your dashboard
           </div>
         )}

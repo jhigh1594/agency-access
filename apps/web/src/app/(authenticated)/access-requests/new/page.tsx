@@ -332,7 +332,7 @@ function AccessRequestWizardContent() {
                 type="button"
                 onClick={() => setStep(2)}
                 disabled={!state.client}
-                className="px-8 py-3 bg-coral text-white text-base rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md font-medium"
+                className="px-8 py-3 bg-coral text-white text-base rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-brutalist hover:shadow-none hover:translate-y-[2px] font-medium"
               >
                 Continue to Platforms
               </button>
@@ -420,7 +420,7 @@ function AccessRequestWizardContent() {
               type="button"
               onClick={() => setStep(3)}
               disabled={!currentStepValid}
-              className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+              className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-brutalist hover:shadow-none hover:translate-y-[2px]"
               >
               Continue to Customize
               </button>
@@ -659,7 +659,7 @@ function AccessRequestWizardContent() {
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 transition-all active:scale-95 shadow-brutalist hover:shadow-none hover:translate-y-[2px]"
               >
                 Review & Create
               </button>
@@ -914,7 +914,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="submit"
                       disabled={state.submitting}
-                      className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md flex items-center gap-2"
+                      className="px-6 py-2.5 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-brutalist hover:shadow-none hover:translate-y-[2px] flex items-center gap-2"
                     >
                       {state.submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                       {state.submitting ? 'Creating Request...' : 'Create Access Request'}

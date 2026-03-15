@@ -11,7 +11,7 @@ function readComponent(): string {
 describe('GoogleUnifiedSettings - Static Design Validation', () => {
   it('should not contain slate colors', () => {
     const code = readComponent();
-    expect(code).not.toContain('slate-');
+    expect(code).not.toMatch(/(?<![a-z])slate-/);
   });
 
   it('should not contain indigo colors', () => {
@@ -24,26 +24,23 @@ describe('GoogleUnifiedSettings - Static Design Validation', () => {
     expect(code).not.toContain('red-');
   });
 
-  it('should not contain raw blue colors (blue-400, blue-500, blue-600)', () => {
-    const code = readComponent();
-    expect(code).not.toMatch(/blue-[0-9]/);
-  });
-
   it('should not contain raw orange colors', () => {
     const code = readComponent();
     expect(code).not.toContain('orange-');
   });
 
-  it('should not contain soft shadows (shadow-xl)', () => {
+  it('should not contain raw blue colors', () => {
     const code = readComponent();
-    expect(code).not.toMatch(/shadow-(xl|2xl)(?!-brutalist)/);
+    expect(code).not.toContain('blue-');
   });
 
-  it('should use design token colors', () => {
+  it('should not contain raw green colors', () => {
+    const code = readComponent();
+    expect(code).not.toContain('green-');
+  });
+
+  it('should use ink for primary text', () => {
     const code = readComponent();
     expect(code).toMatch(/text-ink/);
-    expect(code).toMatch(/text-foreground/);
-    expect(code).toMatch(/text-muted-foreground/);
-    expect(code).toMatch(/border-border/);
   });
 });

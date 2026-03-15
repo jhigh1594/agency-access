@@ -162,7 +162,7 @@ export function SuccessLinkCard({
 
       {/* Success Card */}
       <motion.div
-        className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8"
+        className="bg-gradient-to-br from-teal/10 to-teal/5 border-2 border-teal/30 rounded-2xl p-8"
         variants={bounceVariants}
         initial="initial"
         animate="animate"
@@ -175,30 +175,30 @@ export function SuccessLinkCard({
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 0.5, type: 'spring' }}
         >
-          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+          <div className="w-20 h-20 bg-teal rounded-full flex items-center justify-center shadow-lg">
             <Check className="w-10 h-10 text-white" />
           </div>
         </motion.div>
 
         {/* Heading */}
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-ink mb-2">
             🎉 Congratulations!
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Your first access link is ready
           </p>
         </div>
 
         {/* Link Display */}
-        <div className="bg-card rounded-xl border-2 border-gray-200 p-6 mb-6 shadow-inner">
+        <div className="bg-card rounded-xl border-2 border-border p-6 mb-6 shadow-inner">
           <div className="flex items-center justify-between gap-4">
             {/* Link */}
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 Access Link
               </div>
-              <div className="font-mono text-sm md:text-base text-gray-900 break-all">
+              <div className="font-mono text-sm md:text-base text-ink break-all">
                 {link}
               </div>
             </div>
@@ -209,8 +209,8 @@ export function SuccessLinkCard({
               className={`
                 flex-shrink-0 px-4 py-3 rounded-lg font-semibold transition-all
                 ${copied
-                  ? 'bg-green-500 text-white'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  ? 'bg-teal text-white'
+                  : 'bg-coral hover:bg-coral/90 text-white'
                 }
               `}
               whileHover={{ scale: 1.02 }}
@@ -232,7 +232,7 @@ export function SuccessLinkCard({
         </div>
 
         {/* Info */}
-        <div className="text-center text-sm text-gray-600 mb-6">
+        <div className="text-center text-sm text-muted-foreground mb-6">
           <p>
             Send this to <span className="font-semibold">{clientName}</span> and they can
             authorize <span className="font-semibold">{platformCount} platform(s)</span> in under 2 minutes.
@@ -244,7 +244,7 @@ export function SuccessLinkCard({
           {/* Email Option */}
           <motion.button
             onClick={handleEmail}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-card border-2 border-gray-200 hover:border-gray-300 rounded-lg font-semibold text-gray-700 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-card border-2 border-border hover:border-border rounded-lg font-semibold text-foreground transition-all"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -267,7 +267,7 @@ export function SuccessLinkCard({
                   console.log('Share cancelled or failed:', err);
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-card border-2 border-gray-200 hover:border-gray-300 rounded-lg font-semibold text-gray-700 transition-all"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-card border-2 border-border hover:border-border rounded-lg font-semibold text-foreground transition-all"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -279,14 +279,14 @@ export function SuccessLinkCard({
 
         {/* QR Code (optional) */}
         {showQRCode && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-border">
             <div className="text-center">
-              <div className="text-sm font-semibold text-gray-700 mb-3">
+              <div className="text-sm font-semibold text-foreground mb-3">
                 Or scan this QR code
               </div>
               <div className="inline-flex p-4 bg-card rounded-lg shadow-inner">
                 {/* QR code would be generated here using a library like qrcode.react */}
-                <div className="w-32 h-32 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                <div className="w-32 h-32 bg-muted/20 flex items-center justify-center text-muted-foreground text-xs">
                   QR Code Placeholder
                 </div>
               </div>

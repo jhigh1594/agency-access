@@ -60,7 +60,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
         </motion.div>
 
         {/* Headline */}
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+        <h1 className="text-4xl md:text-5xl font-bold text-ink">
           Welcome to AuthHub
         </h1>
 
@@ -71,7 +71,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
             <span>Get client access in 60 seconds</span>
           </div>
 
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             No more 2-3 day OAuth nightmares. Create a branded access link,
             send it to clients, and get instant token access.
           </p>
@@ -104,8 +104,8 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
               transition={{ delay: index * 0.1 + 0.3 }}
             >
               <div className="text-2xl mb-2">{benefit.icon}</div>
-              <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
-              <p className="text-sm text-gray-600">{benefit.description}</p>
+              <h3 className="font-semibold text-ink mb-1">{benefit.title}</h3>
+              <p className="text-sm text-muted-foreground">{benefit.description}</p>
             </motion.div>
           ))}
         </div>
@@ -121,7 +121,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
             <p className="text-ink text-sm">
               <span className="font-semibold">We've pre-filled your agency name:</span>{' '}
               <span className="font-mono bg-card px-2 py-0.5 rounded">{agencyName}</span>
-              <span className="text-gray-700 ml-2">(you can change this next)</span>
+              <span className="text-foreground ml-2">(you can change this next)</span>
             </p>
           </motion.div>
         )}
@@ -138,7 +138,7 @@ export function WelcomeScreen({ onNext, agencyName }: WelcomeScreenProps) {
         </motion.button>
 
         {/* Trust Indicators */}
-        <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-500">
+        <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-teal" fill="currentColor" viewBox="0 0 20 20">
               <path
