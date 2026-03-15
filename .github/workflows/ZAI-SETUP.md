@@ -86,15 +86,15 @@ git push
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ 5. Extract TypeScript BlogPost object from response        │
+│ 5. Extract Markdown with YAML frontmatter from response     │
 │    - Parse JSON response                                    │
-│    - Extract TypeScript code block                          │
-│    - Validate format                                        │
+│    - Extract markdown code block or raw content             │
+│    - Validate frontmatter format                            │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ 6. Update repository files                                  │
-│    - apps/web/src/lib/blog-data.ts (add new post)          │
+│    - apps/web/content/blog/{slug}.md (create new file)     │
 │    - marketing/content/CONTENT-CALENDAR-Q1-2026.md          │
 │    - marketing/content/KEYWORD-TRACKER.md                    │
 └─────────────────────────────────────────────────────────────┘
@@ -147,7 +147,7 @@ POST https://api.z.ai/api/anthropic/v1/messages
   "content": [
     {
       "type": "text",
-      "text": "```typescript\n{\n  id: \"blog-post-id\",\n  slug: \"url-slug\",\n  ...\n}\n```"
+      "text": "```markdown\n---\nid: blog-post-id\ntitle: ...\n...\n---\n# Headline\n\nBody...\n```"
     }
   ],
   "model": "glm-4.7",
@@ -204,19 +204,21 @@ curl -X POST "https://api.z.ai/api/anthropic/v1/messages" \
 ### Blog post not extracted correctly
 
 **Check:**
-1. Did GLM return a TypeScript code block?
-2. Is the format correct? (Look at `/tmp/zai_response.json` in workflow logs)
+1. Did GLM return a Markdown block with YAML frontmatter (```markdown ... ```)?
+2. Does the content start with --- and have id, title, excerpt, etc. in frontmatter?
+3. Is the format correct? (Look at `/tmp/zai_response.json` in workflow logs)
 
 **Fix:**
-- Adjust the prompt to emphasize output format
+- Adjust the prompt to emphasize output format (YAML frontmatter + markdown body)
 - Add examples of expected output format
 
 ### Files not updated correctly
 
 **Check:**
-1. Blog post format matches `BlogPost` type in `blog-types.ts`
-2. File paths are correct in workflow
-3. Write permissions are correct
+1. Blog post format matches content/blog/*.md structure (YAML frontmatter + body)
+2. Frontmatter has valid `id` (used as filename: {id}.md)
+3. File paths are correct: apps/web/content/blog/
+4. Write permissions are correct
 
 ## Cost Considerations
 

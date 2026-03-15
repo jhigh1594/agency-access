@@ -36,27 +36,42 @@ Your content targets **growing agency owners** (10-50 employees, 3-10 new client
 - **USE THE ELITE-COPYWRITER SKILL** for all outlining and content creation phases
 </hard_constraints>
 
-<typescript_format>
-**CRITICAL: TypeScript Template Literal Syntax**
+<markdown_frontmatter_format>
+**CRITICAL: Markdown with YAML Frontmatter**
 
-When generating blog post entries for `apps/web/src/lib/blog-data.ts`, the `content` field MUST use **template literal backticks**, NOT regular string quotes.
+Blog posts live in `apps/web/content/blog/{slug}.md`. Each file has YAML frontmatter (between --- delimiters) followed by the markdown body.
 
-**❌ WRONG - This causes build errors:**
-```typescript
-content: "# Your markdown content
-with newlines and special characters",
+**Format:**
+```markdown
+---
+id: url-slug-for-filename
+title: Compelling Headline (2026)
+excerpt: >-
+  150-char summary
+category: tutorials
+stage: awareness
+publishedAt: '2026-03-13'
+readTime: 5
+author:
+  name: AuthHub Team
+  role: Agency Operations Experts
+tags:
+  - tag1
+  - tag2
+metaTitle: SEO title
+metaDescription: SEO description
+relatedPosts:
+  - other-post-id
+---
+# Compelling Headline (2026)
+
+Full markdown body here...
 ```
 
-**✅ CORRECT - Use template literals:**
-```typescript
-content: `# Your markdown content
-with newlines and special characters`,
-```
-
-**Why:** Markdown content contains newlines, special characters, and backticks. TypeScript requires template literals (enclosed in backticks `` ` ``) for multiline strings. Regular quotes (single or double) only work for single-line strings.
-
-**Remember:** The `content` field value must start and end with a backtick character (`` ` ``), not a quote character.
-</typescript_format>
+**Required frontmatter:** id, title, excerpt, category, stage, publishedAt, readTime, author (object), tags (array), metaTitle, metaDescription
+**Optional:** relatedPosts (array of post ids), featuredImage
+**Filename:** Use `id` value for filename: `{id}.md`
+</markdown_frontmatter_format>
 
 <visual_content_requirements>
 **CRITICAL: Visual Content Requirements**
@@ -190,7 +205,7 @@ Let H2 (##) and H3 (###) headings provide structure. Use white space for visual 
 - Content strategy: `marketing/CONTENT-STRATEGY-2026.md`
 - Content calendar: `marketing/content/CONTENT-CALENDAR-Q1-2026.md`
 - Keyword tracker: `marketing/content/KEYWORD-TRACKER.md`
-- Blog data: `apps/web/src/lib/blog-data.ts`
+- Blog content: `apps/web/content/blog/` (one .md file per post)
 - Blog types: `apps/web/src/lib/blog-types.ts`
 
 **Available Skills:**
@@ -296,7 +311,7 @@ Your job is to autonomously create a complete blog post by following these 7 pha
 marketing/CONTENT-STRATEGY-2026.md
 marketing/content/CONTENT-CALENDAR-Q1-2026.md
 marketing/content/KEYWORD-TRACKER.md
-apps/web/src/lib/blog-data.ts
+apps/web/content/blog/
 apps/web/src/lib/blog-types.ts
 ```
 
@@ -427,27 +442,34 @@ Requirements:
 - Brand voice alignment
 - completeness of all sections
 
-**Step 3.2** - Create all required metadata fields:
-```typescript
-{
-  id: "kebab-case-id",
-  slug: "url-slug-for-post",
-  title: "Compelling Headline with Year (2026)",
-  excerpt: "150-160 character summary",
-  content: "[Full markdown content]",
-  category: "[from blog-types.ts]",
-  stage: "[awareness|consideration|decision]",
-  publishedAt: "2026-03-13",
-  readTime: [calculate based on word count / 200],
-  author: {
-    name: "AuthHub Team",
-    role: "Agency Operations Experts"
-  },
-  tags: ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  metaTitle: "50-60 characters with keyword",
-  metaDescription: "150-155 characters with keyword and benefit",
-  relatedPosts: ["id1", "id2", "id3"]
-}
+**Step 3.2** - Create all required metadata as YAML frontmatter (body = full markdown):
+```yaml
+---
+id: kebab-case-id
+title: "Compelling Headline with Year (2026)"
+excerpt: >-
+  150-160 character summary
+category: "[from blog-types.ts]"
+stage: "[awareness|consideration|decision]"
+publishedAt: '2026-03-13'
+readTime: [calculate based on word count / 200]
+author:
+  name: AuthHub Team
+  role: Agency Operations Experts
+tags:
+  - tag1
+  - tag2
+  - tag3
+  - tag4
+  - tag5
+metaTitle: "50-60 characters with keyword"
+metaDescription: "150-155 characters with keyword and benefit"
+relatedPosts:
+  - id1
+  - id2
+  - id3
+---
+# Full markdown body follows...
 ```
 
 ---
@@ -491,10 +513,11 @@ Requirements:
 
 ## PHASE 6: UPDATE FILES
 
-**Step 6.1** - Add the new blog post to `apps/web/src/lib/blog-data.ts`:
-- Insert in the BLOG_POSTS array
-- Include all required fields from BlogPost type
-- Place logically with other posts (by date or category)
+**Step 6.1** - Create new blog post file `apps/web/content/blog/{slug}.md`:
+- Use `id` as the slug for the filename (e.g. id: my-post-id → my-post-id.md)
+- Include YAML frontmatter with all required fields (id, title, excerpt, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription)
+- Follow existing posts in content/blog/ for format reference
+- Do NOT duplicate an existing slug (check existing .md filenames)
 
 **Step 6.2** - Update `marketing/content/CONTENT-CALENDAR-Q1-2026.md`:
 - Find the row for your content piece
@@ -545,7 +568,7 @@ Present your work in this exact format:
 **External Links:** [count] - [list]
 
 ## 📄 Files Updated
-1. ✅ `apps/web/src/lib/blog-data.ts` - Added new BlogPost entry
+1. ✅ `apps/web/content/blog/{slug}.md` - Created new blog post file
 2. ✅ `marketing/content/CONTENT-CALENDAR-Q1-2026.md` - Status updated to Published
 3. ✅ `marketing/content/KEYWORD-TRACKER.md` - Target page assigned
 
@@ -610,7 +633,7 @@ Outline Created:
 
 Content Created: 2,400 words
 SEO Optimized: Featured snippet targeted for "how to request Pinterest ads access"
-Files Updated: blog-data.ts, calendar, tracker
+Files Updated: content/blog/{slug}.md, calendar, tracker
 ```
 
 **Example 2 - Best Practices:**
@@ -630,7 +653,7 @@ Outline Created:
 
 Content Created: 3,100 words with downloadable PDF offer
 SEO Optimized: Featured snippet for comprehensive checklist format
-Files Updated: blog-data.ts, calendar, tracker
+Files Updated: content/blog/{slug}.md, calendar, tracker
 ```
 
 **Example 3 - Comparison:**
@@ -651,7 +674,7 @@ Outline Created:
 
 Content Created: 2,800 words
 SEO Optimized: Target both "authhub vs leadsie" and "leadsie alternative"
-Files Updated: blog-data.ts, calendar, tracker
+Files Updated: content/blog/{slug}.md, calendar, tracker
 ```
 
 </examples>
@@ -663,7 +686,7 @@ Files Updated: blog-data.ts, calendar, tracker
 3. ✅ Content follows the appropriate **category template structure** (not just TikTok Ads Access)
 4. ✅ SEO checklist passed (keyword placement, internal/external links)
 5. ✅ Brand voice consistent (professional, approachable, helpful)
-6. ✅ All 3 content files updated (blog-data, calendar, tracker)
+6. ✅ All 3 content files updated (blog post file, calendar, tracker)
 7. ✅ Read time calculated correctly
 8. ✅ Meta title/description within character limits
 9. ✅ No duplicate content with existing posts

@@ -40,6 +40,9 @@ jobs:
           echo "" >> /tmp/context.md
           echo "=== Keyword Tracker ===" >> /tmp/context.md
           cat marketing/content/KEYWORD-TRACKER.md >> /tmp/context.md
+          echo "" >> /tmp/context.md
+          echo "=== Existing Blog Slugs (do not duplicate) ===" >> /tmp/context.md
+          ls -1 apps/web/content/blog/*.md 2>/dev/null | xargs -I {} basename {} .md | sort >> /tmp/context.md || echo "(none)" >> /tmp/context.md
 
       - name: Generate blog post with z.ai API
         id: generate
@@ -66,7 +69,7 @@ jobs:
               "messages": [
                 {
                   "role": "user",
-                  "content": "Read the blog creation workflow at .claude/prompts/blog-creation-workflow.md and execute all 7 phases:\\n\\n1. Research - Read marketing/CONTENT-STRATEGY-2026.md, marketing/content/CONTENT-CALENDAR-Q1-2026.md, marketing/content/KEYWORD-TRACKER.md, apps/web/src/lib/blog-data.ts\\n\\n2. Select a topic autonomously based on: P0/P1 priorities, keyword gaps, strategic alignment\\n\\n3. Outline - INVOKE THE ELITE-COPYWRITER SKILL. Create outline following the CATEGORY TEMPLATE structure (not all posts follow TikTok Ads Access - choose based on category: tutorials, onboarding, comparisons, security, operations, case-studies, or research)\\n\\n4. Create - INVOKE THE ELITE-COPYWRITER SKILL AGAIN. Write complete blog post (2000-3000 words) with all metadata fields (id, slug, title, excerpt, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription, relatedPosts)\\n\\n5. SEO - Include primary keyword in title/slug/H1/first paragraph/meta description. Add 3-5 internal links, 2-3 external links. Target featured snippet.\\n\\n6. Review - Check brand voice (professional, approachable, helpful). Verify content checklist.\\n\\n7. Output - Present final blog post in TypeScript BlogPost format, ready to add to apps/web/lib/blog-data.ts\\n\\nCRITICAL REQUIREMENTS:\\n- **MUST INVOKE ELITE-COPYWRITER SKILL** in Phase 2 (outline) and Phase 3 (content creation)\\n- **CHOOSE TEMPLATE STRUCTURE** based on category from <category_templates> section - do NOT use TikTok Ads Access structure for all posts\\n- Output ONLY the TypeScript code for the BlogPost object\\n- Start with { and end with }\\n- No explanations, no markdown outside the code block\\n- Include all required fields: id, slug, title, excerpt, content, category, stage, publishedAt, readTime, author, tags, metaTitle, metaDescription\\n\\nExample format:\\n{\\n  id: \\\"your-blog-post-id\\\",\\n  slug: \\\"url-slug\\\",\\n  title: \\\"Compelling Headline (2026)\\\",\\n  excerpt: \\\"150-char summary\\\",\\n  content: \\`Full markdown content...\\`,\\n  category: \\\"tutorials\\\",\\n  stage: \\\"awareness\\\",\\n  publishedAt: \\\"2026-03-13\\\",\\n  readTime: 5,\\n  author: { name: \\\"AuthHub Team\\\", role: \\\"Agency Operations Experts\\\" },\\n  tags: [\\\"tag1\\\", \\\"tag2\\\", \\\"tag3\\\"],\\n  metaTitle: \\\"SEO title\\\",\\n  metaDescription: \\\"SEO description\\\"\\n}"
+                  "content": "Read the blog creation workflow at .claude/prompts/blog-creation-workflow.md and execute all 7 phases:\\n\\n1. Research - Read marketing/CONTENT-STRATEGY-2026.md, marketing/content/CONTENT-CALENDAR-Q1-2026.md, marketing/content/KEYWORD-TRACKER.md, and list of existing slugs in apps/web/content/blog/ (one .md file per post)\\n\\n2. Select a topic autonomously based on: P0/P1 priorities, keyword gaps, strategic alignment. Do NOT duplicate an existing slug.\\n\\n3. Outline - INVOKE THE ELITE-COPYWRITER SKILL. Create outline following the CATEGORY TEMPLATE structure (not all posts follow TikTok Ads Access - choose based on category: tutorials, onboarding, comparisons, security, operations, case-studies, or research)\\n\\n4. Create - INVOKE THE ELITE-COPYWRITER SKILL AGAIN. Write complete blog post (2000-3000 words) with YAML frontmatter + markdown body.\\n\\n5. SEO - Include primary keyword in title/slug/H1/first paragraph/meta description. Add 3-5 internal links, 2-3 external links. Target featured snippet.\\n\\n6. Review - Check brand voice (professional, approachable, helpful). Verify content checklist.\\n\\n7. Output - Present final blog post as a Markdown file with YAML frontmatter, ready for apps/web/content/blog/{slug}.md\\n\\nCRITICAL OUTPUT FORMAT:\\n- Output ONLY a single Markdown file wrapped in a markdown code block (```markdown ... ```)\\n- Start with --- (YAML frontmatter) then newline, then frontmatter keys, then ---, then blank line, then full markdown body\\n- Frontmatter MUST include: id, title, excerpt, category, stage, publishedAt, readTime, author (as object with name, role), tags (YAML array), metaTitle, metaDescription, relatedPosts (optional array of post ids)\\n- Filename = slug; slug must be in frontmatter as the id (or derive from title). Use kebab-case slug for filename.\\n\\nExample format:\\n```markdown\\n---\\nid: your-blog-post-id\\ntitle: Compelling Headline (2026)\\nexcerpt: >-\\n  150-char summary\\ncategory: tutorials\\nstage: awareness\\npublishedAt: '2026-03-13'\\nreadTime: 5\\nauthor:\\n  name: AuthHub Team\\n  role: Agency Operations Experts\\ntags:\\n  - tag1\\n  - tag2\\n  - tag3\\nmetaTitle: SEO title\\nmetaDescription: SEO description\\n---\\n# Compelling Headline (2026)\\n\\nFull markdown body here...\\n```"
                 }
               ]
             }')
@@ -91,13 +94,13 @@ jobs:
             exit 1
           fi
 
-          echo "$CONTENT" > /tmp/blog_post.ts
+          echo "$CONTENT" > /tmp/blog_post_raw.txt
           echo "✅ Blog post content extracted ($(echo "$CONTENT" | wc -c) characters)"
 
       - name: Extract and validate blog post content
         id: extract
         run: |
-          # Try to extract TypeScript BlogPost object from response
+          # Extract Markdown with YAML frontmatter from response
           python3 << 'PYTHON_SCRIPT'
           import json
           import re
@@ -105,28 +108,28 @@ jobs:
           with open('/tmp/zai_response.json', 'r') as f:
               response = json.load(f)
 
-          # Extract content from z.ai response
           if 'content' in response and len(response['content']) > 0:
               content_text = response['content'][0]['text']
 
-              # Look for TypeScript code block
-              ts_match = re.search(r'```typescript\n(.*?)\n```', content_text, re.DOTALL)
-              if ts_match:
-                  ts_code = ts_match.group(1)
-                  print(f"FOUND_TYPESCRIPT_CODE_BLOCK")
-                  print(f"Length: {len(ts_code)} characters")
+              # Look for markdown code block
+              md_match = re.search(r'```(?:markdown|md)?\n(.*?)\n```', content_text, re.DOTALL)
+              if md_match:
+                  md_content = md_match.group(1).strip()
+              elif re.match(r'^---\s*\n', content_text):
+                  # Raw content starts with frontmatter (no code block)
+                  md_content = content_text.strip()
+              else:
+                  md_content = None
 
-                  # Save to file
-                  with open('/tmp/blog_post.ts', 'w') as out:
-                      out.write(ts_code)
-
-                  # Also save full response for debugging
+              if md_content and '---' in md_content:
+                  with open('/tmp/blog_post.md', 'w') as out:
+                      out.write(md_content)
                   with open('/tmp/blog_post_full.txt', 'w') as debug:
                       debug.write(content_text)
-
                   print("EXTRACTION_SUCCESS")
+                  print(f"Length: {len(md_content)} characters")
               else:
-                  print("NO_TYPESCRIPT_BLOCK_FOUND")
+                  print("NO_MARKDOWN_WITH_FRONTMATTER")
                   print(f"Content preview: {content_text[:500]}")
                   with open('/tmp/blog_post_raw.txt', 'w') as raw:
                       raw.write(content_text)
@@ -138,44 +141,50 @@ jobs:
       - name: Validate blog post was created
         id: validate
         run: |
-          # Check if we got valid TypeScript
-          if [ -f /tmp/blog_post.ts ] && [ -s /tmp/blog_post.ts ]; then
-            echo "✅ Blog post TypeScript generated successfully"
-            cat /tmp/blog_post.ts
+          if [ -f /tmp/blog_post.md ] && [ -s /tmp/blog_post.md ]; then
+            echo "✅ Blog post Markdown generated successfully"
+            head -30 /tmp/blog_post.md
           else
-            echo "❌ Failed to extract blog post"
-            echo "Raw response:"
-            cat /tmp/zai_response.json
+            echo "❌ Failed to extract blog post (expected /tmp/blog_post.md with YAML frontmatter)"
+            echo "Raw response preview:"
+            cat /tmp/zai_response.json | head -c 1000
             exit 1
           fi
 
-      - name: Update blog-data.ts with new post
+      - name: Write blog post to content/blog
         id: update-blog
         run: |
-          # Use Python to reliably update blog-data.ts
-          python3 << 'PYTHON_UPDATE'
+          python3 << 'PYTHON_WRITE'
+          import os
           import re
 
-          # Read the generated blog post
-          with open('/tmp/blog_post.ts', 'r') as f:
-              new_post = f.read()
-
-          # Read the current blog-data.ts
-          with open('apps/web/src/lib/blog-data.ts', 'r') as f:
+          with open('/tmp/blog_post.md', 'r') as f:
               content = f.read()
 
-          # Insert new post before the closing bracket of the BLOG_POSTS array
-          pattern = r'(export const BLOG_POSTS: BlogPost\[\] = \[)'
-          replacement = rf'\1\n  {new_post},'
+          # Extract slug from frontmatter (id = slug for filename)
+          fm_match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
+          if not fm_match:
+              raise SystemExit("No YAML frontmatter found")
 
-          content = re.sub(pattern, replacement, content)
+          frontmatter = fm_match.group(1)
+          slug = None
+          for line in frontmatter.split('\n'):
+              if line.strip().startswith('id:'):
+                  slug = line.split(':', 1)[1].strip().strip('"\'')
+                  break
+          if not slug or not re.match(r'^[a-z0-9-]+$', slug):
+              raise SystemExit(f"Invalid or missing id/slug in frontmatter: {slug!r}")
 
-          # Write back
-          with open('apps/web/src/lib/blog-data.ts', 'w') as f:
+          out_dir = 'apps/web/content/blog'
+          os.makedirs(out_dir, exist_ok=True)
+          out_path = os.path.join(out_dir, f'{slug}.md')
+
+          with open(out_path, 'w') as f:
               f.write(content)
 
-          print("✅ Updated blog-data.ts")
-          PYTHON_UPDATE
+          print(f"✅ Wrote {out_path}")
+          print(f"slug={slug}")
+          PYTHON_WRITE
 
       - name: Update content calendar
         run: |
@@ -210,7 +219,7 @@ jobs:
             This blog post was automatically generated using the z.ai API workflow.
 
             ### Changes
-            - ✅ Added new blog post to `apps/web/src/lib/blog-data.ts`
+            - ✅ Added new blog post to `apps/web/content/blog/{slug}.md`
             - ✅ Updated content calendar status
             - ✅ Updated keyword tracker
 

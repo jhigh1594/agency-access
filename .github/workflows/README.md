@@ -41,7 +41,7 @@ Every day at 7:00 AM PST (15:00 UTC), the workflow:
 1. **Checks out** your repository
 2. **Runs Claude Code** with the blog creation workflow
 3. **Creates a PR** with:
-   - New blog post in `apps/web/src/lib/blog-data.ts`
+   - New blog post in `apps/web/content/blog/{slug}.md`
    - Updated content calendar status
    - Updated keyword tracker
    - Commit message describing changes
@@ -68,7 +68,7 @@ You can also run the workflow manually:
 Each daily run creates a pull request with:
 
 ### Files Modified
-- `apps/web/src/lib/blog-data.ts` - New blog post added
+- `apps/web/content/blog/{slug}.md` - New blog post file added
 - `marketing/content/CONTENT-CALENDAR-Q1-2026.md` - Status updated
 - `marketing/content/KEYWORD-TRACKER.md` - Target page assigned
 
@@ -86,7 +86,7 @@ Each daily run creates a pull request with:
 **Content Pillar:** [pillar]
 
 ## Changes
-- ✅ Added new blog post to blog-data.ts
+- ✅ Added new blog post to content/blog/{slug}.md
 - ✅ Updated content calendar status
 - ✅ Assigned target page in keyword tracker
 
