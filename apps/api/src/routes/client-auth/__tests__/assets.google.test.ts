@@ -5,6 +5,7 @@ import { accessRequestService } from '@/services/access-request.service';
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { auditService } from '@/services/audit.service';
+import { env } from '@/lib/env';
 
 vi.mock('@/services/access-request.service', () => ({
   accessRequestService: {
@@ -37,11 +38,13 @@ vi.mock('@/lib/prisma', () => ({
 
 describe('Client Auth Asset Routes - Google', () => {
   let app: FastifyInstance;
+  const originalDeveloperToken = env.GOOGLE_ADS_DEVELOPER_TOKEN;
 
   beforeEach(async () => {
     app = Fastify();
     await registerAssetRoutes(app);
     vi.clearAllMocks();
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-google-ads-developer-token';
 
     vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
       data: {
@@ -126,6 +129,7 @@ describe('Client Auth Asset Routes - Google', () => {
   });
 
   afterEach(async () => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = originalDeveloperToken;
     await app.close();
   });
 
@@ -184,5 +188,120 @@ describe('Client Auth Asset Routes - Google', () => {
         request: expect.anything(),
       })
     );
+  });
+
+  it('returns only active Google Ads accounts for client asset discovery', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-a',
+        agencyId: 'agency-a',
+        platforms: [
+          {
+            platformGroup: 'google',
+            products: [{ product: 'google_ads', accessLevel: 'standard' }],
+          },
+        ],
+      } as any,
+      error: null,
+    });
+
+    global.fetch = vi.fn(async (input: any, init?: any) => {
+      const url = String(input);
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers:listAccessibleCustomers')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            resourceNames: [
+              'customers/1111111111',
+              'customers/2222222222',
+              'customers/3333333333',
+            ],
+          }),
+          text: async () => '',
+        } as any;
+      }
+
+      if (url === 'https://googleads.googleapis.com/v22/customers/1111111111') {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            descriptiveName: 'Enabled Account',
+            manager: false,
+            status: 'ENABLED',
+          }),
+          text: async () => '',
+        } as any;
+      }
+
+      if (url === 'https://googleads.googleapis.com/v22/customers/2222222222') {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            descriptiveName: 'Cancelled Account',
+            manager: false,
+            status: 'CANCELED',
+          }),
+          text: async () => '',
+        } as any;
+      }
+
+      if (url === 'https://googleads.googleapis.com/v22/customers/3333333333') {
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          json: async () => ({}),
+          text: async () => 'Not Found',
+        } as any;
+      }
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers/') && url.includes('/googleAds:search')) {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          json: async () => ({}),
+          text: async () => JSON.stringify({
+            error: {
+              code: 403,
+              message: 'Permission denied',
+            },
+          }),
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: async () => ({}),
+        text: async () => 'Not Found',
+      } as any;
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/client/token-a/assets/google_ads?connectionId=conn-1',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data).toEqual([
+      {
+        id: '1111111111',
+        name: 'Enabled Account',
+        formattedId: '111-111-1111',
+        isManager: false,
+        nameSource: 'direct',
+        type: 'google_ads',
+        status: 'ENABLED',
+      },
+    ]);
   });
 });

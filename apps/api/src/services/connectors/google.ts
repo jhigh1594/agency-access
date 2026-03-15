@@ -131,6 +131,14 @@ export class GoogleConnector {
     return `${customerId.slice(0, 3)}-${customerId.slice(3, 6)}-${customerId.slice(6)}`;
   }
 
+  private normalizeGoogleAdsCustomerStatus(status: string | null | undefined): string {
+    return status?.trim().toUpperCase() || 'UNKNOWN';
+  }
+
+  private isSelectableGoogleAdsCustomerStatus(status: string | null | undefined): boolean {
+    return this.normalizeGoogleAdsCustomerStatus(status) === 'ENABLED';
+  }
+
   private parseGoogleAdsError(errorText: string): { message: string; code?: string } {
     try {
       const errorJson = JSON.parse(errorText);
@@ -444,9 +452,6 @@ export class GoogleConnector {
         unresolvedErrors.set(customerId, errs);
       };
 
-      // Google Ads customer status values that are usable (not inactive).
-      const ACTIVE_STATUSES = new Set(['ENABLED', 'UNKNOWN']);
-
       // Allow upgrading a fallback-named entry to a real name discovered in a later phase.
       const recordAccount = (
         customerId: string,
@@ -462,7 +467,7 @@ export class GoogleConnector {
         if (existing && existing.nameSource !== 'fallback') return false;
         if (existing && !resolvedName) return false;
         const formattedId = this.formatGoogleAdsCustomerId(customerId);
-        const normalizedStatus = customerStatus?.toUpperCase() || 'UNKNOWN';
+        const normalizedStatus = this.normalizeGoogleAdsCustomerStatus(customerStatus);
         accountMap.set(customerId, {
           id: customerId,
           name: resolvedName || `Google Ads account • ${formattedId}`,
@@ -766,10 +771,23 @@ export class GoogleConnector {
         };
       });
 
-      const accounts = allResolved.filter((a) => ACTIVE_STATUSES.has(a.status.toUpperCase()));
+      const accounts = allResolved.filter((account) =>
+        this.isSelectableGoogleAdsCustomerStatus(account.status)
+      );
+      const filteredAccounts = allResolved.filter(
+        (account) => !this.isSelectableGoogleAdsCustomerStatus(account.status)
+      );
+      const unknownFilteredCount = filteredAccounts.filter(
+        (account) => this.normalizeGoogleAdsCustomerStatus(account.status) === 'UNKNOWN'
+      ).length;
 
-      console.log(`✅ Google Ads fetch complete: ${accounts.length} active account(s) (${allResolved.length - accounts.length} inactive filtered out)`);
+      console.log(
+        `✅ Google Ads fetch complete: ${accounts.length} active account(s) (${filteredAccounts.length} inactive filtered out, ${unknownFilteredCount} unknown)`
+      );
       accounts.forEach((a) => console.log(`  📦 ${a.id}: "${a.name}" [${a.nameSource}] [${a.status}]`));
+      filteredAccounts.forEach((account) =>
+        console.log(`  🚫 Filtered ${account.id}: "${account.name}" [${account.nameSource}] [${account.status}]`)
+      );
 
       return { accounts };
     } catch (error) {

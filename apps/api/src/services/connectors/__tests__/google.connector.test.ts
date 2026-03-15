@@ -330,7 +330,7 @@ describe('GoogleConnector', () => {
     );
   });
 
-  it('falls back to a neutral Ads account label when account detail lookup returns 403', async () => {
+  it('filters unresolved Google Ads accounts when account detail lookup returns 403', async () => {
     env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-developer-token';
     const connector = new GoogleConnector();
 
@@ -373,19 +373,105 @@ describe('GoogleConnector', () => {
 
     const result = await connector.getAllGoogleAccounts(accessToken);
 
+    expect(result.adsAccounts).toEqual([]);
+    expect(result.hasAccess).toBe(false);
+  });
+
+  it('returns only ENABLED Google Ads accounts and filters cancelled or unresolved accounts', async () => {
+    env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-developer-token';
+    const connector = new GoogleConnector();
+
+    vi.mocked(fetch).mockImplementation(async (input: any, init?: any) => {
+      const url = String(input);
+      const headers = init?.headers as Record<string, string> | undefined;
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers:listAccessibleCustomers')) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            resourceNames: [
+              'customers/1111111111',
+              'customers/2222222222',
+              'customers/3333333333',
+            ],
+          }),
+        } as any;
+      }
+
+      if (url === 'https://googleads.googleapis.com/v22/customers/1111111111') {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            descriptiveName: 'Enabled Account',
+            manager: false,
+            status: 'ENABLED',
+          }),
+        } as any;
+      }
+
+      if (url === 'https://googleads.googleapis.com/v22/customers/2222222222') {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            descriptiveName: 'Cancelled Account',
+            manager: false,
+            status: 'CANCELED',
+          }),
+        } as any;
+      }
+
+      if (url === 'https://googleads.googleapis.com/v22/customers/3333333333') {
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found',
+          json: async () => ({}),
+        } as any;
+      }
+
+      if (url.includes('https://googleads.googleapis.com/v22/customers/') && url.includes('/googleAds:search')) {
+        return {
+          ok: false,
+          status: 403,
+          statusText: 'Forbidden',
+          text: async () => JSON.stringify({
+            error: {
+              code: 403,
+              message: `Permission denied for ${headers?.['login-customer-id'] || 'none'}`,
+            },
+          }),
+        } as any;
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not Found',
+        json: async () => ({}),
+      } as any;
+    });
+
+    const result = await connector.getAllGoogleAccounts(accessToken);
+
     expect(result.adsAccounts).toEqual([
       {
-        id: '6449142979',
-        name: 'Google Ads account • 644-914-2979',
-        formattedId: '644-914-2979',
+        id: '1111111111',
+        name: 'Enabled Account',
+        formattedId: '111-111-1111',
         isManager: false,
-        nameSource: 'fallback',
+        nameSource: 'direct',
         type: 'google_ads',
-        status: 'UNKNOWN',
+        status: 'ENABLED',
       },
     ]);
-    expect(result.adsAccounts[0]?.name).not.toContain('Restricted');
-    expect(result.hasAccess).toBe(true);
   });
 
   it('uses the customer descriptive name when Google Ads returns direct customer details', async () => {

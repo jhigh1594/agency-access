@@ -191,6 +191,30 @@ describe('AccessRequestService', () => {
       expect(result.data).toBeDefined();
     });
 
+    it('should accept meta_pages as a supported access request product', async () => {
+      const mockAgency = {
+        id: 'agency-1',
+        name: 'Test Agency',
+      };
+
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue(mockAgency as any);
+      vi.mocked(prisma.accessRequest.create).mockResolvedValue({
+        id: 'request-1',
+        uniqueToken: 'a1b2c3d4e5f6',
+      } as any);
+
+      const result = await accessRequestService.createAccessRequest({
+        agencyId: 'agency-1',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        platforms: [{ platform: 'meta_pages' as any, accessLevel: 'manage' }],
+        intakeFields: [],
+      });
+
+      expect(result.error).toBeNull();
+      expect(result.data).toBeDefined();
+    });
+
     it('should persist externalReference when provided', async () => {
       const mockAgency = {
         id: 'agency-1',
