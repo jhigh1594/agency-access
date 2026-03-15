@@ -148,7 +148,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
 
   const handleCancelNewClient = () => {
     setActiveTab('existing');
-    setNewClient({ name: '', company: '', email: '', language: 'en' });
+    setNewClient({ name: '', company: '', email: '' });
     setFormErrors({});
   };
 
