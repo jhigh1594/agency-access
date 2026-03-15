@@ -602,6 +602,9 @@ export async function getDashboardConnectionSummaries(
         clientEmail: true,
         status: true,
         createdAt: true,
+        accessRequest: {
+          select: { clientId: true },
+        },
         authorizations: {
           where: {
             status: 'active',
@@ -623,6 +626,7 @@ export async function getDashboardConnectionSummaries(
 
     const items: DashboardConnectionSummary[] = connections.map((connection) => ({
       id: connection.id,
+      clientId: connection.accessRequest?.clientId ?? null,
       clientEmail: connection.clientEmail,
       status: connection.status,
       createdAt: connection.createdAt.toISOString(),

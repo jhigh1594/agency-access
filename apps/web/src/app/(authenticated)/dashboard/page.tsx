@@ -8,7 +8,7 @@
  * Includes ETag support for conditional requests to save bandwidth.
  */
 
-import { Plus, Users, Key, Activity, AlertCircle, ChevronRight } from 'lucide-react';
+import { Plus, Users, Key, Activity, AlertCircle, ChevronRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
@@ -642,10 +642,15 @@ export default function DashboardPage() {
                       })}
                     </div>
                     <Link
-                      href={`/clients?email=${encodeURIComponent(connection.clientEmail)}`}
-                      className="text-coral hover:text-coral/90 text-sm font-semibold"
+                      href={
+                        connection.clientId
+                          ? `/clients/${connection.clientId}`
+                          : `/clients?email=${encodeURIComponent(connection.clientEmail)}`
+                      }
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 border-2 border-black/10 bg-transparent text-foreground rounded-lg hover:bg-black/5 hover:border-black/30 transition-all text-sm font-medium"
                     >
                       View Details
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
                   </div>
                 </div>

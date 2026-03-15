@@ -1990,6 +1990,7 @@ export type DashboardRequestSummary = z.infer<typeof DashboardRequestSummarySche
 
 export const DashboardConnectionSummarySchema = z.object({
   id: z.string(),
+  clientId: z.string().nullable().optional(),
   clientEmail: z.string(),
   status: z.string(),
   createdAt: z.string(),
