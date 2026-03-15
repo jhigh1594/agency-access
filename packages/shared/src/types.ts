@@ -9,6 +9,7 @@ export const PlatformSchema = z.enum([
   'google_ads',
   'ga4',
   'meta_ads',
+  'meta_pages',
   'tiktok',
   'tiktok_ads',
   'linkedin',
@@ -86,6 +87,13 @@ export const PLATFORM_TOKEN_CAPABILITIES: Record<Platform, PlatformTokenCapabili
     expiryBehavior: 'expiring',
   },
   meta_ads: {
+    connectionMethod: 'oauth',
+    tokenKind: 'oauth',
+    refreshStrategy: 'reconnect',
+    healthStrategy: 'live_verify',
+    expiryBehavior: 'expiring',
+  },
+  meta_pages: {
     connectionMethod: 'oauth',
     tokenKind: 'oauth',
     refreshStrategy: 'reconnect',
@@ -362,6 +370,7 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   google: 'Google',
   meta: 'Meta',
   meta_ads: 'Meta Ads',
+  meta_pages: 'Meta Pages',
   google_ads: 'Google Ads',
   ga4: 'Google Analytics',
   tiktok: 'TikTok Ads',
@@ -392,6 +401,7 @@ export const PLATFORM_DOMAINS: Record<Platform, string> = {
   google_ads: 'google.com',
   ga4: 'google.com',
   meta_ads: 'meta.com',
+  meta_pages: 'meta.com',
   tiktok: 'tiktok.com',
   tiktok_ads: 'tiktok.com',
   linkedin_ads: 'linkedin.com',
@@ -432,6 +442,10 @@ export const PLATFORM_SCOPES: Record<Platform, string[]> = {
     'ads_read',
     'business_management',
     // pages_manage_metadata and pages_show_list removed - not valid OAuth scopes
+    'pages_read_engagement',
+  ],
+  meta_pages: [
+    'business_management',
     'pages_read_engagement',
   ],
   google_ads: [
@@ -518,7 +532,7 @@ export const PLATFORM_CATEGORIES = {
   // Group-level platforms (recommended for new connections)
   recommended: ['google', 'meta', 'linkedin'] as const,
   // Product-level platforms (legacy, still supported)
-  other: ['google_ads', 'ga4', 'meta_ads', 'tiktok', 'snapchat', 'instagram', 'linkedin_pages', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify', 'zapier'] as const,
+  other: ['google_ads', 'ga4', 'meta_ads', 'meta_pages', 'tiktok', 'snapchat', 'instagram', 'linkedin_pages', 'kit', 'beehiiv', 'mailchimp', 'klaviyo', 'shopify', 'zapier'] as const,
 } as const;
 
 export type RecommendedPlatform = typeof PLATFORM_CATEGORIES.recommended[number];
@@ -636,9 +650,7 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
       { id: 'google_tag_manager', name: 'Tag Manager', icon: 'GTMIcon', description: 'Tag management system' },
       { id: 'google_merchant_center', name: 'Merchant Center', icon: 'GMCIcon', description: 'Product feed management' },
       { id: 'google_search_console', name: 'Search Console', icon: 'GSCIcon', description: 'Search performance monitoring' },
-      { id: 'youtube_studio', name: 'YouTube Studio', icon: 'YouTubeIcon', description: 'Video content management' },
       { id: 'google_business_profile', name: 'Business Profile', icon: 'GBPIcon', description: 'Local business presence' },
-      { id: 'display_video_360', name: 'Display & Video 360', icon: 'DV360Icon', description: 'Programmatic advertising platform' },
     ],
   },
   meta: {
@@ -647,8 +659,8 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
     description: 'Meta Business Platform',
     products: [
       { id: 'meta_ads', name: 'Meta Ads', icon: 'MetaAdsIcon', description: 'Facebook and Instagram advertising' },
+      { id: 'meta_pages', name: 'Meta Pages', icon: 'MetaPagesIcon', description: 'Facebook Pages access and management' },
       { id: 'instagram', name: 'Instagram', icon: 'InstagramIcon', description: 'Instagram business profile' },
-      { id: 'whatsapp_business', name: 'WhatsApp Business', icon: 'WhatsAppIcon', description: 'WhatsApp business messaging' },
     ],
   },
   linkedin: {
