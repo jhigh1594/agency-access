@@ -328,12 +328,12 @@ export function MetaAssetSelector({
   return (
     <div className="space-y-6">
       {requiresBusinessSelection ? (
-        <div className="border-2 border-black dark:border-white bg-[var(--sand)]/20 p-6 space-y-4">
+        <div className="border-2 border-black dark:border-white bg-[rgb(var(--warm-gray))]/20 p-6 space-y-4">
           <div>
-            <h3 className="text-lg font-bold text-[var(--ink)] font-display">
+            <h3 className="text-lg font-bold text-[rgb(var(--ink))] font-display">
               Select Business Portfolio
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-[rgb(var(--muted-foreground))] mt-1">
               Choose the client Business Portfolio that owns the Meta assets you want to share.
             </p>
           </div>
@@ -341,13 +341,13 @@ export function MetaAssetSelector({
           <div className="space-y-3">
             <label
               htmlFor="meta-business-portfolio"
-              className="block text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground"
+              className="block text-xs font-bold uppercase tracking-[0.18em] text-[rgb(var(--muted-foreground))]"
             >
               Business Portfolio
             </label>
             <select
               id="meta-business-portfolio"
-              className="w-full border-2 border-black dark:border-white bg-card px-4 py-3 text-[var(--ink)]"
+              className="w-full border-2 border-black dark:border-white bg-[rgb(var(--card))] px-4 py-3 text-[rgb(var(--ink))] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))]"
               value={pendingBusinessId}
               onChange={(event) => setPendingBusinessId(event.target.value)}
             >
@@ -362,7 +362,7 @@ export function MetaAssetSelector({
               type="button"
               onClick={handleBusinessSelectionLoad}
               disabled={!pendingBusinessId || isLoading}
-              className="inline-flex min-h-[48px] items-center justify-center bg-ink px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground"
+              className="inline-flex min-h-[48px] items-center justify-center bg-[rgb(var(--ink))] px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-[rgb(var(--muted))]/40 disabled:text-[rgb(var(--muted-foreground))]"
             >
               Load accounts
             </button>
@@ -371,14 +371,14 @@ export function MetaAssetSelector({
       ) : null}
 
       {selectedBusinessName ? (
-        <div className="border-2 border-black dark:border-white bg-card px-4 py-3">
+        <div className="border-2 border-black dark:border-white bg-[rgb(var(--card))] px-4 py-3">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-[var(--ink)]">
+              <p className="text-sm font-bold text-[rgb(var(--ink))]">
                 Sharing from {selectedBusinessName}
               </p>
               {availableBusinesses.length > 1 ? (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-[rgb(var(--muted-foreground))] mt-1">
                   Switch to another client Business Portfolio before continuing if these assets are not the right ones.
                 </p>
               ) : null}
@@ -387,7 +387,7 @@ export function MetaAssetSelector({
               <button
                 type="button"
                 onClick={handleSwitchBusiness}
-                className="inline-flex min-h-[44px] items-center justify-center border-2 border-black dark:border-white bg-[var(--paper)] px-4 py-2 text-sm font-bold text-[var(--ink)] hover:bg-muted/20"
+                className="inline-flex min-h-[44px] items-center justify-center border-2 border-black dark:border-white bg-[rgb(var(--paper))] px-4 py-2 text-sm font-bold text-[rgb(var(--ink))] hover:bg-[rgb(var(--muted))]/20"
               >
                 Switch business
               </button>
@@ -403,12 +403,12 @@ export function MetaAssetSelector({
         {/* Ad Accounts - Multi-select Combobox or Creator */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-black dark:border-white bg-coral flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-[rgb(var(--coral))] flex items-center justify-center">
               <span className="text-white text-lg">💼</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[var(--ink)] font-display">Ad Accounts</h3>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
+              <h3 className="text-lg font-bold text-[rgb(var(--ink))] font-display">Ad Accounts</h3>
+              <p className="text-sm text-[rgb(var(--muted-foreground))] mt-0.5">
                 {selectedAdAccounts.size} of {adAccountAssets.length} selected
               </p>
             </div>
@@ -416,12 +416,12 @@ export function MetaAssetSelector({
 
           {/* Show creator if empty and user clicked "Create New" */}
           {showAdAccountCreator && creationBusinessId ? (
-            <div className="border-2 border-[var(--coral)] bg-[var(--coral)]/5 p-4 rounded-lg mb-3">
+            <div className="border-2 border-[rgb(var(--coral))] bg-[rgb(var(--coral))]/5 p-4 rounded-lg mb-3">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-bold text-[var(--ink)]">Create New Ad Account</h4>
+                <h4 className="font-bold text-[rgb(var(--ink))]">Create New Ad Account</h4>
                 <button
                   onClick={() => setShowAdAccountCreator(false)}
-                  className="text-sm text-muted-foreground hover:text-[var(--coral)] underline"
+                  className="text-sm text-[rgb(var(--muted-foreground))] hover:text-[rgb(var(--coral))] underline"
                 >
                   Cancel
                 </button>
@@ -449,15 +449,15 @@ export function MetaAssetSelector({
             /* Empty state with create option */
             <div className="py-8 text-center px-6">
               {/* Empty state icon - Brutalist Square */}
-              <div className="w-20 h-20 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 border-2 border-black dark:border-white bg-[rgb(var(--muted))]/30 dark:bg-[rgb(var(--muted))]/60 flex items-center justify-center mx-auto mb-4">
                 <span className="text-4xl" role="img" aria-label="Empty">
                   📭
                 </span>
               </div>
 
               {/* Message */}
-              <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">No Ad Accounts Found</h3>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4 max-w-sm mx-auto">
+              <h3 className="text-lg font-bold text-[rgb(var(--ink))] mb-2 font-display">No Ad Accounts Found</h3>
+              <p className="text-sm text-[rgb(var(--muted-foreground))] mb-4 max-w-sm mx-auto">
                 You don't have any ad accounts in this Business Manager yet. Create one to get started.
               </p>
 
@@ -465,13 +465,13 @@ export function MetaAssetSelector({
               {creationBusinessId ? (
                 <button
                   onClick={() => setShowAdAccountCreator(true)}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[rgb(var(--coral))] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
                 >
                   <Plus className="w-5 h-5" />
                   Create Ad Account
                 </button>
               ) : (
-                <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-sm text-[var(--warning)] max-w-sm mx-auto">
+                <div className="border-2 border-[rgb(var(--warning))] bg-[rgb(var(--warning))]/10 p-4 text-sm text-[rgb(var(--warning))] max-w-sm mx-auto">
                   Select a Business Portfolio before creating ad accounts.
                 </div>
               )}
@@ -482,12 +482,12 @@ export function MetaAssetSelector({
         {/* Pages - Multi-select Combobox or Guided Redirect */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-black dark:border-white bg-coral/100 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-black dark:border-white bg-[rgb(var(--coral))]/100 flex items-center justify-center">
               <span className="text-white text-lg">📄</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[var(--ink)] font-display">Pages</h3>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
+              <h3 className="text-lg font-bold text-[rgb(var(--ink))] font-display">Pages</h3>
+              <p className="text-sm text-[rgb(var(--muted-foreground))] mt-0.5">
                 {selectedPages.size} of {pageAssets.length} selected
               </p>
             </div>
@@ -523,15 +523,15 @@ export function MetaAssetSelector({
             /* Empty state with create option */
             <div className="py-8 text-center px-6">
               {/* Empty state icon - Brutalist Square */}
-              <div className="w-20 h-20 border-2 border-black dark:border-white bg-muted/30 dark:bg-muted/60 flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 border-2 border-black dark:border-white bg-[rgb(var(--muted))]/30 dark:bg-[rgb(var(--muted))]/60 flex items-center justify-center mx-auto mb-4">
                 <span className="text-4xl" role="img" aria-label="Empty">
                   📄
                 </span>
               </div>
 
               {/* Message */}
-              <h3 className="text-lg font-bold text-[var(--ink)] mb-2 font-display">No Pages Found</h3>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4 max-w-sm mx-auto">
+              <h3 className="text-lg font-bold text-[rgb(var(--ink))] mb-2 font-display">No Pages Found</h3>
+              <p className="text-sm text-[rgb(var(--muted-foreground))] mb-4 max-w-sm mx-auto">
                 You don't have any Facebook Pages in this Business Manager. Create one to get started.
               </p>
 
@@ -539,13 +539,13 @@ export function MetaAssetSelector({
               {creationBusinessId ? (
                 <button
                   onClick={() => setShowPageCreator(true)}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--coral)] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[rgb(var(--coral))] text-white border-2 border-black dark:border-white rounded-[0.75rem] font-bold uppercase tracking-wide shadow-brutalist hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all min-h-[48px]"
                 >
                   <Plus className="w-5 h-5" />
                   Create Page
                 </button>
               ) : (
-                <div className="border-2 border-[var(--warning)] bg-[var(--warning)]/10 p-4 text-sm text-[var(--warning)] max-w-sm mx-auto">
+                <div className="border-2 border-[rgb(var(--warning))] bg-[rgb(var(--warning))]/10 p-4 text-sm text-[rgb(var(--warning))] max-w-sm mx-auto">
                   Select a Business Portfolio before creating pages.
                 </div>
               )}

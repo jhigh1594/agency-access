@@ -208,14 +208,14 @@ export function MultiSelectCombobox({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {label && (
-        <label className="block text-sm font-semibold text-ink mb-2">{label}</label>
+        <label className="block text-sm font-semibold text-[rgb(var(--ink))] mb-2">{label}</label>
       )}
 
       {/* Select All Button (Outside Dropdown) */}
       {showSelectAll && options.length > 1 && (
         <button
           onClick={handleSelectAll}
-          className="flex items-center gap-2 px-4 py-2 border-2 border-coral rounded-lg hover:bg-coral/10 transition-colors mb-2 w-full text-left"
+          className="flex items-center gap-2 px-4 py-2 border-2 border-[rgb(var(--coral))] dark:border-[rgb(var(--coral))] rounded-lg hover:bg-[rgb(var(--coral))]/10 transition-colors mb-2 w-full text-left min-h-[44px]"
           type="button"
         >
           <div
@@ -223,22 +223,22 @@ export function MultiSelectCombobox({
               w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
               ${
                 isAllSelected
-                  ? 'bg-coral border-coral'
+                  ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]'
                   : isPartiallySelected
-                  ? 'bg-coral/20 border-coral/40'
-                  : 'border-2 border-black bg-card'
+                  ? 'bg-[rgb(var(--coral))]/20 border-[rgb(var(--coral))]/40'
+                  : 'border-2 border-black dark:border-white bg-card'
               }
             `}
           >
             {isAllSelected && <Check className="w-3 h-3 text-white" />}
             {isPartiallySelected && (
-              <div className="w-2 h-0.5 bg-coral rounded" />
+              <div className="w-2 h-0.5 bg-[rgb(var(--coral))] rounded" />
             )}
           </div>
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-sm font-medium text-[rgb(var(--foreground))]">
             {isAllSelected ? 'Deselect All' : 'Select All'}
           </span>
-          <span className="text-xs text-muted-foreground ml-auto">
+          <span className="text-xs text-[rgb(var(--muted-foreground))] ml-auto">
             {selectedOptions.length} of {options.length}
           </span>
         </button>
@@ -258,7 +258,7 @@ export function MultiSelectCombobox({
         className={`
           min-h-[60px] w-full px-3 py-2 border-2 rounded-lg cursor-pointer
           transition-all duration-200 relative
-          ${isOpen ? 'border-coral ring-2 ring-coral/20' : 'border-border hover:border-black'}
+          ${isOpen ? 'border-[rgb(var(--coral))] ring-2 ring-[rgb(var(--coral))]/20' : 'border-[rgb(var(--border))] hover:border-black dark:hover:border-white'}
         `}
         role="combobox"
         aria-expanded={isOpen}
@@ -266,7 +266,7 @@ export function MultiSelectCombobox({
       >
         <div className="flex flex-wrap gap-2 items-center pr-8">
           {selectedOptions.length === 0 ? (
-            <span className="text-muted-foreground text-sm py-1 flex items-center gap-2">
+            <span className="text-[rgb(var(--muted-foreground))] text-sm py-1 flex items-center gap-2">
               <Search className="w-4 h-4" />
               {placeholder}
             </span>
@@ -275,12 +275,12 @@ export function MultiSelectCombobox({
               {visibleSelected.map((option) => (
                 <span
                   key={option.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-coral/10 border border-coral rounded-md text-sm text-coral-90"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[rgb(var(--coral))]/10 border border-[rgb(var(--coral))] rounded-md text-sm text-[rgb(var(--coral))]"
                 >
                   <span className="font-medium">{option.name}</span>
                   <button
                     onClick={(e) => removeItem(option.id, e)}
-                    className="hover:bg-coral/20 rounded p-0.5 transition-colors"
+                    className="hover:bg-[rgb(var(--coral))]/20 rounded p-0.5 transition-colors"
                     aria-label={`Remove ${option.name}`}
                     type="button"
                   >
@@ -289,7 +289,7 @@ export function MultiSelectCombobox({
                 </span>
               ))}
               {hiddenCount > 0 && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-muted border border-border rounded-md text-sm text-foreground">
+                <span className="inline-flex items-center px-2.5 py-1 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-md text-sm text-[rgb(var(--foreground))]">
                   +{hiddenCount} more
                 </span>
               )}
@@ -299,14 +299,14 @@ export function MultiSelectCombobox({
 
         {/* Chevron indicator */}
         <ChevronDown
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-transform ${
+          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--muted-foreground))] transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
 
         {/* Helper text below selected items */}
         {selectedOptions.length > 0 && (
-          <div className="text-xs text-muted-foreground mt-1">
+          <div className="text-xs text-[rgb(var(--muted-foreground))] mt-1">
             Start typing to search or click to see options
           </div>
         )}
@@ -316,7 +316,7 @@ export function MultiSelectCombobox({
       {showClearAll && selectedOptions.length > 0 && (
         <button
           onClick={handleClearAll}
-          className="text-xs text-coral hover:text-coral/90 font-medium mt-2 flex items-center gap-1"
+          className="text-xs text-[rgb(var(--coral))] hover:text-[rgb(var(--coral))]/90 font-medium mt-2 flex items-center gap-1 min-h-[44px] px-2 py-1"
           type="button"
         >
           <X className="w-3 h-3" />
@@ -328,7 +328,7 @@ export function MultiSelectCombobox({
       {isOpen && typeof window !== 'undefined' && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] bg-card border-2 border-border rounded-lg shadow-brutalist overflow-auto"
+          className="fixed z-[9999] bg-[rgb(var(--card))] border-2 border-[rgb(var(--border))] dark:border-white rounded-lg shadow-brutalist overflow-auto"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -338,9 +338,9 @@ export function MultiSelectCombobox({
           role="listbox"
         >
           {/* Search Input */}
-          <div className="sticky top-0 bg-card border-b border-border p-2">
+          <div className="sticky top-0 bg-[rgb(var(--card))] border-b border-[rgb(var(--border))] dark:border-white p-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--muted-foreground))]" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -350,7 +350,7 @@ export function MultiSelectCombobox({
                   setFocusedIndex(-1);
                 }}
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 border-2 border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-coral focus:border-coral"
+                className="w-full pl-9 pr-3 py-2 border-2 border-[rgb(var(--border))] dark:border-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))] bg-[rgb(var(--background))]"
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
               />
@@ -360,15 +360,15 @@ export function MultiSelectCombobox({
           {/* Options List */}
           <div className="p-2" role="presentation">
             {filteredOptions.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">
+              <div className="py-8 text-center text-[rgb(var(--muted-foreground))] text-sm">
                 {searchQuery ? (
                   <>
-                    <p className="font-medium text-foreground mb-2">
+                    <p className="font-medium text-[rgb(var(--foreground))] mb-2">
                       No accounts match "{searchQuery}"
                     </p>
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="text-coral hover:text-coral/90 font-medium"
+                      className="text-[rgb(var(--coral))] hover:text-[rgb(var(--coral))]/90 font-medium"
                       type="button"
                     >
                       Clear search
@@ -390,9 +390,9 @@ export function MultiSelectCombobox({
                     onMouseEnter={() => setFocusedIndex(index)}
                     className={`
                       flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer
-                      transition-colors
-                      ${isSelected ? 'bg-coral/10 hover:bg-coral/20' : 'hover:bg-card'}
-                      ${isFocused ? 'ring-2 ring-coral/20 ring-inset' : ''}
+                      transition-colors min-h-[44px]
+                      ${isSelected ? 'bg-[rgb(var(--coral))]/10 hover:bg-[rgb(var(--coral))]/20' : 'hover:bg-[rgb(var(--accent))]'}
+                      ${isFocused ? 'ring-2 ring-[rgb(var(--coral))]/20 ring-inset' : ''}
                     `}
                     role="option"
                     aria-selected={isSelected}
@@ -400,15 +400,15 @@ export function MultiSelectCombobox({
                     <div
                       className={`
                         w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0
-                        ${isSelected ? 'bg-coral border-coral' : 'border-2 border-black'}
+                        ${isSelected ? 'bg-[rgb(var(--coral))] border-[rgb(var(--coral))]' : 'border-2 border-black dark:border-white'}
                       `}
                     >
                       {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-ink text-sm truncate">{option.name}</div>
+                      <div className="font-medium text-[rgb(var(--ink))] text-sm truncate">{option.name}</div>
                       {option.description && (
-                        <div className="text-xs text-muted-foreground mt-0.5 truncate">{option.description}</div>
+                        <div className="text-xs text-[rgb(var(--muted-foreground))] mt-0.5 truncate">{option.description}</div>
                       )}
                     </div>
                   </div>
