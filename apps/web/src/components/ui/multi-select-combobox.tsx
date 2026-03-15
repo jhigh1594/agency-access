@@ -328,7 +328,7 @@ export function MultiSelectCombobox({
       {isOpen && typeof window !== 'undefined' && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] bg-[rgb(var(--card))] border-2 border-[rgb(var(--border))] dark:border-white rounded-lg shadow-brutalist overflow-auto"
+          className="fixed z-[9999] bg-white border-2 border-[rgb(var(--border))] dark:border-white rounded-lg shadow-brutalist overflow-auto"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -338,7 +338,7 @@ export function MultiSelectCombobox({
           role="listbox"
         >
           {/* Search Input */}
-          <div className="sticky top-0 bg-[rgb(var(--card))] border-b border-[rgb(var(--border))] dark:border-white p-2">
+          <div className="sticky top-0 bg-white border-b border-[rgb(var(--border))] dark:border-white p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--muted-foreground))]" />
               <input
@@ -350,7 +350,7 @@ export function MultiSelectCombobox({
                   setFocusedIndex(-1);
                 }}
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 border-2 border-[rgb(var(--border))] dark:border-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))] bg-[rgb(var(--background))]"
+                className="w-full pl-9 pr-3 py-2 border-2 border-[rgb(var(--border))] dark:border-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))] bg-white"
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
               />
@@ -391,7 +391,7 @@ export function MultiSelectCombobox({
                     className={`
                       flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer
                       transition-colors min-h-[44px]
-                      ${isSelected ? 'bg-[rgb(var(--coral))]/10 hover:bg-[rgb(var(--coral))]/20' : 'hover:bg-[rgb(var(--accent))]'}
+                      ${isSelected ? 'bg-[rgb(var(--coral))]/10 hover:bg-[rgb(var(--coral))]/20' : 'hover:bg-electric/10'}
                       ${isFocused ? 'ring-2 ring-[rgb(var(--coral))]/20 ring-inset' : ''}
                     `}
                     role="option"

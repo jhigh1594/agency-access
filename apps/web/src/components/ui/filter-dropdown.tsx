@@ -64,8 +64,8 @@ export function FilterDropdown({
         className={`
           inline-flex items-center gap-2 px-4 py-2
           border border-slate-300 rounded-lg
-          text-sm text-slate-700 bg-card
-          hover:bg-slate-50
+          text-sm text-slate-700 bg-white
+          hover:bg-electric/10
           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
           transition-colors
           min-w-[160px]
@@ -84,7 +84,7 @@ export function FilterDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-card border border-slate-200 rounded-lg shadow-lg py-1">
+        <div className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg py-1">
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
@@ -97,7 +97,7 @@ export function FilterDropdown({
                   transition-colors
                   ${isSelected
                     ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-slate-700 hover:bg-slate-50'
+                    : 'text-slate-700 hover:bg-electric/10'
                   }
                 `}
                 role="option"

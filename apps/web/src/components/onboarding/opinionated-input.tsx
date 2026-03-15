@@ -278,7 +278,7 @@ export function OpinionatedInput({
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="absolute z-10 w-full mt-1 bg-card rounded-lg shadow-lg border border-border overflow-hidden"
+            className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-border overflow-hidden"
           >
             {filteredSuggestions.map((suggestion, index) => (
               <button
@@ -293,7 +293,7 @@ export function OpinionatedInput({
                   w-full px-4 py-3 text-left text-sm transition-colors
                   ${index === highlightedIndex
                     ? 'bg-coral/10 text-coral'
-                    : 'hover:bg-paper text-foreground'
+                    : 'hover:bg-electric/10 text-foreground'
                   }
                 `}
               >

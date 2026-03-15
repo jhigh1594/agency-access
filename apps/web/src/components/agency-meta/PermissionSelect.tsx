@@ -67,7 +67,7 @@ export function PermissionSelect({ value, onChange, disabled }: PermissionSelect
         disabled={disabled}
         className={`
           flex items-center justify-between gap-2 px-3 py-1.5 border border-slate-200 rounded-sm text-sm
-          ${disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-card hover:border-slate-300'}
+          ${disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-white hover:border-slate-300'}
           transition-colors min-w-[100px]
         `}
       >
@@ -81,9 +81,9 @@ export function PermissionSelect({ value, onChange, disabled }: PermissionSelect
             className="fixed inset-0 z-40" 
             onClick={() => setOpen(false)}
           />
-          <div 
+          <div
             ref={dropdownRef}
-            className="fixed z-50 bg-card border border-slate-200 rounded-sm shadow-lg min-w-[180px] overflow-hidden"
+            className="fixed z-50 bg-white border border-slate-200 rounded-sm shadow-lg min-w-[180px] overflow-hidden"
             style={{
               top: `${position.top}px`,
               right: `${position.right}px`,
@@ -98,7 +98,7 @@ export function PermissionSelect({ value, onChange, disabled }: PermissionSelect
                   setOpen(false);
                 }}
                 className={`
-                  w-full px-3 py-2 text-left hover:bg-slate-50 transition-colors
+                  w-full px-3 py-2 text-left hover:bg-electric/10 transition-colors
                   ${value === permission.value ? 'bg-slate-100' : ''}
                 `}
               >

@@ -30,7 +30,7 @@ export function AccessLevelSelector({
         id="access-level"
         value={selectedAccessLevel || ''}
         onChange={handleChange}
-        className="w-full px-4 py-2.5 border border-border rounded-lg bg-card text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+        className="w-full px-4 py-2.5 border border-border rounded-lg bg-white text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
       >
         <option value="" disabled>
           Select access level...
