@@ -71,6 +71,117 @@ Your content targets **growing agency owners** (10-50 employees, 3-10 new client
 - [ ] Proofread for clarity and concision
 </copywriting_guidance>
 
+<seo_keyword_strategy>
+**Keyword Research Summary (March 2026)**
+
+**Total Addressable Opportunity:**
+- 87 keywords identified across 3 tiers
+- ~145,000 searches/month total volume
+- 7 content clusters for topical authority
+- Priority: Tier 3 (4-12 week runway) → Tier 2 (3-6 month) → Tier 1 (6-18 month)
+
+**Tier 3 - Fast Wins (Start Here)**
+*Troubleshooting & Error-Based* - Capture frustrated searchers:
+- "Meta ads access not working" (390 Vol, Diff 18) - Very High Priority
+- "Google Ads access request pending" (340 Vol, Diff 15) - Very High Priority
+- "client denied Meta Business Manager access" (280 Vol, Diff 12) - Very High Priority
+- "how to fix expired Google Ads token" (220 Vol, Diff 14) - High Priority
+- "Meta API permissions error agency" (180 Vol, Diff 16) - High Priority
+
+*How-To & Step-by-Step* - Core workflow content:
+- "how to send Meta access request to client" (480 Vol, Diff 22) - Very High
+- "step by step Google Ads client access" (420 Vol, Diff 24) - Very High
+- "grant agency access Meta Business Manager" (390 Vol, Diff 20) - Very High
+- "add agency to Google Ads manager account" (360 Vol, Diff 18) - Very High
+
+**Tier 2 - Body Terms (3-6 month runway)**
+- "how to get Meta ads access" (2,200 Vol, Diff 38) - Very High
+- "Google Ads client access guide" (1,800 Vol, Diff 42) - Very High
+- "agency client authorization process" (950 Vol, Diff 35) - High
+- "client onboarding checklist agency" (1,400 Vol, Diff 48) - High
+- "automate client onboarding agency" (920 Vol, Diff 52) - Very High
+- "agency client access software" (1,600 Vol, Diff 58) - Very High
+- "best client onboarding tools for agencies" (320 Vol, Diff 35) - Very High
+
+**Tier 1 - Head Terms (6-18 month runway)**
+- "agency client onboarding" (2,400 Vol, Diff 65) - Pillar page
+- "Meta Business Manager access" (5,400 Vol, Diff 72) - High volume
+- "Google Ads Manager access" (3,200 Vol, Diff 68) - High volume
+
+**Content Clusters (Build Topical Authority):**
+
+**Cluster 1: Meta Ads Access** (~4,890/month)
+- Pillar: "Meta Business Manager for Agencies"
+- Supporting: how to get Meta ads access, grant agency access Meta Business Manager, Meta ads access not working, client denied Meta Business Manager access, Meta pixel access for agencies
+
+**Cluster 2: Google Ads Access** (~3,410/month)
+- Pillar: "Google Ads Manager for Agencies"
+- Supporting: Google Ads client access guide, step by step Google Ads client access, add agency to Google Ads manager account, Google Ads access request pending
+
+**Cluster 3: Client Onboarding Workflows** (~4,910/month)
+- Pillar: "Agency Client Onboarding"
+- Supporting: automate client onboarding agency, client onboarding checklist agency, how to onboard new agency client marketing, platform access request template
+
+**Cluster 4: Platform Access Tools** (~2,620/month)
+- Pillar: "Agency Access Management Software"
+- Supporting: agency client access software, best client onboarding tools for agencies, automate agency client access requests
+
+**Cluster 5: Multi-Platform Authorization** (~3,460/month)
+- Pillar: "Platform Authorization for Agencies"
+- Supporting: client permission workflow, agency platform tools, LinkedIn Campaign Manager access, TikTok Ads agency access
+
+**Cluster 6: Troubleshooting & Errors** (~1,810/month)
+- Pillar: "Platform Access Troubleshooting"
+- Supporting: Meta ads access not working, Google Ads access request pending, client denied Meta Business Manager access, how to fix expired Google Ads token
+
+**Cluster 7: Security & Best Practices** (~1,930/month)
+- Pillar: "Secure Platform Access for Agencies"
+- Supporting: agency client permissions best practices, platform access security agencies, is client access sharing secure, OAuth token management agency
+
+**Content Format Standards:**
+
+**Troubleshooting Articles:**
+- Structure: Problem → Why it happens → Step-by-step fixes → Prevention
+- Length: 800-1,200 words
+- Visuals: Screenshots, error message examples, flow diagrams
+
+**How-To Guides:**
+- Structure: Prerequisites → Agency-side steps → Client-side steps → Verification
+- Length: 1,200-1,800 words
+- Visuals: Screenshots at each step, annotated UI elements
+
+**Best Practices Roundups:**
+- Structure: Why it matters → X practices → Examples → Tools
+- Length: 1,500-2,500 words
+- Visuals: Process diagrams, checklists, comparison tables
+
+**Comparison Articles:**
+- Structure: What to compare → Feature comparison → When to choose what
+- Length: 1,000-1,500 words
+- Visuals: Comparison table, decision tree
+
+**Opportunity Scoring:**
+Formula: `Opportunity = (Volume × (1 - Difficulty/100)) × IntentMultiplier`
+
+Intent Multipliers:
+- Transactional: 1.5
+- Commercial Investigation: 1.3
+- Informational: 1.0
+- Navigational: 0.2
+
+Top 10 by Opportunity Score (prioritize these):
+1. how to get Meta ads access (1,364)
+2. automate client onboarding agency (1,059)
+3. agency client access software (1,046)
+4. Google Ads client access guide (1,044)
+5. client onboarding checklist agency (1,064)
+6. agency client authorization process (618)
+7. Meta pixel access for agencies (616)
+8. best client onboarding tools for agencies (389)
+9. how to send Meta access request to client (374)
+10. Meta ads access not working (320)
+</seo_keyword_strategy>
+
 <hard_constraints>
 **NEVER:**
 - Hallucinate platform-specific instructions (verify against actual platform documentation)
@@ -261,8 +372,17 @@ Let H2 (##) and H3 (###) headings provide structure. Use white space for visual 
 - Content strategy: `marketing/CONTENT-STRATEGY-2026.md`
 - Content calendar: `marketing/content/CONTENT-CALENDAR-Q1-2026.md`
 - Keyword tracker: `marketing/content/KEYWORD-TRACKER.md`
+- SEO keyword research: `docs/seo/keyword-research-agency-operations.md` (87 keywords, 7 clusters)
+- SEO execution plan: `docs/seo/keyword-research-execution-plan.md` (content standards, KPIs)
 - Blog content: `apps/web/content/blog/` (one .md file per post)
 - Blog types: `apps/web/src/lib/blog-types.ts`
+
+**SEO Research Highlights:**
+- 87 keywords across 3 tiers (Tier 3 = fast wins, Tier 2 = body terms, Tier 1 = head terms)
+- 7 content clusters for topical authority building
+- ~145K/month total addressable search volume
+- Opportunity scoring: (Volume × (1 - Difficulty/100)) × IntentMultiplier
+- Content formats: Troubleshooting (800-1,200 words), How-To (1,200-1,800), Best Practices (1,500-2,500), Comparison (1,000-1,500)
 </context_info>
 
 <category_templates>
@@ -365,24 +485,33 @@ apps/web/content/blog/
 apps/web/src/lib/blog-types.ts
 ```
 
-**Step 1.2** - Analyze content gaps and opportunities:
-- Keyword gaps in your content
-- High-priority topics from the tracker (Tier 1-2, P0-P1)
-- Competitor keywords you should target
-- Featured snippet opportunities
+**Step 1.2** - Analyze content gaps and opportunities using the <seo_keyword_strategy> section:
+- Review Tier 3 (Fast Wins) - 4-12 week runway, lowest difficulty, quick rankings
+- Review Tier 2 (Body Terms) - 3-6 month runway, healthy volume, core pain points
+- Review Tier 1 (Head Terms) - 6-18 month runway, high volume but competitive
+- Check content clusters - prioritize topics that build cluster authority
+- Use opportunity scoring: prioritize Top 10 by Opportunity Score
 
 **Step 1.3** - AUTONOMOUSLY SELECT a topic based on:
-- Priority: P0 > P1 > P2 (from calendar)
-- Keyword gap: Untapped high-volume terms from tracker
-- Strategic alignment: Supports one of 4 content pillars
-- Feasibility: Can be completed in one session
+1. **Tier priority**: Tier 3 (fastest wins) > Tier 2 (body terms) > Tier 1 (head terms)
+2. **Opportunity Score**: Higher score = better ROI (see Top 10 in <seo_keyword_strategy>)
+3. **Cluster alignment**: Choose topics that build topical authority within a cluster
+4. **Content gap**: Untapped keywords from the research (not yet covered in existing posts)
+5. **Search intent**: Match format to intent (troubleshooting for error-based, how-to for instructional)
+
+**When selecting, consider content format from <seo_keyword_strategy>:**
+- Troubleshooting articles (Problem → Why → Fixes → Prevention)
+- How-To guides (Prerequisites → Steps → Verification)
+- Best practices roundups (Why → Practices → Examples → Tools)
+- Comparison articles (What → Comparison → When to choose)
 
 **Output of Phase 1:**
 State your chosen topic with:
 - Topic title
 - Target keyword
-- Priority level (P0/P1/P2)
-- Content pillar
+- Tier level (1/2/3) and opportunity score
+- Content cluster (1-7)
+- Content format (troubleshooting/how-to/best-practices/comparison)
 - Search intent
 - Rationale for selection
 
@@ -390,9 +519,37 @@ State your chosen topic with:
 
 ## PHASE 2: OUTLINE (Structure Before Writing)
 
-**Step 2.1** - Create a detailed outline following the category template structure.
+**Step 2.1** - Create a detailed outline following the content format standards.
 
-Use the <copywriting_guidance> section for tone and style requirements. Select the appropriate template from <category_templates> based on your chosen category:
+Use the <copywriting_guidance> section for tone and style requirements. Select the appropriate format from <seo_keyword_strategy> based on your topic's search intent:
+
+**Content Format Standards (from SEO research):**
+
+**Troubleshooting Articles** - For error-based searches:
+- Structure: Problem → Why it happens → Step-by-step fixes → Prevention
+- Length: 800-1,200 words
+- Visuals: Screenshots, error message examples, flow diagrams
+- Examples: "Meta ads access not working", "Google Ads access request pending"
+
+**How-To Guides** - For instructional searches:
+- Structure: Prerequisites → Agency-side steps → Client-side steps → Verification
+- Length: 1,200-1,800 words
+- Visuals: Screenshots at each step, annotated UI elements
+- Examples: "how to send Meta access request to client", "step by step Google Ads client access"
+
+**Best Practices Roundups** - For exploratory searches:
+- Structure: Why it matters → X practices → Examples → Tools
+- Length: 1,500-2,500 words
+- Visuals: Process diagrams, checklists, comparison tables
+- Examples: "agency client permissions best practices", "platform access security agencies"
+
+**Comparison Articles** - For commercial investigation:
+- Structure: What to compare → Feature comparison → When to choose what
+- Length: 1,000-1,500 words
+- Visuals: Comparison table, decision tree
+- Examples: "best client onboarding tools for agencies", "agency access management software comparison"
+
+Then select the appropriate template from <category_templates>:
 
 - **Tutorials** (Platform Access Guides): Hook → Why platform matters → Platform structure → Manual process → AuthHub process → Common problems → Comparison → Pro tips → Security → CTA
 - **Onboarding** (Client Onboarding Best Practices): Problem statement → Impact → Framework → Implementation guide → Tools → Pitfalls → ROI → AuthHub role
