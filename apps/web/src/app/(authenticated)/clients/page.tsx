@@ -82,6 +82,38 @@ function ClientsPageContent() {
   const clients = clientsResponse?.data?.data || [];
   const pagination = clientsResponse?.data?.pagination || { total: 0 };
 
+  const handleCreateClientClick = async () => {
+    try {
+      const result = await checkQuota.mutateAsync({ metric: 'clients' });
+      if (!result.allowed) {
+        setQuotaError(
+          new QuotaExceededError({
+            code: 'QUOTA_EXCEEDED',
+            message: `You've reached your client limit`,
+            metric: 'clients',
+            limit: result.limit,
+            used: result.used,
+            remaining: result.remaining,
+            upgradeUrl: result.upgradeUrl || '',
+            currentTier: result.currentTier,
+            suggestedTier: result.suggestedTier,
+          })
+        );
+        setShowUpgradeModal(true);
+        return;
+      }
+      setShowCreateModal(true);
+    } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        setQuotaError(error);
+        setShowUpgradeModal(true);
+      } else {
+        console.error('Failed to check quota:', error);
+        setShowCreateModal(true);
+      }
+    }
+  };
+
   if (isLoadingClients && !clients.length) {
     return (
       <div className="flex-1 bg-paper p-8">
@@ -118,40 +150,7 @@ function ClientsPageContent() {
             </p>
           </div>
           <button
-            onClick={async () => {
-              try {
-                const result = await checkQuota.mutateAsync({ metric: 'clients' });
-                if (!result.allowed) {
-                  // Quota exceeded - show upgrade modal
-                  setQuotaError(
-                    new QuotaExceededError({
-                      code: 'QUOTA_EXCEEDED',
-                      message: `You've reached your client limit`,
-                      metric: 'clients',
-                      limit: result.limit,
-                      used: result.used,
-                      remaining: result.remaining,
-                      upgradeUrl: result.upgradeUrl || '',
-                      currentTier: result.currentTier,
-                      suggestedTier: result.suggestedTier,
-                    })
-                  );
-                  setShowUpgradeModal(true);
-                  return;
-                }
-                // Quota OK - show create modal
-                setShowCreateModal(true);
-              } catch (error) {
-                if (error instanceof QuotaExceededError) {
-                  setQuotaError(error);
-                  setShowUpgradeModal(true);
-                } else {
-                  console.error('Failed to check quota:', error);
-                  // Allow modal to open even if quota check fails
-                  setShowCreateModal(true);
-                }
-              }
-            }}
+            onClick={handleCreateClientClick}
             className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
           >
             <Plus className="h-4 w-4" />
@@ -187,8 +186,8 @@ function ClientsPageContent() {
           <EmptyState
             title="No clients yet"
             description="Clients will appear here once they authorize their platforms through access requests."
-            actionLabel="Create Access Request"
-            actionHref="/access-requests/new"
+            actionLabel="Create Client"
+            onAction={handleCreateClientClick}
           />
         )}
 
