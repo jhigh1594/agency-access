@@ -10,6 +10,7 @@
 
 import { Plus, Users, Key, Activity, AlertCircle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
@@ -18,10 +19,12 @@ import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
+import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
+import { UpgradeModal } from '@/components/upgrade-modal';
 import {
   SUBSCRIPTION_TIER_NAMES,
   type DashboardPayload,
@@ -126,6 +129,12 @@ export default function DashboardPage() {
   const canFetchDashboard = Boolean(perfHarness?.token) || (isLoaded && Boolean(principalId));
   const hasTrackedView = useRef(false);
   const hasTrackedChecklistView = useRef(false);
+  const router = useRouter();
+
+  // Quota check for access requests
+  const checkQuota = useQuotaCheck();
+  const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Single unified query that fetches all dashboard data at once.
   const { data: dashboardData, isLoading, error, refetch } = useQuery<DashboardApiResponse>({
@@ -256,6 +265,41 @@ export default function DashboardPage() {
       agencyId: agency.id,
       status: onboardingStatus?.status,
     });
+  };
+
+  const handleCreateRequest = async () => {
+    try {
+      const result = await checkQuota.mutateAsync({ metric: 'access_requests' });
+      if (!result.allowed) {
+        // Quota exceeded - show upgrade modal
+        setQuotaError(
+          new QuotaExceededError({
+            code: 'QUOTA_EXCEEDED',
+            message: `You've reached your Access Requests limit`,
+            metric: 'access_requests',
+            limit: result.limit,
+            used: result.used,
+            remaining: result.remaining,
+            currentTier: result.currentTier,
+            suggestedTier: result.suggestedTier,
+            upgradeUrl: result.upgradeUrl || '',
+          })
+        );
+        setShowUpgradeModal(true);
+        return;
+      }
+      // Quota OK - navigate to new request page
+      router.push('/access-requests/new');
+    } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        setQuotaError(error);
+        setShowUpgradeModal(true);
+      } else {
+        console.error('Failed to check quota:', error);
+        // Allow navigation even if quota check fails
+        router.push('/access-requests/new');
+      }
+    }
   };
 
   // Track dashboard view in PostHog (only once per mount)
@@ -390,12 +434,13 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
-          <Button variant="brutalist-rounded" size="md" asChild>
-            <Link href="/access-requests/new">
-              <Plus className="h-4 w-4" />
-              Create Request
-            </Link>
-          </Button>
+          <button
+            onClick={handleCreateRequest}
+            className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
+          >
+            <Plus className="h-4 w-4" />
+            Create Request
+          </button>
         </div>
 
         {trialBanner && (
@@ -480,12 +525,13 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <Button variant="brutalist-rounded" size="md" asChild>
-              <Link href="/access-requests/new">
-                <Plus className="h-4 w-4" />
-                Create Request
-              </Link>
-            </Button>
+            <button
+              onClick={handleCreateRequest}
+              className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
+            >
+              <Plus className="h-4 w-4" />
+              Create Request
+            </button>
           </div>
 
           {requests.length === 0 ? (
@@ -607,6 +653,19 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Upgrade Modal */}
+        {showUpgradeModal && quotaError && (
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => {
+              setShowUpgradeModal(false);
+              setQuotaError(null);
+            }}
+            quotaError={quotaError}
+            currentTier={quotaError.currentTier}
+          />
+        )}
       </div>
     </div>
   );
