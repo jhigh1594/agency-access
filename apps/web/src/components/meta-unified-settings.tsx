@@ -352,7 +352,7 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
               <select
                 value={selectedBusinessId}
                 onChange={(e) => handleBusinessSelect(e.target.value)}
-                className="w-full px-4 py-3 pr-10 bg-card border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none"
+                className="w-full min-h-[44px] px-4 py-3 pr-10 bg-card border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))] transition-all appearance-none"
               >
                 <option value="" disabled>Select a portfolio...</option>
                 {businesses.map((business) => (
