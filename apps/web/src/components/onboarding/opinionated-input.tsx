@@ -212,9 +212,9 @@ export function OpinionatedInput({
   return (
     <div className="relative">
       {/* Label */}
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+      <label className="block text-sm font-semibold text-foreground mb-1.5">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-coral ml-1">*</span>}
       </label>
 
       {/* Input Container */}
@@ -229,14 +229,14 @@ export function OpinionatedInput({
           placeholder={placeholder}
           disabled={disabled}
           className={`
-            w-full px-4 py-3 pr-10 rounded-lg border-2 text-gray-900
+            w-full px-4 py-3 pr-10 rounded-lg border-2 text-ink
             focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all
-            disabled:bg-gray-100 disabled:cursor-not-allowed
+            disabled:bg-muted/20 disabled:cursor-not-allowed
             ${showError
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+              ? 'border-coral/40 focus:border-coral focus:ring-coral/30'
               : isValid
-                ? 'border-green-300 focus:border-green-500 focus:ring-green-200'
-                : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-200'
+                ? 'border-teal/40 focus:border-teal focus:ring-teal/30'
+                : 'border-border focus:border-coral focus:ring-coral/30'
             }
           `}
           aria-invalid={showError}
@@ -257,7 +257,7 @@ export function OpinionatedInput({
                 exit={{ scale: 0, rotate: 180 }}
                 transition={{ duration: 0.2 }}
               >
-                <AlertCircle className="w-5 h-5 text-red-500" />
+                <AlertCircle className="w-5 h-5 text-coral" />
               </motion.div>
             )}
             {isValid && value.length > 0 && !showError && (
@@ -268,7 +268,7 @@ export function OpinionatedInput({
                 exit={{ scale: 0, rotate: 180 }}
                 transition={{ duration: 0.2 }}
               >
-                <Check className="w-5 h-5 text-green-500" />
+                <Check className="w-5 h-5 text-teal" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -278,7 +278,7 @@ export function OpinionatedInput({
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="absolute z-10 w-full mt-1 bg-card rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+            className="absolute z-10 w-full mt-1 bg-card rounded-lg shadow-lg border border-border overflow-hidden"
           >
             {filteredSuggestions.map((suggestion, index) => (
               <button
@@ -292,8 +292,8 @@ export function OpinionatedInput({
                 className={`
                   w-full px-4 py-3 text-left text-sm transition-colors
                   ${index === highlightedIndex
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'hover:bg-gray-50 text-gray-700'
+                    ? 'bg-coral/10 text-coral'
+                    : 'hover:bg-paper text-foreground'
                   }
                 `}
               >
@@ -315,7 +315,7 @@ export function OpinionatedInput({
           <motion.p
             key="error"
             id={`${label}-error`}
-            className="mt-1.5 text-sm text-red-600 flex items-start gap-1.5"
+            className="mt-1.5 text-sm text-coral flex items-start gap-1.5"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
@@ -328,7 +328,7 @@ export function OpinionatedInput({
           <motion.p
             key="helper"
             id={`${label}-helper`}
-            className="mt-1.5 text-sm text-gray-500"
+            className="mt-1.5 text-sm text-muted-foreground"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}

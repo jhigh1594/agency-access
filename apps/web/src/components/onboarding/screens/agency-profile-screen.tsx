@@ -84,9 +84,9 @@ export function AgencyProfileScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-indigo-600 mb-2">Step 1 of 6</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Tell us about your agency</h2>
-        <p className="text-gray-600">We'll get you set up in seconds.</p>
+        <div className="text-sm font-semibold text-coral mb-2">Step 1 of 6</div>
+        <h2 className="text-3xl font-bold text-ink mb-2">Tell us about your agency</h2>
+        <p className="text-muted-foreground">We'll get you set up in seconds.</p>
       </div>
 
       {/* Form */}
@@ -106,10 +106,10 @@ export function AgencyProfileScreen({
         />
 
         {/* Timezone (Pre-detected) */}
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="p-4 bg-teal/10 border border-teal/30 rounded-lg">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-teal mt-0.5 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -120,11 +120,11 @@ export function AgencyProfileScreen({
               />
             </svg>
             <div className="flex-1">
-              <div className="font-semibold text-green-900 mb-1">Timezone detected</div>
-              <div className="text-sm text-green-700">
+              <div className="font-semibold text-ink mb-1">Timezone detected</div>
+              <div className="text-sm text-teal">
                 Your timezone is set to <span className="font-mono bg-card px-1.5 py-0.5 rounded">{localTimezone}</span>
               </div>
-              <div className="text-xs text-green-600 mt-1">
+              <div className="text-xs text-teal mt-1">
                 You can customize this in Settings later
               </div>
             </div>
@@ -133,14 +133,14 @@ export function AgencyProfileScreen({
 
         {/* Industry (Pre-selected with option to change) */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label className="block text-sm font-semibold text-foreground mb-1.5">
             Industry
           </label>
           <div className="relative">
             <select
               value={localIndustry}
               onChange={(e) => setLocalIndustry(e.target.value)}
-              className="w-full px-4 py-3 pr-10 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all appearance-none bg-card"
+              className="w-full px-4 py-3 pr-10 rounded-lg border-2 border-border text-ink focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/30 transition-all appearance-none bg-card"
             >
               {COMMON_INDUSTRIES.map((ind) => (
                 <option key={ind} value={ind.toLowerCase().replace(/\s+/g, '_')}>
@@ -149,21 +149,21 @@ export function AgencyProfileScreen({
               ))}
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
           </div>
-          <p className="mt-1.5 text-sm text-gray-500">
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Helps us provide relevant tips and templates
           </p>
         </div>
 
         {/* Reassurance */}
-        <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+        <div className="p-4 bg-coral/10 border border-coral/30 rounded-lg">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-coral mt-0.5 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -173,7 +173,7 @@ export function AgencyProfileScreen({
                 clipRule="evenodd"
               />
             </svg>
-            <div className="flex-1 text-sm text-indigo-900">
+            <div className="flex-1 text-sm text-ink">
               <span className="font-semibold">Everything else is pre-configured.</span>{' '}
               You can customize your logo, branding, and more in Settings after onboarding.
             </div>
@@ -181,8 +181,8 @@ export function AgencyProfileScreen({
         </div>
 
         {/* Example of what's pre-configured */}
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">We've set up for you:</h3>
+        <div className="border-t border-border pt-6">
+          <h3 className="text-sm font-semibold text-foreground mb-3">We've set up for you:</h3>
           <div className="grid sm:grid-cols-2 gap-3">
             {[
               { label: 'Default Access Level', value: 'Standard (recommended)' },
@@ -191,7 +191,7 @@ export function AgencyProfileScreen({
               { label: 'Team Roles', value: 'Admin, Member, Viewer' },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 text-sm">
-                <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-teal flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -199,8 +199,8 @@ export function AgencyProfileScreen({
                   />
                 </svg>
                 <div>
-                  <span className="font-medium text-gray-700">{item.label}:</span>{' '}
-                  <span className="text-gray-600">{item.value}</span>
+                  <span className="font-medium text-foreground">{item.label}:</span>{' '}
+                  <span className="text-muted-foreground">{item.value}</span>
                 </div>
               </div>
             ))}

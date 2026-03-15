@@ -138,22 +138,22 @@ export function ClientSelectionScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-indigo-600 mb-2">Step 2 of 6</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Create your first access request</h2>
-        <p className="text-gray-600">
+        <div className="text-sm font-semibold text-coral mb-2">Step 2 of 6</div>
+        <h2 className="text-3xl font-bold text-ink mb-2">Create your first access request</h2>
+        <p className="text-muted-foreground">
           This is how you'll get client OAuth tokens in under 2 minutes.
         </p>
       </div>
 
       <div className="space-y-6 max-w-4xl">
         {loading && (
-          <p className="text-sm text-gray-500">Loading existing clients...</p>
+          <p className="text-sm text-muted-foreground">Loading existing clients...</p>
         )}
 
         {/* Existing Clients Section */}
         {existingClients.length > 0 && mode === 'existing' && (
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-sm font-semibold text-foreground">
               Select an existing client
             </label>
 
@@ -164,7 +164,7 @@ export function ClientSelectionScreen({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search clients..."
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                className="w-full px-4 py-3 rounded-lg border-2 border-border focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/30"
               />
             </div>
 
@@ -178,8 +178,8 @@ export function ClientSelectionScreen({
                   className={`
                     w-full p-4 rounded-lg border-2 text-left transition-all
                     ${selectedClientId === client.id
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-card'
+                      ? 'border-coral bg-coral/10'
+                      : 'border-border hover:border-border bg-card'
                     }
                   `}
                   whileHover={{ scale: 1.01 }}
@@ -187,11 +187,11 @@ export function ClientSelectionScreen({
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-gray-900">{client.name}</div>
-                      <div className="text-sm text-gray-500">{client.email}</div>
+                      <div className="font-semibold text-ink">{client.name}</div>
+                      <div className="text-sm text-muted-foreground">{client.email}</div>
                     </div>
                     {selectedClientId === client.id && (
-                      <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-coral" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -208,7 +208,7 @@ export function ClientSelectionScreen({
             <button
               type="button"
               onClick={handleCreateNew}
-              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              className="text-sm text-coral hover:text-coral font-medium"
             >
               + Create a new client instead
             </button>
@@ -222,7 +222,7 @@ export function ClientSelectionScreen({
               <button
                 type="button"
                 onClick={handleSwitchToExisting}
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                className="text-sm text-coral hover:text-coral font-medium"
               >
                 ← Back to client list
               </button>
@@ -271,10 +271,10 @@ export function ClientSelectionScreen({
         </div>
 
         {/* Insight Box */}
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="p-4 bg-teal/10 border border-teal/30 rounded-lg">
           <div className="flex items-start gap-3">
             <span className="text-2xl">💡</span>
-            <div className="flex-1 text-sm text-green-900">
+            <div className="flex-1 text-sm text-ink">
               <span className="font-semibold">Why this matters:</span>{' '}
               After you create this access request, you'll get a unique link that your client can use to authorize all their platforms in one go. No more back-and-forth emails!
             </div>
@@ -286,7 +286,7 @@ export function ClientSelectionScreen({
             <button
               type="button"
               onClick={() => void onDefer()}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              className="text-sm font-medium text-coral hover:text-coral"
             >
               No client yet
             </button>
@@ -294,9 +294,9 @@ export function ClientSelectionScreen({
         )}
 
         {/* Next Step Teaser */}
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Next: Choose Platforms</h3>
-          <p className="text-sm text-gray-600">
+        <div className="border-t border-border pt-6">
+          <h3 className="text-sm font-semibold text-foreground mb-2">Next: Choose Platforms</h3>
+          <p className="text-sm text-muted-foreground">
             We'll select which platforms this client needs to authorize. Google Ads and Meta Ads are pre-selected (most agencies start with these).
           </p>
         </div>
