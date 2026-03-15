@@ -6,12 +6,25 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ConnectionsPage from '../page';
 
 const mockLaunchMetaBusinessLogin = vi.fn();
 const mockFinalizeMetaBusinessLogin = vi.fn();
+const { clerkState, devAuthState } = vi.hoisted(() => ({
+  clerkState: {
+    userId: 'user_123',
+    orgId: null as string | null,
+    getToken: vi.fn(),
+  },
+  devAuthState: {
+    userId: 'user_123',
+    orgId: null as string | null,
+    isLoaded: true,
+    isDevelopmentBypass: false,
+  },
+}));
 
 // Mock next/navigation
 const mockReplace = vi.fn();
@@ -34,9 +47,9 @@ vi.mock('next/image', () => ({
 // Mock Clerk
 vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({
-    userId: 'user_123',
-    orgId: null,
-    getToken: vi.fn().mockResolvedValue('test-token'),
+    userId: clerkState.userId,
+    orgId: clerkState.orgId,
+    getToken: clerkState.getToken,
   }),
   useUser: () => ({
     user: {
@@ -45,6 +58,10 @@ vi.mock('@clerk/nextjs', () => ({
       },
     },
   }),
+}));
+
+vi.mock('@/lib/dev-auth', () => ({
+  useAuthOrBypass: () => devAuthState,
 }));
 
 vi.mock('@/lib/meta-business-login', () => ({
@@ -90,6 +107,13 @@ describe('ConnectionsPage', () => {
       },
     });
     vi.clearAllMocks();
+    clerkState.userId = 'user_123';
+    clerkState.orgId = null;
+    clerkState.getToken.mockResolvedValue('test-token');
+    devAuthState.userId = 'user_123';
+    devAuthState.orgId = null;
+    devAuthState.isLoaded = true;
+    devAuthState.isDevelopmentBypass = false;
     (global.fetch as any).mockReset();
     localStorageStore.clear();
     mockSearchParams.delete('success');
@@ -171,6 +195,32 @@ describe('ConnectionsPage', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/agencies?clerkUserId=user_123'),
         expect.anything()
+      );
+    });
+  });
+
+  it('sends the development bypass token for agency bootstrap in bypass mode', async () => {
+    clerkState.userId = null;
+    clerkState.orgId = null;
+    clerkState.getToken.mockResolvedValue(null);
+    devAuthState.userId = 'dev_user_test_123456789';
+    devAuthState.orgId = 'dev_org_test_987654321';
+    devAuthState.isDevelopmentBypass = true;
+
+    (global.fetch as any)
+      .mockResolvedValueOnce(mockJsonResponse({ data: [{ id: 'test-agency-id' }] }))
+      .mockResolvedValueOnce(mockJsonResponse({ data: [] }));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/agencies?clerkUserId=dev_org_test_987654321'),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer dev-bypass-token',
+          }),
+        })
       );
     });
   });
@@ -401,6 +451,112 @@ describe('ConnectionsPage', () => {
         screen.getByText('Failed to load Meta Business Login. Please try again.')
       ).toBeInTheDocument();
     });
+  });
+
+  it('uses a shared modal footer contract for Manage Assets dialogs', async () => {
+    (global.fetch as any).mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes('/api/agencies?clerkUserId=')) {
+        return mockJsonResponse({ data: [{ id: 'test-agency-id' }] });
+      }
+
+      if (url.includes('/agency-platforms/available?agencyId=test-agency-id')) {
+        return mockJsonResponse({
+          data: [
+            {
+              platform: 'meta',
+              name: 'Meta',
+              category: 'recommended',
+              connected: true,
+              connectedEmail: 'meta@example.com',
+              status: 'active',
+              metadata: {
+                selectedBusinessId: 'biz_1',
+                selectedBusinessName: 'Business One',
+                metaBusinessAccounts: {
+                  businesses: [{ id: 'biz_1', name: 'Business One' }],
+                },
+              },
+            },
+            {
+              platform: 'google',
+              name: 'Google',
+              category: 'recommended',
+              connected: true,
+              connectedEmail: 'google@example.com',
+              status: 'active',
+            },
+          ],
+        });
+      }
+
+      if (url.includes('/agency-platforms/meta/business-accounts')) {
+        return mockJsonResponse({
+          data: {
+            businesses: [{ id: 'biz_1', name: 'Business One' }],
+          },
+        });
+      }
+
+      if (url.includes('/agency-platforms/meta/asset-settings')) {
+        return mockJsonResponse({
+          data: {
+            adAccount: { enabled: true, permissionLevel: 'analyze' },
+            page: { enabled: true, permissionLevel: 'analyze', limitPermissions: false },
+            catalog: { enabled: false, permissionLevel: 'analyze' },
+            dataset: { enabled: false, requestFullAccess: false },
+            instagramAccount: { enabled: false, requestFullAccess: false },
+          },
+        });
+      }
+
+      if (url.includes('/agency-platforms/google/accounts')) {
+        return mockJsonResponse({
+          data: {
+            adsAccounts: [],
+            analyticsProperties: [],
+            businessAccounts: [],
+            tagManagerContainers: [],
+            searchConsoleSites: [],
+            merchantCenterAccounts: [],
+            hasAccess: true,
+          },
+        });
+      }
+
+      if (url.includes('/agency-platforms/google/asset-settings')) {
+        return mockJsonResponse({
+          data: {
+            googleAds: { enabled: true, requestManageUsers: false },
+            googleAnalytics: { enabled: false, requestManageUsers: false },
+            googleBusinessProfile: { enabled: false, requestManageUsers: false },
+            googleTagManager: { enabled: false, requestManageUsers: false },
+            googleSearchConsole: { enabled: false, requestManageUsers: false },
+            googleMerchantCenter: { enabled: false, requestManageUsers: false },
+          },
+        });
+      }
+
+      return mockJsonResponse({ data: null });
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Meta')).toBeInTheDocument();
+      expect(screen.getByText('Google')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /manage assets/i })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/changes save automatically/i)).toBeInTheDocument();
+    });
+
+    const dialog = screen.getByRole('dialog', { name: /meta connection settings/i });
+    expect(within(dialog).getByRole('button', { name: /^disconnect$/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: /^done$/i })).toBeInTheDocument();
   });
 
   // TODO: Loading state depends on agencyId + platforms query timing; mock chain can be flaky

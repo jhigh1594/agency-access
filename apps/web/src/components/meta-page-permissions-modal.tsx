@@ -8,9 +8,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Facebook, Loader2 } from 'lucide-react';
 import type { MetaPagePermission } from '@agency-platform/shared';
+import { Button } from './ui/button';
 
 export interface MetaPagePermissionOption {
   id: MetaPagePermission;
@@ -128,7 +129,7 @@ export function MetaPagePermissionsModal({
   return (
     <AnimatePresence>
       {/* Backdrop */}
-      <motion.div
+      <m.div
         key="meta-page-permissions-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -138,7 +139,7 @@ export function MetaPagePermissionsModal({
       />
 
       {/* Modal */}
-      <motion.div
+      <m.div
         key="meta-page-permissions-content"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -147,41 +148,53 @@ export function MetaPagePermissionsModal({
         className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
       >
         <div
-          className="relative bg-card rounded-lg shadow-brutalist-lg w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto"
+          className="relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-[1.15rem] border-2 border-black bg-card shadow-brutalist-lg pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 bg-card">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className={`h-6 w-11 rounded-full transition-colors ${allSelected ? 'bg-teal' : 'bg-gray-300'}`}>
-                  <div className={`h-5 w-5 rounded-full bg-card mt-0.5 ml-0.5 transition-transform ${allSelected ? 'translate-x-5' : 'translate-x-0'}`} />
+          <div className="border-b border-border bg-paper px-6 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+                  Page permissions
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className={`h-6 w-11 rounded-full border border-black transition-colors ${allSelected ? 'bg-teal' : 'bg-border'}`}>
+                    <div className={`mt-0.5 ml-0.5 h-5 w-5 rounded-full bg-card transition-transform ${allSelected ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </div>
+                  <Facebook className="h-5 w-5 text-coral" />
+                  <span className="text-lg font-semibold text-ink">
+                    Page {allSelected ? '(all permissions)' : '(selected permissions only)'}
+                  </span>
                 </div>
-                <Facebook className="h-5 w-5 text-coral" />
-                <span className="text-lg font-semibold text-ink">
-                  Page {allSelected ? '(all permissions)' : '(selected permissions only)'}
-                </span>
               </div>
+              <Button
+                type="button"
+                variant="brutalist-ghost-rounded"
+                size="icon"
+                onClick={onClose}
+                disabled={isSaving}
+                aria-label="Close modal"
+                className="h-11 w-11 min-h-[44px] shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              disabled={isSaving}
-            >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
           </div>
 
           {/* Request Maximum Permissions Link */}
           {!allSelected && (
-            <div className="px-6 py-3 bg-coral/10 border-b border-coral">
-              <button
+            <div className="border-b border-border bg-coral/10 px-6 py-3">
+              <Button
+                type="button"
                 onClick={handleRequestMaximum}
-                className="text-sm text-coral font-medium hover:underline"
+                variant="ghost"
+                size="sm"
+                className="px-0 text-coral hover:bg-transparent hover:text-coral"
                 disabled={isSaving}
               >
                 Request maximum permissions
-              </button>
+              </Button>
             </div>
           )}
 
@@ -195,10 +208,10 @@ export function MetaPagePermissionsModal({
                 return (
                   <div
                     key={permission.id}
-                    className={`p-4 rounded-lg border transition-all ${
+                    className={`rounded-[1rem] border p-4 transition-all ${
                       isChecked
-                        ? 'bg-coral/10 border-coral'
-                        : 'bg-card border-black/10 hover:border-black'
+                        ? 'border-coral bg-coral/10 shadow-brutalist-sm'
+                        : 'border-border bg-paper hover:border-black'
                     }`}
                   >
                     <label className="flex items-start gap-3 cursor-pointer">
@@ -210,10 +223,10 @@ export function MetaPagePermissionsModal({
                         className="mt-1 h-4 w-4 rounded border-2 border-black text-coral focus:ring-coral cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <div className="flex-1">
-                        <div className={`font-medium text-sm ${isChecked ? 'text-ink' : 'text-gray-700'}`}>
+                        <div className="text-sm font-medium text-ink">
                           {permission.label}
                         </div>
-                        <div className={`text-xs mt-1 leading-relaxed ${isChecked ? 'text-gray-600' : 'text-gray-500'}`}>
+                        <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
                           {permission.description}
                         </div>
                       </div>
@@ -225,35 +238,38 @@ export function MetaPagePermissionsModal({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-black/10 bg-gray-100">
+          <div className="border-t border-border bg-paper px-6 py-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 {localPermissions.length === 0
                   ? 'No permissions selected'
                   : `${localPermissions.length} permission${localPermissions.length !== 1 ? 's' : ''} selected`}
               </p>
               <div className="flex gap-3">
-                <button
+                <Button
+                  type="button"
                   onClick={onClose}
                   disabled={isSaving}
-                  className="px-4 py-2 border-2 border-black rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="brutalist-ghost-rounded"
+                  size="sm"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
                   onClick={handleSave}
                   disabled={isSaving || localPermissions.length === 0}
-                  className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+                  variant="brutalist-rounded"
+                  size="sm"
                 >
                   {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {isSaving ? 'Saving...' : 'Save Permissions'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }
-

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { GoogleUnifiedSettings } from '../google-unified-settings';
@@ -215,7 +215,7 @@ describe('GoogleUnifiedSettings', () => {
 
     // Wait until the UI is hydrated
     await waitFor(() => {
-      expect(getByText(/google ads account/i)).toBeInTheDocument();
+      expect(getByRole('checkbox', { name: /^enable google ads account$/i })).toBeInTheDocument();
     });
 
     await user.click(getByRole('button', { name: /^select all$/i }));
@@ -240,6 +240,54 @@ describe('GoogleUnifiedSettings', () => {
       const checkbox = getByRole('checkbox', { name: new RegExp(`^enable ${label}$`, 'i') });
       expect(checkbox).not.toBeChecked();
     }
+  });
+
+  it('renders a configuration overview with the active product count', async () => {
+    const fetchMock = vi.fn(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('/agency-platforms/google/accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              adsAccounts: [],
+              analyticsProperties: [],
+              businessAccounts: [],
+              tagManagerContainers: [],
+              searchConsoleSites: [],
+              merchantCenterAccounts: [],
+              hasAccess: true,
+            },
+          }),
+        } as any;
+      }
+
+      if (url.includes('/agency-platforms/google/asset-settings?')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              googleAds: { enabled: true, requestManageUsers: false },
+              googleAnalytics: { enabled: true, requestManageUsers: false },
+              googleBusinessProfile: { enabled: false, requestManageUsers: false },
+              googleTagManager: { enabled: false, requestManageUsers: false },
+              googleSearchConsole: { enabled: false, requestManageUsers: false },
+              googleMerchantCenter: { enabled: false, requestManageUsers: false },
+            },
+          }),
+        } as any;
+      }
+
+      return { ok: true, json: async () => ({ data: null }) } as any;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+
+    expect(await screen.findByText(/configuration overview/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 active products/i)).toBeInTheDocument();
   });
 
   it('renders Google Ads dropdown labels with account title and formatted ID, including fallback labels', async () => {
@@ -309,5 +357,79 @@ describe('GoogleUnifiedSettings', () => {
       expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
       expect(container.textContent).toContain('Google Ads account • 549-755-9774');
     });
+  });
+
+  it('warns when the saved Google Ads account is no longer active and excludes it from the dropdown', async () => {
+    const user = userEvent.setup();
+
+    const fetchMock = vi.fn(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('/agency-platforms/google/accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              adsAccounts: [
+                {
+                  id: '1111111111',
+                  name: 'Enabled Account',
+                  formattedId: '111-111-1111',
+                  nameSource: 'direct',
+                  isManager: false,
+                  type: 'google_ads',
+                  status: 'ENABLED',
+                },
+              ],
+              analyticsProperties: [],
+              businessAccounts: [],
+              tagManagerContainers: [],
+              searchConsoleSites: [],
+              merchantCenterAccounts: [],
+              hasAccess: true,
+            },
+          }),
+        } as any;
+      }
+
+      if (url.includes('/agency-platforms/google/asset-settings')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              googleAds: {
+                enabled: true,
+                accountId: '9999999999',
+                requestManageUsers: false,
+              },
+              googleAnalytics: { enabled: false, requestManageUsers: false },
+              googleBusinessProfile: { enabled: false, requestManageUsers: false },
+              googleTagManager: { enabled: false, requestManageUsers: false },
+              googleSearchConsole: { enabled: false, requestManageUsers: false },
+              googleMerchantCenter: { enabled: false, requestManageUsers: false },
+            },
+          }),
+        } as any;
+      }
+
+      return { ok: true, json: async () => ({ data: null }) } as any;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+
+    expect(
+      await screen.findByText(/previously selected google ads account is no longer active/i)
+    ).toBeInTheDocument();
+
+    const select = screen.getByRole('combobox');
+    expect(select).toHaveValue('');
+
+    await user.selectOptions(select, '1111111111');
+
+    expect(
+      within(select).queryByRole('option', { name: /9999999999/ })
+    ).not.toBeInTheDocument();
   });
 });

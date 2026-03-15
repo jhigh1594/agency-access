@@ -287,6 +287,32 @@ Backend: `apps/api/.env` — see `apps/api/.env.example`. Core (NODE_ENV, PORT, 
 5. **Demand Elegance (balanced):** For non-trivial changes ask "is there a more elegant way?"; avoid hacky fixes; skip for obvious fixes.
 6. **Autonomous Bug Fixing:** Given a bug, fix it using logs/errors/tests; fix failing CI without being asked.
 
+## Learning & Self-Maintenance
+
+Actively manage institutional knowledge. This is as important as the current task.
+
+**Track two types of knowledge:**
+- **Domain: what things are** — product context, user preferences, APIs, naming conventions
+- **Procedural: how to do things** — deploy steps, test commands, review flows
+
+**Organize as a hierarchy of .md files:**
+- `docs/START-HERE.md` and `docs/` subdirs (solutions/, sprints/, features/) route to categories
+- Categories hold the details
+- Progressive disclosure: read top-down, only load what is needed
+
+**Log errors to `docs/ERRORS.md`:**
+- **Deterministic errors** (bad schema, wrong type) — conclude immediately
+- **Infrastructure errors** (timeout, rate limit) — log, no conclusion until pattern emerges
+- **Conclusions** graduate into the relevant domain or procedural file
+
+**Self-maintenance actions:**
+- Review knowledge files at the start of each session
+- Merge overlapping categories
+- Split files that grow too long
+- Remove knowledge that is no longer accurate
+- Create new categories when patterns emerge
+- When something should be here but is not — propose the edit
+
 ## Session Protocol
 
 **Start of session:** Read the last 3–5 entries in `docs/SESSION-LOG.md` to get current status and next steps.

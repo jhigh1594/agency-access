@@ -65,6 +65,8 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
       // Should show Google products
       expect(screen.getAllByText(/Google Ads/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/Google Analytics 4/i)).toBeInTheDocument();
+      expect(screen.queryByText(/YouTube Studio/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Display & Video 360/i)).not.toBeInTheDocument();
     });
 
     it('should collapse a group when clicked again', async () => {
@@ -86,6 +88,8 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
       await user.click(screen.getByRole('button', { name: /Meta platform group/i }));
 
       expect(screen.getByText(/Facebook and Instagram advertising/i)).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /^Meta Pages$/i })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /^WhatsApp Business$/i })).not.toBeInTheDocument();
     });
   });
 

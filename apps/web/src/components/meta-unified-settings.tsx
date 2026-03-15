@@ -3,31 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { 
-  MetaAssetSettings, 
-  MetaPermissionLevel,
-  MetaPagePermission
-} from '@agency-platform/shared';
+import { MetaAssetSettings } from '@agency-platform/shared';
 import { MetaPagePermissionsModal } from './meta-page-permissions-modal';
+import { ManageAssetsSectionCard, ManageAssetsStatusPanel } from './manage-assets-ui';
+import { Button } from './ui/button';
 import { extractApiErrorMessage } from '@/lib/api/extract-error';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
-import { 
-  Loader2, 
-  ChevronUp,
-  ChevronDown,
-  Trash2,
-  X,
-  Facebook, 
-  Instagram, 
-  ShoppingBag,
-  AlertCircle,
-  Info,
-  AlertTriangle
-} from 'lucide-react';
+import { Loader2, ChevronDown, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MetaUnifiedSettingsProps {
   agencyId: string;
-  onDisconnect?: () => void;
 }
 
 interface Business {
@@ -35,11 +21,10 @@ interface Business {
   name: string;
 }
 
-export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSettingsProps) {
+export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { user } = useUser();
-  const [isExpanded, setIsExpanded] = useState(true);
   const [settings, setSettings] = useState<MetaAssetSettings | null>(null);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
   const [selectedBusinessName, setSelectedBusinessName] = useState<string>('');
@@ -199,14 +184,14 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   if (isLoading) {
     return (
       <div className="p-8 text-center">
-        <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!settings) {
     return (
-      <div className="p-8 text-red-500 text-center">
+      <div className="p-8 text-center text-coral">
         <AlertCircle className="h-6 w-6 mx-auto mb-2" />
         Failed to load Meta settings
       </div>
@@ -224,6 +209,8 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   const assetSummary = enabledAssets.length > 0 
     ? `${enabledAssets[0]}${enabledAssets.length > 1 ? `, ${enabledAssets[1]}` : ''}${enabledAssets.length > 2 ? `, +${enabledAssets.length - 2}` : ''}`
     : 'No assets';
+  const enabledAssetCount = enabledAssets.length;
+  const selectedPortfolioLabel = selectedBusinessName || 'No portfolio selected';
 
   const updateSetting = (key: keyof MetaAssetSettings, field: string, value: any) => {
     const newSettings = {
@@ -242,11 +229,6 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
       setSelectedBusinessName(business.name);
       savePortfolio({ businessId: businessId, businessName: business.name });
     }
-  };
-
-  const handleClearBusiness = () => {
-    setSelectedBusinessId('');
-    setSelectedBusinessName('');
   };
 
   const handleReauthenticate = async () => {
@@ -286,73 +268,81 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
   };
 
   return (
-    <div className="bg-card rounded-lg border border-slate-200 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={true}
-            readOnly
-            className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+    <div className="space-y-6">
+      <ManageAssetsSectionCard
+        eyebrow="Configuration overview"
+        title="Current Meta setup"
+        description="Use this snapshot to confirm which portfolio and asset types are active before you change access settings."
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <ManageAssetsStatusPanel
+            label="Active portfolio"
+            title={selectedPortfolioLabel}
+            description={
+              selectedBusinessId
+                ? 'Stored for delegated-access requests.'
+                : 'Choose a Business Portfolio before configuring asset access.'
+            }
+            tone={selectedBusinessId ? 'default' : 'warning'}
           />
-          <img
-            src="/meta-color.svg"
-            alt="Meta"
-            className="w-6 h-6"
+          <ManageAssetsStatusPanel
+            label="Enabled assets"
+            title={`${enabledAssetCount} enabled asset type${enabledAssetCount === 1 ? '' : 's'}`}
+            description={assetSummary}
           />
-          <span className="font-medium text-slate-900">Meta {assetSummary}</span>
+          <ManageAssetsStatusPanel
+            label="Page access mode"
+            title={settings.page.limitPermissions ? 'Selected permissions only' : 'All page permissions'}
+            description={
+              settings.page.limitPermissions
+                ? 'Page access is constrained to the permission set below.'
+                : 'Enabled page sharing uses the broad default permission set.'
+            }
+            tone={settings.page.limitPermissions ? 'warning' : 'default'}
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-slate-100 rounded transition-colors"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-slate-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-slate-500" />
-            )}
-          </button>
-          {onDisconnect && (
-            <button
-              onClick={onDisconnect}
-              className="p-1 hover:bg-red-50 rounded transition-colors"
-            >
-              <Trash2 className="h-5 w-5 text-red-500" />
-            </button>
-          )}
-        </div>
-      </div>
+      </ManageAssetsSectionCard>
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="p-6 space-y-6">
-          {/* Business Portfolio Selector */}
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                Meta Business Portfolio
-                {selectedBusinessId && (
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
-                    Stored
-                  </span>
-                )}
-              </h3>
-              <button
-                type="button"
-                onClick={() => void handleReauthenticate()}
-                disabled={isReauthenticating}
-                className="text-xs font-medium text-indigo-600 hover:underline disabled:text-slate-400 disabled:no-underline"
-              >
-                {isReauthenticating ? 'Logging in again…' : 'Log in again'}
-              </button>
-            </div>
+      <ManageAssetsSectionCard
+        eyebrow="Primary control"
+        title="Business Portfolio"
+        description="The stored portfolio is the source of truth for Meta asset management and reauthentication."
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            isLoading={isReauthenticating}
+            onClick={() => void handleReauthenticate()}
+            disabled={isSavingPortfolio}
+          >
+            {isReauthenticating ? 'Logging in again...' : 'Log in again'}
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <ManageAssetsStatusPanel
+            label="Stored portfolio"
+            title={selectedPortfolioLabel}
+            description={
+              selectedBusinessId
+                ? 'This portfolio will be used to manage all selected Meta assets.'
+                : 'No portfolio is stored yet.'
+            }
+            tone={selectedBusinessId ? 'default' : 'warning'}
+          />
+
+          <div className="rounded-[1rem] border border-border bg-paper p-4">
+            <label htmlFor="meta-business-portfolio" className="mb-2 block text-sm font-semibold text-ink">
+              Meta Business Portfolio
+            </label>
             <div className="relative">
               <select
+                id="meta-business-portfolio"
                 value={selectedBusinessId}
                 onChange={(e) => handleBusinessSelect(e.target.value)}
-                className="w-full min-h-[44px] px-4 py-3 pr-10 bg-card border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))] transition-all appearance-none"
+                disabled={isSavingPortfolio}
+                className="w-full min-h-[44px] appearance-none rounded-lg border border-border bg-card px-4 py-3 pr-10 text-ink transition-all focus:border-[rgb(var(--coral))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))]"
               >
                 <option value="" disabled>Select a portfolio...</option>
                 {businesses.map((business) => (
@@ -361,162 +351,151 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             </div>
-            {businessRefreshWarning && cachedBusinesses.length > 0 && (
-              <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                <p>{businessRefreshWarning}</p>
-                <p className="mt-1">Showing last synced portfolios until Meta refresh succeeds.</p>
-              </div>
-            )}
-            {reauthError && (
-              <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900">
-                {reauthError}
-              </div>
-            )}
-            <p className="text-xs text-slate-500 mt-2">
-              The selected portfolio will be used to manage all client assets. Changing this will re-configure your system user access.
+            <p className="mt-2 text-xs text-muted-foreground">
+              Changing this selection reconfigures the portfolio used for delegated system-user access.
             </p>
           </div>
 
-          {/* Asset Cards */}
-          <div className="space-y-3">
-            {/* Ad Account */}
-            <AssetCard
-              icon={
-                <img
-                  src="/meta-color.svg"
-                  alt="Meta"
-                  className="w-5 h-5"
-                />
-              }
-              label="Ad Account"
-              enabled={settings.adAccount.enabled}
-              onToggle={(val) => updateSetting('adAccount', 'enabled', val)}
+          {businessRefreshWarning && cachedBusinesses.length > 0 ? (
+            <ManageAssetsStatusPanel
+              label="Refresh warning"
+              title={businessRefreshWarning}
+              description="Showing the last synced portfolios until Meta refresh succeeds."
+              tone="warning"
             />
+          ) : null}
 
-            {/* Page */}
-            <AssetCard
-              icon={
-                <img
-                  src="/meta-color.svg"
-                  alt="Meta"
-                  className="w-5 h-5"
-                />
-              }
-              label={`Page${settings.page.limitPermissions ? '' : ' (all permissions)'}`}
-              enabled={settings.page.enabled}
-              onToggle={(val) => updateSetting('page', 'enabled', val)}
-              extraContent={
-                settings.page.enabled && (
-                  <button
-                    onClick={() => {
-                      if (!settings.page.limitPermissions) {
-                        // Opening modal to limit permissions
-                        setIsPermissionsModalOpen(true);
-                      } else {
-                        // Clearing limit permissions
-                        updateSetting('page', 'limitPermissions', false);
-                        updateSetting('page', 'selectedPermissions', undefined);
-                      }
-                    }}
-                    className="text-xs text-indigo-600 font-medium hover:underline mt-1"
-                  >
-                    {settings.page.limitPermissions ? 'Allow all permissions' : 'Limit permissions'}
-                  </button>
-                )
-              }
+          {reauthError ? (
+            <ManageAssetsStatusPanel
+              label="Reauthentication failed"
+              title={reauthError}
+              tone="danger"
             />
+          ) : null}
+        </div>
+      </ManageAssetsSectionCard>
 
-            {/* Catalog */}
-            <AssetCard
-              icon={
-                <img
-                  src="/meta-color.svg"
-                  alt="Meta"
-                  className="w-5 h-5"
-                />
-              }
-              label="Catalog"
-              enabled={settings.catalog.enabled}
-              onToggle={(val) => updateSetting('catalog', 'enabled', val)}
-            />
+      <ManageAssetsSectionCard
+        eyebrow="Asset access"
+        title="Enabled asset types"
+        description="Turn asset types on or off, then adjust permission-specific options where needed."
+      >
+        <div className="space-y-3">
+          <AssetCard
+            icon={<img src="/meta-color.svg" alt="Meta" className="h-5 w-5" />}
+            label="Ad Account"
+            description="Enable ad-account sharing for delegated access requests."
+            enabled={settings.adAccount.enabled}
+            onToggle={(val) => updateSetting('adAccount', 'enabled', val)}
+          />
 
-            {/* Dataset */}
-            <AssetCard
-              icon={
-                <img
-                  src="/meta-color.svg"
-                  alt="Meta"
-                  className="w-5 h-5"
-                />
-              }
-              label="Dataset"
-              enabled={settings.dataset.enabled}
-              onToggle={(val) => updateSetting('dataset', 'enabled', val)}
-              extraContent={
-                settings.dataset.enabled && (
-                  <div className="mt-2 flex items-start gap-2">
+          <AssetCard
+            icon={<img src="/meta-color.svg" alt="Meta" className="h-5 w-5" />}
+            label="Page"
+            description={
+              settings.page.limitPermissions
+                ? 'Requests only the selected page permissions.'
+                : 'Requests the full default page permission set.'
+            }
+            enabled={settings.page.enabled}
+            onToggle={(val) => updateSetting('page', 'enabled', val)}
+            extraContent={
+              settings.page.enabled ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (!settings.page.limitPermissions) {
+                      setIsPermissionsModalOpen(true);
+                      return;
+                    }
+
+                    updateSetting('page', 'limitPermissions', false);
+                    updateSetting('page', 'selectedPermissions', undefined);
+                  }}
+                  className="justify-start px-0 text-coral hover:bg-transparent hover:text-coral"
+                >
+                  {settings.page.limitPermissions ? 'Allow all permissions' : 'Limit permissions'}
+                </Button>
+              ) : null
+            }
+          />
+
+          <AssetCard
+            icon={<img src="/meta-color.svg" alt="Meta" className="h-5 w-5" />}
+            label="Catalog"
+            description="Enable catalog access for product and commerce workflows."
+            enabled={settings.catalog.enabled}
+            onToggle={(val) => updateSetting('catalog', 'enabled', val)}
+          />
+
+          <AssetCard
+            icon={<img src="/meta-color.svg" alt="Meta" className="h-5 w-5" />}
+            label="Dataset"
+            description="Request dataset access when your reporting or conversion workflows depend on it."
+            enabled={settings.dataset.enabled}
+            onToggle={(val) => updateSetting('dataset', 'enabled', val)}
+            extraContent={
+              settings.dataset.enabled ? (
+                <ManageAssetsStatusPanel
+                  label="Optional escalation"
+                  title="Request full Dataset access"
+                  description="Enable this only when your agency needs full dataset control inside the selected Business Portfolio."
+                >
+                  <label htmlFor="dataset-full-access" className="flex items-start gap-3 text-sm text-foreground">
                     <input
                       type="checkbox"
                       id="dataset-full-access"
                       checked={settings.dataset.requestFullAccess}
                       onChange={(e) => updateSetting('dataset', 'requestFullAccess', e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                      className="mt-0.5 h-4 w-4 rounded border-border text-coral focus:ring-coral"
                     />
-                    <div className="flex-1">
-                      <label htmlFor="dataset-full-access" className="text-xs text-slate-700 cursor-pointer flex items-center gap-1">
-                        Request full Dataset access
-                        <Info className="h-3 w-3 text-slate-400" />
-                      </label>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Enable setting to request full Dataset access within your Business Portfolio
-                      </p>
-                    </div>
-                  </div>
-                )
-              }
-            />
+                    <span className="flex items-center gap-2">
+                      Enable full Dataset access
+                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                  </label>
+                </ManageAssetsStatusPanel>
+              ) : null
+            }
+          />
 
-            {/* Instagram Account */}
-            <AssetCard
-              icon={
-                <img
-                  src="/meta-color.svg"
-                  alt="Meta"
-                  className="w-5 h-5"
-                />
-              }
-              label="Instagram Account"
-              enabled={settings.instagramAccount.enabled}
-              onToggle={(val) => updateSetting('instagramAccount', 'enabled', val)}
-              extraContent={
-                settings.instagramAccount.enabled && (
-                  <div className="mt-2 flex items-start gap-2">
+          <AssetCard
+            icon={<img src="/meta-color.svg" alt="Meta" className="h-5 w-5" />}
+            label="Instagram Account"
+            description="Only enable the highest Instagram access level for commerce-specific workflows."
+            enabled={settings.instagramAccount.enabled}
+            onToggle={(val) => updateSetting('instagramAccount', 'enabled', val)}
+            extraContent={
+              settings.instagramAccount.enabled ? (
+                <ManageAssetsStatusPanel
+                  label="High access request"
+                  title="Request full Instagram access"
+                  description="This increases the chance clients must manually complete Instagram sharing in Business Portfolio."
+                  tone="warning"
+                >
+                  <label htmlFor="instagram-full-access" className="flex items-start gap-3 text-sm text-foreground">
                     <input
                       type="checkbox"
                       id="instagram-full-access"
                       checked={settings.instagramAccount.requestFullAccess}
                       onChange={(e) => updateSetting('instagramAccount', 'requestFullAccess', e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                      className="mt-0.5 h-4 w-4 rounded border-border text-coral focus:ring-coral"
                     />
-                    <div className="flex-1">
-                      <label htmlFor="instagram-full-access" className="text-xs text-slate-700 cursor-pointer flex items-center gap-1">
-                        Request full Instagram access
-                        <AlertTriangle className="h-3 w-3 text-amber-500" />
-                      </label>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                        This setting will force your clients to manually share Instagram access via their Business Portfolio. You don't need this access to run ads or post Instagram content. Getting this level of access is only required if you're running Instagram Commerce campaigns.{' '}
-                        <a href="#" className="text-indigo-600 hover:underline">More info</a>
-                      </p>
-                    </div>
-                  </div>
-                )
-              }
-            />
-          </div>
+                    <span className="flex items-center gap-2">
+                      Enable full Instagram access
+                      <AlertTriangle className="h-3.5 w-3.5 text-coral" />
+                    </span>
+                  </label>
+                </ManageAssetsStatusPanel>
+              ) : null
+            }
+          />
         </div>
-      )}
+      </ManageAssetsSectionCard>
 
       {/* Meta Page Permissions Modal */}
       <MetaPagePermissionsModal
@@ -537,33 +516,43 @@ export function MetaUnifiedSettings({ agencyId, onDisconnect }: MetaUnifiedSetti
 function AssetCard({
   icon,
   label,
+  description,
   enabled,
   onToggle,
   extraContent,
 }: {
   icon: React.ReactNode;
   label: string;
+  description: string;
   enabled: boolean;
   onToggle: (val: boolean) => void;
   extraContent?: React.ReactNode;
 }) {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${enabled ? 'bg-card border-slate-200' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 flex-1">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
-            className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-0.5"
-          />
-          <div className="flex items-center gap-2 text-slate-400">
-            {icon}
+    <div
+      className={cn(
+        'rounded-[1rem] border p-4 transition-all',
+        enabled ? 'border-black bg-card shadow-brutalist-sm' : 'border-border bg-paper/80 opacity-75'
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => onToggle(e.target.checked)}
+          className="mt-1 h-5 w-5 rounded border-border text-coral focus:ring-coral"
+        />
+        <div className="flex-1">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-paper text-muted-foreground">
+              {icon}
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-ink">{label}</p>
+              <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <span className="text-sm font-medium text-slate-900">{label}</span>
-            {extraContent}
-          </div>
+          {extraContent ? <div className="mt-4 border-t border-border pt-4">{extraContent}</div> : null}
         </div>
       </div>
     </div>

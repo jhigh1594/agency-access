@@ -131,6 +131,8 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Prefer atomic commits; when multiple logical changes exist, ask user to choose scope (e.g. A/B/C options) rather than committing everything
 
 ## Learned Workspace Facts
+- Blog posts live in apps/web/content/blog/*.md (one Markdown file per post with YAML frontmatter); blog-data.ts loads from these files
+- Comparison/alternatives pages are defined in apps/web/src/lib/comparison-data.ts, not in content/
 - Skip when committing: next-env.d.ts (auto-generated), __pycache__, .serena, .worktrees
 - gws auth setup requires gcloud; use manual OAuth (Cloud Console → Desktop app client → ~/.config/gws/client_secret.json) when gcloud is not installed
 - When Cursor is slow in this repo: ensure .cursorignore excludes node_modules, .next, .agents, .claude, .codex, .aipmos (skills still load by path; node_modules should never be indexed)

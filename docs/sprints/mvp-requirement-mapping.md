@@ -1,5 +1,27 @@
 # MVP Requirement Mapping: Client Request Workflow
 
+## Connections Manage Assets Modal Revamp (2026-03-15)
+
+### Requirement 1: Connections `Manage Assets` modals must share a coherent brutalist shell
+- Meta and Google should feel like part of the same product system through a shared header, summary, scroll, and footer contract without flattening their internal workflows.
+- Mapped tasks: `MAMR-010`, `MAMR-011`, `MAMR-020`, `MAMR-021`, `MAMR-022`
+
+### Requirement 2: The modal revamp must improve scanability and lightweight task flow without changing core behavior
+- Users should be able to understand current configuration state faster through clearer hierarchy, summary framing, warnings, and stable footer affordances while existing autosave and selection logic remain intact.
+- Mapped tasks: `MAMR-010`, `MAMR-021`, `MAMR-030`, `MAMR-031`, `MAMR-032`, `MAMR-033`
+
+### Requirement 3: Meta and Google must keep platform-specific internal structure inside the shared shell
+- Meta should foreground the stored Business Portfolio and asset permission controls, while Google should retain a readable product/account matrix with upgraded utility controls and warning states.
+- Mapped tasks: `MAMR-030`, `MAMR-031`, `MAMR-032`, `MAMR-033`
+
+### Requirement 4: Nested Meta permissions treatment must align with the parent modal system
+- The child permissions modal should feel visually related to the new shell and token system without changing permission-selection semantics.
+- Mapped tasks: `MAMR-040`, `MAMR-041`
+
+### Requirement 5: Delivery requires enforceable design coverage and screenshot-backed verification
+- Touched modal surfaces must remain on semantic tokens, pass focused design and behavior tests, and ship with desktop/mobile browser evidence for parent and nested modal states.
+- Mapped tasks: `MAMR-002`, `MAMR-020`, `MAMR-022`, `MAMR-042`, `MAMR-043`
+
 ## Meta OBO Client Access Refactor (2026-03-11)
 
 ### Requirement 1: Agency owners must see all client-relevant Meta Business Portfolios during setup and invite fulfillment

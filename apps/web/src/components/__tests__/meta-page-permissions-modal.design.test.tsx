@@ -48,6 +48,27 @@ describe('PagePermissionModal - Static Design Validation', () => {
 
       expect(componentCode).not.toContain('indigo-');
     });
+
+    it('should not contain gray colors', () => {
+      const fs = require('fs');
+      const componentCode = fs.readFileSync(
+        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'utf-8'
+      );
+
+      expect(componentCode).not.toContain('gray-');
+    });
+
+    it('should use LazyMotion-safe m components instead of motion components', () => {
+      const fs = require('fs');
+      const componentCode = fs.readFileSync(
+        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'utf-8'
+      );
+
+      expect(componentCode).toContain('import { m, AnimatePresence }');
+      expect(componentCode).not.toContain('<motion.div');
+    });
   });
 
   describe('Component uses brutalist styling', () => {

@@ -132,17 +132,17 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       expect(typeof PLATFORM_HIERARCHY).toBe('object');
     });
 
-    it('should have Google platform group with 8 products', () => {
+    it('should have Google platform group with 6 supported products', () => {
       expect(PLATFORM_HIERARCHY.google).toBeDefined();
       expect(PLATFORM_HIERARCHY.google.name).toBe('Google');
       expect(PLATFORM_HIERARCHY.google.products).toBeDefined();
-      expect(PLATFORM_HIERARCHY.google.products.length).toBeGreaterThanOrEqual(8);
+      expect(PLATFORM_HIERARCHY.google.products).toHaveLength(6);
     });
 
     it('should have Meta platform group with 3 products', () => {
       expect(PLATFORM_HIERARCHY.meta).toBeDefined();
       expect(PLATFORM_HIERARCHY.meta.name).toBe('Meta');
-      expect(PLATFORM_HIERARCHY.meta.products.length).toBeGreaterThanOrEqual(3);
+      expect(PLATFORM_HIERARCHY.meta.products).toHaveLength(3);
     });
 
     it('should have LinkedIn platform group', () => {
@@ -204,9 +204,16 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       expect(instagram).toBeDefined();
     });
 
-    it('should include WhatsApp Business product', () => {
-      const whatsapp = PLATFORM_HIERARCHY.meta.products.find(p => p.id === 'whatsapp_business');
-      expect(whatsapp).toBeDefined();
+    it('should include Meta Pages product', () => {
+      const metaPages = PLATFORM_HIERARCHY.meta.products.find(p => p.id === 'meta_pages');
+      expect(metaPages).toBeDefined();
+      expect(metaPages?.name).toBe('Meta Pages');
+    });
+
+    it('should not include unsupported Google or Meta products', () => {
+      expect(PLATFORM_HIERARCHY.google.products.find(p => p.id === 'youtube_studio')).toBeUndefined();
+      expect(PLATFORM_HIERARCHY.google.products.find(p => p.id === 'display_video_360')).toBeUndefined();
+      expect(PLATFORM_HIERARCHY.meta.products.find(p => p.id === 'whatsapp_business')).toBeUndefined();
     });
   });
 

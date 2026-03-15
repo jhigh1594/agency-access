@@ -8,13 +8,11 @@ import {
   GoogleAccountsResponse
 } from '@agency-platform/shared';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
-import { PlatformIcon } from './ui/platform-icon';
+import { ManageAssetsSectionCard, ManageAssetsStatusPanel } from './manage-assets-ui';
 import { Button } from './ui/button';
 import { 
   Loader2, 
-  ChevronUp,
   ChevronDown,
-  Trash2,
   AlertCircle,
   Info,
   CircleDollarSign,
@@ -24,16 +22,15 @@ import {
   Search,
   ShoppingBag
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface GoogleUnifiedSettingsProps {
   agencyId: string;
-  onDisconnect?: () => void;
 }
 
-export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedSettingsProps) {
+export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
-  const [isExpanded, setIsExpanded] = useState(true);
   const [settings, setSettings] = useState<GoogleAssetSettings | null>(null);
 
   // Fetch all Google accounts across products
@@ -177,6 +174,13 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
   const productSummary = enabledProducts.length > 0 
     ? `${enabledProducts[0]}${enabledProducts.length > 1 ? `, +${enabledProducts.length - 1}` : ''}`
     : 'No products';
+  const accountInventoryCount =
+    (accountsData?.adsAccounts?.length || 0) +
+    (accountsData?.analyticsProperties?.length || 0) +
+    (accountsData?.businessAccounts?.length || 0) +
+    (accountsData?.tagManagerContainers?.length || 0) +
+    (accountsData?.searchConsoleSites?.length || 0) +
+    (accountsData?.merchantCenterAccounts?.length || 0);
 
   const updateSetting = (key: keyof GoogleAssetSettings, field: string, value: any) => {
     const newSettings = {
@@ -213,42 +217,52 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
     saveAccount({ product, accountId, accountName });
   };
 
-  return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="bg-card rounded p-1 border border-border">
-            <PlatformIcon platform="google" size="sm" />
-          </div>
-          <span className="font-medium text-ink">Google {productSummary}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-muted/10 rounded transition-colors"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
-            )}
-          </button>
-          {onDisconnect && (
-            <button
-              onClick={onDisconnect}
-              className="p-1 hover:bg-coral/10 rounded transition-colors"
-            >
-              <Trash2 className="h-5 w-5 text-coral" />
-            </button>
-          )}
-        </div>
-      </div>
+  const hasActiveGoogleAdsSelection = Boolean(
+    settings.googleAds.accountId &&
+      (accountsData?.adsAccounts || []).some((account) => account.id === settings.googleAds.accountId)
+  );
+  const staleGoogleAdsAccountId =
+    settings.googleAds.accountId && !hasActiveGoogleAdsSelection
+      ? settings.googleAds.accountId
+      : null;
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-end gap-2">
+  return (
+    <div className="space-y-6">
+      <ManageAssetsSectionCard
+        eyebrow="Configuration overview"
+        title="Current Google setup"
+        description="Use this snapshot to confirm which Google products are active before you adjust product-level access."
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <ManageAssetsStatusPanel
+            label="Active products"
+            title={`${enabledProducts.length} active product${enabledProducts.length === 1 ? '' : 's'}`}
+            description={productSummary}
+          />
+          <ManageAssetsStatusPanel
+            label="Discovered inventory"
+            title={`${accountInventoryCount} available account${accountInventoryCount === 1 ? '' : 's'}`}
+            description="Accounts and properties discovered from the latest Google refresh."
+          />
+          <ManageAssetsStatusPanel
+            label="Selection health"
+            title={staleGoogleAdsAccountId ? 'Needs attention' : 'Selections in sync'}
+            description={
+              staleGoogleAdsAccountId
+                ? 'A saved Google Ads selection is stale and should be replaced.'
+                : 'Saved selections still match the available Google inventory.'
+            }
+            tone={staleGoogleAdsAccountId ? 'warning' : 'default'}
+          />
+        </div>
+      </ManageAssetsSectionCard>
+
+      <ManageAssetsSectionCard
+        eyebrow="Product controls"
+        title="Google products"
+        description="Enable the products your agency actually uses, then map each one to the correct account or property."
+        actions={
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="secondary"
@@ -268,97 +282,102 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
               Deselect all
             </Button>
           </div>
+        }
+      >
+        <div className="space-y-4">
+          <ProductCard
+            icon={<CircleDollarSign className="h-5 w-5 text-muted-foreground" />}
+            label="Google Ads Account"
+            description="Map delegated access to the active Google Ads account your agency will manage."
+            enabled={settings.googleAds.enabled}
+            onToggle={(val) => updateSetting('googleAds', 'enabled', val)}
+            accounts={accountsData?.adsAccounts || []}
+            selectedId={hasActiveGoogleAdsSelection ? settings.googleAds.accountId : undefined}
+            onAccountSelect={(id, name) => handleAccountSelect('googleAds', id, name)}
+            placeholder="Select Ads Account..."
+            warningMessage={
+              staleGoogleAdsAccountId
+                ? `Previously selected Google Ads account is no longer active and must be replaced before you send a new request. Saved account ID: ${staleGoogleAdsAccountId}`
+                : undefined
+            }
+          />
 
-          <div className="space-y-4">
-            {/* Google Ads */}
-            <ProductCard
-              icon={<CircleDollarSign className="w-5 h-5 text-muted-foreground" />}
-              label="Google Ads Account"
-              enabled={settings.googleAds.enabled}
-              onToggle={(val) => updateSetting('googleAds', 'enabled', val)}
-              accounts={accountsData?.adsAccounts || []}
-              selectedId={settings.googleAds.accountId}
-              onAccountSelect={(id, name) => handleAccountSelect('googleAds', id, name)}
-              placeholder="Select Ads Account..."
-            />
+          <ProductCard
+            icon={<BarChart3 className="h-5 w-5 text-muted-foreground" />}
+            label="Google Analytics Account"
+            description="Connect the GA4 property your team needs for reporting and measurement."
+            enabled={settings.googleAnalytics.enabled}
+            onToggle={(val) => updateSetting('googleAnalytics', 'enabled', val)}
+            accounts={accountsData?.analyticsProperties || []}
+            selectedId={settings.googleAnalytics.propertyId}
+            onAccountSelect={(id, name) => handleAccountSelect('googleAnalytics', id, name)}
+            placeholder="Select GA4 Property..."
+            requestManageUsers={settings.googleAnalytics.requestManageUsers}
+            onRequestManageUsersToggle={(val) => updateSetting('googleAnalytics', 'requestManageUsers', val)}
+            tooltip="Enable setting to request Administrator access (instead of Editor access)"
+          />
 
-            {/* Google Analytics */}
-            <ProductCard
-              icon={<BarChart3 className="w-5 h-5 text-muted-foreground" />}
-              label="Google Analytics Account"
-              enabled={settings.googleAnalytics.enabled}
-              onToggle={(val) => updateSetting('googleAnalytics', 'enabled', val)}
-              accounts={accountsData?.analyticsProperties || []}
-              selectedId={settings.googleAnalytics.propertyId}
-              onAccountSelect={(id, name) => handleAccountSelect('googleAnalytics', id, name)}
-              placeholder="Select GA4 Property..."
-              requestManageUsers={settings.googleAnalytics.requestManageUsers}
-              onRequestManageUsersToggle={(val) => updateSetting('googleAnalytics', 'requestManageUsers', val)}
-              tooltip="Enable setting to request Administrator access (instead of Editor access)"
-            />
+          <ProductCard
+            icon={<MapPin className="h-5 w-5 text-muted-foreground" />}
+            label="Google Business Profile Location"
+            description="Choose the location your agency needs to manage in Business Profile."
+            enabled={settings.googleBusinessProfile.enabled}
+            onToggle={(val) => updateSetting('googleBusinessProfile', 'enabled', val)}
+            accounts={accountsData?.businessAccounts || []}
+            selectedId={settings.googleBusinessProfile.locationId}
+            onAccountSelect={(id, name) => handleAccountSelect('googleBusinessProfile', id, name)}
+            placeholder="Select Business Location..."
+            requestManageUsers={settings.googleBusinessProfile.requestManageUsers}
+            onRequestManageUsersToggle={(val) => updateSetting('googleBusinessProfile', 'requestManageUsers', val)}
+            tooltip="Enable setting to request Owner access (instead of Manager access)"
+          />
 
-            {/* Google Business Profile */}
-            <ProductCard
-              icon={<MapPin className="w-5 h-5 text-muted-foreground" />}
-              label="Google Business Profile Location"
-              enabled={settings.googleBusinessProfile.enabled}
-              onToggle={(val) => updateSetting('googleBusinessProfile', 'enabled', val)}
-              accounts={accountsData?.businessAccounts || []}
-              selectedId={settings.googleBusinessProfile.locationId}
-              onAccountSelect={(id, name) => handleAccountSelect('googleBusinessProfile', id, name)}
-              placeholder="Select Business Location..."
-              requestManageUsers={settings.googleBusinessProfile.requestManageUsers}
-              onRequestManageUsersToggle={(val) => updateSetting('googleBusinessProfile', 'requestManageUsers', val)}
-              tooltip="Enable setting to request Owner access (instead of Manager access)"
-            />
+          <ProductCard
+            icon={<Tags className="h-5 w-5 text-muted-foreground" />}
+            label="Google Tag Manager"
+            description="Choose the GTM container your agency should maintain."
+            enabled={settings.googleTagManager.enabled}
+            onToggle={(val) => updateSetting('googleTagManager', 'enabled', val)}
+            accounts={accountsData?.tagManagerContainers || []}
+            selectedId={settings.googleTagManager.containerId}
+            onAccountSelect={(id, name) => handleAccountSelect('googleTagManager', id, name)}
+            placeholder="Select TGM Container..."
+            requestManageUsers={settings.googleTagManager.requestManageUsers}
+            onRequestManageUsersToggle={(val) => updateSetting('googleTagManager', 'requestManageUsers', val)}
+            tooltip="Enable setting to request Administrator access (instead of User access)"
+          />
 
-            {/* Google Tag Manager */}
-            <ProductCard
-              icon={<Tags className="w-5 h-5 text-muted-foreground" />}
-              label="Google Tag Manager"
-              enabled={settings.googleTagManager.enabled}
-              onToggle={(val) => updateSetting('googleTagManager', 'enabled', val)}
-              accounts={accountsData?.tagManagerContainers || []}
-              selectedId={settings.googleTagManager.containerId}
-              onAccountSelect={(id, name) => handleAccountSelect('googleTagManager', id, name)}
-              placeholder="Select TGM Container..."
-              requestManageUsers={settings.googleTagManager.requestManageUsers}
-              onRequestManageUsersToggle={(val) => updateSetting('googleTagManager', 'requestManageUsers', val)}
-              tooltip="Enable setting to request Administrator access (instead of User access)"
-            />
+          <ProductCard
+            icon={<Search className="h-5 w-5 text-muted-foreground" />}
+            label="Google Search Console"
+            description="Map Search Console access to the site your agency monitors."
+            enabled={settings.googleSearchConsole.enabled}
+            onToggle={(val) => updateSetting('googleSearchConsole', 'enabled', val)}
+            accounts={accountsData?.searchConsoleSites || []}
+            selectedId={settings.googleSearchConsole.siteUrl}
+            onAccountSelect={(id, name) => handleAccountSelect('googleSearchConsole', id, name)}
+            placeholder="Select Search Console Site..."
+            requestManageUsers={settings.googleSearchConsole.requestManageUsers}
+            onRequestManageUsersToggle={(val) => updateSetting('googleSearchConsole', 'requestManageUsers', val)}
+            tooltip="Enable setting to request Owner access (instead of Full access)"
+          />
 
-            {/* Google Search Console */}
-            <ProductCard
-              icon={<Search className="w-5 h-5 text-muted-foreground" />}
-              label="Google Search Console"
-              enabled={settings.googleSearchConsole.enabled}
-              onToggle={(val) => updateSetting('googleSearchConsole', 'enabled', val)}
-              accounts={accountsData?.searchConsoleSites || []}
-              selectedId={settings.googleSearchConsole.siteUrl}
-              onAccountSelect={(id, name) => handleAccountSelect('googleSearchConsole', id, name)}
-              placeholder="Select Search Console Site..."
-              requestManageUsers={settings.googleSearchConsole.requestManageUsers}
-              onRequestManageUsersToggle={(val) => updateSetting('googleSearchConsole', 'requestManageUsers', val)}
-              tooltip="Enable setting to request Owner access (instead of Full access)"
-            />
-
-            {/* Google Merchant Center */}
-            <ProductCard
-              icon={<ShoppingBag className="w-5 h-5 text-coral" />}
-              label="Google Merchant Center"
-              enabled={settings.googleMerchantCenter.enabled}
-              onToggle={(val) => updateSetting('googleMerchantCenter', 'enabled', val)}
-              accounts={accountsData?.merchantCenterAccounts || []}
-              selectedId={settings.googleMerchantCenter.accountId}
-              onAccountSelect={(id, name) => handleAccountSelect('googleMerchantCenter', id, name)}
-              placeholder="Select Merchant Account..."
-              requestManageUsers={settings.googleMerchantCenter.requestManageUsers}
-              onRequestManageUsersToggle={(val) => updateSetting('googleMerchantCenter', 'requestManageUsers', val)}
-              tooltip="Enable setting to request Super Admin access (instead of Standard access)"
-            />
-          </div>
+          <ProductCard
+            icon={<ShoppingBag className="h-5 w-5 text-coral" />}
+            label="Google Merchant Center"
+            description="Connect the Merchant Center account used for shopping feeds and commerce operations."
+            enabled={settings.googleMerchantCenter.enabled}
+            onToggle={(val) => updateSetting('googleMerchantCenter', 'enabled', val)}
+            accounts={accountsData?.merchantCenterAccounts || []}
+            selectedId={settings.googleMerchantCenter.accountId}
+            onAccountSelect={(id, name) => handleAccountSelect('googleMerchantCenter', id, name)}
+            placeholder="Select Merchant Account..."
+            requestManageUsers={settings.googleMerchantCenter.requestManageUsers}
+            onRequestManageUsersToggle={(val) => updateSetting('googleMerchantCenter', 'requestManageUsers', val)}
+            tooltip="Enable setting to request Super Admin access (instead of Standard access)"
+          />
         </div>
-      )}
+      </ManageAssetsSectionCard>
     </div>
   );
 }
@@ -366,6 +385,7 @@ export function GoogleUnifiedSettings({ agencyId, onDisconnect }: GoogleUnifiedS
 interface ProductCardProps {
   icon: React.ReactNode;
   label: string;
+  description: string;
   enabled: boolean;
   onToggle: (val: boolean) => void;
   accounts: any[];
@@ -375,6 +395,7 @@ interface ProductCardProps {
   requestManageUsers?: boolean;
   onRequestManageUsersToggle?: (val: boolean) => void;
   tooltip?: string;
+  warningMessage?: string;
 }
 
 function getAccountDisplayName(account: any): string {
@@ -407,6 +428,7 @@ function getAccountOptionLabel(account: any): string {
 function ProductCard({
   icon,
   label,
+  description,
   enabled,
   onToggle,
   accounts,
@@ -416,21 +438,32 @@ function ProductCard({
   requestManageUsers,
   onRequestManageUsersToggle,
   tooltip,
+  warningMessage,
 }: ProductCardProps) {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${enabled ? 'bg-card border-border' : 'bg-muted/10 border-border opacity-60'}`}>
+    <div
+      className={cn(
+        'rounded-[1rem] border p-4 transition-all',
+        enabled ? 'border-black bg-card shadow-brutalist-sm' : 'border-border bg-paper/80 opacity-75'
+      )}
+    >
       <div className="flex items-start gap-3">
         <input
           type="checkbox"
           checked={enabled}
           onChange={(e) => onToggle(e.target.checked)}
           aria-label={`Enable ${label}`}
-          className="h-5 w-5 rounded border-border text-coral focus:ring-coral cursor-pointer mt-0.5"
+          className="mt-1 h-5 w-5 rounded border-border text-coral focus:ring-coral"
         />
-        <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-2">
-            {icon}
-            <span className="text-sm font-medium text-ink">{label}</span>
+        <div className="flex-1 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-paper">
+              {icon}
+            </div>
+            <div className="space-y-1">
+              <span className="block text-sm font-semibold text-ink">{label}</span>
+              <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
           </div>
 
           {enabled && (
@@ -459,17 +492,27 @@ function ProductCard({
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
 
+              {warningMessage && (
+                <ManageAssetsStatusPanel
+                  label="Selection warning"
+                  title="Saved account needs replacement"
+                  description={warningMessage}
+                  tone="warning"
+                />
+              )}
+
               {onRequestManageUsersToggle && (
-                <div className="flex items-start gap-2">
+                <div className="rounded-[1rem] border border-border bg-paper px-3 py-3">
+                  <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
                     id={`manage-users-${label}`}
                     checked={requestManageUsers || false}
                     onChange={(e) => onRequestManageUsersToggle(e.target.checked)}
-                    className="h-4 w-4 rounded border-border text-coral focus:ring-coral mt-0.5"
+                    className="mt-0.5 h-4 w-4 rounded border-border text-coral focus:ring-coral"
                   />
                   <div className="flex-1">
-                    <label htmlFor={`manage-users-${label}`} className="text-xs text-foreground cursor-pointer flex items-center gap-1">
+                    <label htmlFor={`manage-users-${label}`} className="flex items-center gap-1 text-xs text-foreground">
                       Request permission to manage users
                       {tooltip && (
                         <div className="group relative">
@@ -481,6 +524,7 @@ function ProductCard({
                       )}
                     </label>
                   </div>
+                </div>
                 </div>
               )}
             </div>

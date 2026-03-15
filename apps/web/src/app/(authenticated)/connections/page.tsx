@@ -12,17 +12,21 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import posthog from 'posthog-js';
 import { PlatformCard, Button, EmptyState } from '@/components/ui';
 import { Platform, PlatformInfo } from '@agency-platform/shared';
 import { MetaUnifiedSettings } from '@/components/meta-unified-settings';
 import { GoogleUnifiedSettings } from '@/components/google-unified-settings';
+import { ManageAssetsModalShell } from '@/components/manage-assets-modal-shell';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
-import { m, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useAuthOrBypass } from '@/lib/dev-auth';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
+import { readPerfHarnessContext } from '@/lib/perf-harness';
+
+const DEV_BYPASS_TOKEN = 'dev-bypass-token';
 
 function ConnectionsPageContent() {
   const router = useRouter();
@@ -45,8 +49,22 @@ function ConnectionsPageContent() {
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [currentEmail, setCurrentEmail] = useState<string>('');
+  const perfHarness = useMemo(() => readPerfHarnessContext(), []);
 
-  const principalClerkId = orgId || userId;
+  const principalClerkId = (isDevelopmentBypass ? perfHarness?.principalId : null) || orgId || userId;
+
+  const getAuthToken = async (): Promise<string | null> => {
+    const token = await getToken();
+    if (token) {
+      return token;
+    }
+
+    if (isDevelopmentBypass) {
+      return perfHarness?.token || DEV_BYPASS_TOKEN;
+    }
+
+    return null;
+  };
 
   const { data: agencyData } = useQuery({
     queryKey: ['user-agency', principalClerkId],
@@ -56,7 +74,7 @@ function ConnectionsPageContent() {
       }
 
       // Get Clerk session token for authenticated request
-      const token = isDevelopmentBypass ? null : await getToken();
+      const token = await getAuthToken();
 
       // Resolve the active principal's agency by clerk user/org id.
       const response = await fetch(
@@ -136,7 +154,7 @@ function ConnectionsPageContent() {
       if (!agencyId) return [];
 
       // Get Clerk session token for authenticated request
-      const token = isDevelopmentBypass ? null : await getToken();
+      const token = await getAuthToken();
 
       // Get stored ETag from previous request
       const etagKey = `etag-available-platforms-${agencyId}`;
@@ -200,7 +218,7 @@ function ConnectionsPageContent() {
       setConnectingPlatform(platform);
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
-      const token = isDevelopmentBypass ? null : await getToken();
+      const token = await getAuthToken();
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/initiate`,
@@ -245,7 +263,7 @@ function ConnectionsPageContent() {
       setDisconnectingPlatform(platform);
 
       const userEmail = user?.primaryEmailAddress?.emailAddress || 'user@agency.com';
-      const token = isDevelopmentBypass ? null : await getToken();
+      const token = await getAuthToken();
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,
@@ -348,7 +366,7 @@ function ConnectionsPageContent() {
       await finalizeMetaBusinessLogin({
         agencyId,
         userEmail,
-        getToken: async () => (isDevelopmentBypass ? null : await getToken()),
+        getToken: getAuthToken,
         authPayload,
       });
 
@@ -495,6 +513,7 @@ function ConnectionsPageContent() {
                 <PlatformCard
                   key={platformInfo.platform}
                   platform={platformInfo.platform as Platform}
+                  variant="other"
                   connected={platformInfo.connected}
                   connectedEmail={platformInfo.connectedEmail}
                   status={platformInfo.status}
@@ -515,86 +534,36 @@ function ConnectionsPageContent() {
       {/* Meta Unified Settings Modal */}
       <AnimatePresence>
         {managingMetaAssets && agencyId && platforms.some(p => p.platform === 'meta' && p.connected) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setManagingMetaAssets(false)}
-              className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
-            />
-            <m.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative bg-card rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-            >
-              <div className="flex items-center justify-between p-6 border-b border-border bg-paper">
-                <h2 className="text-xl font-bold text-ink font-display">Meta Connection Settings</h2>
-                <button
-                  onClick={() => setManagingMetaAssets(false)}
-                  aria-label="Close modal"
-                  className="p-2 hover:bg-electric/10 rounded-full transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6">
-                <MetaUnifiedSettings 
-                  agencyId={agencyId}
-                  onDisconnect={() => {
-                    setManagingMetaAssets(false);
-                    disconnectPlatform('meta');
-                  }}
-                />
-              </div>
-            </m.div>
-          </div>
+          <ManageAssetsModalShell
+            isOpen={managingMetaAssets}
+            title="Meta connection settings"
+            description="Control the Business Portfolio and Meta asset types your agency uses when managing delegated access."
+            onClose={() => setManagingMetaAssets(false)}
+            onDisconnect={() => {
+              setManagingMetaAssets(false);
+              disconnectPlatform('meta');
+            }}
+          >
+            <MetaUnifiedSettings agencyId={agencyId} />
+          </ManageAssetsModalShell>
         )}
       </AnimatePresence>
 
       {/* Google Unified Settings Modal */}
       <AnimatePresence>
         {managingGoogleAssets && agencyId && platforms.some(p => p.platform === 'google' && p.connected) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setManagingGoogleAssets(false)}
-              className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
-            />
-            <m.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative bg-card rounded-lg shadow-brutalist-lg border-2 border-black w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-            >
-              <div className="flex items-center justify-between p-6 border-b border-border bg-paper">
-                <h2 className="text-xl font-bold text-ink font-display">Google Connection Settings</h2>
-                <button
-                  onClick={() => setManagingGoogleAssets(false)}
-                  aria-label="Close modal"
-                  className="p-2 hover:bg-electric/10 rounded-full transition-colors text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6">
-                <GoogleUnifiedSettings 
-                  agencyId={agencyId}
-                  onDisconnect={() => {
-                    setManagingGoogleAssets(false);
-                    disconnectPlatform('google');
-                  }}
-                />
-              </div>
-            </m.div>
-          </div>
+          <ManageAssetsModalShell
+            isOpen={managingGoogleAssets}
+            title="Google connection settings"
+            description="Choose which Google products and accounts are active for delegated access requests."
+            onClose={() => setManagingGoogleAssets(false)}
+            onDisconnect={() => {
+              setManagingGoogleAssets(false);
+              disconnectPlatform('google');
+            }}
+          >
+            <GoogleUnifiedSettings agencyId={agencyId} />
+          </ManageAssetsModalShell>
         )}
       </AnimatePresence>
 

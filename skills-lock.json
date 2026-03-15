@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "find-keywords": {
+      "source": "calm-north/seojuice-skills",
+      "sourceType": "github",
+      "computedHash": "57ee45205794397994320374741794bf8863419ec92e549fa56279ef871b8e53"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",

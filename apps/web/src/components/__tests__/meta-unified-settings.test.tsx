@@ -245,9 +245,44 @@ describe('MetaUnifiedSettings', () => {
       expect(screen.getByText(/failed to fetch meta business accounts/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/showing last synced portfolios/i)).toBeInTheDocument();
+    expect(await screen.findByText(/showing the last synced portfolios/i)).toBeInTheDocument();
     expect(screen.getByRole('combobox')).toHaveValue('biz_1');
     expect(screen.getByRole('option', { name: /Business One \(biz_1\)/ })).toBeInTheDocument();
+  });
+
+  it('renders a configuration overview with the active portfolio and enabled asset count', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes('/agency-platforms/meta/business-accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              businesses: [{ id: 'biz_1', name: 'Business One' }],
+            },
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/agency-platforms/meta/asset-settings')) {
+        return buildSettingsResponse();
+      }
+
+      if (url.includes('/agency-platforms/available')) {
+        return buildConnectionResponse();
+      }
+
+      return { ok: true, json: async () => ({ data: null }) } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithQueryClient(<MetaUnifiedSettings agencyId="agency-1" />);
+
+    expect(await screen.findByText(/configuration overview/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/business one/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/5 enabled asset types/i)).toBeInTheDocument();
   });
 
   it('lets the user log in again to refresh the portfolio snapshot from Meta', async () => {

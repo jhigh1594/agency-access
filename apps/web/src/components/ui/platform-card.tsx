@@ -15,7 +15,7 @@ interface PlatformCardProps {
   status?: string;
   isConnecting?: boolean;
   isDisconnecting?: boolean;
-  variant?: 'default' | 'featured';
+  variant?: 'default' | 'featured' | 'other';
   onConnect: (platform: Platform) => void;
   onDisconnect?: (platform: Platform) => void;
   onManageAssets?: (platform: Platform) => void;
@@ -48,8 +48,9 @@ export function PlatformCard({
   const isShopify = platform === 'shopify';
 
   const isFeatured = variant === 'featured';
-  const iconSize = isFeatured ? 'lg' : 'md';
-  const textClass = isFeatured ? 'text-lg' : 'text-base'; // Larger platform name for prominence
+  const isOther = variant === 'other';
+  const iconSize = isFeatured ? 'lg' : isOther ? 'lg' : 'md';
+  const textClass = isFeatured ? 'text-lg' : isOther ? 'text-lg' : 'text-base';
 
   const cardBaseClasses = cn(
     'clean-card bg-card rounded-xl h-full',
