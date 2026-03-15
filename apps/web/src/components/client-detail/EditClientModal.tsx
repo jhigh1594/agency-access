@@ -4,7 +4,7 @@
  * EditClientModal Component
  *
  * Modal form for editing client information.
- * Allows editing name, company, website, and language.
+ * Allows editing name, company, and website.
  * Email is read-only since it's the unique identifier.
  */
 
@@ -13,7 +13,6 @@ import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ClientLanguage } from '@agency-platform/shared';
 import { Button } from '@/components/ui';
 
 interface EditClientModalProps {
@@ -23,7 +22,6 @@ interface EditClientModalProps {
     company: string;
     email: string;
     website: string | null;
-    language: ClientLanguage;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -37,13 +35,12 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
   const [name, setName] = useState(client.name);
   const [company, setCompany] = useState(client.company);
   const [website, setWebsite] = useState(client.website || '');
-  const [language, setLanguage] = useState<ClientLanguage>(client.language as ClientLanguage);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   // Update client mutation
   const updateMutation = useMutation({
-    mutationFn: async (data: { name: string; company: string; website?: string; language: ClientLanguage }) => {
+    mutationFn: async (data: { name: string; company: string; website?: string }) => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${client.id}`, {
@@ -97,7 +94,6 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
       name: name.trim(),
       company: company.trim(),
       website: website.trim() || undefined,
-      language,
     });
   };
 
@@ -187,22 +183,6 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="https://example.com"
               />
-            </div>
-
-            {/* Language */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Language
-              </label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as ClientLanguage)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              >
-                <option value="en">🇬🇧 English</option>
-                <option value="es">🇪🇸 Español</option>
-                <option value="nl">🇳🇱 Nederlands</option>
-              </select>
             </div>
 
             {/* Error message */}

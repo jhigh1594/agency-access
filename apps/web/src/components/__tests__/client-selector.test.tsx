@@ -246,41 +246,6 @@ describe('Phase 5: ClientSelector - TDD Tests', () => {
     });
   });
 
-  describe('Language Selection', () => {
-    it('should show language selector in new client form', async () => {
-      const user = userEvent.setup();
-      render(<ClientSelector agencyId="agency-1" onSelect={vi.fn()} />);
-
-      await user.click(screen.getByRole('button', { name: /add new client/i }));
-
-      expect(screen.getByLabelText(/language/i)).toBeInTheDocument();
-    });
-
-    it('should default language to English', async () => {
-      const user = userEvent.setup();
-      render(<ClientSelector agencyId="agency-1" onSelect={vi.fn()} />);
-
-      await user.click(screen.getByRole('button', { name: /add new client/i }));
-
-      const languageSelect = screen.getByLabelText(/language/i);
-      expect(languageSelect).toHaveValue('en');
-    });
-
-    it('should support Spanish and Dutch languages', async () => {
-      const user = userEvent.setup();
-      render(<ClientSelector agencyId="agency-1" onSelect={vi.fn()} />);
-
-      await user.click(screen.getByRole('button', { name: /add new client/i }));
-
-      const languageSelect = screen.getByLabelText(/language/i);
-
-      // Check options
-      expect(within(languageSelect).getByRole('option', { name: /english/i })).toBeInTheDocument();
-      expect(within(languageSelect).getByRole('option', { name: /espa.*ol/i })).toBeInTheDocument();
-      expect(within(languageSelect).getByRole('option', { name: /nederlands/i })).toBeInTheDocument();
-    });
-  });
-
   describe('Accessibility', () => {
     it('should be keyboard navigable', async () => {
       const user = userEvent.setup();

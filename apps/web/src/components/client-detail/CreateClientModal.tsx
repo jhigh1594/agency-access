@@ -4,7 +4,7 @@
  * CreateClientModal Component
  *
  * Modal form for creating a new client.
- * Allows entering name, company, email, website, and language.
+ * Allows entering name, company, email, and website.
  */
 
 import { useState } from 'react';
@@ -12,7 +12,6 @@ import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, CheckCircle2, Plus } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ClientLanguage } from '@agency-platform/shared';
 import { getApiBaseUrl } from '@/lib/api/api-env';
 import { extractApiErrorMessage } from '@/lib/api/extract-error';
 
@@ -34,7 +33,6 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
-  const [language, setLanguage] = useState<ClientLanguage>('en');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -45,7 +43,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
       company: string;
       email: string;
       website?: string;
-      language: ClientLanguage;
+      language?: string;
     }) => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
@@ -113,7 +111,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
       company: company.trim(),
       email: email.trim().toLowerCase(),
       website: website.trim() || undefined,
-      language,
+      language: 'en',
     });
   };
 
@@ -210,23 +208,6 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
                 placeholder="https://example.com"
                 disabled={createMutation.isPending}
               />
-            </div>
-
-            {/* Language */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Language
-              </label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as ClientLanguage)}
-                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-acid focus:border-transparent"
-                disabled={createMutation.isPending}
-              >
-                <option value="en">🇬🇧 English</option>
-                <option value="es">🇪🸸 Español</option>
-                <option value="nl">🇳🇱 Nederlands</option>
-              </select>
             </div>
 
             {/* Error message */}

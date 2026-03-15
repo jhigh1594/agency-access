@@ -10,16 +10,10 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, X, Loader2, AlertCircle, Check, Globe } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
-import { Client, ClientLanguage } from '@agency-platform/shared';
+import { Client } from '@agency-platform/shared';
 import { useAuthOrBypass } from '@/lib/dev-auth';
 import { getApiBaseUrl } from '@/lib/api/api-env';
 import { extractMessageFromBody } from '@/lib/api/extract-error';
-
-const SUPPORTED_LANGUAGES: Record<ClientLanguage, { name: string; flag: string }> = {
-  en: { name: 'English', flag: '🇬🇧' },
-  es: { name: 'Español', flag: '🇪🇸' },
-  nl: { name: 'Nederlands', flag: '🇳🇱' },
-};
 
 interface ClientSelectorProps {
   agencyId: string;
@@ -51,7 +45,6 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
     name: '',
     company: '',
     email: '',
-    language: 'en' as ClientLanguage,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
@@ -124,7 +117,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
           ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newClient),
+        body: JSON.stringify({ ...newClient, language: 'en' }),
       });
 
       if (!response.ok) {
@@ -143,7 +136,7 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
       // Handle both formats: { data: client } and direct client object
       const createdClient: Client = 'data' in json ? json.data : json;
       setActiveTab('existing'); // Switch back to existing tab
-      setNewClient({ name: '', company: '', email: '', language: 'en' });
+      setNewClient({ name: '', company: '', email: '' });
       onSelect(createdClient);
       loadClients(); // Refresh client list
     } catch (err) {
@@ -242,7 +235,6 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
             <div className="space-y-2" role="listbox" aria-label="Clients">
               {clients?.map((client) => {
                 const isSelected = value === client.id;
-                const languageInfo = client.language && SUPPORTED_LANGUAGES[client.language];
                 return (
                   <button
                     key={client.id}
@@ -263,11 +255,6 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                     </div>
                     {isSelected && (
                       <Check className="h-5 w-5 text-coral" />
-                    )}
-                    {languageInfo && client.language !== 'en' && (
-                      <span className="text-sm" title={languageInfo.name}>
-                        {languageInfo.flag}
-                      </span>
                     )}
                   </button>
                 );
@@ -367,28 +354,6 @@ export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProp
                   {formErrors.email}
                 </p>
               )}
-            </div>
-
-            {/* Language */}
-            <div>
-              <label htmlFor="client-language" className="block text-sm font-medium text-foreground mb-1.5">
-                <span className="flex items-center gap-1">
-                  <Globe className="h-4 w-4" />
-                  Language
-                </span>
-              </label>
-              <select
-                id="client-language"
-                value={newClient.language}
-                onChange={(e) => setNewClient({ ...newClient, language: e.target.value as ClientLanguage })}
-                className="w-full px-4 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-coral text-base"
-              >
-                {Object.entries(SUPPORTED_LANGUAGES).map(([code, { name, flag }]) => (
-                  <option key={code} value={code}>
-                    {flag} {name}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Actions */}
