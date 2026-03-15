@@ -44,12 +44,92 @@ jobs:
           echo "=== Existing Blog Slugs (do not duplicate) ===" >> /tmp/context.md
           ls -1 apps/web/content/blog/*.md 2>/dev/null | xargs -I {} basename {} .md | sort >> /tmp/context.md || echo "(none)" >> /tmp/context.md
 
+      - name: Pre-process blog content for patterns
+        id: analyze-content
+        run: |
+          python3 << 'PYTHON_ANALYZE'
+          import os
+          import re
+          from pathlib import Path
+
+          # Read existing blog posts
+          blog_dir = Path('apps/web/content/blog')
+          posts = []
+
+          for md_file in sorted(blog_dir.glob('*.md')):
+              with open(md_file, 'r') as f:
+                  content = f.read()
+
+              # Extract frontmatter
+              fm_match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
+              if fm_match:
+                  frontmatter = fm_match.group(1)
+                  category = None
+                  for line in frontmatter.split('\n'):
+                      if line.strip().startswith('category:'):
+                          category = line.split(':', 1)[1].strip().strip('"\'')
+                          break
+                  posts.append({
+                      'file': md_file.stem,
+                      'category': category or 'unknown'
+                  })
+
+          # Count by category
+          from collections import Counter
+          category_counts = Counter(p['category'] for p in posts)
+
+          # Generate pattern summary
+          print("=== BLOG CONTENT PATTERNS ===")
+          print(f"Total posts: {len(posts)}")
+          print(f"Categories: {dict(category_counts)}")
+          print(f"Recent posts: {[p['file'] for p in posts[-5:]]}")
+          print("\n=== STRUCTURE OBSERVATIONS ===")
+
+          # Read one example from each category for patterns
+          examples_by_category = {}
+          for post in posts:
+              cat = post['category']
+              if cat not in examples_by_category and cat != 'unknown':
+                  with open(blog_dir / f"{post['file']}.md", 'r') as f:
+                      examples_by_category[cat] = f.read()[:3000]  # First 3000 chars
+
+          for cat, content in examples_by_category.items():
+              print(f"\n## {cat.upper()} PATTERN:")
+              # Extract H2 headings
+              h2_matches = re.findall(r'^##\s+(.+)$', content, re.MULTILINE)
+              print(f"  H2 structure: {h2_matches[:5]}")
+
+          # Save to file for prompt injection
+          with open('/tmp/blog_patterns.md', 'w') as out:
+              out.write("# Blog Content Patterns\n\n")
+              out.write(f"Total posts: {len(posts)}\n")
+              out.write(f"Categories: {dict(category_counts)}\n\n")
+              out.write("## Recent Slugs (do not duplicate)\n")
+              for p in posts:
+                  out.write(f"- {p['file']}\n")
+              out.write("\n## Category Structures\n")
+              for cat, content in examples_by_category.items():
+                  out.write(f"\n### {cat}\n")
+                  h2_matches = re.findall(r'^##\s+(.+)$', content, re.MULTILINE)
+                  out.write(f"H2s: {h2_matches}\n")
+
+          print("✅ Blog patterns saved to /tmp/blog_patterns.md")
+          PYTHON_ANALYZE
+
       - name: Generate blog post with z.ai API
         id: generate
         run: |
-          echo "📖 Reading workflow prompt..."
-          PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
-          echo "✅ Workflow prompt read ($(echo "$PROMPT" | wc -c) characters)"
+          echo "📖 Reading workflow prompt and context files..."
+
+          # Build the embedded prompt with actual file content
+          WORKFLOW_PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
+          BLOG_PATTERNS=$(cat /tmp/blog_patterns.md)
+          CONTENT_STRATEGY=$(cat marketing/CONTENT-STRATEGY-2026.md | head -c 8000)
+          EXISTING_SLUGS=$(ls -1 apps/web/content/blog/*.md 2>/dev/null | xargs -I {} basename {} .md | tr '\n' ', ' || echo "(none)")
+
+          echo "✅ Workflow prompt read ($(echo "$WORKFLOW_PROMPT" | wc -c) characters)"
+          echo "✅ Blog patterns loaded ($(echo "$BLOG_PATTERNS" | wc -c) characters)"
+          echo "✅ Content strategy loaded ($(echo "$CONTENT_STRATEGY" | wc -c) characters)"
 
           echo "🤖 Calling z.ai API..."
           echo "🔑 API Endpoint: https://api.z.ai/api/anthropic/v1/messages"
@@ -62,17 +142,17 @@ jobs:
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
             -s \
-            -d '{
-              "model": "glm-4.7",
-              "max_tokens": 8000,
-              "system": "You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly.",
-              "messages": [
+            -d "{
+              \"model\": \"glm-4.7\",
+              \"max_tokens\": 8000,
+              \"system\": \"You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly.\",
+              \"messages\": [
                 {
-                  "role": "user",
-                  "content": "Read the blog creation workflow at .claude/prompts/blog-creation-workflow.md and execute all 7 phases:\\n\\n1. Research - Read marketing/CONTENT-STRATEGY-2026.md, marketing/content/CONTENT-CALENDAR-Q1-2026.md, marketing/content/KEYWORD-TRACKER.md, and list of existing slugs in apps/web/content/blog/ (one .md file per post)\\n\\n2. Select a topic autonomously based on: P0/P1 priorities, keyword gaps, strategic alignment. Do NOT duplicate an existing slug.\\n\\n3. Outline - INVOKE THE ELITE-COPYWRITER SKILL. Create outline following the CATEGORY TEMPLATE structure (not all posts follow TikTok Ads Access - choose based on category: tutorials, onboarding, comparisons, security, operations, case-studies, or research)\\n\\n4. Create - INVOKE THE ELITE-COPYWRITER SKILL AGAIN. Write complete blog post (2000-3000 words) with YAML frontmatter + markdown body.\\n\\n5. SEO - Include primary keyword in title/slug/H1/first paragraph/meta description. Add 3-5 internal links, 2-3 external links. Target featured snippet.\\n\\n6. Review - Check brand voice (professional, approachable, helpful). Verify content checklist.\\n\\n7. Output - Present final blog post as a Markdown file with YAML frontmatter, ready for apps/web/content/blog/{slug}.md\\n\\nCRITICAL OUTPUT FORMAT:\\n- Output ONLY a single Markdown file wrapped in a markdown code block (```markdown ... ```)\\n- Start with --- (YAML frontmatter) then newline, then frontmatter keys, then ---, then blank line, then full markdown body\\n- Frontmatter MUST include: id, title, excerpt, category, stage, publishedAt, readTime, author (as object with name, role), tags (YAML array), metaTitle, metaDescription, relatedPosts (optional array of post ids)\\n- Filename = slug; slug must be in frontmatter as the id (or derive from title). Use kebab-case slug for filename.\\n\\nExample format:\\n```markdown\\n---\\nid: your-blog-post-id\\ntitle: Compelling Headline (2026)\\nexcerpt: >-\\n  150-char summary\\ncategory: tutorials\\nstage: awareness\\npublishedAt: '2026-03-13'\\nreadTime: 5\\nauthor:\\n  name: AuthHub Team\\n  role: Agency Operations Experts\\ntags:\\n  - tag1\\n  - tag2\\n  - tag3\\nmetaTitle: SEO title\\nmetaDescription: SEO description\\n---\\n# Compelling Headline (2026)\\n\\nFull markdown body here...\\n```"
+                  \"role\": \"user\",
+                  \"content\": \"You are creating a blog post for Agency Access Platform (authhub.co).\\n\\n=== WORKFLOW INSTRUCTIONS ===\\n${WORKFLOW_PROMPT}\\n\\n=== BLOG PATTERNS ===\\n${BLOG_PATTERNS}\\n\\n=== CONTENT STRATEGY (keyword topics and ideas) ===\\n${CONTENT_STRATEGY}\\n\\n=== EXECUTION INSTRUCTIONS ===\\nUsing the workflow instructions above, create a complete blog post:\\n1. Follow all 7 phases from the workflow instructions\\n2. Select a topic from the content strategy that hasn't been covered\\n3. Use the blog patterns to match structure by category\\n4. Apply copywriting_guidance for tone and style\\n5. Do NOT duplicate an existing slug: ${EXISTING_SLUGS}\\n\\nOutput ONLY a markdown code block with the complete blog post including YAML frontmatter.\\n\\nExample format:\\n```markdown\\n---\\nid: your-blog-post-id\\ntitle: Compelling Headline (2026)\\nexcerpt: >-\\n  150-char summary\\ncategory: tutorials\\nstage: awareness\\npublishedAt: '2026-03-13'\\nreadTime: 5\\nauthor:\\n  name: AuthHub Team\\n  role: Agency Operations Experts\\ntags:\\n  - tag1\\n  - tag2\\nmetaTitle: SEO title\\nmetaDescription: SEO description\\n---\\n# Compelling Headline (2026)\\n\\nFull markdown body here...\\n```\"
                 }
               ]
-            }')
+            }")
 
           # Check if API call was successful
           if [ $? -ne 0 ]; then
