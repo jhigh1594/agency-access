@@ -35,6 +35,7 @@ vi.mock('@/lib/prisma', () => ({
       findMany: vi.fn(),
       update: vi.fn(),
       findFirst: vi.fn(),
+      count: vi.fn(),
     },
     agency: {
       findUnique: vi.fn(),
@@ -917,6 +918,155 @@ describe('AccessRequestService', () => {
       expect(result.error).toBeNull();
       expect(prisma.webhookEvent.create).not.toHaveBeenCalled();
       expect(queueWebhookDelivery).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getDashboardAccessRequestSummaries', () => {
+    it('should exclude revoked (canceled) and expired requests from dashboard', async () => {
+      const mockRequests = [
+        {
+          id: 'request-1',
+          clientId: 'client-1',
+          clientName: 'Active Client',
+          clientEmail: 'active@test.com',
+          status: 'pending',
+          createdAt: new Date('2026-03-15T10:00:00.000Z'),
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        },
+        {
+          id: 'request-2',
+          clientId: 'client-2',
+          clientName: 'Canceled Client',
+          clientEmail: 'canceled@test.com',
+          status: 'revoked', // Canceled request
+          createdAt: new Date('2026-03-15T09:00:00.000Z'),
+          platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
+        },
+        {
+          id: 'request-3',
+          clientId: 'client-3',
+          clientName: 'Another Active Client',
+          clientEmail: 'active2@test.com',
+          status: 'completed',
+          createdAt: new Date('2026-03-15T08:00:00.000Z'),
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        },
+        {
+          id: 'request-4',
+          clientId: 'client-4',
+          clientName: 'Expired Client',
+          clientEmail: 'expired@test.com',
+          status: 'expired', // Expired request
+          createdAt: new Date('2026-03-14T10:00:00.000Z'),
+          platforms: [{ platform: 'ga4', accessLevel: 'manage' }],
+        },
+      ];
+
+      vi.mocked(prisma.accessRequest.findMany).mockResolvedValue(mockRequests as any);
+      vi.mocked(prisma.accessRequest.count).mockResolvedValue(4);
+
+      const result = await accessRequestService.getDashboardAccessRequestSummaries(
+        'agency-1',
+        10
+      );
+
+      expect(result.error).toBeNull();
+      expect(result.data).toBeDefined();
+
+      const items = result.data!.items;
+      // Should only include pending, partial, and completed requests
+      // NOT include revoked (canceled) or expired requests
+      expect(items).toHaveLength(2);
+      expect(items.map((i) => i.id)).toEqual(['request-1', 'request-3']);
+      expect(items.every((i) => i.status !== 'revoked' && i.status !== 'expired')).toBe(true);
+    });
+
+    it('should include pending, partial, and completed requests', async () => {
+      const mockRequests = [
+        {
+          id: 'request-1',
+          clientId: 'client-1',
+          clientName: 'Pending Client',
+          clientEmail: 'pending@test.com',
+          status: 'pending',
+          createdAt: new Date('2026-03-15T10:00:00.000Z'),
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        },
+        {
+          id: 'request-2',
+          clientId: 'client-2',
+          clientName: 'Partial Client',
+          clientEmail: 'partial@test.com',
+          status: 'partial',
+          createdAt: new Date('2026-03-15T09:00:00.000Z'),
+          platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
+        },
+        {
+          id: 'request-3',
+          clientId: 'client-3',
+          clientName: 'Completed Client',
+          clientEmail: 'completed@test.com',
+          status: 'completed',
+          createdAt: new Date('2026-03-15T08:00:00.000Z'),
+          platforms: [{ platform: 'ga4', accessLevel: 'manage' }],
+        },
+      ];
+
+      vi.mocked(prisma.accessRequest.findMany).mockResolvedValue(mockRequests as any);
+      vi.mocked(prisma.accessRequest.count).mockResolvedValue(3);
+
+      const result = await accessRequestService.getDashboardAccessRequestSummaries(
+        'agency-1',
+        10
+      );
+
+      expect(result.error).toBeNull();
+      expect(result.data?.items).toHaveLength(3);
+      expect(result.data?.items.map((i) => i.status)).toEqual(
+        expect.arrayContaining(['pending', 'partial', 'completed'])
+      );
+    });
+
+    it('should exclude orphaned requests (clientId is null)', async () => {
+      const mockRequests = [
+        {
+          id: 'request-1',
+          clientId: 'client-1',
+          clientName: 'Valid Client',
+          clientEmail: 'valid@test.com',
+          status: 'pending',
+          createdAt: new Date('2026-03-15T10:00:00.000Z'),
+          platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        },
+        {
+          id: 'request-orphan',
+          clientId: null, // Orphaned request
+          clientName: 'Orphaned Client',
+          clientEmail: 'orphan@test.com',
+          status: 'pending',
+          createdAt: new Date('2026-03-15T09:00:00.000Z'),
+          platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
+        },
+      ];
+
+      vi.mocked(prisma.accessRequest.findMany).mockResolvedValue(mockRequests as any);
+      vi.mocked(prisma.accessRequest.count).mockResolvedValue(2);
+
+      const result = await accessRequestService.getDashboardAccessRequestSummaries(
+        'agency-1',
+        10
+      );
+
+      expect(result.error).toBeNull();
+      // The where clause should filter out clientId: null at the database level
+      // So the mocked result shouldn't include orphaned requests
+      expect(prisma.accessRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clientId: { not: null },
+          }),
+        })
+      );
     });
   });
 

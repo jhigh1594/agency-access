@@ -1153,8 +1153,13 @@ export async function getDashboardAccessRequestSummaries(
 ): Promise<{ data: { items: DashboardRequestSummary[]; total: number } | null; error: any }> {
   try {
     const includeTotal = options.includeTotal ?? true;
-    // Exclude orphaned requests (clientId null) so requests whose client was deleted don't appear
-    const where = { agencyId, clientId: { not: null } };
+    // Exclude orphaned requests (clientId null) and inactive requests (revoked, expired)
+    // Dashboard should only show active requests: pending, partial, completed
+    const where = {
+      agencyId,
+      clientId: { not: null },
+      status: { in: ['pending', 'partial', 'completed'] },
+    };
     const requestsPromise = prisma.accessRequest.findMany({
       where,
       select: {
