@@ -32,6 +32,60 @@ For full security rules see [.cursor/rules/security.mdc](.cursor/rules/security.
 
 OAuth aggregation platform for marketing agencies. Agencies create access requests; clients authorize multiple platforms (Meta, Google Ads, GA4, LinkedIn) through a single link; agencies get instant token access. Replaces 2–3 days of manual OAuth setup with a 5-minute flow.
 
+## Design Context
+
+### Users
+
+**Primary users**: Marketing agencies (digital advertising, social media marketing, performance marketing) who onboard 3+ clients monthly. They're frustrated with the manual OAuth setup process — it takes 2–3 days of back-and-forth emails, confused clients, and expired tokens.
+
+**Secondary users**: Agency clients (business owners, marketing managers) who receive access requests and need to authorize platform permissions. They're not technical — they just want it to work.
+
+**The job to be done**: Get client platform access (Meta Ads, Google Ads, GA4, LinkedIn) in 5 minutes instead of 3 days. Agencies send one link; clients click and authorize; everyone gets back to work.
+
+### Brand Personality
+
+**Three words**: Bold, Efficient, Trustworthy
+
+**Voice and tone**:
+- Direct and confident — we know the OAuth pain and we've solved it
+- Professional but not corporate — agencies appreciate personality and expertise
+- Action-oriented — focus on "done" rather than "doing"
+
+**Emotional goals** (the feeling when using AuthHub):
+- **Relief**: "Finally, this OAuth nightmare is over"
+- **Efficiency**: "That was fast — back to real work"
+- **Bold/Different**: "This isn't another generic SaaS tool"
+- **Calm Control**: "Predictable pricing, clear status, no surprises"
+
+### Aesthetic Direction
+
+**Visual tone**: "Acid Brutalism" — hard shadows (`shadow-brutalist`), bold borders (2px hard borders), kinetic accent colors (coral, teal, acid green). Rejects generic SaaS aesthetics (soft gradients, rounded everything, blue "trust" colors).
+
+**References**: Bento, Hey, Superhuman — personality-driven, distinctive, breaks conventions while remaining usable. These apps have strong points of view and aren't afraid to be different.
+
+**Anti-references**: Generic enterprise SaaS — interchangeable dashboards, "safe" design, committee-driven aesthetics. If it looks like it could be any tool, we've failed.
+
+**Theme**: Light-first with brutalist accents. Dark mode supported but not the primary experience. One brutalist element per view — restraint creates impact.
+
+### Design Principles
+
+1. **Boldness through restraint, not excess**
+   One brutalist element per view. When everything is bold, nothing is. Let the hard shadows, bold borders, and accent colors stand out through scarcity.
+
+2. **Relief through clarity**
+   OAuth is confusing; AuthHub should be clear. Use accessible status colors, show progress, explain next steps, and eliminate uncertainty.
+
+3. **Efficiency through speed**
+   Fast load times, instant feedback, minimal clicks. Respect `prefers-reduced-motion`. The "5-minute flow" promise means every second counts.
+
+4. **Trust through consistency**
+   Use the documented design system — predictable patterns build familiarity. Brutalist aesthetics feel chaotic if undisciplined.
+
+5. **Personality through details**
+   The brutalist aesthetic is the surface personality. The deeper personality is in micro-interactions: hover feedback, reveal animations, and specific wording in error messages. These make AuthHub feel crafted, not generic.
+
+**When in doubt**: Ask "Could this be mistaken for a generic SaaS tool?" If yes, push harder. We're the bold alternative to Leadsie's conservative approach — make it count.
+
 ## Monorepo Structure
 
 - `apps/web/` — Next.js 16 frontend (App Router, TypeScript, TailwindCSS, Clerk auth)
@@ -178,7 +232,7 @@ AccessRequestTemplate: platforms (hierarchical), intakeFields, branding (logoUrl
 
 **Conventions:** See [.cursor/rules/ui-ux.mdc](.cursor/rules/ui-ux.mdc) and [.cursor/rules/react-nextjs.mdc](.cursor/rules/react-nextjs.mdc) for TypeScript, Tailwind, shadcn, and React/Next.js patterns.
 
-**Project-specific:** Design system in `apps/web/DESIGN_SYSTEM.md`; token showcase at `http://localhost:3000/design-system`. "Acid Brutalism": one brutalist element per view. Tokens: --ink, --paper, --coral, --teal, --acid (sparingly), --electric. Typography: font-dela (hero), font-display (headings), sans, mono. Shadows: .shadow-brutalist, .shadow-brutalist-lg, .shadow-brutalist-xl. Button variants: primary, secondary, success, danger, ghost, brutalist (once per page), brutalist-ghost, brutalist-rounded. Cards: .brutalist-card, .clean-card. Animations: reveal-element reveal-up/down, hover-lift-brutalist. Guidelines: 44×44px touch targets, mobile-first, prefer-reduced-motion. Component layout: `apps/web/src/components/ui/` (button, card, status-badge, platform-icon, empty-state, etc.).
+**Project-specific:** Design system in `apps/web/DESIGN_SYSTEM.md`; token showcase at `/design-system`. "Acid Brutalism": one brutalist element per view. Component library at `apps/web/src/components/ui/`.
 
 ## Test-Driven Development (TDD)
 
