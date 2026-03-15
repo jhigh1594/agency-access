@@ -33,12 +33,6 @@ const isPublicRoute = createRouteMatcher([
 const isMarketingRedirectRoute = createRouteMatcher(['/'])
 
 export default clerkMiddleware(async (auth, request) => {
-  // Bypass crawler discovery files immediately (before any Clerk logic) to avoid redirect loops
-  const pathname = new URL(request.url).pathname.replace(/\/$/, '') || '/'
-  if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
-    return NextResponse.next()
-  }
-
   const isPerfHarnessRequest =
     process.env.NODE_ENV === 'development' &&
     request.headers.get('x-perf-harness') === '1'
@@ -73,8 +67,7 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals, static files, and API routes
-    // sitemap.xml and robots.txt ARE matched so proxy runs; early return above passes them through
-    '/((?!_next|api|agency-platforms|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals, static files, API routes, and crawler files (sitemap.xml, robots.txt)
+    '/((?!_next|api|agency-platforms|sitemap\\.xml|robots\\.txt|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
   ],
 }
