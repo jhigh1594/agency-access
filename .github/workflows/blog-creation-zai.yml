@@ -125,11 +125,13 @@ jobs:
           WORKFLOW_PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
           BLOG_PATTERNS=$(cat /tmp/blog_patterns.md)
           CONTENT_STRATEGY=$(cat marketing/CONTENT-STRATEGY-2026.md | head -c 8000)
+          KEYWORD_TRACKER=$(cat marketing/content/KEYWORD-TRACKER.md | head -c 5000)
           EXISTING_SLUGS=$(ls -1 apps/web/content/blog/*.md 2>/dev/null | xargs -I {} basename {} .md | tr '\n' ', ' || echo "(none)")
 
           echo "✅ Workflow prompt read ($(echo "$WORKFLOW_PROMPT" | wc -c) characters)"
           echo "✅ Blog patterns loaded ($(echo "$BLOG_PATTERNS" | wc -c) characters)"
           echo "✅ Content strategy loaded ($(echo "$CONTENT_STRATEGY" | wc -c) characters)"
+          echo "✅ Keyword tracker loaded ($(echo "$KEYWORD_TRACKER" | wc -c) characters)"
 
           echo "🤖 Calling z.ai API..."
           echo "🔑 API Endpoint: https://api.z.ai/api/anthropic/v1/messages"
@@ -149,7 +151,7 @@ jobs:
               \"messages\": [
                 {
                   \"role\": \"user\",
-                  \"content\": \"You are creating a blog post for Agency Access Platform (authhub.co).\\n\\n=== WORKFLOW INSTRUCTIONS ===\\n${WORKFLOW_PROMPT}\\n\\n=== BLOG PATTERNS ===\\n${BLOG_PATTERNS}\\n\\n=== CONTENT STRATEGY (keyword topics and ideas) ===\\n${CONTENT_STRATEGY}\\n\\n=== EXECUTION INSTRUCTIONS ===\\nUsing the workflow instructions above, create a complete blog post:\\n1. Follow all 7 phases from the workflow instructions\\n2. Select a topic from the content strategy that hasn't been covered\\n3. Use the blog patterns to match structure by category\\n4. Apply copywriting_guidance for tone and style\\n5. Do NOT duplicate an existing slug: ${EXISTING_SLUGS}\\n\\nOutput ONLY a markdown code block with the complete blog post including YAML frontmatter.\\n\\nExample format:\\n```markdown\\n---\\nid: your-blog-post-id\\ntitle: Compelling Headline (2026)\\nexcerpt: >-\\n  150-char summary\\ncategory: tutorials\\nstage: awareness\\npublishedAt: '2026-03-13'\\nreadTime: 5\\nauthor:\\n  name: AuthHub Team\\n  role: Agency Operations Experts\\ntags:\\n  - tag1\\n  - tag2\\nmetaTitle: SEO title\\nmetaDescription: SEO description\\n---\\n# Compelling Headline (2026)\\n\\nFull markdown body here...\\n```\"
+                  \"content\": \"You are creating a blog post for Agency Access Platform (authhub.co).\\n\\n=== WORKFLOW INSTRUCTIONS ===\\n${WORKFLOW_PROMPT}\\n\\n=== BLOG PATTERNS ===\\n${BLOG_PATTERNS}\\n\\n=== CONTENT STRATEGY ===\\n${CONTENT_STRATEGY}\\n\\n=== KEYWORD TRACKER ===\\n${KEYWORD_TRACKER}\\n\\n=== EXECUTION INSTRUCTIONS ===\\nUsing the workflow instructions above, create a complete blog post:\\n1. Follow all 7 phases from the workflow instructions\\n2. Select a topic from KEYWORD TRACKER (prioritize P0 > P1 > P2)\\n3. Use the blog patterns to match structure by category\\n4. Apply copywriting_guidance for tone and style\\n5. Do NOT duplicate an existing slug: ${EXISTING_SLUGS}\\n\\nWhen selecting a topic, consider:\\n- Monthly search volume (higher = more traffic potential)\\n- Priority level (P0 > P1 > P2)\\n- Whether a target page is already assigned\\n- Content pillar alignment\\n\\nOutput ONLY a markdown code block with the complete blog post including YAML frontmatter.\\n\\nExample format:\\n```markdown\\n---\\nid: your-blog-post-id\\ntitle: Compelling Headline (2026)\\nexcerpt: >-\\n  150-char summary\\ncategory: tutorials\\nstage: awareness\\npublishedAt: '2026-03-13'\\nreadTime: 5\\nauthor:\\n  name: AuthHub Team\\n  role: Agency Operations Experts\\ntags:\\n  - tag1\\n  - tag2\\nmetaTitle: SEO title\\nmetaDescription: SEO description\\n---\\n# Compelling Headline (2026)\\n\\nFull markdown body here...\\n```\"
                 }
               ]
             }")
