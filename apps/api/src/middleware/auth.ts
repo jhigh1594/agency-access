@@ -10,6 +10,12 @@ import { recordPerformanceMark } from './performance.js';
 
 type VerifiedAuthClaims = Record<string, unknown>;
 const AUTH_DURATION_MS = Symbol('auth-duration-ms');
+const DEV_BYPASS_TOKEN = 'dev-bypass-token';
+const DEV_BYPASS_USER = {
+  sub: 'dev_user_test_123456789',
+  orgId: 'dev_org_test_987654321',
+  email: 'dev-bypass@agency-access.local',
+} satisfies VerifiedAuthClaims;
 
 let verifyTokenImpl:
   | ((token: string, options: { secretKey: string | undefined }) => Promise<VerifiedAuthClaims | null>)
@@ -58,6 +64,13 @@ async function verifyBearerTokenFromRequest(request: FastifyRequest): Promise<nu
 
   const authStartMs = Date.now();
   const token = authHeader.substring(7);
+
+  if (process.env.NODE_ENV === 'development' && token === DEV_BYPASS_TOKEN) {
+    const durationMs = Date.now() - authStartMs;
+    setVerifiedUser(request, DEV_BYPASS_USER, durationMs);
+    return durationMs;
+  }
+
   const verified = await verifyAuthToken(token);
 
   if (!verified) {
