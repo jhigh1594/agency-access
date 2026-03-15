@@ -1,6 +1,7 @@
 'use client';
 
 import { LogoSpinner } from './logo-spinner';
+import { Slot } from '@radix-ui/react-slot';
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,6 +10,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  asChild?: boolean;
 }
 
 /**
@@ -39,6 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       disabled,
       className = '',
+      asChild = false,
       ...props
     },
     ref
@@ -72,6 +75,29 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       xl: 'px-12 py-5 text-xl rounded-2xl min-h-[56px]',
       icon: 'p-0 w-11 h-11 rounded-full min-h-[44px]', // Increased w-10→w-11 for 44px minimum
     };
+
+    if (asChild) {
+      return (
+        <Slot
+          ref={ref}
+          className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+          {...props}
+        >
+          {isLoading ? (
+            <>
+              <LogoSpinner size="sm" />
+              {children && <span>Loading...</span>}
+            </>
+          ) : (
+            <>
+              {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
+              {children}
+              {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
+            </>
+          )}
+        </Slot>
+      );
+    }
 
     return (
       <button
