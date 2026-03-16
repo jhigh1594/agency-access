@@ -5,16 +5,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { 
   getDefaultGoogleAssetSettings,
-  type GoogleAdsGrantMode,
   GoogleAssetSettings,
   GoogleAccountsResponse
 } from '@agency-platform/shared';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { ManageAssetsSectionCard, ManageAssetsStatusPanel } from './manage-assets-ui';
+import { GoogleAdsAccessMethod } from './google-ads-access-method';
 import { Button } from './ui/button';
 import { SingleSelect } from './ui/single-select';
-import { 
-  Loader2, 
+import {
+  Loader2,
   AlertCircle,
   Info,
   CircleDollarSign,
@@ -22,7 +22,7 @@ import {
   MapPin,
   Tags,
   Search,
-  ShoppingBag
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -292,101 +292,23 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
       : null;
   const managerAccounts = (accountsData?.adsAccounts || []).filter((account) => account.isManager);
   const googleAdsManagement = settings.googleAdsManagement || getDefaultGoogleAssetSettings().googleAdsManagement!;
-  const googleAdsGrantModeOptions = [
-    { value: 'manager_link', label: 'Manager account (MCC)' },
-    { value: 'user_invite', label: 'Direct user invite' },
-  ];
 
   return (
     <div className="space-y-6">
       <ManageAssetsSectionCard
-        eyebrow="Access defaults"
-        title="Google Ads access defaults"
-        description="Set the agency-wide Google Ads mode the orchestrator should try first. MCC linking is preferred when you have an eligible manager account configured."
+        eyebrow="Access"
+        title="Google Ads access method (account-level)"
+        description="This controls how all Google Ads access requests are handled. You can change it any time."
       >
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Default grant mode
-              </label>
-              <SingleSelect
-                ariaLabel="Default Google Ads grant mode"
-                options={googleAdsGrantModeOptions}
-                value={googleAdsManagement.preferredGrantMode}
-                onChange={(value) =>
-                  updateGoogleAdsManagement({
-                    preferredGrantMode: value as GoogleAdsGrantMode,
-                  })
-                }
-                placeholder="Select grant mode..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="google-ads-invite-email"
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground"
-              >
-                Invite email
-              </label>
-              <input
-                id="google-ads-invite-email"
-                type="email"
-                aria-label="Google Ads invite email"
-                value={googleAdsManagement.inviteEmail || ''}
-                onChange={(event) =>
-                  updateGoogleAdsManagement({
-                    inviteEmail: event.target.value,
-                  })
-                }
-                className="h-11 w-full rounded-xl border border-border bg-paper px-3 text-sm text-ink shadow-sm outline-none transition focus:border-coral focus:ring-2 focus:ring-coral/20"
-                placeholder="jon.highmu@gmail.com"
-              />
-            </div>
-          </div>
-
-          {googleAdsManagement.preferredGrantMode === 'manager_link' && (
-            <>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Manager account
-                </label>
-                <SingleSelect
-                  ariaLabel="Select Manager Account"
-                  options={managerAccounts.map((account) => ({
-                    value: account.id,
-                    label: getGoogleAdsAccountLabel(account),
-                  }))}
-                  value={googleAdsManagement.managerCustomerId || ''}
-                  onChange={(value, label) =>
-                    updateGoogleAdsManagement({
-                      managerCustomerId: value,
-                      managerAccountLabel: label,
-                    })
-                  }
-                  placeholder="Select Manager Account..."
-                />
-              </div>
-
-              {managerAccounts.length === 0 && (
-                <ManageAssetsStatusPanel
-                  label="MCC readiness"
-                  title="No eligible manager account found"
-                  description="Refresh Google accounts and connect an eligible Google Ads manager account before defaulting to MCC linking."
-                  tone="warning"
-                />
-              )}
-            </>
-          )}
-
-          <ManageAssetsStatusPanel
-            label="Fallback behavior"
-            title="MCC first, direct invite only when safe"
-            description="If manager linking is not eligible, the platform can fall back to a direct Google Ads user invite and record why it changed modes."
-            tone="default"
-          />
-        </div>
+        <GoogleAdsAccessMethod
+          preferredGrantMode={googleAdsManagement.preferredGrantMode}
+          managerAccounts={managerAccounts}
+          managerCustomerId={googleAdsManagement.managerCustomerId || ''}
+          managerAccountLabel={googleAdsManagement.managerAccountLabel}
+          inviteEmail={googleAdsManagement.inviteEmail || ''}
+          onUpdate={updateGoogleAdsManagement}
+          disabled={isSavingSettings}
+        />
       </ManageAssetsSectionCard>
 
       <ManageAssetsSectionCard

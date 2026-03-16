@@ -36,6 +36,9 @@ export type { FilterOption } from './filter-dropdown';
 export { SingleSelect } from './single-select';
 export type { SingleSelectOption } from './single-select';
 
+export { RadioCard } from './radio-card';
+export type { RadioCardProps } from './radio-card';
+
 // Multi-Select Combobox
 export { MultiSelectCombobox } from './multi-select-combobox';
 export type { MultiSelectOption } from './multi-select-combobox';

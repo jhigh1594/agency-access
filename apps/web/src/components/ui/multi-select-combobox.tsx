@@ -264,7 +264,7 @@ export function MultiSelectCombobox({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        <div className="flex flex-wrap gap-2 items-center pr-8">
+        <div className="flex flex-wrap gap-2 items-center pr-5">
           {selectedOptions.length === 0 ? (
             <span className="text-[rgb(var(--muted-foreground))] text-sm py-1 flex items-center gap-2">
               <Search className="w-4 h-4" />
@@ -299,7 +299,7 @@ export function MultiSelectCombobox({
 
         {/* Chevron indicator */}
         <ChevronDown
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--muted-foreground))] transition-transform ${
+          className={`absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgb(var(--muted-foreground))] transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}
         />

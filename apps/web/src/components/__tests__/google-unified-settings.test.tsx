@@ -515,8 +515,7 @@ describe('GoogleUnifiedSettings', () => {
     const user = userEvent.setup();
     const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    expect(await screen.findByText(/google ads access defaults/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue('jon.highmu@gmail.com')).toBeInTheDocument();
+    expect(await screen.findByText(/google ads access method/i)).toBeInTheDocument();
 
     const managerCombobox = screen.getByRole('combobox', { name: /Select Manager Account/i });
     await user.click(managerCombobox);

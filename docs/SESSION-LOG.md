@@ -27,6 +27,32 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
+## Session: 2026-03-16 — Google Ads Access Method Redesign
+
+### What was done
+- Redesigned Google Ads section in manage-assets modal from "defaults" dropdown to radio-card choice
+- Added RadioCard UI component with badge and tooltip support
+- Added GoogleAdsAccessMethod, GoogleManagerAccountSelector, GoogleInviteEmailInput components
+- Replaced Fallback behavior section with tooltip on MCC card
+- Progressive disclosure: Manager Account dropdown or Invite Email input based on selection
+
+### Files changed
+- `apps/web/src/components/ui/radio-card.tsx` — new
+- `apps/web/src/components/google-ads-access-method.tsx` — new
+- `apps/web/src/components/google-manager-account-selector.tsx` — new
+- `apps/web/src/components/google-invite-email-input.tsx` — new
+- `apps/web/src/components/google-unified-settings.tsx` — use new components
+- `apps/web/src/components/__tests__/google-unified-settings.test.tsx` — update assertions
+
+### Decisions made
+- Section retitled to "Google Ads access method (account-level)"
+- MCC marked as [Recommended] with fallback info in tooltip only
+
+### Next steps
+- (none)
+
+---
+
 ## Session: 2026-03-10 — Sentry Webhook Integration Setup
 
 ### What was done

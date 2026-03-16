@@ -74,7 +74,7 @@ export function SingleSelect({
         aria-expanded={isOpen}
         aria-label={ariaLabel ?? displayLabel}
         className={cn(
-          'w-full min-h-[44px] px-3 py-2 pr-10 flex items-center justify-between gap-2',
+          'w-full min-h-[44px] px-3 py-2 pr-5 flex items-center justify-between gap-2',
           'border border-border rounded-md text-sm text-ink',
           'focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))]',
           'transition-all appearance-none cursor-pointer',
