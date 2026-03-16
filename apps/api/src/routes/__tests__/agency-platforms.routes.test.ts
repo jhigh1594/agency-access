@@ -11,6 +11,7 @@ import { agencyPlatformsRoutes } from '../agency-platforms.js';
 import { agencyPlatformService } from '../../services/agency-platform.service.js';
 import { oauthStateService } from '../../services/oauth-state.service.js';
 import { metaAssetsService } from '../../services/meta-assets.service.js';
+import { googleAssetsService } from '../../services/google-assets.service.js';
 import { MetaConnector } from '../../services/connectors/meta.js';
 import * as authorization from '../../lib/authorization.js';
 import { prisma } from '../../lib/prisma.js';
@@ -35,6 +36,13 @@ vi.mock('../../services/meta-assets.service.js', () => ({
     saveBusinessPortfolio: vi.fn(),
     saveAssetSettings: vi.fn(),
     getAssetSettings: vi.fn(),
+  },
+}));
+vi.mock('../../services/google-assets.service.js', () => ({
+  googleAssetsService: {
+    saveAssetSettings: vi.fn(),
+    getAssetSettings: vi.fn(),
+    saveAccountSelection: vi.fn(),
   },
 }));
 vi.mock('../../lib/prisma.js', () => ({
@@ -1240,6 +1248,77 @@ describe('Agency Platforms Routes', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json().data).toEqual(mockSettings);
+    });
+  });
+
+  describe('GET /agency-platforms/google/asset-settings', () => {
+    it('should return current Google asset settings', async () => {
+      const mockSettings = {
+        googleAdsManagement: {
+          preferredGrantMode: 'user_invite',
+          inviteEmail: 'jon.highmu@gmail.com',
+        },
+        googleAds: { enabled: true, requestManageUsers: false },
+        googleAnalytics: { enabled: true, requestManageUsers: false },
+        googleBusinessProfile: { enabled: false, requestManageUsers: false },
+        googleTagManager: { enabled: false, requestManageUsers: false },
+        googleSearchConsole: { enabled: false, requestManageUsers: false },
+        googleMerchantCenter: { enabled: false, requestManageUsers: false },
+      };
+
+      vi.mocked(googleAssetsService.getAssetSettings).mockResolvedValue({
+        data: mockSettings as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/agency-platforms/google/asset-settings?agencyId=agency-1',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data).toEqual(mockSettings);
+    });
+  });
+
+  describe('PATCH /agency-platforms/google/asset-settings', () => {
+    it('should return 400 for invalid MCC settings', async () => {
+      vi.mocked(googleAssetsService.saveAssetSettings).mockResolvedValue({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Select an eligible Google Ads manager account before defaulting to MCC linking.',
+        },
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/agency-platforms/google/asset-settings',
+        payload: {
+          agencyId: 'agency-1',
+          settings: {
+            googleAdsManagement: {
+              preferredGrantMode: 'manager_link',
+              managerCustomerId: '549-755-9774',
+            },
+            googleAds: { enabled: true, requestManageUsers: false },
+            googleAnalytics: { enabled: true, requestManageUsers: false },
+            googleBusinessProfile: { enabled: false, requestManageUsers: false },
+            googleTagManager: { enabled: false, requestManageUsers: false },
+            googleSearchConsole: { enabled: false, requestManageUsers: false },
+            googleMerchantCenter: { enabled: false, requestManageUsers: false },
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        data: null,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Select an eligible Google Ads manager account before defaulting to MCC linking.',
+        },
+      });
     });
   });
 });

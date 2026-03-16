@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { registerAssetRoutes } from '../assets.routes';
 import { accessRequestService } from '@/services/access-request.service';
+import { googleNativeAccessService } from '@/services/google-native-access.service';
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { auditService } from '@/services/audit.service';
@@ -10,6 +11,12 @@ import { env } from '@/lib/env';
 vi.mock('@/services/access-request.service', () => ({
   accessRequestService: {
     getAccessRequestByToken: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/google-native-access.service', () => ({
+  googleNativeAccessService: {
+    planGoogleNativeGrants: vi.fn(),
   },
 }));
 
@@ -29,9 +36,11 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     clientConnection: {
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
     platformAuthorization: {
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -67,6 +76,7 @@ describe('Client Auth Asset Routes - Google', () => {
       clientEmail: 'client@example.com',
       grantedAssets: {},
     } as any);
+    vi.mocked(prisma.clientConnection.update).mockResolvedValue({ id: 'conn-1' } as any);
 
     vi.mocked(prisma.platformAuthorization.findUnique).mockResolvedValue({
       id: 'pa-1',
@@ -76,9 +86,15 @@ describe('Client Auth Asset Routes - Google', () => {
       status: 'active',
       metadata: {},
     } as any);
+    vi.mocked(prisma.platformAuthorization.update).mockResolvedValue({ id: 'pa-1' } as any);
 
     vi.mocked(infisical.getOAuthTokens).mockResolvedValue({
       accessToken: 'google-access-token',
+    } as any);
+
+    vi.mocked(googleNativeAccessService.planGoogleNativeGrants).mockResolvedValue({
+      data: null,
+      error: null,
     } as any);
 
     global.fetch = vi.fn(async (input: any) => {
@@ -303,5 +319,90 @@ describe('Client Auth Asset Routes - Google', () => {
         status: 'ENABLED',
       },
     ]);
+  });
+
+  it('persists orchestrated Google native-grant lifecycle details when saving Google assets', async () => {
+    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+      data: {
+        id: 'request-a',
+        agencyId: 'agency-a',
+        platforms: [
+          {
+            platformGroup: 'google',
+            products: [{ product: 'google_ads', accessLevel: 'admin' }],
+          },
+        ],
+      } as any,
+      error: null,
+    });
+    vi.mocked(googleNativeAccessService.planGoogleNativeGrants).mockResolvedValue({
+      data: {
+        selectedAssets: {
+          adAccounts: ['1111111111'],
+          googleGrantLifecycle: {
+            product: 'google_ads',
+            capabilityTier: 'native_grant_supported',
+            fulfillmentMode: 'manager_link',
+            state: 'pending_native_grant',
+            requiresNativeGrant: true,
+            isFulfilled: false,
+            grantStatus: 'pending',
+            pendingActor: 'none',
+          },
+        },
+      },
+      error: null,
+    } as any);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-a/save-assets',
+      payload: {
+        connectionId: 'conn-1',
+        platform: 'google_ads',
+        selectedAssets: {
+          adAccounts: ['1111111111'],
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(googleNativeAccessService.planGoogleNativeGrants).toHaveBeenCalledWith(
+      expect.objectContaining({
+        platform: 'google_ads',
+        selectedAssets: {
+          adAccounts: ['1111111111'],
+        },
+      })
+    );
+    expect(prisma.clientConnection.update).toHaveBeenCalledWith({
+      where: { id: 'conn-1' },
+      data: {
+        grantedAssets: {
+          google_ads: {
+            adAccounts: ['1111111111'],
+            googleGrantLifecycle: expect.objectContaining({
+              fulfillmentMode: 'manager_link',
+              state: 'pending_native_grant',
+            }),
+          },
+        },
+      },
+    });
+    expect(prisma.platformAuthorization.update).toHaveBeenCalledWith({
+      where: { id: 'pa-1' },
+      data: {
+        metadata: {
+          selectedAssets: {
+            google_ads: {
+              adAccounts: ['1111111111'],
+              googleGrantLifecycle: expect.objectContaining({
+                fulfillmentMode: 'manager_link',
+              }),
+            },
+          },
+        },
+      },
+    });
   });
 });

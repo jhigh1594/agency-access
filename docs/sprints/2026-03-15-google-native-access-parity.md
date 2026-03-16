@@ -116,6 +116,8 @@ Implementation-time unknowns that still require verification in code review and 
    - The product must not imply native invite automation unless the official API supports it.
 9. The agency-side default for Google Ads should prefer `manager_link` when the agency has configured an eligible MCC/manager account.
    - If no eligible manager account is configured, fall back to `user_invite`.
+   - Fallback must be explicit, persisted, and attributable to a concrete precondition or provider failure code.
+   - The first slice does not expose per-request manual mode selection; the agency default plus automatic fallback is the locked behavior.
 10. The client-facing happy path should require no manual Google UI walkthroughs beyond Google’s own native approval steps.
    - For Google Ads `user_invite`, the agency recipient may still need to accept the Google invitation.
    - For Google Ads `manager_link`, the client-side Google account must still accept the link when Google requires acceptance.
@@ -152,7 +154,8 @@ Implementation-time unknowns that still require verification in code review and 
      - native grant state
      - verification timestamps / error codes / metadata
 3. Extend agency Google configuration so the system knows which native modes are available.
-   - Persist manager-account identifiers, invite-capable email identities, and per-product management capability on the agency Google connection.
+   - Persist `preferredGoogleAdsGrantMode`, `managerCustomerId`, `managerAccountLabel`, and `inviteEmail` on the agency Google connection.
+   - Validation must reject impossible MCC defaults, including missing manager IDs, malformed customer IDs, and selecting the target client account as the manager account.
    - Allow an agency-level default for `manager_link` vs `user_invite` where multiple modes exist.
 4. Introduce a Google native-access orchestration layer in the API.
    - Planning step: determine requested assets + applicable grant mode per asset.
@@ -184,6 +187,41 @@ Implementation-time unknowns that still require verification in code review and 
    - Client sees: connecting, request sent, waiting on Google acceptance, fulfilled, failed.
    - Agency sees: which mode was used, who must accept, exact pending items, and what can be retried.
 
+## Google Ads MCC Delivery Model
+
+This sprint locks Google Ads to an MCC-first parity path with deterministic fallback.
+
+1. Agency configuration
+   - The agency stores one Google Ads manager account customer ID and one invite email on the grouped Google connection metadata.
+   - `manager_link` is the default only when the manager account is configured and valid.
+
+2. Grant planning
+   - When the requested Google Ads asset is eligible for MCC, the planner chooses `manager_link`.
+   - If MCC preconditions fail before any provider mutation, the planner records the reason and chooses `user_invite`.
+   - The chosen mode is persisted on the per-asset `GoogleNativeGrant` record before execution.
+
+3. Manager-link execution
+   - The manager-link service creates a `CustomerClientLink` invitation from the agency manager account to the selected client Ads account.
+   - The provider resource name and link metadata are stored on the grant row.
+   - The pending actor is `client` while Google is waiting for client-side link acceptance.
+
+4. Manager-link verification
+   - Reconciliation reads back the exact link state and resolves the final `managerLinkId` / provider identifiers needed to prove the link is active.
+   - Google Ads fulfillment is not marked complete until the requested client account is actively linked to the configured manager account.
+
+5. Fallback boundaries
+   - Safe fallback to `user_invite` is allowed before provider mutation or on explicitly handled MCC failure cases such as missing manager configuration or blocked eligibility.
+   - Safe fallback is not assumed after an unknown provider error, because that can create duplicate or contradictory Google-side grant attempts.
+   - When fallback happens, the original failed MCC attempt and the final execution mode must both remain visible in persisted metadata.
+
+6. User-invite execution
+   - The fallback service creates a `CustomerUserAccessInvitation` for the agency invite email.
+   - The pending actor is `agency` while the invited agency user still needs to accept.
+
+7. Truthful UI state
+   - Agency request detail and client detail must show whether Google Ads is pending on the client (`manager_link`) or the agency (`user_invite`).
+   - The UI copy must explain fallback without exposing raw Google API terminology.
+
 ## Milestones
 
 ### Milestone 1: Contract Lock + Research Closure
@@ -203,33 +241,33 @@ Implementation-time unknowns that still require verification in code review and 
 
 ## Ordered Task Board
 
-- [ ] `GNAP-001` Create sprint artifact for Google native access parity.
+- [x] `GNAP-001` Create sprint artifact for Google native access parity.
   Dependency: none
   Acceptance criteria:
   - Sprint doc locks hybrid Google architecture, milestones, verification strategy, and risks.
   - The doc explicitly distinguishes OAuth discovery from durable Google-native access.
 
-- [ ] `GNAP-002` Refresh [`docs/sprints/mvp-requirement-mapping.md`](/Users/jhigh/agency-access-platform/docs/sprints/mvp-requirement-mapping.md) for this sprint.
+- [x] `GNAP-002` Refresh [`docs/sprints/mvp-requirement-mapping.md`](/Users/jhigh/agency-access-platform/docs/sprints/mvp-requirement-mapping.md) for this sprint.
   Dependency: `GNAP-001`
   Acceptance criteria:
   - Requirement mapping includes stable `GNAP-*` task IDs.
   - Requirements distinguish Google product capability tiers instead of collapsing all Google work into Ads/GA4.
 
-- [ ] `GNAP-010` Lock the Google hybrid fulfillment contract across products and grant modes.
+- [x] `GNAP-010` Lock the Google hybrid fulfillment contract across products and grant modes.
   Dependency: `GNAP-001`
   Acceptance criteria:
   - Supported grant modes are explicit for each product.
   - Product-level completion rules are defined before implementation.
   - The contract defines who must accept native Google steps for each mode.
 
-- [ ] `GNAP-011` Close external Google API unknowns that affect implementation viability.
+- [x] `GNAP-011` Close external Google API unknowns that affect implementation viability.
   Dependency: `GNAP-001`
   Acceptance criteria:
   - Official Google Ads, GA4, Business Profile, GTM, Search Console, and Merchant workflows are confirmed against current docs.
   - Remaining unknowns are narrowed to implementation-time validation, not architecture-level uncertainty.
   - Any API-scope or developer-token prerequisites are documented in this sprint doc.
 
-- [ ] `GNAP-012` Lock persistence and rollout strategy for additive delivery.
+- [x] `GNAP-012` Lock persistence and rollout strategy for additive delivery.
   Dependency: `GNAP-010`, `GNAP-011`
   Acceptance criteria:
   - The plan chooses a dedicated native-grant persistence model instead of extending ad hoc JSON fields.
@@ -261,6 +299,8 @@ Implementation-time unknowns that still require verification in code review and 
   Acceptance criteria:
   - Tests cover pending link creation, manager link ID lookup, acceptance verification, and termination/retry logic.
   - MCC hierarchy prerequisites and failure states are covered.
+  - Tests prove `manager_link` is the default mode when agency MCC settings are valid.
+  - Tests prove fallback to `user_invite` only occurs on explicit precondition failures or explicitly safe provider failure cases.
 
 - [ ] `GNAP-023` Add failing GA4 tests for native access-binding creation and verification.
   Dependency: `GNAP-010`, `GNAP-011`
@@ -300,11 +340,12 @@ Implementation-time unknowns that still require verification in code review and 
   - Migration/backfill impact is documented.
   - Existing access-request and connection models remain compatible.
 
-- [ ] `GNAP-032` Implement agency Google settings for manager accounts, invite identities, and per-product management capability.
+- [x] `GNAP-032` Implement agency Google settings for manager accounts, invite identities, and per-product management capability.
   Dependency: `GNAP-030`, `GNAP-031`
   Acceptance criteria:
-  - Agency-side Google settings can persist manager customer ID, invite email, and preferred mode where applicable.
+  - Agency-side Google settings can persist manager customer ID, manager account label, invite email, and preferred mode where applicable.
   - Validation prevents impossible configurations from being selected as defaults.
+  - Validation normalizes Google Ads customer IDs and rejects malformed manager IDs.
   - Existing Google connection health UI remains intact.
 
 - [ ] `GNAP-033` Implement grouped Google scope planning for discovery vs native-management features.
@@ -314,26 +355,42 @@ Implementation-time unknowns that still require verification in code review and 
   - Existing grouped OAuth behavior remains backward-compatible for current discovery-only requests.
   - Management-only scopes are not requested when they are not needed.
 
-- [ ] `GNAP-040` Implement the Google native access orchestrator and queue-backed lifecycle.
+- [x] `GNAP-040` Implement the Google native access orchestrator and queue-backed lifecycle.
   Dependency: `GNAP-030`, `GNAP-031`, `GNAP-032`, `GNAP-033`
   Acceptance criteria:
   - Orchestration plans grants per selected asset and enqueues native grant jobs.
   - Re-runs are idempotent at the per-asset level.
   - The orchestrator never marks fulfillment complete before verification.
+  - Google Ads planning chooses `manager_link` by default when agency MCC settings are eligible and records fallback reasons when it selects `user_invite` instead.
+  Notes:
+  - Initial orchestrator coverage is wired through the client Google `save-assets` flow and persists `googleGrantLifecycle` back into selected-asset payloads so request/client status remains truthful before execution lands.
+  - Queue-backed grant planning is now in place; provider-specific execution remains in `GNAP-041` through `GNAP-046`.
 
-- [ ] `GNAP-041` Implement automated Google Ads direct-user invitation execution.
+- [x] `GNAP-041` Implement automated Google Ads direct-user invitation execution.
   Dependency: `GNAP-021`, `GNAP-040`
   Acceptance criteria:
   - The service creates `CustomerUserAccessInvitation` records through the Google Ads API.
   - Pending invitations are persisted with provider IDs/resource names.
   - Agency request-detail surfaces can show that the invite is awaiting agency-user acceptance when applicable.
+  - Direct user invites can run as the configured default or as an orchestrator-selected fallback from MCC mode.
+  Notes:
+  - Direct user invites now execute with the client Google token, persist invitation IDs/resource names, and verify accepted access through `customer_user_access` on re-run.
+  - `googleGrantLifecycle` now distinguishes client-pending MCC links from agency-pending direct invites.
 
 - [ ] `GNAP-042` Implement automated Google Ads manager-account linking execution.
   Dependency: `GNAP-022`, `GNAP-040`
   Acceptance criteria:
   - The service creates `CustomerClientLink` invitations from the agency manager account.
   - Verification can prove when the client account has accepted and the link is active.
-  - MCC mode can be selected as the default and fall back safely when preconditions are not met.
+  - MCC mode is the default when agency configuration is eligible.
+  - The service persists client-pending status truthfully while Google is waiting for acceptance.
+  - Fallback to `user_invite` is limited to explicitly allowed conditions and records the fallback reason for later support/debugging.
+  Notes:
+  - The current slice executes queued Google Ads `manager_link` grants end-to-end: create invitation, resolve `managerLinkId`, verify active links on re-run, and sync `googleGrantLifecycle` back into client/auth metadata.
+  - Retryable Google Ads provider failures now keep the grant in its pending state and rethrow through BullMQ so bounded retries can run; non-retryable provider failures now persist `follow_up_needed` and update `googleGrantLifecycle` truthfully instead of collapsing to generic internal errors.
+  - Safe automatic fallback is now implemented for explicit pre-mutation Google Ads auth failures (`USER_PERMISSION_DENIED`, `NOT_ADS_USER`): the original MCC grant is marked failed with fallback metadata, a `user_invite` fallback grant is upserted and queued, and selected-asset lifecycle state switches to queued `user_invite` pending.
+  - The Google Ads connector now extracts actionable auth/error codes from nested `GoogleAdsFailure.details` payloads, so fallback and retry policy can use real provider error codes instead of only top-level HTTP/API statuses.
+  - The task stays open until safe MCC fallback conditions and retry/reconciliation policy are finalized.
 
 - [ ] `GNAP-043` Implement GA4 native access-binding execution.
   Dependency: `GNAP-023`, `GNAP-040`
@@ -377,6 +434,9 @@ Implementation-time unknowns that still require verification in code review and 
   - Every native grant mutation and token read is audit logged with action, actor, timestamp, and metadata.
   - Retry limits and exponential backoff are explicit for provider-side transient failures.
   - User-facing errors use the existing `{ error: { code, message } }` contract.
+  Notes:
+  - Google Ads execution now classifies provider failures into retryable vs follow-up-needed paths, stores exact provider error codes/messages on the grant row, and only lets BullMQ retry transient failures.
+  - Non-retryable Google Ads grant failures now discard the BullMQ job before throwing so queue-level telemetry reflects a terminal failure without consuming additional retry attempts.
 
 - [ ] `GNAP-049` Add reusable Google grant-state helpers and shared UI primitives for pending/fulfilled/follow-up rendering.
   Dependency: `GNAP-030`, `GNAP-047`
@@ -448,6 +508,7 @@ Implementation-time unknowns that still require verification in code review and 
 4. Sandbox / live-provider validation
    - Confirm Google Ads user invites are generated and status is read back correctly
    - Confirm Google Ads manager links become active after client acceptance
+   - Confirm manager-link fallback boundaries with real-provider behavior so the system does not auto-fallback after ambiguous provider errors
    - Confirm GA4 access bindings create the expected access state and note whether Google sends a notification or grants immediately
    - Confirm Business Profile admin grants create the expected access state and whether Google emits email notifications
    - Confirm GTM user-permission creation and readback behavior
@@ -476,10 +537,13 @@ Implementation-time unknowns that still require verification in code review and 
 5. MCC mode can fail due to account hierarchy limits, missing manager configuration, or developer-token constraints.
    Mitigation: validate agency configuration up front, prefer MCC only when eligible, and fall back to user invites safely.
 
-6. Search Console may not support the same native automation class as the other Google products.
+6. Automatic fallback after a partially created manager-link mutation can cause duplicate or contradictory Google-side grants.
+   Mitigation: only auto-fallback on pre-mutation planner failures or explicitly safe provider failures; otherwise leave the grant in `follow_up_needed` for truthful operator handling.
+
+7. Search Console may not support the same native automation class as the other Google products.
    Mitigation: keep Search Console on a separate capability tier and do not promise native grant creation until official docs support it.
 
-7. Marketing and product semantics can drift again if OAuth and native access are conflated.
+8. Marketing and product semantics can drift again if OAuth and native access are conflated.
    Mitigation: centralize completion and status evaluation in the service layer and update copy/webhooks in the same sprint.
 
 ## Open Questions To Close During Milestone 1
@@ -490,9 +554,7 @@ Implementation-time unknowns that still require verification in code review and 
    Recommended answer: support both only if the role mapping is simple; otherwise location-level first.
 3. Should Merchant Center first slice include provider/service relationships, or direct user grants only?
    Recommended answer: direct user grants first, provider/service relationships later unless there is a clear customer need already validated.
-4. Should agencies be allowed to choose grant mode per request, or only per agency default in the first slice?
-   Recommended answer: agency default plus automatic fallback first; per-request override can follow.
-5. Do we expose Google-native grant retry controls in the UI immediately, or keep retries internal/admin-only in the first slice?
+4. Do we expose Google-native grant retry controls in the UI immediately, or keep retries internal/admin-only in the first slice?
    Recommended answer: internal/admin retry first, user-facing retry later if needed.
 
 ## Planned Verification Commands
@@ -521,3 +583,10 @@ Implementation-time unknowns that still require verification in code review and 
 4. `packages/shared/src/__tests__/types.test.ts` currently contains unrelated subscription-tier assertions for legacy `PRO` / `ENTERPRISE` values; keep that baseline failure separate from Google-native-access verification until the tier test suite is updated.
 5. `apps/api/src/services/__tests__/access-request.service.test.ts` still contains an unrelated dashboard-summary failure about revoked/expired requests; keep that baseline red separate from Google native-fulfillment verification until the dashboard summary path is fixed.
 6. `GNAP-031` introduces a new empty `google_native_grants` table with lazy row creation on future grant attempts, so no historical backfill is required for rollout.
+7. Milestone 1 must confirm whether the initial safe-fallback allowlist for Google Ads manager-link auth failures (`USER_PERMISSION_DENIED`, `NOT_ADS_USER`) should expand after live-provider validation, and which remaining provider errors must continue to stay on the MCC grant as `follow_up_needed`.
+8. `GNAP-032` shipped MCC/default-mode settings through the existing Google settings API and agency manage-assets UI, but screenshot evidence is still outstanding because this slice only ran focused component tests and typechecks.
+9. `GNAP-022` now has focused coverage for Google Ads manager-link provider calls and access-request default-mode resolution, but retry/termination behavior and safe fallback cases are still outstanding before the task can be marked complete.
+10. `GNAP-040` now queues planned native grants and persists pending lifecycle state from the client Google asset-selection step, but no background worker should execute queued jobs until the product-specific executors in `GNAP-041` onward are in place.
+11. Google Ads `manager_link` and `user_invite` now execute through the BullMQ native-grant worker; other Google products remain persisted-but-unqueued until their executors are implemented.
+12. The Google Ads executor now treats persisted `providerResourceName` values as a recovery marker, so retries resume from provider-side lookup instead of reissuing duplicate manager-link or user-invite mutations when the original create succeeded but post-create persistence was incomplete.
+13. BullMQ now discards non-retryable Google native-grant jobs before throwing, so terminal follow-up-needed failures are visible in queue failure telemetry without consuming retry attempts.

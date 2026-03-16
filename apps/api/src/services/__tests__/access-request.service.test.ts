@@ -396,6 +396,77 @@ describe('AccessRequestService', () => {
       expect(result.data?.authorizationProgress.isComplete).toBe(true);
     });
 
+    it('defaults Google Ads fulfillment to manager_link when the agency has valid MCC settings configured', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-google-mcc-default-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([
+        {
+          platform: 'google',
+          connectedBy: 'owner@agency.test',
+          metadata: {
+            googleAssetSettings: {
+              googleAdsManagement: {
+                preferredGrantMode: 'manager_link',
+                managerCustomerId: '6449142979',
+                inviteEmail: 'jon.highmu@gmail.com',
+              },
+            },
+            googleAccounts: {
+              adsAccounts: [
+                {
+                  id: '6449142979',
+                  isManager: true,
+                  type: 'google_ads',
+                  status: 'active',
+                  name: 'Pillar AI Agency MCC',
+                },
+              ],
+            },
+          },
+        },
+      ] as any);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-google-pending',
+          grantedAssets: {
+            google_ads: {
+              adAccounts: ['customers/123'],
+              availableAssetCount: 1,
+            },
+          },
+          authorizations: [{ platform: 'google', status: 'active' }],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken(
+        'token-google-mcc-default-123'
+      );
+
+      expect(result.error).toBeNull();
+      expect((result.data as any)?.authorizationProgress.googleProductFulfillment).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            product: 'google_ads',
+            fulfillmentMode: 'manager_link',
+            state: 'oauth_only_insufficient',
+            pendingActor: 'system',
+          }),
+        ])
+      );
+    });
+
     it('does not mark unsupported Search Console automation paths as complete', async () => {
       const mockRequest = {
         id: 'request-1',

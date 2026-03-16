@@ -43,9 +43,14 @@ export const trialExpirationQueue = registerQueueErrorHandler(new Queue('trial-e
   connection: bullMqConnectionOptions,
 }), 'trial-expiration');
 
+export const googleNativeGrantQueue = registerQueueErrorHandler(new Queue('google-native-grant', {
+  connection: bullMqConnectionOptions,
+}), 'google-native-grant');
+
 export const TOKEN_REFRESH_SCAN_JOB = 'check-expiring-tokens';
 export const TOKEN_REFRESH_JOB = 'refresh-token';
 export const WEBHOOK_DELIVERY_JOB = 'deliver-webhook-event';
+export const GOOGLE_NATIVE_GRANT_JOB = 'execute-google-native-grant';
 
 /**
  * Token Refresh Worker
@@ -378,6 +383,50 @@ export async function startTrialExpirationWorker() {
   return worker;
 }
 
+export async function startGoogleNativeGrantWorker() {
+  const worker = new Worker(
+    'google-native-grant',
+    async (job) => {
+      if (job.name !== GOOGLE_NATIVE_GRANT_JOB) {
+        return { success: false, error: 'UNKNOWN_JOB_TYPE' };
+      }
+
+      const { googleNativeAccessService } = await import('@/services/google-native-access.service');
+      const result = await googleNativeAccessService.executeGoogleNativeGrant(job.data.grantId);
+
+      if (result.error) {
+        if ((result.error.details as { retryable?: boolean } | undefined)?.retryable) {
+          throw new Error(result.error.message);
+        }
+
+        if (typeof job.discard === 'function') {
+          job.discard();
+        }
+
+        throw new Error(result.error.message);
+      }
+
+      return result.data;
+    },
+    {
+      connection: bullMqConnectionOptions,
+      concurrency: 5,
+    }
+  );
+
+  registerWorkerErrorHandler(worker, 'google-native-grant');
+
+  worker.on('completed', (job) => {
+    console.log(`Google native-grant job completed: ${job.id}`);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`Google native-grant job failed: ${job?.id}`, err);
+  });
+
+  return worker;
+}
+
 /**
  * Schedule recurring jobs
  */
@@ -456,6 +505,21 @@ export async function queueWebhookDelivery(eventId: string) {
         delay: 30000,
       },
       jobId: `webhook-${eventId}`,
+    }
+  );
+}
+
+export async function queueGoogleNativeGrantExecution(grantId: string) {
+  await googleNativeGrantQueue.add(
+    GOOGLE_NATIVE_GRANT_JOB,
+    { grantId },
+    {
+      attempts: 5,
+      backoff: {
+        type: 'exponential',
+        delay: 30000,
+      },
+      jobId: `google-native-grant-${grantId}`,
     }
   );
 }

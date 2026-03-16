@@ -374,6 +374,11 @@ type AuthorizationProgressConnection = {
   }>;
 };
 
+type AgencyPlatformConnectionSummary = {
+  platform: string;
+  metadata?: unknown;
+};
+
 const GOOGLE_PRODUCT_ID_SET = new Set<string>(GOOGLE_PLATFORM_PRODUCT_IDS);
 
 const GOOGLE_DEFAULT_FULFILLMENT_MODE: Record<
@@ -539,10 +544,65 @@ function extractSelectedAssets(
     : null;
 }
 
+function resolveGoogleDefaultFulfillmentMode(
+  requestedProduct: RequestedProduct,
+  agencyPlatformConnections: AgencyPlatformConnectionSummary[] = []
+): GoogleProductFulfillmentMode {
+  const defaultMode =
+    GOOGLE_DEFAULT_FULFILLMENT_MODE[requestedProduct.product as GooglePlatformProductId];
+
+  if (requestedProduct.product !== 'google_ads') {
+    return defaultMode;
+  }
+
+  const googleConnection = agencyPlatformConnections.find(
+    (connection) => connection.platform === 'google'
+  );
+  const metadata =
+    googleConnection?.metadata && typeof googleConnection.metadata === 'object'
+      ? (googleConnection.metadata as Record<string, any>)
+      : null;
+  const managementSettings =
+    metadata?.googleAssetSettings &&
+    typeof metadata.googleAssetSettings === 'object' &&
+    metadata.googleAssetSettings.googleAdsManagement &&
+    typeof metadata.googleAssetSettings.googleAdsManagement === 'object'
+      ? (metadata.googleAssetSettings.googleAdsManagement as Record<string, any>)
+      : null;
+
+  if (managementSettings?.preferredGrantMode !== 'manager_link') {
+    return defaultMode;
+  }
+
+  const managerCustomerId =
+    typeof managementSettings.managerCustomerId === 'string'
+      ? managementSettings.managerCustomerId.replace(/\D/g, '')
+      : '';
+
+  if (!managerCustomerId) {
+    return defaultMode;
+  }
+
+  const adsAccounts = Array.isArray(metadata?.googleAccounts?.adsAccounts)
+    ? metadata.googleAccounts.adsAccounts
+    : null;
+
+  if (adsAccounts && adsAccounts.length > 0) {
+    const selectedManager = adsAccounts.find(
+      (account: any) => account?.id === managerCustomerId && account?.isManager
+    );
+
+    return selectedManager ? 'manager_link' : defaultMode;
+  }
+
+  return 'manager_link';
+}
+
 function buildGoogleGrantLifecycle(
   requestedProduct: RequestedProduct,
   hasOAuthAuthorization: boolean,
-  selectedAssets: Record<string, any> | null
+  selectedAssets: Record<string, any> | null,
+  agencyPlatformConnections: AgencyPlatformConnectionSummary[] = []
 ): GoogleProductGrantLifecycle {
   const storedLifecycle =
     selectedAssets &&
@@ -554,7 +614,7 @@ function buildGoogleGrantLifecycle(
   const fulfillmentMode =
     typeof storedLifecycle?.fulfillmentMode === 'string'
       ? (storedLifecycle.fulfillmentMode as GoogleProductFulfillmentMode)
-      : GOOGLE_DEFAULT_FULFILLMENT_MODE[requestedProduct.product as GooglePlatformProductId];
+      : resolveGoogleDefaultFulfillmentMode(requestedProduct, agencyPlatformConnections);
 
   const grantStatus =
     typeof storedLifecycle?.grantStatus === 'string' ? storedLifecycle.grantStatus : undefined;
@@ -569,7 +629,8 @@ function buildGoogleGrantLifecycle(
 
 function evaluateAuthorizationProgress(
   requestedProducts: RequestedProduct[],
-  connections: AuthorizationProgressConnection[]
+  connections: AuthorizationProgressConnection[],
+  agencyPlatformConnections: AgencyPlatformConnectionSummary[] = []
 ) {
   const fulfilledProducts: RequestedProduct[] = [];
   const unresolvedProducts: UnresolvedProduct[] = [];
@@ -619,7 +680,8 @@ function evaluateAuthorizationProgress(
       const lifecycle = buildGoogleGrantLifecycle(
         requestedProduct,
         hasAuthorization,
-        resolvedSelectedAssets
+        resolvedSelectedAssets,
+        agencyPlatformConnections
       );
       googleProductFulfillment.push(lifecycle);
 
@@ -1181,7 +1243,8 @@ export async function getAccessRequestByToken(token: string) {
 
     const authorizationProgress = evaluateAuthorizationProgress(
       requestedProducts,
-      clientConnections as any
+      clientConnections as any,
+      platformConnections as any
     );
 
     return {

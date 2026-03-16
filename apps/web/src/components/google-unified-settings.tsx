@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { 
+  getDefaultGoogleAssetSettings,
+  type GoogleAdsGrantMode,
   GoogleAssetSettings,
   GoogleAccountsResponse
 } from '@agency-platform/shared';
@@ -26,6 +28,64 @@ import { cn } from '@/lib/utils';
 
 interface GoogleUnifiedSettingsProps {
   agencyId: string;
+}
+
+type GoogleSettingsProductKey = Exclude<keyof GoogleAssetSettings, 'googleAdsManagement'>;
+
+function mergeGoogleSettings(settings: GoogleAssetSettings | null | undefined): GoogleAssetSettings | null {
+  if (!settings) {
+    return null;
+  }
+
+  const defaults = getDefaultGoogleAssetSettings();
+  const mergedGoogleAdsManagement = {
+    preferredGrantMode:
+      settings.googleAdsManagement?.preferredGrantMode ||
+      defaults.googleAdsManagement?.preferredGrantMode ||
+      'user_invite',
+    ...(defaults.googleAdsManagement?.inviteEmail
+      ? { inviteEmail: defaults.googleAdsManagement.inviteEmail }
+      : {}),
+    ...(settings.googleAdsManagement?.inviteEmail
+      ? { inviteEmail: settings.googleAdsManagement.inviteEmail }
+      : {}),
+    ...(settings.googleAdsManagement?.managerCustomerId
+      ? { managerCustomerId: settings.googleAdsManagement.managerCustomerId }
+      : {}),
+    ...(settings.googleAdsManagement?.managerAccountLabel
+      ? { managerAccountLabel: settings.googleAdsManagement.managerAccountLabel }
+      : {}),
+  };
+
+  return {
+    ...defaults,
+    ...settings,
+    googleAdsManagement: mergedGoogleAdsManagement,
+    googleAds: {
+      ...defaults.googleAds,
+      ...settings.googleAds,
+    },
+    googleAnalytics: {
+      ...defaults.googleAnalytics,
+      ...settings.googleAnalytics,
+    },
+    googleBusinessProfile: {
+      ...defaults.googleBusinessProfile,
+      ...settings.googleBusinessProfile,
+    },
+    googleTagManager: {
+      ...defaults.googleTagManager,
+      ...settings.googleTagManager,
+    },
+    googleSearchConsole: {
+      ...defaults.googleSearchConsole,
+      ...settings.googleSearchConsole,
+    },
+    googleMerchantCenter: {
+      ...defaults.googleMerchantCenter,
+      ...settings.googleMerchantCenter,
+    },
+  };
 }
 
 export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) {
@@ -81,7 +141,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
 
   useEffect(() => {
     if (initialSettings) {
-      setSettings(initialSettings);
+      setSettings(mergeGoogleSettings(initialSettings));
     }
   }, [initialSettings]);
 
@@ -161,13 +221,39 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
     );
   }
 
-  const updateSetting = (key: keyof GoogleAssetSettings, field: string, value: any) => {
+  const updateSetting = (key: GoogleSettingsProductKey, field: string, value: any) => {
     const newSettings = {
       ...settings,
       [key]: { ...settings[key], [field]: value }
     };
     setSettings(newSettings);
     // Auto-save on change
+    saveSettings(newSettings);
+  };
+
+  const updateGoogleAdsManagement = (updates: Record<string, any>) => {
+    if (!settings) return;
+
+    const nextGoogleAdsManagement = {
+      preferredGrantMode: settings.googleAdsManagement?.preferredGrantMode || 'user_invite',
+      ...(settings.googleAdsManagement?.inviteEmail
+        ? { inviteEmail: settings.googleAdsManagement.inviteEmail }
+        : {}),
+      ...(settings.googleAdsManagement?.managerCustomerId
+        ? { managerCustomerId: settings.googleAdsManagement.managerCustomerId }
+        : {}),
+      ...(settings.googleAdsManagement?.managerAccountLabel
+        ? { managerAccountLabel: settings.googleAdsManagement.managerAccountLabel }
+        : {}),
+      ...updates,
+    };
+
+    const newSettings: GoogleAssetSettings = {
+      ...settings,
+      googleAdsManagement: nextGoogleAdsManagement,
+    };
+
+    setSettings(newSettings);
     saveSettings(newSettings);
   };
 
@@ -186,7 +272,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
     saveSettings(newSettings);
   };
 
-  const handleAccountSelect = (product: keyof GoogleAssetSettings, accountId: string, accountName: string) => {
+  const handleAccountSelect = (product: GoogleSettingsProductKey, accountId: string, accountName: string) => {
     const idField = product === 'googleAnalytics' ? 'propertyId' : 
                     product === 'googleBusinessProfile' ? 'locationId' :
                     product === 'googleTagManager' ? 'containerId' :
@@ -204,9 +290,105 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
     settings.googleAds.accountId && !hasActiveGoogleAdsSelection
       ? settings.googleAds.accountId
       : null;
+  const managerAccounts = (accountsData?.adsAccounts || []).filter((account) => account.isManager);
+  const googleAdsManagement = settings.googleAdsManagement || getDefaultGoogleAssetSettings().googleAdsManagement!;
+  const googleAdsGrantModeOptions = [
+    { value: 'manager_link', label: 'Manager account (MCC)' },
+    { value: 'user_invite', label: 'Direct user invite' },
+  ];
 
   return (
     <div className="space-y-6">
+      <ManageAssetsSectionCard
+        eyebrow="Access defaults"
+        title="Google Ads access defaults"
+        description="Set the agency-wide Google Ads mode the orchestrator should try first. MCC linking is preferred when you have an eligible manager account configured."
+      >
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Default grant mode
+              </label>
+              <SingleSelect
+                ariaLabel="Default Google Ads grant mode"
+                options={googleAdsGrantModeOptions}
+                value={googleAdsManagement.preferredGrantMode}
+                onChange={(value) =>
+                  updateGoogleAdsManagement({
+                    preferredGrantMode: value as GoogleAdsGrantMode,
+                  })
+                }
+                placeholder="Select grant mode..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="google-ads-invite-email"
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground"
+              >
+                Invite email
+              </label>
+              <input
+                id="google-ads-invite-email"
+                type="email"
+                aria-label="Google Ads invite email"
+                value={googleAdsManagement.inviteEmail || ''}
+                onChange={(event) =>
+                  updateGoogleAdsManagement({
+                    inviteEmail: event.target.value,
+                  })
+                }
+                className="h-11 w-full rounded-xl border border-border bg-paper px-3 text-sm text-ink shadow-sm outline-none transition focus:border-coral focus:ring-2 focus:ring-coral/20"
+                placeholder="jon.highmu@gmail.com"
+              />
+            </div>
+          </div>
+
+          {googleAdsManagement.preferredGrantMode === 'manager_link' && (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Manager account
+                </label>
+                <SingleSelect
+                  ariaLabel="Select Manager Account"
+                  options={managerAccounts.map((account) => ({
+                    value: account.id,
+                    label: getGoogleAdsAccountLabel(account),
+                  }))}
+                  value={googleAdsManagement.managerCustomerId || ''}
+                  onChange={(value, label) =>
+                    updateGoogleAdsManagement({
+                      managerCustomerId: value,
+                      managerAccountLabel: label,
+                    })
+                  }
+                  placeholder="Select Manager Account..."
+                />
+              </div>
+
+              {managerAccounts.length === 0 && (
+                <ManageAssetsStatusPanel
+                  label="MCC readiness"
+                  title="No eligible manager account found"
+                  description="Refresh Google accounts and connect an eligible Google Ads manager account before defaulting to MCC linking."
+                  tone="warning"
+                />
+              )}
+            </>
+          )}
+
+          <ManageAssetsStatusPanel
+            label="Fallback behavior"
+            title="MCC first, direct invite only when safe"
+            description="If manager linking is not eligible, the platform can fall back to a direct Google Ads user invite and record why it changed modes."
+            tone="default"
+          />
+        </div>
+      </ManageAssetsSectionCard>
+
       <ManageAssetsSectionCard
         eyebrow="Product controls"
         title="Google products"

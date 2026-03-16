@@ -444,4 +444,86 @@ describe('GoogleUnifiedSettings', () => {
 
     await user.click(screen.getByRole('option', { name: /Enabled Account.*111-111-1111/i }));
   });
+
+  it('renders Google Ads MCC defaults and limits manager selection to manager accounts', async () => {
+    const fetchMock = vi.fn(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes('/agency-platforms/google/accounts')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              adsAccounts: [
+                {
+                  id: '6449142979',
+                  name: 'Pillar AI Agency MCC',
+                  formattedId: '644-914-2979',
+                  nameSource: 'hierarchy',
+                  isManager: true,
+                  type: 'google_ads',
+                  status: 'active',
+                },
+                {
+                  id: '5497559774',
+                  name: 'Client Ads Account',
+                  formattedId: '549-755-9774',
+                  nameSource: 'direct',
+                  isManager: false,
+                  type: 'google_ads',
+                  status: 'active',
+                },
+              ],
+              analyticsProperties: [],
+              businessAccounts: [],
+              tagManagerContainers: [],
+              searchConsoleSites: [],
+              merchantCenterAccounts: [],
+              hasAccess: true,
+            },
+          }),
+        } as any;
+      }
+
+      if (url.includes('/agency-platforms/google/asset-settings')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              googleAdsManagement: {
+                preferredGrantMode: 'manager_link',
+                managerCustomerId: '6449142979',
+                managerAccountLabel: 'Pillar AI Agency MCC',
+                inviteEmail: 'jon.highmu@gmail.com',
+              },
+              googleAds: { enabled: true, requestManageUsers: false },
+              googleAnalytics: { enabled: false, requestManageUsers: false },
+              googleBusinessProfile: { enabled: false, requestManageUsers: false },
+              googleTagManager: { enabled: false, requestManageUsers: false },
+              googleSearchConsole: { enabled: false, requestManageUsers: false },
+              googleMerchantCenter: { enabled: false, requestManageUsers: false },
+            },
+          }),
+        } as any;
+      }
+
+      return { ok: true, json: async () => ({ data: null }) } as any;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const user = userEvent.setup();
+    const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+
+    expect(await screen.findByText(/google ads access defaults/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('jon.highmu@gmail.com')).toBeInTheDocument();
+
+    const managerCombobox = screen.getByRole('combobox', { name: /Select Manager Account/i });
+    await user.click(managerCombobox);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
+    });
+    expect(container.textContent).not.toContain('Client Ads Account • 549-755-9774');
+  });
 });

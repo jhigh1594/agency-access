@@ -242,6 +242,7 @@ const start = async () => {
     const {
       scheduleJobs,
       startCleanupWorker,
+      startGoogleNativeGrantWorker,
       startNotificationWorker,
       startOnboardingEmailWorker,
       startTokenRefreshWorker,
@@ -265,6 +266,12 @@ const start = async () => {
       'trial expiration worker',
       startTrialExpirationWorker,
       'Trial expiration jobs will be disabled until Redis is available.'
+    );
+
+    await startOptionalBackgroundTask(
+      'google native grant worker',
+      startGoogleNativeGrantWorker,
+      'Google native grant execution will be disabled until Redis is available.'
     );
 
     await startOptionalBackgroundTask(

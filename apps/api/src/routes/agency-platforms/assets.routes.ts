@@ -595,7 +595,15 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const result = await googleAssetsService.saveAssetSettings(agencyId, settings);
 
     if (result.error) {
-      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send(result);
+      return reply
+        .code(
+          result.error.code === 'NOT_FOUND'
+            ? 404
+            : result.error.code === 'VALIDATION_ERROR'
+              ? 400
+              : 500
+        )
+        .send(result);
     }
 
     return reply.send(result);

@@ -3,9 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { auditService } from '@/services/audit.service';
 import { refreshClientPlatformAuthorization } from '@/services/token-lifecycle.service';
 import { webhookDeliveryService } from '@/services/webhook-delivery.service';
+import { googleNativeAccessService } from '@/services/google-native-access.service';
 import {
   processExpiringTokens,
+  GOOGLE_NATIVE_GRANT_JOB,
+  queueGoogleNativeGrantExecution,
   queueWebhookDelivery,
+  startGoogleNativeGrantWorker,
   startWebhookDeliveryWorker,
   startTokenRefreshWorker,
   WEBHOOK_DELIVERY_JOB,
@@ -59,6 +63,12 @@ vi.mock('@/services/token-lifecycle.service', () => ({
 vi.mock('@/services/webhook-delivery.service', () => ({
   webhookDeliveryService: {
     deliverWebhookEvent: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/google-native-access.service', () => ({
+  googleNativeAccessService: {
+    executeGoogleNativeGrant: vi.fn(),
   },
 }));
 
@@ -157,6 +167,103 @@ describe('queue', () => {
         }),
       })
     );
+  });
+
+  it('queues Google native-grant execution jobs with per-grant idempotency and retry settings', async () => {
+    await queueGoogleNativeGrantExecution('grant-1');
+
+    expect(queueAddMock).toHaveBeenCalledWith(
+      GOOGLE_NATIVE_GRANT_JOB,
+      { grantId: 'grant-1' },
+      expect.objectContaining({
+        jobId: 'google-native-grant-grant-1',
+        attempts: expect.any(Number),
+        backoff: expect.objectContaining({
+          type: 'exponential',
+        }),
+      })
+    );
+  });
+
+  it('google native-grant worker delegates execution jobs to the native-access service', async () => {
+    vi.mocked(googleNativeAccessService.executeGoogleNativeGrant).mockResolvedValue({
+      data: {
+        grantId: 'grant-1',
+        nativeGrantState: 'awaiting_client_acceptance',
+      },
+      error: null,
+    } as any);
+
+    await startGoogleNativeGrantWorker();
+    const processor = workerProcessors.get('google-native-grant');
+
+    expect(processor).toBeTypeOf('function');
+
+    const result = await processor!({
+      name: GOOGLE_NATIVE_GRANT_JOB,
+      data: {
+        grantId: 'grant-1',
+      },
+    });
+
+    expect(result).toEqual({
+      grantId: 'grant-1',
+      nativeGrantState: 'awaiting_client_acceptance',
+    });
+    expect(googleNativeAccessService.executeGoogleNativeGrant).toHaveBeenCalledWith('grant-1');
+  });
+
+  it('google native-grant worker discards non-retryable failures and throws for terminal telemetry', async () => {
+    vi.mocked(googleNativeAccessService.executeGoogleNativeGrant).mockResolvedValue({
+      data: null,
+      error: {
+        code: 'FAILED_PRECONDITION',
+        message: 'Manager link cannot be created for this account',
+        details: {
+          retryable: false,
+        },
+      },
+    } as any);
+
+    await startGoogleNativeGrantWorker();
+    const processor = workerProcessors.get('google-native-grant');
+    const discard = vi.fn();
+
+    await expect(
+      processor!({
+        name: GOOGLE_NATIVE_GRANT_JOB,
+        data: {
+          grantId: 'grant-2',
+        },
+        discard,
+      })
+    ).rejects.toThrow('Manager link cannot be created for this account');
+    expect(discard).toHaveBeenCalledTimes(1);
+  });
+
+  it('google native-grant worker throws retryable failures so BullMQ retries the job', async () => {
+    vi.mocked(googleNativeAccessService.executeGoogleNativeGrant).mockResolvedValue({
+      data: null,
+      error: {
+        code: 'UNAVAILABLE',
+        message: 'Google Ads API temporarily unavailable',
+        details: {
+          retryable: true,
+        },
+      },
+    } as any);
+
+    await startGoogleNativeGrantWorker();
+    const processor = workerProcessors.get('google-native-grant');
+
+    await expect(
+      processor!({
+        name: GOOGLE_NATIVE_GRANT_JOB,
+        data: {
+          grantId: 'grant-3',
+        },
+      })
+    ).rejects.toThrow('Google Ads API temporarily unavailable');
   });
 
   it('webhook delivery worker delegates delivery jobs to the webhook delivery service', async () => {

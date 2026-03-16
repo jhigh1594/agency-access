@@ -7,8 +7,8 @@
 - Mapped tasks: `GNAP-010`, `GNAP-013`, `GNAP-020`, `GNAP-030`, `GNAP-040`, `GNAP-047`
 
 ### Requirement 2: Google Ads must support both manager-account linking and direct user invites
-- Agencies need parity with the validated competitor patterns: MCC/manager linking where configured, and direct user invites where MCC is unavailable or not preferred.
-- Mapped tasks: `GNAP-011`, `GNAP-021`, `GNAP-022`, `GNAP-032`, `GNAP-041`, `GNAP-042`
+- Agencies need parity with the validated competitor patterns: MCC/manager linking should be the default when the agency has an eligible manager account configured, with truthful fallback to direct user invites only when MCC preconditions or explicitly safe provider failures allow it.
+- Mapped tasks: `GNAP-011`, `GNAP-021`, `GNAP-022`, `GNAP-032`, `GNAP-040`, `GNAP-041`, `GNAP-042`
 
 ### Requirement 3: GA4 must support native user grants with truthful role and status handling
 - GA4 access should be granted natively on the requested account/property, with exact role mapping and verified completion instead of OAuth-only success semantics.

@@ -84,6 +84,7 @@ describe('queue runtime safety', () => {
     ).toBe(true);
 
     await queueModule.startTokenRefreshWorker();
+    await queueModule.startGoogleNativeGrantWorker();
     await queueModule.startWebhookDeliveryWorker();
 
     expect(workerInstances.length).toBeGreaterThan(0);

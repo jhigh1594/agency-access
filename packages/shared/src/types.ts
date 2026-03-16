@@ -1181,7 +1181,62 @@ export interface GoogleAccountsResponse {
   hasAccess: boolean;
 }
 
+export const GoogleAdsGrantModeSchema = z.enum(['manager_link', 'user_invite']);
+export type GoogleAdsGrantMode = z.infer<typeof GoogleAdsGrantModeSchema>;
+
+export interface GoogleAdsManagementSettings {
+  preferredGrantMode: GoogleAdsGrantMode;
+  managerCustomerId?: string;
+  managerAccountLabel?: string;
+  inviteEmail?: string;
+}
+
+function normalizeGoogleAdsCustomerId(value: unknown): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed.replace(/\D/g, '');
+}
+
+export const GoogleAdsManagementSettingsSchema = z
+  .object({
+    preferredGrantMode: GoogleAdsGrantModeSchema.default('user_invite'),
+    managerCustomerId: z.preprocess(
+      normalizeGoogleAdsCustomerId,
+      z
+        .string()
+        .regex(/^\d{10}$/, 'Manager customer ID must be a 10-digit Google Ads customer ID')
+        .optional()
+    ),
+    managerAccountLabel: z.string().trim().min(1).optional(),
+    inviteEmail: z.string().trim().email('Invite email must be a valid email address').optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.preferredGrantMode === 'manager_link' && !value.managerCustomerId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['managerCustomerId'],
+        message: 'Manager customer ID is required when MCC linking is the default.',
+      });
+    }
+
+    if (value.preferredGrantMode === 'user_invite' && !value.inviteEmail) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['inviteEmail'],
+        message: 'Invite email is required when direct user invite is the default.',
+      });
+    }
+  });
+
 export interface GoogleAssetSettings {
+  googleAdsManagement?: GoogleAdsManagementSettings;
   googleAds: {
     enabled: boolean;
     accountId?: string;
@@ -1211,6 +1266,55 @@ export interface GoogleAssetSettings {
     enabled: boolean;
     accountId?: string;
     requestManageUsers?: boolean;
+  };
+}
+
+export const GoogleAssetSettingsSchema = z.object({
+  googleAdsManagement: GoogleAdsManagementSettingsSchema.optional(),
+  googleAds: z.object({
+    enabled: z.boolean(),
+    accountId: z.string().min(1).optional(),
+    requestManageUsers: z.boolean().optional(),
+  }),
+  googleAnalytics: z.object({
+    enabled: z.boolean(),
+    propertyId: z.string().min(1).optional(),
+    requestManageUsers: z.boolean().optional(),
+  }),
+  googleBusinessProfile: z.object({
+    enabled: z.boolean(),
+    locationId: z.string().min(1).optional(),
+    requestManageUsers: z.boolean().optional(),
+  }),
+  googleTagManager: z.object({
+    enabled: z.boolean(),
+    containerId: z.string().min(1).optional(),
+    requestManageUsers: z.boolean().optional(),
+  }),
+  googleSearchConsole: z.object({
+    enabled: z.boolean(),
+    siteUrl: z.string().min(1).optional(),
+    requestManageUsers: z.boolean().optional(),
+  }),
+  googleMerchantCenter: z.object({
+    enabled: z.boolean(),
+    accountId: z.string().min(1).optional(),
+    requestManageUsers: z.boolean().optional(),
+  }),
+});
+
+export function getDefaultGoogleAssetSettings(inviteEmail?: string): GoogleAssetSettings {
+  return {
+    googleAdsManagement: {
+      preferredGrantMode: 'user_invite',
+      ...(inviteEmail ? { inviteEmail } : {}),
+    },
+    googleAds: { enabled: true, requestManageUsers: false },
+    googleAnalytics: { enabled: true, requestManageUsers: false },
+    googleBusinessProfile: { enabled: true, requestManageUsers: false },
+    googleTagManager: { enabled: true, requestManageUsers: false },
+    googleSearchConsole: { enabled: true, requestManageUsers: false },
+    googleMerchantCenter: { enabled: true, requestManageUsers: false },
   };
 }
 

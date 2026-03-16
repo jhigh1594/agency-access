@@ -5,6 +5,7 @@ import {
   clientAssetsService,
   MetaBusinessPortfolioUnavailableError,
 } from '../../services/client-assets.service.js';
+import { googleNativeAccessService } from '@/services/google-native-access.service';
 import {
   mapAccessLevelToTikTokRole,
   tiktokPartnerService,
@@ -17,6 +18,7 @@ import {
   MetaClientAuthorizationMetadataSchema,
   type MetaAssetGrantResult,
   type MetaClientAuthorizationMetadata,
+  type GooglePlatformProductId,
   type Platform,
 } from '@agency-platform/shared';
 import type { GoogleProduct } from '../../services/connectors/google.js';
@@ -34,6 +36,15 @@ import { metaPartnerService } from '@/services/meta-partner.service';
 import { MetaConnector } from '@/services/connectors/meta';
 
 type ShareResultWithVerification = TikTokPartnerShareResultItem & { verified?: boolean };
+
+const GOOGLE_NATIVE_ACCESS_PRODUCTS = new Set<GoogleProduct>([
+  'google_ads',
+  'ga4',
+  'google_business_profile',
+  'google_tag_manager',
+  'google_search_console',
+  'google_merchant_center',
+]);
 
 function resolveAgencyTikTokBusinessCenterId(connection: {
   businessId?: string | null;
@@ -351,11 +362,38 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
       }
       const connection = authContext.connection;
+      let resolvedSelectedAssets = selectedAssets;
+
+      if (GOOGLE_NATIVE_ACCESS_PRODUCTS.has(platform as GoogleProduct) && authContext.accessRequest) {
+        const orchestrationResult = await googleNativeAccessService.planGoogleNativeGrants({
+          accessRequest: authContext.accessRequest as any,
+          connection,
+          platform: platform as GooglePlatformProductId,
+          selectedAssets,
+        });
+
+        if (orchestrationResult.error) {
+          return reply.code(500).send({
+            data: null,
+            error: {
+              code: orchestrationResult.error.code,
+              message: orchestrationResult.error.message,
+              ...(orchestrationResult.error.details
+                ? { details: orchestrationResult.error.details }
+                : {}),
+            },
+          });
+        }
+
+        if (orchestrationResult.data?.selectedAssets) {
+          resolvedSelectedAssets = orchestrationResult.data.selectedAssets as typeof selectedAssets;
+        }
+      }
 
       const currentGrantedAssets = (connection.grantedAssets as any) || {};
       const updatedGrantedAssets = {
         ...currentGrantedAssets,
-        [platform]: selectedAssets,
+        [platform]: resolvedSelectedAssets,
       };
 
       await prisma.clientConnection.update({
@@ -400,14 +438,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           authPlatform === 'tiktok'
             ? {
                 selectedAdvertiserIds:
-                  selectedAssets.selectedAdvertiserIds ||
-                  selectedAssets.adAccounts ||
-                  selectedAssets.advertisers ||
+                  resolvedSelectedAssets.selectedAdvertiserIds ||
+                  resolvedSelectedAssets.adAccounts ||
+                  resolvedSelectedAssets.advertisers ||
                   [],
-                selectedBusinessCenterId: selectedAssets.selectedBusinessCenterId || null,
+                selectedBusinessCenterId: resolvedSelectedAssets.selectedBusinessCenterId || null,
                 discoverySnapshot: {
-                  advertisers: selectedAssets.availableAdvertisers || [],
-                  businessCenters: selectedAssets.availableBusinessCenters || [],
+                  advertisers: resolvedSelectedAssets.availableAdvertisers || [],
+                  businessCenters: resolvedSelectedAssets.availableBusinessCenters || [],
                 },
               }
             : undefined;
@@ -416,7 +454,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           ...existingMetadata,
           selectedAssets: {
             ...(existingMetadata.selectedAssets || {}),
-            [platform]: selectedAssets,
+            [platform]: resolvedSelectedAssets,
           },
           ...(tiktokSelection
             ? {
@@ -442,7 +480,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         resourceId: connection.id,
         metadata: {
           platform,
-          selectedAssets,
+          selectedAssets: resolvedSelectedAssets,
         },
       });
 
