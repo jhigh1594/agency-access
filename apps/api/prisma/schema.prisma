@@ -161,6 +161,7 @@ model AccessRequest {
   agency     Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   client     Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
   connection ClientConnection?
+  googleNativeGrants GoogleNativeGrant[]
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
@@ -253,6 +254,7 @@ model ClientConnection {
   accessRequest  AccessRequest           @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
   agency         Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   authorizations PlatformAuthorization[]
+  googleNativeGrants GoogleNativeGrant[]
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
@@ -323,6 +325,38 @@ model AuthorizationVerification {
   @@unique([connectionId, platform])
   @@index([accessRequestId, status])
   @@map("authorization_verifications")
+}
+
+model GoogleNativeGrant {
+  id                  String    @id @default(uuid())
+  accessRequestId     String    @map("access_request_id")
+  connectionId        String    @map("connection_id")
+  product             String
+  assetId             String    @map("asset_id")
+  assetName           String?   @map("asset_name")
+  grantMode           String    @map("grant_mode")
+  requestedRole       String?   @map("requested_role")
+  recipientEmail      String?   @map("recipient_email")
+  managerCustomerId   String?   @map("manager_customer_id")
+  providerResourceName String?  @map("provider_resource_name")
+  providerExternalId  String?   @map("provider_external_id")
+  nativeGrantState    String    @map("native_grant_state")
+  lastAttemptAt       DateTime? @map("last_attempt_at")
+  verifiedAt          DateTime? @map("verified_at")
+  lastErrorCode       String?   @map("last_error_code")
+  lastErrorMessage    String?   @map("last_error_message") @db.Text
+  metadata            Json?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  accessRequest AccessRequest   @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
+  connection    ClientConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, product, assetId, grantMode])
+  @@index([accessRequestId, product, createdAt])
+  @@index([connectionId, nativeGrantState, updatedAt])
+  @@index([product, nativeGrantState, updatedAt])
+  @@map("google_native_grants")
 }
 
 // Agency usage counters for quota tracking

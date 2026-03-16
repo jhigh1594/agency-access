@@ -167,6 +167,18 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     defaultScopes: ['ads_management', 'ads_read', 'business_management', 'pages_read_engagement'],
   },
 
+  meta_pages: {
+    name: 'Meta Pages',
+    authUrl: 'https://www.facebook.com/v20.0/dialog/oauth',
+    tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
+    scopeSeparator: ',',
+    version: 'v20.0',
+    requiresLongLivedExchange: true,
+    userInfoUrl: 'https://graph.facebook.com/v20.0/me',
+    supportsRefreshTokens: false,
+    defaultScopes: ['business_management', 'pages_read_engagement'],
+  },
+
   instagram: {
     name: 'Instagram',
     authUrl: 'https://www.facebook.com/v20.0/dialog/oauth',

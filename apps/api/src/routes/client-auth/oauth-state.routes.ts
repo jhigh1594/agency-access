@@ -3,7 +3,7 @@ import { accessRequestService } from '../../services/access-request.service.js';
 import { oauthStateService } from '../../services/oauth-state.service.js';
 import { getConnector } from '../../services/connectors/factory.js';
 import { env } from '../../lib/env.js';
-import type { Platform } from '@agency-platform/shared';
+import { resolveGoogleOAuthScopes, type Platform } from '@agency-platform/shared';
 import { createOAuthStateSchema } from './schemas.js';
 import { resolveClientInviteCallbackUrl } from './redirect-uri.js';
 
@@ -157,27 +157,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
       let scopes: string[] | undefined;
       if (platform === 'google') {
         const productIds = getRequestedGroupProductIds(accessRequest.data.platforms, 'google');
-
-        scopes = [];
-        if (productIds.includes('google_ads')) {
-          scopes.push('https://www.googleapis.com/auth/adwords');
-        }
-        if (productIds.includes('ga4')) {
-          scopes.push('https://www.googleapis.com/auth/analytics.readonly');
-        }
-        if (productIds.includes('google_business_profile')) {
-          scopes.push('https://www.googleapis.com/auth/business.manage');
-        }
-        if (productIds.includes('google_tag_manager')) {
-          scopes.push('https://www.googleapis.com/auth/tagmanager.readonly');
-        }
-        if (productIds.includes('google_merchant_center')) {
-          scopes.push('https://www.googleapis.com/auth/content');
-        }
-        if (productIds.includes('google_search_console')) {
-          scopes.push('https://www.googleapis.com/auth/webmasters');
-        }
-        scopes.push('https://www.googleapis.com/auth/userinfo.email');
+        scopes = resolveGoogleOAuthScopes(productIds);
       }
 
       if (platform === 'linkedin') {

@@ -14,6 +14,11 @@ import {
   type AccessRequestStatus,
   type ConnectionStatus,
   type DashboardRequestSummary,
+  GOOGLE_PLATFORM_PRODUCT_IDS,
+  evaluateGoogleProductFulfillment,
+  type GooglePlatformProductId,
+  type GoogleProductFulfillmentMode,
+  type GoogleProductGrantLifecycle,
 } from '@agency-platform/shared';
 import { invalidateCache } from '@/lib/cache.js';
 import { env } from '@/lib/env.js';
@@ -109,6 +114,7 @@ const PLATFORM_GROUP_MAP: Record<string, string> = {
   'display_video_360': 'google',
   // Meta products
   'meta_ads': 'meta',
+  'meta_pages': 'meta',
   'instagram': 'meta',
   'whatsapp_business': 'meta',
   // Other platforms (standalone)
@@ -344,6 +350,7 @@ const ASSET_SELECTING_PRODUCTS = new Set([
   'google_search_console',
   'google_merchant_center',
   'meta_ads',
+  'meta_pages',
   'linkedin_ads',
   'linkedin_pages',
   'tiktok',
@@ -359,12 +366,38 @@ type UnresolvedProduct = RequestedProduct & {
   reason: 'no_assets' | 'selection_required';
 };
 
+type AuthorizationProgressConnection = {
+  grantedAssets: unknown;
+  authorizations?: Array<{
+    platform: string;
+    status: string;
+  }>;
+};
+
+const GOOGLE_PRODUCT_ID_SET = new Set<string>(GOOGLE_PLATFORM_PRODUCT_IDS);
+
+const GOOGLE_DEFAULT_FULFILLMENT_MODE: Record<
+  GooglePlatformProductId,
+  GoogleProductFulfillmentMode
+> = {
+  google_ads: 'user_invite',
+  ga4: 'access_binding',
+  google_business_profile: 'location_admin',
+  google_tag_manager: 'user_permission',
+  google_search_console: 'discovery',
+  google_merchant_center: 'merchant_user',
+};
+
 function isActiveAuthorizationStatus(status: string): boolean {
   return status === 'active';
 }
 
 function isAssetSelectingProduct(product: string): boolean {
   return ASSET_SELECTING_PRODUCTS.has(product);
+}
+
+function isGooglePlatformProduct(product: string): product is GooglePlatformProductId {
+  return GOOGLE_PRODUCT_ID_SET.has(product);
 }
 
 function extractRequestedProducts(platforms: unknown): RequestedProduct[] {
@@ -415,6 +448,8 @@ function getSelectedAssetCount(product: string, assets: Record<string, any>): nu
         (assets.pages?.length ?? 0) +
         (assets.instagramAccounts?.length ?? 0)
       );
+    case 'meta_pages':
+      return assets.pages?.length ?? 0;
     case 'ga4':
       return assets.properties?.length ?? 0;
     case 'google_business_profile':
@@ -446,6 +481,7 @@ function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolea
     product === 'google_tag_manager' ||
     product === 'google_search_console' ||
     product === 'google_merchant_center' ||
+    product === 'meta_pages' ||
     product === 'linkedin_ads' ||
     product === 'linkedin_pages'
   ) {
@@ -461,10 +497,7 @@ function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolea
 
 function hasNonSelectingProductAccess(
   requestedProduct: RequestedProduct,
-  connection: {
-    grantedAssets: unknown;
-    authorizations?: Array<{ platform: string; status: string }>;
-  }
+  connection: AuthorizationProgressConnection
 ): boolean {
   const grantedAssets =
     (connection.grantedAssets as Record<string, unknown> | null) || null;
@@ -489,18 +522,58 @@ function hasNonSelectingProductAccess(
   );
 }
 
+function extractSelectedAssets(
+  requestedProduct: RequestedProduct,
+  connection: AuthorizationProgressConnection
+): Record<string, any> | null {
+  const grantedAssets =
+    (connection.grantedAssets as Record<string, unknown> | null) || null;
+
+  if (!grantedAssets || !(requestedProduct.product in grantedAssets)) {
+    return null;
+  }
+
+  const selectedAssets = grantedAssets[requestedProduct.product];
+  return selectedAssets && typeof selectedAssets === 'object'
+    ? (selectedAssets as Record<string, any>)
+    : null;
+}
+
+function buildGoogleGrantLifecycle(
+  requestedProduct: RequestedProduct,
+  hasOAuthAuthorization: boolean,
+  selectedAssets: Record<string, any> | null
+): GoogleProductGrantLifecycle {
+  const storedLifecycle =
+    selectedAssets &&
+    selectedAssets.googleGrantLifecycle &&
+    typeof selectedAssets.googleGrantLifecycle === 'object'
+      ? (selectedAssets.googleGrantLifecycle as Partial<GoogleProductGrantLifecycle>)
+      : null;
+
+  const fulfillmentMode =
+    typeof storedLifecycle?.fulfillmentMode === 'string'
+      ? (storedLifecycle.fulfillmentMode as GoogleProductFulfillmentMode)
+      : GOOGLE_DEFAULT_FULFILLMENT_MODE[requestedProduct.product as GooglePlatformProductId];
+
+  const grantStatus =
+    typeof storedLifecycle?.grantStatus === 'string' ? storedLifecycle.grantStatus : undefined;
+
+  return evaluateGoogleProductFulfillment({
+    productId: requestedProduct.product as GooglePlatformProductId,
+    hasOAuthAuthorization,
+    fulfillmentMode,
+    grantStatus,
+  });
+}
+
 function evaluateAuthorizationProgress(
   requestedProducts: RequestedProduct[],
-  connections: Array<{
-    grantedAssets: unknown;
-    authorizations?: Array<{
-      platform: string;
-      status: string;
-    }>;
-  }>
+  connections: AuthorizationProgressConnection[]
 ) {
   const fulfilledProducts: RequestedProduct[] = [];
   const unresolvedProducts: UnresolvedProduct[] = [];
+  const googleProductFulfillment: GoogleProductGrantLifecycle[] = [];
 
   for (const requestedProduct of requestedProducts) {
     if (!isAssetSelectingProduct(requestedProduct.product)) {
@@ -513,6 +586,7 @@ function evaluateAuthorizationProgress(
     let hasAuthorization = false;
     let hasSelectedAssets = false;
     let hasNoAssets = false;
+    let resolvedSelectedAssets: Record<string, any> | null = null;
 
     for (const connection of connections) {
       if (
@@ -525,25 +599,58 @@ function evaluateAuthorizationProgress(
         hasAuthorization = true;
       }
 
-      const grantedAssets =
-        (connection.grantedAssets as Record<string, unknown> | null) || null;
-      const selectedAssets =
-        grantedAssets && requestedProduct.product in grantedAssets
-          ? grantedAssets[requestedProduct.product]
-          : null;
-
-      if (!selectedAssets || typeof selectedAssets !== 'object') {
+      const selectedAssets = extractSelectedAssets(requestedProduct, connection);
+      if (!selectedAssets) {
         continue;
       }
 
-      const typedAssets = selectedAssets as Record<string, any>;
-      if (getSelectedAssetCount(requestedProduct.product, typedAssets) > 0) {
+      resolvedSelectedAssets = selectedAssets;
+
+      if (getSelectedAssetCount(requestedProduct.product, selectedAssets) > 0) {
         hasSelectedAssets = true;
       }
 
-      if (hasNoAssetsSignal(requestedProduct.product, typedAssets)) {
+      if (hasNoAssetsSignal(requestedProduct.product, selectedAssets)) {
         hasNoAssets = true;
       }
+    }
+
+    if (isGooglePlatformProduct(requestedProduct.product)) {
+      const lifecycle = buildGoogleGrantLifecycle(
+        requestedProduct,
+        hasAuthorization,
+        resolvedSelectedAssets
+      );
+      googleProductFulfillment.push(lifecycle);
+
+      if (hasNoAssets) {
+        unresolvedProducts.push({
+          ...requestedProduct,
+          reason: 'no_assets',
+        });
+        continue;
+      }
+
+      if (!hasSelectedAssets) {
+        if (hasAuthorization) {
+          unresolvedProducts.push({
+            ...requestedProduct,
+            reason: 'selection_required',
+          });
+        }
+        continue;
+      }
+
+      if (lifecycle.isFulfilled) {
+        fulfilledProducts.push(requestedProduct);
+        continue;
+      }
+
+      unresolvedProducts.push({
+        ...requestedProduct,
+        reason: lifecycle.state as UnresolvedProduct['reason'],
+      });
+      continue;
     }
 
     if (hasSelectedAssets) {
@@ -581,6 +688,7 @@ function evaluateAuthorizationProgress(
   return {
     fulfilledProducts,
     unresolvedProducts,
+    googleProductFulfillment,
     completedPlatforms,
     isComplete:
       requestedProducts.length > 0 && fulfilledProducts.length === requestedProducts.length,

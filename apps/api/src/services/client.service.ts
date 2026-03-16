@@ -8,7 +8,14 @@
 import { invalidateCache } from '@/lib/cache';
 import { infisical } from '@/lib/infisical';
 import { prisma } from '@/lib/prisma';
-import type { ClientLanguage } from '@agency-platform/shared';
+import {
+  GOOGLE_PLATFORM_PRODUCT_IDS,
+  evaluateGoogleProductFulfillment,
+  type ClientLanguage,
+  type GooglePlatformProductId,
+  type GoogleProductFulfillmentMode,
+  type GoogleProductGrantLifecycle,
+} from '@agency-platform/shared';
 import type { Prisma } from '@prisma/client';
 
 type Client = Prisma.ClientGetPayload<{}>;
@@ -401,6 +408,7 @@ const PLATFORM_GROUP_MAP: Record<string, string> = {
   google_search_console: 'google',
   google_merchant_center: 'google',
   meta_ads: 'meta',
+  meta_pages: 'meta',
   instagram: 'meta',
   whatsapp_business: 'meta',
   linkedin_ads: 'linkedin',
@@ -417,6 +425,7 @@ const ASSET_SELECTING_PRODUCTS = new Set([
   'google_search_console',
   'google_merchant_center',
   'meta_ads',
+  'meta_pages',
   'linkedin_ads',
   'linkedin_pages',
   'tiktok',
@@ -461,12 +470,30 @@ type ClientDetailAccessRequestRecord = {
   } | null;
 };
 
+const GOOGLE_PRODUCT_ID_SET = new Set<string>(GOOGLE_PLATFORM_PRODUCT_IDS);
+
+const GOOGLE_DEFAULT_FULFILLMENT_MODE: Record<
+  GooglePlatformProductId,
+  GoogleProductFulfillmentMode
+> = {
+  google_ads: 'user_invite',
+  ga4: 'access_binding',
+  google_business_profile: 'location_admin',
+  google_tag_manager: 'user_permission',
+  google_search_console: 'discovery',
+  google_merchant_center: 'merchant_user',
+};
+
 function normalizePlatformGroup(platform: string): string {
   return PLATFORM_GROUP_MAP[platform] || platform;
 }
 
 function isActiveAuthorizationStatus(status?: string | null): boolean {
   return status === 'active';
+}
+
+function isGooglePlatformProduct(product: string): product is GooglePlatformProductId {
+  return GOOGLE_PRODUCT_ID_SET.has(product);
 }
 
 function extractRequestedProducts(platforms: unknown): ClientDetailRequestedProduct[] {
@@ -542,6 +569,8 @@ function getSelectedAssetCount(product: string, assets: Record<string, any>): nu
         (assets.pages?.length ?? 0) +
         (assets.instagramAccounts?.length ?? 0)
       );
+    case 'meta_pages':
+      return assets.pages?.length ?? 0;
     case 'ga4':
       return assets.properties?.length ?? 0;
     case 'google_business_profile':
@@ -573,6 +602,7 @@ function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolea
     product === 'google_tag_manager' ||
     product === 'google_search_console' ||
     product === 'google_merchant_center' ||
+    product === 'meta_pages' ||
     product === 'linkedin_ads' ||
     product === 'linkedin_pages'
   ) {
@@ -586,19 +616,74 @@ function hasNoAssetsSignal(product: string, assets: Record<string, any>): boolea
   return false;
 }
 
-function resolveProductStatus(
+function resolveGoogleGrantLifecycle(
+  requestedProduct: ClientDetailRequestedProduct,
+  matchingAuthorization:
+    | {
+        platform: string;
+        status: string;
+        metadata?: unknown;
+      }
+    | undefined,
+  selectedAssets: Record<string, any> | null
+): GoogleProductGrantLifecycle | undefined {
+  if (!isGooglePlatformProduct(requestedProduct.product)) {
+    return undefined;
+  }
+
+  const authorizationMetadata =
+    matchingAuthorization?.metadata && typeof matchingAuthorization.metadata === 'object'
+      ? (matchingAuthorization.metadata as Record<string, any>)
+      : null;
+
+  const storedLifecycleSource =
+    (selectedAssets &&
+      selectedAssets.googleGrantLifecycle &&
+      typeof selectedAssets.googleGrantLifecycle === 'object'
+      ? selectedAssets.googleGrantLifecycle
+      : null) ||
+    (authorizationMetadata &&
+    authorizationMetadata.googleGrantLifecycle &&
+    typeof authorizationMetadata.googleGrantLifecycle === 'object'
+      ? authorizationMetadata.googleGrantLifecycle
+      : null);
+
+  const storedLifecycle = storedLifecycleSource as Partial<GoogleProductGrantLifecycle> | null;
+
+  const fulfillmentMode =
+    typeof storedLifecycle?.fulfillmentMode === 'string'
+      ? (storedLifecycle.fulfillmentMode as GoogleProductFulfillmentMode)
+      : GOOGLE_DEFAULT_FULFILLMENT_MODE[requestedProduct.product as GooglePlatformProductId];
+
+  const grantStatus =
+    typeof storedLifecycle?.grantStatus === 'string' ? storedLifecycle.grantStatus : undefined;
+
+  return evaluateGoogleProductFulfillment({
+    productId: requestedProduct.product as GooglePlatformProductId,
+    hasOAuthAuthorization: Boolean(
+      matchingAuthorization && isActiveAuthorizationStatus(matchingAuthorization.status)
+    ),
+    fulfillmentMode,
+    grantStatus,
+  });
+}
+
+function resolveProductSummary(
   request: ClientDetailAccessRequestRecord,
   requestedProduct: ClientDetailRequestedProduct
-): ClientDetailProductStatus {
+): {
+  status: ClientDetailProductStatus;
+  googleGrantLifecycle?: GoogleProductGrantLifecycle;
+} {
   const connectionStatus = request.connection?.status;
   const authorizations = request.connection?.authorizations || [];
 
   if (request.status === 'revoked' || connectionStatus === 'revoked') {
-    return 'revoked';
+    return { status: 'revoked' };
   }
 
   if (request.status === 'expired' || connectionStatus === 'expired') {
-    return 'expired';
+    return { status: 'expired' };
   }
 
   const matchingAuthorization = authorizations.find(
@@ -612,7 +697,7 @@ function resolveProductStatus(
       matchingAuthorization &&
       isActiveAuthorizationStatus(matchingAuthorization.status)
     ) {
-      return 'connected';
+      return { status: 'connected' };
     }
 
     const grantedAssets =
@@ -627,10 +712,10 @@ function resolveProductStatus(
       (grantedPlatform === requestedProduct.product ||
         normalizePlatformGroup(grantedPlatform) === requestedProduct.platformGroup)
     ) {
-      return 'connected';
+      return { status: 'connected' };
     }
 
-    return 'pending';
+    return { status: 'pending' };
   }
 
   const selectedAssets =
@@ -640,13 +725,23 @@ function resolveProductStatus(
       ? ((request.connection.grantedAssets as Record<string, unknown>)[requestedProduct.product] as Record<string, any> | null)
       : null;
 
+  const googleGrantLifecycle = resolveGoogleGrantLifecycle(
+    requestedProduct,
+    matchingAuthorization,
+    selectedAssets
+  );
+
   if (selectedAssets) {
     if (getSelectedAssetCount(requestedProduct.product, selectedAssets) > 0) {
-      return 'connected';
+      if (googleGrantLifecycle && !googleGrantLifecycle.isFulfilled) {
+        return { status: 'pending', googleGrantLifecycle };
+      }
+
+      return { status: 'connected', ...(googleGrantLifecycle ? { googleGrantLifecycle } : {}) };
     }
 
     if (hasNoAssetsSignal(requestedProduct.product, selectedAssets)) {
-      return 'no_assets';
+      return { status: 'no_assets', ...(googleGrantLifecycle ? { googleGrantLifecycle } : {}) };
     }
   }
 
@@ -657,13 +752,16 @@ function resolveProductStatus(
         : null;
 
     if (metadata && hasNoAssetsSignal(requestedProduct.product, metadata)) {
-      return 'no_assets';
+      return { status: 'no_assets', ...(googleGrantLifecycle ? { googleGrantLifecycle } : {}) };
     }
 
-    return 'selection_required';
+    return {
+      status: 'selection_required',
+      ...(googleGrantLifecycle ? { googleGrantLifecycle } : {}),
+    };
   }
 
-  return 'pending';
+  return { status: 'pending', ...(googleGrantLifecycle ? { googleGrantLifecycle } : {}) };
 }
 
 function getProductStatusPriority(status: ClientDetailProductStatus): number {
@@ -704,7 +802,14 @@ function buildClientDetailPlatformGroups(
       latestRequestId?: string;
       latestRequestName?: string;
       latestRequestedAt?: Date;
-      products: Map<string, { status: ClientDetailProductStatus; latestRequestId?: string }>;
+      products: Map<
+        string,
+        {
+          status: ClientDetailProductStatus;
+          latestRequestId?: string;
+          googleGrantLifecycle?: GoogleProductGrantLifecycle;
+        }
+      >;
     }
   >();
 
@@ -719,23 +824,34 @@ function buildClientDetailPlatformGroups(
           latestRequestId: request.id,
           latestRequestName: request.clientName,
           latestRequestedAt: request.createdAt,
-          products: new Map<string, { status: ClientDetailProductStatus; latestRequestId?: string }>(),
+          products: new Map<
+            string,
+            {
+              status: ClientDetailProductStatus;
+              latestRequestId?: string;
+              googleGrantLifecycle?: GoogleProductGrantLifecycle;
+            }
+          >(),
         };
 
       if (!groupedProducts.has(groupKey)) {
         groupedProducts.set(groupKey, currentGroup);
       }
 
-      const nextStatus = resolveProductStatus(request, requestedProduct);
+      const nextProductSummary = resolveProductSummary(request, requestedProduct);
       const existingProduct = currentGroup.products.get(requestedProduct.product);
 
       if (
         !existingProduct ||
-        getProductStatusPriority(nextStatus) > getProductStatusPriority(existingProduct.status)
+        getProductStatusPriority(nextProductSummary.status) >
+          getProductStatusPriority(existingProduct.status)
       ) {
         currentGroup.products.set(requestedProduct.product, {
-          status: nextStatus,
+          status: nextProductSummary.status,
           latestRequestId: request.id,
+          ...(nextProductSummary.googleGrantLifecycle
+            ? { googleGrantLifecycle: nextProductSummary.googleGrantLifecycle }
+            : {}),
         });
       }
     }
@@ -748,6 +864,9 @@ function buildClientDetailPlatformGroups(
         status: productSummary.status,
         note: getProductStatusNote(productSummary.status),
         latestRequestId: productSummary.latestRequestId,
+        ...(productSummary.googleGrantLifecycle
+          ? { googleGrantLifecycle: productSummary.googleGrantLifecycle }
+          : {}),
       }))
       .sort((left, right) => left.product.localeCompare(right.product));
 

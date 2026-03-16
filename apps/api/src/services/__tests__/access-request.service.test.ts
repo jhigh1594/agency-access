@@ -280,7 +280,7 @@ describe('AccessRequestService', () => {
       ]);
     });
 
-    it('should aggregate completed platforms across multiple client connections', async () => {
+    it('does not count OAuth-only Google discovery as completed for native-grant-supported products', async () => {
       const mockRequest = {
         id: 'request-1',
         uniqueToken: 'token-123',
@@ -321,9 +321,139 @@ describe('AccessRequestService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data?.authorizationProgress.completedPlatforms).toEqual(
-        expect.arrayContaining(['google', 'beehiiv'])
+        expect.arrayContaining(['beehiiv'])
+      );
+      expect(result.data?.authorizationProgress.completedPlatforms).not.toContain('google');
+      expect((result.data as any)?.authorizationProgress.unresolvedProducts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            product: 'google_ads',
+            platformGroup: 'google',
+            reason: 'oauth_only_insufficient',
+          }),
+        ])
+      );
+      expect((result.data as any)?.authorizationProgress.googleProductFulfillment).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            product: 'google_ads',
+            state: 'oauth_only_insufficient',
+            isFulfilled: false,
+          }),
+        ])
+      );
+      expect(result.data?.authorizationProgress.isComplete).toBe(false);
+    });
+
+    it('marks Google products complete once the native grant lifecycle is verified', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-google-verified-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-google-verified',
+          grantedAssets: {
+            google_ads: {
+              adAccounts: ['customers/123'],
+              availableAssetCount: 1,
+              googleGrantLifecycle: {
+                fulfillmentMode: 'manager_link',
+                grantStatus: 'verified',
+              },
+            },
+          },
+          authorizations: [{ platform: 'google', status: 'active' }],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken(
+        'token-google-verified-123'
+      );
+
+      expect(result.error).toBeNull();
+      expect(result.data?.authorizationProgress.completedPlatforms).toEqual(['google']);
+      expect((result.data as any)?.authorizationProgress.googleProductFulfillment).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            product: 'google_ads',
+            state: 'fulfilled',
+            isFulfilled: true,
+          }),
+        ])
       );
       expect(result.data?.authorizationProgress.isComplete).toBe(true);
+    });
+
+    it('does not mark unsupported Search Console automation paths as complete', async () => {
+      const mockRequest = {
+        id: 'request-1',
+        uniqueToken: 'token-gsc-unsupported-123',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [{ platform: 'google_search_console', accessLevel: 'manage' }],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([
+        {
+          id: 'conn-gsc-unsupported',
+          grantedAssets: {
+            google_search_console: {
+              sites: ['sc-domain:example.com'],
+              availableAssetCount: 1,
+              googleGrantLifecycle: {
+                fulfillmentMode: 'user_permission',
+                grantStatus: 'verified',
+              },
+            },
+          },
+          authorizations: [{ platform: 'google', status: 'active' }],
+        },
+      ] as any);
+
+      const result = await accessRequestService.getAccessRequestByToken(
+        'token-gsc-unsupported-123'
+      );
+
+      expect(result.error).toBeNull();
+      expect(result.data?.authorizationProgress.completedPlatforms).toEqual([]);
+      expect((result.data as any)?.authorizationProgress.unresolvedProducts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            product: 'google_search_console',
+            platformGroup: 'google',
+            reason: 'unsupported_automation_path',
+          }),
+        ])
+      );
+      expect((result.data as any)?.authorizationProgress.googleProductFulfillment).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            product: 'google_search_console',
+            state: 'unsupported_automation_path',
+            isFulfilled: false,
+          }),
+        ])
+      );
+      expect(result.data?.authorizationProgress.isComplete).toBe(false);
     });
 
     it('marks LinkedIn Ads unresolved when OAuth exists without any selected accounts', async () => {

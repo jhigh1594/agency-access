@@ -113,6 +113,24 @@ function normalizeStringIds(value: unknown): string[] {
   return value.map((item) => String(item)).filter(Boolean);
 }
 
+function getSelectedMetaAssets(selectedAssets: unknown): Record<string, unknown> {
+  if (!selectedAssets || typeof selectedAssets !== 'object' || Array.isArray(selectedAssets)) {
+    return {};
+  }
+
+  const record = selectedAssets as Record<string, unknown>;
+  const metaAdsAssets =
+    record.meta_ads && typeof record.meta_ads === 'object' && !Array.isArray(record.meta_ads)
+      ? (record.meta_ads as Record<string, unknown>)
+      : null;
+  const metaPagesAssets =
+    record.meta_pages && typeof record.meta_pages === 'object' && !Array.isArray(record.meta_pages)
+      ? (record.meta_pages as Record<string, unknown>)
+      : null;
+
+  return metaAdsAssets || metaPagesAssets || {};
+}
+
 function readMetaClientAuthorizationMetadata(metadata: unknown): {
   rootMetadata: Record<string, unknown>;
   metaMetadata: MetaClientAuthorizationMetadata;
@@ -354,6 +372,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         google_search_console: 'google',
         google_merchant_center: 'google',
         meta_ads: 'meta',
+        meta_pages: 'meta',
         linkedin_ads: 'linkedin',
         linkedin_pages: 'linkedin',
         instagram: 'meta',
@@ -496,8 +515,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
       const requestedAssetTypes = new Set(assetTypes || ['page', 'ad_account', 'instagram_account']);
       const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
-      const selectedMetaAssets = ((rootMetadata.selectedAssets as Record<string, unknown> | undefined)?.meta_ads ||
-        {}) as Record<string, unknown>;
+      const selectedMetaAssets = getSelectedMetaAssets(rootMetadata.selectedAssets);
       const selectedPageIds = requestedAssetTypes.has('page')
         ? normalizeStringIds(selectedMetaAssets.pages)
         : [];
@@ -1215,8 +1233,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         }
 
         const { rootMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
-        const selectedMetaAssets = ((rootMetadata.selectedAssets as Record<string, unknown> | undefined)
-          ?.meta_ads || {}) as Record<string, unknown>;
+        const selectedMetaAssets = getSelectedMetaAssets(rootMetadata.selectedAssets);
         const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
 
         if (selectedAdAccounts.length === 0) {
@@ -1401,8 +1418,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       }
 
       const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
-      const selectedMetaAssets = ((rootMetadata.selectedAssets as Record<string, unknown> | undefined)
-        ?.meta_ads || {}) as Record<string, unknown>;
+      const selectedMetaAssets = getSelectedMetaAssets(rootMetadata.selectedAssets);
       const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
 
       if (selectedAdAccounts.length === 0) {
@@ -2248,6 +2264,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       google_search_console: 'google',
       google_merchant_center: 'google',
       meta_ads: 'meta',
+      meta_pages: 'meta',
       linkedin_ads: 'linkedin',
       linkedin_pages: 'linkedin',
       instagram: 'meta',
@@ -2368,7 +2385,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       let assets;
       const platformStr = String(platform);
 
-      if (platform === 'meta_ads') {
+      if (platform === 'meta_ads' || platform === 'meta_pages') {
         const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(
           platformAuth.metadata
         );

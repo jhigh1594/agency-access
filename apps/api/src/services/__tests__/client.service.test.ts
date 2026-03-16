@@ -355,7 +355,7 @@ describe('Phase 5: Client Service - TDD Tests', () => {
   });
 
   describe('getClientDetail', () => {
-    it('aggregates platform-group progress and product-level statuses', async () => {
+    it('keeps Google products pending until a native grant lifecycle is verified', async () => {
       vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
         id: 'client-1',
         agencyId: 'agency-1',
@@ -368,12 +368,12 @@ describe('Phase 5: Client Service - TDD Tests', () => {
         updatedAt: new Date('2026-03-05T00:00:00.000Z'),
         accessRequests: [
           {
-            id: 'request-1',
-            clientName: 'Q1 access refresh',
+            id: 'request-google-oauth-only',
+            clientName: 'Google Ads access',
             status: 'partial',
             createdAt: new Date('2026-03-08T00:00:00.000Z'),
             authorizedAt: new Date('2026-03-08T01:00:00.000Z'),
-            platforms: { google: ['google_ads', 'ga4'] },
+            platforms: { google: ['google_ads'] },
             connection: {
               id: 'connection-1',
               status: 'active',
@@ -403,14 +403,97 @@ describe('Phase 5: Client Service - TDD Tests', () => {
       expect(result?.platformGroups).toEqual([
         expect.objectContaining({
           platformGroup: 'google',
+          status: 'pending',
+          fulfilledCount: 0,
+          requestedCount: 1,
+          products: [
+            expect.objectContaining({
+              product: 'google_ads',
+              status: 'pending',
+              googleGrantLifecycle: expect.objectContaining({
+                state: 'oauth_only_insufficient',
+                isFulfilled: false,
+              }),
+            }),
+          ],
+        }),
+      ]);
+    });
+
+    it('aggregates platform-group progress and product-level statuses', async () => {
+      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
+        id: 'client-1',
+        agencyId: 'agency-1',
+        name: 'Taylor Client',
+        company: 'Acme',
+        email: 'taylor@acme.com',
+        website: null,
+        language: 'en',
+        createdAt: new Date('2026-03-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-03-05T00:00:00.000Z'),
+        accessRequests: [
+          {
+            id: 'request-1',
+            clientName: 'Q1 access refresh',
+            status: 'partial',
+            createdAt: new Date('2026-03-08T00:00:00.000Z'),
+            authorizedAt: new Date('2026-03-08T01:00:00.000Z'),
+            platforms: { google: ['google_ads', 'ga4'] },
+            connection: {
+              id: 'connection-1',
+              status: 'active',
+              createdAt: new Date('2026-03-08T01:00:00.000Z'),
+              grantedAssets: {
+                google_ads: {
+                  adAccounts: [{ id: 'acc-1', name: 'Main Account' }],
+                  googleGrantLifecycle: {
+                    fulfillmentMode: 'manager_link',
+                    grantStatus: 'verified',
+                  },
+                },
+              },
+              authorizations: [
+                {
+                  platform: 'google',
+                  status: 'active',
+                  metadata: {},
+                },
+              ],
+            },
+          },
+        ],
+      } as any);
+
+      const result = await clientService.getClientDetail({
+        clientId: 'client-1',
+        agencyId: 'agency-1',
+      });
+
+      expect(result?.platformGroups).toEqual([
+        expect.objectContaining({
+          platformGroup: 'google',
           status: 'needs_follow_up',
           fulfilledCount: 1,
           requestedCount: 2,
           latestRequestId: 'request-1',
           latestRequestName: 'Q1 access refresh',
           products: expect.arrayContaining([
-            expect.objectContaining({ product: 'google_ads', status: 'connected' }),
-            expect.objectContaining({ product: 'ga4', status: 'selection_required' }),
+            expect.objectContaining({
+              product: 'google_ads',
+              status: 'connected',
+              googleGrantLifecycle: expect.objectContaining({
+                state: 'fulfilled',
+                isFulfilled: true,
+              }),
+            }),
+            expect.objectContaining({
+              product: 'ga4',
+              status: 'selection_required',
+              googleGrantLifecycle: expect.objectContaining({
+                state: 'oauth_only_insufficient',
+                isFulfilled: false,
+              }),
+            }),
           ]),
         }),
       ]);

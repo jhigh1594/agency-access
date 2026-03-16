@@ -307,6 +307,7 @@ async function verifyPlatformAccess(
 ): Promise<VerificationResult> {
   switch (platform) {
     case 'meta_ads':
+    case 'meta_pages':
       return await metaConnector.verifyClientAccess(
         accessToken,
         jobData.agencyIdentity.businessId || '',

@@ -119,6 +119,7 @@ const connectors: Partial<Record<Platform, PlatformConnector>> = {
   // Legacy pattern connectors
   meta: metaConnector,
   meta_ads: metaConnector,
+  meta_pages: metaConnector,
   google: googleConnector,
   google_ads: googleAdsConnector,
   ga4: ga4Connector,

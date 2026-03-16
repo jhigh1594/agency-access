@@ -140,6 +140,98 @@ describe('Client Auth Routes', () => {
       );
     });
 
+    it('adds GA4 management scopes for native Google Analytics access requests', async () => {
+      const mockToken = 'test-token';
+      const mockState = 'test-state';
+      const mockAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?state=test-state';
+
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          clientEmail: 'client@example.com',
+          platforms: [
+            {
+              platformGroup: 'google',
+              products: [{ product: 'ga4', accessLevel: 'admin' }],
+            },
+          ],
+        } as any,
+        error: null,
+      });
+
+      vi.mocked(oauthStateService.createState).mockResolvedValue({
+        data: mockState,
+        error: null,
+      });
+
+      const mockConnector = {
+        getAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
+      };
+      vi.mocked(getConnector).mockReturnValue(mockConnector as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/client/${mockToken}/oauth-url`,
+        payload: { platform: 'google' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockConnector.getAuthUrl).toHaveBeenCalledWith(
+        mockState,
+        [
+          'https://www.googleapis.com/auth/analytics.readonly',
+          'https://www.googleapis.com/auth/analytics.manage.users',
+          'https://www.googleapis.com/auth/userinfo.email',
+        ],
+        'http://localhost:3000/invite/oauth-callback'
+      );
+    });
+
+    it('keeps Search Console requests discovery-only instead of widening to management scopes', async () => {
+      const mockToken = 'test-token';
+      const mockState = 'test-state';
+      const mockAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?state=test-state';
+
+      vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
+        data: {
+          id: 'req-1',
+          agencyId: 'agency-1',
+          clientEmail: 'client@example.com',
+          platforms: [
+            {
+              platformGroup: 'google',
+              products: [{ product: 'google_search_console', accessLevel: 'admin' }],
+            },
+          ],
+        } as any,
+        error: null,
+      });
+
+      vi.mocked(oauthStateService.createState).mockResolvedValue({
+        data: mockState,
+        error: null,
+      });
+
+      const mockConnector = {
+        getAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
+      };
+      vi.mocked(getConnector).mockReturnValue(mockConnector as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/client/${mockToken}/oauth-url`,
+        payload: { platform: 'google' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(mockConnector.getAuthUrl).toHaveBeenCalledWith(
+        mockState,
+        ['https://www.googleapis.com/auth/webmasters', 'https://www.googleapis.com/auth/userinfo.email'],
+        'http://localhost:3000/invite/oauth-callback'
+      );
+    });
+
     it('adds LinkedIn page admin scopes for linkedin_pages requests', async () => {
       const mockToken = 'test-token';
       const mockState = 'test-state';
