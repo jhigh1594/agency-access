@@ -41,29 +41,39 @@ function toPlatformGroup(platform: string): string {
   return platform.split('_')[0] || platform;
 }
 
-function normalizePlatformsPayload(platforms: any): Array<{ platform: string; accessLevel: 'manage' | 'view_only' }> {
+function normalizePlatformsPayload(platforms: any): Array<{ platform: string; accessLevel: 'manage' | 'view_only'; accountId?: string }> {
   if (Array.isArray(platforms)) {
     return platforms.flatMap((entry: any) => {
       if (entry?.platformGroup && Array.isArray(entry.products)) {
         return entry.products
           .filter((product: any) => typeof product?.product === 'string')
-          .map((product: any) => ({
-            platform: product.product,
-            accessLevel: ACCESS_LEVEL_MAP[product.accessLevel] || 'manage',
-          }));
+          .map((product: any) => {
+            const base = {
+              platform: product.product,
+              accessLevel: ACCESS_LEVEL_MAP[product.accessLevel] || 'manage' as const,
+            };
+            if (typeof product.accountId === 'string' && product.accountId.trim().length > 0) {
+              return { ...base, accountId: product.accountId.trim() };
+            }
+            return base;
+          });
       }
 
       if (typeof entry?.platform === 'string') {
-        return [{
+        const base = {
           platform: entry.platform,
-          accessLevel: ACCESS_LEVEL_MAP[entry.accessLevel] || 'manage',
-        }];
+          accessLevel: ACCESS_LEVEL_MAP[entry.accessLevel] || 'manage' as const,
+        };
+        if (typeof entry.accountId === 'string' && entry.accountId.trim().length > 0) {
+          return [{ ...base, accountId: entry.accountId.trim() }];
+        }
+        return [base];
       }
 
       if (typeof entry === 'string') {
         return [{
           platform: entry,
-          accessLevel: 'manage',
+          accessLevel: 'manage' as const,
         }];
       }
 

@@ -282,14 +282,6 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
     saveAccount({ product, accountId, accountName });
   };
 
-  const hasActiveGoogleAdsSelection = Boolean(
-    settings.googleAds.accountId &&
-      (accountsData?.adsAccounts || []).some((account) => account.id === settings.googleAds.accountId)
-  );
-  const staleGoogleAdsAccountId =
-    settings.googleAds.accountId && !hasActiveGoogleAdsSelection
-      ? settings.googleAds.accountId
-      : null;
   const managerAccounts = (accountsData?.adsAccounts || []).filter((account) => account.isManager);
   const googleAdsManagement = settings.googleAdsManagement || getDefaultGoogleAssetSettings().googleAdsManagement!;
 
@@ -342,19 +334,16 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
         <div className="space-y-4">
           <ProductCard
             icon={<CircleDollarSign className="h-5 w-5 text-muted-foreground" />}
-            label="Google Ads Account"
-            description="Map delegated access to the active Google Ads account your agency will manage."
+            label="Google Ads"
+            description="Request Google Ads access. Account is chosen per request when you create an access link."
             enabled={settings.googleAds.enabled}
             onToggle={(val) => updateSetting('googleAds', 'enabled', val)}
-            accounts={accountsData?.adsAccounts || []}
-            selectedId={hasActiveGoogleAdsSelection ? settings.googleAds.accountId : undefined}
-            onAccountSelect={(id, name) => handleAccountSelect('googleAds', id, name)}
-            placeholder="Select Ads Account..."
-            warningMessage={
-              staleGoogleAdsAccountId
-                ? `Previously selected Google Ads account is no longer active and must be replaced before you send a new request. Saved account ID: ${staleGoogleAdsAccountId}`
-                : undefined
-            }
+            showAccountSelector={false}
+            noAccountSelectorHelperText="Choose which account to request when creating each access link in the client request form."
+            accounts={[]}
+            selectedId={undefined}
+            onAccountSelect={() => {}}
+            placeholder=""
           />
 
           <ProductCard
@@ -447,6 +436,8 @@ interface ProductCardProps {
   selectedId?: string;
   onAccountSelect: (id: string, name: string) => void;
   placeholder: string;
+  showAccountSelector?: boolean;
+  noAccountSelectorHelperText?: string;
   requestManageUsers?: boolean;
   onRequestManageUsersToggle?: (val: boolean) => void;
   tooltip?: string;
@@ -490,6 +481,8 @@ function ProductCard({
   selectedId,
   onAccountSelect,
   placeholder,
+  showAccountSelector = true,
+  noAccountSelectorHelperText,
   requestManageUsers,
   onRequestManageUsersToggle,
   tooltip,
@@ -521,7 +514,7 @@ function ProductCard({
             </div>
           </div>
 
-          {enabled && (
+          {enabled && showAccountSelector && (
             <div className="space-y-3">
               <SingleSelect
                 options={accounts.map((account) => {
@@ -541,8 +534,14 @@ function ProductCard({
                   tone="warning"
                 />
               )}
+            </div>
+          )}
 
-              {onRequestManageUsersToggle && (
+          {enabled && !showAccountSelector && noAccountSelectorHelperText && (
+            <p className="text-xs text-muted-foreground">{noAccountSelectorHelperText}</p>
+          )}
+
+          {enabled && showAccountSelector && onRequestManageUsersToggle && (
                 <div className="rounded-[1rem] border border-border bg-paper px-3 py-3">
                   <div className="flex items-start gap-2">
                   <input

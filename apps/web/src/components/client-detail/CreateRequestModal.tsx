@@ -7,16 +7,18 @@
  * Simplified 2-step flow: Platform selection + Access level.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Link2, ChevronDown, Check, Minus } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type Platform } from '@agency-platform/shared';
 import { Button, PlatformIcon } from '@/components/ui';
+import { SingleSelect } from '@/components/ui/single-select';
 import { buildInviteUrl } from '@/lib/app-url';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
+import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { cn } from '@/lib/utils';
 
 interface CreateRequestModalProps {
@@ -32,7 +34,7 @@ interface CreateRequestModalProps {
 
 interface SelectedPlatform {
   platformGroup: string;
-  products: Array<{ product: string; accessLevel: AccessLevel }>;
+  products: Array<{ product: string; accessLevel: AccessLevel; accountId?: string }>;
 }
 
 export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequestModalProps) {
@@ -49,6 +51,47 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   const [createdRequest, setCreatedRequest] = useState<{ id: string; uniqueToken: string } | null>(null);
   const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [googleAdsAccountId, setGoogleAdsAccountId] = useState<string>('');
+
+  // Fetch Google accounts and asset settings for Google Ads account picker
+  const { data: googleData } = useQuery({
+    queryKey: ['google-accounts-and-settings', orgId],
+    queryFn: async () => {
+      if (!orgId || !getToken) return null;
+      const token = await getToken();
+      const [accountsRes, settingsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${orgId}&refresh=false`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings?agencyId=${orgId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }),
+      ]);
+      if (!accountsRes.ok || !settingsRes.ok) return null;
+      const [accountsJson, settingsJson] = await Promise.all([accountsRes.json(), settingsRes.json()]);
+      return {
+        adsAccounts: accountsJson?.data?.adsAccounts ?? [],
+        settings: settingsJson?.data ?? null,
+      };
+    },
+    enabled: Boolean(orgId),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const adsAccounts = googleData?.adsAccounts ?? [];
+  const mccCustomerId = googleData?.settings?.googleAdsManagement?.preferredGrantMode === 'manager_link'
+    ? (googleData?.settings?.googleAdsManagement?.managerCustomerId ?? '').replace(/\D/g, '')
+    : '';
+
+  // Default Google Ads account to MCC when user selects google_ads and MCC is configured
+  useEffect(() => {
+    if (!isProductSelected('google', 'google_ads') || !mccCustomerId || googleAdsAccountId) return;
+    const norm = (s: string) => (s || '').replace(/\D/g, '');
+    const match = adsAccounts.find(
+      (a: { id: string }) => norm(a.id) === mccCustomerId || a.id === mccCustomerId
+    );
+    if (match) setGoogleAdsAccountId(match.id);
+  }, [selectedPlatforms, mccCustomerId, adsAccounts, googleAdsAccountId]);
 
   // Toggle platform group expansion
   const toggleGroup = (groupKey: string) => {
@@ -111,6 +154,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
         products: products.map(product => ({
           product,
           accessLevel: globalAccessLevel,
+          ...(product === 'google_ads' && googleAdsAccountId ? { accountId: googleAdsAccountId } : {}),
         })),
       }));
   };
@@ -208,6 +252,11 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
     if (totalSelected === 0) {
       setErrorMessage('Please select at least one platform');
+      return;
+    }
+
+    if (isProductSelected('google', 'google_ads') && !googleAdsAccountId) {
+      setErrorMessage('Please select a Google Ads account');
       return;
     }
 
@@ -470,6 +519,32 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                                       </label>
                                     );
                                   })}
+                                  {/* Google Ads account selector - show when google_ads is selected */}
+                                  {groupKey === 'google' && isProductSelected('google', 'google_ads') && (
+                                    <div className="col-span-2 mt-2 pt-2 border-t border-border/50 space-y-1.5">
+                                      <label className="block text-xs font-medium text-foreground">
+                                        Google Ads account
+                                      </label>
+                                      <SingleSelect
+                                        value={googleAdsAccountId}
+                                        onChange={(v) => setGoogleAdsAccountId(v)}
+                                        options={adsAccounts.map((a: { id: string; name?: string; formattedId?: string; nameSource?: string }) => ({
+                                          value: a.id,
+                                          label: getGoogleAdsAccountLabel(a),
+                                        }))}
+                                        placeholder="Select account"
+                                        disabled={adsAccounts.length === 0}
+                                        ariaLabel="Select Google Ads account"
+                                        className="w-full"
+                                        triggerClassName="min-h-[44px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                                      />
+                                      {adsAccounts.length === 0 && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Connect Google in Connections to see accounts.
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </m.div>
                             )}

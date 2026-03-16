@@ -48,6 +48,7 @@ const createAccessRequestSchema = z.object({
     z.object({
       platform: AccessRequestPlatformSchema,
       accessLevel: z.enum(['manage', 'view_only']),
+      accountId: z.string().min(1).optional(), // Per-request override (e.g. google_ads)
     })
   ).min(1, 'At least one platform must be selected'),
   intakeFields: z.array(
