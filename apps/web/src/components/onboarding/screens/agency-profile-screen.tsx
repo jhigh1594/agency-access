@@ -21,6 +21,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { OpinionatedInput } from '../opinionated-input';
+import { SingleSelect } from '@/components/ui/single-select';
 import { fadeVariants, fadeTransition } from '@/lib/animations';
 
 // ============================================================
@@ -136,24 +137,17 @@ export function AgencyProfileScreen({
           <label className="block text-sm font-semibold text-foreground mb-1.5">
             Industry
           </label>
-          <div className="relative">
-            <select
-              value={localIndustry}
-              onChange={(e) => setLocalIndustry(e.target.value)}
-              className="w-full px-4 py-3 pr-10 rounded-lg border-2 border-border text-ink focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/30 transition-all appearance-none bg-card"
-            >
-              {COMMON_INDUSTRIES.map((ind) => (
-                <option key={ind} value={ind.toLowerCase().replace(/\s+/g, '_')}>
-                  {ind}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <SingleSelect
+            options={COMMON_INDUSTRIES.map((ind) => ({
+              value: ind.toLowerCase().replace(/\s+/g, '_'),
+              label: ind,
+            }))}
+            value={localIndustry}
+            onChange={(v) => setLocalIndustry(v)}
+            placeholder="Select industry"
+            ariaLabel="Industry"
+            triggerClassName="w-full px-4 py-3 rounded-lg border-2 border-border focus:border-coral focus:ring-2 focus:ring-coral/30"
+          />
           <p className="mt-1.5 text-sm text-muted-foreground">
             Helps us provide relevant tips and templates
           </p>

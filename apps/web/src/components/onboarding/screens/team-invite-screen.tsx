@@ -22,6 +22,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { AgencyRole } from '@agency-platform/shared';
 import { OpinionatedInput } from '../opinionated-input';
+import { SingleSelect } from '@/components/ui/single-select';
 import { fadeVariants, fadeTransition } from '@/lib/animations';
 import { X, Plus, Mail } from 'lucide-react';
 
@@ -189,19 +190,16 @@ export function TeamInviteScreen({
                   </div>
                   <div>
                     <div className="font-medium text-ink">{invite.email}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Role:{' '}
-                      <select
+                    <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <span>Role:</span>
+                      <SingleSelect
+                        options={ROLE_OPTIONS.map((r) => ({ value: r.value, label: r.label }))}
                         value={invite.role}
-                        onChange={(e) => handleUpdateRole(invite.email, e.target.value as AgencyRole)}
-                        className="ml-1 px-2 py-0.5 rounded border border-border text-foreground text-xs"
-                      >
-                        {ROLE_OPTIONS.map((role) => (
-                          <option key={role.value} value={role.value}>
-                            {role.label}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => handleUpdateRole(invite.email, v as AgencyRole)}
+                        placeholder="Role"
+                        ariaLabel={`Role for ${invite.email}`}
+                        triggerClassName="ml-1 px-2 py-0.5 rounded border border-border text-foreground text-xs min-h-auto"
+                      />
                     </div>
                   </div>
                 </div>
