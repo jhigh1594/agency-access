@@ -1,7 +1,6 @@
 'use client';
 
 import { AnimatePresence, m } from 'framer-motion';
-import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ManageAssetsModalShellProps {
@@ -9,7 +8,6 @@ interface ManageAssetsModalShellProps {
   title: string;
   description: string;
   onClose: () => void;
-  onDisconnect?: () => void;
   summary?: React.ReactNode;
   children: React.ReactNode;
 }
@@ -19,7 +17,6 @@ export function ManageAssetsModalShell({
   title,
   description,
   onClose,
-  onDisconnect,
   summary,
   children,
 }: ManageAssetsModalShellProps) {
@@ -60,13 +57,12 @@ export function ManageAssetsModalShell({
               </div>
               <Button
                 type="button"
-                variant="brutalist-ghost-rounded"
-                size="icon"
+                variant="brutalist-rounded"
+                size="sm"
                 onClick={onClose}
-                aria-label="Close modal"
-                className="h-11 w-11 min-h-[44px] shrink-0"
+                className="shrink-0"
               >
-                <X className="h-5 w-5" />
+                Done
               </Button>
             </div>
             {summary ? (
@@ -77,28 +73,6 @@ export function ManageAssetsModalShell({
           </div>
 
           <div className="flex-1 overflow-y-auto bg-card px-5 py-5 sm:px-6">{children}</div>
-
-          <div className="sticky bottom-0 border-t-2 border-black bg-paper px-5 py-4 sm:px-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink shadow-brutalist-sm">
-                  Autosave
-                </span>
-                <span>Changes save automatically</span>
-              </div>
-
-              <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                {onDisconnect ? (
-                  <Button type="button" variant="brutalist-ghost-rounded" size="sm" onClick={onDisconnect}>
-                    Disconnect
-                  </Button>
-                ) : null}
-                <Button type="button" variant="brutalist-rounded" size="sm" onClick={onClose}>
-                  Done
-                </Button>
-              </div>
-            </div>
-          </div>
         </m.div>
       </div>
     </AnimatePresence>

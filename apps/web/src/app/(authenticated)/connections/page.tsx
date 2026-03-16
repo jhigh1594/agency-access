@@ -539,10 +539,6 @@ function ConnectionsPageContent() {
             title="Meta connection settings"
             description="Control the Business Portfolio and Meta asset types your agency uses when managing delegated access."
             onClose={() => setManagingMetaAssets(false)}
-            onDisconnect={() => {
-              setManagingMetaAssets(false);
-              disconnectPlatform('meta');
-            }}
           >
             <MetaUnifiedSettings agencyId={agencyId} />
           </ManageAssetsModalShell>
@@ -557,10 +553,6 @@ function ConnectionsPageContent() {
             title="Google connection settings"
             description="Choose which Google products and accounts are active for delegated access requests."
             onClose={() => setManagingGoogleAssets(false)}
-            onDisconnect={() => {
-              setManagingGoogleAssets(false);
-              disconnectPlatform('google');
-            }}
           >
             <GoogleUnifiedSettings agencyId={agencyId} />
           </ManageAssetsModalShell>

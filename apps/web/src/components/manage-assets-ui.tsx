@@ -22,7 +22,12 @@ export function ManageAssetsSectionCard({
   contentClassName,
 }: ManageAssetsSectionCardProps) {
   return (
-    <section className={cn('rounded-[1.1rem] border-2 border-black bg-card shadow-brutalist-sm', className)}>
+    <section
+      className={cn(
+        'overflow-hidden rounded-[1.1rem] border-2 border-black bg-card shadow-brutalist-sm',
+        className
+      )}
+    >
       <div className="border-b border-border bg-paper px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">

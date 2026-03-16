@@ -453,7 +453,7 @@ describe('ConnectionsPage', () => {
     });
   });
 
-  it('uses a shared modal footer contract for Manage Assets dialogs', async () => {
+  it('uses a shared header close contract for Manage Assets dialogs', async () => {
     (global.fetch as any).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input);
 
@@ -551,12 +551,13 @@ describe('ConnectionsPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /manage assets/i })[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/changes save automatically/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^done$/i })).toBeInTheDocument();
     });
 
     const dialog = screen.getByRole('dialog', { name: /meta connection settings/i });
-    expect(within(dialog).getByRole('button', { name: /^disconnect$/i })).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: /^done$/i })).toBeInTheDocument();
+    expect(within(dialog).queryByText(/changes save automatically/i)).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /^disconnect$/i })).not.toBeInTheDocument();
   });
 
   // TODO: Loading state depends on agencyId + platforms query timing; mock chain can be flaky
