@@ -1,4 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import React from 'react';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { act, render, waitFor, screen } from '@testing-library/react';
 import { GoogleAssetSelector } from '../GoogleAssetSelector';
 
@@ -30,9 +31,16 @@ vi.mock('../AssetSelectorStates', () => ({
 }));
 
 describe('GoogleAssetSelector', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it('publishes loaded asset counts before the user makes a selection', async () => {
@@ -222,5 +230,52 @@ describe('GoogleAssetSelector', () => {
       expect(screen.getByText('Pillar AI Agency MCC • 644-914-2979')).toBeInTheDocument();
       expect(screen.getByText('Google Ads account • 549-755-9774')).toBeInTheDocument();
     });
+  });
+
+  it('does not enter a parent update loop when the caller stores selection state', async () => {
+    const parentSelectionSpy = vi.fn();
+
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => ({
+        data: [{ id: 'customers/123', name: 'Account 123' }],
+        error: null,
+      }),
+    } as any);
+
+    function Harness() {
+      const [, setSelection] = React.useState<unknown>(null);
+
+      return (
+        <GoogleAssetSelector
+          sessionId="conn-1"
+          accessRequestToken="token-1"
+          product="google_ads"
+          onSelectionChange={(selection) => {
+            parentSelectionSpy(selection);
+            setSelection(selection);
+          }}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Ad Accounts')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(parentSelectionSpy.mock.calls.length).toBeLessThanOrEqual(3);
+    expect(
+      consoleErrorSpy.mock.calls.some((call) =>
+        call.some(
+          (value) => typeof value === 'string' && value.includes('Maximum update depth exceeded')
+        )
+      )
+    ).toBe(false);
   });
 });

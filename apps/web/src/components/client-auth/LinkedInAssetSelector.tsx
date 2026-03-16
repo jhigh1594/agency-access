@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import {
   AssetSelectorEmpty,
@@ -42,6 +42,7 @@ export function LinkedInAssetSelector({
   const [assets, setAssets] = useState<LinkedInAsset[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const emitSelectionChange = useEffectEvent(onSelectionChange);
 
   const fetchAssets = async () => {
     try {
@@ -90,7 +91,7 @@ export function LinkedInAssetSelector({
       .map((a) => a.name);
 
     if (product === 'linkedin_pages') {
-      onSelectionChange({
+      emitSelectionChange({
         pages: Array.from(selectedIds),
         availableAssetCount: assets.length,
         selectedAssetNames: selectedNames,
@@ -98,12 +99,12 @@ export function LinkedInAssetSelector({
       return;
     }
 
-    onSelectionChange({
+    emitSelectionChange({
       adAccounts: Array.from(selectedIds),
       availableAssetCount: assets.length,
       selectedAssetNames: selectedNames,
     });
-  }, [assets, onSelectionChange, product, selectedIds]);
+  }, [assets, product, selectedIds]);
 
   const isPagesProduct = product === 'linkedin_pages';
 

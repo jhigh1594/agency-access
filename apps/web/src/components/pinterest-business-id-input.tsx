@@ -109,7 +109,7 @@ export function PinterestBusinessIdInput({
               placeholder="e.g., 664351519939856629"
               value={businessId}
               onChange={(e) => setBusinessId(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               maxLength={20}
             />
             {businessId && !isValidBusinessId && (

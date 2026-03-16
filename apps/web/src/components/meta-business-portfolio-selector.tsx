@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Loader2, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { SingleSelect } from '@/components/ui/single-select';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 
 interface Business {
@@ -183,18 +184,16 @@ export function MetaBusinessPortfolioSelector({
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
               Business Portfolio
             </label>
-            <select
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer appearance-none"
+            <SingleSelect
+              options={businesses.map((b) => ({
+                value: b.id,
+                label: `${b.name} (${b.id})`,
+              }))}
               value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-            >
-              <option value="" disabled>Select a portfolio...</option>
-              {businesses.map((business) => (
-                <option key={business.id} value={business.id}>
-                  {business.name} ({business.id})
-                </option>
-              ))}
-            </select>
+              onChange={(id: string) => setSelectedId(id)}
+              placeholder="Select a portfolio..."
+              ariaLabel="Business Portfolio"
+            />
           </div>
 
           <div className="pt-4 flex items-center justify-between">

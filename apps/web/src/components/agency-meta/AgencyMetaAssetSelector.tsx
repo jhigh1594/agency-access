@@ -9,6 +9,7 @@ import {
   MetaPermissionLevel
 } from '@agency-platform/shared';
 import { PermissionSelect } from './PermissionSelect';
+import { SingleSelect } from '@/components/ui/single-select';
 import { Search, Loader2, AlertCircle } from 'lucide-react';
 
 interface AgencyMetaAssetSelectorProps {
@@ -137,17 +138,21 @@ export function AgencyMetaAssetSelector({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <select 
-            className="px-3 py-2 border border-slate-200 rounded-sm text-sm bg-card focus:outline-none"
+          <SingleSelect
+            options={[
+              { value: 'all', label: 'All Types' },
+              { value: 'ad_account', label: 'Ad Accounts' },
+              { value: 'page', label: 'Pages' },
+              { value: 'instagram', label: 'Instagram' },
+              { value: 'catalog', label: 'Catalogs' },
+            ]}
             value={assetTypeFilter}
-            onChange={(e) => setAssetTypeFilter(e.target.value as any)}
-          >
-            <option value="all">All Types</option>
-            <option value="ad_account">Ad Accounts</option>
-            <option value="page">Pages</option>
-            <option value="instagram">Instagram</option>
-            <option value="catalog">Catalogs</option>
-          </select>
+            onChange={(v) => setAssetTypeFilter(v as any)}
+            placeholder="All Types"
+            ariaLabel="Asset type filter"
+            className="flex-1 min-w-0"
+            triggerClassName="px-3 py-2 border border-slate-200 rounded-sm text-sm min-h-auto"
+          />
         </div>
       </div>
 

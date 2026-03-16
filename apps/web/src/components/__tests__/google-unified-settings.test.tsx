@@ -154,7 +154,12 @@ describe('GoogleUnifiedSettings', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
+    const user = userEvent.setup();
     const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+
+    // Open the GA4 selector dropdown (options only rendered when open)
+    const ga4Combobox = await screen.findByRole('combobox', { name: /Select GA4 Property/i });
+    await user.click(ga4Combobox);
 
     await waitFor(() => {
       // Ensure the option text uses displayName (not "properties/...")
@@ -242,7 +247,7 @@ describe('GoogleUnifiedSettings', () => {
     }
   });
 
-  it('renders a configuration overview with the active product count', async () => {
+  it('does not render the removed configuration overview block', async () => {
     const fetchMock = vi.fn(async (input: any) => {
       const url = String(input);
 
@@ -286,8 +291,9 @@ describe('GoogleUnifiedSettings', () => {
 
     renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    expect(await screen.findByText(/configuration overview/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 active products/i)).toBeInTheDocument();
+    expect(await screen.findByText(/google products/i)).toBeInTheDocument();
+    expect(screen.queryByText(/configuration overview/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/current google setup/i)).not.toBeInTheDocument();
   });
 
   it('renders Google Ads dropdown labels with account title and formatted ID, including fallback labels', async () => {
@@ -351,7 +357,12 @@ describe('GoogleUnifiedSettings', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
+    const user = userEvent.setup();
     const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+
+    // Open the Google Ads selector (options only rendered when open)
+    const adsCombobox = await screen.findByRole('combobox', { name: /Select Ads Account/i });
+    await user.click(adsCombobox);
 
     await waitFor(() => {
       expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
@@ -423,13 +434,14 @@ describe('GoogleUnifiedSettings', () => {
       await screen.findByText(/previously selected google ads account is no longer active/i)
     ).toBeInTheDocument();
 
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveValue('');
+    const adsCombobox = screen.getByRole('combobox', { name: /Select Ads Account/i });
+    expect(adsCombobox).toHaveTextContent(/Select Ads Account/i);
 
-    await user.selectOptions(select, '1111111111');
+    await user.click(adsCombobox);
 
-    expect(
-      within(select).queryByRole('option', { name: /9999999999/ })
-    ).not.toBeInTheDocument();
+    // Stale account 9999999999 must not appear in the dropdown
+    expect(screen.queryByRole('option', { name: /9999999999/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('option', { name: /Enabled Account.*111-111-1111/i }));
   });
 });

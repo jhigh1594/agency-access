@@ -99,7 +99,7 @@ export function PermissionSelect({ value, onChange, disabled }: PermissionSelect
                 }}
                 className={`
                   w-full px-3 py-2 text-left hover:bg-electric/10 transition-colors
-                  ${value === permission.value ? 'bg-slate-100' : ''}
+                  ${value === permission.value ? 'bg-accent/20' : ''}
                 `}
               >
                 <div className={`font-medium text-sm ${permission.color}`}>

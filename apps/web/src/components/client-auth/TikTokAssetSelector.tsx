@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
+import { SingleSelect } from '@/components/ui/single-select';
 import { AssetSelectorEmpty, AssetSelectorError, AssetSelectorLoading } from './AssetSelectorStates';
 
 interface TikTokAdvertiser {
@@ -183,19 +184,17 @@ export function TikTokAssetSelector({
           >
             Business Center
           </label>
-          <select
-            id="tiktok-business-center"
+          <SingleSelect
+            options={[
+              { value: '', label: 'All Business Centers' },
+              ...assets.businessCenters.map((bc) => ({ value: bc.id, label: bc.name })),
+            ]}
             value={selectedBusinessCenterId}
-            onChange={(event) => setSelectedBusinessCenterId(event.target.value)}
-            className="w-full rounded-lg border-2 border-border bg-card px-3 py-2 text-sm text-foreground"
-          >
-            <option value="">All Business Centers</option>
-            {assets.businessCenters.map((businessCenter) => (
-              <option key={businessCenter.id} value={businessCenter.id}>
-                {businessCenter.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setSelectedBusinessCenterId(v)}
+            placeholder="All Business Centers"
+            ariaLabel="Business Center"
+            triggerClassName="rounded-lg border-2 border-border"
+          />
         </div>
       )}
 

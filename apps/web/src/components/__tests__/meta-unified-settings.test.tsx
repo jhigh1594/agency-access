@@ -250,7 +250,7 @@ describe('MetaUnifiedSettings', () => {
     expect(screen.getByRole('option', { name: /Business One \(biz_1\)/ })).toBeInTheDocument();
   });
 
-  it('renders a configuration overview with the active portfolio and enabled asset count', async () => {
+  it('does not render the removed configuration overview block', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
 
@@ -280,9 +280,9 @@ describe('MetaUnifiedSettings', () => {
 
     renderWithQueryClient(<MetaUnifiedSettings agencyId="agency-1" />);
 
-    expect(await screen.findByText(/configuration overview/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/business one/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/5 enabled asset types/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^business portfolio$/i })).toBeInTheDocument();
+    expect(screen.queryByText(/configuration overview/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/current meta setup/i)).not.toBeInTheDocument();
   });
 
   it('lets the user log in again to refresh the portfolio snapshot from Meta', async () => {

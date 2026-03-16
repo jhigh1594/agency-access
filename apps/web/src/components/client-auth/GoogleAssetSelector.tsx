@@ -12,7 +12,7 @@
  * - google_merchant_center: Merchant Center Accounts
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
@@ -98,6 +98,7 @@ export function GoogleAssetSelector({
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const latestRequestIdRef = useRef(0);
+  const emitSelectionChange = useEffectEvent(onSelectionChange);
 
   // Get title based on product type (defined early since it's used in early returns)
   const getTitle = () => {
@@ -182,8 +183,8 @@ export function GoogleAssetSelector({
           ? getGoogleAdsAccountLabel(a)
           : a.displayName || a.name || a.username || a.url || `Account ${a.id}`
       );
-    onSelectionChange(selection);
-  }, [assets, error, isLoading, onSelectionChange, product, selectedIds]);
+    emitSelectionChange(selection);
+  }, [assets, error, isLoading, product, selectedIds]);
 
   if (isLoading) {
     return (

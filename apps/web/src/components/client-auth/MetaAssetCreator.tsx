@@ -21,6 +21,7 @@
 import { useState, FormEvent } from 'react';
 import { Loader2, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SingleSelect } from '@/components/ui/single-select';
 
 // Currency options with symbols
 const CURRENCIES = [
@@ -258,19 +259,14 @@ export function MetaAssetCreator({
         >
           Currency
         </label>
-        <select
-          id="currency"
+        <SingleSelect
+          options={CURRENCIES.map((c) => ({ value: c.code, label: `${c.symbol} ${c.code} - ${c.name}` }))}
           value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
+          onChange={(v) => setCurrency(v)}
           disabled={state === 'loading'}
-          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-ink text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow appearance-none cursor-pointer"
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.symbol} {c.code} - {c.name}
-            </option>
-          ))}
-        </select>
+          triggerClassName="border-2 border-black dark:border-white shadow-brutalist-sm focus:shadow-brutalist"
+          ariaLabel="Currency"
+        />
         <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
           The currency for billing and reporting
         </p>
@@ -284,19 +280,14 @@ export function MetaAssetCreator({
         >
           Timezone
         </label>
-        <select
-          id="timezone"
+        <SingleSelect
+          options={TIMEZONES.map((tz) => ({ value: tz.id, label: `${tz.name} (${tz.offset})` }))}
           value={timezoneId}
-          onChange={(e) => setTimezoneId(e.target.value)}
+          onChange={(v) => setTimezoneId(v)}
           disabled={state === 'loading'}
-          className="w-full px-4 py-3 border-2 border-black dark:border-white rounded-lg bg-white dark:bg-ink text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--coral)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-brutalist-sm focus:shadow-brutalist transition-shadow appearance-none cursor-pointer"
-        >
-          {TIMEZONES.map((tz) => (
-            <option key={tz.id} value={tz.id}>
-              {tz.name} ({tz.offset})
-            </option>
-          ))}
-        </select>
+          triggerClassName="border-2 border-black dark:border-white shadow-brutalist-sm focus:shadow-brutalist"
+          ariaLabel="Timezone"
+        />
         <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
           Used for reporting and ad scheduling
         </p>

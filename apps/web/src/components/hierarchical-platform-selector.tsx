@@ -17,6 +17,7 @@ import { PLATFORM_HIERARCHY, AccessLevel, ACCESS_LEVEL_DESCRIPTIONS } from '@age
 import Link from 'next/link';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { PlatformIcon } from '@/components/ui';
+import { SingleSelect } from '@/components/ui/single-select';
 import type { Platform } from '@agency-platform/shared';
 import { cn } from '@/lib/utils';
 
@@ -427,17 +428,19 @@ export function HierarchicalPlatformSelector({
                             >
                               Access level:
                             </label>
-                            <select
-                              id={`access-level-${groupKey}`}
+                            <SingleSelect
+                              options={[
+                                { value: 'admin', label: 'Admin' },
+                                { value: 'standard', label: 'Standard' },
+                                { value: 'read_only', label: 'Read Only' },
+                                { value: 'email_only', label: 'Email Only' },
+                              ]}
                               value={platformAccessLevels[groupKey] || 'standard'}
-                              onChange={(e) => onPlatformAccessLevelChange(groupKey, e.target.value as AccessLevel)}
-                              className="flex-1 px-2 py-1.5 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
-                            >
-                              <option value="admin">Admin</option>
-                              <option value="standard">Standard</option>
-                              <option value="read_only">Read Only</option>
-                              <option value="email_only">Email Only</option>
-                            </select>
+                              onChange={(v: string) => onPlatformAccessLevelChange(groupKey, v as AccessLevel)}
+                              ariaLabel={`Access level for ${group.name}`}
+                              className="flex-1 min-w-0"
+                              triggerClassName="px-2 py-1.5 text-sm min-h-auto"
+                            />
                           </div>
                         )}
 

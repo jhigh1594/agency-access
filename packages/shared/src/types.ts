@@ -639,6 +639,286 @@ export interface PlatformGroup {
   products: PlatformProduct[];
 }
 
+export const GOOGLE_IDENTITY_SCOPE = 'https://www.googleapis.com/auth/userinfo.email';
+
+export const GOOGLE_PLATFORM_PRODUCT_IDS = [
+  'google_ads',
+  'ga4',
+  'google_business_profile',
+  'google_tag_manager',
+  'google_search_console',
+  'google_merchant_center',
+] as const;
+
+export type GooglePlatformProductId = (typeof GOOGLE_PLATFORM_PRODUCT_IDS)[number];
+
+export type GoogleProductCapabilityTier = 'native_grant_supported' | 'discovery_only';
+
+export interface GoogleProductOAuthRequirement {
+  capabilityTier: GoogleProductCapabilityTier;
+  discoveryScopes: string[];
+  managementScopes: string[];
+}
+
+export const GoogleProductFulfillmentModeSchema = z.enum([
+  'discovery',
+  'user_invite',
+  'manager_link',
+  'access_binding',
+  'account_admin',
+  'location_admin',
+  'user_permission',
+  'merchant_user',
+]);
+export type GoogleProductFulfillmentMode = z.infer<typeof GoogleProductFulfillmentModeSchema>;
+
+export const GoogleNativeGrantStatusSchema = z.enum([
+  'not_started',
+  'pending',
+  'awaiting_client_acceptance',
+  'awaiting_agency_acceptance',
+  'verified',
+  'failed',
+  'follow_up_needed',
+]);
+export type GoogleNativeGrantStatus = z.infer<typeof GoogleNativeGrantStatusSchema>;
+
+export const GooglePendingActorSchema = z.enum(['none', 'system', 'client', 'agency']);
+export type GooglePendingActor = z.infer<typeof GooglePendingActorSchema>;
+
+export const GoogleProductFulfillmentStateSchema = z.enum([
+  'authorization_required',
+  'oauth_only_insufficient',
+  'pending_native_grant',
+  'fulfilled',
+  'follow_up_needed',
+  'unsupported_automation_path',
+]);
+export type GoogleProductFulfillmentState = z.infer<typeof GoogleProductFulfillmentStateSchema>;
+
+export interface GoogleProductGrantLifecycle {
+  product: GooglePlatformProductId;
+  capabilityTier: GoogleProductCapabilityTier;
+  fulfillmentMode: GoogleProductFulfillmentMode;
+  state: GoogleProductFulfillmentState;
+  requiresNativeGrant: boolean;
+  isFulfilled: boolean;
+  grantStatus?: GoogleNativeGrantStatus;
+  pendingActor: GooglePendingActor;
+}
+
+export interface EvaluateGoogleProductFulfillmentInput {
+  productId: GooglePlatformProductId;
+  hasOAuthAuthorization: boolean;
+  fulfillmentMode: GoogleProductFulfillmentMode;
+  grantStatus?: GoogleNativeGrantStatus;
+}
+
+export const GOOGLE_PRODUCT_OAUTH_REQUIREMENTS: Record<
+  GooglePlatformProductId,
+  GoogleProductOAuthRequirement
+> = {
+  google_ads: {
+    capabilityTier: 'native_grant_supported',
+    discoveryScopes: ['https://www.googleapis.com/auth/adwords'],
+    managementScopes: [],
+  },
+  ga4: {
+    capabilityTier: 'native_grant_supported',
+    discoveryScopes: ['https://www.googleapis.com/auth/analytics.readonly'],
+    managementScopes: ['https://www.googleapis.com/auth/analytics.manage.users'],
+  },
+  google_business_profile: {
+    capabilityTier: 'native_grant_supported',
+    discoveryScopes: ['https://www.googleapis.com/auth/business.manage'],
+    managementScopes: [],
+  },
+  google_tag_manager: {
+    capabilityTier: 'native_grant_supported',
+    discoveryScopes: ['https://www.googleapis.com/auth/tagmanager.readonly'],
+    managementScopes: ['https://www.googleapis.com/auth/tagmanager.manage.users'],
+  },
+  google_search_console: {
+    capabilityTier: 'discovery_only',
+    discoveryScopes: ['https://www.googleapis.com/auth/webmasters'],
+    managementScopes: [],
+  },
+  google_merchant_center: {
+    capabilityTier: 'native_grant_supported',
+    discoveryScopes: ['https://www.googleapis.com/auth/content'],
+    managementScopes: [],
+  },
+};
+
+const DISCOVERY_ONLY_FULFILLMENT_MODES = new Set<GoogleProductFulfillmentMode>(['discovery']);
+
+function getPendingActor(
+  state: GoogleProductFulfillmentState,
+  grantStatus?: GoogleNativeGrantStatus
+): GooglePendingActor {
+  if (state === 'authorization_required' || state === 'oauth_only_insufficient') {
+    return 'system';
+  }
+
+  if (grantStatus === 'awaiting_client_acceptance') {
+    return 'client';
+  }
+
+  if (grantStatus === 'awaiting_agency_acceptance') {
+    return 'agency';
+  }
+
+  return 'none';
+}
+
+export function evaluateGoogleProductFulfillment(
+  input: EvaluateGoogleProductFulfillmentInput
+): GoogleProductGrantLifecycle {
+  const requirement = GOOGLE_PRODUCT_OAUTH_REQUIREMENTS[input.productId];
+  const requiresNativeGrant = requirement.capabilityTier === 'native_grant_supported';
+
+  if (!input.hasOAuthAuthorization) {
+    return {
+      product: input.productId,
+      capabilityTier: requirement.capabilityTier,
+      fulfillmentMode: input.fulfillmentMode,
+      state: 'authorization_required',
+      requiresNativeGrant,
+      isFulfilled: false,
+      grantStatus: input.grantStatus,
+      pendingActor: 'system',
+    };
+  }
+
+  if (!requiresNativeGrant) {
+    const supportedMode = DISCOVERY_ONLY_FULFILLMENT_MODES.has(input.fulfillmentMode);
+
+    return {
+      product: input.productId,
+      capabilityTier: requirement.capabilityTier,
+      fulfillmentMode: input.fulfillmentMode,
+      state: supportedMode ? 'fulfilled' : 'unsupported_automation_path',
+      requiresNativeGrant: false,
+      isFulfilled: supportedMode,
+      grantStatus: input.grantStatus,
+      pendingActor: supportedMode ? 'none' : 'system',
+    };
+  }
+
+  if (input.grantStatus === 'verified') {
+    return {
+      product: input.productId,
+      capabilityTier: requirement.capabilityTier,
+      fulfillmentMode: input.fulfillmentMode,
+      state: 'fulfilled',
+      requiresNativeGrant: true,
+      isFulfilled: true,
+      grantStatus: input.grantStatus,
+      pendingActor: 'none',
+    };
+  }
+
+  if (input.grantStatus === 'failed' || input.grantStatus === 'follow_up_needed') {
+    return {
+      product: input.productId,
+      capabilityTier: requirement.capabilityTier,
+      fulfillmentMode: input.fulfillmentMode,
+      state: 'follow_up_needed',
+      requiresNativeGrant: true,
+      isFulfilled: false,
+      grantStatus: input.grantStatus,
+      pendingActor: 'system',
+    };
+  }
+
+  if (
+    input.grantStatus === 'pending' ||
+    input.grantStatus === 'awaiting_client_acceptance' ||
+    input.grantStatus === 'awaiting_agency_acceptance'
+  ) {
+    const state: GoogleProductFulfillmentState = 'pending_native_grant';
+
+    return {
+      product: input.productId,
+      capabilityTier: requirement.capabilityTier,
+      fulfillmentMode: input.fulfillmentMode,
+      state,
+      requiresNativeGrant: true,
+      isFulfilled: false,
+      grantStatus: input.grantStatus,
+      pendingActor: getPendingActor(state, input.grantStatus),
+    };
+  }
+
+  return {
+    product: input.productId,
+    capabilityTier: requirement.capabilityTier,
+    fulfillmentMode: input.fulfillmentMode,
+    state: 'oauth_only_insufficient',
+    requiresNativeGrant: true,
+    isFulfilled: false,
+    grantStatus: input.grantStatus,
+    pendingActor: 'system',
+  };
+}
+
+export interface ResolveGoogleOAuthScopesOptions {
+  includeManagementScopes?: boolean;
+  includeIdentityScope?: boolean;
+}
+
+const GOOGLE_PLATFORM_PRODUCT_ID_SET = new Set<string>(GOOGLE_PLATFORM_PRODUCT_IDS);
+
+function isGooglePlatformProductId(productId: string): productId is GooglePlatformProductId {
+  return GOOGLE_PLATFORM_PRODUCT_ID_SET.has(productId);
+}
+
+export function resolveGoogleOAuthScopes(
+  productIds: string[],
+  options: ResolveGoogleOAuthScopesOptions = {}
+): string[] {
+  const {
+    includeManagementScopes = true,
+    includeIdentityScope = true,
+  } = options;
+
+  const scopes: string[] = [];
+  const seenScopes = new Set<string>();
+
+  const appendScope = (scope: string) => {
+    if (seenScopes.has(scope)) {
+      return;
+    }
+
+    seenScopes.add(scope);
+    scopes.push(scope);
+  };
+
+  for (const productId of productIds) {
+    if (!isGooglePlatformProductId(productId)) {
+      continue;
+    }
+
+    const requirement = GOOGLE_PRODUCT_OAUTH_REQUIREMENTS[productId];
+
+    for (const scope of requirement.discoveryScopes) {
+      appendScope(scope);
+    }
+
+    if (includeManagementScopes) {
+      for (const scope of requirement.managementScopes) {
+        appendScope(scope);
+      }
+    }
+  }
+
+  if (includeIdentityScope) {
+    appendScope(GOOGLE_IDENTITY_SCOPE);
+  }
+
+  return scopes;
+}
+
 export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
   google: {
     name: 'Google',
@@ -1181,6 +1461,7 @@ export interface ClientAuthorizationProgress {
   isComplete: boolean;
   fulfilledProducts?: ClientFulfilledProduct[];
   unresolvedProducts?: ClientUnresolvedProduct[];
+  googleProductFulfillment?: GoogleProductGrantLifecycle[];
 }
 
 export interface ClientAccessRequestPlatformProduct {
@@ -2164,6 +2445,7 @@ export interface ClientDetailPlatformProduct {
   status: ClientDetailProductStatus;
   note?: string;
   latestRequestId?: string;
+  googleGrantLifecycle?: GoogleProductGrantLifecycle;
 }
 
 export interface ClientDetailPlatformGroup {

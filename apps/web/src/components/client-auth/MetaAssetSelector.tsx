@@ -19,6 +19,7 @@ import { useState, useEffect, useRef } from 'react';
 import posthog from 'posthog-js';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import { SingleSelect } from '@/components/ui/single-select';
 import { AssetSelectorLoading, AssetSelectorError } from './AssetSelectorStates';
 import { MetaAssetCreator } from './MetaAssetCreator';
 import { GuidedRedirectCard } from './GuidedRedirectModal';
@@ -58,6 +59,7 @@ interface MetaAssetSelectorProps {
   sessionId: string;
   accessRequestToken: string;
   businessId?: string;
+  allowedAssetTypes?: Array<'ad_account' | 'page' | 'instagram'>;
   onSelectionChange: (selectedAssets: {
     adAccounts: string[];
     pages: string[];
@@ -82,6 +84,7 @@ export function MetaAssetSelector({
   sessionId,
   accessRequestToken,
   businessId,
+  allowedAssetTypes = ['ad_account', 'page', 'instagram'],
   onSelectionChange,
   onError,
 }: MetaAssetSelectorProps) {
@@ -104,6 +107,17 @@ export function MetaAssetSelector({
   // Track if we've already captured the event (to avoid duplicates)
   const hasTrackedSelection = useRef(false);
   const activeBusinessId = selectedBusinessId || businessId || undefined;
+  const showAdAccounts = allowedAssetTypes.includes('ad_account');
+  const showPages = allowedAssetTypes.includes('page');
+  const showInstagramAccounts = allowedAssetTypes.includes('instagram');
+
+  const assetTypeLabel = [
+    showAdAccounts ? 'ad accounts' : null,
+    showPages ? 'pages' : null,
+    showInstagramAccounts ? 'Instagram accounts' : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
 
   // Handle successful ad account creation - auto-select and refresh
   const handleAdAccountCreated = (newAccount: { id: string; name: string }) => {
@@ -190,7 +204,10 @@ export function MetaAssetSelector({
     });
 
     // Track meta_assets_selected when selection changes (debounced)
-    const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
+    const totalSelected =
+      (showAdAccounts ? selectedAdAccounts.size : 0) +
+      (showPages ? selectedPages.size : 0) +
+      (showInstagramAccounts ? selectedInstagram.size : 0);
     let selectionTrackingTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     if (totalSelected > 0 && !hasTrackedSelection.current) {
@@ -212,9 +229,9 @@ export function MetaAssetSelector({
 
     // Build flat list of selected asset names for Step 3 summary
     const selectedAssetNames = [
-      ...selectedAdAccountsWithNames.map((a) => a.name),
-      ...selectedPagesWithNames.map((p) => p.name),
-      ...selectedInstagramWithNames.map((ig) => ig.name),
+      ...(showAdAccounts ? selectedAdAccountsWithNames.map((a) => a.name) : []),
+      ...(showPages ? selectedPagesWithNames.map((p) => p.name) : []),
+      ...(showInstagramAccounts ? selectedInstagramWithNames.map((ig) => ig.name) : []),
     ];
 
     onSelectionChange({
@@ -248,7 +265,7 @@ export function MetaAssetSelector({
   if (isLoading) {
     return (
       <AssetSelectorLoading
-        message="Finding your ad accounts, pages, and Instagram accounts..."
+        message={`Finding your ${assetTypeLabel || 'accounts'}...`}
       />
     );
   }
@@ -286,7 +303,10 @@ export function MetaAssetSelector({
     },
   }));
 
-  const totalSelected = selectedAdAccounts.size + selectedPages.size + selectedInstagram.size;
+  const totalSelected =
+    (showAdAccounts ? selectedAdAccounts.size : 0) +
+    (showPages ? selectedPages.size : 0) +
+    (showInstagramAccounts ? selectedInstagram.size : 0);
   const availableBusinesses = assets?.businesses || [];
   const requiresBusinessSelection = Boolean(
     assets?.selectionRequired && !selectedBusinessId && availableBusinesses.length > 0
@@ -345,19 +365,17 @@ export function MetaAssetSelector({
             >
               Business Portfolio
             </label>
-            <select
-              id="meta-business-portfolio"
-              className="w-full border-2 border-black dark:border-white bg-[rgb(var(--card))] px-4 py-3 text-[rgb(var(--ink))] min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))]"
+            <SingleSelect
+              options={availableBusinesses.map((b) => ({
+                value: b.id,
+                label: `${b.name} (${b.id})`,
+              }))}
               value={pendingBusinessId}
-              onChange={(event) => setPendingBusinessId(event.target.value)}
-            >
-              <option value="">Select a portfolio...</option>
-              {availableBusinesses.map((business) => (
-                <option key={business.id} value={business.id}>
-                  {business.name} ({business.id})
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setPendingBusinessId(v)}
+              placeholder="Select a portfolio..."
+              ariaLabel="Business Portfolio"
+              triggerClassName="border-2 border-black dark:border-white min-h-[48px]"
+            />
             <button
               type="button"
               onClick={handleBusinessSelectionLoad}
@@ -401,6 +419,7 @@ export function MetaAssetSelector({
       {/* Asset Groups */}
       <div className="space-y-4">
         {/* Ad Accounts - Multi-select Combobox or Creator */}
+        {showAdAccounts ? (
         <div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 border-2 border-black dark:border-white bg-[rgb(var(--coral))] flex items-center justify-center">
@@ -478,8 +497,10 @@ export function MetaAssetSelector({
             </div>
           )}
         </div>
+        ) : null}
 
         {/* Pages - Multi-select Combobox or Guided Redirect */}
+        {showPages ? (
         <div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 border-2 border-black dark:border-white bg-[rgb(var(--coral))]/100 flex items-center justify-center">
@@ -552,8 +573,10 @@ export function MetaAssetSelector({
             </div>
           )}
         </div>
+        ) : null}
 
         {/* Instagram Accounts - Keep as AssetGroup for now */}
+        {showInstagramAccounts ? (
         <AssetGroup
           title="Instagram Accounts"
           assets={instagramAssets}
@@ -566,6 +589,7 @@ export function MetaAssetSelector({
           }
           defaultExpanded={instagramAssets.length > 0}
         />
+        ) : null}
       </div>
         </>
       )}

@@ -7,6 +7,7 @@ import { MetaAssetSettings } from '@agency-platform/shared';
 import { MetaPagePermissionsModal } from './meta-page-permissions-modal';
 import { ManageAssetsSectionCard, ManageAssetsStatusPanel } from './manage-assets-ui';
 import { Button } from './ui/button';
+import { SingleSelect } from '@/components/ui/single-select';
 import { extractApiErrorMessage } from '@/lib/api/extract-error';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 import { Loader2, ChevronDown, AlertCircle, Info, AlertTriangle } from 'lucide-react';
@@ -198,18 +199,6 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
     );
   }
 
-  // Count enabled assets for summary
-  const enabledAssets = [
-    settings.adAccount.enabled && 'Ad Account',
-    settings.page.enabled && 'Page',
-    settings.catalog.enabled && 'Catalog',
-    settings.dataset.enabled && 'Dataset',
-    settings.instagramAccount.enabled && 'Instagram Account',
-  ].filter(Boolean);
-  const assetSummary = enabledAssets.length > 0 
-    ? `${enabledAssets[0]}${enabledAssets.length > 1 ? `, ${enabledAssets[1]}` : ''}${enabledAssets.length > 2 ? `, +${enabledAssets.length - 2}` : ''}`
-    : 'No assets';
-  const enabledAssetCount = enabledAssets.length;
   const selectedPortfolioLabel = selectedBusinessName || 'No portfolio selected';
 
   const updateSetting = (key: keyof MetaAssetSettings, field: string, value: any) => {
@@ -270,40 +259,6 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
   return (
     <div className="space-y-6">
       <ManageAssetsSectionCard
-        eyebrow="Configuration overview"
-        title="Current Meta setup"
-        description="Use this snapshot to confirm which portfolio and asset types are active before you change access settings."
-      >
-        <div className="grid gap-3 md:grid-cols-3">
-          <ManageAssetsStatusPanel
-            label="Active portfolio"
-            title={selectedPortfolioLabel}
-            description={
-              selectedBusinessId
-                ? 'Stored for delegated-access requests.'
-                : 'Choose a Business Portfolio before configuring asset access.'
-            }
-            tone={selectedBusinessId ? 'default' : 'warning'}
-          />
-          <ManageAssetsStatusPanel
-            label="Enabled assets"
-            title={`${enabledAssetCount} enabled asset type${enabledAssetCount === 1 ? '' : 's'}`}
-            description={assetSummary}
-          />
-          <ManageAssetsStatusPanel
-            label="Page access mode"
-            title={settings.page.limitPermissions ? 'Selected permissions only' : 'All page permissions'}
-            description={
-              settings.page.limitPermissions
-                ? 'Page access is constrained to the permission set below.'
-                : 'Enabled page sharing uses the broad default permission set.'
-            }
-            tone={settings.page.limitPermissions ? 'warning' : 'default'}
-          />
-        </div>
-      </ManageAssetsSectionCard>
-
-      <ManageAssetsSectionCard
         eyebrow="Primary control"
         title="Business Portfolio"
         description="The stored portfolio is the source of truth for Meta asset management and reauthentication."
@@ -336,23 +291,17 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
             <label htmlFor="meta-business-portfolio" className="mb-2 block text-sm font-semibold text-ink">
               Meta Business Portfolio
             </label>
-            <div className="relative">
-              <select
-                id="meta-business-portfolio"
-                value={selectedBusinessId}
-                onChange={(e) => handleBusinessSelect(e.target.value)}
-                disabled={isSavingPortfolio}
-                className="w-full min-h-[44px] appearance-none rounded-lg border border-border bg-card px-4 py-3 pr-10 text-ink transition-all focus:border-[rgb(var(--coral))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))]"
-              >
-                <option value="" disabled>Select a portfolio...</option>
-                {businesses.map((business) => (
-                  <option key={business.id} value={business.id}>
-                    {business.name} ({business.id})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            </div>
+            <SingleSelect
+              options={businesses.map((b) => ({
+                value: b.id,
+                label: `${b.name} (${b.id})`,
+              }))}
+              value={selectedBusinessId}
+              onChange={(id: string) => handleBusinessSelect(id)}
+              placeholder="Select a portfolio..."
+              disabled={isSavingPortfolio}
+              ariaLabel="Meta Business Portfolio"
+            />
             <p className="mt-2 text-xs text-muted-foreground">
               Changing this selection reconfigures the portfolio used for delegated system-user access.
             </p>

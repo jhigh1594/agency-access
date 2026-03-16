@@ -10,9 +10,9 @@ import {
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { ManageAssetsSectionCard, ManageAssetsStatusPanel } from './manage-assets-ui';
 import { Button } from './ui/button';
+import { SingleSelect } from './ui/single-select';
 import { 
   Loader2, 
-  ChevronDown,
   AlertCircle,
   Info,
   CircleDollarSign,
@@ -161,27 +161,6 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
     );
   }
 
-  // Count enabled assets for summary
-  const enabledProducts = [
-    settings.googleAds.enabled && 'Ads',
-    settings.googleAnalytics.enabled && 'Analytics',
-    settings.googleBusinessProfile.enabled && 'Business Profile',
-    settings.googleTagManager.enabled && 'Tag Manager',
-    settings.googleSearchConsole.enabled && 'Search Console',
-    settings.googleMerchantCenter.enabled && 'Merchant Center',
-  ].filter(Boolean);
-  
-  const productSummary = enabledProducts.length > 0 
-    ? `${enabledProducts[0]}${enabledProducts.length > 1 ? `, +${enabledProducts.length - 1}` : ''}`
-    : 'No products';
-  const accountInventoryCount =
-    (accountsData?.adsAccounts?.length || 0) +
-    (accountsData?.analyticsProperties?.length || 0) +
-    (accountsData?.businessAccounts?.length || 0) +
-    (accountsData?.tagManagerContainers?.length || 0) +
-    (accountsData?.searchConsoleSites?.length || 0) +
-    (accountsData?.merchantCenterAccounts?.length || 0);
-
   const updateSetting = (key: keyof GoogleAssetSettings, field: string, value: any) => {
     const newSettings = {
       ...settings,
@@ -228,35 +207,6 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
 
   return (
     <div className="space-y-6">
-      <ManageAssetsSectionCard
-        eyebrow="Configuration overview"
-        title="Current Google setup"
-        description="Use this snapshot to confirm which Google products are active before you adjust product-level access."
-      >
-        <div className="grid gap-3 md:grid-cols-3">
-          <ManageAssetsStatusPanel
-            label="Active products"
-            title={`${enabledProducts.length} active product${enabledProducts.length === 1 ? '' : 's'}`}
-            description={productSummary}
-          />
-          <ManageAssetsStatusPanel
-            label="Discovered inventory"
-            title={`${accountInventoryCount} available account${accountInventoryCount === 1 ? '' : 's'}`}
-            description="Accounts and properties discovered from the latest Google refresh."
-          />
-          <ManageAssetsStatusPanel
-            label="Selection health"
-            title={staleGoogleAdsAccountId ? 'Needs attention' : 'Selections in sync'}
-            description={
-              staleGoogleAdsAccountId
-                ? 'A saved Google Ads selection is stale and should be replaced.'
-                : 'Saved selections still match the available Google inventory.'
-            }
-            tone={staleGoogleAdsAccountId ? 'warning' : 'default'}
-          />
-        </div>
-      </ManageAssetsSectionCard>
-
       <ManageAssetsSectionCard
         eyebrow="Product controls"
         title="Google products"
@@ -468,29 +418,15 @@ function ProductCard({
 
           {enabled && (
             <div className="space-y-3">
-              <div className="relative">
-                <select
-                  value={selectedId || ''}
-                  onChange={(e) => {
-                    const account = accounts.find((a) => getAccountId(a) === e.target.value);
-                    if (account) {
-                      onAccountSelect(e.target.value, getAccountDisplayName(account));
-                    }
-                  }}
-                  className="w-full min-h-[44px] px-3 py-2 pr-10 bg-card border border-border rounded-md text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:border-[rgb(var(--coral))] transition-all appearance-none"
-                >
-                  <option value="">{placeholder}</option>
-                  {accounts.map((account) => {
-                    const id = getAccountId(account);
-                    return (
-                      <option key={id} value={id}>
-                        {getAccountOptionLabel(account)}
-                      </option>
-                    );
-                  })}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
+              <SingleSelect
+                options={accounts.map((account) => {
+                  const id = getAccountId(account);
+                  return { value: id, label: getAccountOptionLabel(account) };
+                })}
+                value={selectedId || ''}
+                onChange={(id, label) => onAccountSelect(id, label)}
+                placeholder={placeholder}
+              />
 
               {warningMessage && (
                 <ManageAssetsStatusPanel

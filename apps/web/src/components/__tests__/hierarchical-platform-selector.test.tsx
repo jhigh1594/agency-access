@@ -15,6 +15,7 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
   const defaultProps = {
     selectedPlatforms: {} as Record<string, string[]>,
     onSelectionChange: vi.fn(),
+    showAllPlatforms: true,
   };
 
   describe('Initial Rendering', () => {
