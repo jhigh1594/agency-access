@@ -162,6 +162,11 @@
   select:focus-visible {
     @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
+
+  /* Ensure dropdown triggers have white background in light mode */
+  :root:not(.dark) select {
+    background-color: #ffffff;
+  }
 }
 
 @layer utilities {

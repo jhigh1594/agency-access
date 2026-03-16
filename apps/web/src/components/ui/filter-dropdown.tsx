@@ -96,7 +96,7 @@ export function FilterDropdown({
                   flex items-center justify-between gap-3
                   transition-colors
                   ${isSelected
-                    ? 'bg-indigo-50 text-indigo-700'
+                    ? 'bg-accent/20 text-indigo-700'
                     : 'text-slate-700 hover:bg-electric/10'
                   }
                 `}
