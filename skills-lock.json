@@ -1,6 +1,16 @@
 {
   "version": 1,
   "skills": {
+    "codegen": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "058fec9bf514a97583ce670f9d084ba8bb1aacc3f63ab2ebe6afc7dd47b7302f"
+    },
+    "core": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "ee0feec2d99e508c9561455afa6697c8ce3f6ab03b5428fe671b881abb0a022f"
+    },
     "find-keywords": {
       "source": "calm-north/seojuice-skills",
       "sourceType": "github",
@@ -11,10 +21,35 @@
       "sourceType": "github",
       "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
     },
-    "remotion-best-practices": {
-      "source": "remotion-dev/skills",
+    "image": {
+      "source": "vercel-labs/json-render",
       "sourceType": "github",
-      "computedHash": "9851afb52e1b892c43b2af973bda1776ce01fedfdfe704e0cfd70069a3a9c300"
+      "computedHash": "f4e8c094db4900ddf1467f8a69596fc9445136b3a62c1312831ff968451f4eb5"
+    },
+    "react": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "22dde85d5a69aaee45eb56aeed8e7f8fb5d2ae2559b38f71621d0654385bed1d"
+    },
+    "react-native": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "1cfeffbd71f8fc350e7fdb5cd1f76067d64b60f2fef2300fd83181ad90148451"
+    },
+    "remotion": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "391d340781220430ac6a8cc92fea99c5df026439d2e9be46b9d2c5d20488e3ef"
+    },
+    "remotion-best-practices": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "4756068d1b2f92ef4f6d1301094a9862ef275687d3dbf26fda5e52cae3fca4c1"
+    },
+    "shadcn": {
+      "source": "vercel-labs/json-render",
+      "sourceType": "github",
+      "computedHash": "fa8e374b96f1f1d0a0f81adb97a843b82753e546d9ac176c0dace04f879090d3"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
