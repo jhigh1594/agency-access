@@ -1,0 +1,1195 @@
+1
+00:00:00,640 --> 00:00:02,550
+
+Hello and welcome to Agency Access. My
+
+2
+00:00:02,550 --> 00:00:02,560
+Hello and welcome to Agency Access. My
+ 
+
+3
+00:00:02,560 --> 00:00:04,550
+Hello and welcome to Agency Access. My
+name is Kevin, founder and I'm going to
+
+4
+00:00:04,550 --> 00:00:04,560
+name is Kevin, founder and I'm going to
+ 
+
+5
+00:00:04,560 --> 00:00:06,309
+name is Kevin, founder and I'm going to
+guide you through the platform in a few
+
+6
+00:00:06,309 --> 00:00:06,319
+guide you through the platform in a few
+ 
+
+7
+00:00:06,319 --> 00:00:09,190
+guide you through the platform in a few
+quick minutes. So once you're under the
+
+8
+00:00:09,190 --> 00:00:09,200
+quick minutes. So once you're under the
+ 
+
+9
+00:00:09,200 --> 00:00:10,470
+quick minutes. So once you're under the
+platform, the first thing you want to do
+
+10
+00:00:10,470 --> 00:00:10,480
+platform, the first thing you want to do
+ 
+
+11
+00:00:10,480 --> 00:00:12,150
+platform, the first thing you want to do
+is to connect your account to agency
+
+12
+00:00:12,150 --> 00:00:12,160
+is to connect your account to agency
+ 
+
+13
+00:00:12,160 --> 00:00:13,830
+is to connect your account to agency
+access. Otherwise, you can't request
+
+14
+00:00:13,830 --> 00:00:13,840
+access. Otherwise, you can't request
+ 
+
+15
+00:00:13,840 --> 00:00:16,230
+access. Otherwise, you can't request
+access to any other accounts obviously.
+
+16
+00:00:16,230 --> 00:00:16,240
+access to any other accounts obviously.
+ 
+
+17
+00:00:16,240 --> 00:00:18,070
+access to any other accounts obviously.
+So in order to do that, you go on the
+
+18
+00:00:18,070 --> 00:00:18,080
+So in order to do that, you go on the
+ 
+
+19
+00:00:18,080 --> 00:00:19,670
+So in order to do that, you go on the
+left hand side, you go to accounts and
+
+20
+00:00:19,670 --> 00:00:19,680
+left hand side, you go to accounts and
+ 
+
+21
+00:00:19,680 --> 00:00:21,510
+left hand side, you go to accounts and
+you choose the one uh you want to link
+
+22
+00:00:21,510 --> 00:00:21,520
+you choose the one uh you want to link
+ 
+
+23
+00:00:21,520 --> 00:00:25,029
+you choose the one uh you want to link
+with. uh in my example in the case um
+
+24
+00:00:25,029 --> 00:00:25,039
+with. uh in my example in the case um
+ 
+
+25
+00:00:25,039 --> 00:00:28,390
+with. uh in my example in the case um
+I'm a PPC expert and I want access to
+
+26
+00:00:28,390 --> 00:00:28,400
+I'm a PPC expert and I want access to
+ 
+
+27
+00:00:28,400 --> 00:00:31,189
+I'm a PPC expert and I want access to
+their analytics for tracking purposes
+
+28
+00:00:31,189 --> 00:00:31,199
+their analytics for tracking purposes
+ 
+
+29
+00:00:31,199 --> 00:00:33,430
+their analytics for tracking purposes
+their tech manager and their Google ads
+
+30
+00:00:33,430 --> 00:00:33,440
+their tech manager and their Google ads
+ 
+
+31
+00:00:33,440 --> 00:00:36,310
+their tech manager and their Google ads
+obviously. So um obviously those are all
+
+32
+00:00:36,310 --> 00:00:36,320
+obviously. So um obviously those are all
+ 
+
+33
+00:00:36,320 --> 00:00:38,150
+obviously. So um obviously those are all
+Google services we have meta now and
+
+34
+00:00:38,150 --> 00:00:38,160
+Google services we have meta now and
+ 
+
+35
+00:00:38,160 --> 00:00:40,389
+Google services we have meta now and
+we're working on a lot of other services
+
+36
+00:00:40,389 --> 00:00:40,399
+we're working on a lot of other services
+ 
+
+37
+00:00:40,399 --> 00:00:43,670
+we're working on a lot of other services
+as well. So in order to do that we go to
+
+38
+00:00:43,670 --> 00:00:43,680
+as well. So in order to do that we go to
+ 
+
+39
+00:00:43,680 --> 00:00:45,990
+as well. So in order to do that we go to
+uh link and you'll select your Google
+
+40
+00:00:45,990 --> 00:00:46,000
+uh link and you'll select your Google
+ 
+
+41
+00:00:46,000 --> 00:00:50,470
+uh link and you'll select your Google
+account. Click continue.
+
+42
+00:00:50,470 --> 00:00:50,480
+account. Click continue.
+ 
+
+43
+00:00:50,480 --> 00:00:52,470
+account. Click continue.
+And it takes a few seconds to link your
+
+44
+00:00:52,470 --> 00:00:52,480
+And it takes a few seconds to link your
+ 
+
+45
+00:00:52,480 --> 00:00:54,709
+And it takes a few seconds to link your
+account.
+
+46
+00:00:54,709 --> 00:00:54,719
+account.
+ 
+
+47
+00:00:54,719 --> 00:00:57,350
+account.
+Okay, we're linked. Um, and we can send
+
+48
+00:00:57,350 --> 00:00:57,360
+Okay, we're linked. Um, and we can send
+ 
+
+49
+00:00:57,360 --> 00:00:59,110
+Okay, we're linked. Um, and we can send
+a link right away. But before I want to
+
+50
+00:00:59,110 --> 00:00:59,120
+a link right away. But before I want to
+ 
+
+51
+00:00:59,120 --> 00:01:01,670
+a link right away. But before I want to
+send a link, I want to yeah, be sure
+
+52
+00:01:01,670 --> 00:01:01,680
+send a link, I want to yeah, be sure
+ 
+
+53
+00:01:01,680 --> 00:01:03,349
+send a link, I want to yeah, be sure
+that it looks like my agency look like
+
+54
+00:01:03,349 --> 00:01:03,359
+that it looks like my agency look like
+ 
+
+55
+00:01:03,359 --> 00:01:05,509
+that it looks like my agency look like
+it coming from my agency and it ensures
+
+56
+00:01:05,509 --> 00:01:05,519
+it coming from my agency and it ensures
+ 
+
+57
+00:01:05,519 --> 00:01:08,230
+it coming from my agency and it ensures
+the like the professionality. So, uh, in
+
+58
+00:01:08,230 --> 00:01:08,240
+the like the professionality. So, uh, in
+ 
+
+59
+00:01:08,240 --> 00:01:10,230
+the like the professionality. So, uh, in
+order to do so, we go to branding. I
+
+60
+00:01:10,230 --> 00:01:10,240
+order to do so, we go to branding. I
+ 
+
+61
+00:01:10,240 --> 00:01:12,550
+order to do so, we go to branding. I
+want to make it look like my own agency.
+
+62
+00:01:12,550 --> 00:01:12,560
+want to make it look like my own agency.
+ 
+
+63
+00:01:12,560 --> 00:01:15,510
+want to make it look like my own agency.
+So, my agency color is red. Um, and you
+
+64
+00:01:15,510 --> 00:01:15,520
+So, my agency color is red. Um, and you
+ 
+
+65
+00:01:15,520 --> 00:01:17,109
+So, my agency color is red. Um, and you
+can choose a dark mode or like a white
+
+66
+00:01:17,109 --> 00:01:17,119
+can choose a dark mode or like a white
+ 
+
+67
+00:01:17,119 --> 00:01:20,310
+can choose a dark mode or like a white
+mode. I like the white. And uh, choose
+
+68
+00:01:20,310 --> 00:01:20,320
+mode. I like the white. And uh, choose
+ 
+
+69
+00:01:20,320 --> 00:01:22,149
+mode. I like the white. And uh, choose
+your name,
+
+70
+00:01:22,149 --> 00:01:22,159
+your name,
+ 
+
+71
+00:01:22,159 --> 00:01:26,149
+your name,
+agency name. I can add my own logo. I
+
+72
+00:01:26,149 --> 00:01:26,159
+agency name. I can add my own logo. I
+ 
+
+73
+00:01:26,159 --> 00:01:29,429
+agency name. I can add my own logo. I
+can add it to my own subdomain. Um, and
+
+74
+00:01:29,429 --> 00:01:29,439
+can add it to my own subdomain. Um, and
+ 
+
+75
+00:01:29,439 --> 00:01:31,990
+can add it to my own subdomain. Um, and
+you can like see how it's going to look
+
+76
+00:01:31,990 --> 00:01:32,000
+you can like see how it's going to look
+ 
+
+77
+00:01:32,000 --> 00:01:34,469
+you can like see how it's going to look
+here. So, I made a typo.
+
+78
+00:01:34,469 --> 00:01:34,479
+here. So, I made a typo.
+ 
+
+79
+00:01:34,479 --> 00:01:35,990
+here. So, I made a typo.
+Um, and once you're happy with it, you
+
+80
+00:01:35,990 --> 00:01:36,000
+Um, and once you're happy with it, you
+ 
+
+81
+00:01:36,000 --> 00:01:37,990
+Um, and once you're happy with it, you
+can just save changes. You get a success
+
+82
+00:01:37,990 --> 00:01:38,000
+can just save changes. You get a success
+ 
+
+83
+00:01:38,000 --> 00:01:41,109
+can just save changes. You get a success
+message. And now you're ready to send a
+
+84
+00:01:41,109 --> 00:01:41,119
+message. And now you're ready to send a
+ 
+
+85
+00:01:41,119 --> 00:01:43,510
+message. And now you're ready to send a
+request. So to do so, you go back to the
+
+86
+00:01:43,510 --> 00:01:43,520
+request. So to do so, you go back to the
+ 
+
+87
+00:01:43,520 --> 00:01:45,670
+request. So to do so, you go back to the
+dashboard. You're going to create a link
+
+88
+00:01:45,670 --> 00:01:45,680
+dashboard. You're going to create a link
+ 
+
+89
+00:01:45,680 --> 00:01:48,389
+dashboard. You're going to create a link
+to a new client. The client's going to
+
+90
+00:01:48,389 --> 00:01:48,399
+to a new client. The client's going to
+ 
+
+91
+00:01:48,399 --> 00:01:51,350
+to a new client. The client's going to
+uh name is going to be
+
+92
+00:01:51,350 --> 00:01:51,360
+uh name is going to be
+ 
+
+93
+00:01:51,360 --> 00:01:54,469
+uh name is going to be
+new client
+
+94
+00:01:54,469 --> 00:01:54,479
+new client
+ 
+
+95
+00:01:54,479 --> 00:01:58,230
+new client
+from new company
+
+96
+00:01:58,230 --> 00:01:58,240
+from new company
+ 
+
+97
+00:01:58,240 --> 00:02:01,429
+from new company
+newest.com. It doesn't really matter.
+
+98
+00:02:01,429 --> 00:02:01,439
+newest.com. It doesn't really matter.
+ 
+
+99
+00:02:01,439 --> 00:02:06,149
+newest.com. It doesn't really matter.
+And we're going to use XXL nutrition
+
+100
+00:02:06,149 --> 00:02:06,159
+And we're going to use XXL nutrition
+ 
+
+101
+00:02:06,159 --> 00:02:07,830
+And we're going to use XXL nutrition
+nutrition
+
+102
+00:02:07,830 --> 00:02:07,840
+nutrition
+ 
+
+103
+00:02:07,840 --> 00:02:10,070
+nutrition
+as example. Uh you have to choose if
+
+104
+00:02:10,070 --> 00:02:10,080
+as example. Uh you have to choose if
+ 
+
+105
+00:02:10,080 --> 00:02:11,990
+as example. Uh you have to choose if
+it's going to be a client. So you can
+
+106
+00:02:11,990 --> 00:02:12,000
+it's going to be a client. So you can
+ 
+
+107
+00:02:12,000 --> 00:02:14,150
+it's going to be a client. So you can
+request admin access. Uh if it's going
+
+108
+00:02:14,150 --> 00:02:14,160
+request admin access. Uh if it's going
+ 
+
+109
+00:02:14,160 --> 00:02:16,150
+request admin access. Uh if it's going
+to be prospect, you only be able to
+
+110
+00:02:16,150 --> 00:02:16,160
+to be prospect, you only be able to
+ 
+
+111
+00:02:16,160 --> 00:02:20,550
+to be prospect, you only be able to
+request uh read only access uh to Google
+
+112
+00:02:20,550 --> 00:02:20,560
+request uh read only access uh to Google
+ 
+
+113
+00:02:20,560 --> 00:02:22,790
+request uh read only access uh to Google
+Messa etc etc. So it's going to be
+
+114
+00:02:22,790 --> 00:02:22,800
+Messa etc etc. So it's going to be
+ 
+
+115
+00:02:22,800 --> 00:02:24,869
+Messa etc etc. So it's going to be
+client. I'm going to create my new link.
+
+116
+00:02:24,869 --> 00:02:24,879
+client. I'm going to create my new link.
+ 
+
+117
+00:02:24,879 --> 00:02:28,309
+client. I'm going to create my new link.
+Um as said earlier I want access to ads
+
+118
+00:02:28,309 --> 00:02:28,319
+Um as said earlier I want access to ads
+ 
+
+119
+00:02:28,319 --> 00:02:33,270
+Um as said earlier I want access to ads
+analytics and tag manager. Uh I'll just
+
+120
+00:02:33,270 --> 00:02:33,280
+analytics and tag manager. Uh I'll just
+ 
+
+121
+00:02:33,280 --> 00:02:35,270
+analytics and tag manager. Uh I'll just
+admin
+
+122
+00:02:35,270 --> 00:02:35,280
+admin
+ 
+
+123
+00:02:35,280 --> 00:02:37,190
+admin
+continue. This is what the link is going
+
+124
+00:02:37,190 --> 00:02:37,200
+continue. This is what the link is going
+ 
+
+125
+00:02:37,200 --> 00:02:40,470
+continue. This is what the link is going
+to look like. Um, it's based off your
+
+126
+00:02:40,470 --> 00:02:40,480
+to look like. Um, it's based off your
+ 
+
+127
+00:02:40,480 --> 00:02:41,990
+to look like. Um, it's based off your
+branding set settings. And if you're not
+
+128
+00:02:41,990 --> 00:02:42,000
+branding set settings. And if you're not
+ 
+
+129
+00:02:42,000 --> 00:02:43,270
+branding set settings. And if you're not
+happy, you can change it right here or
+
+130
+00:02:43,270 --> 00:02:43,280
+happy, you can change it right here or
+ 
+
+131
+00:02:43,280 --> 00:02:45,830
+happy, you can change it right here or
+go back to branding. Um, it looks fine
+
+132
+00:02:45,830 --> 00:02:45,840
+go back to branding. Um, it looks fine
+ 
+
+133
+00:02:45,840 --> 00:02:47,830
+go back to branding. Um, it looks fine
+to me. So, we're going to continue. And
+
+134
+00:02:47,830 --> 00:02:47,840
+to me. So, we're going to continue. And
+ 
+
+135
+00:02:47,840 --> 00:02:49,750
+to me. So, we're going to continue. And
+you can add a custom thank you message
+
+136
+00:02:49,750 --> 00:02:49,760
+you can add a custom thank you message
+ 
+
+137
+00:02:49,760 --> 00:02:52,070
+you can add a custom thank you message
+or you can redirect after uh they're
+
+138
+00:02:52,070 --> 00:02:52,080
+or you can redirect after uh they're
+ 
+
+139
+00:02:52,080 --> 00:02:54,150
+or you can redirect after uh they're
+done through your custom thank you page,
+
+140
+00:02:54,150 --> 00:02:54,160
+done through your custom thank you page,
+ 
+
+141
+00:02:54,160 --> 00:02:56,869
+done through your custom thank you page,
+for example. Um, it's not relevant to
+
+142
+00:02:56,869 --> 00:02:56,879
+for example. Um, it's not relevant to
+ 
+
+143
+00:02:56,879 --> 00:02:58,390
+for example. Um, it's not relevant to
+me, so I'm just going to continue. And
+
+144
+00:02:58,390 --> 00:02:58,400
+me, so I'm just going to continue. And
+ 
+
+145
+00:02:58,400 --> 00:03:02,149
+me, so I'm just going to continue. And
+this is uh the preview of the send. Um I
+
+146
+00:03:02,149 --> 00:03:02,159
+this is uh the preview of the send. Um I
+ 
+
+147
+00:03:02,159 --> 00:03:06,229
+this is uh the preview of the send. Um I
+can include um let agency access send an
+
+148
+00:03:06,229 --> 00:03:06,239
+can include um let agency access send an
+ 
+
+149
+00:03:06,239 --> 00:03:09,830
+can include um let agency access send an
+email to your client with hey um um this
+
+150
+00:03:09,830 --> 00:03:09,840
+email to your client with hey um um this
+ 
+
+151
+00:03:09,840 --> 00:03:12,550
+email to your client with hey um um this
+agency request access to your account um
+
+152
+00:03:12,550 --> 00:03:12,560
+agency request access to your account um
+ 
+
+153
+00:03:12,560 --> 00:03:15,190
+agency request access to your account um
+you want to guarant uh obviously you can
+
+154
+00:03:15,190 --> 00:03:15,200
+you want to guarant uh obviously you can
+ 
+
+155
+00:03:15,200 --> 00:03:17,190
+you want to guarant uh obviously you can
+just uncheck and send it yourself uh
+
+156
+00:03:17,190 --> 00:03:17,200
+just uncheck and send it yourself uh
+ 
+
+157
+00:03:17,200 --> 00:03:18,630
+just uncheck and send it yourself uh
+even through like WhatsApp or something
+
+158
+00:03:18,630 --> 00:03:18,640
+even through like WhatsApp or something
+ 
+
+159
+00:03:18,640 --> 00:03:20,949
+even through like WhatsApp or something
+if you prefer that.
+
+160
+00:03:20,949 --> 00:03:20,959
+if you prefer that.
+ 
+
+161
+00:03:20,959 --> 00:03:24,550
+if you prefer that.
+Once you're ready send it
+
+162
+00:03:24,550 --> 00:03:24,560
+Once you're ready send it
+ 
+
+163
+00:03:24,560 --> 00:03:26,790
+Once you're ready send it
+takes a few seconds
+
+164
+00:03:26,790 --> 00:03:26,800
+takes a few seconds
+ 
+
+165
+00:03:26,800 --> 00:03:29,430
+takes a few seconds
+and the link is created. You'll see it
+
+166
+00:03:29,430 --> 00:03:29,440
+and the link is created. You'll see it
+ 
+
+167
+00:03:29,440 --> 00:03:31,110
+and the link is created. You'll see it
+here. It says pending because they
+
+168
+00:03:31,110 --> 00:03:31,120
+here. It says pending because they
+ 
+
+169
+00:03:31,120 --> 00:03:32,789
+here. It says pending because they
+haven't accepted it yet. Once they
+
+170
+00:03:32,789 --> 00:03:32,799
+haven't accepted it yet. Once they
+ 
+
+171
+00:03:32,799 --> 00:03:35,190
+haven't accepted it yet. Once they
+connect any of the services, it will um
+
+172
+00:03:35,190 --> 00:03:35,200
+connect any of the services, it will um
+ 
+
+173
+00:03:35,200 --> 00:03:37,350
+connect any of the services, it will um
+yeah, the light indicator will turn
+
+174
+00:03:37,350 --> 00:03:37,360
+yeah, the light indicator will turn
+ 
+
+175
+00:03:37,360 --> 00:03:39,830
+yeah, the light indicator will turn
+green real time. And once all are done,
+
+176
+00:03:39,830 --> 00:03:39,840
+green real time. And once all are done,
+ 
+
+177
+00:03:39,840 --> 00:03:42,710
+green real time. And once all are done,
+it will be granted. Um good thing to
+
+178
+00:03:42,710 --> 00:03:42,720
+it will be granted. Um good thing to
+ 
+
+179
+00:03:42,720 --> 00:03:44,550
+it will be granted. Um good thing to
+know, you can send a reminder, for
+
+180
+00:03:44,550 --> 00:03:44,560
+know, you can send a reminder, for
+ 
+
+181
+00:03:44,560 --> 00:03:46,309
+know, you can send a reminder, for
+example, if they haven't replied or
+
+182
+00:03:46,309 --> 00:03:46,319
+example, if they haven't replied or
+ 
+
+183
+00:03:46,319 --> 00:03:48,070
+example, if they haven't replied or
+granted access to all the services, you
+
+184
+00:03:48,070 --> 00:03:48,080
+granted access to all the services, you
+ 
+
+185
+00:03:48,080 --> 00:03:51,190
+granted access to all the services, you
+could do so once every two hours, I
+
+186
+00:03:51,190 --> 00:03:51,200
+could do so once every two hours, I
+ 
+
+187
+00:03:51,200 --> 00:03:54,309
+could do so once every two hours, I
+believe. Um, if you want to send it to
+
+188
+00:03:54,309 --> 00:03:54,319
+believe. Um, if you want to send it to
+ 
+
+189
+00:03:54,319 --> 00:03:55,910
+believe. Um, if you want to send it to
+multiple people, you can CC another
+
+190
+00:03:55,910 --> 00:03:55,920
+multiple people, you can CC another
+ 
+
+191
+00:03:55,920 --> 00:03:57,350
+multiple people, you can CC another
+person with their name and email and
+
+192
+00:03:57,350 --> 00:03:57,360
+person with their name and email and
+ 
+
+193
+00:03:57,360 --> 00:04:00,949
+person with their name and email and
+we'll send the mail notification. Um,
+
+194
+00:04:00,949 --> 00:04:00,959
+we'll send the mail notification. Um,
+ 
+
+195
+00:04:00,959 --> 00:04:02,550
+we'll send the mail notification. Um,
+that's optional. You can send it to
+
+196
+00:04:02,550 --> 00:04:02,560
+that's optional. You can send it to
+ 
+
+197
+00:04:02,560 --> 00:04:05,750
+that's optional. You can send it to
+someone else as well. Or you can uh edit
+
+198
+00:04:05,750 --> 00:04:05,760
+someone else as well. Or you can uh edit
+ 
+
+199
+00:04:05,760 --> 00:04:08,710
+someone else as well. Or you can uh edit
+the message. So if you say okay, I also
+
+200
+00:04:08,710 --> 00:04:08,720
+the message. So if you say okay, I also
+ 
+
+201
+00:04:08,720 --> 00:04:11,030
+the message. So if you say okay, I also
+want access to their search console for
+
+202
+00:04:11,030 --> 00:04:11,040
+want access to their search console for
+ 
+
+203
+00:04:11,040 --> 00:04:14,149
+want access to their search console for
+example as an owner. I can do so update
+
+204
+00:04:14,149 --> 00:04:14,159
+example as an owner. I can do so update
+ 
+
+205
+00:04:14,159 --> 00:04:15,830
+example as an owner. I can do so update
+it. It will update in real time. So
+
+206
+00:04:15,830 --> 00:04:15,840
+it. It will update in real time. So
+ 
+
+207
+00:04:15,840 --> 00:04:18,150
+it. It will update in real time. So
+that's really cool. Um, I can copy the
+
+208
+00:04:18,150 --> 00:04:18,160
+that's really cool. Um, I can copy the
+ 
+
+209
+00:04:18,160 --> 00:04:24,629
+that's really cool. Um, I can copy the
+link here and I can also
+
+210
+00:04:24,629 --> 00:04:24,639
+
+ 
+
+211
+00:04:24,639 --> 00:04:28,070
+
+uh good to know. If you need us, please
+
+212
+00:04:28,070 --> 00:04:28,080
+uh good to know. If you need us, please
+ 
+
+213
+00:04:28,080 --> 00:04:29,749
+uh good to know. If you need us, please
+go to the chat widget on the right or
+
+214
+00:04:29,749 --> 00:04:29,759
+go to the chat widget on the right or
+ 
+
+215
+00:04:29,759 --> 00:04:31,749
+go to the chat widget on the right or
+click on support, it will open and we'll
+
+216
+00:04:31,749 --> 00:04:31,759
+click on support, it will open and we'll
+ 
+
+217
+00:04:31,759 --> 00:04:35,270
+click on support, it will open and we'll
+be here to help you. Um, also good to
+
+218
+00:04:35,270 --> 00:04:35,280
+be here to help you. Um, also good to
+ 
+
+219
+00:04:35,280 --> 00:04:37,670
+be here to help you. Um, also good to
+know if you go to referrals um and you
+
+220
+00:04:37,670 --> 00:04:37,680
+know if you go to referrals um and you
+ 
+
+221
+00:04:37,680 --> 00:04:40,550
+know if you go to referrals um and you
+can um create a referral account you can
+
+222
+00:04:40,550 --> 00:04:40,560
+can um create a referral account you can
+ 
+
+223
+00:04:40,560 --> 00:04:43,430
+can um create a referral account you can
+get up to uh 20%
+
+224
+00:04:43,430 --> 00:04:43,440
+get up to uh 20%
+ 
+
+225
+00:04:43,440 --> 00:04:45,749
+get up to uh 20%
+uh on the people you refer on their
+
+226
+00:04:45,749 --> 00:04:45,759
+uh on the people you refer on their
+ 
+
+227
+00:04:45,759 --> 00:04:47,749
+uh on the people you refer on their
+subscription. So if you refer a few
+
+228
+00:04:47,749 --> 00:04:47,759
+subscription. So if you refer a few
+ 
+
+229
+00:04:47,759 --> 00:04:50,950
+subscription. So if you refer a few
+people um yeah it can be interesting for
+
+230
+00:04:50,950 --> 00:04:50,960
+people um yeah it can be interesting for
+ 
+
+231
+00:04:50,960 --> 00:04:53,430
+people um yeah it can be interesting for
+you as well. Again thank you for
+
+232
+00:04:53,430 --> 00:04:53,440
+you as well. Again thank you for
+ 
+
+233
+00:04:53,440 --> 00:04:54,950
+you as well. Again thank you for
+choosing Agency Access and we hope the
+
+234
+00:04:54,950 --> 00:04:54,960
+choosing Agency Access and we hope the
+ 
+
+235
+00:04:54,960 --> 00:04:56,710
+choosing Agency Access and we hope the
+platform is useful for you and if you
+
+236
+00:04:56,710 --> 00:04:56,720
+platform is useful for you and if you
+ 
+
+237
+00:04:56,720 --> 00:04:58,790
+platform is useful for you and if you
+need us you know where to find us. Thank
+
+238
+00:04:58,790 --> 00:04:58,800
+need us you know where to find us. Thank
+ 
+
+239
+00:04:58,800 --> 00:05:01,199
+need us you know where to find us. Thank
+you.
+
