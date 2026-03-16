@@ -1,5 +1,35 @@
 # MVP Requirement Mapping: Client Request Workflow
 
+## Google Native Access Parity (2026-03-15)
+
+### Requirement 1: Google access architecture must separate discovery OAuth from durable native access
+- The product should keep grouped Google OAuth for discovery and orchestration, but every supported Google product must resolve through an explicit capability path: native grant where supported, truthful discovery/follow-up where not.
+- Mapped tasks: `GNAP-010`, `GNAP-013`, `GNAP-020`, `GNAP-030`, `GNAP-040`, `GNAP-047`
+
+### Requirement 2: Google Ads must support both manager-account linking and direct user invites
+- Agencies need parity with the validated competitor patterns: MCC/manager linking where configured, and direct user invites where MCC is unavailable or not preferred.
+- Mapped tasks: `GNAP-011`, `GNAP-021`, `GNAP-022`, `GNAP-032`, `GNAP-041`, `GNAP-042`
+
+### Requirement 3: GA4 must support native user grants with truthful role and status handling
+- GA4 access should be granted natively on the requested account/property, with exact role mapping and verified completion instead of OAuth-only success semantics.
+- Mapped tasks: `GNAP-011`, `GNAP-023`, `GNAP-040`, `GNAP-043`, `GNAP-047`
+
+### Requirement 4: The remaining supported Google products must each have an explicit native-access or discovery-only plan
+- Business Profile, Tag Manager, Merchant Center, and Search Console cannot ride on the Ads/GA4 implementation by implication; each product needs a locked capability tier, correct API path, and truthful completion semantics.
+- Mapped tasks: `GNAP-011`, `GNAP-013`, `GNAP-024`, `GNAP-025`, `GNAP-026`, `GNAP-044`, `GNAP-045`, `GNAP-046`, `GNAP-047`
+
+### Requirement 5: Per-asset Google grant lifecycle must be durable, auditable, and additive
+- Native Google grant state needs its own persistence model, exact verification, audit logging, and backward-compatible shared/API contracts rather than ad hoc JSON metadata.
+- Mapped tasks: `GNAP-012`, `GNAP-030`, `GNAP-031`, `GNAP-047`, `GNAP-048`, `GNAP-051`
+
+### Requirement 6: Client and agency surfaces must expose truthful Google pending/accepted/follow-up states across all supported products
+- The product must show which Google step is pending, who needs to act, what mode was used, and where native automation is not supported, without collapsing every Google product into one generic status.
+- Mapped tasks: `GNAP-032`, `GNAP-049`, `GNAP-050`, `GNAP-051`, `GNAP-052`
+
+### Requirement 7: Delivery must be feature-flagged and verified against real Google-provider behavior
+- Because Google-native grant behavior differs by product and may include delayed acceptance/propagation, rollout must use feature flags, focused provider validation, and screenshot-backed verification.
+- Mapped tasks: `GNAP-012`, `GNAP-052`, `GNAP-053`
+
 ## Connections Manage Assets Modal Revamp (2026-03-15)
 
 ### Requirement 1: Connections `Manage Assets` modals must share a coherent brutalist shell
