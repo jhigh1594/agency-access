@@ -19,6 +19,7 @@ import { buildInviteUrl } from '@/lib/app-url';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
+import type { GoogleAdsAccount } from '@agency-platform/shared';
 import { cn } from '@/lib/utils';
 
 interface CreateRequestModalProps {
@@ -528,7 +529,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                                       <SingleSelect
                                         value={googleAdsAccountId}
                                         onChange={(v) => setGoogleAdsAccountId(v)}
-                                        options={adsAccounts.map((a: { id: string; name?: string; formattedId?: string; nameSource?: string }) => ({
+                                        options={adsAccounts.map((a: GoogleAdsAccount) => ({
                                           value: a.id,
                                           label: getGoogleAdsAccountLabel(a),
                                         }))}
