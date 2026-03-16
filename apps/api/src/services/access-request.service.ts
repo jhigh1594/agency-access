@@ -20,7 +20,7 @@ import {
   type GoogleProductFulfillmentMode,
   type GoogleProductGrantLifecycle,
 } from '@agency-platform/shared';
-import { invalidateCache } from '@/lib/cache.js';
+import { invalidateDashboardCache } from '@/lib/cache.js';
 import { env } from '@/lib/env.js';
 import { logger } from '@/lib/logger.js';
 import { webhookEventService } from '@/services/webhook-event.service.js';
@@ -244,7 +244,7 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
     });
 
     // Invalidate dashboard cache for this agency
-    await invalidateCache(`dashboard:${validated.agencyId}:*`);
+    await invalidateDashboardCache(validated.agencyId);
 
     return { data: accessRequest, error: null };
   } catch (error) {
@@ -982,7 +982,7 @@ export async function setAccessRequestLifecycleStatus(
     },
   });
 
-  await invalidateCache(`dashboard:${existing.agencyId}:*`);
+  await invalidateDashboardCache(existing.agencyId);
   await emitAccessRequestLifecycleWebhook({
     accessRequestId: requestId,
     previousStatus: existing.status,
@@ -1427,7 +1427,7 @@ export async function updateAccessRequest(
       data: updateData,
     });
 
-    await invalidateCache(`dashboard:${existing.agencyId}:*`);
+    await invalidateDashboardCache(existing.agencyId);
     await emitAccessRequestLifecycleWebhook({
       accessRequestId: id,
       previousStatus: existing.status,
@@ -1556,7 +1556,7 @@ export async function cancelAccessRequest(id: string) {
     });
 
     if (existing?.agencyId) {
-      await invalidateCache(`dashboard:${existing.agencyId}:*`);
+      await invalidateDashboardCache(existing.agencyId);
     }
 
     return { data: { success: true }, error: null };

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { redis } from './redis.js';
 
 /**
  * PKCE (Proof Key for Code Exchange) Helper
@@ -67,7 +68,6 @@ export async function storeCodeVerifier(
   verifier: string,
   ttl: number = 600
 ): Promise<void> {
-  const { redis } = await import('@/lib/redis.js');
   await redis.setex(`pkce:${state}`, ttl, verifier);
 }
 
@@ -78,7 +78,6 @@ export async function storeCodeVerifier(
  * @returns Code verifier or null if not found/expired
  */
 export async function getCodeVerifier(state: string): Promise<string | null> {
-  const { redis } = await import('@/lib/redis.js');
   return await redis.get(`pkce:${state}`);
 }
 
@@ -90,6 +89,5 @@ export async function getCodeVerifier(state: string): Promise<string | null> {
  * @param state - OAuth state parameter used as the key
  */
 export async function deleteCodeVerifier(state: string): Promise<void> {
-  const { redis } = await import('@/lib/redis.js');
   await redis.del(`pkce:${state}`);
 }

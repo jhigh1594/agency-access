@@ -293,6 +293,12 @@ const start = async () => {
     );
 
     await startOptionalBackgroundTask(
+      'authorization verification worker',
+      () => import('./jobs/authorization-verification.js'),
+      'Platform authorization verification will be disabled until Redis is available.'
+    );
+
+    await startOptionalBackgroundTask(
       'recurring job scheduler',
       scheduleJobs,
       'Recurring background jobs will not be scheduled until Redis is available.'

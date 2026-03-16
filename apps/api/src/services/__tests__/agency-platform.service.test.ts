@@ -9,9 +9,9 @@ import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import * as agencyPlatformService from '@/services/agency-platform.service';
 
-const { deleteCacheMock, invalidateCacheMock, ensureAgencyAccessTokenMock } = vi.hoisted(() => ({
+const { deleteCacheMock, invalidateDashboardCacheMock, ensureAgencyAccessTokenMock } = vi.hoisted(() => ({
   deleteCacheMock: vi.fn(async () => true),
-  invalidateCacheMock: vi.fn(async () => ({ success: true, keysDeleted: 1 })),
+  invalidateDashboardCacheMock: vi.fn(async () => {}),
   ensureAgencyAccessTokenMock: vi.fn(),
 }));
 
@@ -41,7 +41,7 @@ vi.mock('@/lib/cache', () => ({
     agencyConnections: (agencyId: string) => `agency:${agencyId}:connections`,
   },
   deleteCache: deleteCacheMock,
-  invalidateCache: invalidateCacheMock,
+  invalidateDashboardCache: invalidateDashboardCacheMock,
 }));
 
 vi.mock('@/services/token-lifecycle.service', () => ({
@@ -225,6 +225,7 @@ describe('AgencyPlatformService', () => {
 
       // Verify cache invalidated (so /agency-platforms/available updates immediately)
       expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
+      expect(invalidateDashboardCacheMock).toHaveBeenCalledWith('agency-1');
     });
 
     it('should return error if agency not found', async () => {
@@ -309,6 +310,7 @@ describe('AgencyPlatformService', () => {
 
       // Verify cache invalidated (so /agency-platforms/available updates immediately)
       expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
+      expect(invalidateDashboardCacheMock).toHaveBeenCalledWith('agency-1');
     });
 
     it('should return error if connection not found', async () => {
@@ -389,6 +391,7 @@ describe('AgencyPlatformService', () => {
 
       // Verify cache invalidated (expiresAt affects UI)
       expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
+      expect(invalidateDashboardCacheMock).toHaveBeenCalledWith('agency-1');
     });
   });
 
@@ -420,6 +423,7 @@ describe('AgencyPlatformService', () => {
         },
       });
       expect(deleteCacheMock).toHaveBeenCalledWith('agency:agency-1:connections');
+      expect(invalidateDashboardCacheMock).toHaveBeenCalledWith('agency-1');
     });
   });
 

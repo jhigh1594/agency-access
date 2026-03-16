@@ -11,9 +11,9 @@ import { prisma } from '@/lib/prisma';
 import * as agencyPlatformService from '@/services/agency-platform.service';
 
 const deleteSecretMock = vi.fn();
-const { deleteCacheMock, invalidateCacheMock } = vi.hoisted(() => ({
+const { deleteCacheMock, invalidateDashboardCacheMock } = vi.hoisted(() => ({
   deleteCacheMock: vi.fn(async () => true),
-  invalidateCacheMock: vi.fn(async () => ({ success: true, keysDeleted: 1 })),
+  invalidateDashboardCacheMock: vi.fn(async () => {}),
 }));
 
 vi.mock('@infisical/sdk', () => ({
@@ -50,7 +50,7 @@ vi.mock('@/lib/prisma', () => ({
 vi.mock('@/lib/cache', () => ({
   CacheKeys: { agencyConnections: (id: string) => `agency:${id}:connections` },
   deleteCache: deleteCacheMock,
-  invalidateCache: invalidateCacheMock,
+  invalidateDashboardCache: invalidateDashboardCacheMock,
 }));
 
 vi.mock('@/services/token-lifecycle.service', () => ({

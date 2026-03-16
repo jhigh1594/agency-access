@@ -17,7 +17,7 @@ import {
   type HealthStatus,
 } from '@agency-platform/shared';
 import { z } from 'zod';
-import { invalidateCache } from '@/lib/cache.js';
+import { invalidateDashboardCache } from '@/lib/cache.js';
 
 function calculateHealthStatus(
   expiresAt: Date | null,
@@ -165,7 +165,7 @@ export async function createClientConnection(input: {
     });
 
     // Invalidate dashboard cache for this agency
-    await invalidateCache(`dashboard:${accessRequest.agencyId}:*`);
+    await invalidateDashboardCache(accessRequest.agencyId);
 
     return { data: result, error: null };
   } catch (error) {

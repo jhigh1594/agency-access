@@ -145,7 +145,8 @@ export async function startTokenRefreshWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 5, // Process up to 5 jobs concurrently
+      concurrency: 5,
+      drainDelay: 30, // Reduce Redis polling when queue empty (Upstash cost optimization)
     }
   );
 
@@ -189,6 +190,7 @@ export async function startCleanupWorker() {
     },
     {
       connection: bullMqConnectionOptions,
+      drainDelay: 30,
     }
   );
 
@@ -242,7 +244,8 @@ export async function startNotificationWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 10, // Process up to 10 notifications concurrently
+      concurrency: 3, // Reduced from 5 for Upstash cost optimization
+      drainDelay: 30,
     }
   );
 
@@ -297,7 +300,8 @@ export async function startWebhookDeliveryWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 10,
+      concurrency: 3, // Reduced from 5 for Upstash cost optimization
+      drainDelay: 30,
     }
   );
 
@@ -334,7 +338,8 @@ export async function startOnboardingEmailWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 5,
+      concurrency: 3,
+      drainDelay: 30,
     }
   );
 
@@ -367,6 +372,7 @@ export async function startTrialExpirationWorker() {
     },
     {
       connection: bullMqConnectionOptions,
+      drainDelay: 30,
     }
   );
 
@@ -411,6 +417,7 @@ export async function startGoogleNativeGrantWorker() {
     {
       connection: bullMqConnectionOptions,
       concurrency: 5,
+      drainDelay: 30,
     }
   );
 
@@ -436,17 +443,13 @@ export async function scheduleJobs() {
     { type: 'check-expiring-tokens' },
     {
       repeat: {
-        pattern: '0 */6 * * *', // Every 6 hours
+        pattern: '0 */12 * * *', // Every 12 hours (reduces Redis usage vs 6h)
         tz: 'UTC',
       },
     }
   );
 
-  // Cleanup job - runs daily at 2 AM UTC
-  const cleanupQueue = registerQueueErrorHandler(new Queue('cleanup', {
-    connection: bullMqConnectionOptions,
-  }), 'cleanup-scheduler');
-
+  // Cleanup job - runs daily at 2 AM UTC (reuse cleanupQueue)
   await cleanupQueue.add(
     'delete-expired-requests',
     { type: 'delete-expired-requests' },
@@ -458,12 +461,8 @@ export async function scheduleJobs() {
     }
   );
 
-  // Trial expiration check - runs daily at 3 AM UTC
-  const trialExpQueue = registerQueueErrorHandler(new Queue('trial-expiration', {
-    connection: bullMqConnectionOptions,
-  }), 'trial-expiration-scheduler');
-
-  await trialExpQueue.add(
+  // Trial expiration check - runs daily at 3 AM UTC (reuse trialExpirationQueue)
+  await trialExpirationQueue.add(
     'check-expired-trials',
     { type: 'check-expired-trials' },
     {

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import type { Platform } from '@agency-platform/shared';
 import { PLATFORM_NAMES, MANUAL_PLATFORMS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
-import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache.js';
+import { CacheKeys, deleteCache, invalidateDashboardCache } from '@/lib/cache.js';
 
 export async function registerManualRoutes(fastify: FastifyInstance) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -172,7 +172,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
     await Promise.all([
       deleteCache(CacheKeys.agencyConnections(actualAgencyId)),
-      invalidateCache(`dashboard:${actualAgencyId}:*`),
+      invalidateDashboardCache(actualAgencyId),
     ]);
 
     return reply.code(201).send({
@@ -354,7 +354,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
     await Promise.all([
       deleteCache(CacheKeys.agencyConnections(actualAgencyId)),
-      invalidateCache(`dashboard:${actualAgencyId}:*`),
+      invalidateDashboardCache(actualAgencyId),
     ]);
 
     return reply.send({

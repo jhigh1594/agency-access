@@ -79,17 +79,19 @@ export async function getCached<T>({ key, ttl = 300, fetch }: CacheOptions<T>): 
 /**
  * Invalidate cache by key pattern
  *
- * Usage:
- * ```ts
- * await invalidateCache('dashboard:agency-123:*');
- * ```
+ * Uses SCAN instead of KEYS to avoid blocking Redis and reduce command cost
+ * on Upstash (KEYS is O(N) over entire keyspace; SCAN is incremental).
  *
- * @param pattern - Redis key pattern to match (supports wildcards)
+ * @param pattern - Redis key pattern to match (supports wildcards, e.g. dashboard:agency-123:*)
  * @returns Object with success status and number of keys deleted
  */
 export async function invalidateCache(pattern: string): Promise<{ success: boolean; keysDeleted: number; error?: any }> {
   try {
-    const keys = await redis.keys(pattern);
+    const keys: string[] = [];
+    const stream = redis.scanStream({ match: pattern, count: 100 });
+    for await (const batch of stream) {
+      keys.push(...batch);
+    }
 
     if (keys.length > 0) {
       await redis.del(...keys);
@@ -156,6 +158,17 @@ export const CacheKeys = {
   // OAuth tokens (not cached - in Infisical)
   // Token cache keys are managed by the token refresh system
 };
+
+/**
+ * Invalidate all dashboard-related cache for an agency.
+ * Clears both the main dashboard key and sub-keys (stats, requests, connections).
+ */
+export async function invalidateDashboardCache(agencyId: string): Promise<void> {
+  await Promise.all([
+    deleteCache(CacheKeys.dashboard(agencyId)),
+    invalidateCache(`dashboard:${agencyId}:*`),
+  ]);
+}
 
 /**
  * Cache TTL constants (in seconds)

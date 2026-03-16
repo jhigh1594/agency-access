@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import { registerManualRoutes } from '../manual.routes.js';
-import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache';
+import { CacheKeys, deleteCache, invalidateDashboardCache } from '@/lib/cache';
 import { prisma } from '@/lib/prisma';
 import { agencyResolutionService } from '@/services/agency-resolution.service';
 
@@ -33,7 +33,7 @@ vi.mock('@/lib/cache', () => ({
     agencyConnections: (agencyId: string) => `agency:${agencyId}:connections`,
   },
   deleteCache: vi.fn(async () => true),
-  invalidateCache: vi.fn(async () => ({ success: true, keysDeleted: 1 })),
+  invalidateDashboardCache: vi.fn(async () => {}),
 }));
 
 describe('Manual Agency Platform Routes', () => {
@@ -78,7 +78,7 @@ describe('Manual Agency Platform Routes', () => {
 
     expect(response.statusCode).toBe(201);
     expect(deleteCache).toHaveBeenCalledWith(CacheKeys.agencyConnections('agency-1'));
-    expect(invalidateCache).toHaveBeenCalledWith('dashboard:agency-1:*');
+    expect(invalidateDashboardCache).toHaveBeenCalledWith('agency-1');
   });
 
   it('invalidates platform caches after manual invitation update succeeds', async () => {
@@ -113,7 +113,7 @@ describe('Manual Agency Platform Routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(deleteCache).toHaveBeenCalledWith(CacheKeys.agencyConnections('agency-1'));
-    expect(invalidateCache).toHaveBeenCalledWith('dashboard:agency-1:*');
+    expect(invalidateDashboardCache).toHaveBeenCalledWith('agency-1');
   });
 
   it('creates Snapchat manual connection with agency email', async () => {

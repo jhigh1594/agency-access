@@ -9,7 +9,7 @@
 import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { logger } from '@/lib/logger.js';
-import { CacheKeys, deleteCache, invalidateCache } from '@/lib/cache';
+import { CacheKeys, deleteCache, invalidateDashboardCache } from '@/lib/cache';
 import { ensureAgencyAccessToken } from '@/services/token-lifecycle.service';
 import type { Platform } from '@agency-platform/shared';
 import { z } from 'zod';
@@ -194,7 +194,7 @@ export async function createConnection(input: CreateConnectionInput) {
     // Invalidate caches that power the Connections UI and dashboard widgets.
     await Promise.all([
       deleteCache(CacheKeys.agencyConnections(validated.agencyId)),
-      invalidateCache(`dashboard:${validated.agencyId}:*`),
+      invalidateDashboardCache(validated.agencyId),
     ]);
 
     return { data: connection, error: null };
@@ -276,7 +276,7 @@ export async function revokeConnection(
 
     await Promise.all([
       deleteCache(CacheKeys.agencyConnections(agencyId)),
-      invalidateCache(`dashboard:${agencyId}:*`),
+      invalidateDashboardCache(agencyId),
     ]);
 
     return { data: updatedConnection, error: null };
@@ -357,7 +357,7 @@ export async function refreshConnection(
 
     await Promise.all([
       deleteCache(CacheKeys.agencyConnections(agencyId)),
-      invalidateCache(`dashboard:${agencyId}:*`),
+      invalidateDashboardCache(agencyId),
     ]);
 
     return { data: updatedConnection, error: null };
@@ -471,7 +471,7 @@ export async function updateConnectionMetadata(
 
     await Promise.all([
       deleteCache(CacheKeys.agencyConnections(agencyId)),
-      invalidateCache(`dashboard:${agencyId}:*`),
+      invalidateDashboardCache(agencyId),
     ]);
 
     return { data: updatedConnection, error: null };
