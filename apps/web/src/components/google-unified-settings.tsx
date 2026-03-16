@@ -299,6 +299,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
         eyebrow="Access"
         title="Google Ads access method (account-level)"
         description="This controls how all Google Ads access requests are handled. You can change it any time."
+        contentClassName="pb-6"
       >
         <GoogleAdsAccessMethod
           preferredGrantMode={googleAdsManagement.preferredGrantMode}
