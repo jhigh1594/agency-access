@@ -26,7 +26,7 @@ export function GoogleInviteEmailInput({
 }: GoogleInviteEmailInputProps) {
   const [touched, setTouched] = useState(false);
   const isValid = !value || EMAIL_REGEX.test(value);
-  const showError = touched && value && !isValid;
+  const showError = Boolean(touched && value && !isValid);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
