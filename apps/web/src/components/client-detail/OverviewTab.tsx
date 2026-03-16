@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
-import { Card, EmptyState, PlatformIcon, StatusBadge } from '@/components/ui';
+import { Card, EmptyState, PlatformIcon, StatusBadge, SingleSelect } from '@/components/ui';
 import type {
   ClientAccessRequest,
   ClientDetailPlatformGroup,
@@ -84,21 +84,13 @@ export function OverviewTab({
 
           {/* Status filter */}
           <div>
-            <label htmlFor="request-status-filter" className="sr-only">
-              Filter access requests by status
-            </label>
-            <select
-              id="request-status-filter"
+            <SingleSelect
+              options={statusFilterOptions}
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-              className="min-h-[44px] px-3 py-2 border border-border bg-card rounded-lg text-sm text-foreground"
-            >
-              {statusFilterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setStatusFilter(v as StatusFilter)}
+              ariaLabel="Filter access requests by status"
+              className="min-w-[140px]"
+            />
           </div>
         </div>
 

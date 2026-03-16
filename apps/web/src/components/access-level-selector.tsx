@@ -7,6 +7,7 @@
 'use client';
 
 import { ACCESS_LEVEL_DESCRIPTIONS, AccessLevel } from '@agency-platform/shared';
+import { SingleSelect } from './ui/single-select';
 
 interface AccessLevelSelectorProps {
   selectedAccessLevel?: AccessLevel;
@@ -17,30 +18,23 @@ export function AccessLevelSelector({
   selectedAccessLevel,
   onSelectionChange,
 }: AccessLevelSelectorProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onSelectionChange?.(e.target.value as AccessLevel);
-  };
+  const options = Object.entries(ACCESS_LEVEL_DESCRIPTIONS).map(([level, info]) => ({
+    value: level,
+    label: `${info.title} — ${info.description}`,
+  }));
 
   return (
     <div className="space-y-2">
       <label htmlFor="access-level" className="block text-sm font-medium text-foreground">
         Default Access Level
       </label>
-      <select
-        id="access-level"
+      <SingleSelect
+        options={options}
         value={selectedAccessLevel || ''}
-        onChange={handleChange}
-        className="w-full px-4 py-2.5 border border-border rounded-lg bg-white text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-      >
-        <option value="" disabled>
-          Select access level...
-        </option>
-        {Object.entries(ACCESS_LEVEL_DESCRIPTIONS).map(([level, info]) => (
-          <option key={level} value={level}>
-            {info.title} — {info.description}
-          </option>
-        ))}
-      </select>
+        onChange={(value) => onSelectionChange?.(value as AccessLevel)}
+        placeholder="Select access level..."
+        ariaLabel="Default Access Level"
+      />
       
       {/* Show permissions for selected level */}
       {selectedAccessLevel && ACCESS_LEVEL_DESCRIPTIONS[selectedAccessLevel] && (

@@ -26,6 +26,7 @@ import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform
 import { AccessLevelSelector } from '@/components/access-level-selector';
 import { SaveAsTemplateModal } from '@/components/save-as-template-modal';
 import { FlowShell } from '@/components/flow/flow-shell';
+import { SingleSelect } from '@/components/ui/single-select';
 
 // Context & Utilities
 import { AccessRequestProvider, useAccessRequest } from '@/contexts/access-request-context';
@@ -493,19 +494,20 @@ function AccessRequestWizardContent() {
                 className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-ring focus:border-coral"
                   />
                   <div className="flex items-center gap-3">
-                <select
+                <SingleSelect
+                  options={[
+                    { value: 'text', label: 'Text' },
+                    { value: 'email', label: 'Email' },
+                    { value: 'phone', label: 'Phone' },
+                    { value: 'url', label: 'URL' },
+                    { value: 'textarea', label: 'Text Area' },
+                  ]}
                   value={field.type}
-                  onChange={(e) =>
-                    updateIntakeField(field.id, { type: e.target.value as any })
-                  }
-                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-ring focus:border-coral"
-                >
-                  <option value="text">Text</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone</option>
-                  <option value="url">URL</option>
-                  <option value="textarea">Text Area</option>
-                </select>
+                  onChange={(v) => updateIntakeField(field.id, { type: v as IntakeField['type'] })}
+                  placeholder="Field type"
+                  ariaLabel="Field type"
+                  triggerClassName="flex-1 px-3 py-2 border border-border rounded-lg text-sm min-h-auto"
+                />
                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                   <input
                     type="checkbox"

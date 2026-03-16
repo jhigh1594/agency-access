@@ -13,7 +13,7 @@ import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
 import { InvitePrimaryActionDock } from '@/components/flow/invite-primary-action-dock';
 import { InviteTrustNote } from '@/components/flow/invite-trust-note';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
-import { Button } from '@/components/ui';
+import { Button, SingleSelect } from '@/components/ui';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
 import {
@@ -448,24 +448,22 @@ export default function ClientAuthorizationPage() {
                       className="w-full"
                     />
                   ) : field.type === 'dropdown' ? (
-                    <select
+                    <SingleSelect
+                      options={[
+                        { value: '', label: 'Select an option' },
+                        ...(field.options ?? []).map((opt) => ({ value: opt, label: opt })),
+                      ]}
                       value={intakeResponses[field.id] || ''}
-                      onChange={(e) =>
+                      onChange={(v) =>
                         setIntakeResponses((prev) => ({
                           ...prev,
-                          [field.id]: e.target.value,
+                          [field.id]: v,
                         }))
                       }
-                      required={field.required}
-                      className="w-full"
-                    >
-                      <option value="">Select an option</option>
-                      {field.options?.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select an option"
+                      ariaLabel={field.label}
+                      triggerClassName="w-full rounded-lg border-2 border-border"
+                    />
                   ) : (
                     <input
                       type={field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}

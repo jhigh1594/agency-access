@@ -8,7 +8,7 @@ import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { FlowShell } from '@/components/flow/flow-shell';
 import { AccessLevelSelector } from '@/components/access-level-selector';
 import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform-selector';
-import { Button } from '@/components/ui';
+import { Button, SingleSelect } from '@/components/ui';
 import { getAccessRequest, updateAccessRequest } from '@/lib/api/access-requests';
 import type { AccessRequest } from '@/lib/api/access-requests';
 import { transformPlatformsForAPI } from '@/lib/transform-platforms';
@@ -443,18 +443,21 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
                     className="w-full rounded-lg border border-border px-3 py-2"
                     placeholder="Field label"
                   />
-                  <select
+                  <SingleSelect
+                    options={[
+                      { value: 'text', label: 'Text' },
+                      { value: 'email', label: 'Email' },
+                      { value: 'phone', label: 'Phone' },
+                      { value: 'url', label: 'URL' },
+                      { value: 'textarea', label: 'Text Area' },
+                      { value: 'dropdown', label: 'Dropdown' },
+                    ]}
                     value={field.type}
-                    onChange={(event) => updateIntakeField(field.id, { type: event.target.value as IntakeField['type'] })}
-                    className="w-full rounded-lg border border-border px-3 py-2 bg-card"
-                  >
-                    <option value="text">Text</option>
-                    <option value="email">Email</option>
-                    <option value="phone">Phone</option>
-                    <option value="url">URL</option>
-                    <option value="textarea">Text Area</option>
-                    <option value="dropdown">Dropdown</option>
-                  </select>
+                    onChange={(v) => updateIntakeField(field.id, { type: v as IntakeField['type'] })}
+                    placeholder="Field type"
+                    ariaLabel="Field type"
+                    triggerClassName="w-full rounded-lg border border-border px-3 py-2 min-h-auto"
+                  />
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <label className="inline-flex items-center gap-2 text-sm text-foreground">

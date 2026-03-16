@@ -68,9 +68,13 @@ interface TikTokShareResponse {
   };
 }
 
+function isMetaAssetProduct(product: string): boolean {
+  return product === 'meta_ads' || product === 'meta_pages';
+}
+
 function supportsAssetSelection(product: string): boolean {
   return (
-    product === 'meta_ads' ||
+    isMetaAssetProduct(product) ||
     product.startsWith('google_') ||
     product === 'ga4' ||
     product === 'linkedin_ads' ||
@@ -147,7 +151,7 @@ function getMetaFollowUpLines(assets: any): string[] {
 }
 
 function hasGrantFollowUp(product: string, assets: any): boolean {
-  return product === 'meta_ads' && getMetaFollowUpLines(assets).length > 0;
+  return isMetaAssetProduct(product) && getMetaFollowUpLines(assets).length > 0;
 }
 
 function getSelectedAssetCount(product: string, assets: any): number {
@@ -157,6 +161,8 @@ function getSelectedAssetCount(product: string, assets: any): number {
     case 'linkedin_ads':
     case 'linkedin_pages':
       return (assets.adAccounts?.length ?? 0) + (assets.pages?.length ?? 0) + (assets.instagramAccounts?.length ?? 0);
+    case 'meta_pages':
+      return assets.pages?.length ?? 0;
     case 'ga4':
       return assets.properties?.length ?? 0;
     case 'google_business_profile':
@@ -222,6 +228,9 @@ function getProductSummaryLines(product: string, assets: any): string[] {
       lines.push(...getMetaFollowUpLines(assets));
       return lines;
     }
+    case 'meta_pages':
+      if ((assets.pages?.length ?? 0) > 0) return [`${assets.pages.length} Page${assets.pages.length === 1 ? '' : 's'} selected`];
+      return [];
     case 'linkedin_ads':
       if ((assets.adAccounts?.length ?? 0) > 0) return [`${assets.adAccounts.length} Ad Account${assets.adAccounts.length === 1 ? '' : 's'} selected`];
       if (assets.availableAssetCount === 0) return ['Follow-up needed: No ad accounts found yet'];
@@ -263,6 +272,13 @@ export function PlatformAuthWizard({
   const manualRoute = getClientInviteManualRoute(platform);
   const isManualPlatform = Boolean(manualRoute);
   const requiresAssetSelection = products.some((product) => supportsAssetSelection(product.product));
+  const requestedMetaAssetProducts = products
+    .filter((product) => isMetaAssetProduct(product.product))
+    .map((product) => product.product);
+  const primaryMetaAssetProduct =
+    requestedMetaAssetProducts.find((product) => product === 'meta_ads') ||
+    requestedMetaAssetProducts[0] ||
+    null;
   const finalActionLabel = completionActionLabel || 'Continue to next platform';
 
   // Redirect platforms to manual flow (no OAuth - uses team invitations)
@@ -274,9 +290,7 @@ export function PlatformAuthWizard({
 
   // Initialize with props if returning from OAuth callback
   // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
-  const metaNeedsGrantStep = platform === 'meta' && products.some(
-    (p) => p.product === 'meta_ads'
-  );
+  const metaNeedsGrantStep = platform === 'meta' && primaryMetaAssetProduct !== null;
   const maxSteps = 3;
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep ? (initialStep > 3 ? 3 : initialStep as 1 | 2 | 3) : 1);
   const [connectionId, setConnectionId] = useState<string | null>(initialConnectionId || null);
@@ -354,12 +368,23 @@ export function PlatformAuthWizard({
 
   // Update selection for a specific product in the group
   const handleProductSelectionChange = useCallback((product: string, selectedAssets: any) => {
-    setGroupAssets((prev) => ({
-      ...prev,
-      [product]: selectedAssets,
-    }));
+    setGroupAssets((prev) => {
+      if (isMetaAssetProduct(product)) {
+        return {
+          ...prev,
+          meta_ads: selectedAssets,
+          meta_pages: selectedAssets,
+          [product]: selectedAssets,
+        };
+      }
 
-    if (product === 'meta_ads') {
+      return {
+        ...prev,
+        [product]: selectedAssets,
+      };
+    });
+
+    if (isMetaAssetProduct(product)) {
       setPagesGranted(false);
       setMetaAdAccountShareStatus('idle');
     }
@@ -378,7 +403,7 @@ export function PlatformAuthWizard({
         selectedBusinessCenterId: selectedAssets?.selectedBusinessCenterId,
       });
     }
-  }, []);
+  }, [platform]);
 
   // Fetch Business Manager ID for Meta
   useEffect(() => {
@@ -786,6 +811,7 @@ export function PlatformAuthWizard({
                     'google_merchant_center': 'Google Merchant Center',
                     'google_business_profile': 'Google Business Profile',
                     'meta_ads': 'Meta Ads',
+                    'meta_pages': 'Meta Pages',
                     'linkedin_ads': 'LinkedIn Ads',
                     'linkedin_pages': 'LinkedIn Pages',
                     'tiktok': 'TikTok Ads',
@@ -800,12 +826,17 @@ export function PlatformAuthWizard({
                         <h4 className="text-sm font-semibold text-[var(--ink)] font-display">{productName}</h4>
                       </div>
 
-                      {p.product === 'meta_ads' && (
+                      {isMetaAssetProduct(p.product) && primaryMetaAssetProduct === p.product && (
                         <div className="relative">
                           <MetaAssetSelector
                             sessionId={connectionId!}
                             accessRequestToken={accessRequestToken}
                             businessId={businessId || undefined}
+                            allowedAssetTypes={
+                              p.product === 'meta_pages' && !requestedMetaAssetProducts.includes('meta_ads')
+                                ? ['page']
+                                : ['ad_account', 'page', 'instagram']
+                            }
                             onSelectionChange={(selectedAssets) => {
                               // Store both IDs and full asset objects for grant step
                               // selectedAssets now includes selectedPagesWithNames, etc. from MetaAssetSelector
@@ -815,6 +846,12 @@ export function PlatformAuthWizard({
                           />
                           {!connectionId && <AssetSelectorDisabled />}
                         </div>
+                      )}
+
+                      {isMetaAssetProduct(p.product) && primaryMetaAssetProduct !== p.product && (
+                        <p className="text-sm text-muted-foreground">
+                          Account selection is shared with {PLATFORM_NAMES[primaryMetaAssetProduct as Platform] || primaryMetaAssetProduct}.
+                        </p>
                       )}
 
                       {/* Use generic GoogleAssetSelector for all Google products */}
@@ -1245,6 +1282,7 @@ export function PlatformAuthWizard({
                   'google_merchant_center': 'Merchant Center',
                   'google_business_profile': 'Business Profile',
                   'meta_ads': 'Meta Ads',
+                  'meta_pages': 'Meta Pages',
                   'linkedin_ads': 'LinkedIn Ads',
                   'linkedin_pages': 'LinkedIn Pages',
                 };
