@@ -52,7 +52,7 @@ export function GoogleAdsAccessMethod({
           className={cn(
             'relative flex-1 min-h-[44px] px-4 py-3 flex items-center justify-center gap-2 border-r-0 sm:border-r-2 sm:border-b-0 border-b-2 sm:border-b-0 border-black text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:ring-offset-2',
             preferredGrantMode === 'manager_link'
-              ? 'bg-card shadow-brutalist-sm'
+              ? 'bg-coral/15 shadow-brutalist-sm ring-2 ring-inset ring-[rgb(var(--coral))]'
               : 'bg-paper hover:bg-paper/90',
             disabled && 'cursor-not-allowed opacity-60'
           )}
@@ -84,10 +84,10 @@ export function GoogleAdsAccessMethod({
           disabled={disabled}
           onClick={() => !disabled && onUpdate({ preferredGrantMode: 'user_invite' })}
           className={cn(
-            'flex-1 min-h-[44px] px-4 py-3 flex items-center justify-center text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:ring-offset-2',
+            'flex-1 min-h-[44px] px-4 py-3 flex items-center justify-center text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[rgb(var(--coral))] focus:ring-offset-2 border-t-2 sm:border-t-0 sm:border-l-0 border-black',
             preferredGrantMode === 'user_invite'
-              ? 'bg-card shadow-brutalist-sm'
-              : 'bg-paper hover:bg-paper/90 border-t-2 sm:border-t-0 sm:border-l-0 border-black',
+              ? 'bg-coral/15 shadow-brutalist-sm ring-2 ring-inset ring-[rgb(var(--coral))]'
+              : 'bg-paper hover:bg-paper/90',
             disabled && 'cursor-not-allowed opacity-60'
           )}
           aria-label="Client email invite"
