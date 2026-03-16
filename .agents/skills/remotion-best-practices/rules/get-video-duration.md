@@ -34,19 +34,9 @@ const duration = await getVideoDuration("https://remotion.media/video.mp4");
 console.log(duration); // e.g. 10.5 (seconds)
 ```
 
-## Video files from the public/ directory
+## Using with local files
 
-Make sure to wrap the file path in `staticFile()`:
-
-```tsx
-import { staticFile } from "remotion";
-
-const duration = await getVideoDuration(staticFile("video.mp4"));
-```
-
-## In Node.js and Bun
-
-Use `FileSource` instead of `UrlSource`:
+For local files, use `FileSource` instead of `UrlSource`:
 
 ```tsx
 import { Input, ALL_FORMATS, FileSource } from "mediabunny";
@@ -57,4 +47,12 @@ const input = new Input({
 });
 
 const durationInSeconds = await input.computeDuration();
+```
+
+## Using with staticFile in Remotion
+
+```tsx
+import { staticFile } from "remotion";
+
+const duration = await getVideoDuration(staticFile("video.mp4"));
 ```
