@@ -23,8 +23,8 @@ Be specific. Not "sees dashboard" but "achieves outcome."
 Use web scraping tools to capture the documented onboarding flow:
 
 ```
-# If Firecrawl MCP is available:
-mcp__firecrawl__firecrawl_scrape(url: [signup URL], formats: ["markdown"])
+# Use Firecrawl CLI:
+firecrawl scrape [signup URL] --only-main-content -o .firecrawl/signup.md
 
 # Alternative: Use /browse command to navigate and capture
 ```
@@ -42,16 +42,10 @@ Research external sources to identify friction points:
 
 ```
 # Search for onboarding tutorials (proof of gaps)
-mcp__firecrawl__firecrawl_search(
-  query: "[product] getting started tutorial onboarding",
-  limit: 5
-)
+firecrawl search "[product] getting started tutorial onboarding" --limit 5 -o .firecrawl/search-onboarding.json --json
 
 # Search for complaints about setup
-mcp__firecrawl__firecrawl_search(
-  query: "[product] setup difficult confusing hard",
-  limit: 5
-)
+firecrawl search "[product] setup difficult confusing hard" --limit 5 -o .firecrawl/search-complaints.json --json
 ```
 
 **Insight:** Tutorials = proof of activation gaps. If users need tutorials to complete onboarding, the onboarding has gaps.

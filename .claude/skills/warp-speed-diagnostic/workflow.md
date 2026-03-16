@@ -21,11 +21,11 @@ If URLs not provided, work with descriptions only (confidence drops to 60%).
 
 ### Step 1b: Research (Web Search)
 
-**Option A: If Firecrawl MCP available (preferred):**
+**Option A: Use Firecrawl CLI (preferred):**
 
 If product URL provided:
 ```
-mcp__firecrawl__firecrawl_scrape(url: [product URL], formats: ["markdown"])
+firecrawl scrape [product URL] --only-main-content -o .firecrawl/product.md
 ```
 Extract: positioning, features, value proposition, pricing
 
