@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { SubscriptionTier } from '@agency-platform/shared';
 import { AdminTableShell } from '@/components/internal-admin';
+import { SingleSelect } from '@/components/ui';
 import { StatusBadge } from '@/components/ui/status-badge';
 import {
   useInternalAdminCancelSubscription,
@@ -87,33 +88,37 @@ export default function InternalAdminSubscriptionsPage() {
           description={`${data.total} total`}
           actions={(
             <div className="flex items-center gap-2">
-              <select
+              <SingleSelect
+                options={[
+                  { value: '', label: 'All status' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'trialing', label: 'Trialing' },
+                  { value: 'past_due', label: 'Past due' },
+                  { value: 'canceled', label: 'Canceled' },
+                ]}
                 value={status}
-                onChange={(event) => {
-                  setStatus(event.target.value);
+                onChange={(v) => {
+                  setStatus(v);
                   setPage(1);
                 }}
-                className="h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground"
-              >
-                <option value="">All status</option>
-                <option value="active">Active</option>
-                <option value="trialing">Trialing</option>
-                <option value="past_due">Past due</option>
-                <option value="canceled">Canceled</option>
-              </select>
-              <select
+                placeholder="All status"
+                ariaLabel="Filter by status"
+                triggerClassName="h-10 min-w-[120px] px-3 rounded-md border border-border bg-background text-sm"
+              />
+              <SingleSelect
+                options={[
+                  { value: '', label: 'All tiers' },
+                  ...TIER_OPTIONS.map((o) => ({ value: o, label: o })),
+                ]}
                 value={tier}
-                onChange={(event) => {
-                  setTier(event.target.value);
+                onChange={(v) => {
+                  setTier(v);
                   setPage(1);
                 }}
-                className="h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground"
-              >
-                <option value="">All tiers</option>
-                {TIER_OPTIONS.map((tierOption) => (
-                  <option key={tierOption} value={tierOption}>{tierOption}</option>
-                ))}
-              </select>
+                placeholder="All tiers"
+                ariaLabel="Filter by tier"
+                triggerClassName="h-10 min-w-[120px] px-3 rounded-md border border-border bg-background text-sm"
+              />
             </div>
           )}
         >
@@ -145,20 +150,18 @@ export default function InternalAdminSubscriptionsPage() {
                           <p className="text-xs text-muted-foreground">{subscription.agencyEmail}</p>
                         </td>
                         <td className="py-3">
-                          <select
+                          <SingleSelect
+                            options={TIER_OPTIONS.map((o) => ({ value: o, label: o }))}
                             value={targetTier}
-                            onChange={(event) => {
+                            onChange={(v) =>
                               setTargetTiers((current) => ({
                                 ...current,
-                                [subscription.id]: event.target.value as SubscriptionTier,
-                              }));
-                            }}
-                            className="h-9 px-2 rounded-md border border-border bg-background text-sm text-foreground"
-                          >
-                            {TIER_OPTIONS.map((tierOption) => (
-                              <option key={tierOption} value={tierOption}>{tierOption}</option>
-                            ))}
-                          </select>
+                                [subscription.id]: v as SubscriptionTier,
+                              }))
+                            }
+                            ariaLabel="Target tier"
+                            triggerClassName="h-9 min-w-[100px] px-2 rounded-md border border-border bg-background text-sm"
+                          />
                         </td>
                         <td className="py-3">
                           <StatusBadge status={subscription.status as any} />

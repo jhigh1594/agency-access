@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Loader2, Webhook } from 'lucide-react';
 import { AdminTableShell } from '@/components/internal-admin';
+import { SingleSelect } from '@/components/ui';
 import {
   WebhookDeliveryInspector,
   WebhookStatusBadge,
@@ -125,15 +126,18 @@ export default function InternalAdminWebhooksPage() {
                 placeholder="Search agency name or email"
                 className="h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <select
+              <SingleSelect
+                options={[
+                  { value: '', label: 'All status' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'disabled', label: 'Disabled' },
+                ]}
                 value={status}
-                onChange={(event) => setStatus(event.target.value as '' | 'active' | 'disabled')}
-                className="h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground"
-              >
-                <option value="">All status</option>
-                <option value="active">Active</option>
-                <option value="disabled">Disabled</option>
-              </select>
+                onChange={(v) => setStatus(v as '' | 'active' | 'disabled')}
+                placeholder="All status"
+                ariaLabel="Filter by status"
+                triggerClassName="h-10 min-w-[120px] px-3 rounded-md border border-border bg-background text-sm"
+              />
             </div>
           )}
         >

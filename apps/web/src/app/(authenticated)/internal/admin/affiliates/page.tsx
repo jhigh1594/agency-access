@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 
 import { AffiliateStatusChip } from '@/components/affiliate';
 import { AdminTableShell } from '@/components/internal-admin';
+import { SingleSelect } from '@/components/ui';
 import {
   useInternalAdminAdjustAffiliateCommission,
   useInternalAdminAffiliateFraudQueue,
@@ -479,20 +480,23 @@ export default function InternalAdminAffiliatesPage() {
             description={`${data.total} total`}
             actions={(
               <div className="flex flex-col gap-2 sm:flex-row">
-                <select
+                <SingleSelect
+                  options={[
+                    { value: '', label: 'All status' },
+                    { value: 'applied', label: 'Applied' },
+                    { value: 'approved', label: 'Approved' },
+                    { value: 'rejected', label: 'Rejected' },
+                    { value: 'disabled', label: 'Disabled' },
+                  ]}
                   value={status}
-                  onChange={(event) => {
-                    setStatus(event.target.value);
+                  onChange={(v) => {
+                    setStatus(v);
                     setPage(1);
                   }}
-                  className="h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground"
-                >
-                  <option value="">All status</option>
-                  <option value="applied">Applied</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="disabled">Disabled</option>
-                </select>
+                  placeholder="All status"
+                  ariaLabel="Filter by status"
+                  triggerClassName="h-10 min-w-[120px] px-3 rounded-md border border-border bg-background text-sm"
+                />
                 <input
                   value={search}
                   onChange={(event) => {
