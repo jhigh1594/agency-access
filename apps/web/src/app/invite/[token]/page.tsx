@@ -300,7 +300,10 @@ export default function ClientAuthorizationPage() {
       params.delete('platform');
       params.delete('step');
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname);
+      const href = (qs ? `${pathname}?${qs}` : pathname) as Parameters<
+        typeof router.replace
+      >[0];
+      router.replace(href);
     }
 
     setCompletedPlatforms((prev) => {
