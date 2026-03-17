@@ -14,6 +14,7 @@ import { InvitePrimaryActionDock } from '@/components/flow/invite-primary-action
 import { InviteTrustNote } from '@/components/flow/invite-trust-note';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
 import { Button, SingleSelect } from '@/components/ui';
+import { PlatformIcon } from '@/components/ui/platform-icon';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
 import {
@@ -27,8 +28,19 @@ type PagePhase = 'intake' | 'platforms' | 'complete';
 
 const SESSION_STORAGE_PREFIX = 'invite-progress:';
 
+function toTitleCase(str: string): string {
+  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const ACCESS_LEVEL_DISPLAY: Record<string, string> = {
+  admin: 'Full access',
+  standard: 'Standard access',
+  read_only: 'Read only',
+  email_only: 'Email only',
+};
+
 function formatAccessLevelLabel(value: string): string {
-  return value.replace(/_/g, ' ');
+  return ACCESS_LEVEL_DISPLAY[value] ?? value.replace(/_/g, ' ');
 }
 
 function buildPlatformSummary(platforms: Platform[]): string {
@@ -353,7 +365,7 @@ export default function ClientAuthorizationPage() {
       hideStepChipsOnMobile
       header={
         <InviteHeroHeader
-          eyebrow={`Request for ${data.clientName}`}
+          eyebrow={`Request for ${toTitleCase(data.clientName)}`}
           title={
             phase === 'platforms'
               ? isConnectStatusReview
@@ -361,7 +373,7 @@ export default function ClientAuthorizationPage() {
                 : activePlatformName
                 ? `Complete ${activePlatformName} access`
                 : 'Complete account access'
-              : `Share account access with ${data.agencyName}`
+              : `Share account access with ${toTitleCase(data.clientName)}`
           }
           description={
             phase === 'platforms'
@@ -395,7 +407,7 @@ export default function ClientAuthorizationPage() {
                   { label: 'Requested by', value: data.agencyName },
                   {
                     label: 'Recipient',
-                    value: data.clientEmail ? `${data.clientName} · ${data.clientEmail}` : data.clientName,
+                    value: data.clientEmail ? `${toTitleCase(data.clientName)} · ${data.clientEmail}` : toTitleCase(data.clientName),
                   },
                   { label: 'Platforms', value: platformSummary || 'No platforms requested' },
                   {
@@ -519,13 +531,6 @@ export default function ClientAuthorizationPage() {
           </form>
         ) : (
           <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card pb-28 shadow-sm">
-            <div className="border-b border-border bg-muted/10 px-5 py-4 sm:px-6">
-              <h2 className="text-xl font-semibold text-ink font-display">Review request</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Confirm the platforms below, then continue to authorize access.
-              </p>
-            </div>
-
             <div className="space-y-3 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -537,7 +542,10 @@ export default function ClientAuthorizationPage() {
 
                     return (
                       <div key={platform} className="rounded-xl border border-border bg-paper/70 p-3.5">
-                        <p className="text-sm font-semibold text-ink">{PLATFORM_NAMES[platform]}</p>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <PlatformIcon platform={platform} size="sm" />
+                          <p className="text-sm font-semibold text-ink">{PLATFORM_NAMES[platform]}</p>
+                        </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {groupConfig.products.map((product) => (
                             <span
@@ -559,6 +567,16 @@ export default function ClientAuthorizationPage() {
                 title="Approve only what you want to share"
                 description="Your agency receives access only to the accounts you explicitly approve in the next step."
               />
+            </div>
+
+            <div className="border-t border-border bg-muted/10 px-5 py-4 sm:px-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Lock className="h-3.5 w-3.5 shrink-0" />
+                <span>Passwords are never requested</span>
+              </div>
+              <Button variant="primary" onClick={() => setPhase('platforms')}>
+                Continue to connect
+              </Button>
             </div>
           </div>
         ))}

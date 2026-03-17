@@ -102,7 +102,7 @@ export function InviteFlowShell({
                             : 'border-border bg-card text-muted-foreground',
                         ].join(' ')}
                       >
-                        {label}
+                        {stepNumber} · {label}
                       </div>
                     );
                   })}
