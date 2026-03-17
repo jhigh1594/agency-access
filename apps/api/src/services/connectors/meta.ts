@@ -93,7 +93,10 @@ export class MetaConnector {
       response_type: 'code',
     });
 
-    if (this.loginForBusinessConfigId) {
+    // Agency Business Login uses config_id, but client invite OAuth must keep
+    // requesting explicit scopes so non-role client users are not forced
+    // through the agency Business Login configuration.
+    if (this.loginForBusinessConfigId && !scopes) {
       params.set('config_id', this.loginForBusinessConfigId);
     } else {
       const scopesToUse = scopes ?? MetaConnector.DEFAULT_SCOPES;

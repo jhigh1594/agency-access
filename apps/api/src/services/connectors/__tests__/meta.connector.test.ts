@@ -43,6 +43,26 @@ describe('MetaConnector Asset Discovery', () => {
       expect(authUrl.searchParams.get('scope')).toBeNull();
     });
 
+    it('uses explicit scopes instead of config_id for client OAuth flows', () => {
+      mockEnv.META_LOGIN_FOR_BUSINESS_CONFIG_ID = '1436589444014622';
+      connector = new MetaConnector();
+
+      const authUrl = new URL(
+        connector.getAuthUrl('state-123', [
+          'ads_management',
+          'ads_read',
+          'business_management',
+          'pages_read_engagement',
+        ], 'https://authhub.co/invite/oauth-callback')
+      );
+
+      expect(authUrl.searchParams.get('redirect_uri')).toBe('https://authhub.co/invite/oauth-callback');
+      expect(authUrl.searchParams.get('config_id')).toBeNull();
+      expect(authUrl.searchParams.get('scope')).toBe(
+        'ads_management,ads_read,business_management,pages_read_engagement'
+      );
+    });
+
     it('falls back to scope-based OAuth when Meta Login for Business configuration is absent', () => {
       const authUrl = new URL(connector.getAuthUrl('state-123'));
 
