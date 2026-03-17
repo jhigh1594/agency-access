@@ -11,11 +11,9 @@ describe('GoogleAdsConnector manager linking', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        results: [
-          {
-            resourceName: 'customers/6449142979/customerClientLinks/123',
-          },
-        ],
+        result: {
+          resourceName: 'customers/6449142979/customerClientLinks/123',
+        },
       }),
     });
 
@@ -41,14 +39,12 @@ describe('GoogleAdsConnector manager linking', () => {
           'login-customer-id': '6449142979',
         }),
         body: JSON.stringify({
-          operations: [
-            {
-              create: {
-                clientCustomer: 'customers/9756457868',
-                status: 'PENDING',
-              },
+          operation: {
+            create: {
+              clientCustomer: 'customers/9756457868',
+              status: 'PENDING',
             },
-          ],
+          },
         }),
       })
     );

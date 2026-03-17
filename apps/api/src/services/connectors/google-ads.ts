@@ -456,14 +456,12 @@ export class GoogleAdsConnector {
         method: 'POST',
         headers: this.buildHeaders(input.accessToken, managerCustomerId),
         body: JSON.stringify({
-          operations: [
-            {
-              create: {
-                clientCustomer: `customers/${clientCustomerId}`,
-                status: 'PENDING',
-              },
+          operation: {
+            create: {
+              clientCustomer: `customers/${clientCustomerId}`,
+              status: 'PENDING',
             },
-          ],
+          },
         }),
       }
     );
@@ -473,9 +471,9 @@ export class GoogleAdsConnector {
     }
 
     const data = (await response.json()) as {
-      results?: Array<{ resourceName?: string }>;
+      result?: { resourceName?: string };
     };
-    const resourceName = data.results?.[0]?.resourceName;
+    const resourceName = data.result?.resourceName;
 
     if (!resourceName) {
       throw new Error('Google Ads manager-link creation did not return a resource name');
