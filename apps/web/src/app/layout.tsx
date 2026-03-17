@@ -121,6 +121,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${outfit.variable} ${jetbrainsMono.variable} ${delaGothicOne.variable}`} suppressHydrationWarning>
       <head>
+        <meta name="facebook-domain-verification" content="3m49m2lu2cvxshjd01sbp77phldp4w" />
         {/* Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: gtmHeadScript }} />
         {/* Organization Schema JSON-LD */}
