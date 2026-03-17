@@ -138,23 +138,74 @@ jobs:
           echo "📦 Model: glm-4.7"
           echo "🎯 Max tokens: 8000"
 
+          # Build JSON payload with jq to ensure proper escaping
+          PAYLOAD=$(jq -n \
+            --arg system "You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly." \
+            --arg workflow "$WORKFLOW_PROMPT" \
+            --arg patterns "$BLOG_PATTERNS" \
+            --arg strategy "$CONTENT_STRATEGY" \
+            --arg keywords "$KEYWORD_TRACKER" \
+            --arg slugs "$EXISTING_SLUGS" \
+            '{
+              model: "glm-4.7",
+              max_tokens: 8000,
+              system: $system,
+              messages: [
+                {
+                  role: "user",
+                  content:
+                    "You are creating a blog post for Agency Access Platform (authhub.co).\n\n" +
+                    "=== WORKFLOW INSTRUCTIONS ===\n" + $workflow + "\n\n" +
+                    "=== BLOG PATTERNS ===\n" + $patterns + "\n\n" +
+                    "=== CONTENT STRATEGY ===\n" + $strategy + "\n\n" +
+                    "=== KEYWORD TRACKER ===\n" + $keywords + "\n\n" +
+                    "=== EXECUTION INSTRUCTIONS ===\n" +
+                    "Using the workflow instructions above, create a complete blog post:\n" +
+                    "1. Follow all 7 phases from the workflow instructions\n" +
+                    "2. Select a topic from KEYWORD TRACKER (prioritize P0 > P1 > P2)\n" +
+                    "3. Use the blog patterns to match structure by category\n" +
+                    "4. Apply copywriting_guidance for tone and style\n" +
+                    "5. Do NOT duplicate an existing slug: " + $slugs + "\n\n" +
+                    "When selecting a topic, consider:\n" +
+                    "- Monthly search volume (higher = more traffic potential)\n" +
+                    "- Priority level (P0 > P1 > P2)\n" +
+                    "- Whether a target page is already assigned\n" +
+                    "- Content pillar alignment\n\n" +
+                    "Output ONLY a markdown code block with the complete blog post including YAML frontmatter.\n\n" +
+                    "Example format:\n" +
+                    "```markdown\n" +
+                    "---\n" +
+                    "id: your-blog-post-id\n" +
+                    "title: Compelling Headline (2026)\n" +
+                    "excerpt: >-\n" +
+                    "  150-char summary\n" +
+                    "category: tutorials\n" +
+                    "stage: awareness\n" +
+                    "publishedAt: '2026-03-13'\n" +
+                    "readTime: 5\n" +
+                    "author:\n" +
+                    "  name: AuthHub Team\n" +
+                    "  role: Agency Operations Experts\n" +
+                    "tags:\n" +
+                    "  - tag1\n" +
+                    "  - tag2\n" +
+                    "metaTitle: SEO title\n" +
+                    "metaDescription: SEO description\n" +
+                    "---\n" +
+                    "# Compelling Headline (2026)\n\n" +
+                    "Full markdown body here...\n" +
+                    "```"
+                }
+              ]
+            }')
+
           # Call z.ai API (Anthropic-compatible endpoint)
           RESPONSE=$(curl -X POST "https://api.z.ai/api/anthropic/v1/messages" \
             -H "x-api-key: ${{ secrets.ZAI_API_KEY }}" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
             -s \
-            -d "{
-              \"model\": \"glm-4.7\",
-              \"max_tokens\": 8000,
-              \"system\": \"You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly.\",
-              \"messages\": [
-                {
-                  \"role\": \"user\",
-                  \"content\": \"You are creating a blog post for Agency Access Platform (authhub.co).\\n\\n=== WORKFLOW INSTRUCTIONS ===\\n${WORKFLOW_PROMPT}\\n\\n=== BLOG PATTERNS ===\\n${BLOG_PATTERNS}\\n\\n=== CONTENT STRATEGY ===\\n${CONTENT_STRATEGY}\\n\\n=== KEYWORD TRACKER ===\\n${KEYWORD_TRACKER}\\n\\n=== EXECUTION INSTRUCTIONS ===\\nUsing the workflow instructions above, create a complete blog post:\\n1. Follow all 7 phases from the workflow instructions\\n2. Select a topic from KEYWORD TRACKER (prioritize P0 > P1 > P2)\\n3. Use the blog patterns to match structure by category\\n4. Apply copywriting_guidance for tone and style\\n5. Do NOT duplicate an existing slug: ${EXISTING_SLUGS}\\n\\nWhen selecting a topic, consider:\\n- Monthly search volume (higher = more traffic potential)\\n- Priority level (P0 > P1 > P2)\\n- Whether a target page is already assigned\\n- Content pillar alignment\\n\\nOutput ONLY a markdown code block with the complete blog post including YAML frontmatter.\\n\\nExample format:\\n```markdown\\n---\\nid: your-blog-post-id\\ntitle: Compelling Headline (2026)\\nexcerpt: >-\\n  150-char summary\\ncategory: tutorials\\nstage: awareness\\npublishedAt: '2026-03-13'\\nreadTime: 5\\nauthor:\\n  name: AuthHub Team\\n  role: Agency Operations Experts\\ntags:\\n  - tag1\\n  - tag2\\nmetaTitle: SEO title\\nmetaDescription: SEO description\\n---\\n# Compelling Headline (2026)\\n\\nFull markdown body here...\\n```\"
-                }
-              ]
-            }")
+            -d "$PAYLOAD")
 
           # Check if API call was successful
           if [ $? -ne 0 ]; then
