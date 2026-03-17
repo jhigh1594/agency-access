@@ -528,7 +528,7 @@ export default function ClientAuthorizationPage() {
               ))}
             </div>
 
-            <div className="border-t border-border bg-muted/10 px-6 py-4 flex items-center justify-between gap-4">
+            <div className="border-t border-border bg-muted/10 px-6 py-3 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock className="h-4 w-4" />
                 {securitySummary.detail}
@@ -539,7 +539,7 @@ export default function ClientAuthorizationPage() {
             </div>
           </form>
         ) : (
-          <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card pb-28 shadow-sm">
+          <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm">
             <div className="space-y-3 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -578,7 +578,7 @@ export default function ClientAuthorizationPage() {
               />
             </div>
 
-            <div className="border-t border-border bg-muted/10 px-5 py-4 sm:px-6 flex items-center justify-between gap-4">
+            <div className="border-t border-border bg-muted/10 px-5 py-3 sm:px-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Lock className="h-3.5 w-3.5 shrink-0" />
                 <span>Passwords are never requested</span>
