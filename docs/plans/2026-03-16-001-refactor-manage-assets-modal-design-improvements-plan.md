@@ -1,7 +1,7 @@
 ---
 title: Manage Assets Modal Design Improvements
 type: refactor
-status: active
+status: completed
 date: 2026-03-16
 origin: docs/brainstorms/2026-03-15-connections-manage-assets-modal-revamp-brainstorm.md
 ---
