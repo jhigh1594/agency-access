@@ -72,6 +72,14 @@ const envSchema = z.object({
     }
   }, 'REDIS_URL must use redis:// or rediss://'),
 
+  // BullMQ Workers (Upstash cost control)
+  // When false: no workers start, no scheduled jobs, no Redis polling. Use for pre-launch/staging with zero traffic.
+  // OAuth, cache, and API work normally; token refresh, notifications, webhooks, etc. will queue but not process.
+  BULLMQ_WORKERS_ENABLED: z.preprocess(
+    value => parseBooleanish(value) ?? value,
+    z.boolean().default(true)
+  ),
+
   // Meta OAuth
   META_APP_ID: z.string(),
   META_APP_SECRET: z.string(),

@@ -30,14 +30,14 @@ Comprehensive analysis of Redis usage across the agency-access-platform API to i
 
 | Queue | Worker | Concurrency | drainDelay | Started from index? |
 |-------|--------|--------------|------------|---------------------|
-| token-refresh | ✅ | 5 | 30 | ✅ |
+| token-refresh | ✅ | 1 | 30 | ✅ |
 | cleanup | ✅ | 1 | 30 | ✅ |
-| notification | ✅ | 5 | 30 | ✅ |
-| webhook-delivery | ✅ | 5 | 30 | ✅ |
-| onboarding-email | ✅ | 3 | 30 | ✅ |
+| notification | ✅ | 1 | 30 | ✅ |
+| webhook-delivery | ✅ | 1 | 30 | ✅ |
+| onboarding-email | ✅ | 1 | 30 | ✅ |
 | trial-expiration | ✅ | 1 | 30 | ✅ |
-| google-native-grant | ✅ | 5 | 30 | ✅ |
-| authorization-verification | ✅ | 3 | **Missing** | ❌ Not in index.ts |
+| google-native-grant | ✅ | 1 | 30 | ✅ |
+| authorization-verification | ✅ | 1 | 30 | ✅ |
 
 ### Findings
 
@@ -174,3 +174,24 @@ Assuming current optimizations (drainDelay, 12h token refresh, SCAN) are deploye
 | **Total (low-traffic)** | ~500K/month | ~100–200K/month |
 
 Add authorization-verification drainDelay and concurrency cuts for further savings.
+
+---
+
+## 11. Zero-Traffic Baseline (2026-03-17)
+
+**Observed:** ~846K Redis commands/day with zero users, only manual testing.
+
+**Root cause:** BullMQ workers poll Redis continuously even when queues are empty. Upstash docs: "BullMQ accesses Redis regularly, even when there is no queue activity."
+
+**Fix implemented:** `BULLMQ_WORKERS_ENABLED` env var (default: true).
+
+| BULLMQ_WORKERS_ENABLED | Workers | Concurrency | Est. Redis/day |
+|------------------------|---------|--------------|----------------|
+| `true` (default) | 8 workers | 1 each (8 slots) | ~250–300K (idle polling) |
+| `false` | None | — | ~100–1K (startup + request-driven only) |
+
+**When to use `false`:** Pre-launch, staging, or any environment with zero/minimal traffic. OAuth, cache, and API work normally; token refresh, notifications, webhooks, onboarding emails, cleanup, trial expiration, and authorization verification will queue but not process.
+
+**Production:** Set `BULLMQ_WORKERS_ENABLED=true` (or omit; default) before launch.
+
+**Concurrency:** All workers use `concurrency: 1` to minimize Redis usage. Increase (e.g. token-refresh to 3–5, notification/webhook to 2–3) when traffic justifies.

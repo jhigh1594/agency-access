@@ -170,6 +170,23 @@ describe('env contract', () => {
     expect(module.env.INTERNAL_ADMIN_EMAILS).toEqual(['admin@example.com', 'ops@example.com']);
   });
 
+  it('parses BULLMQ_WORKERS_ENABLED as boolean (default true)', async () => {
+    const moduleDefault = await importEnvWith(withRequiredBase({
+      BULLMQ_WORKERS_ENABLED: undefined,
+    }));
+    expect(moduleDefault.env.BULLMQ_WORKERS_ENABLED).toBe(true);
+
+    const moduleFalse = await importEnvWith(withRequiredBase({
+      BULLMQ_WORKERS_ENABLED: 'false',
+    }));
+    expect(moduleFalse.env.BULLMQ_WORKERS_ENABLED).toBe(false);
+
+    const moduleTrue = await importEnvWith(withRequiredBase({
+      BULLMQ_WORKERS_ENABLED: 'true',
+    }));
+    expect(moduleTrue.env.BULLMQ_WORKERS_ENABLED).toBe(true);
+  });
+
   it('defaults internal admin allowlists to empty arrays when unset', async () => {
     const module = await importEnvWith(withRequiredBase({
       INTERNAL_ADMIN_USER_IDS: undefined,

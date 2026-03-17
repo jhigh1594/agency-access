@@ -145,7 +145,7 @@ export async function startTokenRefreshWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 5,
+      concurrency: 1, // Minimal for Upstash; increase when traffic justifies
       drainDelay: 30, // Reduce Redis polling when queue empty (Upstash cost optimization)
     }
   );
@@ -244,7 +244,7 @@ export async function startNotificationWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 3, // Reduced from 5 for Upstash cost optimization
+      concurrency: 1, // Minimal for Upstash; increase when traffic justifies
       drainDelay: 30,
     }
   );
@@ -300,7 +300,7 @@ export async function startWebhookDeliveryWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 3, // Reduced from 5 for Upstash cost optimization
+      concurrency: 1, // Minimal for Upstash; increase when traffic justifies
       drainDelay: 30,
     }
   );
@@ -338,7 +338,7 @@ export async function startOnboardingEmailWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 3,
+      concurrency: 1, // Minimal for Upstash; increase when traffic justifies
       drainDelay: 30,
     }
   );
@@ -416,7 +416,7 @@ export async function startGoogleNativeGrantWorker() {
     },
     {
       connection: bullMqConnectionOptions,
-      concurrency: 5,
+      concurrency: 1, // Minimal for Upstash; increase when traffic justifies
       drainDelay: 30,
     }
   );

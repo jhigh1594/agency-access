@@ -150,7 +150,7 @@ export const tokenRefreshWorker = new Worker<RefreshJobData>(
   },
   {
     connection: bullMqConnectionOptions,
-    concurrency: 5, // Process up to 5 jobs concurrently
+    concurrency: 1, // Minimal for Upstash; increase when traffic justifies
     limiter: {
       max: 10, // Max 10 jobs per interval
       duration: 1000, // Per second

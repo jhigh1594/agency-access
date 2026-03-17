@@ -239,70 +239,76 @@ const start = async () => {
       }
     };
 
-    const {
-      scheduleJobs,
-      startCleanupWorker,
-      startGoogleNativeGrantWorker,
-      startNotificationWorker,
-      startOnboardingEmailWorker,
-      startTokenRefreshWorker,
-      startTrialExpirationWorker,
-      startWebhookDeliveryWorker,
-    } = await import('./lib/queue.js');
+    if (env.BULLMQ_WORKERS_ENABLED) {
+      const {
+        scheduleJobs,
+        startCleanupWorker,
+        startGoogleNativeGrantWorker,
+        startNotificationWorker,
+        startOnboardingEmailWorker,
+        startTokenRefreshWorker,
+        startTrialExpirationWorker,
+        startWebhookDeliveryWorker,
+      } = await import('./lib/queue.js');
 
-    await startOptionalBackgroundTask(
-      'token refresh worker',
-      startTokenRefreshWorker,
-      'Automatic token refresh will be disabled until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'token refresh worker',
+        startTokenRefreshWorker,
+        'Automatic token refresh will be disabled until Redis is available.'
+      );
 
-    await startOptionalBackgroundTask(
-      'cleanup worker',
-      startCleanupWorker,
-      'Cleanup jobs will be disabled until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'cleanup worker',
+        startCleanupWorker,
+        'Cleanup jobs will be disabled until Redis is available.'
+      );
 
-    await startOptionalBackgroundTask(
-      'trial expiration worker',
-      startTrialExpirationWorker,
-      'Trial expiration jobs will be disabled until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'trial expiration worker',
+        startTrialExpirationWorker,
+        'Trial expiration jobs will be disabled until Redis is available.'
+      );
 
-    await startOptionalBackgroundTask(
-      'google native grant worker',
-      startGoogleNativeGrantWorker,
-      'Google native grant execution will be disabled until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'google native grant worker',
+        startGoogleNativeGrantWorker,
+        'Google native grant execution will be disabled until Redis is available.'
+      );
 
-    await startOptionalBackgroundTask(
-      'notification worker',
-      startNotificationWorker,
-      'Notifications will be disabled. To enable, ensure Redis is running.'
-    );
+      await startOptionalBackgroundTask(
+        'notification worker',
+        startNotificationWorker,
+        'Notifications will be disabled. To enable, ensure Redis is running.'
+      );
 
-    await startOptionalBackgroundTask(
-      'webhook delivery worker',
-      startWebhookDeliveryWorker,
-      'Outbound webhooks will not be delivered until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'webhook delivery worker',
+        startWebhookDeliveryWorker,
+        'Outbound webhooks will not be delivered until Redis is available.'
+      );
 
-    await startOptionalBackgroundTask(
-      'onboarding email worker',
-      startOnboardingEmailWorker,
-      'Onboarding emails will not be delayed. To enable, ensure Redis is running.'
-    );
+      await startOptionalBackgroundTask(
+        'onboarding email worker',
+        startOnboardingEmailWorker,
+        'Onboarding emails will not be delayed. To enable, ensure Redis is running.'
+      );
 
-    await startOptionalBackgroundTask(
-      'authorization verification worker',
-      () => import('./jobs/authorization-verification.js'),
-      'Platform authorization verification will be disabled until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'authorization verification worker',
+        () => import('./jobs/authorization-verification.js'),
+        'Platform authorization verification will be disabled until Redis is available.'
+      );
 
-    await startOptionalBackgroundTask(
-      'recurring job scheduler',
-      scheduleJobs,
-      'Recurring background jobs will not be scheduled until Redis is available.'
-    );
+      await startOptionalBackgroundTask(
+        'recurring job scheduler',
+        scheduleJobs,
+        'Recurring background jobs will not be scheduled until Redis is available.'
+      );
+    } else {
+      fastify.log.info(
+        'BullMQ workers disabled (BULLMQ_WORKERS_ENABLED=false). Redis usage minimized for pre-launch/staging.'
+      );
+    }
 
     await fastify.listen({
       port: env.PORT,

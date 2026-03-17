@@ -62,7 +62,7 @@ export const authorizationVerificationWorker = new Worker<VerificationJobData>(
   },
   {
     connection: bullMqConnectionOptions,
-    concurrency: 3, // Process up to 3 verifications concurrently (API rate limits)
+    concurrency: 1, // Minimal for Upstash; increase when traffic justifies
     drainDelay: 30, // Reduce Redis polling when queue empty (Upstash cost optimization)
     limiter: {
       max: 5, // Max 5 verification jobs per interval
