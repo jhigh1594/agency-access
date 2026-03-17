@@ -520,23 +520,34 @@ function ProductCard({
 
           {enabled && showAccountSelector && (
             <div className="space-y-3">
-              <SingleSelect
-                options={accounts.map((account) => {
-                  const id = getAccountId(account);
-                  return { value: id, label: getAccountOptionLabel(account) };
-                })}
-                value={selectedId || ''}
-                onChange={(id, label) => onAccountSelect(id, label)}
-                placeholder={placeholder}
-              />
+              {accounts.length === 0 ? (
+                <div className="rounded-[1rem] border border-coral/40 bg-coral/5 px-4 py-3">
+                  <p className="text-sm font-medium text-coral">No accounts available</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Connect your {label} account first to select assets.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <SingleSelect
+                    options={accounts.map((account) => {
+                      const id = getAccountId(account);
+                      return { value: id, label: getAccountOptionLabel(account) };
+                    })}
+                    value={selectedId || ''}
+                    onChange={(id, label) => onAccountSelect(id, label)}
+                    placeholder={placeholder}
+                  />
 
-              {warningMessage && (
-                <ManageAssetsStatusPanel
-                  label="Selection warning"
-                  title="Saved account needs replacement"
-                  description={warningMessage}
-                  tone="warning"
-                />
+                  {warningMessage && (
+                    <ManageAssetsStatusPanel
+                      label="Selection warning"
+                      title="Saved account needs replacement"
+                      description={warningMessage}
+                      tone="warning"
+                    />
+                  )}
+                </>
               )}
             </div>
           )}
