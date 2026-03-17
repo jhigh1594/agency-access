@@ -64,9 +64,12 @@ export function ManageAssetsStatusPanel({
   children,
   className,
 }: ManageAssetsStatusPanelProps) {
+  // Per DESIGN_SYSTEM.md v1.3.0:
+  // --acid (CCFF00) has 1.4:1 contrast - DECORATIVE ONLY, never for text/status
+  // --warning (B45309) has 5.2:1 contrast - WCAG AA compliant for status
   const toneClasses = {
     default: 'border-border bg-paper text-ink',
-    warning: 'border-acid/40 bg-acid/10 text-ink',
+    warning: 'border-warning/40 bg-warning/10 text-ink',
     danger: 'border-coral/40 bg-coral/10 text-ink',
   } as const;
 
