@@ -289,23 +289,6 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
   return (
     <div className="space-y-6">
       <ManageAssetsSectionCard
-        eyebrow="Access"
-        title="Google Ads access method (account-level)"
-        description="This controls how all Google Ads access requests are handled. You can change it any time."
-        contentClassName="pb-6"
-      >
-        <GoogleAdsAccessMethod
-          preferredGrantMode={googleAdsManagement.preferredGrantMode}
-          managerAccounts={managerAccounts}
-          managerCustomerId={googleAdsManagement.managerCustomerId || ''}
-          managerAccountLabel={googleAdsManagement.managerAccountLabel}
-          inviteEmail={googleAdsManagement.inviteEmail || ''}
-          onUpdate={updateGoogleAdsManagement}
-          disabled={isSavingSettings}
-        />
-      </ManageAssetsSectionCard>
-
-      <ManageAssetsSectionCard
         eyebrow="Product controls"
         title="Google products"
         description="Enable the products your agency actually uses, then map each one to the correct account or property."
@@ -340,11 +323,21 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
             enabled={settings.googleAds.enabled}
             onToggle={(val) => updateSetting('googleAds', 'enabled', val)}
             showAccountSelector={false}
-            noAccountSelectorHelperText="Choose which account to request when creating each access link in the client request form."
             accounts={[]}
             selectedId={undefined}
             onAccountSelect={() => {}}
             placeholder=""
+            customContent={
+              <GoogleAdsAccessMethod
+                preferredGrantMode={googleAdsManagement.preferredGrantMode}
+                managerAccounts={managerAccounts}
+                managerCustomerId={googleAdsManagement.managerCustomerId || ''}
+                managerAccountLabel={googleAdsManagement.managerAccountLabel}
+                inviteEmail={googleAdsManagement.inviteEmail || ''}
+                onUpdate={updateGoogleAdsManagement}
+                disabled={isSavingSettings}
+              />
+            }
           />
 
           <ProductCard
@@ -439,6 +432,7 @@ interface ProductCardProps {
   placeholder: string;
   showAccountSelector?: boolean;
   noAccountSelectorHelperText?: string;
+  customContent?: React.ReactNode;
   requestManageUsers?: boolean;
   onRequestManageUsersToggle?: (val: boolean) => void;
   tooltip?: string;
@@ -484,6 +478,7 @@ function ProductCard({
   placeholder,
   showAccountSelector = true,
   noAccountSelectorHelperText,
+  customContent,
   requestManageUsers,
   onRequestManageUsersToggle,
   tooltip,
@@ -552,8 +547,14 @@ function ProductCard({
             </div>
           )}
 
-          {enabled && !showAccountSelector && noAccountSelectorHelperText && (
+          {enabled && !showAccountSelector && !customContent && noAccountSelectorHelperText && (
             <p className="text-xs text-muted-foreground">{noAccountSelectorHelperText}</p>
+          )}
+
+          {enabled && customContent && (
+            <div className="pt-3 border-t border-border space-y-3">
+              {customContent}
+            </div>
           )}
 
           {enabled && showAccountSelector && onRequestManageUsersToggle && (

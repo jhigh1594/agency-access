@@ -27,6 +27,27 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
+## Session: 2026-03-17 — Google Ads Manage Assets Consolidation
+
+### What was done
+- Consolidated Google Ads access method into the Google Ads product row (spec: google-ads-manage-assets-consolidation.md)
+- Removed standalone "Google Ads access method (account-level)" card; single "Google products" section
+- ProductCard supports `customContent`; GoogleAdsAccessMethod renders inline when Google Ads enabled
+- Updated functional tests: GA4 displayName (use screen for portaled options), Select all/deselect all (correct labels), Manager Account dropdown when MCC, access method radiogroup when enabled
+
+### Files changed
+- `apps/web/src/components/google-unified-settings.tsx` — removed Access card, added customContent to Google Ads ProductCard
+- `apps/web/src/components/manage-assets-ui.tsx` (ProductCard) — already had customContent; no change
+- `apps/web/src/components/__tests__/google-unified-settings.test.tsx` — updated 5 tests for consolidated UI
+
+### Decisions made
+- (none; followed spec Option A)
+
+### Next steps
+- (none)
+
+---
+
 ## Session: 2026-03-16 — Google Ads Access Method Redesign
 
 ### What was done

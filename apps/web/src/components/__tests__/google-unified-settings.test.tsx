@@ -155,17 +155,16 @@ describe('GoogleUnifiedSettings', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const user = userEvent.setup();
-    const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+    renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    // Open the GA4 selector dropdown (options only rendered when open)
+    // Open the GA4 selector dropdown (options render in portal)
     const ga4Combobox = await screen.findByRole('combobox', { name: /Select GA4 Property/i });
     await user.click(ga4Combobox);
 
-    await waitFor(() => {
-      // Ensure the option text uses displayName (not "properties/...")
-      expect(container.textContent).toContain('Pillar AI Agency');
-    });
-    expect(container.textContent).not.toContain('properties/524870148 (524870148)');
+    // Ensure the option uses displayName (not "properties/...")
+    const option = await screen.findByRole('option', { name: /Pillar AI Agency/i });
+    expect(option).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /properties\/524870148/i })).not.toBeInTheDocument();
   });
 
   it('can select all and deselect all Google products', async () => {
@@ -218,15 +217,15 @@ describe('GoogleUnifiedSettings', () => {
 
     const { getByRole, getByText } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    // Wait until the UI is hydrated
+    // Wait until the UI is hydrated (Google Ads label is "Google Ads", not "Google Ads Account")
     await waitFor(() => {
-      expect(getByRole('checkbox', { name: /^enable google ads account$/i })).toBeInTheDocument();
+      expect(getByRole('checkbox', { name: /^enable google ads$/i })).toBeInTheDocument();
     });
 
     await user.click(getByRole('button', { name: /^select all$/i }));
 
     const productLabels = [
-      'Google Ads Account',
+      'Google Ads',
       'Google Analytics Account',
       'Google Business Profile Location',
       'Google Tag Manager',
@@ -296,7 +295,7 @@ describe('GoogleUnifiedSettings', () => {
     expect(screen.queryByText(/current google setup/i)).not.toBeInTheDocument();
   });
 
-  it('renders Google Ads dropdown labels with account title and formatted ID, including fallback labels', async () => {
+  it('renders Google Ads Manager Account dropdown labels when MCC is selected', async () => {
     const fetchMock = vi.fn(async (input: any) => {
       const url = String(input);
 
@@ -341,6 +340,11 @@ describe('GoogleUnifiedSettings', () => {
           ok: true,
           json: async () => ({
             data: {
+              googleAdsManagement: {
+                preferredGrantMode: 'manager_link',
+                managerCustomerId: '',
+                inviteEmail: '',
+              },
               googleAds: { enabled: true, requestManageUsers: false },
               googleAnalytics: { enabled: false, requestManageUsers: false },
               googleBusinessProfile: { enabled: false, requestManageUsers: false },
@@ -358,21 +362,20 @@ describe('GoogleUnifiedSettings', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const user = userEvent.setup();
-    const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+    renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    // Open the Google Ads selector (options only rendered when open)
-    const adsCombobox = await screen.findByRole('combobox', { name: /Select Ads Account/i });
-    await user.click(adsCombobox);
+    // Manager Account selector appears when MCC is selected
+    const managerCombobox = await screen.findByRole('combobox', { name: /Select Manager Account/i });
+    await user.click(managerCombobox);
 
     await waitFor(() => {
-      expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
-      expect(container.textContent).toContain('Google Ads account • 549-755-9774');
+      expect(screen.getByRole('option', { name: /Pillar AI Agency MCC.*644-914-2979/i })).toBeInTheDocument();
     });
+    // Non-manager accounts should not appear
+    expect(screen.queryByRole('option', { name: /Google Ads account.*549-755-9774/i })).not.toBeInTheDocument();
   });
 
-  it('warns when the saved Google Ads account is no longer active and excludes it from the dropdown', async () => {
-    const user = userEvent.setup();
-
+  it('renders Google Ads access method when Google Ads is enabled', async () => {
     const fetchMock = vi.fn(async (input: any) => {
       const url = String(input);
 
@@ -381,17 +384,7 @@ describe('GoogleUnifiedSettings', () => {
           ok: true,
           json: async () => ({
             data: {
-              adsAccounts: [
-                {
-                  id: '1111111111',
-                  name: 'Enabled Account',
-                  formattedId: '111-111-1111',
-                  nameSource: 'direct',
-                  isManager: false,
-                  type: 'google_ads',
-                  status: 'ENABLED',
-                },
-              ],
+              adsAccounts: [],
               analyticsProperties: [],
               businessAccounts: [],
               tagManagerContainers: [],
@@ -408,11 +401,7 @@ describe('GoogleUnifiedSettings', () => {
           ok: true,
           json: async () => ({
             data: {
-              googleAds: {
-                enabled: true,
-                accountId: '9999999999',
-                requestManageUsers: false,
-              },
+              googleAds: { enabled: true, requestManageUsers: false },
               googleAnalytics: { enabled: false, requestManageUsers: false },
               googleBusinessProfile: { enabled: false, requestManageUsers: false },
               googleTagManager: { enabled: false, requestManageUsers: false },
@@ -430,19 +419,10 @@ describe('GoogleUnifiedSettings', () => {
 
     renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    expect(
-      await screen.findByText(/previously selected google ads account is no longer active/i)
-    ).toBeInTheDocument();
-
-    const adsCombobox = screen.getByRole('combobox', { name: /Select Ads Account/i });
-    expect(adsCombobox).toHaveTextContent(/Select Ads Account/i);
-
-    await user.click(adsCombobox);
-
-    // Stale account 9999999999 must not appear in the dropdown
-    expect(screen.queryByRole('option', { name: /9999999999/ })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('option', { name: /Enabled Account.*111-111-1111/i }));
+    // Access method (MCC vs invite) is inline in the Google Ads row
+    expect(await screen.findByRole('radiogroup', { name: /Google Ads access method/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Manager account \(MCC\)/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Client email invite/i })).toBeInTheDocument();
   });
 
   it('renders Google Ads MCC defaults and limits manager selection to manager accounts', async () => {
@@ -513,16 +493,16 @@ describe('GoogleUnifiedSettings', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const user = userEvent.setup();
-    const { container } = renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
+    renderWithQueryClient(<GoogleUnifiedSettings agencyId="agency-1" />);
 
-    expect(await screen.findByText(/google ads access method/i)).toBeInTheDocument();
+    expect(await screen.findByRole('radiogroup', { name: /Google Ads access method/i })).toBeInTheDocument();
 
     const managerCombobox = screen.getByRole('combobox', { name: /Select Manager Account/i });
     await user.click(managerCombobox);
 
     await waitFor(() => {
-      expect(container.textContent).toContain('Pillar AI Agency MCC • 644-914-2979');
+      expect(screen.getByRole('option', { name: /Pillar AI Agency MCC.*644-914-2979/i })).toBeInTheDocument();
     });
-    expect(container.textContent).not.toContain('Client Ads Account • 549-755-9774');
+    expect(screen.queryByRole('option', { name: /Client Ads Account.*549-755-9774/i })).not.toBeInTheDocument();
   });
 });
