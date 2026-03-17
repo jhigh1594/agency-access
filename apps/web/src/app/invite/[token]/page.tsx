@@ -364,7 +364,11 @@ export default function ClientAuthorizationPage() {
       hideStepChipsOnMobile
       header={
         <InviteHeroHeader
-          eyebrow={`Request for ${toTitleCase(data.clientName)}`}
+          eyebrow={
+            phase === 'intake'
+              ? undefined
+              : `Request for ${toTitleCase(data.clientName)}`
+          }
           title={
             phase === 'platforms'
               ? isConnectStatusReview
@@ -381,7 +385,11 @@ export default function ClientAuthorizationPage() {
                 : activePlatformName
                 ? `Finish ${activePlatformName} first, then continue through the remaining requested platforms.`
                 : 'Finish the remaining platform connection steps.'
-              : `Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`
+              : phase === 'intake'
+                ? intakeFields.length > 0
+                  ? 'Share a few details, then confirm which accounts to share.'
+                  : 'Confirm which accounts to share below, then continue.'
+                : `Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`
           }
           badge={securitySummary.badge}
           logoUrl={data.branding?.logoUrl}
@@ -402,21 +410,23 @@ export default function ClientAuthorizationPage() {
                       : 'Review completion',
                   },
                 ]
-              : [
-                  { label: 'Requested by', value: data.agencyName },
-                  {
-                    label: 'Recipient',
-                    value: data.clientEmail ? `${toTitleCase(data.clientName)} · ${data.clientEmail}` : toTitleCase(data.clientName),
-                  },
-                  { label: 'Platforms', value: platformSummary || 'No platforms requested' },
-                  {
-                    label: 'Next',
-                    value:
-                      phase === 'complete'
-                        ? 'Review the completed authorization'
-                        : 'Confirm what will be shared',
-                  },
-                ]
+              : phase === 'intake'
+                ? [
+                    { label: 'From', value: data.agencyName },
+                    { label: 'Next', value: 'Confirm what will be shared' },
+                  ]
+                : [
+                    { label: 'Requested by', value: data.agencyName },
+                    {
+                      label: 'Recipient',
+                      value: data.clientEmail ? `${toTitleCase(data.clientName)} · ${data.clientEmail}` : toTitleCase(data.clientName),
+                    },
+                    { label: 'Platforms', value: platformSummary || 'No platforms requested' },
+                    {
+                      label: 'Next',
+                      value: 'Review the completed authorization',
+                    },
+                  ]
           }
         />
       }
