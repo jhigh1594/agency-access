@@ -484,16 +484,17 @@ function ProductCard({
   tooltip,
   warningMessage,
 }: ProductCardProps) {
-  // Per DESIGN_SYSTEM.md: "Disabled state should maintain brutalist language with reduced intensity"
-  // - Keep border-2 and black-derived colors (not generic border-border)
-  // - Keep shadow (uses element opacity to dim, not remove shadow entirely)
+  // Updated per design critique:
+  // - Let the outer `ManageAssetsSectionCard` be the brutalist anchor.
+  // - Product rows should feel structured but lighter, not like stacked hero cards.
+  // - Disabled state still reads as clearly disabled via opacity and softer border.
   return (
     <div
       className={cn(
-        'rounded-[1rem] border-2 p-4 transition-all',
+        'rounded-[1rem] border p-4 transition-colors duration-150',
         enabled
-          ? 'border-black bg-card shadow-brutalist-sm'
-          : 'border-black/30 bg-paper shadow-brutalist-sm opacity-60'
+          ? 'border-border bg-paper hover:border-black hover:bg-paper/95'
+          : 'border-border bg-card/70 opacity-60'
       )}
     >
       <div className="flex items-start gap-3">

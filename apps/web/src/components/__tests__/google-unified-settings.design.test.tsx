@@ -44,18 +44,11 @@ describe('GoogleUnifiedSettings - Static Design Validation', () => {
     expect(code).toMatch(/text-ink/);
   });
 
-  it('should retain brutalist shadow on ProductCard when disabled', () => {
+  it('should keep ProductCard visually lighter than the section shell', () => {
     const code = readComponent();
-    // Per DESIGN_SYSTEM.md: disabled states should maintain brutalist language
-    // The ProductCard should use shadow-brutalist-sm in both states
-    expect(code).toMatch(/shadow-brutalist-sm/);
-  });
-
-  it('should use black-derived border on ProductCard when disabled', () => {
-    const code = readComponent();
-    // Disabled ProductCard should use border-black/30, not generic border-border
-    // This maintains the hard-edge brutalist language
-    expect(code).toMatch(/border-black\/30/);
-    expect(code).not.toMatch(/disabled.*border-border/);
+    // Product rows should not use the heavy brutalist shadow; the section card is the anchor.
+    expect(code).not.toMatch(/shadow-brutalist-sm/);
+    // Enabled state can tighten border color on hover but stays border-based, not full brutalist.
+    expect(code).toMatch(/border-border bg-paper/);
   });
 });
