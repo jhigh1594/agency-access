@@ -1373,6 +1373,8 @@ export function PlatformAuthWizard({
     );
   }
 
+  const stepContent = renderStepContent();
+
   return (
     <PlatformWizardCard
       platform={platform}
@@ -1381,7 +1383,22 @@ export function PlatformAuthWizard({
       totalSteps={maxSteps}
       chrome="minimal"
     >
-      {renderStepContent()}
+      {stepContent ?? (
+        <div className="text-center space-y-3 py-6">
+          <h3 className="text-lg font-bold text-[var(--ink)] font-display">Connect {platformName}</h3>
+          <p className="text-sm text-muted-foreground">
+            Sign in to {platformName} and approve access.
+          </p>
+          <Button
+            onClick={handleConnectClick}
+            isLoading={isProcessing}
+            variant="brutalist-rounded"
+            size="lg"
+          >
+            Connect {platformName}
+          </Button>
+        </div>
+      )}
     </PlatformWizardCard>
   );
 }

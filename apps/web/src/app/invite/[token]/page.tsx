@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Check, Lock, RefreshCw } from 'lucide-react';
 import posthog from 'posthog-js';
 import { InviteFlowShell } from '@/components/flow/invite-flow-shell';
@@ -64,7 +64,10 @@ export default function ClientAuthorizationPage() {
 
   const completionSubmittedRef = useRef(false);
   const startedTrackedRef = useRef(false);
+  const platformStageRef = useRef<HTMLDivElement | null>(null);
 
+  const router = useRouter();
+  const pathname = usePathname();
   const storageKey = `${SESSION_STORAGE_PREFIX}${token}`;
 
   const {
@@ -219,6 +222,12 @@ export default function ClientAuthorizationPage() {
     sessionStorage.setItem(storageKey, JSON.stringify(Array.from(completedPlatforms)));
   }, [completedPlatforms, storageKey]);
 
+  // Scroll platform stage into view when switching platforms (e.g. Google → Meta) to avoid blank-seeming transitions
+  useLayoutEffect(() => {
+    if (phase !== 'platforms' || !platformQueue.activePlatform) return;
+    platformStageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [phase, platformQueue.activePlatform?.platformGroup]);
+
   useEffect(() => {
     if (!data) return;
     if (isReviewingConnectStatus) return;
@@ -284,9 +293,22 @@ export default function ClientAuthorizationPage() {
       setOauthConnectionInfo(null);
     }
 
+    // Clear OAuth callback params from URL to avoid stale state when switching to next platform
+    if (urlConnectionId || urlPlatform || urlStep) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('connectionId');
+      params.delete('platform');
+      params.delete('step');
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
+    }
+
     setCompletedPlatforms((prev) => {
       const updated = new Set(prev);
       updated.add(platform);
+      if (data?.platforms && updated.size >= data.platforms.length) {
+        queueMicrotask(() => setPhase('complete'));
+      }
       return updated;
     });
 
@@ -571,7 +593,9 @@ export default function ClientAuthorizationPage() {
             </div>
           ) : null}
 
+          {/* When all platforms are done, activePlatform is null - show complete view to avoid blank state */}
           {platformQueue.activePlatform ? (
+            <div ref={platformStageRef}>
             <InvitePlatformStage
               platformName={PLATFORM_NAMES[platformQueue.activePlatform.platformGroup as Platform]}
               description={
@@ -613,6 +637,7 @@ export default function ClientAuthorizationPage() {
                 }
               />
             </InvitePlatformStage>
+            </div>
           ) : null}
 
           {platformQueue.remainingPlatforms.length > 0 ? (
