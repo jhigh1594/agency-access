@@ -61,15 +61,15 @@ export function PlatformWizardCard({
         </div>
       ) : null}
 
-      {/* Content: Step-specific content with animation */}
-      <div className={showFullChrome ? 'p-5 sm:p-6' : 'p-4 sm:p-5'}>
-        <AnimatePresence mode="wait" initial={false}>
+      {/* Content: Step-specific content with animation - min-h prevents blank collapse during transitions */}
+      <div className={showFullChrome ? 'p-5 sm:p-6 min-h-[200px]' : 'p-4 sm:p-5 min-h-[180px]'}>
+        <AnimatePresence mode="sync" initial={false}>
           <m.div
             key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
+            initial={false}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 1, x: -20 }}
+            transition={{ duration: 0.25 }}
           >
             {children}
           </m.div>

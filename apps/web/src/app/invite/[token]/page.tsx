@@ -628,7 +628,7 @@ export default function ClientAuthorizationPage() {
                 completionActionLabel={
                   platformQueue.nextPlatform
                     ? `Continue to ${PLATFORM_NAMES[platformQueue.nextPlatform.platformGroup as Platform]}`
-                    : 'Finish request'
+                    : 'Finish'
                 }
                 initialConnectionId={
                   oauthConnectionInfo?.platform === platformQueue.activePlatform.platformGroup

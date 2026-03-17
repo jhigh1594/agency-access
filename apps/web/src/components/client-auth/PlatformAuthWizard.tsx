@@ -308,6 +308,7 @@ export function PlatformAuthWizard({
   const [assetsSaved, setAssetsSaved] = useState(false);
   const [chooseAccountsExpanded, setChooseAccountsExpanded] = useState(true);
   const [grantAccessExpanded, setGrantAccessExpanded] = useState(true);
+  const [sharedAccountsExpanded, setSharedAccountsExpanded] = useState(false);
   const [tiktokShareResult, setTikTokShareResult] = useState<TikTokShareResponse | null>(null);
   const [isTikTokSharing, setIsTikTokSharing] = useState(false);
   const [tiktokShareError, setTikTokShareError] = useState<string | null>(null);
@@ -908,7 +909,7 @@ export function PlatformAuthWizard({
                 variant="brutalist-rounded"
                 rightIcon={!isProcessing ? <CheckCircle2 className="w-6 h-6" /> : undefined}
               >
-                {hasZeroAssetFollowUp ? 'Continue with follow-up needed' : 'Save selected accounts'}
+                {hasZeroAssetFollowUp ? 'Share access' : 'Share Access'}
               </Button>
             </div>
                         )}
@@ -1241,14 +1242,14 @@ export function PlatformAuthWizard({
 
         return (
           <div className="space-y-4 py-3">
-            {/* Compact success header */}
+            {/* Compact success header - start visible to avoid blank-state when enter animation fails */}
             <m.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 1, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-3"
             >
               <m.div
-                initial={{ scale: 0 }}
+                initial={{ scale: 1 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.4, type: 'spring' }}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--teal)] bg-[var(--teal)]/10"
@@ -1271,81 +1272,108 @@ export function PlatformAuthWizard({
               </div>
             </m.div>
 
-            {/* Compact product summary list */}
-            <div className="space-y-2">
-              {Object.entries(groupAssets).map(([product, assets]) => {
-                const productNameMap: Record<string, string> = {
-                  'google_ads': 'Google Ads',
-                  'ga4': 'Google Analytics',
-                  'google_tag_manager': 'Tag Manager',
-                  'google_search_console': 'Search Console',
-                  'google_merchant_center': 'Merchant Center',
-                  'google_business_profile': 'Business Profile',
-                  'meta_ads': 'Meta Ads',
-                  'meta_pages': 'Meta Pages',
-                  'linkedin_ads': 'LinkedIn Ads',
-                  'linkedin_pages': 'LinkedIn Pages',
-                };
-                const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
-                const isWarning =
-                  (hasNoAssetsFollowUp(product, assets) &&
-                    getSelectedAssetCount(product, assets) === 0) ||
-                  hasGrantFollowUp(product, assets);
-                const summaryLines = getProductSummaryLines(product, assets);
-                const assetNames: string[] = assets.selectedAssetNames || [];
+            {/* Collapsible shared accounts – collapsed by default, compact and secondary */}
+            <div className="border-2 border-black dark:border-white overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setSharedAccountsExpanded(!sharedAccountsExpanded)}
+                className="w-full px-4 py-3 flex items-center justify-between bg-muted/20 dark:bg-muted/60 hover:bg-muted/30 dark:hover:bg-muted/50 transition-colors text-left"
+              >
+                <span className="text-sm font-medium text-muted-foreground">
+                  See which accounts you shared
+                </span>
+                <m.div
+                  animate={{ rotate: sharedAccountsExpanded ? 0 : -90 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                </m.div>
+              </button>
 
-                return (
+              <AnimatePresence initial={false}>
+                {sharedAccountsExpanded && (
                   <m.div
-                    key={product}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className={`rounded-lg border px-3 py-2.5 text-left ${
-                      isWarning
-                        ? 'border-[var(--warning)]/60 bg-[var(--warning)]/5'
-                        : 'border-[var(--teal)]/40 bg-[var(--teal)]/5'
-                    }`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
                   >
-                    <div className="flex items-center gap-2">
-                      <PlatformIcon platform={product as Platform} size="sm" />
-                      <span className="text-sm font-semibold text-[var(--ink)]">{productName}</span>
-                      {summaryLines.length > 0 && !summaryLines[0].startsWith('Follow-up') && (
-                        <span className="ml-auto text-xs font-medium text-[var(--teal)]">
-                          {summaryLines[0]}
-                        </span>
-                      )}
-                    </div>
+                    <div className="p-3 pt-0 space-y-2">
+                      {Object.entries(groupAssets).map(([product, assets]) => {
+                        const productNameMap: Record<string, string> = {
+                          'google_ads': 'Google Ads',
+                          'ga4': 'Google Analytics',
+                          'google_tag_manager': 'Tag Manager',
+                          'google_search_console': 'Search Console',
+                          'google_merchant_center': 'Merchant Center',
+                          'google_business_profile': 'Business Profile',
+                          'meta_ads': 'Meta Ads',
+                          'meta_pages': 'Meta Pages',
+                          'linkedin_ads': 'LinkedIn Ads',
+                          'linkedin_pages': 'LinkedIn Pages',
+                          'tiktok': 'TikTok Ads',
+                          'tiktok_ads': 'TikTok Ads',
+                        };
+                        const productName = PLATFORM_NAMES[product as Platform] || productNameMap[product] || product;
+                        const isWarning =
+                          (hasNoAssetsFollowUp(product, assets) &&
+                            getSelectedAssetCount(product, assets) === 0) ||
+                          hasGrantFollowUp(product, assets);
+                        const summaryLines = getProductSummaryLines(product, assets);
+                        const assetNames: string[] = assets.selectedAssetNames || [];
 
-                    {/* Show selected asset names */}
-                    {assetNames.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {assetNames.slice(0, 4).map((name) => (
-                          <span
-                            key={name}
-                            className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground"
+                        return (
+                          <div
+                            key={product}
+                            className={`rounded-lg border px-3 py-2.5 text-left ${
+                              isWarning
+                                ? 'border-[var(--warning)]/60 bg-[var(--warning)]/5'
+                                : 'border-[var(--teal)]/40 bg-[var(--teal)]/5'
+                            }`}
                           >
-                            {name}
-                          </span>
-                        ))}
-                        {assetNames.length > 4 && (
-                          <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
-                            +{assetNames.length - 4} more
-                          </span>
-                        )}
-                      </div>
-                    )}
+                            <div className="flex items-center gap-2">
+                              <PlatformIcon platform={product as Platform} size="sm" />
+                              <span className="text-sm font-semibold text-[var(--ink)]">{productName}</span>
+                              {summaryLines.length > 0 && !summaryLines[0].startsWith('Follow-up') && (
+                                <span className="ml-auto text-xs font-medium text-[var(--teal)]">
+                                  {summaryLines[0]}
+                                </span>
+                              )}
+                            </div>
 
-                    {/* Follow-up warnings */}
-                    {summaryLines
-                      .filter((line) => line.startsWith('Follow-up needed'))
-                      .map((line) => (
-                        <p key={line} className="mt-1 text-xs text-[var(--warning)]">
-                          {line}
-                        </p>
-                      ))}
+                            {assetNames.length > 0 && (
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                {assetNames.slice(0, 4).map((name) => (
+                                  <span
+                                    key={name}
+                                    className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground"
+                                  >
+                                    {name}
+                                  </span>
+                                ))}
+                                {assetNames.length > 4 && (
+                                  <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
+                                    +{assetNames.length - 4} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {summaryLines
+                              .filter((line) => line.startsWith('Follow-up needed'))
+                              .map((line) => (
+                                <p key={line} className="mt-1 text-xs text-[var(--warning)]">
+                                  {line}
+                                </p>
+                              ))}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </m.div>
-                );
-              })}
+                )}
+              </AnimatePresence>
             </div>
 
             <Button

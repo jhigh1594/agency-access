@@ -205,7 +205,7 @@ function Step2SelectionPreview() {
         footer={
           <div className="flex justify-center">
             <Button size="xl" variant="brutalist-rounded" disabled={selection.pages.length === 0}>
-              Save selected accounts
+              Share Access
             </Button>
           </div>
         }

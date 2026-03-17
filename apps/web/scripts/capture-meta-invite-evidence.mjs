@@ -89,7 +89,7 @@ async function preparePageGrantFlow(page) {
   await page.getByText('Select pages...', { exact: false }).click();
   await page.locator('[role="option"]').filter({ hasText: 'DogTimez Facebook' }).first().click();
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Save selected accounts' }).click();
+  await page.getByRole('button', { name: 'Share Access' }).click();
 }
 
 async function preparePartialFlow(page) {
@@ -105,7 +105,7 @@ async function preparePartialFlow(page) {
   await page.keyboard.press('Escape');
 
   await page.getByText('dogtimez.ig', { exact: false }).click();
-  await page.getByRole('button', { name: 'Save selected accounts' }).click();
+  await page.getByRole('button', { name: 'Share Access' }).click();
 }
 
 const scenarios = [

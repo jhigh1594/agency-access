@@ -526,7 +526,7 @@ describe('Invite Flow Page', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Active platform: Meta')).toBeInTheDocument();
-      expect(screen.getByText('Completion action: Finish request')).toBeInTheDocument();
+      expect(screen.getByText('Completion action: Finish')).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Active platform: Google')).not.toBeInTheDocument();
@@ -915,7 +915,7 @@ describe('Invite Flow Page', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Active platform: Google')).toBeInTheDocument();
-      expect(screen.getByText('Completion action: Finish request')).toBeInTheDocument();
+      expect(screen.getByText('Completion action: Finish')).toBeInTheDocument();
       expect(screen.queryAllByRole('button', { name: /complete platform/i })).toHaveLength(1);
     });
 
