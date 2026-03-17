@@ -10,7 +10,6 @@ import { InvitePlatformQueueItem } from '@/components/flow/invite-platform-queue
 import { InvitePlatformStage } from '@/components/flow/invite-platform-stage';
 import { InviteStickyRail } from '@/components/flow/invite-sticky-rail';
 import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
-import { InvitePrimaryActionDock } from '@/components/flow/invite-primary-action-dock';
 import { InviteTrustNote } from '@/components/flow/invite-trust-note';
 import { PlatformAuthWizard } from '@/components/client-auth/PlatformAuthWizard';
 import { Button, SingleSelect } from '@/components/ui';
@@ -580,15 +579,6 @@ export default function ClientAuthorizationPage() {
             </div>
           </div>
         ))}
-
-      {phase === 'intake' && intakeFields.length === 0 ? (
-        <InvitePrimaryActionDock
-          title="Ready to continue?"
-          description="You will choose which accounts to share next. Passwords are never requested."
-          actionLabel="Continue to connect"
-          onAction={() => setPhase('platforms')}
-        />
-      ) : null}
 
       {phase === 'platforms' && (
         <div className="space-y-4">
