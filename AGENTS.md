@@ -111,6 +111,15 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - When changing public-route behavior, add or update a focused proxy test in [apps/web/src/__tests__/proxy.test.ts](/Users/jhigh/agency-access-platform/apps/web/src/__tests__/proxy.test.ts) so Clerk interception regressions are caught quickly.
 - For non-HTML routes served by Next.js (e.g. sitemap.xml, robots.txt), exclude by exact path in the proxy matcher regex — early returns inside the `clerkMiddleware` callback are unreliable for preventing redirect loops
 
+### UI/UX Patterns
+- Card footers with CTAs should use compact padding (py-3) to avoid excessive whitespace below buttons
+- Multi-step wizard footers benefit from a security note + primary CTA pattern (Lock icon + descriptive text + button)
+- Avoid rendering redundant action docks when review cards already provide complete context; one clear CTA per screen reduces cognitive friction
+- Platform icon integration via PlatformIcon component (with size tokens) improves visual recognition in lists of requested platforms
+- Access level labels should use friendly terminology ("Full access" not "admin") to reduce client anxiety
+- Step indicator chips benefit from numeric prefixes ("1 · SETUP") for clarity of active step
+- Inline CTAs in footers are preferred over floating docks when the triggering context is visible above the fold
+
 ## Vercel Build and Next.js
 - **Commit new modules before deploy**: Any file the app imports must be in the repo. Untracked files cause "Module not found" on Vercel.
 - **Design-system / showcase pages**: Use actual component prop names and types (e.g. StatusBadge `status`/`badgeVariant`, HealthBadge `health`, PlatformIcon `size` as token not number). Check component source when adding examples.
