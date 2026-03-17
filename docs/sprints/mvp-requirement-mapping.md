@@ -1,5 +1,31 @@
 # MVP Requirement Mapping: Client Request Workflow
 
+## Meta Client Popup Flow (2026-03-17)
+
+### Requirement 1: Replace Meta client redirect flow with popup login
+- The client invite Meta flow must use a frontend JS SDK popup login instead of backend-generated redirect URLs and full-page callback trampolines.
+- Mapped tasks: `meta-client-03`, `meta-client-04`
+
+### Requirement 2: Remove Meta invite callback dependence
+- The Meta client flow must no longer depend on `/invite/oauth-callback`; any remaining callback path is only for other providers (Google, LinkedIn, etc.).
+- Mapped tasks: `meta-client-05`
+
+### Requirement 3: Preserve secure backend validation and Infisical storage
+- The popup-finalize backend must verify the frontend-obtained token, upgrade to long-lived where needed, and store in Infisical only; no tokens in the database.
+- Mapped tasks: `meta-client-01`, `meta-client-02`
+
+### Requirement 4: Reuse existing asset discovery and grant pipeline
+- The downstream asset fetch, selection, page grant, and manual ad-account fallback flows must remain compatible without format regressions.
+- Mapped tasks: `meta-client-06`
+
+### Requirement 5: Add regression protection for future Meta flow changes
+- Tests and browser QA must cover popup finalize, cancel/error handling, asset selection persistence, and post-selection grant flows.
+- Mapped tasks: `meta-client-07`, `meta-client-08`
+
+### Replaced vs Reused Pipeline Steps
+- **Replaced**: backend `oauth-url` generation for Meta, full-page redirect to Meta, `/invite/oauth-callback` for Meta, `code + state` exchange for Meta.
+- **Reused**: Infisical token storage, `ClientConnection` and `PlatformAuthorization` models, `GET /client/:token/assets/:platform`, `POST /client/:token/save-assets`, `POST /client/:token/grant-meta-access`, manual ad-account share start/verify, `MetaAssetSelector`, `AutomaticPagesGrant`, `AdAccountSharingInstructions`.
+
 ## Google Native Access Parity (2026-03-15)
 
 ### Requirement 1: Google access architecture must separate discovery OAuth from durable native access

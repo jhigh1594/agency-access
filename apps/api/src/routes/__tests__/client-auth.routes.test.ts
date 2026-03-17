@@ -470,4 +470,64 @@ describe('Client Auth Routes', () => {
       expect(response.json().error.code).toBe('VALIDATION_ERROR');
     });
   });
+
+  describe('POST /client/:token/meta/finalize', () => {
+    it('returns 400 for invalid payload (missing required fields)', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/client/test-token/meta/finalize',
+        payload: { state: 'stateless.xxx.yyy', accessToken: 'token' },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const json = response.json();
+      expect(json.error?.code).toBe('VALIDATION_ERROR');
+      expect(json.error?.message).toContain('Invalid Meta finalize payload');
+    });
+
+    it('returns 400 for invalid or expired OAuth state', async () => {
+      vi.mocked(oauthStateService.validateState).mockResolvedValue({
+        data: null,
+        error: { code: 'INVALID_STATE', message: 'Invalid or expired' },
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/client/test-token/meta/finalize',
+        payload: {
+          state: 'stateless.invalid.signature',
+          accessToken: 'fb-token-123',
+          userId: 'fb-user-123',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error?.code).toBe('INVALID_STATE');
+    });
+
+    it('returns 400 when state platform is not meta or meta_ads', async () => {
+      vi.mocked(oauthStateService.validateState).mockResolvedValue({
+        data: {
+          accessRequestId: 'req-1',
+          platform: 'google',
+          clientEmail: 'client@example.com',
+        } as any,
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/client/test-token/meta/finalize',
+        payload: {
+          state: 'stateless.valid.state',
+          accessToken: 'fb-token-123',
+          userId: 'fb-user-123',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error?.code).toBe('PLATFORM_MISMATCH');
+      expect(response.json().error?.message).toContain('Meta finalize only supports meta or meta_ads');
+    });
+  });
 });

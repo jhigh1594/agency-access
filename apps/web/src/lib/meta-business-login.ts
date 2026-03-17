@@ -105,21 +105,29 @@ export async function loadMetaBusinessLoginSdk({
         resolve(window.FB);
       };
 
-      if (existingScript) {
+      if (existingScript && window.FB) {
+        window.FB.init({
+          appId,
+          cookie: false,
+          xfbml: false,
+          version: META_GRAPH_VERSION,
+        });
+        resolve(window.FB);
         return;
       }
 
-      const script = document.createElement('script');
-      script.id = META_SDK_SCRIPT_ID;
-      script.src = META_SDK_SRC;
-      script.async = true;
-      script.defer = true;
-      script.onerror = () => {
-        sdkPromise = null;
-        reject(new Error('Failed to load Meta Business Login. Please try again.'));
-      };
-
-      document.head.appendChild(script);
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.id = META_SDK_SCRIPT_ID;
+        script.src = META_SDK_SRC;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+          sdkPromise = null;
+          reject(new Error('Failed to load Meta Business Login. Please try again.'));
+        };
+        document.head.appendChild(script);
+      }
     });
   }
 
@@ -154,6 +162,56 @@ export async function launchMetaBusinessLogin({
     }, {
       config_id: configId,
     });
+  });
+}
+
+/**
+ * Client invite Meta popup login (no config_id).
+ *
+ * Uses scope-based FB.login for unauthenticated client invite pages.
+ * Does not use Facebook Login for Business config; avoids the "Feature Unavailable"
+ * error for non-role client users.
+ *
+ * Scopes match the backend client Meta OAuth flow: ads_management, ads_read,
+ * business_management, pages_read_engagement.
+ */
+const META_CLIENT_SCOPES = [
+  'ads_management',
+  'ads_read',
+  'business_management',
+  'pages_read_engagement',
+].join(',');
+
+export async function launchMetaClientPopupLogin(appId: string): Promise<MetaBusinessLoginAuthPayload> {
+  if (!appId) {
+    throw new Error('Meta app ID is required for client popup login.');
+  }
+
+  const sdk = await loadMetaBusinessLoginSdk({ appId });
+
+  return new Promise<MetaBusinessLoginAuthPayload>((resolve, reject) => {
+    sdk.login(
+      (response) => {
+        const authResponse = response.authResponse;
+        if (
+          response.status !== 'connected' ||
+          !authResponse?.accessToken ||
+          !authResponse.userID
+        ) {
+          reject(new Error('Meta login was cancelled or did not return a usable session.'));
+          return;
+        }
+
+        resolve({
+          accessToken: authResponse.accessToken,
+          userId: authResponse.userID,
+          expiresIn: authResponse.expiresIn,
+          signedRequest: authResponse.signedRequest,
+          dataAccessExpirationTime: authResponse.data_access_expiration_time,
+        });
+      },
+      { scope: META_CLIENT_SCOPES, enable_profile_selector: true }
+    );
   });
 }
 

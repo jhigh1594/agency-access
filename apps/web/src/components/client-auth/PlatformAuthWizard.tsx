@@ -36,6 +36,7 @@ import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { getClientInviteManualRoute } from '@/lib/client-invite-platforms';
 import { getApiBaseUrl } from '@/lib/api/api-env';
 import { parseJsonResponse } from '@/lib/api/parse-json-response';
+import { launchMetaClientPopupLogin } from '@/lib/meta-business-login';
 
 interface PlatformAuthWizardProps {
   platform: Platform;
@@ -326,12 +327,71 @@ export function PlatformAuthWizard({
     }
   }, [initialConnectionId]);
 
-  // Step 1: Initiate OAuth
+  // Step 1: Initiate OAuth (or Meta popup)
   const handleConnectClick = async () => {
     try {
       setIsProcessing(true);
       setError(null);
-      // Get OAuth authorization URL from backend
+
+      // Meta client invite: popup flow instead of redirect
+      if (platform === 'meta') {
+        const appId = process.env.NEXT_PUBLIC_META_APP_ID?.trim();
+        if (!appId) {
+          setError('Meta login is not configured. Please contact your agency.');
+          setIsProcessing(false);
+          return;
+        }
+
+        const stateResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platform: 'meta' }),
+        });
+
+        const stateJson = await parseJsonResponse<{
+          data: { state: string };
+          error: null | { message?: string };
+        }>(stateResponse, {
+          fallbackErrorMessage: 'Failed to prepare Meta login',
+        });
+
+        if (stateJson.error || !stateJson.data?.state) {
+          throw new Error(stateJson.error?.message || 'Failed to prepare Meta login');
+        }
+
+        const authPayload = await launchMetaClientPopupLogin(appId);
+
+        const finalizeResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/meta/finalize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            state: stateJson.data.state,
+            accessToken: authPayload.accessToken,
+            userId: authPayload.userId,
+            expiresIn: authPayload.expiresIn,
+            signedRequest: authPayload.signedRequest,
+            dataAccessExpirationTime: authPayload.dataAccessExpirationTime,
+          }),
+        });
+
+        const finalizeJson = await parseJsonResponse<{
+          data: { connectionId: string; platform: string; token: string };
+          error: null | { message?: string };
+        }>(finalizeResponse, {
+          fallbackErrorMessage: 'Failed to complete Meta connection',
+        });
+
+        if (finalizeJson.error || !finalizeJson.data?.connectionId) {
+          throw new Error(finalizeJson.error?.message || 'Failed to complete Meta connection');
+        }
+
+        setConnectionId(finalizeJson.data.connectionId);
+        setCurrentStep(2);
+        setIsProcessing(false);
+        return;
+      }
+
+      // All other platforms: redirect flow
       const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

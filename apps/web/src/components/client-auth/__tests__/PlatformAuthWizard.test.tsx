@@ -192,12 +192,18 @@ vi.mock('@/lib/analytics/onboarding', () => ({
   trackOnboardingEvent: trackOnboardingEventMock,
 }));
 
+const launchMetaClientPopupLoginMock = vi.fn();
+vi.mock('@/lib/meta-business-login', () => ({
+  launchMetaClientPopupLogin: (...args: any[]) => launchMetaClientPopupLoginMock(...args),
+}));
+
 describe('PlatformAuthWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
     vi.stubGlobal('location', { href: '' });
     process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com/';
+    process.env.NEXT_PUBLIC_META_APP_ID = 'meta-app-123';
   });
 
   it('renders the connect step by default for OAuth platforms', () => {
@@ -216,7 +222,7 @@ describe('PlatformAuthWizard', () => {
     expect(screen.getByText(/you'll be redirected to meta to sign in and authorize access/i)).toBeInTheDocument();
   });
 
-  it('calls the oauth-url endpoint on the configured API host when connect is clicked', async () => {
+  it('calls the oauth-url endpoint on the configured API host when connect is clicked (Google redirect flow)', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       text: async () =>
@@ -232,6 +238,62 @@ describe('PlatformAuthWizard', () => {
 
     render(
       <PlatformAuthWizard
+        platform="google"
+        platformName="Google"
+        products={[{ product: 'google_ads', accessLevel: 'standard' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /connect google/i }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/client/token-1/oauth-url',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ platform: 'google' }),
+        })
+      );
+    });
+  });
+
+  it('uses popup flow for Meta: oauth-state, popup login, meta/finalize, then advances to step 2', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: { state: 'stateless.meta.state.sig' },
+            error: null,
+          }),
+        json: async () => ({
+          data: { state: 'stateless.meta.state.sig' },
+          error: null,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: { connectionId: 'conn-123', platform: 'meta', token: 'token-1' },
+            error: null,
+          }),
+        json: async () => ({
+          data: { connectionId: 'conn-123', platform: 'meta', token: 'token-1' },
+          error: null,
+        }),
+      } as Response);
+
+    launchMetaClientPopupLoginMock.mockResolvedValue({
+      accessToken: 'fb-access-token',
+      userId: 'fb-user-123',
+      expiresIn: 3600,
+    });
+
+    render(
+      <PlatformAuthWizard
         platform="meta"
         platformName="Meta"
         products={[{ product: 'meta_ads', accessLevel: 'standard' }]}
@@ -244,12 +306,35 @@ describe('PlatformAuthWizard', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
-        'https://api.example.com/api/client/token-1/oauth-url',
+        'https://api.example.com/api/client/token-1/oauth-state',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ platform: 'meta' }),
         })
       );
+    });
+
+    await waitFor(() => {
+      expect(launchMetaClientPopupLoginMock).toHaveBeenCalledWith('meta-app-123');
+    });
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/client/token-1/meta/finalize',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            state: 'stateless.meta.state.sig',
+            accessToken: 'fb-access-token',
+            userId: 'fb-user-123',
+            expiresIn: 3600,
+          }),
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/choose accounts to share/i)).toBeInTheDocument();
     });
   });
 

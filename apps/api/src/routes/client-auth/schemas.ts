@@ -91,3 +91,17 @@ export const tiktokPartnerVerifySchema = z.object({
   connectionId: z.string(),
   advertiserIds: z.array(z.string()).optional(),
 });
+
+/**
+ * Client Meta popup finalize schema.
+ * Used when the client completes Meta JS SDK popup login (no config_id).
+ * State must be created via POST /client/:token/oauth-state { platform: 'meta' } first.
+ */
+export const metaClientFinalizeSchema = z.object({
+  state: z.string(),
+  accessToken: z.string(),
+  userId: z.string(),
+  expiresIn: z.number().optional(),
+  signedRequest: z.string().optional(),
+  dataAccessExpirationTime: z.number().optional(),
+});
