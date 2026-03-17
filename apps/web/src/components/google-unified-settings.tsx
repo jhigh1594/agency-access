@@ -13,6 +13,7 @@ import { ManageAssetsSectionCard, ManageAssetsStatusPanel } from './manage-asset
 import { GoogleAdsAccessMethod } from './google-ads-access-method';
 import { Button } from './ui/button';
 import { SingleSelect } from './ui/single-select';
+import { BrutalistCheckbox } from './ui/brutalist-checkbox';
 import {
   Loader2,
   AlertCircle,
@@ -501,12 +502,10 @@ function ProductCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <input
-          type="checkbox"
+        <BrutalistCheckbox
           checked={enabled}
-          onChange={(e) => onToggle(e.target.checked)}
+          onChange={onToggle}
           aria-label={`Enable ${label}`}
-          className="mt-1 h-5 w-5 rounded border-border text-coral focus:ring-coral"
         />
         <div className="flex-1 space-y-4">
           <div className="flex items-start gap-3">
@@ -547,31 +546,27 @@ function ProductCard({
           )}
 
           {enabled && showAccountSelector && onRequestManageUsersToggle && (
-                <div className="rounded-[1rem] border border-border bg-paper px-3 py-3">
-                  <div className="flex items-start gap-2">
-                  <input
-                    type="checkbox"
-                    id={`manage-users-${label}`}
-                    checked={requestManageUsers || false}
-                    onChange={(e) => onRequestManageUsersToggle(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-border text-coral focus:ring-coral"
-                  />
-                  <div className="flex-1">
-                    <label htmlFor={`manage-users-${label}`} className="flex items-center gap-1 text-xs text-foreground">
-                      Request permission to manage users
-                      {tooltip && (
-                        <div className="group relative">
-                          <Info className="h-3 w-3 text-muted-foreground cursor-help" />
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-ink text-white text-[10px] rounded shadow-brutalist opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                            {tooltip}
-                          </div>
+            <div className="rounded-[1rem] border border-border bg-paper px-3 py-3">
+              <BrutalistCheckbox
+                checked={requestManageUsers || false}
+                onChange={onRequestManageUsersToggle}
+                label={
+                  <span className="flex items-center gap-1 text-xs text-foreground">
+                    Request permission to manage users
+                    {tooltip && (
+                      <div className="group relative">
+                        <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-ink text-white text-[10px] rounded shadow-brutalist opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          {tooltip}
                         </div>
-                      )}
-                    </label>
-                  </div>
-                </div>
-                </div>
-              )}
+                      </div>
+                    )}
+                  </span>
+                }
+                id={`manage-users-${label}`}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
