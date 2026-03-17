@@ -333,7 +333,7 @@ export function PlatformAuthWizard({
       setIsProcessing(true);
       setError(null);
 
-      // Meta client invite: popup flow instead of redirect
+      // Meta client invite: try popup first, fallback to redirect when SDK blocked (e.g. Firefox tracking protection)
       if (platform === 'meta') {
         const appId = process.env.NEXT_PUBLIC_META_APP_ID?.trim();
         if (!appId) {
@@ -342,53 +342,76 @@ export function PlatformAuthWizard({
           return;
         }
 
-        const stateResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-state`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ platform: 'meta' }),
-        });
+        try {
+          const stateResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-state`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ platform: 'meta' }),
+          });
 
-        const stateJson = await parseJsonResponse<{
-          data: { state: string };
-          error: null | { message?: string };
-        }>(stateResponse, {
-          fallbackErrorMessage: 'Failed to prepare Meta login',
-        });
+          const stateJson = await parseJsonResponse<{
+            data: { state: string };
+            error: null | { message?: string };
+          }>(stateResponse, {
+            fallbackErrorMessage: 'Failed to prepare Meta login',
+          });
 
-        if (stateJson.error || !stateJson.data?.state) {
-          throw new Error(stateJson.error?.message || 'Failed to prepare Meta login');
+          if (stateJson.error || !stateJson.data?.state) {
+            throw new Error(stateJson.error?.message || 'Failed to prepare Meta login');
+          }
+
+          const authPayload = await launchMetaClientPopupLogin(appId);
+
+          const finalizeResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/meta/finalize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              state: stateJson.data.state,
+              accessToken: authPayload.accessToken,
+              userId: authPayload.userId,
+              expiresIn: authPayload.expiresIn,
+              signedRequest: authPayload.signedRequest,
+              dataAccessExpirationTime: authPayload.dataAccessExpirationTime,
+            }),
+          });
+
+          const finalizeJson = await parseJsonResponse<{
+            data: { connectionId: string; platform: string; token: string };
+            error: null | { message?: string };
+          }>(finalizeResponse, {
+            fallbackErrorMessage: 'Failed to complete Meta connection',
+          });
+
+          if (finalizeJson.error || !finalizeJson.data?.connectionId) {
+            throw new Error(finalizeJson.error?.message || 'Failed to complete Meta connection');
+          }
+
+          setConnectionId(finalizeJson.data.connectionId);
+          setCurrentStep(2);
+          setIsProcessing(false);
+          return;
+        } catch (popupErr) {
+          // Fallback to redirect when popup fails (e.g. Firefox Enhanced Tracking Protection blocks Facebook SDK)
+          const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-url`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ platform: 'meta' }),
+          });
+
+          const json = await parseJsonResponse<{
+            data: { authUrl: string };
+            error: null | { message?: string };
+          }>(response, {
+            fallbackErrorMessage: 'Failed to start Meta authorization',
+          });
+
+          if (json.error) {
+            throw new Error(json.error?.message || 'Failed to start Meta authorization');
+          }
+
+          window.location.href = json.data.authUrl;
+          return;
         }
-
-        const authPayload = await launchMetaClientPopupLogin(appId);
-
-        const finalizeResponse = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/meta/finalize`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            state: stateJson.data.state,
-            accessToken: authPayload.accessToken,
-            userId: authPayload.userId,
-            expiresIn: authPayload.expiresIn,
-            signedRequest: authPayload.signedRequest,
-            dataAccessExpirationTime: authPayload.dataAccessExpirationTime,
-          }),
-        });
-
-        const finalizeJson = await parseJsonResponse<{
-          data: { connectionId: string; platform: string; token: string };
-          error: null | { message?: string };
-        }>(finalizeResponse, {
-          fallbackErrorMessage: 'Failed to complete Meta connection',
-        });
-
-        if (finalizeJson.error || !finalizeJson.data?.connectionId) {
-          throw new Error(finalizeJson.error?.message || 'Failed to complete Meta connection');
-        }
-
-        setConnectionId(finalizeJson.data.connectionId);
-        setCurrentStep(2);
-        setIsProcessing(false);
-        return;
       }
 
       // All other platforms: redirect flow

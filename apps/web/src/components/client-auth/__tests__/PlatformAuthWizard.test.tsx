@@ -338,6 +338,71 @@ describe('PlatformAuthWizard', () => {
     });
   });
 
+  it('falls back to redirect flow when Meta popup fails (e.g. Firefox tracking protection)', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: { state: 'stateless.meta.state.sig' },
+            error: null,
+          }),
+        json: async () => ({
+          data: { state: 'stateless.meta.state.sig' },
+          error: null,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            data: { authUrl: 'https://www.facebook.com/v21.0/dialog/oauth?client_id=123' },
+            error: null,
+          }),
+        json: async () => ({
+          data: { authUrl: 'https://www.facebook.com/v21.0/dialog/oauth?client_id=123' },
+          error: null,
+        }),
+      } as Response);
+
+    launchMetaClientPopupLoginMock.mockRejectedValue(
+      new Error('Failed to load Meta Business Login. Please try again.')
+    );
+
+    const location = global.location as { href: string };
+    location.href = '';
+
+    render(
+      <PlatformAuthWizard
+        platform="meta"
+        platformName="Meta"
+        products={[{ product: 'meta_ads', accessLevel: 'standard' }]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /connect meta/i }));
+
+    await waitFor(() => {
+      expect(launchMetaClientPopupLoginMock).toHaveBeenCalledWith('meta-app-123');
+    });
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/client/token-1/oauth-url',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ platform: 'meta' }),
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(location.href).toBe('https://www.facebook.com/v21.0/dialog/oauth?client_id=123');
+    });
+  });
+
   it('shows a friendly error when the authorization service returns non-JSON', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,

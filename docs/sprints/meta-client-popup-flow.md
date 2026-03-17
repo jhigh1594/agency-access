@@ -89,6 +89,7 @@ Competitor reverse-engineering (Leadsie, AgencyAccess) shows the winning pattern
 
 ## Risks and Mitigations
 
+- **Meta JS SDK blocked by Firefox Enhanced Tracking Protection**: The SDK loads from connect.facebook.net and makes requests to facebook.com; Firefox blocks these as known trackers, causing "Network Protocol Error". Mitigation: fallback to redirect flow when popup fails. Try popup first; on any error (SDK load, FB.login, network), use `POST /oauth-url` + `window.location.href` so the user completes Meta auth via full-page redirect.
 - **Meta JS SDK on unauthenticated invite pages**: Reuse SDK loader shape, isolate client-invite options, test popup blockers/cancel early
 - **Frontend token weakens trust boundary**: Backend must verify token validity and app ownership before persistence, following agency finalize pattern
 - **Downstream metadata depends on old callback**: Keep `PlatformAuthorization.metadata.meta` shape stable; run focused regression on assets.meta.test
