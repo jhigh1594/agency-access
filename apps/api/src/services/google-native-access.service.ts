@@ -432,6 +432,23 @@ async function executeGoogleNativeGrant(
       };
     }
 
+    // Validate Google Ads developer token is configured before attempting any API calls
+    const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+    if (!developerToken) {
+      console.error('[executeGoogleNativeGrant] GOOGLE_ADS_DEVELOPER_TOKEN not configured', {
+        grantId,
+        grantMode: grant.grantMode,
+        assetId: grant.assetId,
+      });
+      return {
+        data: null,
+        error: {
+          code: 'CONFIGURATION_ERROR',
+          message: 'Google Ads developer token is not configured. Please set GOOGLE_ADS_DEVELOPER_TOKEN environment variable.',
+        },
+      };
+    }
+
     if (grant.grantMode === 'manager_link' && !grant.managerCustomerId) {
       return {
         data: null,
@@ -818,6 +835,24 @@ async function planGoogleNativeGrants(
         },
         error: null,
       };
+    }
+
+    // Validate Google Ads developer token is configured before attempting to plan grants
+    if (input.platform === 'google_ads') {
+      const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+      if (!developerToken) {
+        console.error('[planGoogleNativeGrants] GOOGLE_ADS_DEVELOPER_TOKEN not configured', {
+          agencyId: input.accessRequest.agencyId,
+          platform: input.platform,
+        });
+        return {
+          data: null,
+          error: {
+            code: 'CONFIGURATION_ERROR',
+            message: 'Google Ads developer token is not configured. Please set GOOGLE_ADS_DEVELOPER_TOKEN environment variable to enable Google Ads access grants.',
+          },
+        };
+      }
     }
 
     const agencyGoogleConnection = await prisma.agencyPlatformConnection.findFirst({
