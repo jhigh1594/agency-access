@@ -22,9 +22,14 @@ export function ManageAssetsSectionCard({
   contentClassName,
 }: ManageAssetsSectionCardProps) {
   return (
+    // Per DESIGN_SYSTEM.md: "One brutalist element per view"
+    // Section cards are the interactive work surfaces and should be the brutalist anchor
+    // Modal shell uses shadow-brutalist (reduced) to support, not compete
     <section
       className={cn(
         'overflow-hidden rounded-[1.1rem] border-2 border-black bg-card shadow-brutalist-sm',
+        'transition-all duration-150',
+        'hover:shadow-brutalist hover:-translate-y-0.5',
         className
       )}
     >

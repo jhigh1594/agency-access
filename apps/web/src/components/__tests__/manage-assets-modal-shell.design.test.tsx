@@ -56,3 +56,27 @@ describe('ManageAssetsStatusPanel - Accessibility Compliance', () => {
     expect(toneClasses).not.toContain('acid');
   });
 });
+
+describe('ManageAssetsSectionCard - Brutalist Anchor', () => {
+  it('should have hover lift effect as the brutalist anchor', () => {
+    const code = readUIComponents();
+    // Section cards are interactive work surfaces - they should be the brutalist anchor
+    expect(code).toMatch(/hover:-translate-y-0\.5/);
+    expect(code).toMatch(/hover:shadow-brutalist["'\s]/);
+  });
+
+  it('should have smooth transition for hover effect', () => {
+    const code = readUIComponents();
+    expect(code).toMatch(/transition-all duration-150/);
+  });
+});
+
+describe('ManageAssetsModalShell - Brutalist Hierarchy', () => {
+  it('should use shadow-brutalist (not shadow-brutalist-lg) for supporting role', () => {
+    const code = readComponent();
+    // Per design system: "One brutalist element per view"
+    // Modal shell should be supporting, not competing with section cards
+    expect(code).toMatch(/shadow-brutalist["'\s]/);
+    expect(code).not.toContain('shadow-brutalist-lg');
+  });
+});

@@ -44,7 +44,7 @@ export function ManageAssetsModalShell({
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.25rem] border-2 border-black bg-card shadow-brutalist-lg sm:max-h-[90vh]"
+          className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.25rem] border-2 border-black bg-card shadow-brutalist sm:max-h-[90vh]"
         >
           <div className="border-b-2 border-black bg-paper px-5 py-4 sm:px-6">
             <div className="flex items-start justify-between gap-4">
