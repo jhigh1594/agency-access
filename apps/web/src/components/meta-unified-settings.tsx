@@ -477,11 +477,14 @@ function AssetCard({
   onToggle: (val: boolean) => void;
   extraContent?: React.ReactNode;
 }) {
+  // Match Google ProductCard: section card is the brutalist anchor; rows stay light.
   return (
     <div
       className={cn(
-        'rounded-[1rem] border p-4 transition-all',
-        enabled ? 'border-black bg-card shadow-brutalist-sm' : 'border-border bg-paper/80 opacity-75'
+        'rounded-[1rem] border p-4 transition-colors duration-150',
+        enabled
+          ? 'border-border bg-paper hover:border-black hover:bg-paper/95'
+          : 'border-border bg-card/70 opacity-60'
       )}
     >
       <div className="flex items-start gap-3">

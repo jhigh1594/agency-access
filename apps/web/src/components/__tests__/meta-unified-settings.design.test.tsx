@@ -23,4 +23,10 @@ describe('MetaUnifiedSettings - Static Design Validation', () => {
     const code = readComponent();
     expect(code).toMatch(/text-ink/);
   });
+
+  it('should keep asset row visually lighter than the section shell', () => {
+    const code = readComponent();
+    expect(code).not.toMatch(/shadow-brutalist-sm/);
+    expect(code).toMatch(/border-border bg-paper/);
+  });
 });
