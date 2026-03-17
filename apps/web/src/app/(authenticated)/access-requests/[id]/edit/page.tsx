@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { FlowShell } from '@/components/flow/flow-shell';
 import { AccessLevelSelector } from '@/components/access-level-selector';
@@ -120,6 +120,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [initialSnapshot, setInitialSnapshot] = useState<string>('');
+  const [advancedExpanded, setAdvancedExpanded] = useState(false);
 
   const snapshot = useMemo(
     () =>
@@ -379,42 +380,14 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       description="Update request settings for pending authorization links"
       step={4}
       totalSteps={4}
-      steps={['Fundamentals', 'Platforms', 'Customize', 'Review']}
+      steps={['Platforms', 'Advanced', 'Customize', 'Review']}
+      rightSlot={
+        <Button type="button" variant="secondary" onClick={() => router.back()}>
+          Back
+        </Button>
+      }
     >
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-semibold text-ink">Fundamentals</h2>
-
-          <div>
-            <label htmlFor="externalReference" className="block text-sm font-medium text-foreground mb-1">
-              External Reference
-            </label>
-            <input
-              id="externalReference"
-              type="text"
-              value={externalReference}
-              onChange={(event) => setExternalReference(event.target.value)}
-              maxLength={255}
-              placeholder="crm-123"
-              className="w-full rounded-lg border border-border bg-card px-3 py-2"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Optional CRM or internal identifier included in webhook payloads.
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-border bg-paper p-3 text-xs text-muted-foreground">
-            Client name and email are managed in the client profile.
-            <button
-              type="button"
-              onClick={() => router.push(profileEditHref as any)}
-              className="ml-1 font-semibold text-coral hover:text-coral/90"
-            >
-              Edit client profile
-            </button>
-          </div>
-        </div>
-
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
           <h2 className="text-lg font-semibold text-ink">Platforms</h2>
           <AccessLevelSelector
@@ -427,6 +400,59 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
             connectedPlatforms={mergedConnectedPlatforms}
             agencyId={request?.agencyId}
           />
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-ink">Advanced</h2>
+            <button
+              type="button"
+              onClick={() => setAdvancedExpanded((prev) => !prev)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-ink"
+              aria-expanded={advancedExpanded}
+              aria-controls="advanced-settings"
+            >
+              {advancedExpanded ? 'Hide' : 'Show'}
+              <ChevronDown
+                className="h-3.5 w-3.5 transition-transform"
+                aria-hidden="true"
+                style={{ transform: advancedExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+              />
+            </button>
+          </div>
+
+          {advancedExpanded && (
+            <div id="advanced-settings" className="space-y-4">
+              <div>
+                <label htmlFor="externalReference" className="block text-sm font-medium text-foreground mb-1">
+                  External Reference
+                </label>
+                <input
+                  id="externalReference"
+                  type="text"
+                  value={externalReference}
+                  onChange={(event) => setExternalReference(event.target.value)}
+                  maxLength={255}
+                  placeholder="crm-123"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Optional CRM or internal identifier included in webhook payloads.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-paper p-3 text-xs text-muted-foreground">
+                Client name and email are managed in the client profile.
+                <button
+                  type="button"
+                  onClick={() => router.push(profileEditHref as any)}
+                  className="ml-1 font-semibold text-coral hover:text-coral/90"
+                >
+                  Edit client profile
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">

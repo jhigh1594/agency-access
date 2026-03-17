@@ -396,7 +396,7 @@ async function persistGrantLifecycle(
 
 async function executeGoogleNativeGrant(
   grantId: string
-): Promise<ServiceResult<{ grantId: string; nativeGrantState: string; googleGrantLifecycle?: GoogleProductGrantLifecycle }>> {
+): Promise<ServiceResult<{ grantId: string; nativeGrantState: string; googleGrantLifecycle?: GoogleProductGrantLifecycle; retryable?: boolean }>> {
   try {
     const grant = await prisma.googleNativeGrant.findUnique({
       where: { id: grantId },
@@ -635,6 +635,78 @@ async function executeGoogleNativeGrant(
       }
     } catch (error) {
       const normalizedError = normalizeNativeGrantExecutionError(error);
+
+      // Check if this error is due to insufficient API access level (Explorer Access vs Basic Access)
+      const isInsufficientAccessError = (err: { code?: string }): boolean => {
+        const INSUFFICIENT_ACCESS_ERROR_CODES = new Set([
+          'AUTHORIZATION_ERROR',
+          'USER_PERMISSION_DENIED',
+          'NO_OPERATIONS_WITH_REQUESTED_SCOPES',
+          'CUSTOMER_NOT_SERVED_BY_USER',
+          'CUSTOMER_NOT_ENABLED',
+          'ACCOUNT_NOT_FOUND',
+        ]);
+        return Boolean(err.code && INSUFFICIENT_ACCESS_ERROR_CODES.has(err.code));
+      };
+
+      if (isInsufficientAccessError(normalizedError)) {
+        // This is a non-retryable error due to insufficient developer token access level
+        const failureMetadata = mergeMetadata(grant.metadata, {
+          latestProviderStatus: latestProviderStatus || null,
+          lastExecutionError: {
+            code: normalizedError.code,
+            message: normalizedError.message,
+            retryable: false,
+          },
+          insufficientAccessLevel: true,
+        });
+
+        const updateResult = await googleNativeGrantService.updateGrantState(grant.id, {
+          nativeGrantState: 'follow_up_needed',
+          lastAttemptAt: new Date(),
+          lastErrorCode: normalizedError.code,
+          lastErrorMessage: normalizedError.message,
+          ...(providerResourceName ? { providerResourceName } : {}),
+          ...(providerExternalId ? { providerExternalId } : {}),
+          metadata: failureMetadata as Prisma.InputJsonValue,
+        });
+
+        if (updateResult.error) {
+          return {
+            data: null,
+            error: updateResult.error,
+          };
+        }
+
+        await persistGrantLifecycle(
+          {
+            ...(grant as GoogleNativeGrantRecord),
+            metadata: failureMetadata as Prisma.JsonValue,
+          },
+          'follow_up_needed'
+        );
+
+        return {
+          data: {
+            retryable: false,
+            grantId,
+            nativeGrantState: 'follow_up_needed',
+          },
+          error: {
+            code: 'INSUFFICIENT_API_ACCESS',
+            message: `Google Ads API operation failed: ${normalizedError.message}. This error typically occurs when your developer token has Explorer Access (test accounts only) instead of Basic Access (production accounts). Please request Basic Access approval for your developer token at https://ads.google.com/aw/apiprojects. Only approved tokens can connect to the API for production Google Ads accounts.`,
+            details: {
+              retryable: false,
+              originalCode: normalizedError.code,
+              originalMessage: normalizedError.message,
+              grantId,
+              grantMode: grant.grantMode,
+              assetId: grant.assetId,
+            },
+          },
+        };
+      }
+
       const fallbackReason = getSafeManagerLinkFallbackReason({
         grant,
         error: normalizedError,
