@@ -55,8 +55,12 @@ export async function syncAllAgencyMetadata() {
   return { success, failed };
 }
 
-// If running as a standalone script (for scheduled jobs)
-if (require.main === module) {
+// If running as a standalone script (for scheduled jobs) — ESM-compatible
+const isSyncClerkDirectExecution = process.argv[1]?.endsWith('sync-clerk-metadata') ||
+  process.argv[1]?.endsWith('sync-clerk-metadata.js') ||
+  process.argv[1]?.endsWith('sync-clerk-metadata.ts');
+
+if (isSyncClerkDirectExecution) {
   syncAllAgencyMetadata()
     .then((result) => {
       console.log(`Metadata sync complete: ${result.success} succeeded, ${result.failed} failed`);

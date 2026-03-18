@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { auditService } from '@/services/audit.service';
 
+import { WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2 } from '@agency-platform/shared';
+
+const VALID_API_VERSIONS = [WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2] as const;
+
 interface ServiceError {
   code: string;
   message: string;
@@ -21,7 +25,8 @@ const WebhookEndpointMutationSchema = z.object({
     'webhook.test',
     'access_request.partial',
     'access_request.completed',
-  ])).min(1).max(3),
+  ])).min(1).max(6),
+  preferredApiVersion: z.enum(VALID_API_VERSIONS).optional(),
   agencyId: z.string().min(1),
 });
 
@@ -54,6 +59,7 @@ function toEndpointSummary(endpoint: any) {
     url: endpoint.url,
     status: endpoint.status,
     subscribedEvents: Array.isArray(endpoint.subscribedEvents) ? endpoint.subscribedEvents : [],
+    preferredApiVersion: endpoint.preferredApiVersion ?? '2026-03-08',
     failureCount: endpoint.failureCount ?? 0,
     secretLastFour: typeof endpoint.secretId === 'string' ? endpoint.secretId.slice(-4) : null,
     lastDeliveredAt: endpoint.lastDeliveredAt ? endpoint.lastDeliveredAt.toISOString() : null,
@@ -128,6 +134,7 @@ export async function createWebhookEndpoint(
         url: validated.url,
         status: 'active',
         subscribedEvents: validated.subscribedEvents,
+        preferredApiVersion: validated.preferredApiVersion ?? '2026-03-08',
         secretId,
         createdBy: validated.createdBy,
       },
@@ -148,6 +155,7 @@ export async function createWebhookEndpoint(
       resourceId: endpoint.id,
       metadata: {
         subscribedEvents: validated.subscribedEvents,
+        preferredApiVersion: validated.preferredApiVersion ?? '2026-03-08',
       },
     });
 
@@ -205,6 +213,7 @@ export async function updateWebhookEndpoint(
         url: validated.url,
         status: 'active',
         subscribedEvents: validated.subscribedEvents,
+        ...(validated.preferredApiVersion ? { preferredApiVersion: validated.preferredApiVersion } : {}),
         disabledAt: null,
       },
     });
@@ -217,6 +226,7 @@ export async function updateWebhookEndpoint(
       resourceId: endpoint.id,
       metadata: {
         subscribedEvents: validated.subscribedEvents,
+        ...(validated.preferredApiVersion ? { preferredApiVersion: validated.preferredApiVersion } : {}),
       },
     });
 

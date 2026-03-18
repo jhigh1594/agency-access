@@ -13,6 +13,9 @@ const EVENT_LABELS: Record<WebhookDeliverySummary['eventType'], string> = {
   'webhook.test': 'Test event',
   'access_request.partial': 'Access request partially completed',
   'access_request.completed': 'Access request completed',
+  'access_request.revoked': 'Access request revoked',
+  'access_request.expired': 'Access request expired',
+  'connection.status_changed': 'Connection status changed',
 };
 
 function formatDateTime(value: string | null | undefined): string {

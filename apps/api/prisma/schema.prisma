@@ -170,19 +170,20 @@ model AccessRequest {
 }
 
 model WebhookEndpoint {
-  id               String    @id @default(uuid())
-  agencyId         String    @map("agency_id")
-  url              String
-  secretId         String    @map("secret_id")
-  status           String // 'active' | 'disabled'
-  subscribedEvents Json      @map("subscribed_events")
-  failureCount     Int       @default(0) @map("failure_count")
-  lastDeliveredAt  DateTime? @map("last_delivered_at")
-  lastFailedAt     DateTime? @map("last_failed_at")
-  disabledAt       DateTime? @map("disabled_at")
-  createdBy        String    @map("created_by")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(uuid())
+  agencyId            String    @map("agency_id")
+  url                 String
+  secretId            String    @map("secret_id")
+  status              String // 'active' | 'disabled'
+  subscribedEvents    Json      @map("subscribed_events")
+  preferredApiVersion String    @default("2026-03-08") @map("preferred_api_version")
+  failureCount        Int       @default(0) @map("failure_count")
+  lastDeliveredAt     DateTime? @map("last_delivered_at")
+  lastFailedAt        DateTime? @map("last_failed_at")
+  disabledAt          DateTime? @map("disabled_at")
+  createdBy           String    @map("created_by")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   events     WebhookEvent[]

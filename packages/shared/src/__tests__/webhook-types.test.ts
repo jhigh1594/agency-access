@@ -1,12 +1,15 @@
 import { describe, expect, it } from '@jest/globals';
 import {
   WebhookApiVersionSchema,
+  WEBHOOK_API_VERSION_V1,
+  WEBHOOK_API_VERSION_V2,
   WebhookDeliverySummarySchema,
   WebhookDeliveryStatusSchema,
   WebhookEndpointConfigInputSchema,
   WebhookEndpointStatusSchema,
   WebhookEventEnvelopeSchema,
   WebhookEventTypeSchema,
+  WebhookConnectionAssetV2Schema,
 } from '../types';
 
 describe('Webhook shared contracts', () => {
@@ -14,10 +17,18 @@ describe('Webhook shared contracts', () => {
     expect(WebhookEventTypeSchema.parse('webhook.test')).toBe('webhook.test');
     expect(WebhookEventTypeSchema.parse('access_request.partial')).toBe('access_request.partial');
     expect(WebhookEventTypeSchema.parse('access_request.completed')).toBe('access_request.completed');
+    expect(WebhookEventTypeSchema.parse('access_request.revoked')).toBe('access_request.revoked');
+    expect(WebhookEventTypeSchema.parse('access_request.expired')).toBe('access_request.expired');
+    expect(WebhookEventTypeSchema.parse('connection.status_changed')).toBe('connection.status_changed');
   });
 
-  it('locks webhook payloads to the current API version', () => {
-    expect(WebhookApiVersionSchema.parse('2026-03-08')).toBe('2026-03-08');
+  it('rejects unknown event types', () => {
+    expect(() => WebhookEventTypeSchema.parse('access_request.unknown')).toThrow();
+  });
+
+  it('accepts both V1 and V2 API versions', () => {
+    expect(WebhookApiVersionSchema.parse(WEBHOOK_API_VERSION_V1)).toBe(WEBHOOK_API_VERSION_V1);
+    expect(WebhookApiVersionSchema.parse(WEBHOOK_API_VERSION_V2)).toBe(WEBHOOK_API_VERSION_V2);
     expect(() => WebhookApiVersionSchema.parse('2026-03-09')).toThrow();
   });
 
@@ -32,6 +43,38 @@ describe('Webhook shared contracts', () => {
       'access_request.partial',
       'access_request.completed',
     ]);
+  });
+
+  it('accepts preferredApiVersion in endpoint config', () => {
+    const payload = WebhookEndpointConfigInputSchema.parse({
+      url: 'https://example.com/webhooks/agency-access',
+      subscribedEvents: ['access_request.completed'],
+      preferredApiVersion: WEBHOOK_API_VERSION_V2,
+    });
+
+    expect(payload.preferredApiVersion).toBe(WEBHOOK_API_VERSION_V2);
+  });
+
+  it('defaults preferredApiVersion to V1 when omitted', () => {
+    const payload = WebhookEndpointConfigInputSchema.parse({
+      url: 'https://example.com/webhooks/agency-access',
+      subscribedEvents: ['access_request.completed'],
+    });
+
+    expect(payload.preferredApiVersion).toBeUndefined();
+  });
+
+  it('allows all current event types (max updated to 6 for Phase 2 expansion)', () => {
+    const payload = WebhookEndpointConfigInputSchema.parse({
+      url: 'https://example.com/webhooks/agency-access',
+      subscribedEvents: [
+        'webhook.test',
+        'access_request.partial',
+        'access_request.completed',
+      ],
+    });
+
+    expect(payload.subscribedEvents).toHaveLength(3);
   });
 
   it('requires at least one subscribed event', () => {
@@ -51,11 +94,11 @@ describe('Webhook shared contracts', () => {
     expect(WebhookDeliveryStatusSchema.parse('failed')).toBe('failed');
   });
 
-  it('validates an access request completed webhook envelope', () => {
+  it('validates a V1 access request completed webhook envelope (unchanged)', () => {
     const payload = WebhookEventEnvelopeSchema.parse({
       id: 'evt_123',
       type: 'access_request.completed',
-      apiVersion: '2026-03-08',
+      apiVersion: WEBHOOK_API_VERSION_V1,
       createdAt: '2026-03-08T18:00:00.000Z',
       data: {
         accessRequest: {
@@ -95,13 +138,200 @@ describe('Webhook shared contracts', () => {
 
     expect(payload.data.accessRequest.externalReference).toBe('crm-42');
     expect(payload.data.connections[0]?.platforms).toEqual(['google']);
+    // V1 envelope: no assets field, no accessLevel
+    expect(payload.data.connections[0]?.assets).toBeUndefined();
+  });
+
+  it('validates a V2 access request completed envelope with per-asset detail', () => {
+    const payload = WebhookEventEnvelopeSchema.parse({
+      id: 'evt_456',
+      type: 'access_request.completed',
+      apiVersion: WEBHOOK_API_VERSION_V2,
+      createdAt: '2026-03-19T10:00:00.000Z',
+      data: {
+        accessRequest: {
+          id: 'request_456',
+          status: 'completed',
+          createdAt: '2026-03-19T09:00:00.000Z',
+          authorizedAt: '2026-03-19T09:45:00.000Z',
+          expiresAt: '2026-04-16T09:00:00.000Z',
+          requestUrl: 'https://app.example.com/invite/xyz789',
+          requestedPlatforms: ['meta', 'google'],
+          completedPlatforms: ['meta', 'google'],
+          accessLevel: 'admin',
+        },
+        client: {
+          id: 'client_456',
+          name: 'John Smith',
+          email: 'john@example.com',
+          company: 'Big Agency',
+        },
+        connections: [
+          {
+            connectionId: 'connection_456',
+            status: 'active',
+            platforms: ['meta'],
+            assets: [
+              {
+                assetId: '178046477',
+                assetName: 'Test Ad Account',
+                assetType: 'Ad Account',
+                platform: 'Meta',
+                connectionStatus: 'Connected',
+                accessLevel: 'Manage',
+                grantedAt: '2026-03-19T09:45:00.000Z',
+                linkToAsset: 'https://business.facebook.com/settings/178046477',
+                statusLastCheckedAt: '2026-03-19T09:46:00.000Z',
+              },
+              {
+                assetId: '581293397',
+                assetName: 'Test Page',
+                assetType: 'Page',
+                platform: 'Meta',
+                connectionStatus: 'Connected',
+                accessLevel: 'Manage',
+                grantedAt: '2026-03-19T09:45:00.000Z',
+                linkToAsset: 'https://www.facebook.com/581293397',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(payload.apiVersion).toBe(WEBHOOK_API_VERSION_V2);
+    if (payload.type !== 'access_request.completed') {
+      throw new Error('Expected an access_request.completed event');
+    }
+    expect(payload.data.accessRequest.accessLevel).toBe('admin');
+    expect(payload.data.connections[0]?.assets).toHaveLength(2);
+    expect(payload.data.connections[0]?.assets?.[0]?.assetId).toBe('178046477');
+    expect(payload.data.connections[0]?.assets?.[0]?.assetType).toBe('Ad Account');
+    expect(payload.data.connections[0]?.assets?.[0]?.platform).toBe('Meta');
+    expect(payload.data.connections[0]?.assets?.[0]?.linkToAsset).toBe('https://business.facebook.com/settings/178046477');
+  });
+
+  it('validates a V2 envelope with failed asset and notes', () => {
+    const payload = WebhookEventEnvelopeSchema.parse({
+      id: 'evt_789',
+      type: 'access_request.completed',
+      apiVersion: WEBHOOK_API_VERSION_V2,
+      createdAt: '2026-03-19T11:00:00.000Z',
+      data: {
+        accessRequest: {
+          id: 'request_789',
+          status: 'completed',
+          createdAt: '2026-03-19T10:00:00.000Z',
+          authorizedAt: '2026-03-19T10:30:00.000Z',
+          expiresAt: '2026-04-16T10:00:00.000Z',
+          requestUrl: 'https://app.example.com/invite/fail123',
+          requestedPlatforms: ['google'],
+          completedPlatforms: [],
+        },
+        client: {
+          id: 'client_789',
+          name: 'Bob Jones',
+          email: 'bob@example.com',
+        },
+        connections: [
+          {
+            connectionId: 'connection_789',
+            status: 'active',
+            platforms: ['google'],
+            assets: [
+              {
+                assetId: '12345',
+                assetName: 'Failed Account',
+                assetType: 'Google Ads Account',
+                platform: 'Google',
+                connectionStatus: 'Failed',
+                notes: 'Client did not grant Google Ads access. Only Analytics was authorized.',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    if (payload.type !== 'access_request.completed') {
+      throw new Error('Expected an access_request.completed event');
+    }
+    expect(payload.data.connections[0]?.assets?.[0]?.connectionStatus).toBe('Failed');
+    expect(payload.data.connections[0]?.assets?.[0]?.notes).toBe(
+      'Client did not grant Google Ads access. Only Analytics was authorized.',
+    );
+  });
+
+  it('validates a V2 envelope with optional asset fields omitted', () => {
+    const payload = WebhookEventEnvelopeSchema.parse({
+      id: 'evt_minimal',
+      type: 'access_request.completed',
+      apiVersion: WEBHOOK_API_VERSION_V2,
+      createdAt: '2026-03-19T12:00:00.000Z',
+      data: {
+        accessRequest: {
+          id: 'request_min',
+          status: 'completed',
+          createdAt: '2026-03-19T11:00:00.000Z',
+          authorizedAt: '2026-03-19T11:30:00.000Z',
+          expiresAt: '2026-04-16T11:00:00.000Z',
+          requestUrl: 'https://app.example.com/invite/min',
+          requestedPlatforms: ['meta'],
+          completedPlatforms: ['meta'],
+        },
+        client: {
+          id: 'client_min',
+          name: 'Minimal Client',
+          email: 'min@example.com',
+        },
+        connections: [
+          {
+            connectionId: 'connection_min',
+            status: 'active',
+            platforms: ['meta'],
+            assets: [
+              {
+                assetId: '999',
+                assetName: 'Simple Asset',
+                assetType: 'Page',
+                platform: 'Meta',
+                connectionStatus: 'Connected',
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    if (payload.type !== 'access_request.completed') {
+      throw new Error('Expected an access_request.completed event');
+    }
+    expect(payload.data.connections[0]?.assets?.[0]?.accessLevel).toBeUndefined();
+    expect(payload.data.connections[0]?.assets?.[0]?.grantedAt).toBeUndefined();
+    expect(payload.data.connections[0]?.assets?.[0]?.linkToAsset).toBeUndefined();
+    expect(payload.data.connections[0]?.assets?.[0]?.statusLastCheckedAt).toBeUndefined();
+  });
+
+  it('validates a V2 envelope with isReplay flag', () => {
+    const payload = WebhookEventEnvelopeSchema.parse({
+      id: 'evt_replay',
+      type: 'webhook.test',
+      apiVersion: WEBHOOK_API_VERSION_V2,
+      createdAt: '2026-03-19T12:00:00.000Z',
+      isReplay: true,
+      data: {
+        message: 'This is a replayed test webhook.',
+      },
+    });
+
+    expect(payload.isReplay).toBe(true);
   });
 
   it('validates a webhook test event envelope', () => {
     const payload = WebhookEventEnvelopeSchema.parse({
       id: 'evt_test_123',
       type: 'webhook.test',
-      apiVersion: '2026-03-08',
+      apiVersion: WEBHOOK_API_VERSION_V1,
       createdAt: '2026-03-08T18:00:00.000Z',
       data: {
         message: 'This is a test webhook from Agency Access.',
@@ -127,5 +357,194 @@ describe('Webhook shared contracts', () => {
 
     expect(payload.status).toBe('failed');
     expect(payload.attemptNumber).toBe(2);
+  });
+
+  describe('WebhookConnectionAssetV2', () => {
+    it('validates a complete V2 asset', () => {
+      const asset = WebhookConnectionAssetV2Schema.parse({
+        assetId: '178046477',
+        assetName: 'Test Ad Account',
+        assetType: 'Ad Account',
+        platform: 'Meta',
+        connectionStatus: 'Connected',
+        accessLevel: 'Manage',
+        grantedAt: '2026-03-19T09:45:00.000Z',
+        notes: 'Client granted full management access.',
+        linkToAsset: 'https://business.facebook.com/settings/178046477',
+        statusLastCheckedAt: '2026-03-19T09:46:00.000Z',
+      });
+
+      expect(asset.assetId).toBe('178046477');
+      expect(asset.platform).toBe('Meta');
+      expect(asset.connectionStatus).toBe('Connected');
+      expect(asset.accessLevel).toBe('Manage');
+    });
+
+    it('validates asset with minimal required fields', () => {
+      const asset = WebhookConnectionAssetV2Schema.parse({
+        assetId: '123',
+        assetName: 'Minimal Asset',
+        assetType: 'Page',
+        platform: 'Google',
+        connectionStatus: 'Connected',
+      });
+
+      expect(asset.accessLevel).toBeUndefined();
+      expect(asset.notes).toBeUndefined();
+      expect(asset.linkToAsset).toBeUndefined();
+    });
+
+    it('rejects invalid connectionStatus', () => {
+      const result = WebhookConnectionAssetV2Schema.safeParse({
+        assetId: '123',
+        assetName: 'Bad Asset',
+        assetType: 'Page',
+        platform: 'Google',
+        connectionStatus: 'InvalidStatus',
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid accessLevel', () => {
+      const result = WebhookConnectionAssetV2Schema.safeParse({
+        assetId: '123',
+        assetName: 'Bad Asset',
+        assetType: 'Page',
+        platform: 'Google',
+        connectionStatus: 'Connected',
+        accessLevel: 'SuperAdmin',
+      });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('Phase 2 event types', () => {
+    it('validates an access_request.revoked envelope', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_revoke_123',
+        type: 'access_request.revoked',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T14:00:00.000Z',
+        data: {
+          accessRequest: {
+            id: 'request_123',
+            status: 'revoked',
+            createdAt: '2026-03-10T09:00:00.000Z',
+            expiresAt: '2026-03-17T09:00:00.000Z',
+            requestUrl: 'https://app.authhub.co/r/abc123',
+            requestedPlatforms: ['meta_ads'],
+            completedPlatforms: ['meta_ads'],
+            revokedAt: '2026-03-19T14:00:00.000Z',
+            revokedBy: 'admin@agency.com',
+          },
+          client: {
+            id: 'client_123',
+            name: 'Acme Fitness',
+            email: 'owner@acmefitness.com',
+            company: 'Acme Fitness',
+          },
+          connections: [
+            {
+              connectionId: 'connection_123',
+              status: 'revoked',
+              platforms: ['meta_ads'],
+            },
+          ],
+        },
+      });
+
+      if (payload.type !== 'access_request.revoked') {
+        throw new Error('Expected access_request.revoked');
+      }
+      expect(payload.data.accessRequest.revokedAt).toBe('2026-03-19T14:00:00.000Z');
+      expect(payload.data.accessRequest.revokedBy).toBe('admin@agency.com');
+      expect(payload.data.connections).toHaveLength(1);
+    });
+
+    it('validates an access_request.expired envelope', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_expire_456',
+        type: 'access_request.expired',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T15:00:00.000Z',
+        data: {
+          accessRequest: {
+            id: 'request_456',
+            status: 'expired',
+            createdAt: '2026-03-10T09:00:00.000Z',
+            expiresAt: '2026-03-17T09:00:00.000Z',
+            requestUrl: 'https://app.authhub.co/r/def456',
+            requestedPlatforms: ['google_ads'],
+            completedPlatforms: [],
+            expiredAt: '2026-03-19T15:00:00.000Z',
+          },
+          client: {
+            id: 'client_456',
+            name: 'Never Responded',
+            email: 'nope@example.com',
+          },
+        },
+      });
+
+      if (payload.type !== 'access_request.expired') {
+        throw new Error('Expected access_request.expired');
+      }
+      expect(payload.data.accessRequest.expiredAt).toBe('2026-03-19T15:00:00.000Z');
+    });
+
+    it('validates a connection.status_changed envelope', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_status_789',
+        type: 'connection.status_changed',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T16:00:00.000Z',
+        data: {
+          connectionId: 'connection_789',
+          agencyId: 'agency_123',
+          platform: 'meta_ads',
+          previousStatus: 'active',
+          newStatus: 'invalid',
+          detectedAt: '2026-03-19T16:00:00.000Z',
+          client: {
+            id: 'client_789',
+            name: 'Token Expired Client',
+            email: 'expired@example.com',
+            company: 'Expired Co',
+          },
+        },
+      });
+
+      if (payload.type !== 'connection.status_changed') {
+        throw new Error('Expected connection.status_changed');
+      }
+      expect(payload.data.previousStatus).toBe('active');
+      expect(payload.data.newStatus).toBe('invalid');
+      expect(payload.data.detectedAt).toBe('2026-03-19T16:00:00.000Z');
+      expect(payload.data.client?.company).toBe('Expired Co');
+    });
+
+    it('validates connection.status_changed without client', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_status_min',
+        type: 'connection.status_changed',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T17:00:00.000Z',
+        data: {
+          connectionId: 'connection_min',
+          agencyId: 'agency_456',
+          platform: 'google_ads',
+          previousStatus: 'active',
+          newStatus: 'expired',
+          detectedAt: '2026-03-19T17:00:00.000Z',
+        },
+      });
+
+      if (payload.type !== 'connection.status_changed') {
+        throw new Error('Expected connection.status_changed');
+      }
+      expect(payload.data.client).toBeUndefined();
+    });
   });
 });

@@ -55,8 +55,12 @@ export async function expireTrials(): Promise<{ expired: number }> {
   return { expired };
 }
 
-// Standalone script support
-if (require.main === module) {
+// Standalone script support — ESM-compatible
+const isTrialExpirationDirectExecution = process.argv[1]?.endsWith('trial-expiration') ||
+  process.argv[1]?.endsWith('trial-expiration.js') ||
+  process.argv[1]?.endsWith('trial-expiration.ts');
+
+if (isTrialExpirationDirectExecution) {
   expireTrials()
     .then((result) => {
       console.log(`Trial expiration complete: ${result.expired} subscriptions expired`);

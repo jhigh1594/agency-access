@@ -381,4 +381,133 @@ describe('Webhook Settings Routes', () => {
     expect(response.statusCode).toBe(403);
     expect(webhookEndpointService.getWebhookEndpoint).not.toHaveBeenCalled();
   });
+
+  describe('preferredApiVersion', () => {
+    it('passes preferredApiVersion to createWebhookEndpoint when provided', async () => {
+      vi.mocked(webhookEndpointService.getWebhookEndpoint).mockResolvedValue({
+        data: null,
+        error: { code: 'NOT_FOUND', message: 'Not found' },
+      } as any);
+      vi.mocked(webhookEndpointService.createWebhookEndpoint).mockResolvedValue({
+        data: {
+          endpoint: {
+            id: 'endpoint-1',
+            agencyId: 'agency-1',
+            url: 'https://example.com/webhooks',
+            status: 'active',
+            subscribedEvents: ['access_request.completed'],
+            preferredApiVersion: '2026-03-19',
+            failureCount: 0,
+            secretLastFour: 'abcd',
+            createdAt: '2026-03-19T00:00:00.000Z',
+            updatedAt: '2026-03-19T00:00:00.000Z',
+          },
+          signingSecret: 'secret_v2',
+        },
+        error: null,
+      } as any);
+
+      const response = await app.inject({
+        method: 'PUT',
+        url: '/api/agencies/agency-1/webhook-endpoint',
+        headers: { authorization: 'Bearer token', 'content-type': 'application/json' },
+        payload: {
+          url: 'https://example.com/webhooks',
+          subscribedEvents: ['access_request.completed'],
+          preferredApiVersion: '2026-03-19',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(webhookEndpointService.createWebhookEndpoint).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agencyId: 'agency-1',
+          preferredApiVersion: '2026-03-19',
+        }),
+      );
+    });
+
+    it('passes preferredApiVersion to updateWebhookEndpoint when provided', async () => {
+      vi.mocked(webhookEndpointService.getWebhookEndpoint).mockResolvedValue({
+        data: { endpoint: { id: 'endpoint-1', agencyId: 'agency-1' } },
+        error: null,
+      } as any);
+      vi.mocked(webhookEndpointService.updateWebhookEndpoint).mockResolvedValue({
+        data: {
+          endpoint: {
+            id: 'endpoint-1',
+            agencyId: 'agency-1',
+            url: 'https://example.com/webhooks',
+            status: 'active',
+            subscribedEvents: ['access_request.completed'],
+            preferredApiVersion: '2026-03-19',
+            failureCount: 0,
+            secretLastFour: 'abcd',
+            createdAt: '2026-03-19T00:00:00.000Z',
+            updatedAt: '2026-03-19T00:00:00.000Z',
+          },
+        },
+        error: null,
+      } as any);
+
+      const response = await app.inject({
+        method: 'PUT',
+        url: '/api/agencies/agency-1/webhook-endpoint',
+        headers: { authorization: 'Bearer token', 'content-type': 'application/json' },
+        payload: {
+          url: 'https://example.com/webhooks',
+          subscribedEvents: ['access_request.completed'],
+          preferredApiVersion: '2026-03-19',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(webhookEndpointService.updateWebhookEndpoint).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agencyId: 'agency-1',
+          preferredApiVersion: '2026-03-19',
+        }),
+      );
+    });
+
+    it('omits preferredApiVersion when not provided', async () => {
+      vi.mocked(webhookEndpointService.getWebhookEndpoint).mockResolvedValue({
+        data: null,
+        error: { code: 'NOT_FOUND', message: 'Not found' },
+      } as any);
+      vi.mocked(webhookEndpointService.createWebhookEndpoint).mockResolvedValue({
+        data: {
+          endpoint: {
+            id: 'endpoint-1',
+            agencyId: 'agency-1',
+            url: 'https://example.com/webhooks',
+            status: 'active',
+            subscribedEvents: ['webhook.test'],
+            preferredApiVersion: '2026-03-08',
+            failureCount: 0,
+            createdAt: '2026-03-08T00:00:00.000Z',
+            updatedAt: '2026-03-08T00:00:00.000Z',
+          },
+          signingSecret: 'secret_v1',
+        },
+        error: null,
+      } as any);
+
+      await app.inject({
+        method: 'PUT',
+        url: '/api/agencies/agency-1/webhook-endpoint',
+        headers: { authorization: 'Bearer token', 'content-type': 'application/json' },
+        payload: {
+          url: 'https://example.com/webhooks',
+          subscribedEvents: ['webhook.test'],
+        },
+      });
+
+      expect(webhookEndpointService.createWebhookEndpoint).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          preferredApiVersion: expect.anything(),
+        }),
+      );
+    });
+  });
 });

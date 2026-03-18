@@ -1413,19 +1413,30 @@ export const AccessRequestUpdatePayloadSchema = z.object({
 });
 export type AccessRequestUpdatePayload = z.infer<typeof AccessRequestUpdatePayloadSchema>;
 
-export const WebhookApiVersionSchema = z.literal('2026-03-08');
+export const WEBHOOK_API_VERSION_V1 = '2026-03-08';
+export const WEBHOOK_API_VERSION_V2 = '2026-03-19';
+
+export const WebhookApiVersionSchema = z.enum([
+  WEBHOOK_API_VERSION_V1,
+  WEBHOOK_API_VERSION_V2,
+]);
 export type WebhookApiVersion = z.infer<typeof WebhookApiVersionSchema>;
 
 export const WebhookEventTypeSchema = z.enum([
   'webhook.test',
   'access_request.partial',
   'access_request.completed',
+  'access_request.revoked',
+  'access_request.expired',
+  'connection.status_changed',
 ]);
 export type WebhookEventType = z.infer<typeof WebhookEventTypeSchema>;
 
 export const WebhookAccessRequestLifecycleEventTypeSchema = z.enum([
   'access_request.partial',
   'access_request.completed',
+  'access_request.revoked',
+  'access_request.expired',
 ]);
 export type WebhookAccessRequestLifecycleEventType = z.infer<typeof WebhookAccessRequestLifecycleEventTypeSchema>;
 
@@ -1437,7 +1448,8 @@ export type WebhookDeliveryStatus = z.infer<typeof WebhookDeliveryStatusSchema>;
 
 export const WebhookEndpointConfigInputSchema = z.object({
   url: z.string().url(),
-  subscribedEvents: z.array(WebhookEventTypeSchema).min(1).max(3),
+  subscribedEvents: z.array(WebhookEventTypeSchema).min(1).max(6),
+  preferredApiVersion: WebhookApiVersionSchema.optional(),
 });
 export type WebhookEndpointConfigInput = z.infer<typeof WebhookEndpointConfigInputSchema>;
 
@@ -1447,6 +1459,7 @@ export const WebhookEndpointSummarySchema = z.object({
   url: z.string().url(),
   status: WebhookEndpointStatusSchema,
   subscribedEvents: z.array(WebhookEventTypeSchema),
+  preferredApiVersion: WebhookApiVersionSchema,
   failureCount: z.number().int().min(0),
   secretLastFour: z.string().length(4).optional().nullable(),
   lastDeliveredAt: z.string().datetime().optional().nullable(),
@@ -1481,6 +1494,7 @@ const WebhookAccessRequestSnapshotSchema = z.object({
   requestedPlatforms: z.array(z.string()),
   completedPlatforms: z.array(z.string()),
   externalReference: z.string().optional().nullable(),
+  accessLevel: z.enum(['admin', 'standard', 'read_only', 'email_only']).optional(),
 });
 
 const WebhookClientSnapshotSchema = z.object({
@@ -1490,11 +1504,27 @@ const WebhookClientSnapshotSchema = z.object({
   company: z.string().optional(),
 });
 
+export const WebhookConnectionAssetV2Schema = z.object({
+  assetId: z.string(),
+  assetName: z.string(),
+  assetType: z.string(),
+  platform: z.string(),
+  connectionStatus: z.enum(['Connected', 'Failed', 'Pending']),
+  accessLevel: z.enum(['ViewOnly', 'Manage', 'Owner']).optional(),
+  grantedAt: z.string().datetime().optional(),
+  notes: z.string().optional(),
+  linkToAsset: z.string().optional(),
+  statusLastCheckedAt: z.string().datetime().optional(),
+});
+
+export type WebhookConnectionAssetV2 = z.infer<typeof WebhookConnectionAssetV2Schema>;
+
 const WebhookConnectionSummarySchema = z.object({
   connectionId: z.string(),
   status: ConnectionStatusSchema,
   platforms: z.array(z.string()),
   grantedAssetsSummary: z.record(z.unknown()).optional(),
+  assets: z.array(WebhookConnectionAssetV2Schema).optional(),
 });
 
 export const WebhookAccessRequestEventDataSchema = z.object({
@@ -1513,6 +1543,7 @@ const WebhookEventEnvelopeBaseSchema = z.object({
   id: z.string(),
   apiVersion: WebhookApiVersionSchema,
   createdAt: z.string().datetime(),
+  isReplay: z.boolean().optional(),
 });
 
 export const WebhookTestEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
@@ -1533,10 +1564,69 @@ export const WebhookAccessRequestCompletedEventEnvelopeSchema = WebhookEventEnve
 });
 export type WebhookAccessRequestCompletedEventEnvelope = z.infer<typeof WebhookAccessRequestCompletedEventEnvelopeSchema>;
 
+// --- Revoked / Expired event data (extends base access request snapshot) ---
+
+const WebhookAccessRequestRevokedEventDataSchema = z.object({
+  accessRequest: WebhookAccessRequestSnapshotSchema.extend({
+    revokedAt: z.string().datetime(),
+    revokedBy: z.string().optional(),
+  }),
+  client: WebhookClientSnapshotSchema,
+  connections: z.array(WebhookConnectionSummarySchema),
+});
+export type WebhookAccessRequestRevokedEventData = z.infer<typeof WebhookAccessRequestRevokedEventDataSchema>;
+
+export const WebhookAccessRequestRevokedEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
+  type: z.literal('access_request.revoked'),
+  data: WebhookAccessRequestRevokedEventDataSchema,
+});
+export type WebhookAccessRequestRevokedEventEnvelope = z.infer<typeof WebhookAccessRequestRevokedEventEnvelopeSchema>;
+
+const WebhookAccessRequestExpiredEventDataSchema = z.object({
+  accessRequest: WebhookAccessRequestSnapshotSchema.extend({
+    expiredAt: z.string().datetime(),
+  }),
+  client: WebhookClientSnapshotSchema,
+});
+export type WebhookAccessRequestExpiredEventData = z.infer<typeof WebhookAccessRequestExpiredEventDataSchema>;
+
+export const WebhookAccessRequestExpiredEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
+  type: z.literal('access_request.expired'),
+  data: WebhookAccessRequestExpiredEventDataSchema,
+});
+export type WebhookAccessRequestExpiredEventEnvelope = z.infer<typeof WebhookAccessRequestExpiredEventEnvelopeSchema>;
+
+// --- Connection status changed event data ---
+
+const WebhookConnectionStatusChangedEventDataSchema = z.object({
+  connectionId: z.string(),
+  agencyId: z.string(),
+  platform: z.string(),
+  previousStatus: z.string(),
+  newStatus: z.string(),
+  detectedAt: z.string().datetime(),
+  client: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    company: z.string().optional(),
+  }).optional(),
+});
+export type WebhookConnectionStatusChangedEventData = z.infer<typeof WebhookConnectionStatusChangedEventDataSchema>;
+
+export const WebhookConnectionStatusChangedEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
+  type: z.literal('connection.status_changed'),
+  data: WebhookConnectionStatusChangedEventDataSchema,
+});
+export type WebhookConnectionStatusChangedEventEnvelope = z.infer<typeof WebhookConnectionStatusChangedEventEnvelopeSchema>;
+
 export const WebhookEventEnvelopeSchema = z.discriminatedUnion('type', [
   WebhookTestEventEnvelopeSchema,
   WebhookAccessRequestPartialEventEnvelopeSchema,
   WebhookAccessRequestCompletedEventEnvelopeSchema,
+  WebhookAccessRequestRevokedEventEnvelopeSchema,
+  WebhookAccessRequestExpiredEventEnvelopeSchema,
+  WebhookConnectionStatusChangedEventEnvelopeSchema,
 ]);
 export type WebhookEventEnvelope = z.infer<typeof WebhookEventEnvelopeSchema>;
 

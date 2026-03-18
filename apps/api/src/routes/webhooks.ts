@@ -150,6 +150,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     const body = request.body as {
       url: string;
       subscribedEvents: string[];
+      preferredApiVersion?: string;
     };
     const actorEmail = resolveActorEmail(request);
     const existing = await getWebhookEndpoint(id);
@@ -160,12 +161,14 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             agencyId: id,
             url: body.url,
             subscribedEvents: body.subscribedEvents as any,
+            preferredApiVersion: body.preferredApiVersion,
             updatedBy: actorEmail,
           })
         : await createWebhookEndpoint({
             agencyId: id,
             url: body.url,
             subscribedEvents: body.subscribedEvents as any,
+            preferredApiVersion: body.preferredApiVersion,
             createdBy: actorEmail,
           });
 

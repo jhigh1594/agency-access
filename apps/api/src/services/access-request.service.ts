@@ -771,6 +771,14 @@ function getAccessRequestLifecycleEventType(
     return 'access_request.completed';
   }
 
+  if (status === 'revoked') {
+    return 'access_request.revoked';
+  }
+
+  if (status === 'expired') {
+    return 'access_request.expired';
+  }
+
   return null;
 }
 
@@ -813,7 +821,7 @@ function buildConnectionSummaries(
   return connectionSummaries;
 }
 
-async function emitAccessRequestLifecycleWebhook(input: {
+export async function emitAccessRequestLifecycleWebhook(input: {
   accessRequestId: string;
   previousStatus: string;
   nextStatus: string;
@@ -873,6 +881,7 @@ async function emitAccessRequestLifecycleWebhook(input: {
         id: true,
         status: true,
         grantedAssets: true,
+        createdAt: true,
         authorizations: {
           select: {
             platform: true,
@@ -887,8 +896,19 @@ async function emitAccessRequestLifecycleWebhook(input: {
     const progress = evaluateAuthorizationProgress(requestedProducts, clientConnections as any);
     const connections = buildConnectionSummaries(clientConnections as any);
 
+    const apiVersion = (endpoint.preferredApiVersion as string) || '2026-03-08';
+
+    // Build V2 connection data with raw grantedAssets for V2 payload builder
+    const connectionsWithV2Data = connections.map((conn, idx) => ({
+      ...conn,
+      grantedAssets: (clientConnections[idx]?.grantedAssets as Record<string, unknown> | null) ?? null,
+      grantedAt: clientConnections[idx]?.createdAt ?? null,
+      authorizationStatuses: clientConnections[idx]?.authorizations,
+    }));
+
     const payload = webhookEventService.buildAccessRequestWebhookEvent({
       type: eventType,
+      apiVersion: apiVersion as '2026-03-08' | '2026-03-19',
       request: {
         id: accessRequest.id,
         status: accessRequest.status as AccessRequestStatus,
@@ -910,8 +930,14 @@ async function emitAccessRequestLifecycleWebhook(input: {
         requestedPlatforms,
         completedPlatforms: progress.completedPlatforms,
       },
-      connections,
+      connections: connectionsWithV2Data,
       requestUrl: `${env.FRONTEND_URL}/invite/${accessRequest.uniqueToken}`,
+      ...(input.nextStatus === 'revoked'
+        ? { revokedAt: new Date().toISOString(), revokedBy: 'system' }
+        : {}),
+      ...(input.nextStatus === 'expired'
+        ? { expiredAt: new Date().toISOString() }
+        : {}),
     });
 
     const eventRecord = await prisma.webhookEvent.create({
@@ -1547,13 +1573,22 @@ export async function cancelAccessRequest(id: string) {
   try {
     const existing = await prisma.accessRequest.findUnique({
       where: { id },
-      select: { agencyId: true },
+      select: { agencyId: true, status: true },
     });
 
     await prisma.accessRequest.update({
       where: { id },
       data: { status: 'revoked' },
     });
+
+    // Emit access_request.revoked webhook
+    if (existing && existing.status !== 'revoked') {
+      await emitAccessRequestLifecycleWebhook({
+        accessRequestId: id,
+        previousStatus: existing.status,
+        nextStatus: 'revoked',
+      });
+    }
 
     if (existing?.agencyId) {
       await invalidateDashboardCache(existing.agencyId);

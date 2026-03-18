@@ -1,9 +1,11 @@
 'use client';
 
 import type {
+  WebhookApiVersion,
   WebhookEndpointConfigInput,
   WebhookEventType,
 } from '@agency-platform/shared';
+import { WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2 } from '@agency-platform/shared';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -40,6 +42,7 @@ const EVENT_OPTIONS: Array<{
   value: WebhookEventType;
   label: string;
   description: string;
+  group?: string;
 }> = [
   {
     value: 'webhook.test',
@@ -50,11 +53,31 @@ const EVENT_OPTIONS: Array<{
     value: 'access_request.partial',
     label: 'Partial completion',
     description: 'Fires when a client has connected part of the requested stack.',
+    group: 'Connection Events',
   },
   {
     value: 'access_request.completed',
     label: 'Completed access request',
     description: 'Fires when the access request is fully completed.',
+    group: 'Connection Events',
+  },
+  {
+    value: 'access_request.revoked',
+    label: 'Revoked access request',
+    description: 'Fires when an agency cancels or revokes a pending or completed request.',
+    group: 'Connection Events',
+  },
+  {
+    value: 'access_request.expired',
+    label: 'Expired access request',
+    description: 'Fires when a pending request passes its expiration date without being completed.',
+    group: 'Connection Events',
+  },
+  {
+    value: 'connection.status_changed',
+    label: 'Connection status changed',
+    description: 'Fires when a platform authorization status changes (e.g., active → invalid).',
+    group: 'Health Events',
   },
 ];
 
@@ -88,6 +111,7 @@ export function WebhookSettingsTab() {
   const principalClerkId = orgId || userId;
   const [destinationUrl, setDestinationUrl] = useState('');
   const [selectedEvents, setSelectedEvents] = useState<WebhookEventType[]>(['access_request.completed']);
+  const [selectedApiVersion, setSelectedApiVersion] = useState<WebhookApiVersion>(WEBHOOK_API_VERSION_V1);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState(false);
   const [signingSecret, setSigningSecret] = useState<string | null>(null);
@@ -126,11 +150,13 @@ export function WebhookSettingsTab() {
     if (!endpoint) {
       setDestinationUrl('');
       setSelectedEvents(['access_request.completed']);
+      setSelectedApiVersion(WEBHOOK_API_VERSION_V1);
       return;
     }
 
     setDestinationUrl(endpoint.url);
     setSelectedEvents(endpoint.subscribedEvents);
+    setSelectedApiVersion(endpoint.preferredApiVersion);
   }, [endpointQuery.data]);
 
   useEffect(() => {
@@ -248,6 +274,7 @@ export function WebhookSettingsTab() {
     await saveMutation.mutateAsync({
       url: trimmedUrl,
       subscribedEvents: selectedEvents,
+      preferredApiVersion: selectedApiVersion,
     });
   };
 
@@ -326,6 +353,27 @@ export function WebhookSettingsTab() {
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 We sign each request with `svix-like` headers: timestamp plus HMAC SHA-256 signature.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="webhook-api-version" className="mb-1 block text-sm font-medium text-foreground">
+                Payload Version
+              </label>
+              <select
+                id="webhook-api-version"
+                value={selectedApiVersion}
+                onChange={(event) => setSelectedApiVersion(event.target.value as WebhookApiVersion)}
+                disabled={isBusy}
+                className="w-full rounded-lg border border-input px-4 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-coral disabled:cursor-not-allowed disabled:bg-muted/40"
+              >
+                <option value={WEBHOOK_API_VERSION_V1}>Standard (V1) — connection-level summary</option>
+                <option value={WEBHOOK_API_VERSION_V2}>Enhanced (V2) — per-asset detail</option>
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {selectedApiVersion === WEBHOOK_API_VERSION_V2
+                  ? 'V2 payloads include individual asset IDs, names, types, and statuses for each connected platform.'
+                  : 'V1 payloads include connection-level summaries. Upgrade to V2 for granular asset data.'}
               </p>
             </div>
 
@@ -423,6 +471,10 @@ export function WebhookSettingsTab() {
               <div>
                 <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Failure Count</dt>
                 <dd className="mt-1 text-ink">{endpoint?.failureCount ?? 0}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Payload Version</dt>
+                <dd className="mt-1 font-mono text-ink">{selectedApiVersion === WEBHOOK_API_VERSION_V2 ? 'Enhanced (V2)' : 'Standard (V1)'}</dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Subscribed Event Set</dt>

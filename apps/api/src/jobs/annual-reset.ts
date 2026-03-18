@@ -62,8 +62,12 @@ export async function checkAndResetAnnualCounters() {
   return { reset };
 }
 
-// If running as a standalone script (for scheduled jobs)
-if (require.main === module) {
+// If running as a standalone script (for scheduled jobs) — ESM-compatible
+const isAnnualResetDirectExecution = process.argv[1]?.endsWith('annual-reset') ||
+  process.argv[1]?.endsWith('annual-reset.js') ||
+  process.argv[1]?.endsWith('annual-reset.ts');
+
+if (isAnnualResetDirectExecution) {
   checkAndResetAnnualCounters()
     .then((result) => {
       console.log(`Annual reset complete: ${result.reset} counters reset`);
