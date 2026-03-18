@@ -925,7 +925,7 @@ async function emitAccessRequestLifecycleWebhook(input: {
       },
     });
 
-    const { queueWebhookDelivery } = await import('@/lib/queue');
+    const { queueWebhookDelivery } = await import('@/lib/queue-helpers');
     await queueWebhookDelivery(eventRecord.id);
   } catch (error) {
     logger.warn('Failed to emit access request lifecycle webhook', {

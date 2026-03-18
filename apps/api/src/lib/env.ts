@@ -62,20 +62,9 @@ const envSchema = z.object({
   INFISICAL_PROJECT_ID: z.string(),
   INFISICAL_ENVIRONMENT: z.string().default('dev'),
 
-  // Redis (Upstash)
-  REDIS_URL: z.string().url().refine(value => {
-    try {
-      const protocol = new URL(value).protocol;
-      return protocol === 'redis:' || protocol === 'rediss:';
-    } catch {
-      return false;
-    }
-  }, 'REDIS_URL must use redis:// or rediss://'),
-
-  // BullMQ Workers (Upstash cost control)
-  // When false: no workers start, no scheduled jobs, no Redis polling. Use for pre-launch/staging with zero traffic.
-  // OAuth, cache, and API work normally; token refresh, notifications, webhooks, etc. will queue but not process.
-  BULLMQ_WORKERS_ENABLED: z.preprocess(
+  // Background workers toggle
+  // When false: no job handlers start, no scheduled jobs. Use for pre-launch/staging with zero traffic.
+  BACKGROUND_WORKERS_ENABLED: z.preprocess(
     value => parseBooleanish(value) ?? value,
     z.boolean().default(true)
   ),
@@ -221,10 +210,6 @@ if (parsedEnv.NODE_ENV === 'production') {
     throw new Error('API_URL cannot point to localhost in production');
   }
 
-  if (isLocalhostUrl(parsedEnv.REDIS_URL)) {
-    throw new Error('REDIS_URL cannot point to localhost in production');
-  }
-
   const databaseUrl = parseUrlSafely(parsedEnv.DATABASE_URL);
   if (!databaseUrl || !isPostgresProtocol(databaseUrl.protocol)) {
     throw new Error('DATABASE_URL must use postgres:// or postgresql:// in production');
@@ -252,21 +237,15 @@ const TRUST_PROXY_IPS = parseCsvList(parsedEnv.TRUST_PROXY_IPS);
 const DASHBOARD_SUMMARY_LIMITS_ENABLED =
   parsedEnv.DASHBOARD_SUMMARY_LIMITS_ENABLED ?? true;
 
-// Parse Redis URL into components for IORedis
-const redisUrl = new URL(parsedEnv.REDIS_URL);
-
 export const env = {
   ...parsedEnv,
   FRONTEND_URL,
   CORS_ALLOWED_ORIGINS,
   API_URL,
-  REDIS_HOST: redisUrl.hostname,
-  REDIS_PORT: parseInt(redisUrl.port || '6379', 10),
-  REDIS_USERNAME: redisUrl.username ? decodeURIComponent(redisUrl.username) : undefined,
-  REDIS_PASSWORD: redisUrl.password ? decodeURIComponent(redisUrl.password) : undefined,
-  REDIS_TLS: redisUrl.protocol === 'rediss:',
   INTERNAL_ADMIN_USER_IDS,
   INTERNAL_ADMIN_EMAILS,
   TRUST_PROXY_IPS,
   DASHBOARD_SUMMARY_LIMITS_ENABLED,
+  // Alias for backwards compatibility
+  BULLMQ_WORKERS_ENABLED: parsedEnv.BACKGROUND_WORKERS_ENABLED,
 };

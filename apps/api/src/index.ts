@@ -188,11 +188,11 @@ fastify.get('/performance-stats', {
 });
 
 fastify.get('/', async () => {
-  return { 
+  return {
     name: 'Agency Access Platform API',
     version: '0.1.0',
     status: 'running',
-    documentation: '/health' 
+    documentation: '/health'
   };
 });
 
@@ -202,111 +202,41 @@ const start = async () => {
     await prisma.$connect();
 
     if (env.NODE_ENV === 'production') {
-      try {
-        const { ensureRedisReady } = await import('./lib/redis.js');
-        await ensureRedisReady();
-        fastify.log.info('redis readiness check passed');
-      } catch (redisErr) {
-        fastify.log.warn(
-          { error: redisErr },
-          'Redis readiness check failed; OAuth state will use stateless fallback and Redis-backed workers may be degraded'
-        );
-      }
-
       const { assertWebhookSchemaReady } = await import('./lib/webhook-schema-readiness.js');
       await assertWebhookSchemaReady();
       fastify.log.info('webhook schema readiness check passed');
     }
 
-    const startOptionalBackgroundTask = async (
-      label: string,
-      startTask: () => Promise<unknown>,
-      warning: string
-    ) => {
+    // Start pg-boss job handlers
+    const startJobHandlers = async () => {
       try {
-        const taskPromise = startTask();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Worker startup timeout')), 10000)
-        );
-        await Promise.race([taskPromise, timeoutPromise]);
-        fastify.log.info(`${label} started`);
-      } catch (workerErr) {
-        fastify.log.warn(`Failed to start ${label} (Redis may be unavailable)`);
-        fastify.log.warn(warning);
-        if (env.NODE_ENV === 'development') {
-          fastify.log.info('To start Redis: brew services start redis (macOS) or docker run -p 6379:6379 redis');
-        }
+        const { getPgBoss, scheduleJob } = await import('./lib/pg-boss.js');
+        const { startAllHandlers, scheduleRecurringJobs } = await import('./lib/job-handlers.js');
+
+        // Initialize pg-boss (creates schema if needed)
+        await getPgBoss();
+
+        // Start all job handlers
+        await startAllHandlers();
+
+        // Schedule recurring jobs
+        await scheduleRecurringJobs();
+
+        // Add OAuth/PKCE cleanup job (runs every hour)
+        await scheduleJob('cleanup-expired-requests', '0 * * * *', { type: 'delete-expired-requests' });
+
+        fastify.log.info('pg-boss job handlers started');
+      } catch (error) {
+        fastify.log.error({ error }, 'Failed to start pg-boss job handlers');
+        throw error;
       }
     };
 
     if (env.BULLMQ_WORKERS_ENABLED) {
-      const {
-        scheduleJobs,
-        startCleanupWorker,
-        startGoogleNativeGrantWorker,
-        startNotificationWorker,
-        startOnboardingEmailWorker,
-        startTokenRefreshWorker,
-        startTrialExpirationWorker,
-        startWebhookDeliveryWorker,
-      } = await import('./lib/queue.js');
-
-      await startOptionalBackgroundTask(
-        'token refresh worker',
-        startTokenRefreshWorker,
-        'Automatic token refresh will be disabled until Redis is available.'
-      );
-
-      await startOptionalBackgroundTask(
-        'cleanup worker',
-        startCleanupWorker,
-        'Cleanup jobs will be disabled until Redis is available.'
-      );
-
-      await startOptionalBackgroundTask(
-        'trial expiration worker',
-        startTrialExpirationWorker,
-        'Trial expiration jobs will be disabled until Redis is available.'
-      );
-
-      await startOptionalBackgroundTask(
-        'google native grant worker',
-        startGoogleNativeGrantWorker,
-        'Google native grant execution will be disabled until Redis is available.'
-      );
-
-      await startOptionalBackgroundTask(
-        'notification worker',
-        startNotificationWorker,
-        'Notifications will be disabled. To enable, ensure Redis is running.'
-      );
-
-      await startOptionalBackgroundTask(
-        'webhook delivery worker',
-        startWebhookDeliveryWorker,
-        'Outbound webhooks will not be delivered until Redis is available.'
-      );
-
-      await startOptionalBackgroundTask(
-        'onboarding email worker',
-        startOnboardingEmailWorker,
-        'Onboarding emails will not be delayed. To enable, ensure Redis is running.'
-      );
-
-      await startOptionalBackgroundTask(
-        'authorization verification worker',
-        () => import('./jobs/authorization-verification.js'),
-        'Platform authorization verification will be disabled until Redis is available.'
-      );
-
-      await startOptionalBackgroundTask(
-        'recurring job scheduler',
-        scheduleJobs,
-        'Recurring background jobs will not be scheduled until Redis is available.'
-      );
+      await startJobHandlers();
     } else {
       fastify.log.info(
-        'BullMQ workers disabled (BULLMQ_WORKERS_ENABLED=false). Redis usage minimized for pre-launch/staging.'
+        'Background workers disabled (BULLMQ_WORKERS_ENABLED=false). Job processing disabled.'
       );
     }
 
@@ -320,5 +250,35 @@ const start = async () => {
     process.exit(1);
   }
 };
+
+// Graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  fastify.log.info(`Received ${signal}, starting graceful shutdown...`);
+
+  try {
+    // Stop pg-boss
+    const { stopPgBoss } = await import('./lib/pg-boss.js');
+    await stopPgBoss();
+
+    // Stop cache cleanup
+    const { stopCache } = await import('./lib/cache.js');
+    stopCache();
+
+    // Close Fastify
+    await fastify.close();
+
+    // Disconnect Prisma
+    await prisma.$disconnect();
+
+    fastify.log.info('Graceful shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    fastify.log.error({ error }, 'Error during graceful shutdown');
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 start();

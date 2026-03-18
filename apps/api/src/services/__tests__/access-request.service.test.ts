@@ -6,8 +6,17 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
-import { queueWebhookDelivery } from '@/lib/queue';
+import { queueWebhookDelivery } from '@/lib/queue-helpers';
 import * as accessRequestService from '@/services/access-request.service';
+
+// Mock env first to prevent Zod validation errors
+vi.mock('@/lib/env', () => ({
+  env: {
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    CLERK_PUBLISHABLE_KEY: 'pk_test_key',
+    CLERK_SECRET_KEY: 'sk_test_secret_key',
+  },
+}));
 
 // Mock crypto for token generation
 var cryptoCallCount = 0;

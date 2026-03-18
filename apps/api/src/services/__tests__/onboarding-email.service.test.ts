@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/services/email.service';
-import { onboardingEmailQueue } from '@/lib/queue';
+import * as pgBoss from '@/lib/pg-boss';
 import { onboardingEmailService } from '@/services/onboarding-email.service';
+
+vi.mock('@/lib/env', () => ({
+  env: {
+    CLERK_SECRET_KEY: 'sk_test_secret_key',
+  },
+}));
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -25,10 +31,8 @@ vi.mock('@/services/email.service', () => ({
   sendEmail: vi.fn(),
 }));
 
-vi.mock('@/lib/queue', () => ({
-  onboardingEmailQueue: {
-    add: vi.fn(),
-  },
+vi.mock('@/lib/pg-boss', () => ({
+  enqueueJob: vi.fn(),
 }));
 
 describe('onboardingEmailService', () => {
@@ -46,27 +50,27 @@ describe('onboardingEmailService', () => {
     it('queues the welcome sequence jobs with expected delays', async () => {
       await onboardingEmailService.queueSequenceStart({ agencyId: 'agency-1' });
 
-      expect(onboardingEmailQueue.add).toHaveBeenCalledTimes(4);
-      expect(onboardingEmailQueue.add).toHaveBeenCalledWith(
+      expect(pgBoss.enqueueJob).toHaveBeenCalledTimes(4);
+      expect(pgBoss.enqueueJob).toHaveBeenCalledWith(
         'onboarding-email',
         expect.objectContaining({
           agencyId: 'agency-1',
           emailKey: 'welcome_first_step',
         }),
         expect.objectContaining({
-          jobId: 'onboarding-email:agency-1:welcome_first_step',
-          delay: 0,
+          singletonKey: 'onboarding-email:agency-1:welcome_first_step',
+          startAfter: 0,
         })
       );
-      expect(onboardingEmailQueue.add).toHaveBeenCalledWith(
+      expect(pgBoss.enqueueJob).toHaveBeenCalledWith(
         'onboarding-email',
         expect.objectContaining({
           agencyId: 'agency-1',
           emailKey: 'get_to_first_link',
         }),
         expect.objectContaining({
-          jobId: 'onboarding-email:agency-1:get_to_first_link',
-          delay: 24 * 60 * 60 * 1000,
+          singletonKey: 'onboarding-email:agency-1:get_to_first_link',
+          startAfter: 86400, // 24 hours in seconds
         })
       );
     });

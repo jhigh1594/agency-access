@@ -44,7 +44,7 @@ vi.mock('@/services/connectors/google-ads', () => ({
   },
 }));
 
-vi.mock('@/lib/queue', () => ({
+vi.mock('@/lib/queue-helpers', () => ({
   queueGoogleNativeGrantExecution: vi.fn(),
 }));
 
@@ -52,7 +52,7 @@ import { prisma } from '@/lib/prisma';
 import { auditService } from '@/services/audit.service';
 import { googleAdsConnector } from '@/services/connectors/google-ads';
 import { googleNativeGrantService } from '@/services/google-native-grant.service';
-import { queueGoogleNativeGrantExecution } from '@/lib/queue';
+import { queueGoogleNativeGrantExecution } from '@/lib/queue-helpers';
 import {
   ensureAgencyAccessToken,
   refreshClientPlatformAuthorization,

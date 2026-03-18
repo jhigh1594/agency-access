@@ -439,9 +439,9 @@ async function queueVerificationJob(
   }
 ): Promise<void> {
   // Import queue dynamically to avoid circular dependencies
-  const { queueVerification } = await import('../lib/verification-queue.js');
+  const { queueAuthorizationVerification } = await import('@/lib/queue-helpers');
 
-  await queueVerification(verificationId, jobData);
+  await queueAuthorizationVerification(verificationId, jobData);
 }
 
 /**

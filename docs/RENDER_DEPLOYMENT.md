@@ -6,8 +6,7 @@ This guide covers deploying the Agency Access Platform to Render using the `rend
 
 - **Frontend**: Next.js (App Router) on Render Web Service
 - **Backend**: Fastify API on Render Web Service
-- **Database**: PostgreSQL (Neon)
-- **Cache/Queue**: Redis (Upstash)
+- **Database**: PostgreSQL (Neon) - also used for job queues (pg-boss)
 - **Secrets**: Infisical
 
 ## 1. Create Render Project (Blueprint)
@@ -31,7 +30,6 @@ Required:
 NODE_ENV=production
 PORT=3001
 DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
 FRONTEND_URL=https://your-app.onrender.com
 API_URL=https://your-service.onrender.com
 CLERK_PUBLISHABLE_KEY=pk_live_...
@@ -116,5 +114,6 @@ render logs
 
 ## Notes
 
-- Keep Neon + Upstash as external managed services.
+- Keep Neon as external managed PostgreSQL service.
+- Job queues use pg-boss (Postgres-backed) - no separate Redis required.
 - `render.yaml` is the source of truth for build/start commands.

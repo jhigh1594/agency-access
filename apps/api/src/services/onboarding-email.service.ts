@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { env } from '@/lib/env';
-import { onboardingEmailQueue } from '@/lib/queue';
+import { enqueueJob } from '@/lib/pg-boss';
 import { sendEmail } from '@/services/email.service';
 
 type OnboardingEmailKey =
@@ -237,30 +237,24 @@ export async function queueSequenceStart(input: { agencyId: string }) {
     const jobs = Object.entries(EMAIL_DELAYS) as Array<[Exclude<OnboardingEmailKey, 'send_the_link'>, number]>;
 
     for (const [emailKey, delay] of jobs) {
-      await onboardingEmailQueue.add(
+      await enqueueJob(
         'onboarding-email',
         {
           agencyId: input.agencyId,
           emailKey,
         },
         {
-          jobId: `onboarding-email:${input.agencyId}:${emailKey}`,
-          delay,
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 2000,
-          },
+          singletonKey: `onboarding-email:${input.agencyId}:${emailKey}`,
+          startAfter: delay / 1000, // Convert ms to seconds
+          retryLimit: 3,
+          retryDelay: 2,
+          retryBackoff: true,
         }
       );
     }
 
     return { data: true, error: null };
   } catch (error: any) {
-    if (error?.code === 'ECONNREFUSED' && env.NODE_ENV !== 'production') {
-      return { data: true, error: null };
-    }
-
     return {
       data: null,
       error: {
@@ -273,7 +267,7 @@ export async function queueSequenceStart(input: { agencyId: string }) {
 
 export async function queueActivatedFollowUp(input: { agencyId: string; accessRequestId: string }) {
   try {
-    await onboardingEmailQueue.add(
+    await enqueueJob(
       'onboarding-email',
       {
         agencyId: input.agencyId,
@@ -281,22 +275,16 @@ export async function queueActivatedFollowUp(input: { agencyId: string; accessRe
         emailKey: 'send_the_link' as const,
       },
       {
-        jobId: `onboarding-email:${input.agencyId}:send_the_link:${input.accessRequestId}`,
-        delay: DAY_MS,
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
+        singletonKey: `onboarding-email:${input.agencyId}:send_the_link:${input.accessRequestId}`,
+        startAfter: DAY_MS / 1000, // Convert ms to seconds
+        retryLimit: 3,
+        retryDelay: 2,
+        retryBackoff: true,
       }
     );
 
     return { data: true, error: null };
   } catch (error: any) {
-    if (error?.code === 'ECONNREFUSED' && env.NODE_ENV !== 'production') {
-      return { data: true, error: null };
-    }
-
     return {
       data: null,
       error: {

@@ -18,7 +18,6 @@ function withRequiredBase(overrides: Record<string, string | undefined> = {}) {
     INFISICAL_CLIENT_ID: 'infisical-client-id',
     INFISICAL_CLIENT_SECRET: 'infisical-client-secret',
     INFISICAL_PROJECT_ID: 'infisical-project-id',
-    REDIS_URL: 'rediss://default:password@cache.example.com:6380',
     META_APP_ID: 'meta-app-id',
     META_APP_SECRET: 'meta-app-secret',
     CREEM_API_KEY: 'creem_live_example',
@@ -82,16 +81,6 @@ describe('env contract', () => {
       API_URL: 'http://localhost:3001',
       INFISICAL_ENVIRONMENT: 'production',
     }))).rejects.toThrow();
-  });
-
-  it('fails in production when REDIS_URL points to localhost', async () => {
-    await expect(importEnvWith(withRequiredBase({
-      NODE_ENV: 'production',
-      FRONTEND_URL: 'https://app.example.com',
-      API_URL: 'https://api.example.com',
-      REDIS_URL: 'redis://localhost:6379',
-      INFISICAL_ENVIRONMENT: 'production',
-    }))).rejects.toThrow('REDIS_URL cannot point to localhost in production');
   });
 
   it('fails in production when DATABASE_URL is not a postgres URL', async () => {
@@ -170,21 +159,28 @@ describe('env contract', () => {
     expect(module.env.INTERNAL_ADMIN_EMAILS).toEqual(['admin@example.com', 'ops@example.com']);
   });
 
-  it('parses BULLMQ_WORKERS_ENABLED as boolean (default true)', async () => {
+  it('parses BACKGROUND_WORKERS_ENABLED as boolean (default true)', async () => {
     const moduleDefault = await importEnvWith(withRequiredBase({
-      BULLMQ_WORKERS_ENABLED: undefined,
+      BACKGROUND_WORKERS_ENABLED: undefined,
     }));
-    expect(moduleDefault.env.BULLMQ_WORKERS_ENABLED).toBe(true);
+    expect(moduleDefault.env.BACKGROUND_WORKERS_ENABLED).toBe(true);
 
     const moduleFalse = await importEnvWith(withRequiredBase({
-      BULLMQ_WORKERS_ENABLED: 'false',
+      BACKGROUND_WORKERS_ENABLED: 'false',
     }));
-    expect(moduleFalse.env.BULLMQ_WORKERS_ENABLED).toBe(false);
+    expect(moduleFalse.env.BACKGROUND_WORKERS_ENABLED).toBe(false);
 
     const moduleTrue = await importEnvWith(withRequiredBase({
-      BULLMQ_WORKERS_ENABLED: 'true',
+      BACKGROUND_WORKERS_ENABLED: 'true',
     }));
-    expect(moduleTrue.env.BULLMQ_WORKERS_ENABLED).toBe(true);
+    expect(moduleTrue.env.BACKGROUND_WORKERS_ENABLED).toBe(true);
+  });
+
+  it('provides BULLMQ_WORKERS_ENABLED as alias for BACKGROUND_WORKERS_ENABLED', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      BACKGROUND_WORKERS_ENABLED: 'false',
+    }));
+    expect(module.env.BULLMQ_WORKERS_ENABLED).toBe(false);
   });
 
   it('defaults internal admin allowlists to empty arrays when unset', async () => {
@@ -299,23 +295,5 @@ describe('env contract', () => {
     expect(module.env.WEBHOOK_DELIVERY_TIMEOUT_MS).toBe(8000);
     expect(module.env.WEBHOOK_FAILURE_DISABLE_THRESHOLD).toBe(3);
     expect(module.env.WEBHOOK_MAX_ATTEMPTS).toBe(4);
-  });
-
-  it('derives BullMQ Redis connection settings from a rediss URL', async () => {
-    const module = await importEnvWith(withRequiredBase({
-      REDIS_URL: 'rediss://default:pa%24%24word@cache.example.com:6380',
-    }));
-
-    expect(module.env.REDIS_HOST).toBe('cache.example.com');
-    expect(module.env.REDIS_PORT).toBe(6380);
-    expect(module.env.REDIS_USERNAME).toBe('default');
-    expect(module.env.REDIS_PASSWORD).toBe('pa$$word');
-    expect(module.env.REDIS_TLS).toBe(true);
-  });
-
-  it('rejects REDIS_URL values that are not redis or rediss schemes', async () => {
-    await expect(importEnvWith(withRequiredBase({
-      REDIS_URL: 'https://example.com/redis',
-    }))).rejects.toThrow('REDIS_URL must use redis:// or rediss://');
   });
 });

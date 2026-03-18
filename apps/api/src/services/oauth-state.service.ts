@@ -2,7 +2,7 @@
  * OAuth State Service
  *
  * Manages OAuth state tokens for CSRF protection during OAuth flows.
- * State tokens are stored in Redis with 10-minute expiry and are single-use.
+ * State tokens are stored in Postgres with 10-minute expiry and are single-use.
  *
  * Security enhancements:
  * - HMAC SHA-256 signatures prevent state token tampering
@@ -11,7 +11,7 @@
  */
 
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
-import { redis } from '@/lib/redis';
+import { prisma } from '@/lib/prisma';
 import { env } from '@/lib/env.js';
 import { logger } from '@/lib/logger.js';
 
@@ -90,7 +90,7 @@ function verifyStateSignature(stateToken: string, signature: string): boolean {
 
 /**
  * Create a new OAuth state token
- * Stores state data in Redis with 10-minute expiry and HMAC signature
+ * Stores state data in Postgres with 10-minute expiry and HMAC signature
  */
 async function createState(
   stateData: OAuthState
@@ -102,13 +102,27 @@ async function createState(
     // Generate HMAC signature
     const signature = signStateToken(stateToken);
 
-    // Store in Redis with 10-minute expiry (include signature for verification)
-    await redis.set(
-      `oauth_state:${stateToken}`,
-      JSON.stringify({ ...stateData, signature }),
-      'EX',
-      STATE_EXPIRY_SECONDS
-    );
+    // Calculate expiry time
+    const expiresAt = new Date(Date.now() + STATE_EXPIRY_SECONDS * 1000);
+
+    // Store in Postgres
+    await prisma.oAuthStateToken.create({
+      data: {
+        stateToken,
+        agencyId: stateData.agencyId,
+        platform: stateData.platform,
+        userEmail: stateData.userEmail,
+        redirectUrl: stateData.redirectUrl,
+        accessRequestId: stateData.accessRequestId,
+        accessRequestToken: stateData.accessRequestToken,
+        clientEmail: stateData.clientEmail,
+        shop: stateData.shop,
+        metadata: stateData,
+        signature,
+        timestamp: BigInt(stateData.timestamp),
+        expiresAt,
+      },
+    });
 
     return { data: stateToken, error: null };
   } catch (error) {
@@ -129,6 +143,7 @@ async function createState(
       error: errorMeta,
     });
 
+    // Fallback to stateless token if database fails
     const fallbackToken = encodeStatelessStateToken(stateData);
     logger.warn('Falling back to stateless OAuth state token', {
       platform: stateData.platform,
@@ -145,9 +160,10 @@ async function createState(
  *
  * Security checks:
  * - HMAC signature verification
- * - Token presence in Redis
+ * - Token presence in database
  * - Required fields validation
  * - Timestamp age validation
+ * - Single-use via consumedAt field
  */
 async function validateState(
   stateToken: string
@@ -164,6 +180,7 @@ async function validateState(
       };
     }
 
+    // Check for stateless token (fallback mode)
     const statelessStateData = decodeStatelessStateToken(stateToken);
     if (statelessStateData) {
       const age = Date.now() - statelessStateData.timestamp;
@@ -181,33 +198,40 @@ async function validateState(
       return { data: statelessStateData, error: null };
     }
 
-    // Get state data from Redis
-    const stateDataStr = await redis.get(`oauth_state:${stateToken}`);
+    // Find the state token in database
+    const stateRecord = await prisma.oAuthStateToken.findUnique({
+      where: { stateToken },
+    });
 
-    // Token not found (expired or already used)
-    if (!stateDataStr) {
+    // Token not found (expired, already used, or never existed)
+    if (!stateRecord) {
       return { data: null, error: null };
     }
 
-    // Delete token immediately (one-time use)
-    await redis.del(`oauth_state:${stateToken}`);
-
-    // Parse state data
-    let stateData: OAuthStateWithSignature;
-    try {
-      stateData = JSON.parse(stateDataStr);
-    } catch (parseError) {
+    // Check if already consumed (single-use)
+    if (stateRecord.consumedAt) {
       return {
         data: null,
         error: {
-          code: 'INVALID_STATE_DATA',
-          message: 'State data is malformed',
+          code: 'STATE_ALREADY_CONSUMED',
+          message: 'State token has already been used',
+        },
+      };
+    }
+
+    // Check if expired
+    if (stateRecord.expiresAt < new Date()) {
+      return {
+        data: null,
+        error: {
+          code: 'STATE_EXPIRED',
+          message: 'State token has expired',
         },
       };
     }
 
     // Verify HMAC signature (prevents tampering)
-    if (!stateData.signature || !verifyStateSignature(stateToken, stateData.signature)) {
+    if (!stateRecord.signature || !verifyStateSignature(stateToken, stateRecord.signature)) {
       return {
         data: null,
         error: {
@@ -217,13 +241,36 @@ async function validateState(
       };
     }
 
+    // Atomic consume: set consumedAt if not already set
+    // This prevents race conditions where two requests try to use the same token
+    const updated = await prisma.oAuthStateToken.updateMany({
+      where: {
+        stateToken,
+        consumedAt: null, // Only update if not already consumed
+      },
+      data: {
+        consumedAt: new Date(),
+      },
+    });
+
+    // If no rows updated, token was consumed by another request
+    if (updated.count === 0) {
+      return {
+        data: null,
+        error: {
+          code: 'STATE_ALREADY_CONSUMED',
+          message: 'State token has already been used',
+        },
+      };
+    }
+
     // Validate required fields
     // For agency flows: agencyId, platform, userEmail required
     // For client flows: accessRequestId, platform, clientEmail required
-    const isAgencyFlow = !!stateData.agencyId && !!stateData.userEmail;
-    const isClientFlow = !!stateData.accessRequestId && !!stateData.clientEmail;
+    const isAgencyFlow = !!stateRecord.agencyId && !!stateRecord.userEmail;
+    const isClientFlow = !!stateRecord.accessRequestId && !!stateRecord.clientEmail;
 
-    if (!stateData.platform || !stateData.timestamp || (!isAgencyFlow && !isClientFlow)) {
+    if (!stateRecord.platform || !stateRecord.timestamp || (!isAgencyFlow && !isClientFlow)) {
       return {
         data: null,
         error: {
@@ -235,7 +282,7 @@ async function validateState(
 
     // Validate timestamp (prevent replay attacks)
     const now = Date.now();
-    const age = now - stateData.timestamp;
+    const age = now - Number(stateRecord.timestamp);
 
     if (age > STATE_MAX_AGE_MS) {
       return {
@@ -247,8 +294,21 @@ async function validateState(
       };
     }
 
-    const { signature: _signature, ...sanitizedStateData } = stateData;
-    return { data: sanitizedStateData as OAuthState, error: null };
+    // Build state object from database record
+    const stateData: OAuthState = {
+      agencyId: stateRecord.agencyId ?? '',
+      platform: stateRecord.platform,
+      userEmail: stateRecord.userEmail ?? '',
+      redirectUrl: stateRecord.redirectUrl ?? undefined,
+      timestamp: Number(stateRecord.timestamp),
+      accessRequestId: stateRecord.accessRequestId ?? undefined,
+      accessRequestToken: stateRecord.accessRequestToken ?? undefined,
+      clientEmail: stateRecord.clientEmail ?? undefined,
+      shop: stateRecord.shop ?? undefined,
+      ...(stateRecord.metadata as Record<string, unknown> ?? {}),
+    };
+
+    return { data: stateData, error: null };
   } catch (error) {
     const errorWithCode = error as Error & { code?: string };
     const errorMeta =
@@ -276,8 +336,26 @@ async function validateState(
   }
 }
 
+/**
+ * Cleanup expired OAuth state tokens
+ * Should be called periodically (e.g., by a background job)
+ */
+async function cleanupExpiredTokens(): Promise<{ deleted: number }> {
+  const result = await prisma.oAuthStateToken.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: new Date() } },
+        { consumedAt: { not: null } },
+      ],
+    },
+  });
+
+  return { deleted: result.count };
+}
+
 // Export as service object for easier mocking in tests
 export const oauthStateService = {
   createState,
   validateState,
+  cleanupExpiredTokens,
 };

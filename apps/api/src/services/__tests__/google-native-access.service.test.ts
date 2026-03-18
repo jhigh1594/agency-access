@@ -14,12 +14,12 @@ vi.mock('@/services/google-native-grant.service', () => ({
   },
 }));
 
-vi.mock('@/lib/queue', () => ({
+vi.mock('@/lib/queue-helpers', () => ({
   queueGoogleNativeGrantExecution: vi.fn(),
 }));
 
 import { prisma } from '@/lib/prisma';
-import { queueGoogleNativeGrantExecution } from '@/lib/queue';
+import { queueGoogleNativeGrantExecution } from '@/lib/queue-helpers';
 import { googleNativeGrantService } from '@/services/google-native-grant.service';
 import { googleNativeAccessService } from '../google-native-access.service.js';
 

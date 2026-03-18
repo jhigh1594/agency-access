@@ -110,7 +110,7 @@ export async function sendWebhookTestEvent(
       },
     });
 
-    const { queueWebhookDelivery } = await import('@/lib/queue');
+    const { queueWebhookDelivery } = await import('@/lib/queue-helpers');
     await queueWebhookDelivery(eventRecord.id);
 
     await auditService.createAuditLog({

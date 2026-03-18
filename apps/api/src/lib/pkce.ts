@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { redis } from './redis.js';
+import { prisma } from './prisma.js';
 
 /**
  * PKCE (Proof Key for Code Exchange) Helper
@@ -54,7 +54,7 @@ function base64UrlEncode(buffer: Buffer): string {
 }
 
 /**
- * Store code verifier in Redis with state as key
+ * Store code verifier in Postgres with state as key
  *
  * The code verifier must be stored during authorization and retrieved during
  * token exchange to verify the PKCE challenge.
@@ -68,26 +68,82 @@ export async function storeCodeVerifier(
   verifier: string,
   ttl: number = 600
 ): Promise<void> {
-  await redis.setex(`pkce:${state}`, ttl, verifier);
+  const expiresAt = new Date(Date.now() + ttl * 1000);
+
+  await prisma.pkceVerifier.create({
+    data: {
+      stateKey: state,
+      verifier,
+      expiresAt,
+    },
+  });
 }
 
 /**
- * Retrieve code verifier from Redis using state
+ * Retrieve code verifier from Postgres using state
+ * Consumes the verifier (single-use) if found.
  *
  * @param state - OAuth state parameter used as the key
  * @returns Code verifier or null if not found/expired
  */
 export async function getCodeVerifier(state: string): Promise<string | null> {
-  return await redis.get(`pkce:${state}`);
+  const record = await prisma.pkceVerifier.findUnique({
+    where: { stateKey: state },
+  });
+
+  if (!record) {
+    return null;
+  }
+
+  // Check if expired
+  if (record.expiresAt < new Date()) {
+    // Clean up expired record
+    await prisma.pkceVerifier.delete({ where: { stateKey: state } });
+    return null;
+  }
+
+  // Check if already consumed
+  if (record.consumedAt) {
+    return null;
+  }
+
+  return record.verifier;
 }
 
 /**
- * Delete code verifier from Redis after use
+ * Delete code verifier from Postgres after use (consume)
  *
- * Should be called after successful token exchange to clean up.
+ * Uses atomic update to mark as consumed, ensuring single-use semantics.
+ * Should be called after successful token exchange.
  *
  * @param state - OAuth state parameter used as the key
  */
 export async function deleteCodeVerifier(state: string): Promise<void> {
-  await redis.del(`pkce:${state}`);
+  // Atomic consume: set consumedAt if not already set
+  await prisma.pkceVerifier.updateMany({
+    where: {
+      stateKey: state,
+      consumedAt: null,
+    },
+    data: {
+      consumedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Cleanup expired PKCE verifiers
+ * Should be called periodically (e.g., by a background job)
+ */
+export async function cleanupExpiredVerifiers(): Promise<{ deleted: number }> {
+  const result = await prisma.pkceVerifier.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: new Date() } },
+        { consumedAt: { not: null } },
+      ],
+    },
+  });
+
+  return { deleted: result.count };
 }

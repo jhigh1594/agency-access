@@ -1,14 +1,141 @@
 /**
  * Cache Layer
  *
- * Server-side caching utilities using Redis for performance optimization.
- * Provides a generic cache wrapper with stale-while-revalidate pattern.
+ * In-memory caching utilities for performance optimization.
+ * Replaces Redis cache with simple LRU-style in-memory cache.
  *
  * Cache keys follow the pattern: `resource:id:subkey`
  * TTL (Time-To-Live) is in seconds
  */
 
-import { redis } from './redis.js';
+/**
+ * Cache entry with expiration
+ */
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number; // Unix timestamp in milliseconds
+}
+
+/**
+ * Simple in-memory LRU cache with TTL support
+ */
+class InMemoryCache {
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private maxSize = 1000; // Maximum number of entries
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    // Run cleanup every 5 minutes
+    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+  }
+
+  /**
+   * Get a value from cache
+   */
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key) as CacheEntry<T> | undefined;
+
+    if (!entry) {
+      return null;
+    }
+
+    // Check if expired
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    // Move to end for LRU (Map maintains insertion order)
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+
+    return entry.data;
+  }
+
+  /**
+   * Set a value in cache with TTL
+   */
+  set<T>(key: string, data: T, ttlSeconds: number): void {
+    // Evict oldest if at capacity
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
+    }
+
+    this.cache.set(key, {
+      data,
+      expiresAt: Date.now() + ttlSeconds * 1000,
+    });
+  }
+
+  /**
+   * Delete a specific key
+   */
+  delete(key: string): boolean {
+    return this.cache.delete(key);
+  }
+
+  /**
+   * Delete keys matching a pattern (simple prefix matching)
+   */
+  deleteByPattern(pattern: string): number {
+    let deleted = 0;
+    const prefix = pattern.replace(/\*/g, '');
+
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+        deleted++;
+      }
+    }
+
+    return deleted;
+  }
+
+  /**
+   * Clear all entries
+   */
+  clear(): void {
+    this.cache.clear();
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getStats(): { size: number; maxSize: number } {
+    return {
+      size: this.cache.size,
+      maxSize: this.maxSize,
+    };
+  }
+
+  /**
+   * Remove expired entries
+   */
+  private cleanup(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiresAt) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Stop cleanup interval (for graceful shutdown)
+   */
+  stop(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+  }
+}
+
+// Global cache instance
+const memoryCache = new InMemoryCache();
 
 /**
  * Cache options for getCached function
@@ -46,17 +173,17 @@ export interface CachedResult<T> {
 export async function getCached<T>({ key, ttl = 300, fetch }: CacheOptions<T>): Promise<CachedResult<T>> {
   // Try cache first
   try {
-    const cached = await redis.get(key);
-    if (cached) {
-      return { data: JSON.parse(cached) as T, cached: true, error: null };
+    const cached = memoryCache.get<T>(key);
+    if (cached !== null) {
+      cacheStats.recordHit();
+      return { data: cached, cached: true, error: null };
     }
   } catch (error) {
     // Cache read failed - continue to fetch from database
-    // This prevents cache failures from breaking the app
-    if ((error as any).code !== 'ECONNREFUSED') {
-      console.warn(`Cache read failed for key "${key}":`, error);
-    }
+    console.warn(`Cache read failed for key "${key}":`, error);
   }
+
+  cacheStats.recordMiss();
 
   // Cache miss - fetch from database/source
   const result = await fetch();
@@ -64,12 +191,10 @@ export async function getCached<T>({ key, ttl = 300, fetch }: CacheOptions<T>): 
   // Store in cache if successful and data exists
   if (result.data && !result.error) {
     try {
-      await redis.set(key, JSON.stringify(result.data), 'EX', ttl);
+      memoryCache.set(key, result.data, ttl);
     } catch (error) {
       // Cache write failed - non-critical, continue with data
-      if ((error as any).code !== 'ECONNREFUSED') {
-        console.warn(`Cache write failed for key "${key}":`, error);
-      }
+      console.warn(`Cache write failed for key "${key}":`, error);
     }
   }
 
@@ -79,25 +204,15 @@ export async function getCached<T>({ key, ttl = 300, fetch }: CacheOptions<T>): 
 /**
  * Invalidate cache by key pattern
  *
- * Uses SCAN instead of KEYS to avoid blocking Redis and reduce command cost
- * on Upstash (KEYS is O(N) over entire keyspace; SCAN is incremental).
+ * Uses simple prefix matching for pattern support.
  *
- * @param pattern - Redis key pattern to match (supports wildcards, e.g. dashboard:agency-123:*)
+ * @param pattern - Cache key pattern to match (supports prefix matching with *)
  * @returns Object with success status and number of keys deleted
  */
 export async function invalidateCache(pattern: string): Promise<{ success: boolean; keysDeleted: number; error?: any }> {
   try {
-    const keys: string[] = [];
-    const stream = redis.scanStream({ match: pattern, count: 100 });
-    for await (const batch of stream) {
-      keys.push(...batch);
-    }
-
-    if (keys.length > 0) {
-      await redis.del(...keys);
-    }
-
-    return { success: true, keysDeleted: keys.length };
+    const keysDeleted = memoryCache.deleteByPattern(pattern);
+    return { success: true, keysDeleted };
   } catch (error) {
     console.error(`Cache invalidation failed for pattern "${pattern}":`, error);
     return {
@@ -115,8 +230,7 @@ export async function invalidateCache(pattern: string): Promise<{ success: boole
  */
 export async function deleteCache(key: string): Promise<boolean> {
   try {
-    await redis.del(key);
-    return true;
+    return memoryCache.delete(key);
   } catch (error) {
     console.warn(`Failed to delete cache key "${key}":`, error);
     return false;
@@ -223,3 +337,31 @@ export class CacheStats {
 
 // Global cache stats instance
 export const cacheStats = new CacheStats();
+
+/**
+ * Get cache statistics including memory usage
+ */
+export function getCacheStats(): {
+  hits: number;
+  misses: number;
+  errors: number;
+  hitRate: number;
+  size: number;
+  maxSize: number;
+} {
+  const stats = cacheStats.getStats();
+  const memStats = memoryCache.getStats();
+
+  return {
+    ...stats,
+    size: memStats.size,
+    maxSize: memStats.maxSize,
+  };
+}
+
+/**
+ * Stop cache cleanup interval (for graceful shutdown)
+ */
+export function stopCache(): void {
+  memoryCache.stop();
+}

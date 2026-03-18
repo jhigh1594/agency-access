@@ -6,7 +6,7 @@
  */
 
 import { prisma } from '../lib/prisma.js';
-import { notificationQueue } from '../lib/queue.js';
+import { enqueueJob } from '../lib/pg-boss.js';
 import { sendClientAuthorizationEmail } from './email.service.js';
 import { env } from '../lib/env.js';
 
@@ -24,12 +24,18 @@ export interface NotificationPayload {
  */
 export async function queueNotification(payload: NotificationPayload) {
   try {
-    await notificationQueue.add('client-authorized', payload, {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000,
-      },
+    await enqueueJob('notification', {
+      agencyId: payload.agencyId,
+      accessRequestId: payload.accessRequestId,
+      clientEmail: payload.clientEmail,
+      clientName: payload.clientName,
+      platforms: payload.platforms,
+      completedAt: payload.completedAt.toISOString(),
+    }, {
+      singletonKey: `notification-${payload.accessRequestId}`,
+      retryLimit: 3,
+      retryDelay: 2,
+      retryBackoff: true,
     });
 
     console.log('Notification queued', {
@@ -39,12 +45,6 @@ export async function queueNotification(payload: NotificationPayload) {
 
     return { data: true, error: null };
   } catch (error: any) {
-    // Gracefully degrade if Redis is unavailable (development mode)
-    if (error?.code === 'ECONNREFUSED' && process.env.NODE_ENV !== 'production') {
-      console.warn('Notification not queued (Redis unavailable)');
-      return { data: true, error: null }; // Don't fail the request
-    }
-
     console.error('Failed to queue notification', error);
     return {
       data: null,

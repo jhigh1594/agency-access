@@ -233,7 +233,7 @@ function resolvePlannedGrantMode(
 }
 
 async function queueGrantExecution(grantId: string): Promise<void> {
-  const { queueGoogleNativeGrantExecution } = await import('@/lib/queue');
+  const { queueGoogleNativeGrantExecution } = await import('@/lib/queue-helpers');
   await queueGoogleNativeGrantExecution(grantId);
 }
 

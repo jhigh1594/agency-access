@@ -600,3 +600,59 @@ model AffiliateCommission {
   @@index([payoutBatchId, status])
   @@map("affiliate_commissions")
 }
+
+// ============================================================
+// OAUTH STATE AND PKCE STORAGE (Redis replacement)
+// ============================================================
+
+/// OAuth state tokens for CSRF protection during OAuth flows.
+/// Replaces Redis-based storage with Postgres for durability.
+model OAuthStateToken {
+  id          String   @id @default(uuid())
+  stateToken  String   @unique @map("state_token")
+  agencyId    String?  @map("agency_id")
+  platform    String
+  userEmail   String?  @map("user_email")
+  redirectUrl String?  @map("redirect_url")
+
+  // For client authorization flows
+  accessRequestId      String?  @map("access_request_id")
+  accessRequestToken   String?  @map("access_request_token")
+  clientEmail          String?  @map("client_email")
+
+  // Platform-specific parameters (e.g., Shopify shop name)
+  shop                 String?
+  metadata             Json?
+
+  // Security
+  signature            String   // HMAC signature for tamper prevention
+  timestamp            BigInt   @map("timestamp") // Unix timestamp in milliseconds
+
+  // TTL and single-use
+  expiresAt            DateTime @map("expires_at")
+  consumedAt           DateTime? @map("consumed_at")
+
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([stateToken, expiresAt])
+  @@index([expiresAt, consumedAt]) // For cleanup queries
+  @@map("oauth_state_tokens")
+}
+
+/// PKCE code verifiers for OAuth flows requiring PKCE (e.g., Klaviyo).
+/// Replaces Redis-based storage with Postgres for durability.
+model PkceVerifier {
+  id        String    @id @default(uuid())
+  stateKey  String    @unique @map("state_key") // OAuth state used as key
+  verifier  String    // PKCE code verifier
+
+  // TTL and single-use
+  expiresAt DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([stateKey, expiresAt])
+  @@index([expiresAt, consumedAt]) // For cleanup queries
+  @@map("pkce_verifiers")
+}
