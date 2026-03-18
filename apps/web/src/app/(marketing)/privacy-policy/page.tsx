@@ -169,7 +169,7 @@ export default function PrivacyPolicyPage() {
               please contact us at:
             </p>
             <p className="mt-4 text-muted-foreground leading-7">
-              Email: jon@pillaraiagency.com
+              Email: support [at] authhub.co
             </p>
           </section>
         </div>

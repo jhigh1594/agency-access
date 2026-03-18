@@ -48,7 +48,7 @@ export async function contactRoutes(fastify: FastifyInstance) {
 
       // Send notification email to team
       const notificationResult = await sendEmail({
-        to: 'jon@pillaraiagency.com',
+        to: 'support@authhub.co',
         subject: `New Contact Form Submission from ${name}`,
         html: `
           <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto;">

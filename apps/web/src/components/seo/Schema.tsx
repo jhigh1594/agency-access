@@ -69,7 +69,7 @@ export function OrganizationSchema() {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
-      email: "support@authhub.co",
+      url: "https://authhub.co/contact",
     },
   };
 

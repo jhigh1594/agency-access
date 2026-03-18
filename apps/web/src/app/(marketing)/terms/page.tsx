@@ -221,7 +221,7 @@ export default function TermsOfServicePage() {
               If you have questions about these Terms of Service, please contact us at:
             </p>
             <p className="mt-4 text-muted-foreground leading-7">
-              Email: jon@pillaraiagency.com
+              Email: support [at] authhub.co
             </p>
           </section>
         </div>
