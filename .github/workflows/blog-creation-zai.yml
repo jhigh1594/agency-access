@@ -4,7 +4,13 @@ on:
   schedule:
     # Runs every day at 7:00 AM PST (15:00 UTC)
     - cron: '0 15 * * *'
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (skip PR creation)'
+        required: false
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
