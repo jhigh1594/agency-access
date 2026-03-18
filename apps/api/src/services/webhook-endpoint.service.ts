@@ -4,7 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { infisical } from '@/lib/infisical';
 import { auditService } from '@/services/audit.service';
 
-const VALID_API_VERSIONS = ['2026-03-08', '2026-03-19'] as const;
+import { WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2 } from '@agency-platform/shared';
+
+const VALID_API_VERSIONS = [WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2] as const;
 
 interface ServiceError {
   code: string;

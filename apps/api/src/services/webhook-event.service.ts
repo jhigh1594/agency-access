@@ -88,8 +88,23 @@ export function normalizeGrantedAssetsToV2(
   grantedAt?: Date | null,
   authorizationStatuses?: Array<{ platform: string; status: string }>,
 ): WebhookConnectionAssetV2[] | undefined {
-  if (!grantedAssets || typeof grantedAssets !== 'object') {
+  if (!grantedAssets || typeof grantedAssets !== 'object' || Array.isArray(grantedAssets)) {
     return undefined;
+  }
+
+  /** Safely extract an asset array, filtering out malformed entries. */
+  function safeAssetArray<T extends Record<string, unknown>>(
+    value: unknown,
+    requiredKeys: string[],
+  ): T[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter(
+      (entry): entry is T =>
+        entry != null &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        requiredKeys.every((key) => key in entry && typeof (entry as Record<string, unknown>)[key] === 'string'),
+    );
   }
 
   const assets: WebhookConnectionAssetV2[] = [];
@@ -109,8 +124,8 @@ export function normalizeGrantedAssetsToV2(
 
   // Meta assets
   if (normalizedPlatform === 'meta') {
-    const adAccounts = grantedAssets.adAccounts as Array<{ id: string; name: string }> | undefined;
-    for (const account of adAccounts ?? []) {
+    const adAccounts = safeAssetArray<{ id: string; name: string }>(grantedAssets.adAccounts, ['id', 'name']);
+    for (const account of adAccounts) {
       assets.push({
         assetId: account.id,
         assetName: account.name,
@@ -122,8 +137,8 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const pages = grantedAssets.pages as Array<{ id: string; name: string }> | undefined;
-    for (const page of pages ?? []) {
+    const pages = safeAssetArray<{ id: string; name: string }>(grantedAssets.pages, ['id', 'name']);
+    for (const page of pages) {
       assets.push({
         assetId: page.id,
         assetName: page.name,
@@ -135,8 +150,8 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const instagramAccounts = grantedAssets.instagramAccounts as Array<{ id: string; username: string }> | undefined;
-    for (const ig of instagramAccounts ?? []) {
+    const instagramAccounts = safeAssetArray<{ id: string; username: string }>(grantedAssets.instagramAccounts, ['id', 'username']);
+    for (const ig of instagramAccounts) {
       assets.push({
         assetId: ig.id,
         assetName: ig.username,
@@ -148,8 +163,8 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const catalogs = grantedAssets.productCatalogs as Array<{ id: string; name: string }> | undefined;
-    for (const catalog of catalogs ?? []) {
+    const catalogs = safeAssetArray<{ id: string; name: string }>(grantedAssets.productCatalogs, ['id', 'name']);
+    for (const catalog of catalogs) {
       assets.push({
         assetId: catalog.id,
         assetName: catalog.name,
@@ -163,8 +178,8 @@ export function normalizeGrantedAssetsToV2(
 
   // Google assets
   if (normalizedPlatform === 'google') {
-    const adsAccounts = grantedAssets.adsAccounts as Array<{ id: string; name: string; status: string }> | undefined;
-    for (const account of adsAccounts ?? []) {
+    const adsAccounts = safeAssetArray<{ id: string; name: string; status: string }>(grantedAssets.adsAccounts, ['id', 'name']);
+    for (const account of adsAccounts) {
       const isFailed = account.status === 'FAILED' || account.status === 'NOT_GRANTED';
       assets.push({
         assetId: account.id,
@@ -178,8 +193,8 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const analyticsProperties = grantedAssets.analyticsProperties as Array<{ id: string; name: string; displayName?: string }> | undefined;
-    for (const prop of analyticsProperties ?? []) {
+    const analyticsProperties = safeAssetArray<{ id: string; name: string; displayName?: string }>(grantedAssets.analyticsProperties, ['id', 'name']);
+    for (const prop of analyticsProperties) {
       assets.push({
         assetId: prop.id,
         assetName: prop.displayName ?? prop.name,
@@ -193,8 +208,8 @@ export function normalizeGrantedAssetsToV2(
 
   // LinkedIn assets
   if (normalizedPlatform === 'linkedin') {
-    const linkedinAds = grantedAssets.adsAccounts as Array<{ id: string; name: string }> | undefined;
-    for (const account of linkedinAds ?? []) {
+    const linkedinAds = safeAssetArray<{ id: string; name: string }>(grantedAssets.adsAccounts, ['id', 'name']);
+    for (const account of linkedinAds) {
       assets.push({
         assetId: account.id,
         assetName: account.name,
@@ -205,8 +220,8 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const linkedinPages = grantedAssets.pages as Array<{ id: string; name: string }> | undefined;
-    for (const page of linkedinPages ?? []) {
+    const linkedinPages = safeAssetArray<{ id: string; name: string }>(grantedAssets.pages, ['id', 'name']);
+    for (const page of linkedinPages) {
       assets.push({
         assetId: page.id,
         assetName: page.name,
@@ -255,7 +270,9 @@ function buildAccessRequestWebhookEventV2(input: AccessRequestWebhookEventInput)
       connections: input.connections.map((connection) => {
         const primaryPlatform = connection.platforms[0] ?? 'unknown';
         const assets = normalizeGrantedAssetsToV2(
-          (connection.grantedAssets as Record<string, unknown> | null) ?? null,
+          (typeof connection.grantedAssets === 'object' && connection.grantedAssets !== null && !Array.isArray(connection.grantedAssets)
+            ? connection.grantedAssets as Record<string, unknown>
+            : null),
           connection.status,
           primaryPlatform,
           connection.grantedAt ?? undefined,

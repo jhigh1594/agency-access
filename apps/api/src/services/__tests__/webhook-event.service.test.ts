@@ -505,4 +505,118 @@ describe('webhook-event.service', () => {
       expect(event.apiVersion).toBe('2026-03-19');
     });
   });
+
+  describe('normalizeGrantedAssetsToV2 runtime validation', () => {
+    it('returns undefined for array instead of object', () => {
+      // grantedAssets could be stored as an array in the DB due to a bug
+      const result = normalizeGrantedAssetsToV2(
+        ['not', 'an', 'object'] as unknown as Record<string, unknown>,
+        'completed',
+        'meta',
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it('returns undefined when grantedAssets is a string', () => {
+      const result = normalizeGrantedAssetsToV2(
+        'malformed' as unknown as Record<string, unknown>,
+        'completed',
+        'meta',
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it('skips asset entries missing required fields (id, name)', () => {
+      const result = normalizeGrantedAssetsToV2(
+        {
+          adAccounts: [
+            { id: 'a1', name: 'Valid Account' },
+            { id: 'a2' }, // missing name
+            { name: 'No ID' }, // missing id
+            null, // null entry
+            'string-entry', // string instead of object
+          ],
+        },
+        'completed',
+        'meta',
+      );
+      expect(result).toHaveLength(1);
+      expect(result![0].assetId).toBe('a1');
+      expect(result![0].assetName).toBe('Valid Account');
+    });
+
+    it('skips asset entries where id/name are not strings', () => {
+      const result = normalizeGrantedAssetsToV2(
+        {
+          adAccounts: [
+            { id: 123, name: 'Numeric ID' },
+            { id: 'a1', name: 456 },
+            { id: 'valid', name: 'Account' },
+          ],
+        },
+        'completed',
+        'meta',
+      );
+      expect(result).toHaveLength(1);
+      expect(result![0].assetId).toBe('valid');
+    });
+
+    it('handles empty asset arrays gracefully', () => {
+      const result = normalizeGrantedAssetsToV2(
+        { adAccounts: [], pages: [] },
+        'completed',
+        'meta',
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it('handles non-array values for asset fields', () => {
+      const result = normalizeGrantedAssetsToV2(
+        { adAccounts: 'not-an-array', pages: 42 },
+        'completed',
+        'meta',
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it('filters invalid entries in Google assets', () => {
+      const result = normalizeGrantedAssetsToV2(
+        {
+          adsAccounts: [
+            { id: 'g1', name: 'Valid Google', status: 'ACTIVE' },
+            { id: 'g2' }, // missing name
+          ],
+          analyticsProperties: [
+            { id: 'p1', name: 'UA', displayName: 'Universal' },
+            { id: 'p2' }, // missing name
+          ],
+        },
+        'completed',
+        'google',
+      );
+      expect(result).toHaveLength(2);
+      expect(result![0].assetId).toBe('g1');
+      expect(result![1].assetId).toBe('p1');
+    });
+
+    it('filters invalid entries in LinkedIn assets', () => {
+      const result = normalizeGrantedAssetsToV2(
+        {
+          adsAccounts: [
+            { id: 'l1', name: 'Valid LinkedIn' },
+            null as unknown as Record<string, string>,
+          ],
+          pages: [
+            { id: 'lp1', name: 'Valid Page' },
+            { name: 'No ID' } as unknown as Record<string, string>,
+          ],
+        },
+        'completed',
+        'linkedin',
+      );
+      expect(result).toHaveLength(2);
+      expect(result![0].assetId).toBe('l1');
+      expect(result![1].assetId).toBe('lp1');
+    });
+  });
 });

@@ -49,8 +49,12 @@ export async function checkExpiredRequests(): Promise<{ expired: number }> {
   return { expired };
 }
 
-// Standalone script support
-if (require.main === module) {
+// Standalone script support (ESM-compatible)
+const isDirectExecution = process.argv[1]?.endsWith('check-expired-requests') ||
+  process.argv[1]?.endsWith('check-expired-requests.js') ||
+  process.argv[1]?.endsWith('check-expired-requests.ts');
+
+if (isDirectExecution) {
   checkExpiredRequests()
     .then((result) => {
       console.log(`Expired requests check complete: ${result.expired} requests expired`);
