@@ -122,6 +122,44 @@ export async function getPgBoss(): Promise<PgBoss> {
 }
 
 /**
+ * Create a queue if it doesn't exist
+ * pg-boss requires queues to be created before work() or schedule() can be called
+ */
+export async function ensureQueue<K extends JobName>(name: K): Promise<void> {
+  const pgBoss = await getPgBoss();
+  try {
+    await pgBoss.createQueue(name);
+    logger.debug(`Queue created: ${name}`);
+  } catch (error) {
+    // Queue may already exist, which is fine
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('already exists')) {
+      logger.warn(`Queue creation warning for ${name}:`, { error: errorMessage });
+    }
+  }
+}
+
+/**
+ * Create all queues used by this application
+ */
+export async function ensureAllQueues(): Promise<void> {
+  const queueNames: JobName[] = [
+    'token-refresh-scan',
+    'token-refresh',
+    'cleanup-expired-requests',
+    'trial-expiration-check',
+    'notification',
+    'webhook-delivery',
+    'onboarding-email',
+    'google-native-grant',
+    'authorization-verification',
+  ];
+
+  await Promise.all(queueNames.map(name => ensureQueue(name)));
+  logger.info('All queues ensured');
+}
+
+/**
  * Enqueue a job for processing
  */
 export async function enqueueJob<K extends JobName>(
@@ -153,6 +191,8 @@ export async function enqueueJob<K extends JobName>(
 
 /**
  * Schedule a recurring job with cron pattern
+ * Note: pg-boss requires the queue to exist before scheduling.
+ * This function handles queue creation and retries on failure.
  */
 export async function scheduleJob<K extends JobName>(
   name: K,
@@ -162,8 +202,35 @@ export async function scheduleJob<K extends JobName>(
 ): Promise<void> {
   const pgBoss = await getPgBoss();
 
-  await pgBoss.schedule(name, cronPattern, data);
-  logger.info(`Scheduled recurring job: ${name}`, { cronPattern });
+  // Try to schedule with retries (queue may not be immediately available after work() registration)
+  const maxRetries = 3;
+  const retryDelayMs = 1000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await pgBoss.schedule(name, cronPattern, data);
+      logger.info(`Scheduled recurring job: ${name}`, { cronPattern });
+      return;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // If queue doesn't exist, wait and retry (work() may still be initializing)
+      if (errorMessage.includes('does not exist') && attempt < maxRetries) {
+        logger.debug(`Queue ${name} not ready, retrying in ${retryDelayMs}ms (attempt ${attempt}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+        continue;
+      }
+
+      // Log warning but don't throw - scheduling failures shouldn't crash the server
+      // Jobs can still be processed on-demand even if scheduling fails
+      logger.warn(`Failed to schedule recurring job: ${name}`, {
+        error: errorMessage,
+        cronPattern,
+        attempt
+      });
+      return;
+    }
+  }
 }
 
 /**

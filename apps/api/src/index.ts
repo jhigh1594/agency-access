@@ -210,11 +210,15 @@ const start = async () => {
     // Start pg-boss job handlers
     const startJobHandlers = async () => {
       try {
-        const { getPgBoss, scheduleJob } = await import('./lib/pg-boss.js');
+        const { getPgBoss, scheduleJob, ensureAllQueues } = await import('./lib/pg-boss.js');
         const { startAllHandlers, scheduleRecurringJobs } = await import('./lib/job-handlers.js');
 
         // Initialize pg-boss (creates schema if needed)
         await getPgBoss();
+
+        // Create all queues BEFORE registering handlers
+        // pg-boss requires queues to exist before work() can be called
+        await ensureAllQueues();
 
         // Start all job handlers
         await startAllHandlers();
