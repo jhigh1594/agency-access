@@ -64,11 +64,21 @@ Your integration will start receiving V2 payloads on the next event. No migratio
 
 All webhook events use a versioned JSON envelope.
 
+### Connection Events
+
 | Event | When it fires |
 | --- | --- |
 | `webhook.test` | When you click **Send Test** in settings. |
 | `access_request.partial` | When an access request first moves into a partial-completion state. |
 | `access_request.completed` | When an access request first moves into a completed state. |
+| `access_request.revoked` | When an agency cancels or revokes an access request. |
+| `access_request.expired` | When a pending access request passes its expiration date without being completed. |
+
+### Health Events
+
+| Event | When it fires |
+| --- | --- |
+| `connection.status_changed` | When a platform authorization status changes (e.g., active → invalid or active → expired). |
 
 ## Request headers
 

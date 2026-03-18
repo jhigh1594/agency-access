@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { WEBHOOK_API_VERSION_V2 } from '@agency-platform/shared';
 import {
   buildAccessRequestWebhookEvent,
+  buildConnectionStatusChangedEvent,
   buildWebhookTestEvent,
   normalizeGrantedAssetsToV2,
 } from '@/services/webhook-event.service';
@@ -352,6 +353,156 @@ describe('webhook-event.service', () => {
         'meta',
       );
       expect(failed![0].connectionStatus).toBe('Failed');
+    });
+  });
+
+  describe('Phase 2 event builders', () => {
+    it('builds access_request.revoked event with revokedAt and revokedBy', () => {
+      const event = buildAccessRequestWebhookEvent({
+        type: 'access_request.revoked',
+        request: {
+          id: 'req-revoke-1',
+          status: 'revoked',
+          createdAt: new Date('2026-03-10T09:00:00.000Z'),
+          authorizedAt: new Date('2026-03-11T10:00:00.000Z'),
+          expiresAt: new Date('2026-04-07T09:00:00.000Z'),
+          externalReference: null,
+          uniqueToken: 'revoke-token',
+        },
+        client: { id: 'c1', name: 'Revoke Client', email: 'revoke@example.com', company: 'Revoke Co' },
+        authorizationProgress: { requestedPlatforms: ['meta'], completedPlatforms: ['meta'] },
+        connections: [{ connectionId: 'conn-1', status: 'revoked', platforms: ['meta'] }],
+        requestUrl: 'https://app.example.com/invite/revoke-token',
+        revokedAt: '2026-03-19T14:00:00.000Z',
+        revokedBy: 'admin@agency.com',
+      });
+
+      expect(event.type).toBe('access_request.revoked');
+      expect(event.data.accessRequest.revokedAt).toBe('2026-03-19T14:00:00.000Z');
+      expect(event.data.accessRequest.revokedBy).toBe('admin@agency.com');
+      expect(event.data.connections[0]?.status).toBe('revoked');
+    });
+
+    it('builds access_request.revoked with V2 apiVersion', () => {
+      const event = buildAccessRequestWebhookEvent({
+        type: 'access_request.revoked',
+        apiVersion: WEBHOOK_API_VERSION_V2,
+        request: {
+          id: 'req-revoke-v2',
+          status: 'revoked',
+          createdAt: new Date('2026-03-10T09:00:00.000Z'),
+          authorizedAt: null,
+          expiresAt: new Date('2026-04-07T09:00:00.000Z'),
+          externalReference: null,
+          uniqueToken: 'revoke-v2',
+        },
+        client: { id: 'c1', name: 'V2 Revoke', email: 'v2@example.com' },
+        authorizationProgress: { requestedPlatforms: [], completedPlatforms: [] },
+        connections: [],
+        requestUrl: 'https://app.example.com/invite/revoke-v2',
+        revokedAt: '2026-03-19T14:00:00.000Z',
+      });
+
+      expect(event.apiVersion).toBe('2026-03-19');
+      expect(event.type).toBe('access_request.revoked');
+      expect(event.data.accessRequest.revokedAt).toBe('2026-03-19T14:00:00.000Z');
+    });
+
+    it('builds access_request.expired event with expiredAt', () => {
+      const event = buildAccessRequestWebhookEvent({
+        type: 'access_request.expired',
+        request: {
+          id: 'req-expire-1',
+          status: 'expired',
+          createdAt: new Date('2026-03-10T09:00:00.000Z'),
+          authorizedAt: null,
+          expiresAt: new Date('2026-03-17T09:00:00.000Z'),
+          externalReference: null,
+          uniqueToken: 'expire-token',
+        },
+        client: { id: 'c1', name: 'Expired Client', email: 'expired@example.com' },
+        authorizationProgress: { requestedPlatforms: ['google'], completedPlatforms: [] },
+        connections: [],
+        requestUrl: 'https://app.example.com/invite/expire-token',
+        expiredAt: '2026-03-19T15:00:00.000Z',
+      });
+
+      expect(event.type).toBe('access_request.expired');
+      expect(event.data.accessRequest.expiredAt).toBe('2026-03-19T15:00:00.000Z');
+      expect(event.data.accessRequest.status).toBe('expired');
+    });
+
+    it('omits revoked/expired fields for access_request.completed', () => {
+      const event = buildAccessRequestWebhookEvent({
+        type: 'access_request.completed',
+        request: {
+          id: 'req-normal',
+          status: 'completed',
+          createdAt: new Date('2026-03-19T00:00:00.000Z'),
+          authorizedAt: new Date('2026-03-19T01:00:00.000Z'),
+          expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+          externalReference: null,
+          uniqueToken: 'normal',
+        },
+        client: { id: 'c1', name: 'Normal', email: 'normal@example.com' },
+        authorizationProgress: { requestedPlatforms: [], completedPlatforms: [] },
+        connections: [],
+        requestUrl: 'https://app.example.com/invite/normal',
+      });
+
+      expect(event.data.accessRequest).not.toHaveProperty('revokedAt');
+      expect(event.data.accessRequest).not.toHaveProperty('revokedBy');
+      expect(event.data.accessRequest).not.toHaveProperty('expiredAt');
+    });
+
+    it('builds connection.status_changed event', () => {
+      const event = buildConnectionStatusChangedEvent({
+        connectionId: 'conn-status-1',
+        agencyId: 'agency-1',
+        platform: 'meta_ads',
+        previousStatus: 'active',
+        newStatus: 'invalid',
+        client: {
+          id: 'c1',
+          name: 'Status Changed Client',
+          email: 'status@example.com',
+          company: 'Status Co',
+        },
+      });
+
+      expect(event.type).toBe('connection.status_changed');
+      expect(event.apiVersion).toBe('2026-03-08');
+      expect(event.data.connectionId).toBe('conn-status-1');
+      expect(event.data.previousStatus).toBe('active');
+      expect(event.data.newStatus).toBe('invalid');
+      expect(event.data.detectedAt).toBeDefined();
+      expect(event.data.client?.company).toBe('Status Co');
+    });
+
+    it('builds connection.status_changed without client info', () => {
+      const event = buildConnectionStatusChangedEvent({
+        connectionId: 'conn-status-2',
+        agencyId: 'agency-2',
+        platform: 'google_ads',
+        previousStatus: 'active',
+        newStatus: 'expired',
+      });
+
+      expect(event.type).toBe('connection.status_changed');
+      expect(event.data.client).toBeUndefined();
+    });
+
+    it('builds connection.status_changed with V2 apiVersion', () => {
+      const event = buildConnectionStatusChangedEvent({
+        connectionId: 'conn-v2',
+        agencyId: 'agency-1',
+        platform: 'meta_ads',
+        previousStatus: 'active',
+        newStatus: 'expired',
+        apiVersion: WEBHOOK_API_VERSION_V2,
+      });
+
+      expect(event.apiVersion).toBe('2026-03-19');
     });
   });
 });

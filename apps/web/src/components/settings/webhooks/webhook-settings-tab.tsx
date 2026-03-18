@@ -42,6 +42,7 @@ const EVENT_OPTIONS: Array<{
   value: WebhookEventType;
   label: string;
   description: string;
+  group?: string;
 }> = [
   {
     value: 'webhook.test',
@@ -52,11 +53,31 @@ const EVENT_OPTIONS: Array<{
     value: 'access_request.partial',
     label: 'Partial completion',
     description: 'Fires when a client has connected part of the requested stack.',
+    group: 'Connection Events',
   },
   {
     value: 'access_request.completed',
     label: 'Completed access request',
     description: 'Fires when the access request is fully completed.',
+    group: 'Connection Events',
+  },
+  {
+    value: 'access_request.revoked',
+    label: 'Revoked access request',
+    description: 'Fires when an agency cancels or revokes a pending or completed request.',
+    group: 'Connection Events',
+  },
+  {
+    value: 'access_request.expired',
+    label: 'Expired access request',
+    description: 'Fires when a pending request passes its expiration date without being completed.',
+    group: 'Connection Events',
+  },
+  {
+    value: 'connection.status_changed',
+    label: 'Connection status changed',
+    description: 'Fires when a platform authorization status changes (e.g., active → invalid).',
+    group: 'Health Events',
   },
 ];
 

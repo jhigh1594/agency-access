@@ -719,7 +719,6 @@ import { Platform, AccessRequestStatus } from '@agency-platform/shared';
 ### Planned (Not Started)
 
 ❌ **Secondary Features:**
-- Webhooks for external automations
 - Multi-language support (Spanish, French, German, Portuguese)
 - Embed capability (iframe/script tag)
 - Subdomain routing for white-label URLs
@@ -1001,7 +1000,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 4. **Templates:** UI exists but backend integration incomplete
 5. **Intake Forms:** Backend storage incomplete
 6. **Multi-Language:** Not implemented (planned)
-7. **Webhooks:** Not implemented (planned)
+7. **Webhooks:** V1 MVP live (3 event types), V2 per-asset payload shipped, 6 event types with lifecycle events (revoked, expired, connection.status_changed)
 8. **API Access:** No programmatic API for agencies (planned v2)
 
 ### Future Improvements (Ideas for Brainstorming)
