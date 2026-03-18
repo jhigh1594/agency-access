@@ -7,14 +7,14 @@ import type { ProgrammaticComparisonPage } from "./programmatic-types";
 
 /**
  * Leadsie Alternative Comparison Page Data
- * Target keywords: "Leadsie alternative", "Leadsie vs AuthHub"
+ * Target keywords: "Leadsie alternative", "Leadsie vs AuthHub", "AuthHub vs Leadsie"
  */
 export const leadsieAlternativePage: ProgrammaticComparisonPage = {
   id: "leadsie-alternative",
   slug: "leadsie-alternative",
   title: "Leadsie Alternative | Why Agencies Switch to AuthHub",
   metaTitle: "Leadsie Alternative | Why Agencies Switch to AuthHub",
-  metaDescription: "Looking for a Leadsie alternative? AuthHub combines access + intake in one link, flat-rate pricing starting at $29/mo, and US-based support. See why agencies made the switch.",
+  metaDescription: "Looking for a Leadsie alternative or comparing AuthHub vs Leadsie? AuthHub combines access + intake in one link, flat-rate pricing starting at $29/mo, and US-based support. See why agencies made the switch.",
 
   competitor: {
     name: "Leadsie",
@@ -363,6 +363,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
 
   keywords: [
     "Leadsie alternative",
+    "AuthHub vs Leadsie",
     "Leadsie vs AuthHub",
     "client access platform alternative",
     "agency onboarding software",

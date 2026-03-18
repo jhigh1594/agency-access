@@ -140,6 +140,8 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Prefer atomic commits; when multiple logical changes exist, ask user to choose scope (e.g. A/B/C options) rather than committing everything
 
 ## Learned Workspace Facts
+- Set BULLMQ_WORKERS_ENABLED=false in Render for pre-launch to minimize Upstash Redis usage (BullMQ workers poll ~800K commands/day with zero traffic)
+- .codex/skills is required for Codex to discover skills; Cursor loads from both workspace and plugins, which can cause duplicate skills to appear
 - Manage-assets modal: Google Ads access method (MCC vs email) is inline in the Google Ads product row when enabled; agencies can switch between modes
 - Blog posts live in apps/web/content/blog/*.md (one Markdown file per post with YAML frontmatter); blog-data.ts loads from these files
 - Comparison/alternatives pages are defined in apps/web/src/lib/comparison-data.ts, not in content/
@@ -148,3 +150,4 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - gws auth setup requires gcloud; use manual OAuth (Cloud Console → Desktop app client → ~/.config/gws/client_secret.json) when gcloud is not installed
 - When Cursor is slow in this repo: ensure .cursorignore excludes node_modules, .next, .agents, .claude, .codex, .aipmos (skills still load by path; node_modules should never be indexed)
 - Use `git worktree remove <path> --force` when a worktree has uncommitted changes and must be removed
+- Obfuscate public-facing marketing/contact email addresses and avoid including plaintext emails in JSON-LD to reduce spam harvesting

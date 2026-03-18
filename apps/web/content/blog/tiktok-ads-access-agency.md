@@ -17,10 +17,10 @@ tags:
   - Business Center
   - Spark Ads
   - permissions
-metaTitle: 'TikTok Ads Access for Agencies: Business Center Guide'
+metaTitle: 'TikTok Ads Access for Agencies: Business Center & Spark Ads Guide (2026)'
 metaDescription: >-
-  Complete guide to TikTok Business Center access for agencies. Learn permission
-  levels, Spark Ads QR authorization, and navigate the 3-Business-Center limit.
+  How to get TikTok Ads access for your agency. Complete guide to Business Center
+  permissions, Spark Ads QR authorization, and the 3-Business-Center limit.
 relatedPosts:
   - meta-ads-access-guide
   - pinterest-ads-access-guide
