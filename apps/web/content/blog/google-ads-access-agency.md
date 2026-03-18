@@ -1,6 +1,6 @@
 ---
 id: google-ads-access-guide
-title: 'Google Ads Access Guide: How Clients Grant Agency Permissions'
+title: 'Google Ads Access Guide: How Clients Grant Agency Permissions (2026)'
 excerpt: >-
   The complete guide to getting Google Ads manager account access. Learn the
   difference between MCC, manager accounts, and direct access—plus how to avoid
@@ -17,10 +17,11 @@ tags:
   - MCC
   - manager account
   - permissions
-metaTitle: 'Google Ads Access Guide: Agency Permissions 2024'
+  - Google Ads access for agencies
+metaTitle: 'Google Ads Access Guide: How Clients Grant Agency Permissions (2026)'
 metaDescription: >-
-  The complete guide to getting Google Ads manager account access. Learn the
-  difference between MCC, manager accounts, and direct access.
+  How to get Google Ads access for your agency. Complete guide to manager account
+  permissions — MCC setup, direct access, and common errors to avoid.
 relatedPosts:
   - meta-ads-access-guide
   - ga4-access-guide

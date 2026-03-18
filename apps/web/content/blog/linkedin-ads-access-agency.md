@@ -1,6 +1,6 @@
 ---
 id: linkedin-ads-access-guide
-title: 'LinkedIn Ads Access for Agencies: Step-by-Step Campaign Manager Guide'
+title: 'LinkedIn Ads Access for Agencies: Step-by-Step Campaign Manager Guide (2026)'
 excerpt: >-
   LinkedIn Ads access is uniquely challenging. Learn the difference between
   Company Page and Ad Account permissions, the 5 role levels, and how to
@@ -17,11 +17,11 @@ tags:
   - Campaign Manager
   - permissions
   - client onboarding
-metaTitle: 'LinkedIn Ads Access for Agencies: Step-by-Step Campaign Manager Guide'
+  - LinkedIn Campaign Manager access
+metaTitle: 'LinkedIn Ads Access for Agencies: Step-by-Step Campaign Manager Guide (2026)'
 metaDescription: >-
-  LinkedIn Ads access is uniquely challenging. Learn the difference between
-  Company Page and Ad Account permissions, the 5 role levels, and connection
-  requirements.
+  How to get LinkedIn Ads access for your agency. Complete guide to Campaign
+  Manager permissions, the 5 role levels, and Company Page access.
 relatedPosts:
   - meta-ads-access-guide
   - google-ads-access-guide

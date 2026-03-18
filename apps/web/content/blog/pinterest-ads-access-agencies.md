@@ -17,11 +17,10 @@ tags:
   - e-commerce
   - client onboarding
   - permissions
-metaTitle: 'Pinterest Ads Access for Agencies: The E-commerce Guide'
+metaTitle: 'Pinterest Ads Access for Agencies: The E-commerce Guide (2026)'
 metaDescription: >-
-  Why Pinterest matters for e-commerce agencies. Complete guide to Pinterest
-  Business accounts, ad access workflows, permissions, and troubleshooting
-  common issues.
+  How to get Pinterest Ads access for your agency. Complete guide to Pinterest
+  Business accounts, ad permissions, and troubleshooting common issues.
 relatedPosts:
   - meta-ads-access-guide
   - google-ads-access-guide
