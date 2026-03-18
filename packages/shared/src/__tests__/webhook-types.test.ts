@@ -17,6 +17,13 @@ describe('Webhook shared contracts', () => {
     expect(WebhookEventTypeSchema.parse('webhook.test')).toBe('webhook.test');
     expect(WebhookEventTypeSchema.parse('access_request.partial')).toBe('access_request.partial');
     expect(WebhookEventTypeSchema.parse('access_request.completed')).toBe('access_request.completed');
+    expect(WebhookEventTypeSchema.parse('access_request.revoked')).toBe('access_request.revoked');
+    expect(WebhookEventTypeSchema.parse('access_request.expired')).toBe('access_request.expired');
+    expect(WebhookEventTypeSchema.parse('connection.status_changed')).toBe('connection.status_changed');
+  });
+
+  it('rejects unknown event types', () => {
+    expect(() => WebhookEventTypeSchema.parse('access_request.unknown')).toThrow();
   });
 
   it('accepts both V1 and V2 API versions', () => {
@@ -410,6 +417,134 @@ describe('Webhook shared contracts', () => {
       });
 
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('Phase 2 event types', () => {
+    it('validates an access_request.revoked envelope', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_revoke_123',
+        type: 'access_request.revoked',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T14:00:00.000Z',
+        data: {
+          accessRequest: {
+            id: 'request_123',
+            status: 'revoked',
+            createdAt: '2026-03-10T09:00:00.000Z',
+            expiresAt: '2026-03-17T09:00:00.000Z',
+            requestUrl: 'https://app.authhub.co/r/abc123',
+            requestedPlatforms: ['meta_ads'],
+            completedPlatforms: ['meta_ads'],
+            revokedAt: '2026-03-19T14:00:00.000Z',
+            revokedBy: 'admin@agency.com',
+          },
+          client: {
+            id: 'client_123',
+            name: 'Acme Fitness',
+            email: 'owner@acmefitness.com',
+            company: 'Acme Fitness',
+          },
+          connections: [
+            {
+              connectionId: 'connection_123',
+              status: 'revoked',
+              platforms: ['meta_ads'],
+            },
+          ],
+        },
+      });
+
+      if (payload.type !== 'access_request.revoked') {
+        throw new Error('Expected access_request.revoked');
+      }
+      expect(payload.data.accessRequest.revokedAt).toBe('2026-03-19T14:00:00.000Z');
+      expect(payload.data.accessRequest.revokedBy).toBe('admin@agency.com');
+      expect(payload.data.connections).toHaveLength(1);
+    });
+
+    it('validates an access_request.expired envelope', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_expire_456',
+        type: 'access_request.expired',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T15:00:00.000Z',
+        data: {
+          accessRequest: {
+            id: 'request_456',
+            status: 'expired',
+            createdAt: '2026-03-10T09:00:00.000Z',
+            expiresAt: '2026-03-17T09:00:00.000Z',
+            requestUrl: 'https://app.authhub.co/r/def456',
+            requestedPlatforms: ['google_ads'],
+            completedPlatforms: [],
+            expiredAt: '2026-03-19T15:00:00.000Z',
+          },
+          client: {
+            id: 'client_456',
+            name: 'Never Responded',
+            email: 'nope@example.com',
+          },
+        },
+      });
+
+      if (payload.type !== 'access_request.expired') {
+        throw new Error('Expected access_request.expired');
+      }
+      expect(payload.data.accessRequest.expiredAt).toBe('2026-03-19T15:00:00.000Z');
+    });
+
+    it('validates a connection.status_changed envelope', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_status_789',
+        type: 'connection.status_changed',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T16:00:00.000Z',
+        data: {
+          connectionId: 'connection_789',
+          agencyId: 'agency_123',
+          platform: 'meta_ads',
+          previousStatus: 'active',
+          newStatus: 'invalid',
+          detectedAt: '2026-03-19T16:00:00.000Z',
+          client: {
+            id: 'client_789',
+            name: 'Token Expired Client',
+            email: 'expired@example.com',
+            company: 'Expired Co',
+          },
+        },
+      });
+
+      if (payload.type !== 'connection.status_changed') {
+        throw new Error('Expected connection.status_changed');
+      }
+      expect(payload.data.previousStatus).toBe('active');
+      expect(payload.data.newStatus).toBe('invalid');
+      expect(payload.data.detectedAt).toBe('2026-03-19T16:00:00.000Z');
+      expect(payload.data.client?.company).toBe('Expired Co');
+    });
+
+    it('validates connection.status_changed without client', () => {
+      const payload = WebhookEventEnvelopeSchema.parse({
+        id: 'evt_status_min',
+        type: 'connection.status_changed',
+        apiVersion: WEBHOOK_API_VERSION_V1,
+        createdAt: '2026-03-19T17:00:00.000Z',
+        data: {
+          connectionId: 'connection_min',
+          agencyId: 'agency_456',
+          platform: 'google_ads',
+          previousStatus: 'active',
+          newStatus: 'expired',
+          detectedAt: '2026-03-19T17:00:00.000Z',
+        },
+      });
+
+      if (payload.type !== 'connection.status_changed') {
+        throw new Error('Expected connection.status_changed');
+      }
+      expect(payload.data.client).toBeUndefined();
     });
   });
 });

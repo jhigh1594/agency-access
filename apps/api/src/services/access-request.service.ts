@@ -771,6 +771,14 @@ function getAccessRequestLifecycleEventType(
     return 'access_request.completed';
   }
 
+  if (status === 'revoked') {
+    return 'access_request.revoked';
+  }
+
+  if (status === 'expired') {
+    return 'access_request.expired';
+  }
+
   return null;
 }
 
@@ -813,7 +821,7 @@ function buildConnectionSummaries(
   return connectionSummaries;
 }
 
-async function emitAccessRequestLifecycleWebhook(input: {
+export async function emitAccessRequestLifecycleWebhook(input: {
   accessRequestId: string;
   previousStatus: string;
   nextStatus: string;
@@ -924,6 +932,12 @@ async function emitAccessRequestLifecycleWebhook(input: {
       },
       connections: connectionsWithV2Data,
       requestUrl: `${env.FRONTEND_URL}/invite/${accessRequest.uniqueToken}`,
+      ...(input.nextStatus === 'revoked'
+        ? { revokedAt: new Date().toISOString(), revokedBy: 'system' }
+        : {}),
+      ...(input.nextStatus === 'expired'
+        ? { expiredAt: new Date().toISOString() }
+        : {}),
     });
 
     const eventRecord = await prisma.webhookEvent.create({
@@ -1559,13 +1573,22 @@ export async function cancelAccessRequest(id: string) {
   try {
     const existing = await prisma.accessRequest.findUnique({
       where: { id },
-      select: { agencyId: true },
+      select: { agencyId: true, status: true },
     });
 
     await prisma.accessRequest.update({
       where: { id },
       data: { status: 'revoked' },
     });
+
+    // Emit access_request.revoked webhook
+    if (existing && existing.status !== 'revoked') {
+      await emitAccessRequestLifecycleWebhook({
+        accessRequestId: id,
+        previousStatus: existing.status,
+        nextStatus: 'revoked',
+      });
+    }
 
     if (existing?.agencyId) {
       await invalidateDashboardCache(existing.agencyId);

@@ -46,6 +46,12 @@ interface AccessRequestWebhookEventInput {
   }>;
   requestUrl: string;
   clientPortalUrl?: string;
+  /** ISO string — when the request was revoked */
+  revokedAt?: string;
+  /** Who revoked the request */
+  revokedBy?: string;
+  /** ISO string — when the request expired */
+  expiredAt?: string;
 }
 
 function buildEventId(): string {
@@ -236,6 +242,9 @@ function buildAccessRequestWebhookEventV2(input: AccessRequestWebhookEventInput)
         completedPlatforms: input.authorizationProgress.completedPlatforms,
         externalReference: input.request.externalReference,
         ...(input.request.accessLevel ? { accessLevel: input.request.accessLevel } : {}),
+        ...(input.revokedAt ? { revokedAt: input.revokedAt } : {}),
+        ...(input.revokedBy ? { revokedBy: input.revokedBy } : {}),
+        ...(input.expiredAt ? { expiredAt: input.expiredAt } : {}),
       },
       client: {
         id: input.client.id,
@@ -293,6 +302,9 @@ export function buildAccessRequestWebhookEvent(input: AccessRequestWebhookEventI
         requestedPlatforms: input.authorizationProgress.requestedPlatforms,
         completedPlatforms: input.authorizationProgress.completedPlatforms,
         externalReference: input.request.externalReference,
+        ...(input.revokedAt ? { revokedAt: input.revokedAt } : {}),
+        ...(input.revokedBy ? { revokedBy: input.revokedBy } : {}),
+        ...(input.expiredAt ? { expiredAt: input.expiredAt } : {}),
       },
       client: {
         id: input.client.id,
@@ -312,8 +324,45 @@ export function buildAccessRequestWebhookEvent(input: AccessRequestWebhookEventI
   } as const;
 }
 
+/**
+ * Builds a connection.status_changed webhook event.
+ * Emitted when a PlatformAuthorization status transitions (e.g., active → invalid).
+ */
+export function buildConnectionStatusChangedEvent(input: {
+  connectionId: string;
+  agencyId: string;
+  platform: string;
+  previousStatus: string;
+  newStatus: string;
+  client?: {
+    id: string;
+    name: string;
+    email: string;
+    company?: string;
+  };
+  apiVersion?: WebhookApiVersion;
+}) {
+  const detectedAt = new Date().toISOString();
+  const apiVersion = input.apiVersion ?? WEBHOOK_API_VERSION_V1;
+
+  return {
+    ...buildBaseEnvelope(apiVersion),
+    type: 'connection.status_changed' as const,
+    data: {
+      connectionId: input.connectionId,
+      agencyId: input.agencyId,
+      platform: input.platform,
+      previousStatus: input.previousStatus,
+      newStatus: input.newStatus,
+      detectedAt,
+      ...(input.client ? { client: input.client } : {}),
+    },
+  } as const;
+}
+
 export const webhookEventService = {
   buildWebhookTestEvent,
   buildAccessRequestWebhookEvent,
+  buildConnectionStatusChangedEvent,
   normalizeGrantedAssetsToV2,
 };
