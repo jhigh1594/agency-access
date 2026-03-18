@@ -121,7 +121,7 @@ jobs:
         run: |
           echo "📖 Reading workflow prompt and context files..."
 
-          # Build the embedded prompt with actual file content
+          # Read content files
           WORKFLOW_PROMPT=$(cat .claude/prompts/blog-creation-workflow.md)
           BLOG_PATTERNS=$(cat /tmp/blog_patterns.md)
           CONTENT_STRATEGY=$(cat marketing/CONTENT-STRATEGY-2026.md | head -c 8000)
@@ -138,66 +138,90 @@ jobs:
           echo "📦 Model: glm-4.7"
           echo "🎯 Max tokens: 8000"
 
-          # Build JSON payload with jq to ensure proper escaping
-          PAYLOAD=$(jq -n \
-            --arg system "You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly." \
-            --arg workflow "$WORKFLOW_PROMPT" \
-            --arg patterns "$BLOG_PATTERNS" \
-            --arg strategy "$CONTENT_STRATEGY" \
-            --arg keywords "$KEYWORD_TRACKER" \
-            --arg slugs "$EXISTING_SLUGS" \
-            '{
-              model: "glm-4.7",
-              max_tokens: 8000,
-              system: $system,
-              messages: [
-                {
-                  role: "user",
-                  content:
-                    "You are creating a blog post for Agency Access Platform (authhub.co).\n\n" +
-                    "=== WORKFLOW INSTRUCTIONS ===\n" + $workflow + "\n\n" +
-                    "=== BLOG PATTERNS ===\n" + $patterns + "\n\n" +
-                    "=== CONTENT STRATEGY ===\n" + $strategy + "\n\n" +
-                    "=== KEYWORD TRACKER ===\n" + $keywords + "\n\n" +
-                    "=== EXECUTION INSTRUCTIONS ===\n" +
-                    "Using the workflow instructions above, create a complete blog post:\n" +
-                    "1. Follow all 7 phases from the workflow instructions\n" +
-                    "2. Select a topic from KEYWORD TRACKER (prioritize P0 > P1 > P2)\n" +
-                    "3. Use the blog patterns to match structure by category\n" +
-                    "4. Apply copywriting_guidance for tone and style\n" +
-                    "5. Do NOT duplicate an existing slug: " + $slugs + "\n\n" +
-                    "When selecting a topic, consider:\n" +
-                    "- Monthly search volume (higher = more traffic potential)\n" +
-                    "- Priority level (P0 > P1 > P2)\n" +
-                    "- Whether a target page is already assigned\n" +
-                    "- Content pillar alignment\n\n" +
-                    "Output ONLY a markdown code block with the complete blog post including YAML frontmatter.\n\n" +
-                    "Example format:\n" +
-                    "```markdown\n" +
-                    "---\n" +
-                    "id: your-blog-post-id\n" +
-                    "title: Compelling Headline (2026)\n" +
-                    "excerpt: >-\n" +
-                    "  150-char summary\n" +
-                    "category: tutorials\n" +
-                    "stage: awareness\n" +
-                    "publishedAt: '2026-03-13'\n" +
-                    "readTime: 5\n" +
-                    "author:\n" +
-                    "  name: AuthHub Team\n" +
-                    "  role: Agency Operations Experts\n" +
-                    "tags:\n" +
-                    "  - tag1\n" +
-                    "  - tag2\n" +
-                    "metaTitle: SEO title\n" +
-                    "metaDescription: SEO description\n" +
-                    "---\n" +
-                    "# Compelling Headline (2026)\n\n" +
-                    "Full markdown body here...\n" +
-                    "```"
-                }
-              ]
-            }')
+          # Build JSON payload using Python for proper escaping
+          # Pass variables via environment to avoid shell quoting issues
+          export WORKFLOW_PROMPT BLOG_PATTERNS CONTENT_STRATEGY KEYWORD_TRACKER EXISTING_SLUGS
+          PAYLOAD=$(python3 << 'PYTHON_PAYLOAD'
+import json
+import os
+
+# Read content from environment variables
+workflow = os.environ.get('WORKFLOW_PROMPT', '')
+patterns = os.environ.get('BLOG_PATTERNS', '')
+strategy = os.environ.get('CONTENT_STRATEGY', '')
+keywords = os.environ.get('KEYWORD_TRACKER', '')
+slugs = os.environ.get('EXISTING_SLUGS', '(none)')
+
+user_content = f"""You are creating a blog post for Agency Access Platform (authhub.co).
+
+=== WORKFLOW INSTRUCTIONS ===
+{workflow}
+
+=== BLOG PATTERNS ===
+{patterns}
+
+=== CONTENT STRATEGY ===
+{strategy}
+
+=== KEYWORD TRACKER ===
+{keywords}
+
+=== EXECUTION INSTRUCTIONS ===
+Using the workflow instructions above, create a complete blog post:
+1. Follow all 7 phases from the workflow instructions
+2. Select a topic from KEYWORD TRACKER (prioritize P0 > P1 > P2)
+3. Use the blog patterns to match structure by category
+4. Apply copywriting_guidance for tone and style
+5. Do NOT duplicate an existing slug: {slugs}
+
+When selecting a topic, consider:
+- Monthly search volume (higher = more traffic potential)
+- Priority level (P0 > P1 > P2)
+- Whether a target page is already assigned
+- Content pillar alignment
+
+Output ONLY a markdown code block with the complete blog post including YAML frontmatter.
+
+Example format:
+```markdown
+---
+id: your-blog-post-id
+title: Compelling Headline (2026)
+excerpt: >-
+  150-char summary
+category: tutorials
+stage: awareness
+publishedAt: '2026-03-13'
+readTime: 5
+author:
+  name: AuthHub Team
+  role: Agency Operations Experts
+tags:
+  - tag1
+  - tag2
+metaTitle: SEO title
+metaDescription: SEO description
+---
+# Compelling Headline (2026)
+
+Full markdown body here...
+```"""
+
+payload = {
+    "model": "glm-4.7",
+    "max_tokens": 8000,
+    "system": "You are a content marketing specialist for Agency Access Platform (authhub.co). Follow the workflow instructions exactly.",
+    "messages": [
+        {
+            "role": "user",
+            "content": user_content
+        }
+    ]
+}
+
+print(json.dumps(payload))
+PYTHON_PAYLOAD
+)
 
           # Call z.ai API (Anthropic-compatible endpoint)
           RESPONSE=$(curl -X POST "https://api.z.ai/api/anthropic/v1/messages" \
