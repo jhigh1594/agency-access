@@ -1413,7 +1413,13 @@ export const AccessRequestUpdatePayloadSchema = z.object({
 });
 export type AccessRequestUpdatePayload = z.infer<typeof AccessRequestUpdatePayloadSchema>;
 
-export const WebhookApiVersionSchema = z.literal('2026-03-08');
+export const WEBHOOK_API_VERSION_V1 = '2026-03-08';
+export const WEBHOOK_API_VERSION_V2 = '2026-03-19';
+
+export const WebhookApiVersionSchema = z.enum([
+  WEBHOOK_API_VERSION_V1,
+  WEBHOOK_API_VERSION_V2,
+]);
 export type WebhookApiVersion = z.infer<typeof WebhookApiVersionSchema>;
 
 export const WebhookEventTypeSchema = z.enum([
@@ -1437,7 +1443,8 @@ export type WebhookDeliveryStatus = z.infer<typeof WebhookDeliveryStatusSchema>;
 
 export const WebhookEndpointConfigInputSchema = z.object({
   url: z.string().url(),
-  subscribedEvents: z.array(WebhookEventTypeSchema).min(1).max(3),
+  subscribedEvents: z.array(WebhookEventTypeSchema).min(1).max(6),
+  preferredApiVersion: WebhookApiVersionSchema.optional(),
 });
 export type WebhookEndpointConfigInput = z.infer<typeof WebhookEndpointConfigInputSchema>;
 
@@ -1447,6 +1454,7 @@ export const WebhookEndpointSummarySchema = z.object({
   url: z.string().url(),
   status: WebhookEndpointStatusSchema,
   subscribedEvents: z.array(WebhookEventTypeSchema),
+  preferredApiVersion: WebhookApiVersionSchema,
   failureCount: z.number().int().min(0),
   secretLastFour: z.string().length(4).optional().nullable(),
   lastDeliveredAt: z.string().datetime().optional().nullable(),
@@ -1481,6 +1489,7 @@ const WebhookAccessRequestSnapshotSchema = z.object({
   requestedPlatforms: z.array(z.string()),
   completedPlatforms: z.array(z.string()),
   externalReference: z.string().optional().nullable(),
+  accessLevel: z.enum(['admin', 'standard', 'read_only', 'email_only']).optional(),
 });
 
 const WebhookClientSnapshotSchema = z.object({
@@ -1490,11 +1499,27 @@ const WebhookClientSnapshotSchema = z.object({
   company: z.string().optional(),
 });
 
+export const WebhookConnectionAssetV2Schema = z.object({
+  assetId: z.string(),
+  assetName: z.string(),
+  assetType: z.string(),
+  platform: z.string(),
+  connectionStatus: z.enum(['Connected', 'Failed', 'Pending']),
+  accessLevel: z.enum(['ViewOnly', 'Manage', 'Owner']).optional(),
+  grantedAt: z.string().datetime().optional(),
+  notes: z.string().optional(),
+  linkToAsset: z.string().optional(),
+  statusLastCheckedAt: z.string().datetime().optional(),
+});
+
+export type WebhookConnectionAssetV2 = z.infer<typeof WebhookConnectionAssetV2Schema>;
+
 const WebhookConnectionSummarySchema = z.object({
   connectionId: z.string(),
   status: ConnectionStatusSchema,
   platforms: z.array(z.string()),
   grantedAssetsSummary: z.record(z.unknown()).optional(),
+  assets: z.array(WebhookConnectionAssetV2Schema).optional(),
 });
 
 export const WebhookAccessRequestEventDataSchema = z.object({
@@ -1513,6 +1538,7 @@ const WebhookEventEnvelopeBaseSchema = z.object({
   id: z.string(),
   apiVersion: WebhookApiVersionSchema,
   createdAt: z.string().datetime(),
+  isReplay: z.boolean().optional(),
 });
 
 export const WebhookTestEventEnvelopeSchema = WebhookEventEnvelopeBaseSchema.extend({
