@@ -60,4 +60,10 @@ scripts/perf/traces/
 
 # Stale Next.js builds
 .next.stale-*
-.worktrees
+
+# AI tool state (ephemeral)
+.aipmos/
+.cache/claude/
+.cursor/hooks/state/
+.claude/worktrees/
+.codex/skills/
