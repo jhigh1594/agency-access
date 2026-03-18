@@ -95,7 +95,12 @@ export function UsageLimitsCard() {
       surface: 'usage_limits_card',
     });
 
-    window.location.href = 'mailto:sales@authhub.co?subject=AuthHub%20Scale%20Expansion';
+    const supportLocalPart = 'support';
+    const supportDomainPart = 'authhub.co';
+    const at = String.fromCharCode(64); // '@'
+    const email = `${supportLocalPart}${at}${supportDomainPart}`;
+    const subject = encodeURIComponent('AuthHub Scale Expansion');
+    window.location.href = `mailto:${email}?subject=${subject}`;
   };
 
   const renderProgressBar = (

@@ -9,6 +9,16 @@ import { getDocsUrl } from '@/lib/docs-url';
 export function ContactInfoCard() {
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
+  const supportLocalPart = 'support';
+  const supportDomainPart = 'authhub.co';
+
+  const handleEmailClick = () => {
+    // Build mailto at click time so plaintext email doesn't appear in initial HTML.
+    const at = String.fromCharCode(64); // '@'
+    const email = `${supportLocalPart}${at}${supportDomainPart}`;
+    window.location.href = `mailto:${email}`;
+  };
+
   return (
     <>
       <div className="bg-paper p-8 border-2 border-black shadow-brutalist h-full flex flex-col">
@@ -27,10 +37,15 @@ export function ContactInfoCard() {
             <div>
               <p className="font-mono text-sm text-gray-500 mb-1">Email us</p>
               <a
-                href="mailto:jon@pillaraiagency.com"
+                href="#"
                 className="text-ink hover:text-coral transition-colors font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleEmailClick();
+                }}
+                aria-label="Email support"
               >
-                jon@pillaraiagency.com
+                support [at] authhub.co
               </a>
             </div>
           </div>

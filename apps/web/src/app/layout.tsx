@@ -90,8 +90,7 @@ const organizationSchema = {
   ],
   "contactPoint": {
     "@type": "ContactPoint",
-    "contactType": "sales",
-    "email": "hello@authhub.co",
+    "contactType": "customer support",
     "url": "https://authhub.co/contact",
   },
 };

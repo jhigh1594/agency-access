@@ -48,6 +48,16 @@ const faqs: FAQItem[] = [
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  const supportLocalPart = 'support';
+  const supportDomainPart = 'authhub.co';
+
+  const handleContactSupportClick = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    const at = String.fromCharCode(64); // '@'
+    const email = `${supportLocalPart}${at}${supportDomainPart}`;
+    window.location.href = `mailto:${email}`;
+  };
+
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
@@ -147,8 +157,10 @@ export function FAQSection() {
                 Still have questions?
               </p>
               <a
-                href="mailto:support@authhub.com"
+                href="#"
                 className="inline-block font-bold uppercase tracking-wider text-xs px-6 py-3 border-2 border-black bg-coral text-white hover:bg-ink hover:shadow-brutalist transition-all duration-200"
+                onClick={handleContactSupportClick}
+                aria-label="Contact support"
               >
                 Contact Support
               </a>
