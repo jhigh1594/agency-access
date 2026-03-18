@@ -176,13 +176,6 @@ describe('env contract', () => {
     expect(moduleTrue.env.BACKGROUND_WORKERS_ENABLED).toBe(true);
   });
 
-  it('provides BULLMQ_WORKERS_ENABLED as alias for BACKGROUND_WORKERS_ENABLED', async () => {
-    const module = await importEnvWith(withRequiredBase({
-      BACKGROUND_WORKERS_ENABLED: 'false',
-    }));
-    expect(module.env.BULLMQ_WORKERS_ENABLED).toBe(false);
-  });
-
   it('defaults internal admin allowlists to empty arrays when unset', async () => {
     const module = await importEnvWith(withRequiredBase({
       INTERNAL_ADMIN_USER_IDS: undefined,

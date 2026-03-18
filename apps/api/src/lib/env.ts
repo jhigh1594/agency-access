@@ -246,6 +246,4 @@ export const env = {
   INTERNAL_ADMIN_EMAILS,
   TRUST_PROXY_IPS,
   DASHBOARD_SUMMARY_LIMITS_ENABLED,
-  // Alias for backwards compatibility
-  BULLMQ_WORKERS_ENABLED: parsedEnv.BACKGROUND_WORKERS_ENABLED,
 };

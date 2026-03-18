@@ -236,11 +236,11 @@ const start = async () => {
       }
     };
 
-    if (env.BULLMQ_WORKERS_ENABLED) {
+    if (env.BACKGROUND_WORKERS_ENABLED) {
       await startJobHandlers();
     } else {
       fastify.log.info(
-        'Background workers disabled (BULLMQ_WORKERS_ENABLED=false). Job processing disabled.'
+        'Background workers disabled (BACKGROUND_WORKERS_ENABLED=false). Job processing disabled.'
       );
     }
 

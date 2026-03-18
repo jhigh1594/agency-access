@@ -71,7 +71,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-vi.mock('@/lib/queue', () => ({
+vi.mock('@/lib/queue-helpers', () => ({
   queueWebhookDelivery: vi.fn(),
 }));
 
