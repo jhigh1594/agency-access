@@ -226,99 +226,146 @@
 
 ## Priority Content Calendar
 
+### Architecture Decision (Resolved — March 2026)
+
+**Decision**: `/guides/` for highest-volume platform keywords (Google Ads, Meta). `/blog/` for everything else, including remaining platform guides. One page per topic — no duplicates.
+
+**Rationale**:
+- The 2 `/guides/` pages (Google Ads, Meta) already exist and target the highest-volume "how to" keywords with optimized metadata
+- Building `/guides/` for GA4, LinkedIn, TikTok, Pinterest would duplicate existing blog content and split authority
+- Better ROI: fix the 5 blog posts with stale "2024" metadata and add target keywords to existing posts
+- `/blog/` handles editorial content (checklists, comparisons, best practices) and remaining platform guides
+- `/compare/authhub-vs-leadsie` is NOT needed — `/compare/leadsie-alternative` already covers that intent. Ensure it targets both "Leadsie alternative" and "AuthHub vs Leadsie" keywords.
+
+**Action plan**:
+1. Fix 5 blog posts with "2024" in title/meta → update to "2026"
+2. Ensure `/compare/leadsie-alternative` also targets "AuthHub vs Leadsie" in metadata
+3. Add target keywords from keyword tracker to existing blog post metadata
+4. Only build new `/guides/` pages if blog posts aren't ranking after 60-90 days
+
+---
+
 ### Q1 2026: Foundation & Competitive Capture
 
 **Month 1 (February) — ✅ COMPLETE
 
 | Week | Content | Type | Keyword | Status |
 |------|---------|------|---------|--------|
-| 1 | /compare/leadsie-alternative | Comparison | "Leadsie alternative" | ✅ **DONE** |
-| 2 | /guides/google-ads-access | Guide | "how to request Google Ads access" | ✅ **DONE** |
-| 2 | /guides/facebook-business-manager-access | Guide | "Facebook Business Manager access" | ⚠️ **Blog version exists** at `/blog/how-to-get-meta-ads-access-from-clients` |
-| 3 | /blog/client-onboarding-checklist | Blog + PDF | "client onboarding checklist" | ❌ **NOT CREATED** |
+| 1 | /compare/leadsie-alternative | Comparison | "Leadsie alternative" | ✅ **LIVE** |
+| 2 | /guides/google-ads-access | Guide | "how to request Google Ads access" | ✅ **LIVE** |
+| 2 | /guides/meta-ads-access | Guide | "Meta ads access for agencies" | ✅ **LIVE** |
+| 3 | /blog/client-onboarding-checklist | Blog + PDF | "client onboarding checklist" | ✅ **LIVE** |
 | 4 | /blog/flat-rate-vs-credit-pricing | Blog | "agency pricing models" | ❌ **NOT CREATED** |
-
-| **NOTES** | | |
-| Platform guides also published as blog posts (dual routes): Meta Ads, Google Ads, GA4, LinkedIn, Pinterest, TikTok | | |
 
 **Month 2 (March)** — 🎯 CURRENT
 
 | Week | Content | Type | Keyword | Status |
 |------|---------|------|---------|--------|
-| 1 | /compare/authhub-vs-leadsie | Comparison | "AuthHub vs Leadsie" | ❌ **NEXT UP** |
-| 2 | /guides/meta-ads-access | Guide | "Meta ads access for agencies" | ⚠️ **Blog exists** at `/blog/how-to-get-meta-ads-access-from-clients` |
-| 2 | /guides/google-analytics-access | Guide | "GA4 access for agencies" | ⚠️ **Blog exists** at `/blog/ga4-access-agencies` |
+| 1 | Fix "2024" metadata on 5 blog posts | Maintenance | — | 🎯 **DO NOW** |
+| 1 | Ensure leadsie-alternative targets "AuthHub vs Leadsie" | SEO | "AuthHub vs Leadsie" | 🎯 **DO NOW** |
+| 2 | /blog/flat-rate-vs-credit-pricing | Blog | "agency pricing models" | ❌ **NOT CREATED** |
 | 3 | /blog/how-to-onboard-clients-faster | Blog | "client onboarding best practices" | ❌ **NOT CREATED** |
 | 4 | /blog/onboarding-roi-calculator | Interactive | "client onboarding ROI" | ❌ **NOT CREATED** |
-
-| **NOTES** | | |
-| Need to decide: Should guides be separate from blog posts, or or duplicate content? Current implementation has both `/guides/` and `/blog/` routes pointing to same content. |
 
 **Month 3 (April)**
 
 | Week | Content | Type | Keyword | Status |
 |------|---------|------|---------|--------|
-| 1 | /guides/tiktok-ads-access | Guide | "TikTok ads access request" | ⚠️ **Blog exists** at `/blog/tiktok-ads-access-agency` |
-| 2 | /guides/linkedin-ads-access | Guide | "LinkedIn Campaign Manager access" | ⚠️ **Blog exists** at `/blog/linkedin-ads-access-agency` |
-| 3 | /blog/what-to-ask-new-clients | Blog + template | "client intake questions" | ❌ **NOT CREATED** |
-| 4 | /compare/agencyaccess-alternative | Comparison | "AgencyAccess alternative" | ✅ **DONE** (created early) |
+| 1 | /blog/what-to-ask-new-clients | Blog + template | "client intake questions" | ❌ **NOT CREATED** |
+| 3 | /compare/client-onboarding-tools | Comparison | "client onboarding tools" | ❌ **NOT CREATED** |
+| 4 | /blog/security-compliance-agencies | Blog | "agency security compliance" | ❌ **NOT CREATED** |
 
 ---
 
-## 📊 Content Inventory Summary
+## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (7 total)
-| Slug | Title | Route |
-|------|-------|-------|
-| `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | `/blog/` + `/guides/` |
-| `google-ads-access-agency` | Google Ads Access Guide | `/blog/` |
-| `ga4-access-agencies` | GA4 Access for Agencies | `/blog/` |
-| `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | `/blog/` |
-| `linkedin-ads-access-agency` | LinkedIn Ads Access for Agencies | `/blog/` |
-| `pinterest-ads-access-agencies` | Pinterest Ads Access for Agencies | `/blog/` |
-| `tiktok-ads-access-agency` | TikTok Ads Access for Agencies | `/blog/` |
+### Published Blog Posts (10 total — loaded from `content/blog/*.md`)
 
-### Published Platform Guides (1 dedicated)
-| Slug | Route |
-|------|-------|
-| `google-ads-access` | `/guides/google-ads-access` |
+| Slug | Title | Category | Year in Meta | Needs Update |
+|------|-------|----------|-------------|-------------|
+| `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | tutorials | 2024 | **Yes** — year update only (guide equivalent exists) |
+| `google-ads-access-agency` | Google Ads Access Guide | tutorials | 2024 | **Yes** — year update only (guide equivalent exists) |
+| `ga4-access-agencies` | GA4 Access for Agencies | tutorials | 2024 | **Yes** — year update + add target keywords |
+| `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | comparisons | 2024 | **Yes** — year update (compare page exists) |
+| `linkedin-ads-access-agency` | LinkedIn Ads Access for Agencies | tutorials | 2024 | **Yes** — year + needs guide equivalent |
+| `pinterest-ads-access-agencies` | Pinterest Ads Access for Agencies | tutorials | 2025 | Minor — year |
+| `tiktok-ads-access-agency` | TikTok Ads Access for Agencies | tutorials | 2026 | No |
+| `client-onboarding-checklist` | The Complete Client Onboarding Checklist | onboarding | 2026 | No |
+| `agency-ad-account-access-management-guide` | Ultimate Guide to Agency Ad Account Access | tutorials | 2026 | No |
+| `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Troubleshooting Guide: Fix Common Ad Account Access Issues | tutorials | 2026 | No |
 
-### Published Comparison Pages (2 total)
+### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
+
+| Slug | Route | Target Keywords |
+|------|-------|----------------|
+| `google-ads-access` | `/guides/google-ads-access` | "how to request google ads access" |
+| `meta-ads-access` | `/guides/meta-ads-access` | "Meta ads access for agencies" |
+
+### Published Comparison Pages (2 total — in `comparison-data.ts`)
+
 | Slug | Title | Route |
 |------|-------|-------|
 | `leadsie-alternative` | Leadsie Alternative \| Why Agencies Switch | `/compare/leadsie-alternative` |
 | `agencyaccess-alternative` | AuthHub vs AgencyAccess | `/compare/agencyaccess-alternative` |
 
+### Missing Routes (planned but no page exists)
+
+| Route | Type | Priority | Note |
+|-------|------|----------|------|
+| `/compare/client-onboarding-tools` | Comparison | P1 | Broad comparison hub |
+| `/templates/*` | Templates | P2 | No route at all |
+| `/blog/flat-rate-vs-credit-pricing` | Blog | P1 | Pricing comparison |
+| `/blog/how-to-onboard-clients-faster` | Blog | P1 | High-value editorial |
+| `/blog/what-to-ask-new-clients` | Blog | P2 | Template/gated |
+| `/blog/onboarding-roi-calculator` | Interactive | P2 | |
+| `/blog/security-compliance-agencies` | Blog | P2 | |
+
+### Content Quality Issues
+
+| Issue | Affected Posts | Action |
+|-------|----------------|--------|
+| Stale "2024" in title/meta | ga4, google-ads, meta, linkedin, leadsie-comparison (5 posts) | Update frontmatter to 2026 |
+| Missing keyword targeting on existing posts | GA4, LinkedIn, TikTok, Pinterest | Add target keywords from keyword tracker to meta |
+| leadsie-alternative not targeting "AuthHub vs Leadsie" | `/compare/leadsie-alternative` | Add "AuthHub vs Leadsie" to keywords/metadata |
+
 ---
 
-## 🎯 Next Actions (Updated)
+## 🎯 Next Actions (Updated March 18, 2026)
 
-1. **Week 1 (March)**: Create `/compare/authhub-vs-leadsie` comparison page
-2. **Week 3-4 (March)**: Create blog posts:
-   - `/blog/client-onboarding-checklist`
-   - `/blog/flat-rate-vs-credit-pricing`
-   - `/blog/how-to-onboard-clients-faster`
-   - `/blog/onboarding-roi-calculator` (interactive)
-3. **Architecture Decision**: Decide whether to keep dual routing (`/blog/` + `/guides/`) or consolidate to single canonical URLs
-4. **Template Library**: Create `/templates/` hub page (Q2 target)
+### Immediate (This Week)
+
+1. **Fix stale metadata**: Update "2024" → "2026" in frontmatter for 5 blog posts (ga4, google-ads, meta, linkedin, leadsie-comparison)
+2. **Keyword-optimize existing posts**: Add target keywords from keyword tracker to GA4, LinkedIn, TikTok, Pinterest blog post metadata
+3. **Ensure leadsie-alternative targets "AuthHub vs Leadsie"**: Add keyword to comparison page metadata
+
+### March Remaining
+
+4. **Create `/blog/flat-rate-vs-credit-pricing`**: Pricing comparison (differentiates from Leadsie)
+5. **Create `/blog/how-to-onboard-clients-faster`**: High-priority editorial content
+6. **Internal linking pass**: Connect blog posts ↔ guides ↔ comparisons
+
+### April
+
+7. **Create `/blog/what-to-ask-new-clients`**: Template/gated content
+8. **Create `/compare/client-onboarding-tools`**: Broad comparison hub
+9. **Launch `/templates/` hub page**: Template library (intake form, onboarding checklist)
 
 ### Q2 2026: Scale & Authority
 
 **Content Themes**:
-- Expand platform guides to 15+ platforms
-- Launch case study program (3-5 customer stories)
-- Create template library (intake forms, checklists, emails)
-- Build out pillar pages for SEO authority
+- Launch template library (`/templates/`)
+- Build case study program (3-5 customer stories)
+- Expand comparison pages (Vendasta, AgencyAnalytics, etc.)
+- Internal linking overhaul (connect blog ↔ guides ↔ comparisons)
+- Monitor rankings — build new `/guides/` pages only if blog posts aren't ranking after 60-90 days
 
 **New Content**:
-- /blog/case-study-[agency-name] (3-5 stories)
-- /templates/ (hub page)
-- /templates/client-intake-form (downloadable)
-- /templates/onboarding-checklist (downloadable)
-- /templates/welcome-email (downloadable)
-- /guides/pinterest-ads-access
-- /guides/snapchat-ads-access
-- /guides/microsoft-ads-access
+- `/templates/` hub page + client intake form template + onboarding checklist template
+- `/compare/vendasta-alternative` or `/compare/agencyanalytics-alternative`
+- `/blog/case-study-[agency-name]` (3-5 stories)
+- `/blog/reducing-onboarding-time-case-study`
+- `/blog/agency-onboarding-automation`
+- `/blog/intake-forms-vs-separate-tools`
 
 ### Q3-Q4 2026: Enterprise & Thought Leadership
 
@@ -583,6 +630,6 @@ Each platform guide follows this structure:
 
 ---
 
-**Last Updated**: February 14, 2026
-**Next Review**: March 1, 2026
+**Last Updated**: March 18, 2026
+**Next Review**: April 1, 2026
 **Owner**: Marketing Team
