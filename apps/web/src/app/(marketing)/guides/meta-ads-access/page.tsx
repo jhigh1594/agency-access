@@ -413,15 +413,15 @@ export default function MetaAdsAccessGuidePage() {
                 Google Ads access for agencies
               </Link>
               ,{" "}
-              <Link href="/blog/linkedin-ads-access-guide" className="text-coral font-bold hover:underline">
+              <Link href="/blog/linkedin-ads-access-agency" className="text-coral font-bold hover:underline">
                 LinkedIn Ads access
               </Link>
               ,{" "}
-              <Link href="/blog/tiktok-ads-access-guide" className="text-coral font-bold hover:underline">
+              <Link href="/blog/tiktok-ads-access-agency" className="text-coral font-bold hover:underline">
                 TikTok Ads access
               </Link>
               , and{" "}
-              <Link href="/blog/pinterest-ads-access-guide" className="text-coral font-bold hover:underline">
+              <Link href="/blog/pinterest-ads-access-agencies" className="text-coral font-bold hover:underline">
                 Pinterest Ads access
               </Link>
               .

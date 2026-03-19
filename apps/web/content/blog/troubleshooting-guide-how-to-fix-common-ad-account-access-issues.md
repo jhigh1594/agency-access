@@ -160,6 +160,6 @@ Access issues are the silent killer of agency productivity. By understanding the
 If you're tired of being the 'reset password' middleman, explore how **AuthHub** automates client access provisioning, so your team can focus on scaling ads, not resetting logins.
 
 **Related Resources:**
-*   [How to structure your Agency's Business Manager for 2026](/blog/agency-business-manager-structure)
-*   [The Client Offboarding Checklist: Revoking Access Securely](/blog/client-offboarding-checklist)
-*   [Meta Business Suite vs. Business Manager: What's the Difference?](/blog/meta-business-suite-vs-manager)
+*   [How to Get Meta Ads Access From Clients](/blog/how-to-get-meta-ads-access-from-clients)
+*   [Google Ads Access Guide for Agencies](/blog/google-ads-access-agency)
+*   [Client Onboarding Checklist](/blog/client-onboarding-checklist)

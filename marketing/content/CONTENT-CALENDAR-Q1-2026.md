@@ -3,60 +3,81 @@
 **Agency Access Platform - Weekly Content Schedule**
 
 **Audited**: March 18, 2026
+**Q2 Plan Added**: March 18, 2026 (based on Leadsie competitive intelligence audit)
 
 ---
 
 ## What's Actually Live (Ground Truth)
 
-Before planning, here's what exists on authhub.co today:
-
-### Blog Posts (10) — `/blog/[slug]`
-| Slug | Title | Year |
-|------|-------|------|
-| `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | 2024 |
-| `google-ads-access-agency` | Google Ads Access Guide | 2024 |
-| `ga4-access-agencies` | GA4 Access for Agencies | 2024 |
-| `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | 2024 |
-| `linkedin-ads-access-agency` | LinkedIn Ads Access for Agencies | 2024 |
-| `pinterest-ads-access-agencies` | Pinterest Ads Access for Agencies | 2025 |
-| `tiktok-ads-access-agency` | TikTok Ads Access for Agencies | 2026 |
-| `client-onboarding-checklist` | The Complete Client Onboarding Checklist | 2026 |
-| `agency-ad-account-access-management-guide` | Ultimate Guide to Agency Ad Account Access | 2026 |
-| `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Fix Common Ad Account Access Issues | 2026 |
+### Blog Posts (11) — `/blog/[slug]`
+| Slug | Title | Year | Quality Rating |
+|------|-------|------|---------------|
+| `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | 2026 | 7/10 — dates fixed, canonical added, links fixed |
+| `google-ads-access-agency` | Google Ads Access Guide | 2026 | 7/10 — date updated, GTM link replaced |
+| `ga4-access-agencies` | GA4 Access for Agencies | 2026 | 6/10 — date updated, GTM link replaced |
+| `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | 2026 | 6/10 — pricing fixed ($29/mo), date updated, links fixed |
+| `linkedin-ads-access-agency` | LinkedIn Ads Access for Agencies | 2026 | 7/10 — date updated |
+| `pinterest-ads-access-agencies` | Pinterest Ads Access for Agencies | 2025 | 6/10 — no internal links, missing year |
+| `tiktok-ads-access-agency` | TikTok Ads Access for Agencies | 2026 | 7/10 — fresh, needs internal linking |
+| `client-onboarding-checklist` | The Complete Client Onboarding Checklist | 2026 | 7/10 — strong, has PDF lead magnet |
+| `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | 2026 | 6/10 — cannibalizes Meta Ads post |
+| `agency-ad-account-access-management-guide` | Ultimate Guide to Agency Ad Account Access | 2026 | 5/10 — no internal links, thin CTA |
+| `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Fix Common Ad Account Access Issues | 2026 | 4/10 — 3 broken links at bottom |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
-| Slug | Title |
-|------|-------|
-| `google-ads-access` | How to Get Google Ads Access for Agencies (2026) |
-| `meta-ads-access` | How to Get Meta Ads Access for Agencies (2026) |
+| Slug | Title | SEO Score |
+|------|-------|-----------|
+| `google-ads-access` | How to Get Google Ads Access for Agencies (2026) | 8/10 — canonical, OG, schema |
+| `meta-ads-access` | How to Get Meta Ads Access for Agencies (2026) | 9/10 — HowTo schema, canonical, OG |
 
 ### Comparison Pages (2) — `/compare/[slug]`
-| Slug | Title |
-|------|-------|
-| `leadsie-alternative` | Leadsie Alternative |
-| `agencyaccess-alternative` | AuthHub vs AgencyAccess |
-
-### Not Built Yet (no route exists)
-| Planned Route | Type | Priority |
-|--------------|------|----------|
-| `/compare/client-onboarding-tools` | Comparison | P1 |
-| `/templates/*` | Templates | P2 |
-| `/blog/flat-rate-vs-credit-pricing` | Blog | P1 |
-| `/blog/how-to-onboard-clients-faster` | Blog | P1 |
-| `/blog/what-to-ask-new-clients` | Blog | P2 |
-| `/blog/onboarding-roi-calculator` | Interactive | P2 |
+| Slug | Title | Issue |
+|------|-------|-------|
+| `leadsie-alternative` | Leadsie Alternative | ✅ Updated 2026-03-18 — correct pricing, 31+ platforms, correct URL |
+| `agencyaccess-alternative` | AuthHub vs AgencyAccess | ✅ Updated 2026-03-18 — pricing standardized to $29/$79/mo |
 
 ---
 
-## Content Quality Backlog
+## Critical Housekeeping (Fix Before Any New Content)
 
-| Issue | Items | Priority |
-|-------|-------|----------|
-| Stale "2024" in meta title/excerpt | 5 blog posts (ga4, google-ads, meta, linkedin, leadsie-comparison) | **Do first** |
-| Missing keywords on existing posts | GA4, LinkedIn, TikTok, Pinterest blog posts | Add target keywords |
-| leadsie-alternative not targeting "AuthHub vs Leadsie" | `/compare/leadsie-alternative` | Add keyword to metadata |
+### P0 — Trust & Credibility ✅ COMPLETED (March 18, 2026)
 
-### What We're NOT Building
+| Issue | Fix | Status |
+|-------|-----|--------|
+| Leadsie comparison: $99/mo (actual: $49/mo), 8 platforms (actual: 31+), wrong URL | Updated `comparison-data.ts` | ✅ Done |
+| 4 different AuthHub starter prices ($24, $29, $30, $79) | Standardized to $29/mo everywhere | ✅ Done |
+| Blog post claims AuthHub is $79/mo | Updated `leadsie-vs-authhub-comparison.md` | ✅ Done |
+| 11 broken internal links across posts | Removed or redirected | ✅ Done |
+
+### P1 — SEO Foundation ✅ COMPLETED (March 18, 2026)
+
+| Issue | Fix | Status |
+|-------|-----|--------|
+| 5 posts with 2024 `publishedAt` dates | Updated to 2026 | ✅ Done |
+| Meta Ads H1 says "2024 Guide" | Fixed to 2026 | ✅ Done |
+| Keyword cannibalization (2 Meta Ads posts) | Added canonical URL to blog post → `/guides/meta-ads-access` | ✅ Done |
+| No canonical URLs on blog posts | Added `canonical` field to BlogPost type + frontmatter | ✅ Done |
+| No HowTo schema on Google Ads guide | Added HowTo JSON-LD matching Meta guide pattern | ✅ Done |
+
+### Broken Internal Links (11 total) ✅ COMPLETED (March 18, 2026)
+
+| Dead Link | Fix Applied |
+|-----------|-------------|
+| `/blog/gtm-access-guide` | Replaced with troubleshooting guide link |
+| `/blog/linkedin-ads-access-guide` | Fixed to `/blog/linkedin-ads-access-agency` |
+| `/blog/leadsie-alternatives` | Removed (replaced with CTA link) |
+| `/blog/leadsie-alternatives-7-tools` | Removed from relatedPosts |
+| `/blog/client-onboarding-47-email-problem` | Replaced with `client-onboarding-checklist` in 4 posts |
+| `/blog/agency-business-manager-structure` | Replaced with existing post links |
+| `/blog/client-offboarding-checklist` | Replaced with existing post links |
+| `/blog/meta-business-suite-vs-manager` | Replaced with existing post links |
+| `/guides/linkedin-ads-access` | Fixed to `/blog/linkedin-ads-access-agency` |
+| `/guides/tiktok-ads-access` | Fixed to `/blog/tiktok-ads-access-agency` |
+| `/guides/pinterest-ads-access` | Fixed to `/blog/pinterest-ads-access-agencies` |
+
+---
+
+## What We're NOT Building
 
 | Planned Route | Why Not |
 |--------------|---------|
@@ -64,7 +85,8 @@ Before planning, here's what exists on authhub.co today:
 | `/guides/tiktok-ads-access` | Blog post covers it (2026, already fresh) |
 | `/guides/linkedin-ads-access` | Blog post covers it — fix metadata instead |
 | `/guides/pinterest-ads-access` | Blog post covers it — minor year update |
-| `/compare/authhub-vs-leadsie` | `/compare/leadsie-alternative` already covers this intent — add keyword instead |
+| `/compare/authhub-vs-leadsie` | `/compare/leadsie-alternative` already covers this intent |
+| `/blog/onboarding-roi-calculator` | Replaced by `/blog/flat-rate-vs-credit-pricing` (stronger wedge) |
 
 ---
 
@@ -93,7 +115,7 @@ Before planning, here's what exists on authhub.co today:
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| — | /compare/authhub-vs-leadsie | Comparison | ❌ NOT CREATED |
+| — | (No content published) | — | ❌ |
 
 ---
 
@@ -103,72 +125,123 @@ Before planning, here's what exists on authhub.co today:
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| — | /guides/tiktok-ads-access | Guide | ❌ NOT CREATED (blog version exists) |
-| — | /guides/linkedin-ads-access | Guide | ❌ NOT CREATED (blog version exists) |
-| — | /blog/how-to-onboard-clients-faster | Blog | ❌ NOT CREATED |
-| — | /blog/onboarding-roi-calculator | Interactive | ❌ NOT CREATED |
+| — | (Content strategy pivot — no new content) | — | ❌ |
 
-### Week 6 (Mar 17-23) — THIS WEEK
+### Week 6 (Mar 17-23)
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| Mon | Fix stale 2024 metadata (5 blog posts) | Maintenance | 🎯 **DO NOW** |
-| Mon | Add target keywords to GA4, LinkedIn, TikTok, Pinterest posts | SEO | 🎯 **DO NOW** |
-| Wed | Ensure leadsie-alternative targets "AuthHub vs Leadsie" | SEO | 🎯 **DO NOW** |
-| Fri | /blog/flat-rate-vs-credit-pricing | Blog | Planned |
+| — | Competitive intelligence audit (this document) | Research | ✅ **COMPLETE** |
+| — | Updated CONTENT-STRATEGY-2026.md with Leadsie findings | Strategy | ✅ **COMPLETE** |
+| — | Q2 content calendar (15 high-leverage ideas) | Planning | ✅ **COMPLETE** |
 
-### Week 7 (Mar 24-30)
+### Week 7 (Mar 24-30) — Housekeeping Week
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| Mon | /blog/how-to-onboard-clients-faster | Blog | Planned |
-| Wed | Internal linking pass (blog ↔ guides ↔ comparisons) | SEO | Planned |
-| Fri | Social: Platform guide roundup | Social | Planned |
+| Mon | Fix broken internal links (11 dead links) | Maintenance | 🎯 **DO NOW** |
+| Tue | Fix Leadsie comparison data (pricing, platforms, URL) | Maintenance | 🎯 **DO NOW** |
+| Wed | Align AuthHub pricing across all pages | Maintenance | 🎯 **DO NOW** |
+| Thu | Update 5 blog post dates from 2024 → 2026 | Maintenance | 🎯 **DO NOW** |
+| Fri | Fix Meta Ads H1 ("2024" → "2026") | Maintenance | 🎯 **DO NOW** |
 
 ### Week 8 (Mar 31 - Apr 6)
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| Mon | /blog/onboarding-roi-calculator | Interactive | Planned |
-| Wed | /blog/what-to-ask-new-clients | Blog + template | Planned |
-| Fri | Email: Monthly roundup | Email | Planned |
+| Tue | #1 `/blog/flat-rate-vs-credit-pricing` | Blog | **Q2 KICKOFF** |
+| Thu | #3 `/blog/what-is-client-access-management` | Blog | Category-defining |
 
 ---
 
-## April 2026
+## April 2026 — Q2 Launch
 
 ### Week 9 (Apr 7-13)
 
-| Day | Content | Type | Status |
-|-----|---------|------|--------|
-| Mon | /templates/ hub page | Template | Planned |
-| Tue | /templates/client-intake-form | Template | Planned |
-| Thu | /templates/onboarding-checklist | Template | Planned |
-| Fri | Social: Free template announcement | Social | Planned |
+| Day | Content | Type | Keyword Target |
+|-----|---------|------|---------------|
+| Tue | #5 `/blog/how-to-onboard-new-marketing-client` | Blog (pillar) | "how to onboard a new marketing client" |
+| Thu | #4 `/blog/best-client-onboarding-software-agencies-2026` | Listicle | "best client onboarding software for agencies" |
 
 ### Week 10 (Apr 14-20)
 
-| Day | Content | Type | Status |
-|-----|---------|------|--------|
-| Mon | /compare/client-onboarding-tools | Comparison | Planned |
-| Wed | /blog/reducing-onboarding-time-case-study | Case study | Planned |
-| Fri | Email: Case study feature | Email | Planned |
+| Day | Content | Type | Keyword Target |
+|-----|---------|------|---------------|
+| Tue | #6 `/blog/agency-security-checklist` | Blog | "agency security checklist" |
+| Thu | #8 `/blog/social-media-access-request-template` | Blog + template | "social media access request template" |
 
 ### Week 11 (Apr 21-27)
 
-| Day | Content | Type | Status |
-|-----|---------|------|--------|
-| Mon | /blog/agency-onboarding-automation | Blog | Planned |
-| Wed | Monitor rankings — decide if any `/guides/` pages needed | SEO | Planned |
-| Fri | Social: Platform guide roundup | Social | Planned |
+| Day | Content | Type | Keyword Target |
+|-----|---------|------|---------------|
+| Tue | #7 `/blog/how-to-revoke-client-access-offboarding` | Blog | "how to revoke client access" |
+| Thu | #10 `/blog/how-to-see-who-has-access-facebook-page` | Blog | "how to see who has access to facebook page" |
 
 ### Week 12 (Apr 28 - May 4)
 
+| Day | Content | Type | Keyword Target |
+|-----|---------|------|---------------|
+| Tue | #12 `/blog/client-onboarding-questionnaire-27-questions` | Blog + template | "client onboarding questionnaire" |
+| Thu | #13 `/blog/marketing-agency-onboarding-best-practices-2026` | Blog | "agency onboarding best practices" |
+
+---
+
+## May 2026
+
+### Week 13 (May 5-11)
+
+| Day | Content | Type | Keyword Target |
+|-----|---------|------|---------------|
+| Tue | #9 `/blog/oauth-token-management-agencies` | Blog (technical) | "oauth token management" |
+| Thu | #11 `/blog/unable-to-assign-assets-meta-business-suite` | Blog | "unable to assign assets meta business suite" |
+
+### Week 14 (May 12-18)
+
+| Day | Content | Type | Keyword Target |
+|-----|---------|------|---------------|
+| Tue | #14 `/blog/google-ads-mcc-setup-guide` | Blog | "google ads manager account setup" |
+| Thu | #15 `/blog/intake-forms-vs-separate-tools` | Blog | "client intake form tools" |
+
+### Week 15 (May 19-25)
+
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| Mon | /blog/security-compliance-agencies | Blog | Planned |
-| Wed | Q2 content planning | Internal | Planned |
-| Fri | Email: Q1 highlights + what's coming | Email | Planned |
+| Mon | Internal linking overhaul — connect all Q2 content | SEO | Planned |
+| Wed | Refresh top 3 existing posts with updated metadata | Maintenance | Planned |
+| Fri | Social: "6 agency onboarding mistakes" roundup | Social | Planned |
+
+### Week 16 (May 26 - Jun 1)
+
+| Day | Content | Type | Status |
+|-----|---------|------|--------|
+| Tue | `/compare/client-onboarding-tools` broad comparison | Comparison | Planned |
+| Thu | Performance review — check rankings, traffic, conversions | Analytics | Planned |
+
+---
+
+## June 2026
+
+### Week 17-20 (June)
+
+| Focus | Tasks |
+|-------|-------|
+| Content | First case study (if customer available) |
+| Content | Refresh any posts not ranking after 60 days |
+| SEO | Build backlinks to top 3 Q2 posts (outreach) |
+| Social | Promote top-performing Q2 content |
+| Planning | Q3 content plan based on Q2 performance data |
+
+---
+
+## Q2 Content Priority Rationale
+
+**Why Tier 1 first?** Comparison/differentiator content captures agencies at the decision point — 3-5x higher conversion than educational content.
+
+**Why "Flat-Rate vs Credit Pricing" as #1?** No competitor covers this. Leadsie's $30 overage fees are a documented pain point. This is our strongest differentiator and an evergreen wedge.
+
+**Why category-defining content (#3, #15)?** "What is client access management?" has no authoritative answer on Google. Whoever defines the category shapes how prospects evaluate solutions.
+
+**Why compete on Leadsie's keywords (#10, #11)?** Their content is aging (2025 dates). A fresh 2026 version with schema markup and better internal linking can displace them.
 
 ---
 
@@ -177,23 +250,24 @@ Before planning, here's what exists on authhub.co today:
 - ✅ **LIVE**: Published and accessible on authhub.co
 - 🎯 **DO NOW / NEXT**: Highest priority for this week
 - **Planned**: Queued for future week
-- ❌ **NOT CREATED**: Was in old calendar as "Published (2026-03-14)" but no page exists
+- ❌ **NOT CREATED**: Planned but no page exists
 - **P2**: Nice to have — backlog
 
 ---
 
 ## Weekly Content Targets
 
-| Metric | Target | Actual (Mar 18) |
-|--------|--------|-----------------|
-| Blog posts | 2/week | 10 total published |
-| Dedicated guides | Maintain | 2 live (Google Ads, Meta — sufficient) |
+| Metric | Target | Q1 Actual |
+|--------|--------|-----------|
+| Blog posts | 2/week | ~1.5/week (11 total in Q1) |
+| Dedicated guides | Maintain | 2 live (sufficient) |
 | Comparison pages | 1/month | 2 live |
 | Social posts | 5/week | Not tracked |
 | Email sends | 1/week | Not started |
-| Stale metadata fixed | 0 tolerance | 5 posts need updates |
-| Posts with target keywords | All platform guides | Needs audit |
+| Stale metadata | 0 tolerance | 5 posts fixed by W7 |
+| Broken internal links | 0 tolerance | 11 links fixed by W7 |
 
 ---
 
 **Last Updated**: March 18, 2026
+**Next Review**: April 15, 2026 (mid-Q2 performance check)

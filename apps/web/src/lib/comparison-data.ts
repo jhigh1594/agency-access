@@ -20,16 +20,16 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     name: "Leadsie",
     tagline: "Client access platform for marketing agencies",
     logo: "/images/competitors/leadsie-logo.png",
-    website: "https://leadsie.io",
+    website: "https://leadsie.com",
     pricing: {
-      starting: 99,
+      starting: 49,
       currency: "USD",
       billing: "monthly",
       starter: {
-        price: 99,
+        price: 49,
         features: [
           "5 access requests/month",
-          "~8 platforms",
+          "31+ platforms",
           "Email support",
           "Basic reporting",
         ],
@@ -68,7 +68,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     weaknesses: [
       "No client intake forms",
       "UK-based support (8hr time difference)",
-      "Limited platform support (no Pinterest, Klaviyo, Shopify)",
+      "Limited advanced platform support (no Pinterest, Klaviyo, Shopify)",
       "No reusable onboarding templates",
       "No API access on lower tiers",
     ],
@@ -146,7 +146,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     ],
   },
 
-  excerpt: "Stop juggling separate tools for access and intake. Get both in one professional link—at a predictable flat rate starting at $29/mo. Save $840/year compared to Leadsie's Agency tier.",
+  excerpt: "Stop juggling separate tools for access and intake. Get both in one professional link—at a predictable flat rate starting at $29/mo. Save $240/year compared to Leadsie's Agency tier.",
 
   content: "", // Rendered by component from structured data
 
@@ -188,13 +188,13 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
   ],
 
   quickComparison: [
-    { feature: "Platform Count", competitor: "~8", authhub: "15+", winner: "authhub" },
+    { feature: "Platform Count", competitor: "31+", authhub: "15+", winner: "competitor" },
     { feature: "Client Intake Forms", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
     { feature: "US-Based Support", competitor: false, authhub: true, winner: "authhub" },
     { feature: "Onboarding Templates", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
     { feature: "API Access (All Tiers)", competitor: false, authhub: true, winner: "authhub", isExclusive: true },
     { feature: "Flat-Rate Pricing", competitor: false, authhub: true, winner: "authhub" },
-    { feature: "Starting Price", competitor: "$99/mo", authhub: "$29/mo", winner: "authhub" },
+    { feature: "Starting Price", competitor: "$49/mo", authhub: "$29/mo", winner: "authhub" },
   ],
 
   detailedComparison: [
@@ -302,13 +302,13 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
 
   pricingComparison: {
     competitor: {
-      starting: 99,
+      starting: 49,
       currency: "USD",
       billing: "monthly",
     },
     authhub: {
       starter: {
-        price: 79,
+        price: 29,
         features: [
           "Unlimited clients",
           "15+ platforms",
@@ -332,9 +332,9 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
       },
     },
     savings: {
-      monthly: 20,
-      yearly: 240,
-      percentage: 20,
+      monthly: 50,
+      yearly: 600,
+      percentage: 50,
     },
   },
 
@@ -352,7 +352,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
     {
       question: "Does AuthHub support all the same platforms as Leadsie?",
       answer:
-        "AuthHub supports all platforms Leadsie supports plus Pinterest, Klaviyo, Kit, Beehiiv, and Shopify—15+ total platforms vs Leadsie's ~8.",
+        "AuthHub supports all platforms Leadsie supports plus Pinterest, Klaviyo, Kit, Beehiiv, and Shopify—15+ total platforms vs Leadsie's 31+.",
     },
     {
       question: "What's the difference between AuthHub and Leadsie's intake approach?",
@@ -391,7 +391,7 @@ export const leadsieAlternativePage: ProgrammaticComparisonPage = {
 
   isProgrammatic: true,
   templateId: "comparison-aida-v1",
-  lastVerified: "2025-02-27",
+  lastVerified: "2026-03-18",
 };
 
 /**
@@ -496,11 +496,11 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     tagline: "Enterprise-grade client access with automation built-in",
     logo: "/logo.png",
     pricing: {
-      starting: 24,
+      starting: 29,
       currency: "USD",
       billing: "monthly",
       starter: {
-        price: 24,
+        price: 29,
         features: [
           "5 clients/month",
           "Unlimited team seats",
@@ -512,7 +512,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
         ],
       },
       pro: {
-        price: 66,
+        price: 79,
         features: [
           "Everything in Starter",
           "20 clients/month",
@@ -585,7 +585,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
       icon: "Users",
       quote: "I hit the 5-invite limit on Starter and now I'm stuck until next month.",
       description: "AgencyAccess caps Starter at 5 invites/month. Growing agencies can blow through that in one busy week. You need Premium ($74/mo) for more invites.",
-      solution: "AuthHub Growth includes 20 clients/month at $66/mo—no invite caps, no upgrade pressure.",
+      solution: "AuthHub Growth includes 20 clients/month at $79/mo—no invite caps, no upgrade pressure.",
     },
   ],
 
@@ -630,7 +630,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     {
       category: "Pricing & Limits",
       features: [
-        { name: "Starting Price", competitor: "$33/mo (annual)", authhub: "$24/mo" },
+        { name: "Starting Price", competitor: "$33/mo (annual)", authhub: "$29/mo" },
         { name: "Unlimited Clients", competitor: "Premium only", authhub: "All plans", notes: "AuthHub advantage" },
         { name: "Starter Invite Limit", competitor: "5/month", authhub: "Unlimited" },
         { name: "Free Trial", competitor: "30 days", authhub: "14 days" },
@@ -719,7 +719,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     },
     authhub: {
       starter: {
-        price: 30,
+        price: 29,
         features: [
           "Unlimited clients",
           "White-label + custom domain",
@@ -765,7 +765,7 @@ export const agencyAccessAlternativePage: ProgrammaticComparisonPage = {
     },
     {
       question: "Is AuthHub more expensive than AgencyAccess?",
-      answer: "AuthHub Growth starts at $66/month ($79 yearly) with 20 clients/month and API access. AgencyAccess Starter is $33/month (annual) but limits you to 5 invites. For equivalent features (more invites, automation), AgencyAccess Premium costs $74/month. AuthHub delivers better value for automation-focused teams.",
+      answer: "AuthHub Growth starts at $79/month with 20 clients/month and API access. AgencyAccess Starter is $33/month (annual) but limits you to 5 invites. For equivalent features (more invites, automation), AgencyAccess Premium costs $74/month. AuthHub delivers better value for automation-focused teams.",
     },
     {
       question: "What security certifications does AuthHub have?",

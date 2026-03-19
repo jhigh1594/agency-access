@@ -25,7 +25,7 @@ metaDescription: >-
 relatedPosts:
   - meta-ads-access-guide
   - google-ads-access-guide
-  - client-onboarding-47-email-problem
+  - ga4-access-guide
 ---
 # The Complete Client Onboarding Checklist for Agencies (2026)
 

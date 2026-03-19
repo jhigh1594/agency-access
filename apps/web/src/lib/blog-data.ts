@@ -79,6 +79,7 @@ function parseFileToPost(filePath: string, slug: string): BlogPost {
       ? data.relatedPosts.map(String)
       : undefined,
     featuredImage: data.featuredImage ? String(data.featuredImage) : undefined,
+    canonical: data.canonical ? String(data.canonical) : undefined,
   };
 }
 

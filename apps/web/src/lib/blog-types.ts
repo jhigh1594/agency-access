@@ -35,6 +35,7 @@ export interface BlogPost {
   tags: string[];
   metaTitle?: string;
   metaDescription?: string;
+  canonical?: string;
   relatedPosts?: string[];
 }
 

@@ -27,7 +27,7 @@ export async function generateMetadata({
     };
   }
 
-  const canonicalUrl = `https://authhub.co/blog/${slug}`;
+  const canonicalUrl = post.canonical || `https://authhub.co/blog/${slug}`;
 
   return {
     title: post.metaTitle || post.title,

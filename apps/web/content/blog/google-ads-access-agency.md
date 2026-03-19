@@ -7,7 +7,7 @@ excerpt: >-
   the most common permission errors.
 category: tutorials
 stage: consideration
-publishedAt: '2024-01-16'
+publishedAt: '2026-01-16'
 readTime: 10
 author:
   name: Jon High
@@ -251,4 +251,4 @@ As you grow from 10 to 100 clients, consider:
 
 ---
 
-*Need help with other Google products? Read our guides for [GA4 access](/blog/ga4-access-agencies) and [Google Tag Manager access](/blog/gtm-access-guide).*
+*Need help with other Google products? Read our guide for [GA4 access](/blog/ga4-access-agencies) and our [troubleshooting guide](/blog/troubleshooting-guide-how-to-fix-common-ad-account-access-issues).*

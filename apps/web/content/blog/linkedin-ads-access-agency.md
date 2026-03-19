@@ -7,7 +7,7 @@ excerpt: >-
   navigate LinkedIn's connection requirement for smooth client onboarding.
 category: tutorials
 stage: consideration
-publishedAt: '2024-01-19'
+publishedAt: '2026-01-19'
 readTime: 11
 author:
   name: Jon High

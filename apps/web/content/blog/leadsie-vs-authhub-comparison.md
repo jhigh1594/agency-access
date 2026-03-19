@@ -7,7 +7,7 @@ excerpt: >-
   right for your agency.
 category: comparisons
 stage: decision
-publishedAt: '2024-01-18'
+publishedAt: '2026-01-18'
 readTime: 12
 author:
   name: Jon High
@@ -25,8 +25,7 @@ metaDescription: >-
   See how platform support, pricing, permissions, and security differ.
 relatedPosts:
   - meta-ads-access-guide
-  - leadsie-alternatives-7-tools
-  - client-onboarding-47-email-problem
+  - client-onboarding-checklist
 ---
 # Leadsie vs Other Platforms vs AuthHub: 2026 Comparison
 
@@ -61,7 +60,7 @@ This comparison breaks down features, pricing, and capabilities so you can choos
 | **Custom Branding** | ❌ | Limited | ✅ (full white-label) |
 | **Multi-Language** | ❌ | ❌ | ✅ (en, es, nl) |
 | **Hierarchical Access** | ❌ | ❌ | ✅ (Google = 8 products from 1 OAuth) |
-| **Pricing** | $97/mo | $149/mo | **$79/mo** |
+| **Pricing** | $97/mo | $149/mo | **$29/mo** |
 
 ## Platform Support Comparison
 
@@ -211,7 +210,7 @@ When a client authorizes Google, they simultaneously grant access to:
 
 | Plan | Leadsie | Other Platforms | AuthHub |
 |------|---------|--------------|------------------------|
-| **Starter** | $97/mo | $149/mo | **$79/mo** |
+| **Starter** | $97/mo | $149/mo | **$29/mo** |
 | **Pro** | $197/mo | $299/mo | **$149/mo** |
 | **Enterprise** | Custom | Custom | **Custom** |
 | **Free Trial** | 14 days | 7 days | **21 days** |
@@ -264,4 +263,4 @@ All three platforms allow you to:
 
 ---
 
-*Need help deciding? Read our [7 Alternatives to Leadsie](/blog/leadsie-alternatives) guide or contact our team for a personalized demo.*
+*Need help deciding? [Contact our team](/pricing) for a personalized demo.*

@@ -7,7 +7,7 @@ excerpt: >-
   requesting the wrong account or getting stuck with insufficient permissions.
 category: tutorials
 stage: consideration
-publishedAt: '2024-01-17'
+publishedAt: '2026-01-17'
 readTime: 9
 author:
   name: Jon High
@@ -26,7 +26,7 @@ metaDescription: >-
 relatedPosts:
   - google-ads-access-guide
   - meta-ads-access-guide
-  - client-onboarding-47-email-problem
+  - client-onboarding-checklist
 ---
 # GA4 Access for Agencies: Step-by-Step Property Authorization
 
@@ -267,4 +267,4 @@ As you grow from 10 to 100 clients:
 
 ---
 
-*Also read our guides for [Google Ads access](/blog/google-ads-access-agency) and [Google Tag Manager access](/blog/gtm-access-guide).*
+*Also read our guides for [Google Ads access](/blog/google-ads-access-agency) and our [troubleshooting guide](/blog/troubleshooting-guide-how-to-fix-common-ad-account-access-issues).*

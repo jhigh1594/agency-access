@@ -30,6 +30,41 @@ export const metadata: Metadata = {
 };
 
 export default function GoogleAdsAccessGuidePage() {
+  // HowTo schema JSON-LD
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Get Google Ads Access for Agencies",
+    "description": "Step-by-step guide for agencies to request Google Ads manager account access from clients",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Get the Agency's Customer ID",
+        "text": "Find your agency's 10-digit Customer ID in Google Ads under Tools and Settings > Account Setup.",
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Send the Access Request Link",
+        "text": "Send your client the link: ads.google.com/home/tools/account-access. This opens the Access and Security page.",
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Client Adds Your Account",
+        "text": "Client clicks the + button on the Access and Security page, selects 'Manage access' or 'Admin' access level, and enters your agency's Customer ID.",
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Review and Confirm",
+        "text": "Client reviews the access level and permissions, then clicks Send Request.",
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Accept the Request",
+        "text": "Agency accepts the request in Google Ads under Tools and Settings > Account Access. Access is now active.",
+      },
+    ],
+  };
+
   // Breadcrumb schema for navigation
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -58,6 +93,13 @@ export default function GoogleAdsAccessGuidePage() {
 
   return (
     <div className="min-h-screen bg-paper">
+      {/* HowTo Schema JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(howToSchema),
+        }}
+      />
       {/* Breadcrumb Schema JSON-LD */}
       <script
         type="application/ld+json"
@@ -267,7 +309,7 @@ export default function GoogleAdsAccessGuidePage() {
                 Google Analytics (GA4) access for agencies
               </Link>
               , and{" "}
-              <Link href="/blog/linkedin-ads-access-guide" className="text-coral font-bold hover:underline">
+              <Link href="/blog/linkedin-ads-access-agency" className="text-coral font-bold hover:underline">
                 LinkedIn Ads access
               </Link>
               .
