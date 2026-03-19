@@ -25,6 +25,7 @@
 | `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Fix Common Ad Account Access Issues | 2026 | 4/10 — 3 broken links at bottom |
 | `flat-rate-vs-credit-pricing` | Flat-Rate vs Credit Pricing for Agency Tools (2026) | 2026 | 9/10 — DRAFT complete, Q2 kickoff, data-driven, competitive wedge |
 | `what-is-client-access-management` | What Is Client Access Management? (2026 Guide for Agencies) | 2026 | 9/10 — publish-ready, elite copywriting polish, AI-pattern-free |
+| `how-to-onboard-new-marketing-client` | How to Onboard a New Marketing Client (The Real 2026 Guide) | 2026 | 9/10 — publish-ready, 4 sourced stats, AI-pattern-free, elite copywriting pass |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
 | Slug | Title | SEO Score |
@@ -164,7 +165,7 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 
 | Day | Content | Type | Keyword Target |
 |-----|---------|------|---------------|
-| Tue | #5 `/blog/how-to-onboard-new-marketing-client` | Blog (pillar) | "how to onboard a new marketing client" |
+| Tue | #5 `/blog/how-to-onboard-new-marketing-client` | Blog (pillar) | "how to onboard a new marketing client" | ✅ **DRAFT COMPLETE** — 9/10, publish-ready |
 | Thu | #4 `/blog/best-client-onboarding-software-agencies-2026` | Listicle | "best client onboarding software for agencies" |
 
 ### Week 10 (Apr 14-20)
