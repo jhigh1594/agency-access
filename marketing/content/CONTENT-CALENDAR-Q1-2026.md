@@ -9,20 +9,21 @@
 
 ## What's Actually Live (Ground Truth)
 
-### Blog Posts (11) — `/blog/[slug]`
+### Blog Posts (13) — `/blog/[slug]`
 | Slug | Title | Year | Quality Rating |
 |------|-------|------|---------------|
 | `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | 2026 | 7/10 — dates fixed, canonical added, links fixed |
 | `google-ads-access-agency` | Google Ads Access Guide | 2026 | 7/10 — date updated, GTM link replaced |
 | `ga4-access-agencies` | GA4 Access for Agencies | 2026 | 6/10 — date updated, GTM link replaced |
-| `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | 2026 | 6/10 — pricing fixed ($29/mo), date updated, links fixed |
+| `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | 2026 | 7/10 — pricing fixed ($29/mo), date updated, links fixed |
+| `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | 2026 | 6/10 — cannibalizes Meta Ads post |
 | `linkedin-ads-access-agency` | LinkedIn Ads Access for Agencies | 2026 | 7/10 — date updated |
 | `pinterest-ads-access-agencies` | Pinterest Ads Access for Agencies | 2025 | 6/10 — no internal links, missing year |
 | `tiktok-ads-access-agency` | TikTok Ads Access for Agencies | 2026 | 7/10 — fresh, needs internal linking |
 | `client-onboarding-checklist` | The Complete Client Onboarding Checklist | 2026 | 7/10 — strong, has PDF lead magnet |
-| `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | 2026 | 6/10 — cannibalizes Meta Ads post |
 | `agency-ad-account-access-management-guide` | Ultimate Guide to Agency Ad Account Access | 2026 | 5/10 — no internal links, thin CTA |
 | `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Fix Common Ad Account Access Issues | 2026 | 4/10 — 3 broken links at bottom |
+| `flat-rate-vs-credit-pricing` | Flat-Rate vs Credit Pricing for Agency Tools (2026) | 2026 | 9/10 — DRAFT complete, Q2 kickoff, data-driven, competitive wedge |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
 | Slug | Title | SEO Score |
@@ -135,21 +136,23 @@
 | — | Updated CONTENT-STRATEGY-2026.md with Leadsie findings | Strategy | ✅ **COMPLETE** |
 | — | Q2 content calendar (15 high-leverage ideas) | Planning | ✅ **COMPLETE** |
 
-### Week 7 (Mar 24-30) — Housekeeping Week
+### Week 7 (Mar 24-30) — Housekeeping Week ✅ COMPLETED EARLY (March 18, 2026)
+
+All housekeeping items were completed ahead of schedule as part of the competitive audit remediation.
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| Mon | Fix broken internal links (11 dead links) | Maintenance | 🎯 **DO NOW** |
-| Tue | Fix Leadsie comparison data (pricing, platforms, URL) | Maintenance | 🎯 **DO NOW** |
-| Wed | Align AuthHub pricing across all pages | Maintenance | 🎯 **DO NOW** |
-| Thu | Update 5 blog post dates from 2024 → 2026 | Maintenance | 🎯 **DO NOW** |
-| Fri | Fix Meta Ads H1 ("2024" → "2026") | Maintenance | 🎯 **DO NOW** |
+| Mon | Fix broken internal links (11 dead links) | Maintenance | ✅ **DONE** |
+| Tue | Fix Leadsie comparison data (pricing, platforms, URL) | Maintenance | ✅ **DONE** |
+| Wed | Align AuthHub pricing across all pages | Maintenance | ✅ **DONE** |
+| Thu | Update 5 blog post dates from 2024 → 2026 | Maintenance | ✅ **DONE** |
+| Fri | Fix Meta Ads H1 ("2024" → "2026") + canonical + HowTo schema | Maintenance | ✅ **DONE** |
 
 ### Week 8 (Mar 31 - Apr 6)
 
 | Day | Content | Type | Status |
 |-----|---------|------|--------|
-| Tue | #1 `/blog/flat-rate-vs-credit-pricing` | Blog | **Q2 KICKOFF** |
+| Tue | #1 `/blog/flat-rate-vs-credit-pricing` | Blog | ✅ **DRAFT COMPLETE** — publish-ready, 9/10 quality |
 | Thu | #3 `/blog/what-is-client-access-management` | Blog | Category-defining |
 
 ---
@@ -259,7 +262,7 @@
 
 | Metric | Target | Q1 Actual |
 |--------|--------|-----------|
-| Blog posts | 2/week | ~1.5/week (11 total in Q1) |
+| Blog posts | 2/week | ~1.5/week (12 total in Q1) |
 | Dedicated guides | Maintain | 2 live (sufficient) |
 | Comparison pages | 1/month | 2 live |
 | Social posts | 5/week | Not tracked |

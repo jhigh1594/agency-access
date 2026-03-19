@@ -287,7 +287,7 @@
 
 Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Catalogs, BM Portfolios, Leads), Google (Ads, Analytics, GTM, Business Profile, Search Console, Merchant Center), TikTok Ads, LinkedIn (Company Pages, Ads), YouTube, Shopify, WordPress, Microsoft Ads, Pinterest Ads, X (Ads + Profiles), GoDaddy, HubSpot, Klaviyo, Mailchimp, Snapchat Ads, Squarespace, Yelp, Wix, Webflow.
 
-**CRITICAL: Our comparison data is outdated.** The `comparison-data.ts` file claims Leadsie has ~8 platforms and prices starting at $99/mo. Actual: 31+ platforms, starting at $49/mo. This must be fixed immediately — inaccurate competitive data destroys trust.
+**CRITICAL: Our comparison data is outdated.** ~~The `comparison-data.ts` file claims Leadsie has ~8 platforms and prices starting at $99/mo. Actual: 31+ platforms, starting at $49/mo. This must be fixed immediately — inaccurate competitive data destroys trust.~~ **FIXED (March 18, 2026)**: Updated `comparison-data.ts` with accurate pricing ($49/mo), platforms (31+), and correct URL (leadsie.com).
 
 ---
 
@@ -313,21 +313,21 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | **No HowTo schema on platform guides** | Missing rich snippet opportunity | Added HowTo JSON-LD to Google Ads guide | ✅ |
 | **Leadsie comparison lastVerified: 2025-02-27** | Competitor data nearly a year old | Updated to 2026-03-18 | ✅ |
 
-### Broken Internal Links Inventory
+### Broken Internal Links Inventory ✅ ALL FIXED (March 18, 2026)
 
-| Referenced Slug | Referenced From | Status |
-|----------------|----------------|--------|
-| `/blog/gtm-access-guide` | Google Ads, GA4 posts | Doesn't exist |
-| `/blog/linkedin-ads-access-guide` | Multiple posts (actual: `linkedin-ads-access-agency`) | Wrong slug |
-| `/blog/leadsie-alternatives` | Leadsie comparison post | Doesn't exist |
-| `/blog/leadsie-alternatives-7-tools` | Leadsie comparison post | Doesn't exist |
-| `/blog/client-onboarding-47-email-problem` | Meta, GA4, Leadsie posts | Doesn't exist |
-| `/blog/agency-business-manager-structure` | Troubleshooting post | Doesn't exist |
-| `/blog/client-offboarding-checklist` | Troubleshooting post | Doesn't exist |
-| `/blog/meta-business-suite-vs-manager` | Troubleshooting post | Doesn't exist |
-| `/guides/linkedin-ads-access` | Google guide sidebar | Doesn't exist |
-| `/guides/tiktok-ads-access` | Meta guide sidebar | Doesn't exist |
-| `/guides/pinterest-ads-access` | Meta guide sidebar | Doesn't exist |
+| Referenced Slug | Referenced From | Resolution |
+|----------------|----------------|------------|
+| `/blog/gtm-access-guide` | Google Ads, GA4 posts | Replaced with troubleshooting guide link |
+| `/blog/linkedin-ads-access-guide` | Multiple posts | Fixed to `/blog/linkedin-ads-access-agency` |
+| `/blog/leadsie-alternatives` | Leadsie comparison post | Removed (replaced with CTA link) |
+| `/blog/leadsie-alternatives-7-tools` | Leadsie comparison post | Removed from relatedPosts |
+| `/blog/client-onboarding-47-email-problem` | Meta, GA4, Leadsie posts | Replaced with `client-onboarding-checklist` |
+| `/blog/agency-business-manager-structure` | Troubleshooting post | Replaced with existing post links |
+| `/blog/client-offboarding-checklist` | Troubleshooting post | Replaced with existing post links |
+| `/blog/meta-business-suite-vs-manager` | Troubleshooting post | Replaced with existing post links |
+| `/guides/linkedin-ads-access` | Google guide sidebar | Fixed to `/blog/linkedin-ads-access-agency` |
+| `/guides/tiktok-ads-access` | Meta guide sidebar | Fixed to `/blog/tiktok-ads-access-agency` |
+| `/guides/pinterest-ads-access` | Meta guide sidebar | Fixed to `/blog/pinterest-ads-access-agencies` |
 
 ---
 
@@ -345,9 +345,9 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 - `/compare/authhub-vs-leadsie` is NOT needed — `/compare/leadsie-alternative` already covers that intent. Ensure it targets both "Leadsie alternative" and "AuthHub vs Leadsie" keywords.
 
 **Action plan**:
-1. Fix 5 blog posts with "2024" in title/meta → update to "2026"
-2. Ensure `/compare/leadsie-alternative` also targets "AuthHub vs Leadsie" in metadata
-3. Add target keywords from keyword tracker to existing blog post metadata
+1. ~~Fix 5 blog posts with "2024" in title/meta → update to "2026"~~ ✅ Done
+2. ~~Ensure `/compare/leadsie-alternative` also targets "AuthHub vs Leadsie" in metadata~~ ✅ Done
+3. Add target keywords from keyword tracker to existing blog post metadata (backlog)
 4. Only build new `/guides/` pages if blog posts aren't ranking after 60-90 days
 
 ---
@@ -362,17 +362,22 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | 2 | /guides/google-ads-access | Guide | "how to request Google Ads access" | ✅ **LIVE** |
 | 2 | /guides/meta-ads-access | Guide | "Meta ads access for agencies" | ✅ **LIVE** |
 | 3 | /blog/client-onboarding-checklist | Blog + PDF | "client onboarding checklist" | ✅ **LIVE** |
-| 4 | /blog/flat-rate-vs-credit-pricing | Blog | "agency pricing models" | ❌ **NOT CREATED** |
+| 4 | /blog/flat-rate-vs-credit-pricing | Blog | "agency pricing models" | ✅ **DRAFT COMPLETE** (March 18) — publish-ready, 9/10 quality |
 
-**Month 2 (March)** — 🎯 CURRENT
+**Month 2 (March)** — ✅ HOUSEKEEPING COMPLETE
 
 | Week | Content | Type | Keyword | Status |
 |------|---------|------|---------|--------|
-| 1 | Fix "2024" metadata on 5 blog posts | Maintenance | — | 🎯 **DO NOW** |
-| 1 | Ensure leadsie-alternative targets "AuthHub vs Leadsie" | SEO | "AuthHub vs Leadsie" | 🎯 **DO NOW** |
-| 2 | /blog/flat-rate-vs-credit-pricing | Blog | "agency pricing models" | ❌ **NOT CREATED** |
-| 3 | /blog/how-to-onboard-clients-faster | Blog | "client onboarding best practices" | ❌ **NOT CREATED** |
-| 4 | /blog/onboarding-roi-calculator | Interactive | "client onboarding ROI" | ❌ **NOT CREATED** |
+| 1 | Fix "2024" metadata on 5 blog posts | Maintenance | — | ✅ **DONE** |
+| 1 | Ensure leadsie-alternative targets "AuthHub vs Leadsie" | SEO | "AuthHub vs Leadsie" | ✅ **DONE** |
+| 1 | Fix 11 broken internal links | Maintenance | — | ✅ **DONE** |
+| 1 | Fix Leadsie comparison data (pricing, platforms, URL) | Maintenance | — | ✅ **DONE** |
+| 1 | Standardize AuthHub pricing to $29/mo everywhere | Maintenance | — | ✅ **DONE** |
+| 1 | Add canonical URL on Meta Ads blog post | SEO | — | ✅ **DONE** |
+| 1 | Add HowTo schema to Google Ads guide | SEO | — | ✅ **DONE** |
+| 2 | /blog/flat-rate-vs-credit-pricing | Blog | "agency pricing models" | ✅ **DRAFT COMPLETE** (March 18) |
+| 3 | /blog/how-to-onboard-clients-faster | Blog | "client onboarding best practices" | ❌ **NOT CREATED** — moved to Q2 |
+| 4 | /blog/onboarding-roi-calculator | Interactive | "client onboarding ROI" | ❌ **NOT CREATED** — replaced by `/blog/flat-rate-vs-credit-pricing` |
 
 **Month 3 (April)**
 
@@ -386,7 +391,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (10 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (12 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
@@ -394,12 +399,14 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `google-ads-access-agency` | Google Ads Access Guide | tutorials | 2026 | Date updated from 2024 |
 | `ga4-access-agencies` | GA4 Access for Agencies | tutorials | 2026 | Date updated from 2024 |
 | `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | comparisons | 2026 | Pricing fixed ($29/mo), date updated |
+| `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | tutorials | 2026 | Cannibalizes Meta Ads post |
 | `linkedin-ads-access-agency` | LinkedIn Ads Access for Agencies | tutorials | 2026 | Date updated from 2024 |
 | `pinterest-ads-access-agencies` | Pinterest Ads Access for Agencies | tutorials | 2025 | Minor — year |
 | `tiktok-ads-access-agency` | TikTok Ads Access for Agencies | tutorials | 2026 | Fresh |
 | `client-onboarding-checklist` | The Complete Client Onboarding Checklist | onboarding | 2026 | Fresh |
 | `agency-ad-account-access-management-guide` | Ultimate Guide to Agency Ad Account Access | tutorials | 2026 | Fresh |
 | `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Troubleshooting Guide: Fix Common Ad Account Access Issues | tutorials | 2026 | Broken links fixed |
+| `flat-rate-vs-credit-pricing` | Flat-Rate vs Credit Pricing for Agency Tools (2026) | operations | 2026 | Draft complete, Q2 kickoff, competitive wedge |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 
@@ -421,36 +428,39 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 |-------|------|----------|------|
 | `/compare/client-onboarding-tools` | Comparison | P1 | Broad comparison hub |
 | `/templates/*` | Templates | P2 | No route at all |
-| `/blog/flat-rate-vs-credit-pricing` | Blog | P1 | Pricing comparison |
+| `/blog/flat-rate-vs-credit-pricing` | Blog | ~~P1~~ ✅ Draft complete |
 | `/blog/how-to-onboard-clients-faster` | Blog | P1 | High-value editorial |
 | `/blog/what-to-ask-new-clients` | Blog | P2 | Template/gated |
 | `/blog/onboarding-roi-calculator` | Interactive | P2 | |
 | `/blog/security-compliance-agencies` | Blog | P2 | |
 
-### Content Quality Issues
+### Content Quality Issues ✅ ALL RESOLVED (March 18, 2026)
 
-| Issue | Affected Posts | Action |
-|-------|----------------|--------|
-| Stale "2024" in title/meta | ga4, google-ads, meta, linkedin, leadsie-comparison (5 posts) | Update frontmatter to 2026 |
-| Missing keyword targeting on existing posts | GA4, LinkedIn, TikTok, Pinterest | Add target keywords from keyword tracker to meta |
-| leadsie-alternative not targeting "AuthHub vs Leadsie" | `/compare/leadsie-alternative` | Add "AuthHub vs Leadsie" to keywords/metadata |
+| Issue | Affected Posts | Action | Status |
+|-------|----------------|--------|--------|
+| Stale "2024" in title/meta | ga4, google-ads, meta, linkedin, leadsie-comparison (5 posts) | Updated frontmatter to 2026 | ✅ |
+| Missing keyword targeting on existing posts | GA4, LinkedIn, TikTok, Pinterest | Add target keywords from keyword tracker to meta | 🔲 Backlog |
+| leadsie-alternative not targeting "AuthHub vs Leadsie" | `/compare/leadsie-alternative` | Added "AuthHub vs Leadsie" to keywords/metadata | ✅ |
+| Meta Ads H1 says "2024 Guide" | `how-to-get-meta-ads-access-from-clients` | Fixed to 2026 | ✅ |
+| Keyword cannibalization (2 Meta Ads posts) | Blog post vs `/guides/meta-ads-access` | Added canonical URL on blog post | ✅ |
+| No HowTo schema on Google Ads guide | `/guides/google-ads-access` | Added HowTo JSON-LD | ✅ |
 
 ---
 
 ## 🎯 Next Actions (Updated March 18, 2026)
 
-### P0 — Fix Before Any New Content (This Week)
+### P0 — Fix Before Any New Content ✅ ALL COMPLETED (March 18, 2026)
 
-1. **Fix Leadsie comparison data**: Update `comparison-data.ts` — pricing ($49 not $99), platforms (31+ not 8), website URL (leadsie.com not leadsie.io)
-2. **Align AuthHub pricing everywhere**: Pick ONE price structure, update blog posts, comparison pages, and any marketing materials
-3. **Fix 11 broken internal links**: Remove or redirect all references to non-existent pages (see inventory above)
-4. **Fix Meta Ads H1**: Change "2024 Guide" to "2026 Guide" in `how-to-get-meta-ads-access-from-clients.md`
+1. ~~**Fix Leadsie comparison data**: Update `comparison-data.ts` — pricing ($49 not $99), platforms (31+ not 8), website URL (leadsie.com not leadsie.io)~~ ✅ Done
+2. ~~**Align AuthHub pricing everywhere**: Pick ONE price structure, update blog posts, comparison pages, and any marketing materials~~ ✅ Done — standardized to $29/mo
+3. ~~**Fix 11 broken internal links**: Remove or redirect all references to non-existent pages (see inventory above)~~ ✅ Done
+4. ~~**Fix Meta Ads H1**: Change "2024 Guide" to "2026 Guide" in `how-to-get-meta-ads-access-from-clients.md`~~ ✅ Done
+5. ~~**Update 5 blog post dates**: Change `publishedAt` from 2024 to 2026~~ ✅ Done
+6. ~~**Fix blog post pricing**: Update `leadsie-vs-authhub-comparison.md` from $79/mo to actual pricing~~ ✅ Done
+7. ~~**Add canonical URL**: Resolve Meta Ads keyword cannibalization with `/guides/meta-ads-access`~~ ✅ Done
+8. ~~**Add HowTo schema**: Google Ads guide now matches Meta guide pattern~~ ✅ Done
 
-### Week 1 (March 31 - April 4)
-
-5. **Update 5 blog post dates**: Change `publishedAt` from 2024 to 2026 (or add `lastUpdated`)
-6. **Create `/blog/flat-rate-vs-credit-pricing`**: Q2 content #1 — our #1 differentiator wedge
-7. **Fix blog post pricing**: Update `leadsie-vs-authhub-comparison.md` from $79/mo to actual pricing
+### Week 1 (March 31 - April 4) — Q2 Content Kickoff
 
 ### Week 2 (April 7 - April 11)
 
@@ -479,7 +489,7 @@ These capture agencies actively evaluating solutions or frustrated with Leadsie.
 | # | Title / Topic | Type | Target Keyword(s) | Est. Volume | Why This Works |
 |---|-------------|------|-------------------|-------------|----------------|
 | 1 | **Flat-Rate vs Credit Pricing for Agency Tools** | Blog | "flat rate vs credit pricing agency tools", "agency tool pricing models" | 50-100/mo | **Leadsie has NO content on this.** Their credit pricing + $30 overage fees are a documented pain point. This is our #1 differentiator wedge. |
-| 2 | **Leadsie Alternative: Why Agencies Switch to AuthHub** | Comparison (update) | "Leadsie alternative", "AuthHub vs Leadsie", "agency onboarding tools" | 200-500/mo | **Update with accurate 2026 data** (fix pricing, platform count, website). Add FAQ schema. This is our highest-intent page. |
+| 2 | **Leadsie Alternative: Why Agencies Switch to AuthHub** | Comparison (update) | "Leadsie alternative", "AuthHub vs Leadsie", "agency onboarding tools" | 200-500/mo | **Updated with accurate 2026 data** (pricing, platform count, website fixed March 18). Add FAQ schema and refresh in W3. This is our highest-intent page. |
 | 3 | **What Is Client Access Management?** | Blog (category-defining) | "what is client access management", "client access management platform" | 100-300/mo | **Own the category definition.** Leadsie has no educational "what is" content. This frames the problem in our terms. |
 | 4 | **Best Client Onboarding Software for Agencies (2026)** | Listicle | "best client onboarding software for agencies", "client onboarding tools" | 500-1K/mo | **Leadsie wrote this too (16 tools)**. We write a more honest, detailed version. Include AuthHub at #1 with transparent "why us" section. |
 
@@ -517,11 +527,9 @@ Content that builds topical authority and captures adjacent search intent.
 | Week | Content | Tier | Keyword Priority |
 |------|---------|------|-----------------|
 | W1 | #1 Flat-Rate vs Credit Pricing | T1 | Differentiator wedge |
-| W1 | Fix broken links + pricing inconsistencies | P0 | Housekeeping |
 | W2 | #3 What Is Client Access Management? | T1 | Category definition |
 | W2 | #5 How to Onboard a New Marketing Client | T2 | Pillar content |
 | W3 | #4 Best Client Onboarding Software (2026) | T1 | Comparison/intent capture |
-| W3 | Update Leadsie comparison page with accurate data | P0 | Housekeeping |
 | W4 | #6 Agency Security Checklist | T2 | Differentiator |
 | W4 | #8 Social Media Access Request Template | T2 | Lead magnet |
 
