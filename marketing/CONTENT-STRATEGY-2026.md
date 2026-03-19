@@ -391,7 +391,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (12 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (13 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
@@ -407,6 +407,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `agency-ad-account-access-management-guide` | Ultimate Guide to Agency Ad Account Access | tutorials | 2026 | Fresh |
 | `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Troubleshooting Guide: Fix Common Ad Account Access Issues | tutorials | 2026 | Broken links fixed |
 | `flat-rate-vs-credit-pricing` | Flat-Rate vs Credit Pricing for Agency Tools (2026) | operations | 2026 | Draft complete, Q2 kickoff, competitive wedge |
+| `what-is-client-access-management` | What Is Client Access Management? (2026 Guide for Agencies) | operations | 2026 | 9/10, publish-ready, elite copywriting polish |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 
@@ -464,7 +465,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ### Week 2 (April 7 - April 11)
 
-8. **Create `/blog/what-is-client-access-management`**: Q2 content #3 — category definition
+8. ~~**Create `/blog/what-is-client-access-management`**: Q2 content #3 — category definition~~ ✅ **PUBLISH-READY, 9/10** (March 19 — elite copywriting polish)
 9. **Create `/blog/how-to-onboard-new-marketing-client`**: Q2 content #5 — pillar content
 
 ### Week 3 (April 14 - April 18)
@@ -490,7 +491,7 @@ These capture agencies actively evaluating solutions or frustrated with Leadsie.
 |---|-------------|------|-------------------|-------------|----------------|
 | 1 | **Flat-Rate vs Credit Pricing for Agency Tools** | Blog | "flat rate vs credit pricing agency tools", "agency tool pricing models" | 50-100/mo | **Leadsie has NO content on this.** Their credit pricing + $30 overage fees are a documented pain point. This is our #1 differentiator wedge. |
 | 2 | **Leadsie Alternative: Why Agencies Switch to AuthHub** | Comparison (update) | "Leadsie alternative", "AuthHub vs Leadsie", "agency onboarding tools" | 200-500/mo | **Updated with accurate 2026 data** (pricing, platform count, website fixed March 18). Add FAQ schema and refresh in W3. This is our highest-intent page. |
-| 3 | **What Is Client Access Management?** | Blog (category-defining) | "what is client access management", "client access management platform" | 100-300/mo | **Own the category definition.** Leadsie has no educational "what is" content. This frames the problem in our terms. |
+| 3 | **What Is Client Access Management?** | Blog (category-defining) | "what is client access management", "client access management platform" | 100-300/mo | **Own the category definition.** Leadsie has no educational "what is" content. This frames the problem in our terms. ✅ **Draft 9/10** |
 | 4 | **Best Client Onboarding Software for Agencies (2026)** | Listicle | "best client onboarding software for agencies", "client onboarding tools" | 500-1K/mo | **Leadsie wrote this too (16 tools)**. We write a more honest, detailed version. Include AuthHub at #1 with transparent "why us" section. |
 
 **Tier 2 — Differentiator Content (Weeks 5-8)**
