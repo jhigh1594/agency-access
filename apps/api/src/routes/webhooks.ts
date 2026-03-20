@@ -22,7 +22,11 @@ import {
   sendWebhookTestEvent,
 } from '@/services/webhook-management.service';
 import { webhookService } from '@/services/webhook.service';
-import { SubscriptionTier } from '@agency-platform/shared';
+import {
+  SubscriptionTier,
+  type WebhookApiVersion,
+  WebhookApiVersionSchema,
+} from '@agency-platform/shared';
 import { getTierFromProductId } from '@/config/creem.config';
 import { creem } from '@/lib/creem';
 
@@ -155,20 +159,36 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     const actorEmail = resolveActorEmail(request);
     const existing = await getWebhookEndpoint(id);
 
+    let preferredApiVersion: WebhookApiVersion | undefined;
+    if (body.preferredApiVersion !== undefined) {
+      const versionParsed = WebhookApiVersionSchema.safeParse(body.preferredApiVersion);
+      if (!versionParsed.success) {
+        return reply.code(400).send({
+          data: null,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid preferredApiVersion',
+            details: versionParsed.error.flatten(),
+          },
+        });
+      }
+      preferredApiVersion = versionParsed.data;
+    }
+
     const result =
       existing.data && !existing.error
         ? await updateWebhookEndpoint({
             agencyId: id,
             url: body.url,
             subscribedEvents: body.subscribedEvents as any,
-            preferredApiVersion: body.preferredApiVersion,
+            preferredApiVersion,
             updatedBy: actorEmail,
           })
         : await createWebhookEndpoint({
             agencyId: id,
             url: body.url,
             subscribedEvents: body.subscribedEvents as any,
-            preferredApiVersion: body.preferredApiVersion,
+            preferredApiVersion,
             createdBy: actorEmail,
           });
 

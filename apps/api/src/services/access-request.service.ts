@@ -19,6 +19,7 @@ import {
   type GooglePlatformProductId,
   type GoogleProductFulfillmentMode,
   type GoogleProductGrantLifecycle,
+  type WebhookAccessRequestLifecycleEventType,
 } from '@agency-platform/shared';
 import { invalidateDashboardCache } from '@/lib/cache.js';
 import { env } from '@/lib/env.js';
@@ -758,11 +759,9 @@ function evaluateAuthorizationProgress(
   };
 }
 
-type AccessRequestLifecycleEventType = 'access_request.partial' | 'access_request.completed';
-
 function getAccessRequestLifecycleEventType(
   status: string
-): AccessRequestLifecycleEventType | null {
+): WebhookAccessRequestLifecycleEventType | null {
   if (status === 'partial') {
     return 'access_request.partial';
   }
