@@ -391,7 +391,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (13 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (15 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
@@ -408,6 +408,8 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `troubleshooting-guide-how-to-fix-common-ad-account-access-issues` | Troubleshooting Guide: Fix Common Ad Account Access Issues | tutorials | 2026 | Broken links fixed |
 | `flat-rate-vs-credit-pricing` | Flat-Rate vs Credit Pricing for Agency Tools (2026) | operations | 2026 | Draft complete, Q2 kickoff, competitive wedge |
 | `what-is-client-access-management` | What Is Client Access Management? (2026 Guide for Agencies) | operations | 2026 | 9/10, publish-ready, elite copywriting polish |
+| `how-to-onboard-new-marketing-client` | How to Onboard a New Marketing Client (The Real 2026 Guide) | onboarding | 2026 | 9/10, publish-ready, elite copywriting pass |
+| `best-client-onboarding-software-agencies-2026` | Best Client Onboarding Software for Agencies (2026) — Honest Breakdown | operations | 2026 | 9/10, publish-ready, category-based framework |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 
@@ -471,7 +473,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 ### Week 3 (April 14 - April 18)
 
 10. **Update Leadsie comparison page**: Re-verify competitor data, add FAQ schema, add "AuthHub vs Leadsie" to keywords
-11. **Create `/blog/best-client-onboarding-software-agencies`**: Q2 content #4 — intent capture listicle
+11. ~~**Create `/blog/best-client-onboarding-software-agencies-2026`**: Q2 content #4 — intent capture listicle~~ ✅ **PUBLISH-READY, 9/10** (March 20 — category-based framework, unique angle)
 
 ### Q2 2026: Competitive Capture & Authority (Updated March 18, 2026)
 
