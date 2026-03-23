@@ -1,0 +1,26 @@
+{
+  "skill_name": "blog-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "name": "category-defining-post",
+      "prompt": "Write a blog post about 'what is client access management' for marketing agencies. This should be a category-defining article that positions AuthHub as the authoritative voice on a term that doesn't have a clear Wikipedia answer yet. Target awareness-stage agencies who are losing 8-12 hours per month on platform access chaos. Include the 5-stage lifecycle framework (Request, Authorization, Verification, Maintenance, Revocation), 2-3 sourced statistics, and honest AuthHub positioning. The post should be 1500-2000 words, read time 8-10 min, with 3-5 internal links to existing posts. Use the blog-pipeline skill.",
+      "expected_output": "A publish-ready (9/10) markdown file at apps/web/content/blog/ with complete frontmatter (id, title, excerpt, category: operations, stage: awareness, publishedAt, readTime, author, tags, metaTitle, metaDescription, relatedPosts). Article should open with a problem vignette, define the term clearly, present a lifecycle framework, quantify the cost ($1,500/month range), and include honest evaluation criteria. No AI-isms. Natural voice.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "listicle-post",
+      "prompt": "Let's write the next blog post from the content calendar. Check marketing/content/CONTENT-CALENDAR-Q1-2026.md to see what's next, then write it using the blog-pipeline skill. It should be the next unscheduled or draft-incomplete post. Follow the full pipeline: research, brief, draft, SEO, polish, quality review, and docs sync. Target 9/10 quality.",
+      "expected_output": "A publish-ready (9/10) blog post file at apps/web/content/blog/. The specific post depends on the calendar, but it should follow the blog-pipeline's 7-phase process with proper frontmatter, SEO elements, internal linking, and quality rating. After completion, the content calendar and content strategy files should be updated.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "comparison-post",
+      "prompt": "I want a data-driven comparison blog post about flat-rate vs credit pricing for agency tools. The angle: most comparison posts rank tools as if they solve the same problem. This one should explain why flat-rate pricing is fundamentally different from credit pricing, use real competitor pricing data (Leadsie charges $49/mo + $30 overage per action), and include 3 scenario tables showing costs for small (3-5 clients), mid (10-15), and large (25+) agencies. Include the '$150 surprise' scenario where credit pricing catches agencies off guard. Honest assessment of when credit pricing actually wins. Target consideration stage. 1500-2000 words. Use the blog-pipeline skill.",
+      "expected_output": "A publish-ready (9/10) blog post at apps/web/content/blog/ with proper frontmatter. Article should open with a vignette (invoice surprise), define both models clearly, include 3 scenario tables with real calculations, present the surprise scenario, give honest assessment of credit pricing strengths, and end with a clear recommendation tied to agency size. Zero AI-isms. Specific numbers throughout. Content calendar and strategy docs updated after completion.",
+      "files": []
+    }
+  ]
+}
