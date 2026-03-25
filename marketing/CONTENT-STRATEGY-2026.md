@@ -410,6 +410,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `what-is-client-access-management` | What Is Client Access Management? (2026 Guide for Agencies) | operations | 2026 | 9/10, publish-ready, elite copywriting polish |
 | `how-to-onboard-new-marketing-client` | How to Onboard a New Marketing Client (The Real 2026 Guide) | onboarding | 2026 | 9/10, publish-ready, elite copywriting pass |
 | `best-client-onboarding-software-agencies-2026` | Best Client Onboarding Software for Agencies (2026) — Honest Breakdown | operations | 2026 | 9/10, publish-ready, category-based framework |
+| `agency-security-checklist` | The Agency Security Checklist: Protect Client Access in 2026 | security | 2026 | 8.5/10, publish-ready, 6-phase framework, unique angle |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 
