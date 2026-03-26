@@ -9,7 +9,7 @@
 
 ## What's Actually Live (Ground Truth)
 
-### Blog Posts (17) — `/blog/[slug]`
+### Blog Posts (18) — `/blog/[slug]`
 | Slug | Title | Year | Quality Rating |
 |------|-------|------|---------------|
 | `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | 2026 | 7/10 — dates fixed, canonical added, links fixed |
@@ -29,6 +29,7 @@
 | `best-client-onboarding-software-agencies-2026` | Best Client Onboarding Software for Agencies (2026) — Honest Breakdown | 2026 | 9/10 — publish-ready, category-based framework, unique angle |
 | `agency-security-checklist` | The Agency Security Checklist: Protect Client Access in 2026 | 2026 | 8.5/10 — publish-ready, 6-phase framework, no competitor covers this angle |
 | `social-media-access-request-template` | Social Media Access Request Template for Agencies (2026) | 2026 | 9/10 — publish-ready, platform-specific templates + follow-ups, practical utility post |
+| `how-to-revoke-client-access-offboarding` | How to Revoke Client Access When Offboarding (2026) | 2026 | 9/10 — publish-ready, 5-phase framework, platform-by-platform revocation instructions |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
 | Slug | Title | SEO Score |
@@ -182,7 +183,7 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 
 | Day | Content | Type | Keyword Target |
 |-----|---------|------|---------------|
-| Tue | #7 `/blog/how-to-revoke-client-access-offboarding` | Blog | "how to revoke client access" |
+| Tue | #7 `/blog/how-to-revoke-client-access-offboarding` | Blog | "how to revoke client access" | ✅ **DRAFT COMPLETE** — 9/10, publish-ready, 5-phase framework, platform-by-platform instructions |
 | Thu | #10 `/blog/how-to-see-who-has-access-facebook-page` | Blog | "how to see who has access to facebook page" |
 
 ### Week 12 (Apr 28 - May 4)
@@ -277,5 +278,5 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 
 ---
 
-**Last Updated**: March 25, 2026
+**Last Updated**: March 25, 2026 (added how-to-revoke-client-access-offboarding)
 **Next Review**: April 15, 2026 (mid-Q2 performance check)

@@ -391,13 +391,14 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (17 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (18 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
 | `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | tutorials | 2026 | Canonical → `/guides/meta-ads-access` |
 | `google-ads-access-agency` | Google Ads Access Guide | tutorials | 2026 | Date updated from 2024 |
 | `social-media-access-request-template` | Social Media Access Request Template for Agencies (2026) | onboarding | 2026 | Platform-specific templates + follow-ups, practical utility |
+| `how-to-revoke-client-access-offboarding` | How to Revoke Client Access When Offboarding (2026) | operations | 2026 | 5-phase offboarding framework, platform-by-platform revocation instructions |
 | `ga4-access-agencies` | GA4 Access for Agencies | tutorials | 2026 | Date updated from 2024 |
 | `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | comparisons | 2026 | Pricing fixed ($29/mo), date updated |
 | `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | tutorials | 2026 | Cannibalizes Meta Ads post |
@@ -837,6 +838,6 @@ Each platform guide follows this structure:
 
 ---
 
-**Last Updated**: March 18, 2026 (competitive intelligence audit + Q2 calendar refresh)
+**Last Updated**: March 25, 2026 (offboarding guide added)
 **Next Review**: April 15, 2026 (mid-Q2 performance check)
 **Owner**: Marketing Team
