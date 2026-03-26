@@ -33,6 +33,7 @@
 | Keyword | Monthly Volume | Current Rank | Target Rank | Target Page | Priority |
 |---------|----------------|--------------|-------------|-------------|----------|
 | client onboarding checklist | ~1,000-2,000 | N/A | Top 10 | /blog/client-onboarding-checklist | P0 |
+| client onboarding questionnaire | ~500-1,000 | N/A | Top 5 | /blog/client-onboarding-questionnaire-27-questions | P1 |
 | agency onboarding process | ~300-500 | N/A | Top 10 | /blog/how-to-onboard-clients-faster | P1 |
 | client intake form template | ~500-1,000 | N/A | Top 10 | /templates/client-intake-form | P1 |
 | marketing agency client onboarding | ~200-400 | N/A | Top 10 | /blog/client-onboarding-checklist | P1 |

@@ -391,7 +391,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (18 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (19 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
@@ -399,6 +399,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `google-ads-access-agency` | Google Ads Access Guide | tutorials | 2026 | Date updated from 2024 |
 | `social-media-access-request-template` | Social Media Access Request Template for Agencies (2026) | onboarding | 2026 | Platform-specific templates + follow-ups, practical utility |
 | `how-to-revoke-client-access-offboarding` | How to Revoke Client Access When Offboarding (2026) | operations | 2026 | 5-phase offboarding framework, platform-by-platform revocation instructions |
+| `how-to-see-who-has-access-facebook-page` | How to See Who Has Access to a Facebook Page (2026 Agency Guide) | tutorials | 2026 | 8.5/10, publish-ready, step-by-step tutorial with role tables, security checklist, agency focus |
 | `ga4-access-agencies` | GA4 Access for Agencies | tutorials | 2026 | Date updated from 2024 |
 | `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | comparisons | 2026 | Pricing fixed ($29/mo), date updated |
 | `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | tutorials | 2026 | Cannibalizes Meta Ads post |
@@ -413,6 +414,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `how-to-onboard-new-marketing-client` | How to Onboard a New Marketing Client (The Real 2026 Guide) | onboarding | 2026 | 9/10, publish-ready, elite copywriting pass |
 | `best-client-onboarding-software-agencies-2026` | Best Client Onboarding Software for Agencies (2026) — Honest Breakdown | operations | 2026 | 9/10, publish-ready, category-based framework |
 | `agency-security-checklist` | The Agency Security Checklist: Protect Client Access in 2026 | security | 2026 | 8.5/10, publish-ready, 6-phase framework, unique angle |
+| `client-onboarding-questionnaire-27-questions` | Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask | onboarding | 2026 | 9/10, publish-ready, 27 questions across 6 categories, downloadable template |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 
