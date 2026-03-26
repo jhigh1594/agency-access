@@ -37,6 +37,7 @@
 | client intake form template | ~500-1,000 | N/A | Top 10 | /templates/client-intake-form | P1 |
 | marketing agency client onboarding | ~200-400 | N/A | Top 10 | /blog/client-onboarding-checklist | P1 |
 | agency security checklist | ~100-200 | N/A | Top 5 | /blog/agency-security-checklist | P1 |
+| social media access request template | ~200-400 | N/A | Top 5 | /blog/social-media-access-request-template | P1 |
 
 ### Tier 4: Branded/Defensive (P1)
 

@@ -9,7 +9,7 @@
 
 ## What's Actually Live (Ground Truth)
 
-### Blog Posts (14) — `/blog/[slug]`
+### Blog Posts (17) — `/blog/[slug]`
 | Slug | Title | Year | Quality Rating |
 |------|-------|------|---------------|
 | `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | 2026 | 7/10 — dates fixed, canonical added, links fixed |
@@ -28,6 +28,7 @@
 | `how-to-onboard-new-marketing-client` | How to Onboard a New Marketing Client (The Real 2026 Guide) | 2026 | 9/10 — publish-ready, 4 sourced stats, AI-pattern-free, elite copywriting pass |
 | `best-client-onboarding-software-agencies-2026` | Best Client Onboarding Software for Agencies (2026) — Honest Breakdown | 2026 | 9/10 — publish-ready, category-based framework, unique angle |
 | `agency-security-checklist` | The Agency Security Checklist: Protect Client Access in 2026 | 2026 | 8.5/10 — publish-ready, 6-phase framework, no competitor covers this angle |
+| `social-media-access-request-template` | Social Media Access Request Template for Agencies (2026) | 2026 | 9/10 — publish-ready, platform-specific templates + follow-ups, practical utility post |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
 | Slug | Title | SEO Score |
@@ -175,7 +176,7 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 | Day | Content | Type | Keyword Target |
 |-----|---------|------|---------------|
 | Tue | #6 `/blog/agency-security-checklist` | Blog | "agency security checklist" | ✅ **DRAFT COMPLETE** — 8.5/10, 6-phase framework, unique angle |
-| Thu | #8 `/blog/social-media-access-request-template` | Blog + template | "social media access request template" |
+| Thu | #8 `/blog/social-media-access-request-template` | Blog + template | "social media access request template" | ✅ **DRAFT COMPLETE** — 9/10, platform-specific templates + follow-ups, practical utility post |
 
 ### Week 11 (Apr 21-27)
 
@@ -276,5 +277,5 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 
 ---
 
-**Last Updated**: March 18, 2026
+**Last Updated**: March 25, 2026
 **Next Review**: April 15, 2026 (mid-Q2 performance check)

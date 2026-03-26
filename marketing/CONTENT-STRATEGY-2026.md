@@ -391,12 +391,13 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (15 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (17 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
 | `how-to-get-meta-ads-access-from-clients` | How to Get Meta Ads Access From Clients | tutorials | 2026 | Canonical → `/guides/meta-ads-access` |
 | `google-ads-access-agency` | Google Ads Access Guide | tutorials | 2026 | Date updated from 2024 |
+| `social-media-access-request-template` | Social Media Access Request Template for Agencies (2026) | onboarding | 2026 | Platform-specific templates + follow-ups, practical utility |
 | `ga4-access-agencies` | GA4 Access for Agencies | tutorials | 2026 | Date updated from 2024 |
 | `leadsie-vs-authhub-comparison` | Leadsie vs Other Platforms vs AuthHub | comparisons | 2026 | Pricing fixed ($29/mo), date updated |
 | `meta-business-manager-access-guide` | How to Grant Meta Business Manager Access | tutorials | 2026 | Cannibalizes Meta Ads post |
