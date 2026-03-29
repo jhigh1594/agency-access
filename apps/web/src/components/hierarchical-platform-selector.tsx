@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { ChevronDown, Check, Minus, AlertCircle, Link2, Edit, Mail } from 'lucide-react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { PLATFORM_HIERARCHY, AccessLevel, ACCESS_LEVEL_DESCRIPTIONS } from '@agency-platform/shared';
 import Link from 'next/link';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
@@ -92,6 +92,7 @@ export function HierarchicalPlatformSelector({
   platformAccessLevels,
   onPlatformAccessLevelChange,
 }: HierarchicalPlatformSelectorProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [expandedGroups, setExpandedGroups] = useState<GroupState>({});
 
   // Manual invitation modal state
@@ -303,6 +304,7 @@ export function HierarchicalPlatformSelector({
                 onClick={() => toggleGroup(groupKey)}
                 className="flex-1 flex items-center gap-3 text-left min-w-0"
                 aria-expanded={isExpanded}
+                aria-label={`${group.name} platform group`}
               >
                 <PlatformIcon platform={groupKey as Platform} size="sm" />
                 <div className="flex-1 min-w-0">
@@ -337,7 +339,10 @@ export function HierarchicalPlatformSelector({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  transition={{
+                    duration: prefersReducedMotion ? 0 : 0.2,
+                    ease: 'easeInOut',
+                  }}
                   className="overflow-hidden"
                 >
                   {(() => {
@@ -474,6 +479,7 @@ export function HierarchicalPlatformSelector({
                                   id={inputId}
                                   type="checkbox"
                                   className="sr-only"
+                                  aria-label={product.name}
                                   checked={isSelected}
                                   onChange={() => handleProductToggle(groupKey, product.id)}
                                 />

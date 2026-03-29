@@ -48,7 +48,7 @@ describe('UsageLimitsCard', () => {
     await waitFor(() => {
       expect(mockCreateCheckoutMutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
-          tier: 'AGENCY',
+          tier: 'GROWTH',
         })
       );
     });

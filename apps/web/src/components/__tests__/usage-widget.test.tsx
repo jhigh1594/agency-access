@@ -161,15 +161,15 @@ describe('UsageWidget Component - TDD Tests', () => {
     });
   });
 
-  describe('Unlimited Seats (PRO Tier)', () => {
-    it('should display unlimited text for PRO tier seats', async () => {
+  describe('Unlimited Seats (AGENCY Tier)', () => {
+    it('should display unlimited text for AGENCY tier seats', async () => {
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => ({
           data: {
             ...mockUsageData,
-            tier: 'PRO',
-            tierName: 'Pro',
+            tier: 'AGENCY',
+            tierName: 'Agency',
             metrics: {
               ...mockUsageData.metrics,
               teamSeats: {

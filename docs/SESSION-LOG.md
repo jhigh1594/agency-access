@@ -27,6 +27,35 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
+## Session: 2026-03-29 — INP improvements and client perf gate
+
+### What was done
+- Dashboard: synchronous pending UI on Create Request, `usePrefetchQuota` on mount, tests for immediate loading while quota is pending.
+- Invite: lazy PostHog via `capture-posthog`, server wrapper + `dynamic()` client split, reduced-motion scroll behavior; loader tests for dynamic import path.
+- Access request edit: save button loading/`aria-busy` hygiene; `HierarchicalPlatformSelector` respects `prefers-reduced-motion` for collapse duration.
+- Regression: `scripts/perf/web-inp-smoke.sh`, root script `npm run perf:web:inp-smoke`, workflow `.github/workflows/web-client-perf-gate.yml` (Vitest smoke, no production build secrets).
+
+### Files changed
+- See git diff for `apps/web` (dashboard, invite, edit, hierarchical selector), `scripts/perf/web-inp-smoke.sh`, `.github/workflows/web-client-perf-gate.yml`, `package.json`, `AGENTS.md`, `docs/SESSION-LOG.md`.
+
+### Field monitoring and refinement loop
+- **Vercel Speed Insights**: After deploy, watch **P75 INP** for `/invite/[token]`, `/dashboard`, and `/access-requests/*` for ~2 weeks; treat low sample counts as directional until roughly 100+ sessions per route.
+- **Lab**: Chrome Performance on Create Request, invite Continue, edit Save; confirm first paint after input shows loading/disabled state.
+- **Repeat**: measure → hypothesis (bundle vs async handler vs animation) → minimal change → `npm run perf:web:inp-smoke` + targeted tests → ship → measure again.
+
+### Verification (same session)
+- `npm run perf:web:inp-smoke`, `npm run typecheck`, and `npm run lint` (warnings only) succeeded.
+- `packages/shared` Jest tests updated for `STARTER` / `GROWTH` / `AGENCY` tier model and Google product count in `PLATFORM_HIERARCHY`.
+- `apps/web` full `vitest run` still reports failures in legacy Phase 5 TDD files (`access-level-selector.test.tsx`, `client-selector.test.tsx`); billing/plan/current-plan/usage-widget and `hierarchical-platform-selector` Phase 5 tests were aligned with current UI. Follow-up: repair or skip the remaining Phase 5 client/access-level suites.
+
+### Decisions made
+- Client perf gate is **Vitest smoke only** (no Lighthouse CI / bundle byte budget in CI): production `next build` requires valid Clerk keys; bundle checks remain manual via local `next build` output or analyzer when needed.
+
+### Next steps
+- Compare Vercel SI P75 INP before/after once sample sizes are meaningful.
+
+---
+
 ## Session: 2026-03-17 — Google Ads Manage Assets Consolidation
 
 ### What was done

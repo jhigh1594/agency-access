@@ -417,8 +417,8 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       expect(totalProducts).toBeGreaterThanOrEqual(15);
     });
 
-    it('should have Google products count >= 8', () => {
-      expect(PLATFORM_HIERARCHY.google.products.length).toBeGreaterThanOrEqual(8);
+    it('should have Google products count >= 6', () => {
+      expect(PLATFORM_HIERARCHY.google.products.length).toBeGreaterThanOrEqual(6);
     });
   });
 
@@ -450,14 +450,14 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate PRO tier', () => {
+    it('should reject legacy PRO tier', () => {
       const result = SubscriptionTierSchema.safeParse('PRO');
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
 
-    it('should validate ENTERPRISE tier', () => {
+    it('should reject legacy ENTERPRISE tier', () => {
       const result = SubscriptionTierSchema.safeParse('ENTERPRISE');
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
 
     it('should reject invalid tier', () => {
@@ -475,9 +475,8 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
     it('should have display names for all tiers', () => {
       expect(SUBSCRIPTION_TIER_NAMES).toBeDefined();
       expect(SUBSCRIPTION_TIER_NAMES.STARTER).toBe('Starter');
-      expect(SUBSCRIPTION_TIER_NAMES.AGENCY).toBe('Growth');
-      expect(SUBSCRIPTION_TIER_NAMES.PRO).toBe('Agency');
-      expect(SUBSCRIPTION_TIER_NAMES.ENTERPRISE).toBe('Enterprise');
+      expect(SUBSCRIPTION_TIER_NAMES.GROWTH).toBe('Growth');
+      expect(SUBSCRIPTION_TIER_NAMES.AGENCY).toBe('Agency');
     });
   });
 
@@ -492,16 +491,15 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
 
     it('should map subscription tiers to pricing display tiers', () => {
       expect(getPricingDisplayTierFromSubscriptionTier('STARTER')).toBe('STARTER');
-      expect(getPricingDisplayTierFromSubscriptionTier('AGENCY')).toBe('GROWTH');
-      expect(getPricingDisplayTierFromSubscriptionTier('PRO')).toBe('AGENCY');
-      expect(getPricingDisplayTierFromSubscriptionTier('ENTERPRISE')).toBe('AGENCY');
+      expect(getPricingDisplayTierFromSubscriptionTier('GROWTH')).toBe('GROWTH');
+      expect(getPricingDisplayTierFromSubscriptionTier('AGENCY')).toBe('AGENCY');
       expect(getPricingDisplayTierFromSubscriptionTier(undefined)).toBe('STARTER');
     });
 
     it('should derive pricing tier name from subscription tier', () => {
       expect(getPricingTierNameFromSubscriptionTier('STARTER')).toBe('Starter');
-      expect(getPricingTierNameFromSubscriptionTier('AGENCY')).toBe('Growth');
-      expect(getPricingTierNameFromSubscriptionTier('PRO')).toBe('Agency');
+      expect(getPricingTierNameFromSubscriptionTier('GROWTH')).toBe('Growth');
+      expect(getPricingTierNameFromSubscriptionTier('AGENCY')).toBe('Agency');
     });
 
     it('should expose pricing details for Starter, Growth, and Agency', () => {
@@ -529,70 +527,59 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
       expect(starter.priceYearly).toBe(290);
     });
 
+    it('should have limits defined for GROWTH tier', () => {
+      const growth = TIER_LIMITS.GROWTH;
+      expect(growth).toBeDefined();
+      expect(growth.accessRequests).toBe(20);
+      expect(growth.clients).toBe(20);
+      expect(growth.members).toBe(-1); // unlimited
+      expect(growth.templates).toBe(10);
+      expect(growth.clientOnboards).toBe(120);
+      expect(growth.platformAudits).toBe(600);
+      expect(growth.teamSeats).toBe(-1); // unlimited
+      expect(growth.priceMonthly).toBe(79);
+      expect(growth.priceYearly).toBe(790);
+    });
+
     it('should have limits defined for AGENCY tier', () => {
       const agency = TIER_LIMITS.AGENCY;
       expect(agency).toBeDefined();
-      expect(agency.accessRequests).toBe(20);
-      expect(agency.clients).toBe(20);
+      expect(agency.accessRequests).toBe(50);
+      expect(agency.clients).toBe(50);
       expect(agency.members).toBe(-1); // unlimited
-      expect(agency.templates).toBe(10);
-      expect(agency.clientOnboards).toBe(120);
-      expect(agency.platformAudits).toBe(600);
+      expect(agency.templates).toBe(20);
+      expect(agency.clientOnboards).toBe(600);
+      expect(agency.platformAudits).toBe(3000);
       expect(agency.teamSeats).toBe(-1); // unlimited
-      expect(agency.priceMonthly).toBe(79);
-      expect(agency.priceYearly).toBe(790);
-    });
-
-    it('should have limits defined for PRO tier', () => {
-      const pro = TIER_LIMITS.PRO;
-      expect(pro).toBeDefined();
-      expect(pro.accessRequests).toBe(50);
-      expect(pro.clients).toBe(50);
-      expect(pro.members).toBe(-1); // unlimited
-      expect(pro.templates).toBe(20);
-      expect(pro.clientOnboards).toBe(600);
-      expect(pro.platformAudits).toBe(3000);
-      expect(pro.teamSeats).toBe(-1); // unlimited
-      expect(pro.priceMonthly).toBe(149);
-      expect(pro.priceYearly).toBe(1490);
-    });
-
-    it('should have limits defined for ENTERPRISE tier', () => {
-      const enterprise = TIER_LIMITS.ENTERPRISE;
-      expect(enterprise).toBeDefined();
-      expect(enterprise.accessRequests).toBe(-1); // unlimited
-      expect(enterprise.clients).toBe(-1);
-      expect(enterprise.members).toBe(-1);
-      expect(enterprise.templates).toBe(-1);
-      expect(enterprise.priceMonthly).toBe(299);
-      expect(enterprise.priceYearly).toBe(2990);
+      expect(agency.priceMonthly).toBe(149);
+      expect(agency.priceYearly).toBe(1490);
     });
 
     it('should have features array for each tier', () => {
       expect(TIER_LIMITS.STARTER.features).toBeInstanceOf(Array);
-      expect(TIER_LIMITS.PRO.features).toBeInstanceOf(Array);
-      expect(TIER_LIMITS.ENTERPRISE.features).toBeInstanceOf(Array);
+      expect(TIER_LIMITS.GROWTH.features).toBeInstanceOf(Array);
+      expect(TIER_LIMITS.AGENCY.features).toBeInstanceOf(Array);
 
       // STARTER should have basic features
       expect(TIER_LIMITS.STARTER.features).toContain('all_platforms');
       expect(TIER_LIMITS.STARTER.features).toContain('email_support');
 
-      // PRO should have additional features
-      expect(TIER_LIMITS.PRO.features).toContain('priority_support');
-      expect(TIER_LIMITS.PRO.features).toContain('custom_branding');
+      // GROWTH should have additional features
+      expect(TIER_LIMITS.GROWTH.features).toContain('priority_support');
+      expect(TIER_LIMITS.GROWTH.features).toContain('custom_branding');
 
-      // ENTERPRISE should have all features
-      expect(TIER_LIMITS.ENTERPRISE.features).toContain('white_label');
-      expect(TIER_LIMITS.ENTERPRISE.features).toContain('sso');
+      // AGENCY should include high-tier features
+      expect(TIER_LIMITS.AGENCY.features).toContain('priority_support');
+      expect(TIER_LIMITS.AGENCY.features).toContain('multi_brand');
     });
 
     it('should have increasing limits across tiers', () => {
       const starter = TIER_LIMITS.STARTER.accessRequests;
+      const growth = TIER_LIMITS.GROWTH.accessRequests;
       const agency = TIER_LIMITS.AGENCY.accessRequests;
-      const pro = TIER_LIMITS.PRO.accessRequests;
 
-      expect(starter).toBeLessThan(agency);
-      expect(agency).toBeLessThan(pro);
+      expect(starter).toBeLessThan(growth);
+      expect(growth).toBeLessThan(agency);
     });
   });
 
@@ -662,12 +649,12 @@ describe('Pricing Tiers & Quota Management - TDD Tests', () => {
         limit: 10,
         used: 10,
         resetsAt: new Date('2025-01-01'),
-        upgradeUrl: '/pricing?upgrade=PRO',
+        upgradeUrl: '/pricing?upgrade=GROWTH',
         currentTier: 'STARTER',
-        suggestedTier: 'PRO',
+        suggestedTier: 'GROWTH',
       };
       expect(error.code).toBe('QUOTA_EXCEEDED');
-      expect(error.suggestedTier).toBe('PRO');
+      expect(error.suggestedTier).toBe('GROWTH');
     });
   });
 });

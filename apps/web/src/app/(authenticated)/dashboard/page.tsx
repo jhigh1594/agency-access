@@ -8,7 +8,7 @@
  * Includes ETag support for conditional requests to save bandwidth.
  */
 
-import { Plus, Users, Key, Activity, AlertCircle, ChevronRight, ExternalLink } from 'lucide-react';
+import { Plus, Users, Key, Activity, AlertCircle, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
-import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
+import { usePrefetchQuota, useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import {
   SUBSCRIPTION_TIER_NAMES,
@@ -133,8 +133,10 @@ export default function DashboardPage() {
 
   // Quota check for access requests
   const checkQuota = useQuotaCheck();
+  const prefetchQuota = usePrefetchQuota();
   const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isCreatingRequest, setIsCreatingRequest] = useState(false);
 
   // Single unified query that fetches all dashboard data at once.
   const { data: dashboardData, isLoading, error, refetch } = useQuery<DashboardApiResponse>({
@@ -267,7 +269,15 @@ export default function DashboardPage() {
     });
   };
 
+  useEffect(() => {
+    if (!agency?.id) {
+      return;
+    }
+    void prefetchQuota();
+  }, [agency?.id, prefetchQuota]);
+
   const handleCreateRequest = async () => {
+    setIsCreatingRequest(true);
     try {
       const result = await checkQuota.mutateAsync({ metric: 'access_requests' });
       if (!result.allowed) {
@@ -299,6 +309,8 @@ export default function DashboardPage() {
         // Allow navigation even if quota check fails
         router.push('/access-requests/new');
       }
+    } finally {
+      setIsCreatingRequest(false);
     }
   };
 
@@ -435,11 +447,20 @@ export default function DashboardPage() {
             <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
           <button
+            type="button"
+            data-testid="dashboard-create-request"
             onClick={handleCreateRequest}
-            className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
+            disabled={isCreatingRequest}
+            aria-busy={isCreatingRequest}
+            aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
+            className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px] disabled:pointer-events-none disabled:opacity-80"
           >
-            <Plus className="h-4 w-4" />
-            Create Request
+            {isCreatingRequest ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+            ) : (
+              <Plus className="h-4 w-4 shrink-0" aria-hidden />
+            )}
+            {isCreatingRequest ? 'Checking…' : 'Create Request'}
           </button>
         </div>
 
@@ -526,11 +547,20 @@ export default function DashboardPage() {
               )}
             </div>
             <button
+              type="button"
+              data-testid="dashboard-create-request"
               onClick={handleCreateRequest}
-              className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px]"
+              disabled={isCreatingRequest}
+              aria-busy={isCreatingRequest}
+              aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
+              className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px] disabled:pointer-events-none disabled:opacity-80"
             >
-              <Plus className="h-4 w-4" />
-              Create Request
+              {isCreatingRequest ? (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+              ) : (
+                <Plus className="h-4 w-4 shrink-0" aria-hidden />
+              )}
+              {isCreatingRequest ? 'Checking…' : 'Create Request'}
             </button>
           </div>
 

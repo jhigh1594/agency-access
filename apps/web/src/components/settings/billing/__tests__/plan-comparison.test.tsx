@@ -43,11 +43,51 @@ describe('PlanComparison', () => {
     });
   });
 
-  it('marks Growth as current plan for STARTER subscriptions', () => {
+  it('marks Starter as current plan for STARTER subscriptions', () => {
     mockUseSubscription.mockReturnValue({
       data: {
         id: 'sub_123',
         tier: 'STARTER',
+        status: 'active',
+        cancelAtPeriodEnd: false,
+      },
+      isLoading: false,
+    });
+
+    render(<PlanComparison />);
+
+    const starterCard = screen.getAllByText('Starter')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
+    expect(starterCard).toBeTruthy();
+    expect(within(starterCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
+  });
+
+  it('marks Agency as current plan for AGENCY subscriptions', () => {
+    mockUseSubscription.mockReturnValue({
+      data: {
+        id: 'sub_456',
+        tier: 'AGENCY',
+        status: 'active',
+        cancelAtPeriodEnd: false,
+      },
+      isLoading: false,
+    });
+
+    render(<PlanComparison />);
+
+    const agencyCard = screen.getAllByText('Agency')
+      .map((node) => node.closest('div.relative'))
+      .find(Boolean);
+    expect(agencyCard).toBeTruthy();
+    expect(within(agencyCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
+  });
+
+  it('marks Growth as current plan for GROWTH subscriptions', () => {
+    mockUseSubscription.mockReturnValue({
+      data: {
+        id: 'sub_789',
+        tier: 'GROWTH',
         status: 'active',
         cancelAtPeriodEnd: false,
       },
@@ -61,46 +101,6 @@ describe('PlanComparison', () => {
       .find(Boolean);
     expect(growthCard).toBeTruthy();
     expect(within(growthCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
-  });
-
-  it('marks Scale as current plan for AGENCY subscriptions', () => {
-    mockUseSubscription.mockReturnValue({
-      data: {
-        id: 'sub_456',
-        tier: 'AGENCY',
-        status: 'active',
-        cancelAtPeriodEnd: false,
-      },
-      isLoading: false,
-    });
-
-    render(<PlanComparison />);
-
-    const scaleCard = screen.getAllByText('Scale')
-      .map((node) => node.closest('div.relative'))
-      .find(Boolean);
-    expect(scaleCard).toBeTruthy();
-    expect(within(scaleCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
-  });
-
-  it('maps PRO subscriptions to Scale current plan display', () => {
-    mockUseSubscription.mockReturnValue({
-      data: {
-        id: 'sub_789',
-        tier: 'PRO',
-        status: 'active',
-        cancelAtPeriodEnd: false,
-      },
-      isLoading: false,
-    });
-
-    render(<PlanComparison />);
-
-    const scaleCard = screen.getAllByText('Scale')
-      .map((node) => node.closest('div.relative'))
-      .find(Boolean);
-    expect(scaleCard).toBeTruthy();
-    expect(within(scaleCard as HTMLElement).getByText('Current Plan')).toBeInTheDocument();
   });
 
   it('uses persisted interval from localStorage for checkout payload', async () => {
@@ -124,7 +124,7 @@ describe('PlanComparison', () => {
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
-          tier: 'STARTER',
+          tier: 'GROWTH',
           billingInterval: 'monthly',
         })
       );
@@ -152,7 +152,7 @@ describe('PlanComparison', () => {
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
-          tier: 'STARTER',
+          tier: 'GROWTH',
           billingInterval: 'monthly',
         })
       );

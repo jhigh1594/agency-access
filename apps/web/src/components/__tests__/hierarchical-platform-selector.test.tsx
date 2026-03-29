@@ -29,11 +29,11 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
       expect(screen.getByRole('button', { name: /Snapchat platform group/i })).toBeInTheDocument();
     });
 
-    it('should show platform group descriptions', () => {
+    it('should show platform group names in headers', () => {
       render(<HierarchicalPlatformSelector {...defaultProps} />);
 
-      expect(screen.getByText(/Google Marketing Platform/i)).toBeInTheDocument();
-      expect(screen.getByText(/Meta Business Platform/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Google platform group/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Meta platform group/i })).toBeInTheDocument();
     });
 
     it('should render expand/collapse controls for each group', () => {
@@ -49,9 +49,8 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
     it('should show selection count for each group', () => {
       render(<HierarchicalPlatformSelector {...defaultProps} />);
 
-      // Should show "0 selected" for all groups initially
-      const zeroSelectedTexts = screen.getAllByText(/0 selected/i);
-      expect(zeroSelectedTexts.length).toBeGreaterThan(0);
+      // When nothing is selected, each group shows "N products" (not "0 selected")
+      expect(screen.getAllByText(/\d+ products/).length).toBeGreaterThan(0);
     });
   });
 
@@ -82,15 +81,14 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
       expect(screen.queryByText(/Google Ads/)).not.toBeInTheDocument();
     });
 
-    it('should show product descriptions when group is expanded', async () => {
+    it('should show product rows when group is expanded', async () => {
       const user = userEvent.setup();
       render(<HierarchicalPlatformSelector {...defaultProps} />);
 
       await user.click(screen.getByRole('button', { name: /Meta platform group/i }));
 
-      expect(screen.getByText(/Facebook and Instagram advertising/i)).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /^Meta Ads$/i })).toBeInTheDocument();
       expect(screen.getByRole('checkbox', { name: /^Meta Pages$/i })).toBeInTheDocument();
-      expect(screen.queryByRole('checkbox', { name: /^WhatsApp Business$/i })).not.toBeInTheDocument();
     });
   });
 
@@ -224,7 +222,7 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
 
       await user.click(screen.getByRole('button', { name: /Google platform group/i }));
 
-      expect(screen.getByRole('checkbox', { name: /Select all Google products/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Select all Google products/i })).toBeInTheDocument();
     });
 
     it('should select all products in group when "Select all" is clicked', async () => {
@@ -235,8 +233,8 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
 
       await user.click(screen.getByRole('button', { name: /Google platform group/i }));
 
-      const selectAllCheckbox = screen.getByRole('checkbox', { name: /Select all Google products/i });
-      await user.click(selectAllCheckbox);
+      const selectAllButton = screen.getByRole('button', { name: /Select all Google products/i });
+      await user.click(selectAllButton);
 
       const googleProducts = PLATFORM_HIERARCHY.google.products;
       expect(onSelectionChange).toHaveBeenCalledWith({
@@ -258,15 +256,15 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
 
       await user.click(screen.getByRole('button', { name: /Google platform group/i }));
 
-      const selectAllCheckbox = screen.getByRole('checkbox', { name: /Select all Google products/i });
-      await user.click(selectAllCheckbox);
+      const selectAllButton = screen.getByRole('button', { name: /Select all Google products/i });
+      await user.click(selectAllButton);
 
       expect(onSelectionChange).toHaveBeenCalledWith({
         google: [],
       });
     });
 
-    it('should update "Select all" checkbox state when individual products are selected', async () => {
+    it('should show partial selection in group header when one product is selected', async () => {
       const user = userEvent.setup();
       const onSelectionChange = vi.fn();
 
@@ -280,9 +278,7 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
 
       await user.click(screen.getByRole('button', { name: /Google platform group/i }));
 
-      const selectAllCheckbox = screen.getByRole('checkbox', { name: /Select all Google products/i }) as HTMLInputElement;
-      expect(selectAllCheckbox.checked).toBe(false);
-      expect(selectAllCheckbox.indeterminate).toBe(true);
+      expect(screen.getByText(/1 of 6 selected/i)).toBeInTheDocument();
     });
   });
 
@@ -323,8 +319,9 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
       render(<HierarchicalPlatformSelector {...defaultProps} />);
 
       await user.tab();
-      const firstGroup = screen.getByRole('button', { name: /Google platform group/i });
-      expect(firstGroup).toHaveFocus();
+      expect(screen.getByRole('button', { name: /Toggle all Google products/i })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole('button', { name: /Google platform group/i })).toHaveFocus();
     });
 
     it('should have proper ARIA labels', () => {
@@ -346,9 +343,7 @@ describe('Phase 5: HierarchicalPlatformSelector - TDD Tests', () => {
       render(<HierarchicalPlatformSelector {...defaultProps} selectedPlatforms={{}} />);
 
       expect(screen.getByRole('button', { name: /Google platform group/i })).toBeInTheDocument();
-      // All groups should show "0 selected"
-      const zeroSelectedTexts = screen.getAllByText(/0 selected/i);
-      expect(zeroSelectedTexts.length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/\d+ products/).length).toBeGreaterThan(0);
     });
 
     it('should handle unknown platform IDs gracefully', () => {

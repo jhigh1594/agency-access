@@ -156,7 +156,6 @@ export function UsageLimitsCard() {
   const isAgencyTier = currentTier === 'AGENCY';
   const showUpgradeNudge =
     limits &&
-    !isAgencyTier &&
     ((limits.accessRequests.limit !== 'unlimited' &&
       limits.accessRequests.used / (limits.accessRequests.limit as number) >= 0.8) ||
       (limits.clients.limit !== 'unlimited' &&

@@ -28,7 +28,8 @@
     "perf:api": "node scripts/perf/benchmark-api.mjs",
     "perf:browser": "node scripts/perf/benchmark-browser.mjs",
     "perf:report": "node scripts/perf/generate-report.mjs",
-    "perf:dashboard:gate": "node scripts/perf/benchmark-api.mjs --enforce-budget true"
+    "perf:dashboard:gate": "node scripts/perf/benchmark-api.mjs --enforce-budget true",
+    "perf:web:inp-smoke": "bash scripts/perf/web-inp-smoke.sh"
   },
   "dependencies": {
     "@vercel/speed-insights": "^1.3.1",

@@ -34,7 +34,7 @@ describe('ManageSubscriptionCard', () => {
     });
   });
 
-  it('shows Growth/Scale labels in tier selector instead of Starter/Agency', async () => {
+  it('shows Starter, Growth, and Agency labels in tier selector', async () => {
     mockUseSubscription.mockReturnValue({
       data: {
         id: 'sub_123',
@@ -49,14 +49,12 @@ describe('ManageSubscriptionCard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /change plan/i }));
 
+    expect(screen.getByText('Starter')).toBeInTheDocument();
     expect(screen.getByText('Growth')).toBeInTheDocument();
-    expect(screen.getAllByText('Scale').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Starter')).not.toBeInTheDocument();
-    expect(screen.queryByText('Agency')).not.toBeInTheDocument();
-    expect(screen.queryByText('Pro')).not.toBeInTheDocument();
+    expect(screen.getByText('Agency')).toBeInTheDocument();
   });
 
-  it('uses new tier label in success copy after plan change', async () => {
+  it('uses tier name in success copy after plan change', async () => {
     mockUseSubscription.mockReturnValue({
       data: {
         id: 'sub_456',
@@ -70,7 +68,7 @@ describe('ManageSubscriptionCard', () => {
     render(<ManageSubscriptionCard />);
 
     fireEvent.click(screen.getByRole('button', { name: /change plan/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Scale.*93\.33\/month/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Agency.*149\/month/i }));
     fireEvent.click(screen.getByRole('button', { name: /Upgrade Now/i }));
 
     await waitFor(() => {
@@ -80,15 +78,14 @@ describe('ManageSubscriptionCard', () => {
       });
     });
 
-    expect(screen.getByText(/Successfully upgraded to Scale/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Successfully upgraded to Agency/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Successfully upgraded to Agency/i)).toBeInTheDocument();
   });
 
-  it('does not show legacy tier options when current tier is PRO', () => {
+  it('shows manageable tiers when current subscription tier is AGENCY', () => {
     mockUseSubscription.mockReturnValue({
       data: {
         id: 'sub_789',
-        tier: 'PRO',
+        tier: 'AGENCY',
         status: 'active',
         cancelAtPeriodEnd: false,
       },
@@ -99,9 +96,8 @@ describe('ManageSubscriptionCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /change plan/i }));
 
     expect(screen.getByText('Growth')).toBeInTheDocument();
-    expect(screen.getAllByText('Scale').length).toBeGreaterThan(0);
+    expect(screen.getByText('Starter')).toBeInTheDocument();
     expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
-    expect(screen.queryByText('Pro')).not.toBeInTheDocument();
   });
 
   it('treats Free as below Growth so Growth is an upgrade (not downgrade)', () => {
@@ -140,12 +136,11 @@ describe('ManageSubscriptionCard', () => {
     expect(screen.queryByRole('button', { name: /^cancel$/i })).not.toBeInTheDocument();
   });
 
-  it('uses checkout flow instead of upgrade API for free accounts', async () => {
+  it('uses upgrade API when changing tier with no subscription row (normalized to STARTER)', async () => {
     mockUseSubscription.mockReturnValue({
       data: null,
       isLoading: false,
     });
-    mockCreateCheckoutMutateAsync.mockRejectedValueOnce(new Error('Checkout unavailable'));
 
     render(<ManageSubscriptionCard />);
 
@@ -154,16 +149,12 @@ describe('ManageSubscriptionCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Upgrade Now/i }));
 
     await waitFor(() => {
-      expect(mockCreateCheckoutMutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tier: 'STARTER',
-          billingInterval: expect.any(String),
-          successUrl: expect.stringContaining('/settings?tab=billing&checkout=success'),
-          cancelUrl: expect.stringContaining('/settings?tab=billing&checkout=cancel'),
-        })
-      );
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        newTier: 'GROWTH',
+        updateBehavior: 'next-cycle',
+      });
     });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(mockCreateCheckoutMutateAsync).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,45 @@
+name: Web client INP smoke
+
+# Client-side regression gate for Interaction to Next Paint work: critical Vitest flows
+# (instant loading on Create Request, invite dynamic shell, edit save). Separate from
+# dashboard API perf (dashboard-perf-gate.yml) which needs backend secrets.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/web/**'
+      - 'packages/shared/**'
+      - 'scripts/perf/web-inp-smoke.sh'
+      - '.github/workflows/web-client-perf-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/shared/**'
+      - 'scripts/perf/web-inp-smoke.sh'
+      - '.github/workflows/web-client-perf-gate.yml'
+  workflow_dispatch:
+
+jobs:
+  web-inp-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --workspace=packages/shared
+
+      - name: Run INP-related Vitest smoke
+        run: npm run perf:web:inp-smoke

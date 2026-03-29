@@ -411,6 +411,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
               className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-ink"
               aria-expanded={advancedExpanded}
               aria-controls="advanced-settings"
+              aria-label={advancedExpanded ? 'Hide advanced settings' : 'Show advanced settings'}
             >
               {advancedExpanded ? 'Hide' : 'Show'}
               <ChevronDown
@@ -577,7 +578,12 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
           >
             Discard Changes
           </Button>
-          <Button type="submit" isLoading={saving}>
+          <Button
+            type="submit"
+            isLoading={saving}
+            aria-busy={saving}
+            data-testid="edit-access-request-save"
+          >
             Save Changes
           </Button>
         </div>

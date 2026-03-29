@@ -125,10 +125,12 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - **Design-system / showcase pages**: Use actual component prop names and types (e.g. StatusBadge `status`/`badgeVariant`, HealthBadge `health`, PlatformIcon `size` as token not number). Check component source when adding examples.
 - **Shared types**: Use properties that exist on the type (e.g. PlatformProduct has `id`, not `product`).
 - **Test files and tsconfig**: Exclude `src/test/**`, `**/__tests__/**`, `**/*.test.ts`, `**/*.test.tsx` from apps/web tsconfig so Next build does not type-check Vitest-only code (avoids missing globals/module errors).
+- **Vitest + Tailwind breakpoints**: In jsdom, stub `window.matchMedia` so queries like `(min-width: 640px)` match when tests need `sm:` and up responsive styles.
 - **useSearchParams**: Wrap usage in a Suspense boundary when the page is statically generated. Extract the part that calls useSearchParams into an inner component and wrap it in `<Suspense>` in the page export.
 - **Install command**: Use `npm install --no-audit` (not `npm ci`) for Vercel; `npm ci` deletes `node_modules` on every run and bypasses Vercel's build cache, doubling install time
 - **Scoped workspace install breaks builds**: `npm ci --workspace=packages/shared --workspace=apps/web` does not install root devDependencies (e.g. TypeScript); full install is required
 - **npm --omit flag**: Only accepts `dev`, `optional`, `peer` — not `audit`; use `--no-audit` instead
+- **INP / interaction paths**: Speed Insights is loaded via deferred analytics. Field INP samples per route are often small until traffic grows; use lab profiling plus `npm run perf:web:inp-smoke` (Vitest smoke for dashboard create, invite shell, access-request edit save) and the `web-client-perf-gate` workflow on PRs touching `apps/web`.
 
 ## Workflow Expectations
 - Don’t edit or revert unrelated changes in a dirty worktree.
@@ -143,7 +145,7 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - Set BULLMQ_WORKERS_ENABLED=false in Render for pre-launch to minimize Upstash Redis usage (BullMQ workers poll ~800K commands/day with zero traffic)
 - .codex/skills is required for Codex to discover skills; Cursor loads from both workspace and plugins, which can cause duplicate skills to appear
 - Manage-assets modal: Google Ads access method (MCC vs email) is inline in the Google Ads product row when enabled; agencies can switch between modes
-- Blog posts live in apps/web/content/blog/*.md (one Markdown file per post with YAML frontmatter); blog-data.ts loads from these files
+- Blog posts live in apps/web/content/blog/*.md (one Markdown file per post with YAML frontmatter); blog-data.ts loads from these files; quote frontmatter string values that contain colons (e.g. `title: "Before: after"`) so gray-matter does not throw YAMLException on Vercel builds
 - Comparison/alternatives pages are defined in apps/web/src/lib/comparison-data.ts, not in content/
 - Prisma migration SQL must use actual table names from @@map (e.g. subscriptions), not model names (e.g. Subscription)
 - Skip when committing: next-env.d.ts (auto-generated), __pycache__, .serena, .worktrees

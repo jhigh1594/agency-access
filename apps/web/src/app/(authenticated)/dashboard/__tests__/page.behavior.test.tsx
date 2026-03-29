@@ -1,6 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import DashboardPage from '../page';
+
+const routerPush = vi.fn();
+const quotaMutateAsync = vi.fn();
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: routerPush }),
+}));
+
+vi.mock('@/lib/query/quota', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/query/quota')>();
+  return {
+    ...actual,
+    usePrefetchQuota: () => vi.fn().mockResolvedValue(undefined),
+    useQuotaCheck: () => ({ mutateAsync: quotaMutateAsync }),
+  };
+});
+
+vi.mock('@/components/upgrade-modal', () => ({
+  UpgradeModal: () => null,
+}));
 
 const useQueryMock = vi.fn();
 const useAgencyOnboardingStatusMock = vi.fn();
@@ -77,6 +98,15 @@ vi.mock('@/components/trial-banner', () => ({
 describe('DashboardPage behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    routerPush.mockClear();
+    quotaMutateAsync.mockReset();
+    quotaMutateAsync.mockResolvedValue({
+      allowed: true,
+      limit: 100,
+      used: 0,
+      remaining: 100,
+      currentTier: 'STARTER',
+    });
     useAgencyOnboardingStatusMock.mockReturnValue({
       data: null,
       isLoading: false,
@@ -385,5 +415,62 @@ describe('DashboardPage behavior', () => {
     render(<DashboardPage />);
 
     expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
+  });
+
+  it('disables Create Request and shows Checking immediately while quota check is pending', async () => {
+    let resolveQuota!: (value: unknown) => void;
+    quotaMutateAsync.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveQuota = resolve;
+        })
+    );
+
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          agency: {
+            id: 'agency_1',
+            name: 'Agency One',
+            email: 'owner@agency.test',
+          },
+          stats: {
+            totalRequests: 0,
+            pendingRequests: 0,
+            activeConnections: 0,
+            totalPlatforms: 0,
+          },
+          requests: [],
+          connections: [],
+        },
+        error: null,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    render(<DashboardPage />);
+
+    await screen.findByRole('heading', { name: 'Dashboard' });
+    const buttons = screen.getAllByTestId('dashboard-create-request');
+    await user.click(buttons[0]!);
+
+    expect(buttons[0]).toBeDisabled();
+    expect(buttons[0]).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getAllByText('Checking…').length).toBeGreaterThanOrEqual(1);
+
+    resolveQuota!({
+      allowed: true,
+      limit: 100,
+      used: 0,
+      remaining: 100,
+      currentTier: 'STARTER',
+    });
+
+    await waitFor(() => {
+      expect(routerPush).toHaveBeenCalledWith('/access-requests/new');
+    });
   });
 });

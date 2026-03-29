@@ -70,6 +70,7 @@ describe('EditAccessRequestPage', () => {
     render(<EditAccessRequestPage params={Promise.resolve({ id: 'request-1' })} />);
 
     expect(await screen.findByText('Edit Access Request')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /show advanced settings/i }));
     expect(screen.getByText(/client name and email are managed in the client profile/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /edit client profile/i })).toBeInTheDocument();
     expect(await screen.findByText('Beehiiv')).toBeInTheDocument();
@@ -151,6 +152,7 @@ describe('EditAccessRequestPage', () => {
     render(<EditAccessRequestPage params={Promise.resolve({ id: 'request-3' })} />);
 
     await screen.findByText('Edit Access Request');
+    await userEvent.click(screen.getByRole('button', { name: /show advanced settings/i }));
 
     fireEvent.change(screen.getByLabelText('External Reference'), { target: { value: 'crm-updated' } });
     fireEvent.change(screen.getByDisplayValue('Website'), { target: { value: 'Business Website' } });
@@ -172,5 +174,73 @@ describe('EditAccessRequestPage', () => {
       );
     });
     expect(screen.getByText(/request updated\./i)).toBeInTheDocument();
+  });
+
+  it('shows loading on Save immediately while update is pending', async () => {
+    vi.mocked(accessRequestsApi.getAccessRequest).mockResolvedValue({
+      data: {
+        id: 'request-4',
+        agencyId: 'agency-1',
+        clientName: 'Acme',
+        clientEmail: 'owner@acme.com',
+        status: 'pending',
+        uniqueToken: 'token-4',
+        expiresAt: '2026-03-14T00:00:00.000Z',
+        createdAt: '2026-03-01T00:00:00.000Z',
+        updatedAt: '2026-03-01T00:00:00.000Z',
+        platforms: [
+          {
+            platformGroup: 'google',
+            products: [{ product: 'google_ads', accessLevel: 'admin', accounts: [] }],
+          },
+        ],
+        intakeFields: [],
+        branding: { primaryColor: '#FF6B35' },
+      } as any,
+    });
+
+    let resolveSave!: (value: Awaited<ReturnType<typeof accessRequestsApi.updateAccessRequest>>) => void;
+    vi.mocked(accessRequestsApi.updateAccessRequest).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSave = resolve;
+        })
+    );
+
+    render(<EditAccessRequestPage params={Promise.resolve({ id: 'request-4' })} />);
+
+    await screen.findByText('Edit Access Request');
+    await userEvent.click(screen.getByTestId('edit-access-request-save'));
+
+    const saveBtn = screen.getByTestId('edit-access-request-save');
+    expect(saveBtn).toBeDisabled();
+    expect(saveBtn).toHaveAttribute('aria-busy', 'true');
+
+    resolveSave!({
+      data: {
+        id: 'request-4',
+        agencyId: 'agency-1',
+        clientName: 'Acme',
+        clientEmail: 'owner@acme.com',
+        status: 'pending',
+        uniqueToken: 'token-4',
+        expiresAt: '2026-03-14T00:00:00.000Z',
+        createdAt: '2026-03-01T00:00:00.000Z',
+        updatedAt: '2026-03-02T00:00:00.000Z',
+        platforms: [
+          {
+            platformGroup: 'google',
+            products: [{ product: 'google_ads', accessLevel: 'admin', accounts: [] }],
+          },
+        ],
+        intakeFields: [],
+        branding: { primaryColor: '#FF6B35' },
+        authorizationLinkChanged: false,
+      } as any,
+    });
+
+    await waitFor(() => {
+      expect(saveBtn).not.toBeDisabled();
+    });
   });
 });

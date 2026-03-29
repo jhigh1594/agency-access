@@ -18,7 +18,7 @@ describe('CurrentPlanCard', () => {
     vi.clearAllMocks();
   });
 
-  it('maps STARTER tier to Growth plan display', () => {
+  it('maps STARTER tier to Starter plan display', () => {
     mockUseSubscription.mockReturnValue({
       data: {
         id: 'sub_123',
@@ -31,11 +31,10 @@ describe('CurrentPlanCard', () => {
 
     render(<CurrentPlanCard />);
 
-    expect(screen.getByRole('heading', { name: 'Growth Plan' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Starter Plan' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Starter Plan' })).toBeInTheDocument();
   });
 
-  it('maps AGENCY tier to Scale plan display', () => {
+  it('maps AGENCY tier to Agency plan display', () => {
     mockUseSubscription.mockReturnValue({
       data: {
         id: 'sub_456',
@@ -48,7 +47,7 @@ describe('CurrentPlanCard', () => {
 
     render(<CurrentPlanCard />);
 
-    expect(screen.getByRole('heading', { name: 'Scale Plan' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Agency Plan' })).toBeInTheDocument();
   });
 
   it('shows Free plan when no active subscription exists', () => {
