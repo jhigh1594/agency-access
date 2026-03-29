@@ -27,8 +27,8 @@ export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheck
     const tierResult = await clerkMetadataService.getSubscriptionTier(clerkUserId);
     if (tierResult.error || !tierResult.data) {
       console.error('Failed to fetch tier:', tierResult.error);
-      // Fail open - allow action if we can't check quota
-      return { allowed: true, metric, limit: 999999, used: 0, remaining: 999999 };
+      // Fail-CLOSED - deny request when quota service is unavailable
+      throw new QuotaServiceUnavailableError('Unable to verify subscription tier');
     }
 
     const tier = tierResult.data.tier;
@@ -60,9 +60,25 @@ export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheck
     const remaining = Math.max(0, limit - used);
     return { allowed: used < limit, metric, limit, used, remaining, resetsAt: counter?.resetAt ?? undefined };
   } catch (error: any) {
+    // Re-throw if it's already a QuotaServiceUnavailableError
+    if (error instanceof QuotaServiceUnavailableError) {
+      throw error;
+    }
     console.error('Quota check error:', error);
-    // Fail open on error
-    return { allowed: true, metric, limit: 999999, used: 0, remaining: 999999 };
+    // Fail-CLOSED on any error - deny the request
+    throw new QuotaServiceUnavailableError('Quota service temporarily unavailable');
+  }
+}
+
+/**
+ * Error thrown when quota service is unavailable.
+ * Results in 503 Service Unavailable response.
+ */
+export class QuotaServiceUnavailableError extends Error {
+  code = 'QUOTA_SERVICE_UNAVAILABLE' as const;
+  constructor(message: string) {
+    super(message);
+    this.name = 'QuotaServiceUnavailableError';
   }
 }
 
@@ -103,31 +119,53 @@ export function quotaEnforcementMiddleware(options: { metric: MetricType }) {
       return reply.code(400).send({ data: null, error: { code: 'MISSING_AGENCY_ID' } });
     }
 
-    const result = await checkQuota({ metric: options.metric, agencyId, clerkUserId: userId });
+    try {
+      const result = await checkQuota({ metric: options.metric, agencyId, clerkUserId: userId });
 
-    if (!result.allowed) {
-      const tierResult = await clerkMetadataService.getSubscriptionTier(userId);
-      const currentTier = tierResult.data?.tier || 'STARTER';
-      const suggestedTier = currentTier === 'STARTER' ? 'AGENCY' : 'PRO';
+      if (!result.allowed) {
+        const tierResult = await clerkMetadataService.getSubscriptionTier(userId);
+        const currentTier = tierResult.data?.tier || 'STARTER';
+        const suggestedTier = currentTier === 'STARTER' ? 'AGENCY' : 'PRO';
 
-      return reply.code(402).send({
-        data: null,
-        error: {
-          code: 'QUOTA_EXCEEDED',
-          message: `You've reached your ${options.metric} limit (${result.used}/${result.limit})`,
-          metric: options.metric,
-          limit: result.limit,
+        return reply.code(402).send({
+          data: null,
+          error: {
+            code: 'QUOTA_EXCEEDED',
+            message: `You've reached your ${options.metric} limit (${result.used}/${result.limit})`,
+            metric: options.metric,
+            limit: result.limit,
           used: result.used,
           resetsAt: result.resetsAt,
           upgradeUrl: `/pricing?upgrade=${suggestedTier}`,
           currentTier,
           suggestedTier,
         },
+        });
+      }
+
+      // Attach quota check result to request for later use
+      (request as any).quotaCheck = result;
+    } catch (error: any) {
+      if (error.code === 'QUOTA_SERVICE_UNAVAILABLE') {
+        console.error('[QUOTA_SERVICE] Service unavailable:', error.message);
+        return reply.code(503).send({
+          data: null,
+          error: {
+            code: 'QUOTA_SERVICE_UNAVAILABLE',
+            message: 'Unable to verify quota. Please try again later.',
+          },
+        });
+      }
+      // Log other errors for alerting but still fail-closed
+      console.error('[QUOTA_SERVICE] Unexpected error:', error);
+      return reply.code(503).send({
+        data: null,
+        error: {
+          code: 'QUOTA_SERVICE_UNAVAILABLE',
+          message: 'Service temporarily unavailable.',
+        },
       });
     }
-
-    // Attach quota check result to request for later use
-    (request as any).quotaCheck = result;
   };
 }
 

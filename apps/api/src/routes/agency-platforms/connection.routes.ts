@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { PLATFORM_CONNECTORS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
+import { quotaEnforcementMiddleware } from '@/middleware/quota-enforcement.js';
 
 export async function registerConnectionRoutes(fastify: FastifyInstance) {
   /**
@@ -48,8 +49,11 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
   /**
    * POST /agency-platforms/:platform/refresh
    * Manually refresh platform tokens
+   * Enforces platform_audits quota to prevent abuse
    */
-  fastify.post('/agency-platforms/:platform/refresh', async (request, reply) => {
+  fastify.post('/agency-platforms/:platform/refresh', {
+    onRequest: [quotaEnforcementMiddleware({ metric: 'platform_audits' })],
+  }, async (request, reply) => {
     const { platform } = request.params as { platform: string };
     const { agencyId } = request.body as { agencyId?: string };
 

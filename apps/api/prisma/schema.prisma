@@ -297,6 +297,7 @@ model AuditLog {
 
   agency Agency? @relation(fields: [agencyId], references: [id])
 
+  @@unique([action, resourceId])
   @@map("audit_logs")
 }
 

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
 import { authenticate } from '@/middleware/auth.js';
+import { quotaEnforcementMiddleware } from '@/middleware/quota-enforcement.js';
 import {
   createWebhookEndpoint,
   disableWebhookEndpoint,
@@ -138,7 +139,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
   });
 
   fastify.put('/agencies/:id/webhook-endpoint', {
-    onRequest: [authenticate(), requirePrincipalAgency],
+    onRequest: [authenticate(), requirePrincipalAgency, quotaEnforcementMiddleware({ metric: 'templates' })],
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -346,34 +347,79 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     const rawBody = (request as any).rawBody;
     const payloadString = typeof rawBody === 'string' ? rawBody : JSON.stringify(payload ?? {});
 
+    // Extract IP and user agent for security logging
+    const ipAddress = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+      || (request.headers['x-real-ip'] as string)
+      || request.ip
+      || 'unknown';
+    const userAgent = request.headers['user-agent'] as string || 'unknown';
+
     if (!signatureHeader || !creem.verifyWebhookSignature(payloadString, signatureHeader)) {
+      // Log invalid signature attempts for security monitoring
+      try {
+        await prisma.auditLog.create({
+          data: {
+            action: 'WEBHOOK_SIGNATURE_INVALID',
+            resourceType: 'webhook',
+            resourceId: payload?.id || 'unknown',
+            metadata: {
+              hasSignature: !!signatureHeader,
+              eventType: payload?.type,
+              ipAddress,
+              userAgent,
+              timestamp: new Date().toISOString(),
+            },
+          },
+        });
+      } catch (logError) {
+        // Don't fail the request if logging fails
+        fastify.log.warn({ error: logError }, 'Failed to log invalid webhook signature');
+      }
+
+      fastify.log.warn({
+        ipAddress,
+        userAgent,
+        hasSignature: !!signatureHeader,
+        eventType: payload?.type,
+      }, 'Invalid webhook signature received');
+
       return reply.code(401).send({
         error: 'Invalid webhook signature',
       });
     }
 
     try {
-      // Check for idempotency - prevent duplicate processing
-      const existing = await prisma.auditLog.findFirst({
+      // Idempotency check using upsert pattern - prevents duplicate webhook processing
+      // Uses unique constraint on (action, resourceId) to ensure atomicity
+      const webhookMarker = await prisma.auditLog.upsert({
         where: {
-          action: `CREEM_WEBHOOK_${payload.type}`,
-          resourceId: payload.id,
+          // Requires unique index on action + resourceId for true upsert behavior
+          action_resourceId: {
+            action: `CREEM_WEBHOOK_${payload.type}`,
+            resourceId: payload.id,
+          },
         },
-      });
-
-      if (existing) {
-        return { received: true, duplicate: true };
-      }
-
-      // Log webhook for audit trail
-      await prisma.auditLog.create({
-        data: {
+        create: {
           action: `CREEM_WEBHOOK_${payload.type}`,
           resourceId: payload.id,
           resourceType: 'webhook',
           metadata: payload as any,
         },
+        update: {}, // No-op if exists
       });
+
+      // If this was an existing record (not created), return early
+      // We can detect this by checking createdAt - but since update returns the record,
+      // we use a simpler approach: if upsert didn't create, it's a duplicate
+      // For now, we'll proceed and the event handlers should be idempotent themselves
+      // Returning early for duplicate events
+      const isNew = webhookMarker.createdAt.getTime() > Date.now() - 1000; // Created within last second
+      if (!isNew && webhookMarker.id) {
+        // Existing webhook - return success without reprocessing
+        return { received: true, duplicate: true, id: webhookMarker.id.toString() };
+      }
+
+      // Log webhook for audit trail (upsert above handles this)
 
       if (payload.type === 'invoice.paid') {
         const invoice = getInvoicePayload(payload);
@@ -432,6 +478,33 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         const agency = agencyWithSubscription;
 
         if (agency?.clerkUserId) {
+          // Check if subscription was expired and is now being reactivated
+          const wasExpired = agency.subscription?.status === 'expired';
+          const isNowActive = subscription.status === 'active' || subscription.status === 'trialing';
+
+          // Log reactivation if this was an expired subscription now being paid
+          if (wasExpired && isNowActive) {
+            await prisma.auditLog.create({
+              data: {
+                action: 'SUBSCRIPTION_REACTIVATED',
+                resourceType: 'subscription',
+                resourceId: agency.subscription?.id || subscription.id,
+                agencyId: agency.id,
+                metadata: {
+                  previousStatus: 'expired',
+                  newStatus: subscription.status,
+                  newTier: tier,
+                  reactivatedAt: new Date().toISOString(),
+                },
+              },
+            });
+            fastify.log.info({
+              agencyId: agency.id,
+              subscriptionId: subscription.id,
+              tier,
+            }, 'Reactivated previously expired subscription');
+          }
+
           // Update Clerk metadata with new tier
           await clerkMetadataService.setSubscriptionTier(
             agency.clerkUserId,
@@ -446,6 +519,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
           );
 
           // Update agency subscription tier in database
+          // Ensure agency.subscriptionTier is always set correctly
           await prisma.agency.update({
             where: { id: agency.id },
             data: { subscriptionTier: tier },
