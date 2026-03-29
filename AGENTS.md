@@ -150,4 +150,5 @@ Guidance for agentic coding tools working in this repository. Follow these rules
 - gws auth setup requires gcloud; use manual OAuth (Cloud Console → Desktop app client → ~/.config/gws/client_secret.json) when gcloud is not installed
 - When Cursor is slow in this repo: ensure .cursorignore excludes node_modules, .next, .agents, .claude, .codex, .aipmos (skills still load by path; node_modules should never be indexed)
 - Use `git worktree remove <path> --force` when a worktree has uncommitted changes and must be removed
-- Obfuscate public-facing marketing/contact email addresses and avoid including plaintext emails in JSON-LD to reduce spam harvesting
+- Public contact for marketing/support surfaces is support@authhub.co; obfuscate addresses in public HTML/JSON-LD to reduce spam harvesting
+- Google OAuth app verification: demo flow and scope explanation notes live in docs/google-oauth-verification-demo-script.md

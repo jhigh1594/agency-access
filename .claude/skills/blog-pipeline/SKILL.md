@@ -1,11 +1,27 @@
 ---
 name: blog-pipeline
-description: End-to-end blog post creation pipeline for AuthHub — from strategic research through publish-ready article with docs sync. Use this skill whenever creating a new blog post, writing an article, drafting content, or the user mentions "blog post", "article", "new content", "write a post", "create content", or anything related to publishing blog content. Also triggers when the user references the content calendar, content strategy, or says things like "let's write the next post" or "time for the Thursday post." This is the ONLY skill you need for blog content creation — it replaces manual coordination of elite-copywriter, copy-editing, seo-audit, and content-strategy for blog workflows.
+description: End-to-end blog post creation pipeline for AuthHub — from strategic research through publish-ready article with docs sync. AUTOMATICALLY starts creating the next queued article when invoked. Use this skill whenever creating a new blog post, writing an article, drafting content, or the user mentions "blog post", "article", "new content", "write a post", "create content", or anything related to publishing blog content. Also triggers when the user references the content calendar, content strategy, or says things like "let's write the next post" or "time for the Thursday post." This is the ONLY skill you need for blog content creation — it replaces manual coordination of elite-copywriter, copy-editing, seo-audit, and content-strategy for blog workflows.
 ---
 
 # Blog Pipeline
 
 End-to-end content creation: research, brief, draft, SEO, editorial polish, quality review, docs sync. Every post follows this pipeline. No shortcuts, no phases skipped.
+
+## ⚡ Default Behavior: Autonomous Creation
+
+**This skill runs automatically.** When invoked without a specific topic:
+
+1. **Read the content calendar** (`marketing/content/CONTENT-CALENDAR-Q1-2026.md`)
+2. **Identify the next queued item** — look for items marked "Planned", "DRAFT DRAFT", or the next unstarted entry in the current week
+3. **Start creating immediately** — proceed through all 7 phases without waiting for confirmation
+4. **Only pause if** the user explicitly asks to review, or if a quality gate fails (score below 9/10)
+
+**User can override by specifying:**
+- A specific topic: `/blog-pipeline how to revoke client access`
+- A mode: `/blog-pipeline --research-only` or `/blog-pipeline --draft-only`
+- A pause point: "stop after the brief" or "let me review before drafting"
+
+**If no override is given, assume autonomous mode and execute the full pipeline.**
 
 ## Why This Skill Exists
 
@@ -14,6 +30,15 @@ Creating a blog post isn't just writing — it's a production pipeline with seve
 ## Phase 1: Research & Positioning
 
 Before writing a single word, understand where this post fits strategically.
+
+**If no topic specified — AUTO-SELECT from calendar:**
+1. Read `marketing/content/CONTENT-CALENDAR-Q1-2026.md`
+2. Find the next queued item (current week's unstarted entry, or next week's first item)
+3. Use the calendar entry's: topic, keyword target, type, and any notes as your brief
+4. Proceed directly to Phase 3 (skip Phase 2 — the calendar is your brief)
+5. Announce: "Starting autonomous creation of [topic] — next in calendar queue"
+
+**If topic IS specified — do full research:**
 
 **Read these files:**
 1. `marketing/CONTENT-STRATEGY-2026.md` — content pillars, brand voice, production workflow
@@ -27,13 +52,13 @@ Before writing a single word, understand where this post fits strategically.
 - Competitive angle — what makes this different from what already ranks
 - Whether existing posts cover similar ground (cannibalization check)
 
-**Gate:** If no clear strategic gap exists, stop and propose alternatives before writing. Don't create content that competes with your own posts.
+**Auto-proceed unless:** No clear strategic gap exists — only then stop and propose alternatives.
 
 ## Phase 2: Content Brief
 
-Define the article's specs before drafting. This phase is skippable when the content calendar already documents the direction (topic, angle, keyword, type) — just confirm the details and proceed.
+**AUTONOMOUS MODE: Skip this phase** if the content calendar already has the topic, keyword, type, and notes. The calendar IS your brief.
 
-When the direction isn't pre-documented, define:
+When the direction isn't pre-documented (or user specified a custom topic), define:
 - **Article type** (pillar, listicle, tutorial, comparison, category-defining)
 - **Target keyword** and secondary keywords
 - **Working title** (50-80 chars, includes year for freshness signal)
@@ -129,14 +154,16 @@ This is the pass that separates 7/10 from 9/10. Read `references/quality-checkli
 
 ## Phase 6: Quality Review
 
+**AUTONOMOUS MODE: Auto-proceed if 9/10+** — only stop and report if the score is below 9/10.
+
 Rate the post on the 1-10 scale. Be honest — inflating scores defeats the purpose.
 
 | Score | Meaning | Action |
 |-------|---------|--------|
-| 9-10 | Publish-ready | Proceed to docs sync |
-| 8-8.5 | Strong but needs tightening | One more pass at Phase 5 |
+| 9-10 | Publish-ready | **AUTO-PROCEED** to Phase 7 (docs sync) — no stop |
+| 8-8.5 | Strong but needs tightening | One more pass at Phase 5, then re-score |
 | 7-7.5 | Good draft, gaps remain | Identify specific gaps, address, re-polish |
-| Below 7 | Needs substantive work | Re-evaluate approach, possibly rewrite |
+| Below 7 | Needs substantive work | **STOP** — re-evaluate approach, possibly rewrite |
 
 **What a 9/10 looks like** (based on the corpus):
 - Original angle no competitor covers

@@ -131,11 +131,11 @@ export function LinkedInAssetSelector({
   if (assets.length === 0) {
     return (
       <AssetSelectorEmpty
-        title={isPagesProduct ? 'No LinkedIn Pages found' : 'No LinkedIn ad accounts found'}
+        title={isPagesProduct ? 'No LinkedIn Pages found' : 'No ad accounts found'}
         description={
           isPagesProduct
             ? "We couldn't find any LinkedIn Pages you can administer with this login."
-            : "We couldn't find any Campaign Manager accounts for this LinkedIn login."
+            : "This LinkedIn account doesn't have any ad accounts. Create one in Campaign Manager first, then try again."
         }
       />
     );

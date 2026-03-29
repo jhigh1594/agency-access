@@ -1,6 +1,6 @@
 ---
 id: client-onboarding-questionnaire-27-questions
-title: Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask New Clients
+title: 'Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask New Clients'
 excerpt: >-
   Stop sending clients a blank Google Doc and hoping they'll fill it out. This client onboarding questionnaire covers 27 essential questions across 6 categories, plus a free downloadable Google Doc template you can customize and send today.
 category: onboarding
