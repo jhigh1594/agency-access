@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 
 interface InviteHeroHeaderStat {
@@ -56,12 +57,20 @@ export function InviteHeroHeader({
             <div className="flex flex-wrap items-center gap-3">
               <div
                 className={[
-                  'flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-paper',
+                  'relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-paper',
                   isCompact ? 'h-10 w-10' : 'h-11 w-11',
                 ].join(' ')}
               >
                 {logoUrl ? (
-                  <img src={logoUrl} alt={logoAlt || title} className="h-full w-full object-contain p-2" />
+                  <Image
+                    src={logoUrl}
+                    alt={logoAlt || title}
+                    fill
+                    className="object-contain p-2"
+                    sizes={isCompact ? '40px' : '44px'}
+                    unoptimized
+                    priority
+                  />
                 ) : (
                   <span className="text-sm font-semibold text-ink">{resolvedFallbackMark}</span>
                 )}

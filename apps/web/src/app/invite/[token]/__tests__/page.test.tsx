@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import InvitePage from '../page';
+import InvitePage from '../client-invite-page';
 
 const { searchParamGetMock } = vi.hoisted(() => ({
   searchParamGetMock: vi.fn(() => null),
@@ -11,13 +11,14 @@ vi.mock('next/navigation', () => ({
   useParams: vi.fn(() => ({ token: 'token-123' })),
   useSearchParams: vi.fn(() => ({
     get: searchParamGetMock,
+    toString: () => '',
   })),
+  useRouter: vi.fn(() => ({ replace: vi.fn(), push: vi.fn(), prefetch: vi.fn() })),
+  usePathname: vi.fn(() => '/invite/token-123'),
 }));
 
-vi.mock('posthog-js', () => ({
-  default: {
-    capture: vi.fn(),
-  },
+vi.mock('@/lib/analytics/capture-posthog', () => ({
+  capturePosthogEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/components/client-auth/PlatformAuthWizard', async () => {
@@ -54,6 +55,17 @@ describe('Invite Flow Page', () => {
     searchParamGetMock.mockImplementation(() => null);
     vi.useRealTimers();
     sessionStorage.clear();
+    // Tailwind `sm:` uses matchMedia; `hidden sm:grid` only shows at min-width — treat as matched in tests.
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: typeof query === 'string' && query.includes('min-width'),
+      media: query,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) as unknown as typeof window.matchMedia;
+    Element.prototype.scrollIntoView = vi.fn();
   });
 
   it('renders explicit error state for invalid token', async () => {
@@ -134,7 +146,7 @@ describe('Invite Flow Page', () => {
       await Promise.resolve();
       vi.advanceTimersByTime(1);
     });
-    expect(screen.getByText(/review request/i)).toBeInTheDocument();
+    expect(screen.getByText(/confirm which accounts to share below/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /continue to connect/i })).toBeInTheDocument();
 
     vi.useRealTimers();
@@ -174,9 +186,9 @@ describe('Invite Flow Page', () => {
     render(<InvitePage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/review request/i)).toBeInTheDocument();
+      expect(screen.getByText(/confirm which accounts to share below/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /continue to connect/i })).toBeInTheDocument();
-      expect(screen.getByText(/you will choose which accounts to share next/i)).toBeInTheDocument();
+      expect(screen.getByText(/you explicitly approve in the next step/i)).toBeInTheDocument();
     });
   });
 
@@ -376,7 +388,7 @@ describe('Invite Flow Page', () => {
     await userEvent.click(continueButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Connect')).toBeInTheDocument();
+      expect(screen.getByText(/2 · Connect/i)).toBeInTheDocument();
       expect(screen.queryByText(/connect 1 more platform/i)).not.toBeInTheDocument();
     });
 
@@ -956,9 +968,9 @@ describe('Invite Flow Page', () => {
       render(<InvitePage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Setup')).toBeInTheDocument();
-        expect(screen.getByText('Connect')).toBeInTheDocument();
-        expect(screen.getByText('Done')).toBeInTheDocument();
+        expect(screen.getByText(/1 · Setup/i)).toBeInTheDocument();
+        expect(screen.getByText(/2 · Connect/i)).toBeInTheDocument();
+        expect(screen.getByText(/3 · Done/i)).toBeInTheDocument();
       });
     });
 
@@ -992,11 +1004,11 @@ describe('Invite Flow Page', () => {
       render(<InvitePage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/review request/i)).toBeInTheDocument();
-        expect(screen.getByText(/share account access with demo agency/i)).toBeInTheDocument();
-        expect(screen.getByText(/request for client/i)).toBeInTheDocument();
+        expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument();
+        expect(screen.getByText(/confirm which accounts to share below/i)).toBeInTheDocument();
+        expect(screen.getByText(/share account access with client/i)).toBeInTheDocument();
         expect(screen.getAllByText('Google').length).toBeGreaterThan(0);
-        expect(screen.getByText('Google Ads · admin')).toBeInTheDocument();
+        expect(screen.getByText('Google Ads · Full access')).toBeInTheDocument();
         expect(screen.getByRole('img', { name: /demo agency logo/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /continue to connect/i })).toBeInTheDocument();
       });

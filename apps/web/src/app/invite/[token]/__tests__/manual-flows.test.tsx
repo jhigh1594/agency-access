@@ -312,8 +312,8 @@ describe('Manual invite flows', () => {
 
     await screen.findByRole('heading', { name: /connect shopify/i });
     expect(screen.getAllByText(/step 1 of 3/i).length).toBeGreaterThan(0);
-    expect(screen.getByText('Select Store')).toBeInTheDocument();
-    expect(screen.getByText('Connected')).toBeInTheDocument();
+    expect(screen.getByText(/2 · Select Store/i)).toBeInTheDocument();
+    expect(screen.getByText(/3 · Connected/i)).toBeInTheDocument();
 
     await clickPrimaryAction('Connect Shopify');
     await screen.findByRole('heading', { name: /select store/i });

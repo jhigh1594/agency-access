@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import posthog from 'posthog-js';
+import { capturePosthogEvent } from '@/lib/analytics/capture-posthog';
 
 export type InviteLoadPhase = 'loading' | 'delayed' | 'timeout' | 'ready' | 'error';
 
@@ -19,6 +19,13 @@ interface UseInviteRequestLoaderOptions<TData> {
   delayedMs?: number;
   timeoutMs?: number;
   parseData?: (payload: any) => TData;
+  /**
+   * When set (e.g. from a Server Component fetch), skip the first client fetch so
+   * the invite shell can paint immediately after hydration.
+   */
+  serverInviteResult?:
+    | { status: 'ok'; payload: TData }
+    | { status: 'error'; message: string };
 }
 
 interface UseInviteRequestLoaderResult<TData> {
@@ -34,20 +41,32 @@ export function useInviteRequestLoader<TData>({
   delayedMs = 8000,
   timeoutMs = 20000,
   parseData,
+  serverInviteResult,
 }: UseInviteRequestLoaderOptions<TData>): UseInviteRequestLoaderResult<TData> {
   const [attempt, setAttempt] = useState(0);
-  const [data, setData] = useState<TData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<InviteLoadPhase>('loading');
+  const [data, setData] = useState<TData | null>(() =>
+    serverInviteResult?.status === 'ok' ? serverInviteResult.payload : null
+  );
+  const [error, setError] = useState<string | null>(() =>
+    serverInviteResult?.status === 'error' ? serverInviteResult.message : null
+  );
+  const [phase, setPhase] = useState<InviteLoadPhase>(() => {
+    if (!serverInviteResult) return 'loading';
+    return serverInviteResult.status === 'ok' ? 'ready' : 'error';
+  });
 
   const requestIdRef = useRef(0);
 
   const retry = useCallback(() => {
-    posthog.capture('client_invite_load_retry', { source, attempt: attempt + 1 });
+    void capturePosthogEvent('client_invite_load_retry', { source, attempt: attempt + 1 });
     setAttempt((prev) => prev + 1);
   }, [attempt, source]);
 
   useEffect(() => {
+    if (serverInviteResult && attempt === 0) {
+      return;
+    }
+
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
 
@@ -61,14 +80,14 @@ export function useInviteRequestLoader<TData>({
       if (requestIdRef.current !== requestId) return;
       setPhase((currentPhase) => {
         if (currentPhase !== 'loading') return currentPhase;
-        posthog.capture('client_invite_load_delayed', { source, attempt: attempt + 1 });
+        void capturePosthogEvent('client_invite_load_delayed', { source, attempt: attempt + 1 });
         return 'delayed';
       });
     }, delayedMs);
 
     const timeoutTimer = window.setTimeout(() => {
       if (requestIdRef.current !== requestId) return;
-      posthog.capture('client_invite_load_timed_out', { source, attempt: attempt + 1 });
+      void capturePosthogEvent('client_invite_load_timed_out', { source, attempt: attempt + 1 });
       setPhase('timeout');
       setError('This is taking longer than expected.');
       abortController.abort();
@@ -110,7 +129,7 @@ export function useInviteRequestLoader<TData>({
       window.clearTimeout(delayedTimer);
       window.clearTimeout(timeoutTimer);
     };
-  }, [attempt, delayedMs, endpoint, parseData, source, timeoutMs]);
+  }, [attempt, delayedMs, endpoint, parseData, serverInviteResult, source, timeoutMs]);
 
   return {
     data,
