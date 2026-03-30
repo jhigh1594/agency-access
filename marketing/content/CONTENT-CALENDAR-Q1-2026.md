@@ -31,7 +31,7 @@
 | `social-media-access-request-template` | Social Media Access Request Template for Agencies (2026) | 2026 | 9/10 — publish-ready, platform-specific templates + follow-ups, practical utility post |
 | `how-to-revoke-client-access-offboarding` | How to Revoke Client Access When Offboarding (2026) | 2026 | 9/10 — publish-ready, 5-phase framework, platform-by-platform revocation instructions |
 | `client-onboarding-questionnaire-27-questions` | Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask | 2026 | 9/10 — publish-ready, 27 questions across 6 categories, downloadable template |
-| `marketing-agency-onboarding-best-practices-2026` | Agency Onboarding Best Practices That Scale (2026) | 2026 | 9/10 — publish-ready, 5-level maturity model framework, sequential progression approach |
+| `marketing-agency-onboarding-best-practices-2026` | Agency Onboarding Best Practices (7 Mistakes That Make Clients Question Hiring You) | 2026 | 9/10 — publish-ready, client-POV mistakes + recovery playbook, unique from existing pillar posts |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
 | Slug | Title | SEO Score |
@@ -193,7 +193,7 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 | Day | Content | Type | Keyword Target |
 |-----|---------|------|---------------|
 | Tue | #12 `/blog/client-onboarding-questionnaire-27-questions` | Blog + template | "client onboarding questionnaire" | ✅ **DRAFT COMPLETE** — 9/10, publish-ready, 27 questions across 6 categories, downloadable template, practical utility post |
-| Thu | #13 `/blog/marketing-agency-onboarding-best-practices-2026` | Blog | "agency onboarding best practices" | ✅ **DRAFT COMPLETE** — 9/10, publish-ready, 5-level maturity model framework |
+| Thu | #13 `/blog/marketing-agency-onboarding-best-practices-2026` | Blog | "agency onboarding best practices" | ✅ **DRAFT COMPLETE** — 9/10, publish-ready, client-POV mistakes angle, 7 onboarding mistakes + recovery playbook |
 
 ---
 
