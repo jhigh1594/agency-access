@@ -391,7 +391,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (19 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (20 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
@@ -415,6 +415,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `best-client-onboarding-software-agencies-2026` | Best Client Onboarding Software for Agencies (2026) — Honest Breakdown | operations | 2026 | 9/10, publish-ready, category-based framework |
 | `agency-security-checklist` | The Agency Security Checklist: Protect Client Access in 2026 | security | 2026 | 8.5/10, publish-ready, 6-phase framework, unique angle |
 | `client-onboarding-questionnaire-27-questions` | Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask | onboarding | 2026 | 9/10, publish-ready, 27 questions across 6 categories, downloadable template |
+| `marketing-agency-onboarding-best-practices-2026` | Agency Onboarding Best Practices That Scale (2026) | onboarding | 2026 | 9/10, publish-ready, 5-level maturity model framework |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 

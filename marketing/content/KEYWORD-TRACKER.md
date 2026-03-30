@@ -40,6 +40,7 @@
 | agency security checklist | ~100-200 | N/A | Top 5 | /blog/agency-security-checklist | P1 |
 | social media access request template | ~200-400 | N/A | Top 5 | /blog/social-media-access-request-template | P1 |
 | how to revoke client access | ~200-400 | N/A | Top 5 | /blog/how-to-revoke-client-access-offboarding | P1 |
+| agency onboarding best practices | ~200-400 | N/A | Top 5 | /blog/marketing-agency-onboarding-best-practices-2026 | P1 |
 
 ### Tier 4: Branded/Defensive (P1)
 
