@@ -15,7 +15,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass, DEV_USER_ID } from '@/lib/dev-auth';
 import { useQuery } from '@tanstack/react-query';
 import { TrialBanner } from '@/components/trial-banner';
-import { StatCard, StatusBadge, EmptyState } from '@/components/ui';
+import { StatCard, StatusBadge, EmptyState, PlatformIcon } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
@@ -26,10 +26,12 @@ import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { usePrefetchQuota, useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import {
+  PLATFORM_NAMES,
   SUBSCRIPTION_TIER_NAMES,
   type DashboardPayload,
   type DashboardRequestSummary,
   type DashboardConnectionSummary,
+  type Platform,
 } from '@agency-platform/shared';
 
 // Simple in-memory ETag cache for conditional requests
@@ -96,24 +98,8 @@ async function captureDashboardLoadPerf(metrics: DashboardPerfMetrics): Promise<
   }
 }
 
-function hasPlatformFamily(platforms: string[] | undefined, family: 'google' | 'meta'): boolean {
-  if (!platforms || platforms.length === 0) {
-    return false;
-  }
-
-  return platforms.some((platform) => platform === family || platform.startsWith(`${family}_`));
-}
-
-function iconForPlatform(platform: string): string | null {
-  if (platform.includes('google')) {
-    return '/google-ads.svg';
-  }
-
-  if (platform.includes('meta') || platform.includes('instagram')) {
-    return '/meta-color.svg';
-  }
-
-  return null;
+function platformLabel(platform: string): string {
+  return (PLATFORM_NAMES as Record<string, string>)[platform] ?? platform;
 }
 
 function requestClientHref(request: DashboardRequestSummary): string {
@@ -446,14 +432,16 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="brutalist-rounded"
+            size="sm"
             data-testid="dashboard-create-request"
             onClick={handleCreateRequest}
             disabled={isCreatingRequest}
             aria-busy={isCreatingRequest}
             aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
-            className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px] disabled:pointer-events-none disabled:opacity-80"
+            className="px-6 sm:px-8 normal-case font-semibold tracking-normal hover:translate-x-0 hover:bg-coral/90 disabled:pointer-events-none disabled:opacity-80"
           >
             {isCreatingRequest ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
@@ -461,7 +449,7 @@ export default function DashboardPage() {
               <Plus className="h-4 w-4 shrink-0" aria-hidden />
             )}
             {isCreatingRequest ? 'Checking…' : 'Create Request'}
-          </button>
+          </Button>
         </div>
 
         {trialBanner && (
@@ -546,14 +534,16 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <button
+            <Button
               type="button"
+              variant="brutalist-rounded"
+              size="sm"
               data-testid="dashboard-create-request"
               onClick={handleCreateRequest}
               disabled={isCreatingRequest}
               aria-busy={isCreatingRequest}
               aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
-              className="flex items-center gap-2 px-6 sm:px-8 bg-coral text-white rounded-lg hover:bg-coral/90 shadow-brutalist hover:shadow-none hover:translate-y-[2px] transition-all font-semibold min-h-[44px] disabled:pointer-events-none disabled:opacity-80"
+              className="px-6 sm:px-8 normal-case font-semibold tracking-normal hover:translate-x-0 hover:bg-coral/90 disabled:pointer-events-none disabled:opacity-80"
             >
               {isCreatingRequest ? (
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
@@ -561,7 +551,7 @@ export default function DashboardPage() {
                 <Plus className="h-4 w-4 shrink-0" aria-hidden />
               )}
               {isCreatingRequest ? 'Checking…' : 'Create Request'}
-            </button>
+            </Button>
           </div>
 
           {requests.length === 0 ? (
@@ -584,14 +574,22 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-medium text-ink">{request.clientName}</h3>
                     <p className="text-sm text-muted-foreground">{request.clientEmail}</p>
-                    <div className="mt-1 flex gap-2">
-                      {hasPlatformFamily(request.platforms, 'google') && (
-                        <span className="text-[10px] bg-teal/10 text-teal-90 px-1.5 py-0.5 rounded border border-teal uppercase font-medium">Google</span>
-                      )}
-                      {hasPlatformFamily(request.platforms, 'meta') && (
-                        <span className="text-[10px] bg-coral/10 text-coral-90 px-1.5 py-0.5 rounded border border-coral uppercase font-medium">Meta</span>
-                      )}
-                    </div>
+                    {request.platforms.length > 0 && (
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-1.5"
+                        aria-label="Platforms in this request"
+                      >
+                        {[...new Set(request.platforms)].map((platform) => (
+                          <div
+                            key={platform}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-black/10 bg-muted/80 p-0.5"
+                            title={platformLabel(platform)}
+                          >
+                            <PlatformIcon platform={platform as Platform} size="sm" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-muted-foreground">
@@ -647,29 +645,15 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex -space-x-2">
-                      {connection.platforms.map((platform) => {
-                        const iconSrc = iconForPlatform(platform);
-
-                        return (
-                          <div
-                            key={`${connection.id}-${platform}`}
-                            className="h-7 w-7 rounded-full border-2 border-white bg-muted flex items-center justify-center overflow-hidden"
-                            title={platform}
-                          >
-                            {iconSrc ? (
-                              <img
-                                src={iconSrc}
-                                className="h-4 w-4"
-                                alt={platform}
-                              />
-                            ) : (
-                              <span className="text-[9px] font-semibold uppercase text-muted-foreground">
-                                {platform.slice(0, 2)}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {connection.platforms.map((platform) => (
+                        <div
+                          key={`${connection.id}-${platform}`}
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-white bg-muted p-0.5 ring-2 ring-card"
+                          title={platformLabel(platform)}
+                        >
+                          <PlatformIcon platform={platform as Platform} size="sm" />
+                        </div>
+                      ))}
                     </div>
                     <Link
                       href={

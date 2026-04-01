@@ -87,6 +87,9 @@ vi.mock('@/components/ui', () => ({
       <p>{description}</p>
     </div>
   ),
+  PlatformIcon: ({ platform }: { platform: string }) => (
+    <span data-testid={`platform-icon-${platform}`}>{platform}</span>
+  ),
 }));
 
 vi.mock('@/components/trial-banner', () => ({
