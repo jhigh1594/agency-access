@@ -49,7 +49,7 @@
 
 ## Critical Housekeeping (Fix Before Any New Content)
 
-### P0 — Trust & Credibility ✅ COMPLETED (March 18, 2026)
+### Published (2026-04-02) — Trust & Credibility ✅ COMPLETED (March 18, 2026)
 
 | Issue | Fix | Status |
 |-------|-----|--------|
@@ -58,7 +58,7 @@
 | Blog post claims AuthHub is $79/mo | Updated `leadsie-vs-authhub-comparison.md` | ✅ Done |
 | 11 broken internal links across posts | Removed or redirected | ✅ Done |
 
-### P1 — SEO Foundation ✅ COMPLETED (March 18, 2026)
+### Published (2026-04-02) — SEO Foundation ✅ COMPLETED (March 18, 2026)
 
 | Issue | Fix | Status |
 |-------|-----|--------|
