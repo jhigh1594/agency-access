@@ -61,6 +61,11 @@ scripts/perf/traces/
 # Stale Next.js builds
 .next.stale-*
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # AI tool state (ephemeral)
 .aipmos/
 .cache/claude/
