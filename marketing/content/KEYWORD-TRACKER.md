@@ -107,6 +107,16 @@ Keywords Leadsie ranks for that we should target:
 
 ---
 
+### Tier 5: Technical / Developer Audience (P2)
+
+| Keyword | Monthly Volume | Current Rank | Target Rank | Target Page | Priority |
+|---------|----------------|--------------|-------------|-------------|----------|
+| oauth token management | ~50-100 | N/A | Top 10 | /blog/oauth-token-management-agencies | P2 |
+| oauth token refresh | ~100-200 | N/A | Top 10 | /blog/oauth-token-management-agencies | P2 |
+| ad account access expired | ~50-100 | N/A | Top 10 | /blog/oauth-token-management-agencies | P2 |
+
+---
+
 ## Content Performance Tracking
 
 ### Top Performing Content (by traffic)
@@ -164,7 +174,8 @@ Common PAA questions to answer in content:
 
 ---
 
-**Next Review**: March 1, 2026
+**Next Review**: May 15, 2026
 # Blog Post Published 
 # Blog Post Published 
 # Blog Post Published 
+# Blog Post Published — oauth-token-management-agencies (9/10, May 5 2026)

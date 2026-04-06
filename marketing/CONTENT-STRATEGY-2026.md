@@ -391,7 +391,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 
 ## 📊 Content Inventory Summary (Audited March 18, 2026)
 
-### Published Blog Posts (20 total — loaded from `content/blog/*.md`)
+### Published Blog Posts (22 total — loaded from `content/blog/*.md`)
 
 | Slug | Title | Category | Year | Notes |
 |------|-------|----------|------|-------|
@@ -416,6 +416,7 @@ Leadsie supports **31+ platforms**: Meta (Pages, IG, Ads, Datasets, Pixels, Cata
 | `agency-security-checklist` | The Agency Security Checklist: Protect Client Access in 2026 | security | 2026 | 8.5/10, publish-ready, 6-phase framework, unique angle |
 | `client-onboarding-questionnaire-27-questions` | Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask | onboarding | 2026 | 9/10, publish-ready, 27 questions across 6 categories, downloadable template |
 | `marketing-agency-onboarding-best-practices-2026` | Agency Onboarding Best Practices (7 Mistakes That Make Clients Question Hiring You) | onboarding | 2026 | 9/10, publish-ready, client-POV mistakes angle, unique from existing pillar |
+| `oauth-token-management-agencies` | OAuth Token Management for Agencies (2026 Complete Guide) | operations | 2026 | 9/10, publish-ready, 5-stage lifecycle framework, technical depth Leadsie has zero coverage on |
 
 ### Published Dedicated Guides (2 total — in `app/(marketing)/guides/`)
 
@@ -519,7 +520,7 @@ Content that builds topical authority and captures adjacent search intent.
 
 | # | Title / Topic | Type | Target Keyword(s) | Est. Volume | Why This Works |
 |---|-------------|------|-------------------|-------------|----------------|
-| 9 | **OAuth Token Management for Agencies: Why Tokens Expire and How to Fix It** | Blog (technical) | "oauth token management", "ad account access expired", "google ads token refresh" | 50-100/mo | **Leadsie has zero technical content.** This targets developers/ops at larger agencies. Shows technical depth. |
+| 9 | ~~**OAuth Token Management for Agencies: Why Tokens Expire and How to Fix It**~~ | Blog (technical) | "oauth token management", "ad account access expired", "google ads token refresh" | 50-100/mo | ✅ **DRAFT COMPLETE** — 9/10, publish-ready. 5-stage lifecycle framework (authorization → storage → refresh → monitoring → revocation). Unique: 30×5=150 token matrix angle, 3 external platform doc links, checklist. May 5, 2026. |
 | 10 | **How to See Who Has Access to Your Facebook Business Page (2026)** | Blog | "how to see who has access to facebook page", "facebook page access check" | 1K-3K/mo | **Leadsie owns this keyword.** Compete with a more comprehensive version including Business Manager, Ad Accounts, and Pixels. |
 | 11 | **Unable to Assign Assets in Meta Business Suite? (2026 Fixes)** | Blog | "unable to assign assets in meta business suite", "meta business suite assign assets error" | 500-1K/mo | **Leadsie ranks for this.** Their post is from July 2025. Our version is 2026-fresh with updated Meta UI screenshots. |
 | 12 | **Client Onboarding Questionnaire: 27 Questions to Ask Every New Client** | Blog + template | "client onboarding questionnaire", "questions to ask new marketing clients" | 500-1K/mo | **Leadsie covers this but our angle is different**: their questionnaire is access-only; ours includes intake/branding/strategy questions. Downloadable template. |
