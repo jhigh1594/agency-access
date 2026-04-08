@@ -107,7 +107,15 @@ Keywords Leadsie ranks for that we should target:
 
 ---
 
-### Tier 5: Technical / Operations (P2)
+### Tier 5: Meta Troubleshooting (P1-P2)
+
+| Keyword | Monthly Volume | Current Rank | Target Rank | Target Page | Priority |
+|---------|----------------|--------------|-------------|-------------|----------|
+| unable to assign assets meta business suite | ~200-500 | N/A | Top 3 | /blog/unable-to-assign-assets-meta-business-suite | P1 |
+| meta business suite asset assignment | ~100-200 | N/A | Top 5 | /blog/unable-to-assign-assets-meta-business-suite | P2 |
+| meta business manager assign button greyed out | ~100-200 | N/A | Top 5 | /blog/unable-to-assign-assets-meta-business-suite | P2 |
+
+### Tier 6: Technical / Operations (P2)
 
 | Keyword | Monthly Volume | Current Rank | Target Rank | Target Page | Priority |
 |---------|----------------|--------------|-------------|-------------|----------|
@@ -179,3 +187,4 @@ Common PAA questions to answer in content:
 # Blog Post Published 
 # Blog Post Published 
 # Blog Post Published — oauth-token-management-agencies (2026-04-06)
+# Blog Post Published — unable-to-assign-assets-meta-business-suite (2026-04-08)
