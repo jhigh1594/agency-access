@@ -32,6 +32,9 @@
 
 | Keyword | Monthly Volume | Current Rank | Target Rank | Target Page | Priority |
 |---------|----------------|--------------|-------------|-------------|----------|
+| oauth token management | ~50-100 | N/A | Top 10 | /blog/oauth-token-management-agencies | P2 |
+| access token expiry agency | ~50-100 | N/A | Top 10 | /blog/oauth-token-management-agencies | P2 |
+| refresh token expired google ads | ~50-100 | N/A | Top 10 | /blog/oauth-token-management-agencies | P2 |
 | client onboarding checklist | ~1,000-2,000 | N/A | Top 10 | /blog/client-onboarding-checklist | P0 |
 | client onboarding questionnaire | ~500-1,000 | N/A | Top 5 | /blog/client-onboarding-questionnaire-27-questions | P1 |
 | agency onboarding process | ~300-500 | N/A | Top 10 | /blog/how-to-onboard-clients-faster | P1 |

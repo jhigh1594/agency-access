@@ -32,6 +32,7 @@
 | `how-to-revoke-client-access-offboarding` | How to Revoke Client Access When Offboarding (2026) | 2026 | 9/10 — publish-ready, 5-phase framework, platform-by-platform revocation instructions |
 | `client-onboarding-questionnaire-27-questions` | Client Onboarding Questionnaire: 27 Questions Every Agency Needs to Ask | 2026 | 9/10 — publish-ready, 27 questions across 6 categories, downloadable template |
 | `marketing-agency-onboarding-best-practices-2026` | Agency Onboarding Best Practices (7 Mistakes That Make Clients Question Hiring You) | 2026 | 9/10 — publish-ready, client-POV mistakes + recovery playbook, unique from existing pillar posts |
+| `oauth-token-management-agencies` | OAuth Token Management for Marketing Agencies (2026 Guide) | 2026 | 9/10 — publish-ready, 6-stage lifecycle framework, agency-owner translation of developer concept, no competitor covers this angle |
 
 ### Dedicated Guides (2) — `/guides/[slug]`
 | Slug | Title | SEO Score |
@@ -203,7 +204,7 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 
 | Day | Content | Type | Keyword Target |
 |-----|---------|------|---------------|
-| Tue | #9 `/blog/oauth-token-management-agencies` | Blog (technical) | "oauth token management" |
+| Tue | #9 `/blog/oauth-token-management-agencies` | Blog (technical) | "oauth token management" | ✅ **DRAFT COMPLETE** — 9/10, publish-ready, 6-stage token lifecycle framework, agency-owner POV (no competitor covers this angle), natural AuthHub positioning |
 | Thu | #11 `/blog/unable-to-assign-assets-meta-business-suite` | Blog | "unable to assign assets meta business suite" |
 
 ### Week 14 (May 12-18)
@@ -280,5 +281,5 @@ All housekeeping items were completed ahead of schedule as part of the competiti
 
 ---
 
-**Last Updated**: March 25, 2026 (added how-to-revoke-client-access-offboarding)
+**Last Updated**: April 9, 2026 (added oauth-token-management-agencies — Week 13 draft complete, 9/10)
 **Next Review**: April 15, 2026 (mid-Q2 performance check)
