@@ -197,6 +197,18 @@ describe('env contract', () => {
     expect(moduleTrue.env.BACKGROUND_WORKERS_ENABLED).toBe(true);
   });
 
+  it('parses Render boolean env strings', async () => {
+    const module = await importEnvWith(withRequiredBase({
+      RATE_LIMIT_ENABLED: 'false',
+      RATE_LIMIT_SKIP_AUTHENTICATED: 'false',
+      DB_ENFORCE_LEAST_PRIVILEGE: 'true',
+    }));
+
+    expect(module.env.RATE_LIMIT_ENABLED).toBe(false);
+    expect(module.env.RATE_LIMIT_SKIP_AUTHENTICATED).toBe(false);
+    expect(module.env.DB_ENFORCE_LEAST_PRIVILEGE).toBe(true);
+  });
+
   it('defaults internal admin allowlists to empty arrays when unset', async () => {
     const module = await importEnvWith(withRequiredBase({
       INTERNAL_ADMIN_USER_IDS: undefined,

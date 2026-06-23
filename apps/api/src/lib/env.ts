@@ -34,6 +34,13 @@ function parseBooleanish(value: unknown): boolean | undefined {
   return undefined;
 }
 
+function booleanish(defaultValue: boolean) {
+  return z.preprocess(
+    value => parseBooleanish(value) ?? value,
+    z.boolean().default(defaultValue)
+  );
+}
+
 function isPostgresProtocol(protocol: string): boolean {
   return protocol === 'postgres:' || protocol === 'postgresql:';
 }
@@ -68,10 +75,7 @@ const envSchema = z.object({
 
   // Background workers toggle
   // When false: no job handlers start, no scheduled jobs. Use for pre-launch/staging with zero traffic.
-  BACKGROUND_WORKERS_ENABLED: z.preprocess(
-    value => parseBooleanish(value) ?? value,
-    z.boolean().default(true)
-  ),
+  BACKGROUND_WORKERS_ENABLED: booleanish(true),
 
   // Meta OAuth
   META_APP_ID: z.string(),
@@ -137,10 +141,7 @@ const envSchema = z.object({
 
   // Sentry Error Monitoring
   SENTRY_DSN: z.string().optional(),
-  SENTRY_SEND_IN_DEV: z.preprocess(
-    value => parseBooleanish(value) ?? value,
-    z.boolean().default(false)
-  ),
+  SENTRY_SEND_IN_DEV: booleanish(false),
   SENTRY_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
   SENTRY_ORG: z.string().optional(),
@@ -149,13 +150,13 @@ const envSchema = z.object({
   LOG_LEVEL: z.string().default('info'),
 
   // Rate Limiting
-  RATE_LIMIT_ENABLED: z.boolean().default(true),
+  RATE_LIMIT_ENABLED: booleanish(true),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   RATE_LIMIT_TIME_WINDOW_SECONDS: z.coerce.number().default(60),
-  RATE_LIMIT_SKIP_AUTHENTICATED: z.boolean().default(true),
+  RATE_LIMIT_SKIP_AUTHENTICATED: booleanish(true),
   DASHBOARD_SUMMARY_LIMITS_ENABLED: z.coerce.boolean().optional(),
   TRUST_PROXY_IPS: z.string().optional(),
-  DB_ENFORCE_LEAST_PRIVILEGE: z.boolean().default(false),
+  DB_ENFORCE_LEAST_PRIVILEGE: booleanish(false),
 
   // OAuth State Security
   OAUTH_STATE_HMAC_SECRET: z.string().default(() => {
@@ -173,10 +174,7 @@ const envSchema = z.object({
   AFFILIATE_DEFAULT_TRAILING_COMMISSION_BPS: z.coerce.number().int().min(0).max(10000).default(3000),
   AFFILIATE_DEFAULT_TRAILING_COMMISSION_MONTHS: z.coerce.number().int().min(0).max(60).default(6),
   AFFILIATE_HOLD_DAYS: z.coerce.number().int().min(0).default(30),
-  AFFILIATE_PORTAL_ENABLED: z.preprocess(
-    value => parseBooleanish(value) ?? value,
-    z.boolean().default(false)
-  ),
+  AFFILIATE_PORTAL_ENABLED: booleanish(false),
 
   // Outbound webhook delivery
   WEBHOOK_DELIVERY_TIMEOUT_MS: z.coerce.number().int().min(1000).default(5000),
