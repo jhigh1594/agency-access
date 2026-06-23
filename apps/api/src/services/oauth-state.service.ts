@@ -143,7 +143,17 @@ async function createState(
       error: errorMeta,
     });
 
-    // Fallback to stateless token if database fails
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        data: null,
+        error: {
+          code: 'STATE_STORAGE_UNAVAILABLE',
+          message: 'Unable to create durable OAuth state token',
+        },
+      };
+    }
+
+    // Fallback to stateless token if database fails outside production.
     const fallbackToken = encodeStatelessStateToken(stateData);
     logger.warn('Falling back to stateless OAuth state token', {
       platform: stateData.platform,
@@ -183,6 +193,16 @@ async function validateState(
     // Check for stateless token (fallback mode)
     const statelessStateData = decodeStatelessStateToken(stateToken);
     if (statelessStateData) {
+      if (process.env.NODE_ENV === 'production') {
+        return {
+          data: null,
+          error: {
+            code: 'STATE_STORAGE_REQUIRED',
+            message: 'Durable OAuth state storage is required in production',
+          },
+        };
+      }
+
       const age = Date.now() - statelessStateData.timestamp;
 
       if (age > STATE_MAX_AGE_MS) {

@@ -4,8 +4,8 @@ services:
     env: node
     plan: free
     rootDir: .
-    buildCommand: npm install --include=dev && npm run build --workspace=packages/shared && cd apps/api && npm run db:generate && npm run build
-    startCommand: cd apps/api && npm start
+    buildCommand: npm install --no-audit --include=dev && npm run build --workspace=packages/shared && cd apps/api && npm run db:generate && npm run build
+    startCommand: cd apps/api && npx prisma migrate deploy && npm start
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -19,6 +19,8 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: DB_ENFORCE_LEAST_PRIVILEGE
+        value: true
       - key: CLERK_PUBLISHABLE_KEY
         sync: false
       - key: CLERK_SECRET_KEY
@@ -31,6 +33,8 @@ services:
         sync: false
       - key: INFISICAL_ENVIRONMENT
         value: prod
+      - key: BACKGROUND_WORKERS_ENABLED
+        value: false
       - key: META_APP_ID
         sync: false
       - key: META_APP_SECRET
@@ -39,9 +43,21 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GOOGLE_ADS_DEVELOPER_TOKEN
+        sync: false
+      - key: GOOGLE_ADS_LOGIN_CUSTOMER_ID
+        sync: false
       - key: LINKEDIN_CLIENT_ID
         sync: false
       - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: KIT_CLIENT_ID
+        sync: false
+      - key: KIT_CLIENT_SECRET
+        sync: false
+      - key: TIKTOK_CLIENT_ID
+        sync: false
+      - key: TIKTOK_CLIENT_SECRET
         sync: false
       - key: TIKTOK_APP_ID
         sync: false
@@ -70,7 +86,19 @@ services:
       - key: CREEM_WEBHOOK_SECRET
         sync: false
       - key: CREEM_API_URL
-        value: https://api.creem.io/v1
+        value: https://api.creem.io
+      - key: OAUTH_STATE_HMAC_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_WEBHOOK_SECRET
+        sync: false
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_SKIP_AUTHENTICATED
+        value: true
+      - key: TRUST_PROXY_IPS
+        sync: false
       - key: LOG_LEVEL
         value: info
       - key: INTERNAL_ADMIN_USER_IDS

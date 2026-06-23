@@ -1,5 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { beehiivVerificationService } from '../services/beehiiv-verification.service.js';
+import { authenticate } from '@/middleware/auth.js';
+import { resolvePrincipalAgency } from '@/lib/authorization.js';
+import { prisma } from '@/lib/prisma.js';
 
 /**
  * Beehiiv API Routes
@@ -8,6 +11,8 @@ import { beehiivVerificationService } from '../services/beehiiv-verification.ser
  * Beehiiv uses API key authentication (team invitation workflow) instead of OAuth.
  */
 export async function beehiivRoutes(fastify: FastifyInstance) {
+  fastify.addHook('onRequest', authenticate());
+
   /**
    * POST /api/beehiiv/verify-team-access
    *
@@ -25,31 +30,44 @@ export async function beehiivRoutes(fastify: FastifyInstance) {
    * - VERIFICATION_FAILED: Agency does not have access to publication
    */
   fastify.post('/api/beehiiv/verify-team-access', async (request, reply) => {
-    const { agencyId, clientPublicationId, agencyApiKey } = request.body as {
+    const { clientPublicationId, agencyApiKey } = request.body as {
       agencyId?: string;
       clientPublicationId?: string;
       agencyApiKey?: string;
     };
+    const principal = await resolvePrincipalAgency(request);
+
+    if (principal.error || !principal.data) {
+      return reply.code(principal.error?.code === 'FORBIDDEN' ? 403 : 401).send({
+        data: null,
+        error: principal.error ?? {
+          code: 'UNAUTHORIZED',
+          message: 'Authenticated user context is required',
+        },
+      });
+    }
 
     // Validate required fields
-    if (!agencyId || !clientPublicationId || !agencyApiKey) {
+    if (!clientPublicationId || !agencyApiKey) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Missing required fields: agencyId, clientPublicationId, and agencyApiKey are required',
+          message: 'Missing required fields: clientPublicationId and agencyApiKey are required',
         },
       });
     }
 
     // Verify agency access and store connection
     const result = await beehiivVerificationService.verifyAgencyAccess(
-      agencyId,
+      principal.data.agencyId,
       clientPublicationId,
       agencyApiKey
     );
 
     if (!result.success) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VERIFICATION_FAILED',
           message: result.error ?? 'Verification failed',
@@ -75,12 +93,43 @@ export async function beehiivRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/api/beehiiv/connection/:connectionId/verify', async (request, reply) => {
     const { connectionId } = request.params as { connectionId?: string };
+    const principal = await resolvePrincipalAgency(request);
+
+    if (principal.error || !principal.data) {
+      return reply.code(principal.error?.code === 'FORBIDDEN' ? 403 : 401).send({
+        data: null,
+        error: principal.error ?? {
+          code: 'UNAUTHORIZED',
+          message: 'Authenticated user context is required',
+        },
+      });
+    }
 
     if (!connectionId) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Missing required field: connectionId',
+        },
+      });
+    }
+
+    const connection = await prisma.agencyPlatformConnection.findFirst({
+      where: {
+        id: connectionId,
+        agencyId: principal.data.agencyId,
+        platform: 'beehiiv',
+      },
+      select: { id: true },
+    });
+
+    if (!connection) {
+      return reply.code(404).send({
+        data: null,
+        error: {
+          code: 'CONNECTION_NOT_FOUND',
+          message: 'Connection not found',
         },
       });
     }

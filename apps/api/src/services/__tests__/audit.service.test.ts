@@ -54,11 +54,12 @@ describe('AuditService', () => {
       expect(result.data).toEqual(mockLog);
       expect(prisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          connectionId: 'connection-1',
-          platform: 'meta_ads',
+          resourceId: 'connection-1',
+          resourceType: 'connection',
           action: 'ACCESSED',
           userEmail: 'user@test.com',
           ipAddress: '192.168.1.1',
+          metadata: { platform: 'meta_ads' },
         }),
       });
     });
@@ -76,7 +77,7 @@ describe('AuditService', () => {
 
       expect(prisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          details: { reason: 'API call', endpoint: '/api/campaigns' },
+          metadata: { platform: 'meta_ads', reason: 'API call', endpoint: '/api/campaigns' },
         }),
       });
     });
@@ -97,7 +98,7 @@ describe('AuditService', () => {
       expect(prisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: 'GRANTED',
-          platform: 'google_ads',
+          metadata: { platform: 'google_ads' },
         }),
       });
     });
@@ -119,8 +120,7 @@ describe('AuditService', () => {
       expect(prisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: 'REVOKED',
-          platform: 'tiktok',
-          details: { reason: 'Client requested removal' },
+          metadata: { platform: 'tiktok', reason: 'Client requested removal' },
         }),
       });
     });
@@ -142,8 +142,7 @@ describe('AuditService', () => {
       expect(prisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: 'REFRESHED',
-          platform: 'linkedin',
-          details: { method: 'automatic', expiresIn: '7 days' },
+          metadata: { platform: 'linkedin', method: 'automatic', expiresIn: '7 days' },
         }),
       });
     });
@@ -167,13 +166,38 @@ describe('AuditService', () => {
       expect(prisma.auditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: 'FAILED',
-          details: {
+          metadata: {
+            platform: 'meta_ads',
             error: 'Token validation failed',
             code: 'INVALID_TOKEN',
             statusCode: 401,
           },
         }),
       });
+    });
+  });
+
+  describe('createAuditLog', () => {
+    it('should allow repeated identical security events', async () => {
+      vi.mocked(prisma.auditLog.create)
+        .mockResolvedValueOnce({ id: 1n } as any)
+        .mockResolvedValueOnce({ id: 2n } as any);
+
+      const input = {
+        agencyId: 'agency-1',
+        userEmail: 'ops@example.com',
+        action: 'TOKEN_ACCESSED',
+        resourceType: 'platform_authorization',
+        resourceId: 'auth-1',
+        metadata: { platform: 'meta' },
+      };
+
+      const first = await auditService.createAuditLog(input);
+      const second = await auditService.createAuditLog(input);
+
+      expect(first.error).toBeNull();
+      expect(second.error).toBeNull();
+      expect(prisma.auditLog.create).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -214,11 +238,13 @@ describe('AuditService', () => {
       expect(result.data).toEqual(mockLogs);
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
         where: {
-          connectionId: 'connection-1',
+          resourceId: 'connection-1',
+          resourceType: 'connection',
         },
         orderBy: {
           createdAt: 'desc',
         },
+        take: undefined,
       });
     });
 
@@ -237,12 +263,17 @@ describe('AuditService', () => {
 
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
         where: {
-          connectionId: 'connection-1',
-          platform: 'meta_ads',
+          resourceId: 'connection-1',
+          resourceType: 'connection',
+          metadata: {
+            path: ['platform'],
+            equals: 'meta_ads',
+          },
         },
         orderBy: {
           createdAt: 'desc',
         },
+        take: undefined,
       });
     });
 
@@ -253,7 +284,8 @@ describe('AuditService', () => {
 
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
         where: {
-          connectionId: 'connection-1',
+          resourceId: 'connection-1',
+          resourceType: 'connection',
         },
         orderBy: {
           createdAt: 'desc',
@@ -296,7 +328,8 @@ describe('AuditService', () => {
       expect(result.data).toEqual(mockLogs);
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
         where: {
-          connectionId: { in: ['connection-1'] },
+          resourceId: { in: ['connection-1'] },
+          resourceType: 'connection',
           action: { in: ['FAILED', 'REVOKED'] },
           createdAt: { gte: expect.any(Date) },
         },

@@ -28,7 +28,7 @@ export async function logTokenAccess(input: {
         action: 'ACCESSED',
         userEmail: input.userEmail,
         ipAddress: input.ipAddress,
-        metadata: input.details || {},
+        metadata: { platform: input.platform, ...(input.details || {}) },
       },
     });
 
@@ -62,7 +62,7 @@ export async function logTokenGrant(input: {
         action: 'GRANTED',
         userEmail: input.userEmail,
         ipAddress: input.ipAddress,
-        metadata: input.details || {},
+        metadata: { platform: input.platform, ...(input.details || {}) },
       },
     });
 
@@ -96,7 +96,7 @@ export async function logTokenRevoke(input: {
         action: 'REVOKED',
         userEmail: input.userEmail,
         ipAddress: input.ipAddress,
-        metadata: input.details || {},
+        metadata: { platform: input.platform, ...(input.details || {}) },
       },
     });
 
@@ -130,7 +130,7 @@ export async function logTokenRefresh(input: {
         action: 'REFRESHED',
         userEmail: input.userEmail,
         ipAddress: input.ipAddress,
-        metadata: input.details || {},
+        metadata: { platform: input.platform, ...(input.details || {}) },
       },
     });
 
@@ -164,7 +164,7 @@ export async function logFailure(input: {
         resourceId: input.connectionId,
         resourceType: 'connection',
         action: 'FAILED',
-        metadata: input.details,
+        metadata: { platform: input.platform, ...input.details },
       },
     });
 
@@ -193,6 +193,13 @@ export async function getConnectionAuditTrail(
       resourceId: connectionId,
       resourceType: 'connection',
     };
+
+    if (platform) {
+      where.metadata = {
+        path: ['platform'],
+        equals: platform,
+      };
+    }
 
     const auditLogs = await prisma.auditLog.findMany({
       where,

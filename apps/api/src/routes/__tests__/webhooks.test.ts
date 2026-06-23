@@ -216,7 +216,7 @@ describe('Webhook Routes - TDD Tests', () => {
       expect(payload.processed).toBe(true);
     });
 
-    it('should map prod_11NeEMY6WtGEkdnvdd7obj to AGENCY tier', async () => {
+    it('should map prod_11NeEMY6WtGEkdnvdd7obj to GROWTH tier', async () => {
       const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
@@ -225,7 +225,7 @@ describe('Webhook Routes - TDD Tests', () => {
 
       expect(clerkMetadataService.setSubscriptionTier).toHaveBeenCalledWith(
         'clerk_user_123',
-        'AGENCY',
+        'GROWTH',
         expect.objectContaining({
           subscriptionId: 'sub_123',
           subscriptionStatus: 'active',
@@ -233,13 +233,13 @@ describe('Webhook Routes - TDD Tests', () => {
       );
     });
 
-    it('should map prod_tbd to PRO tier', async () => {
-      const proPayload = {
+    it('should map agency product IDs to AGENCY tier', async () => {
+      const agencyPayload = {
         ...validPayload,
         data: {
           subscription: {
             ...validPayload.data.subscription,
-            price_id: 'prod_tbd',
+            price_id: 'prod_5FEs6qBlwvbMWHHun95wkk',
           },
         },
       };
@@ -247,12 +247,13 @@ describe('Webhook Routes - TDD Tests', () => {
       const response = await injectSigned({
         method: 'POST',
         url: '/api/webhooks/creem',
-        payload: proPayload,
+        payload: agencyPayload,
       });
 
+      expect(response.statusCode).toBe(200);
       expect(clerkMetadataService.setSubscriptionTier).toHaveBeenCalledWith(
         'clerk_user_123',
-        'PRO',
+        'AGENCY',
         expect.anything()
       );
     });
@@ -271,6 +272,26 @@ describe('Webhook Routes - TDD Tests', () => {
       expect(payload.duplicate).toBe(true);
       expect(payload.received).toBe(true);
       // Should not process duplicates
+      expect(clerkMetadataService.setSubscriptionTier).not.toHaveBeenCalled();
+    });
+
+    it('should treat Creem webhook marker unique conflicts as duplicate deliveries', async () => {
+      (prisma.auditLog.findFirst as any).mockResolvedValue(null);
+      (prisma.auditLog.create as any).mockRejectedValueOnce(
+        Object.assign(new Error('Unique constraint failed'), { code: 'P2002' })
+      );
+
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: validPayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.payload)).toMatchObject({
+        received: true,
+        duplicate: true,
+      });
       expect(clerkMetadataService.setSubscriptionTier).not.toHaveBeenCalled();
     });
 
@@ -307,7 +328,7 @@ describe('Webhook Routes - TDD Tests', () => {
         data: expect.objectContaining({
           action: 'CREEM_WEBHOOK_subscription.created',
           resourceId: 'evt_123',
-          resourceType: 'webhook',
+          resourceType: 'creem_webhook_marker',
         }),
       });
     });
@@ -321,7 +342,7 @@ describe('Webhook Routes - TDD Tests', () => {
 
       expect(prisma.agency.update).toHaveBeenCalledWith({
         where: { id: 'agency-123' },
-        data: { subscriptionTier: 'AGENCY' },
+        data: { subscriptionTier: 'GROWTH' },
       });
     });
 
@@ -388,7 +409,7 @@ describe('Webhook Routes - TDD Tests', () => {
 
       expect(clerkMetadataService.setSubscriptionTier).toHaveBeenCalledWith(
         'clerk_user_123',
-        'AGENCY',
+        'GROWTH',
         expect.objectContaining({
           trialEndsAt: expect.any(Date),
         })
@@ -565,8 +586,37 @@ describe('Webhook Routes - TDD Tests', () => {
       }
     });
 
+    it('should map all growth price IDs', async () => {
+      const growthPrices = ['prod_11NeEMY6WtGEkdnvdd7obj', 'prod_4vNvJn99RTRwhkMeHgkBT7'];
+
+      for (const priceId of growthPrices) {
+        vi.clearAllMocks();
+        const payload = {
+          ...baseValidPayload,
+          data: {
+            subscription: {
+              ...baseValidPayload.data.subscription,
+              price_id: priceId,
+            },
+          },
+        };
+
+        await injectSigned({
+          method: 'POST',
+          url: '/api/webhooks/creem',
+          payload,
+        });
+
+        expect(clerkMetadataService.setSubscriptionTier).toHaveBeenCalledWith(
+          'clerk_user_123',
+          'GROWTH',
+          expect.anything()
+        );
+      }
+    });
+
     it('should map all agency price IDs', async () => {
-      const agencyPrices = ['prod_11NeEMY6WtGEkdnvdd7obj', 'prod_4vNvJn99RTRwhkMeHgkBT7'];
+      const agencyPrices = ['prod_5FEs6qBlwvbMWHHun95wkk', 'prod_6w78r7ZbTUjkJl7mTkNfFr'];
 
       for (const priceId of agencyPrices) {
         vi.clearAllMocks();
@@ -589,35 +639,6 @@ describe('Webhook Routes - TDD Tests', () => {
         expect(clerkMetadataService.setSubscriptionTier).toHaveBeenCalledWith(
           'clerk_user_123',
           'AGENCY',
-          expect.anything()
-        );
-      }
-    });
-
-    it('should map all pro price IDs', async () => {
-      const proPrices = ['prod_tbd', 'prod_tbd'];
-
-      for (const priceId of proPrices) {
-        vi.clearAllMocks();
-        const payload = {
-          ...baseValidPayload,
-          data: {
-            subscription: {
-              ...baseValidPayload.data.subscription,
-              price_id: priceId,
-            },
-          },
-        };
-
-        await injectSigned({
-          method: 'POST',
-          url: '/api/webhooks/creem',
-          payload,
-        });
-
-        expect(clerkMetadataService.setSubscriptionTier).toHaveBeenCalledWith(
-          'clerk_user_123',
-          'PRO',
           expect.anything()
         );
       }

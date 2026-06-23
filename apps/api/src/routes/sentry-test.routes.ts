@@ -8,8 +8,13 @@
 import { FastifyInstance } from 'fastify';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { authenticate } from '@/middleware/auth.js';
+import { requireInternalAdmin } from '@/middleware/internal-admin.js';
 
 export async function sentryTestRoutes(fastify: FastifyInstance) {
+  fastify.addHook('onRequest', authenticate());
+  fastify.addHook('onRequest', requireInternalAdmin());
+
   /**
    * GET /test/sentry/error
    *

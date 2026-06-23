@@ -240,7 +240,7 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         intakeFields: normalizedIntakeFields as any,
         branding: validated.branding as any,
         status: 'pending',
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       },
     });
 
@@ -1376,15 +1376,18 @@ export async function getDashboardAccessRequestSummaries(
       : Promise.resolve<number | null>(null);
     const [requests, total] = await Promise.all([requestsPromise, totalPromise]);
 
-    const items: DashboardRequestSummary[] = requests.map((request) => ({
-      id: request.id,
-      clientId: request.clientId,
-      clientName: request.clientName,
-      clientEmail: request.clientEmail,
-      status: request.status,
-      createdAt: request.createdAt.toISOString(),
-      platforms: extractDashboardPlatformGroups(request.platforms),
-    }));
+    const activeStatuses = new Set(['pending', 'partial', 'completed']);
+    const items: DashboardRequestSummary[] = requests
+      .filter((request) => request.clientId && activeStatuses.has(request.status))
+      .map((request) => ({
+        id: request.id,
+        clientId: request.clientId,
+        clientName: request.clientName,
+        clientEmail: request.clientEmail,
+        status: request.status,
+        createdAt: request.createdAt.toISOString(),
+        platforms: extractDashboardPlatformGroups(request.platforms),
+      }));
 
     return {
       data: {

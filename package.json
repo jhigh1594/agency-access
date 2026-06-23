@@ -16,6 +16,7 @@
     "dev:design-os": "cd tools/design-os && npm run dev",
     "design-os": "bash ./scripts/start-design-os.sh",
     "design-os:quick": "bash ./scripts/design-os.sh",
+    "db:migrate:deploy": "npm run db:migrate:deploy --workspace=apps/api",
     "db:seed": "npm run db:seed --workspace=apps/api",
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
     "build:docs": "npm run build --workspace=apps/docs",
@@ -41,7 +42,18 @@
     "typescript": "^5.7.2"
   },
   "overrides": {
-    "axios": "^1.13.5"
+    "@opentelemetry/core": "^2.8.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.219.0",
+    "@opentelemetry/otlp-exporter-base": "^0.219.0",
+    "@opentelemetry/otlp-transformer": "^0.219.0",
+    "@opentelemetry/resources": "^2.8.0",
+    "@opentelemetry/sdk-logs": "^0.219.0",
+    "@opentelemetry/sdk-metrics": "^2.8.0",
+    "@opentelemetry/sdk-trace-base": "^2.8.0",
+    "axios": "^1.13.5",
+    "picomatch": "^4.0.4",
+    "postcss": "^8.5.10",
+    "svix": "^1.96.0"
   },
   "engines": {
     "node": "20.x",

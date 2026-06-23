@@ -13,6 +13,8 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { authenticate } from '@/middleware/auth.js';
+import { requireInternalAdmin } from '@/middleware/internal-admin.js';
 
 // Directory where Sentry task files will be created
 const SENTRY_TASKS_DIR = join(process.cwd(), '.claude', 'tasks', 'sentry-issues');
@@ -311,7 +313,9 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
    *
    * Simple unauthenticated ping to verify route is registered
    */
-  fastify.get('/webhooks/sentry/ping', async () => {
+  fastify.get('/webhooks/sentry/ping', {
+    onRequest: [authenticate(), requireInternalAdmin()],
+  }, async () => {
     return { pong: true, message: 'sentry-webhooks routes are loaded' };
   });
 
@@ -353,10 +357,27 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
 
     // Get webhook secret from environment
     const webhookSecret = process.env.SENTRY_WEBHOOK_SECRET;
+    const isProduction = process.env.NODE_ENV === 'production';
 
     // Verify signature if secret is configured
-    // Skip verification if secret is "disabled" or if no signature is present and secret isn't strict
+    // Skip verification only outside production for local debugging.
     const skipSignatureVerification = webhookSecret === 'disabled' || webhookSecret === 'skip';
+    if (isProduction && (!webhookSecret || skipSignatureVerification)) {
+      fastify.log.error(
+        {
+          secretConfigured: !!webhookSecret,
+          skipVerification: skipSignatureVerification,
+        },
+        '[SENTRY WEBHOOK] Signature verification is not configured in production'
+      );
+      return reply.code(401).send({
+        data: null,
+        error: {
+          code: 'INVALID_SIGNATURE',
+          message: 'Webhook signature verification failed',
+        },
+      });
+    }
 
     if (webhookSecret && !skipSignatureVerification && !verifySentrySignature(payloadString, signatureHeader, webhookSecret)) {
       fastify.log.warn(
@@ -464,7 +485,9 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
    *
    * Health check endpoint for Sentry webhook integration
    */
-  fastify.get('/webhooks/sentry/health', async (_request, reply) => {
+  fastify.get('/webhooks/sentry/health', {
+    onRequest: [authenticate(), requireInternalAdmin()],
+  }, async (_request, reply) => {
     // Check for existing task files
     let taskFiles: string[] = [];
     let taskCount = 0;
@@ -494,7 +517,9 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
    *
    * Show recent webhook audit log entries (for debugging)
    */
-  fastify.get('/webhooks/sentry/audit', async (_request, reply) => {
+  fastify.get('/webhooks/sentry/audit', {
+    onRequest: [authenticate(), requireInternalAdmin()],
+  }, async (_request, reply) => {
     const recent = await prisma.auditLog.findMany({
       where: {
         action: 'SENTRY_WEBHOOK_ISSUE_CREATED',

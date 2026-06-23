@@ -22,6 +22,7 @@ function withRequiredBase(overrides: Record<string, string | undefined> = {}) {
     META_APP_SECRET: 'meta-app-secret',
     CREEM_API_KEY: 'creem_live_example',
     CREEM_WEBHOOK_SECRET: 'whsec_live_example',
+    OAUTH_STATE_HMAC_SECRET: '0123456789abcdef0123456789abcdef',
     ...overrides,
   };
 }
@@ -112,6 +113,26 @@ describe('env contract', () => {
       DB_ENFORCE_LEAST_PRIVILEGE: 'true',
       INFISICAL_ENVIRONMENT: 'production',
     }))).rejects.toThrow();
+  });
+
+  it('fails in production when OAUTH_STATE_HMAC_SECRET is missing', async () => {
+    await expect(importEnvWith(withRequiredBase({
+      NODE_ENV: 'production',
+      FRONTEND_URL: 'https://app.example.com',
+      API_URL: 'https://api.example.com',
+      INFISICAL_ENVIRONMENT: 'production',
+      OAUTH_STATE_HMAC_SECRET: undefined,
+    }))).rejects.toThrow(/OAUTH_STATE_HMAC_SECRET/);
+  });
+
+  it('fails in production when OAUTH_STATE_HMAC_SECRET is too short', async () => {
+    await expect(importEnvWith(withRequiredBase({
+      NODE_ENV: 'production',
+      FRONTEND_URL: 'https://app.example.com',
+      API_URL: 'https://api.example.com',
+      INFISICAL_ENVIRONMENT: 'production',
+      OAUTH_STATE_HMAC_SECRET: 'short',
+    }))).rejects.toThrow(/OAUTH_STATE_HMAC_SECRET/);
   });
 
   it('supports legacy INFISICAL_ENV when INFISICAL_ENVIRONMENT is not provided', async () => {

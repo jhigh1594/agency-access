@@ -11,6 +11,18 @@ import { oauthStateService } from '@/services/oauth-state.service';
 import { prisma } from '@/lib/prisma';
 import { env } from '@/lib/env';
 
+vi.mock('@/lib/env.js', () => ({
+  env: {
+    OAUTH_STATE_HMAC_SECRET: 'test-oauth-state-secret',
+  },
+}));
+
+vi.mock('@/lib/env', () => ({
+  env: {
+    OAUTH_STATE_HMAC_SECRET: 'test-oauth-state-secret',
+  },
+}));
+
 // Mock Prisma client
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -35,6 +47,7 @@ describe('OAuthStateService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   describe('createState', () => {
@@ -211,6 +224,23 @@ describe('OAuthStateService', () => {
       expect(payload.agencyId).toBe('agency-1');
       expect(payload.platform).toBe('google');
       expect(payload.userEmail).toBe('admin@agency.com');
+    });
+
+    it('should fail closed in production when durable state storage is unavailable', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      const stateData = {
+        agencyId: 'agency-1',
+        platform: 'google',
+        userEmail: 'admin@agency.com',
+        timestamp: Date.now(),
+      };
+
+      vi.mocked(prisma.oAuthStateToken.create).mockRejectedValue(new Error('Database connection failed'));
+
+      const result = await oauthStateService.createState(stateData);
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('STATE_STORAGE_UNAVAILABLE');
     });
   });
 
@@ -419,6 +449,27 @@ describe('OAuthStateService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data).toEqual(stateData);
+      expect(prisma.oAuthStateToken.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should reject stateless fallback tokens in production', async () => {
+      vi.mocked(prisma.oAuthStateToken.create).mockRejectedValue(new Error('Database unavailable'));
+
+      const stateData = {
+        agencyId: 'agency-1',
+        platform: 'google',
+        userEmail: 'admin@agency.com',
+        timestamp: Date.now(),
+      };
+
+      const created = await oauthStateService.createState(stateData);
+      expect(created.data).toMatch(/^stateless\./);
+
+      vi.stubEnv('NODE_ENV', 'production');
+      const result = await oauthStateService.validateState(created.data!);
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('STATE_STORAGE_REQUIRED');
       expect(prisma.oAuthStateToken.findUnique).not.toHaveBeenCalled();
     });
   });

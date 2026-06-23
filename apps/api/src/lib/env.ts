@@ -43,6 +43,10 @@ function hasRequiredSslMode(url: URL): boolean {
   return sslMode === 'require' || sslMode === 'verify-ca' || sslMode === 'verify-full';
 }
 
+function hasProductionSecret(value: string | undefined, minimumLength = 32): boolean {
+  return typeof value === 'string' && value.trim().length >= minimumLength;
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3001),
@@ -225,6 +229,10 @@ if (parsedEnv.NODE_ENV === 'production') {
     if (disallowedElevatedUsers.has(dbUser)) {
       throw new Error('DATABASE_URL must use a least-privilege runtime DB role in production');
     }
+  }
+
+  if (!hasProductionSecret(process.env.OAUTH_STATE_HMAC_SECRET)) {
+    throw new Error('OAUTH_STATE_HMAC_SECRET must be set to at least 32 characters in production');
   }
 }
 

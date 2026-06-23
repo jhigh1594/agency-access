@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   RefreshCw,
@@ -39,23 +39,22 @@ type TokenHealth = {
 type HealthFilter = 'all' | 'healthy' | 'expiring' | 'expired';
 
 export default function TokenHealthPage() {
-  const { userId } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [tokens, setTokens] = useState<TokenHealth[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<HealthFilter>('all');
   const [refreshing, setRefreshing] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (userId) {
-      fetchTokenHealth();
-    }
-  }, [userId]);
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    const token = await getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, [getToken]);
 
-  const fetchTokenHealth = async () => {
+  const fetchTokenHealth = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/token-health`, {
-        headers: userId ? { 'x-agency-id': userId } : {},
+        headers: await getAuthHeaders(),
       });
       const result = await res.json();
       if (result.data) {
@@ -66,7 +65,13 @@ export default function TokenHealthPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      fetchTokenHealth();
+    }
+  }, [fetchTokenHealth, isLoaded, isSignedIn]);
 
   const handleRefresh = async (tokenId: string, platform: Platform) => {
     setRefreshing(new Set(refreshing).add(tokenId));
@@ -75,7 +80,7 @@ export default function TokenHealthPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(userId ? { 'x-agency-id': userId } : {}),
+          ...(await getAuthHeaders()),
         },
         body: JSON.stringify({ connectionId: tokens.find((t) => t.id === tokenId)?.connectionId, platform }),
       });

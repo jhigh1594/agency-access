@@ -4,7 +4,7 @@
  * Tests for access request creation and management.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import { queueWebhookDelivery } from '@/lib/queue-helpers';
 import * as accessRequestService from '@/services/access-request.service';
@@ -78,6 +78,11 @@ vi.mock('@/lib/queue-helpers', () => ({
 describe('AccessRequestService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('createAccessRequest', () => {
@@ -117,6 +122,35 @@ describe('AccessRequestService', () => {
       expect(result.data).toBeDefined();
       expect(result.data?.uniqueToken).toBe('a1b2c3d4e5f6');
       expect(result.data?.status).toBe('pending');
+    });
+
+    it('should expire new access requests after seven days by default', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-06-23T12:00:00.000Z'));
+
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        id: 'agency-1',
+        name: 'Test Agency',
+      } as any);
+      vi.mocked(prisma.accessRequest.create).mockResolvedValue({
+        id: 'request-1',
+        uniqueToken: 'a1b2c3d4e5f6',
+        status: 'pending',
+      } as any);
+
+      await accessRequestService.createAccessRequest({
+        agencyId: 'agency-1',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
+        intakeFields: [],
+      });
+
+      expect(prisma.accessRequest.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          expiresAt: new Date('2026-06-30T12:00:00.000Z'),
+        }),
+      });
     });
 
     it('should return error for invalid input', async () => {

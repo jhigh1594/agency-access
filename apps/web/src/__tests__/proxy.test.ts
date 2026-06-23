@@ -108,4 +108,17 @@ describe('proxy public route handling', () => {
 
     expect(protectMock).not.toHaveBeenCalled();
   });
+
+  it('returns 404 for internal harness routes in production', async () => {
+    process.env.NODE_ENV = 'production';
+    const { default: proxy } = await import('../proxy');
+
+    const response = await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/test/access-request'),
+    );
+
+    expect(response).toMatchObject({ status: 404 });
+    expect(protectMock).not.toHaveBeenCalled();
+  });
 });

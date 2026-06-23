@@ -1,5 +1,33 @@
 # Production OAuth Checklist - Quick Start
 
+## Production Readiness Launch Gates
+
+Run these from a clean Node 20 install before customer launch:
+
+```bash
+npm install --no-audit
+npm audit --omit=dev --audit-level=moderate --workspace=apps/api --workspace=apps/web
+npm run db:generate --workspace=apps/api
+DATABASE_URL='postgresql://user:password@host:5432/db?sslmode=require' npm exec --workspace=apps/api -- prisma validate --schema prisma/schema.prisma
+DATABASE_URL='postgresql://migration_user:password@host:5432/db?sslmode=require' npm run db:migrate:deploy --workspace=apps/api
+npm run lint
+npm run typecheck
+npm run build
+npm run test
+npm run perf:web:inp-smoke
+```
+
+Required production controls:
+
+- `OAUTH_STATE_HMAC_SECRET` is set to a generated 32-byte+ value.
+- `SENTRY_WEBHOOK_SECRET` is set when Sentry webhooks are enabled; `skip` and `disabled` are local-only.
+- `DB_ENFORCE_LEAST_PRIVILEGE=true` with a non-owner runtime database role.
+- `BACKGROUND_WORKERS_ENABLED=false` for pre-launch zero-traffic deploys; turn on deliberately for launch-critical background jobs.
+- Render API service uses `npm install --no-audit --include=dev`.
+- While staying on Render Free, `startCommand` runs `npx prisma migrate deploy` before `npm start`; if upgraded to a paid plan later, move migrations to `preDeployCommand`.
+- Vercel web project is linked to the production account/team and has `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`, Clerk, Meta Business Login, docs, and PostHog env vars configured.
+- Public invite, referral, sitemap, robots, and OAuth callback routes still pass proxy tests while `/dev`, `/test`, `/perf`, and `/design-system` stay unavailable to production customers.
+
 ## ✅ What's Already Working
 
 - **Meta OAuth** - Fully implemented (`meta.ts`)
@@ -30,7 +58,7 @@ Set these in Render dashboard → Environment:
 ```bash
 # URLs (set after deployment)
 API_URL=https://your-service.onrender.com
-FRONTEND_URL=https://your-app.onrender.com
+FRONTEND_URL=https://your-app.vercel.app
 
 # Meta OAuth
 META_APP_ID=your-meta-app-id
@@ -125,7 +153,7 @@ GOOGLE_ADS_DEVELOPER_TOKEN=your-token  # Optional
 | Issue | Solution |
 |-------|----------|
 | `redirect_uri_mismatch` | Check callback URL matches exactly in OAuth app |
-| `Invalid OAuth state` | Check Redis is connected, state token not expired |
+| `Invalid OAuth state` | Check OAuth state storage and HMAC secret configuration; state token may be expired |
 | `Access denied` | Add test users or publish OAuth app |
 | `Token exchange failed` | Verify credentials are correct |
 

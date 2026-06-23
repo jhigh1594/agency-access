@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/node";
 import Fastify, { type FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import compress from '@fastify/compress';
-import rateLimit from '@fastify/rate-limit';
+import rateLimit, { type errorResponseBuilderContext } from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
 import fastifyRawBody from 'fastify-raw-body';
 import { env } from './lib/env.js';
@@ -91,11 +91,11 @@ if (env.RATE_LIMIT_ENABLED) {
     allowList: env.RATE_LIMIT_SKIP_AUTHENTICATED
       ? buildAuthenticatedRateLimitAllowList()
       : async () => false,
-    keyGenerator: (request) => {
+    keyGenerator: (request: FastifyRequest) => {
       // Use IP address as rate limit key
       return extractClientIp(request);
     },
-    errorResponseBuilder: (request, context) => ({
+    errorResponseBuilder: (_request: FastifyRequest, context: errorResponseBuilderContext) => ({
       data: null,
       error: {
         code: 'RATE_LIMIT_EXCEEDED',

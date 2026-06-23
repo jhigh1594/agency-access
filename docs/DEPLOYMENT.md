@@ -4,10 +4,10 @@ This guide covers deploying the Agency Access Platform. The platform consists of
 
 ## Architecture
 
-- **Frontend**: Next.js (App Router), deployed to **Render**.
+- **Frontend**: Next.js (App Router), deployed to **Vercel**.
 - **Backend**: Fastify API, deployed to **Render**.
 - **Database**: PostgreSQL (Neon).
-- **Cache/Queue**: Redis (Upstash).
+- **Queue**: pg-boss on PostgreSQL.
 - **Secrets**: Infisical.
 
 ## 1. Backend Deployment (Render)
@@ -18,7 +18,6 @@ The backend should be deployed first to obtain the API URL.
 
 - Render account connected to your GitHub repo.
 - PostgreSQL database (e.g., Neon).
-- Redis instance (e.g., Upstash).
 - Infisical project set up.
 
 ### Deployment Steps
@@ -28,29 +27,38 @@ The backend should be deployed first to obtain the API URL.
    - `NODE_ENV=production`
    - `PORT=3001`
    - `DATABASE_URL` (PostgreSQL connection string)
-   - `REDIS_URL` (Redis connection string)
-   - `FRONTEND_URL` (Your Render frontend URL)
+   - `FRONTEND_URL` (your Vercel frontend URL)
+   - `API_URL` (your Render API URL)
    - `INFISICAL_CLIENT_ID` / `INFISICAL_CLIENT_SECRET` / `INFISICAL_PROJECT_ID` / `INFISICAL_ENVIRONMENT`
    - `CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`
+   - `OAUTH_STATE_HMAC_SECRET`
+   - `SENTRY_WEBHOOK_SECRET`
+   - `DB_ENFORCE_LEAST_PRIVILEGE=true`
+   - `BACKGROUND_WORKERS_ENABLED=false` for pre-launch zero-traffic deploys
    - Platform OAuth credentials (META_APP_ID, etc.)
-3. Render will automatically build and deploy using the commands in `render.yaml`.
+3. Render will automatically build, run Prisma migrations with `prisma migrate deploy` during startup, and start the API using the commands in `render.yaml`.
 
-## 2. Frontend Deployment (Render)
+## 2. Frontend Deployment (Vercel)
 
 ### Prerequisites
 
-- Render account connected to your GitHub repo.
+- Vercel account connected to your GitHub repo.
 - Deployed backend URL (from step 1).
 
 ### Deployment Steps
 
-1. Use the same Render project and ensure the frontend service is created from `render.yaml`.
+1. Import the repo in Vercel and set the root directory to `apps/web`.
 2. Add the following **Environment Variables**:
    - `NEXT_PUBLIC_API_URL`: Your deployed backend URL (e.g., `https://api.yourdomain.com`)
-   - `NEXT_PUBLIC_APP_URL`: Your Render frontend URL (e.g., `https://app.yourdomain.com`)
+   - `NEXT_PUBLIC_APP_URL`: Your Vercel frontend URL (e.g., `https://app.yourdomain.com`)
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
    - `CLERK_SECRET_KEY`
-3. Deploy. Render will use the `render.yaml` commands to build the monorepo correctly.
+   - `NEXT_PUBLIC_META_APP_ID`
+   - `NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID`
+   - `NEXT_PUBLIC_DOCS_URL`
+   - `NEXT_PUBLIC_POSTHOG_KEY`
+   - `NEXT_PUBLIC_POSTHOG_HOST`
+3. Deploy from Vercel after the API health check passes.
 
 ## 3. Post-Deployment Configuration
 

@@ -78,6 +78,10 @@ function getInvoicePayload(payload: CreemEvent): CreemInvoicePayload | null {
   return candidate as CreemInvoicePayload;
 }
 
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
+}
+
 function resolveActorEmail(request: any): string {
   const user = request.user || {};
   return (
@@ -389,34 +393,33 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      // Idempotency check using upsert pattern - prevents duplicate webhook processing
-      // Uses unique constraint on (action, resourceId) to ensure atomicity
-      const webhookMarker = await prisma.auditLog.upsert({
+      const webhookAction = `CREEM_WEBHOOK_${payload.type}`;
+      const existingWebhookMarker = await prisma.auditLog.findFirst({
         where: {
-          // Requires unique index on action + resourceId for true upsert behavior
-          action_resourceId: {
-            action: `CREEM_WEBHOOK_${payload.type}`,
-            resourceId: payload.id,
-          },
-        },
-        create: {
-          action: `CREEM_WEBHOOK_${payload.type}`,
+          action: webhookAction,
           resourceId: payload.id,
-          resourceType: 'webhook',
-          metadata: payload as any,
+          resourceType: 'creem_webhook_marker',
         },
-        update: {}, // No-op if exists
       });
 
-      // If this was an existing record (not created), return early
-      // We can detect this by checking createdAt - but since update returns the record,
-      // we use a simpler approach: if upsert didn't create, it's a duplicate
-      // For now, we'll proceed and the event handlers should be idempotent themselves
-      // Returning early for duplicate events
-      const isNew = webhookMarker.createdAt.getTime() > Date.now() - 1000; // Created within last second
-      if (!isNew && webhookMarker.id) {
-        // Existing webhook - return success without reprocessing
-        return { received: true, duplicate: true, id: webhookMarker.id.toString() };
+      if (existingWebhookMarker) {
+        return { received: true, duplicate: true, id: existingWebhookMarker.id.toString() };
+      }
+
+      try {
+        await prisma.auditLog.create({
+          data: {
+            action: webhookAction,
+            resourceId: payload.id,
+            resourceType: 'creem_webhook_marker',
+            metadata: payload as any,
+          },
+        });
+      } catch (error) {
+        if (isUniqueConstraintError(error)) {
+          return { received: true, duplicate: true };
+        }
+        throw error;
       }
 
       // Log webhook for audit trail (upsert above handles this)

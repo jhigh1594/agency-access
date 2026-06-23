@@ -32,6 +32,14 @@ const isPublicRoute = createRouteMatcher([
 /** Marketing pages that should redirect authenticated users to the dashboard. */
 const isMarketingRedirectRoute = createRouteMatcher(['/'])
 
+const isInternalHarnessRoute = createRouteMatcher([
+  '/design-system',
+  '/dev/(.*)',
+  '/perf/(.*)',
+  '/test/(.*)',
+  '/hero-copy-rewrite',
+])
+
 export default clerkMiddleware(async (auth, request) => {
   const isPerfHarnessRequest =
     process.env.NODE_ENV === 'development' &&
@@ -45,6 +53,10 @@ export default clerkMiddleware(async (auth, request) => {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
     return
+  }
+
+  if (process.env.NODE_ENV === 'production' && isInternalHarnessRoute(request)) {
+    return new Response(null, { status: 404 })
   }
 
   // Skip auth check for other public routes

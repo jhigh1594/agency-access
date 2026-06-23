@@ -6,7 +6,7 @@
 
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
-import matter from "gray-matter";
+import { parse as parseYaml } from "yaml";
 import type { BlogPost, BlogCategory, BlogStage } from "./blog-types";
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "blog");
@@ -27,9 +27,37 @@ const VALID_STAGES: BlogStage[] = [
   "decision",
 ];
 
+type Frontmatter = Record<string, unknown>;
+type AuthorFrontmatter = Record<"name", unknown> & Record<string, unknown>;
+
+function isAuthorFrontmatter(value: unknown): value is AuthorFrontmatter {
+  return typeof value === "object" && value !== null && "name" in value;
+}
+
+function parseMarkdown(raw: string): { data: Frontmatter; content: string } {
+  if (!raw.startsWith("---")) {
+    return { data: {}, content: raw };
+  }
+
+  const frontmatterEnd = raw.indexOf("\n---", 3);
+  if (frontmatterEnd === -1) {
+    return { data: {}, content: raw };
+  }
+
+  const yaml = raw.slice(3, frontmatterEnd).trim();
+  const contentStart = raw.indexOf("\n", frontmatterEnd + 4);
+  const content = contentStart === -1 ? "" : raw.slice(contentStart + 1);
+  const parsed = parseYaml(yaml);
+
+  return {
+    data: parsed && typeof parsed === "object" ? (parsed as Frontmatter) : {},
+    content,
+  };
+}
+
 function parseFileToPost(filePath: string, slug: string): BlogPost {
   const raw = readFileSync(filePath, "utf-8");
-  const { data, content } = matter(raw);
+  const { data, content } = parseMarkdown(raw);
 
   const category = data.category as string;
   const stage = data.stage as string;
@@ -46,14 +74,13 @@ function parseFileToPost(filePath: string, slug: string): BlogPost {
   }
 
   const author = data.author;
-  const authorObj =
-    typeof author === "object" && author !== null && "name" in author
-      ? {
-          name: String(author.name ?? ""),
-          role: String(author.role ?? ""),
-          avatar: author.avatar ? String(author.avatar) : undefined,
-        }
-      : { name: "AuthHub Team", role: "Agency Operations Experts" };
+  const authorObj = isAuthorFrontmatter(author)
+    ? {
+        name: String(author.name ?? ""),
+        role: String(author.role ?? ""),
+        avatar: author.avatar ? String(author.avatar) : undefined,
+      }
+    : { name: "AuthHub Team", role: "Agency Operations Experts" };
 
   return {
     id: String(data.id ?? slug),

@@ -4,7 +4,7 @@ This guide covers deploying the Agency Access Platform to Render using the `rend
 
 ## Architecture
 
-- **Frontend**: Next.js (App Router) on Render Web Service
+- **Frontend**: Next.js (App Router) on Vercel
 - **Backend**: Fastify API on Render Web Service
 - **Database**: PostgreSQL (Neon) - also used for job queues (pg-boss)
 - **Secrets**: Infisical
@@ -14,9 +14,7 @@ This guide covers deploying the Agency Access Platform to Render using the `rend
 1. Go to [render.com/dashboard](https://render.com/dashboard)
 2. Click **New** → **Blueprint**
 3. Select your GitHub repo
-4. Render reads `render.yaml` and creates:
-   - `agency-access-api`
-   - `agency-access-web`
+4. Render reads `render.yaml` and creates `agency-access-api`. The web app deploys from Vercel.
 
 ## 2. Configure Environment Variables
 
@@ -30,7 +28,7 @@ Required:
 NODE_ENV=production
 PORT=3001
 DATABASE_URL=postgresql://...
-FRONTEND_URL=https://your-app.onrender.com
+FRONTEND_URL=https://your-app.vercel.app
 API_URL=https://your-service.onrender.com
 CLERK_PUBLISHABLE_KEY=pk_live_...
 CLERK_SECRET_KEY=sk_live_...
@@ -44,7 +42,18 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 CREEM_API_KEY=...
 CREEM_WEBHOOK_SECRET=...
+OAUTH_STATE_HMAC_SECRET=$(openssl rand -hex 32)
+SENTRY_WEBHOOK_SECRET=$(openssl rand -hex 32)
+DB_ENFORCE_LEAST_PRIVILEGE=true
+BACKGROUND_WORKERS_ENABLED=false
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_SKIP_AUTHENTICATED=true
+TRUST_PROXY_IPS=<Render trusted proxy CIDRs>
 ```
+
+Pre-launch deploys should keep `BACKGROUND_WORKERS_ENABLED=false` to avoid background polling cost while there is no customer traffic. Turn it on only when token refresh, notifications, scheduled webhooks, and other background jobs are intentionally part of the launch posture.
+
+Production startup fails when `OAUTH_STATE_HMAC_SECRET` is missing or shorter than 32 characters. Sentry webhook delivery also fails closed in production unless `SENTRY_WEBHOOK_SECRET` is configured and incoming requests include a valid signature.
 
 Optional:
 
@@ -60,7 +69,7 @@ Required:
 
 ```bash
 NEXT_PUBLIC_API_URL=https://your-service.onrender.com
-NEXT_PUBLIC_APP_URL=https://your-app.onrender.com
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
 CLERK_SECRET_KEY=sk_live_...
 ```
@@ -75,23 +84,26 @@ NEXT_PUBLIC_CREEM_PUBLISHABLE_KEY=pk_live_...
 ## 3. Deploy
 
 1. Deploy the API service first.
-2. Deploy the web service second.
+2. Deploy the web app from Vercel second.
 
 Render will:
 - Install dependencies at repo root
 - Build shared package + app
+- Run `npx prisma migrate deploy` during service startup
 - Start the service using `render.yaml` commands
 
-## 4. Run Prisma Schema Push
+## 4. Prisma Migrations
 
-If the database is new or the schema changed:
+Production schema changes must use committed Prisma migrations. Because this service stays on Render Free, migrations run from the `startCommand` before `npm start`:
 
 ```bash
 cd apps/api
-npm run db:push
+npx prisma migrate deploy
 ```
 
-You can run this locally using the production `DATABASE_URL`, or use Render one-off command execution.
+If the service later moves to a paid instance type, prefer Render's `preDeployCommand` for migrations so database changes complete before the new web process starts.
+
+Do not use `prisma db push` against production. Use it only for local development experiments where migration history is not being preserved.
 
 ## 5. Update External Integrations
 
@@ -102,7 +114,7 @@ You can run this locally using the production `DATABASE_URL`, or use Render one-
 ## 6. Health Checks
 
 - API: `https://your-service.onrender.com/health`
-- Web: load `https://your-app.onrender.com`
+- Web: load `https://your-app.vercel.app`
 
 ## 7. Logs
 
@@ -116,4 +128,4 @@ render logs
 
 - Keep Neon as external managed PostgreSQL service.
 - Job queues use pg-boss (Postgres-backed) - no separate Redis required.
-- `render.yaml` is the source of truth for build/start commands.
+- `render.yaml` is the source of truth for build, migration, and start commands.
