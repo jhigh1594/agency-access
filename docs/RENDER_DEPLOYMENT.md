@@ -27,7 +27,8 @@ Required:
 ```bash
 NODE_ENV=production
 PORT=3001
-DATABASE_URL=postgresql://...
+DATABASE_URL=postgresql://runtime_user:...@.../neondb?sslmode=require
+MIGRATE_DATABASE_URL=postgresql://migration_owner:...@.../neondb?sslmode=require
 FRONTEND_URL=https://your-app.vercel.app
 API_URL=https://your-service.onrender.com
 CLERK_PUBLISHABLE_KEY=pk_live_...
@@ -89,7 +90,7 @@ NEXT_PUBLIC_CREEM_PUBLISHABLE_KEY=pk_live_...
 Render will:
 - Install dependencies at repo root
 - Build shared package + app
-- Run `PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy` during service startup
+- Run `DATABASE_URL="${MIGRATE_DATABASE_URL:-$DATABASE_URL}" PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy` during service startup
 - Start the service using `render.yaml` commands
 
 ## 4. Prisma Migrations
@@ -98,8 +99,10 @@ Production schema changes must use committed Prisma migrations. Because this ser
 
 ```bash
 cd apps/api
-PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
+DATABASE_URL="${MIGRATE_DATABASE_URL:-$DATABASE_URL}" PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
 ```
+
+`MIGRATE_DATABASE_URL` should use a migration-capable database role. `DATABASE_URL` should use the least-privilege runtime role used by the API after migrations finish.
 
 The advisory lock is disabled for this Free-plan startup path because the previous live process can still hold pg-boss advisory locks while Render is starting the replacement process. Keep Render at one instance while using this startup migration pattern.
 
