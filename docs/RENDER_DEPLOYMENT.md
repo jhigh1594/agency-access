@@ -89,7 +89,7 @@ NEXT_PUBLIC_CREEM_PUBLISHABLE_KEY=pk_live_...
 Render will:
 - Install dependencies at repo root
 - Build shared package + app
-- Run `npx prisma migrate deploy` during service startup
+- Run `PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy` during service startup
 - Start the service using `render.yaml` commands
 
 ## 4. Prisma Migrations
@@ -98,8 +98,10 @@ Production schema changes must use committed Prisma migrations. Because this ser
 
 ```bash
 cd apps/api
-npx prisma migrate deploy
+PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
 ```
+
+The advisory lock is disabled for this Free-plan startup path because the previous live process can still hold pg-boss advisory locks while Render is starting the replacement process. Keep Render at one instance while using this startup migration pattern.
 
 If the service later moves to a paid instance type, prefer Render's `preDeployCommand` for migrations so database changes complete before the new web process starts.
 
