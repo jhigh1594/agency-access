@@ -49,6 +49,36 @@ describe('proxy public route handling', () => {
     expect(protectMock).not.toHaveBeenCalled();
   });
 
+  it('does not protect public company and guide pages', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    for (const path of ['/about', '/guides/meta-ads-access', '/guides/google-ads-access']) {
+      protectMock.mockClear();
+
+      await proxy(
+        { protect: protectMock },
+        new Request(`https://authhub.test${path}`),
+      );
+
+      expect(protectMock).not.toHaveBeenCalled();
+    }
+  });
+
+  it('does not protect Clerk auth entry pages', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    for (const path of ['/sign-in', '/sign-up']) {
+      protectMock.mockClear();
+
+      await proxy(
+        { protect: protectMock },
+        new Request(`https://authhub.test${path}`),
+      );
+
+      expect(protectMock).not.toHaveBeenCalled();
+    }
+  });
+
   it('does not protect referral redirect routes', async () => {
     const { default: proxy } = await import('../proxy');
 

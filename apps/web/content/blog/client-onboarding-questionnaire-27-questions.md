@@ -230,7 +230,7 @@ Send Categories 1, 2, 5, and 6 immediately. Use Categories 3 and 4 as discussion
 
 ## The Downloadable Template
 
-**[→ Download the Client Onboarding Questionnaire Template (Google Doc)](https://docs.google.com/document/d/1-placeholder/edit)**
+**[→ Download the Client Onboarding Questionnaire Template](/downloads/client-onboarding-questionnaire.html)**
 
 Copy the template to your agency's Google Drive, customize questions for your specific services, and start sending it to clients today.
 
@@ -320,7 +320,7 @@ Stop sending blank Google Docs. Stop walking into kickoff calls blind. Stop spen
 
 A structured questionnaire isn't bureaucracy — it's the difference between an account manager who's prepared and one who's scrambling.
 
-**[→ Download the Client Onboarding Questionnaire Template (Google Doc)](https://docs.google.com/document/d/1-placeholder/edit)**
+**[→ Download the Client Onboarding Questionnaire Template](/downloads/client-onboarding-questionnaire.html)**
 
 ---
 
