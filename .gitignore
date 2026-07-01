@@ -72,3 +72,10 @@ __pycache__/
 .cursor/hooks/state/
 .claude/worktrees/
 .codex/skills/
+.agents/
+.planning/
+.conversations/
+.serena/
+.codex/
+.ruler/
+.cursor/
