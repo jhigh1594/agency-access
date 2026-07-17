@@ -82,6 +82,50 @@ describe('proxy public route handling', () => {
     expect(protectMock).not.toHaveBeenCalled();
   });
 
+  it('does not protect the sign-in flow', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/sign-in/factor-one'),
+    );
+
+    expect(protectMock).not.toHaveBeenCalled();
+  });
+
+  it('does not protect the sign-in page', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/sign-in'),
+    );
+
+    expect(protectMock).not.toHaveBeenCalled();
+  });
+
+  it('does not protect the sign-up flow', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/sign-up/verify-email-address'),
+    );
+
+    expect(protectMock).not.toHaveBeenCalled();
+  });
+
+  it('does not protect the sign-up page', async () => {
+    const { default: proxy } = await import('../proxy');
+
+    await proxy(
+      { protect: protectMock },
+      new Request('https://authhub.test/sign-up'),
+    );
+
+    expect(protectMock).not.toHaveBeenCalled();
+  });
+
   it('still protects partner portal routes', async () => {
     const { default: proxy } = await import('../proxy');
 
