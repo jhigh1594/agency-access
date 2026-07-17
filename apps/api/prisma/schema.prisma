@@ -38,6 +38,8 @@ model Agency {
   affiliateReferral   AffiliateReferral?
   webhookEndpoints    WebhookEndpoint[]
   webhookEvents       WebhookEvent[]
+  agentGrants         AgentGrant[]
+  agentOperations     AgentOperation[]
 
   @@map("agencies")
 }
@@ -143,28 +145,29 @@ model AccessRequestTemplate {
 
 // Access requests created by agencies
 model AccessRequest {
-  id           String    @id @default(uuid())
-  agencyId     String    @map("agency_id")
-  clientId     String?   @map("client_id")
-  clientName   String    @map("client_name")
-  clientEmail  String    @map("client_email")
-  externalReference String? @map("external_reference")
-  platforms    Json // Platform configuration with groups, products, access levels
-  status       String // 'pending', 'partial', 'completed', 'expired', 'revoked'
-  uniqueToken  String    @unique @map("unique_token")
-  expiresAt    DateTime  @map("expires_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  intakeFields Json?     @map("intake_fields") // Custom form fields for client intake
-  branding     Json? // Custom branding (logo, colors, subdomain)
-  authorizedAt DateTime? @map("authorized_at") // When client completed authorization
+  id                String    @id @default(uuid())
+  agencyId          String    @map("agency_id")
+  clientId          String?   @map("client_id")
+  clientName        String    @map("client_name")
+  clientEmail       String    @map("client_email")
+  externalReference String?   @map("external_reference")
+  platforms         Json // Platform configuration with groups, products, access levels
+  status            String // 'pending', 'partial', 'completed', 'expired', 'revoked'
+  uniqueToken       String    @unique @map("unique_token")
+  expiresAt         DateTime  @map("expires_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  intakeFields      Json?     @map("intake_fields") // Custom form fields for client intake
+  branding          Json? // Custom branding (logo, colors, subdomain)
+  authorizedAt      DateTime? @map("authorized_at") // When client completed authorization
 
-  agency     Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  client     Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  connection ClientConnection?
+  agency             Agency              @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client             Client?             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  connection         ClientConnection?
   googleNativeGrants GoogleNativeGrant[]
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
+  @@index([agencyId, externalReference])
   @@index([clientId, createdAt])
   @@map("access_requests")
 }
@@ -185,7 +188,7 @@ model WebhookEndpoint {
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency     Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   events     WebhookEvent[]
   deliveries WebhookDelivery[]
 
@@ -204,8 +207,8 @@ model WebhookEvent {
   payload      Json
   createdAt    DateTime @default(now()) @map("created_at")
 
-  agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  endpoint   WebhookEndpoint  @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  agency     Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  endpoint   WebhookEndpoint   @relation(fields: [endpointId], references: [id], onDelete: Cascade)
   deliveries WebhookDelivery[]
 
   @@index([agencyId, type])
@@ -252,9 +255,9 @@ model ClientConnection {
   // Format: { adAccounts: [{id, name}], pages: [{id, name}], instagramAccounts: [{id, username}] }
   grantedAssets Json? @map("granted_assets")
 
-  accessRequest  AccessRequest           @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
-  agency         Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  authorizations PlatformAuthorization[]
+  accessRequest      AccessRequest           @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
+  agency             Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  authorizations     PlatformAuthorization[]
   googleNativeGrants GoogleNativeGrant[]
 
   @@index([agencyId, status])
@@ -293,13 +296,82 @@ model AuditLog {
   metadata           Json?
   ipAddress          String?  @map("ip_address")
   userAgent          String?  @map("user_agent")
+  actorType          String?  @map("actor_type")
+  actorId            String?  @map("actor_id")
+  agentGrantId       String?  @map("agent_grant_id")
+  agentOperationId   String?  @map("agent_operation_id")
+  oauthClientId      String?  @map("oauth_client_id")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  agency Agency? @relation(fields: [agencyId], references: [id])
+  agency         Agency?         @relation(fields: [agencyId], references: [id])
+  agentGrant     AgentGrant?     @relation(fields: [agentGrantId], references: [id], onDelete: SetNull)
+  agentOperation AgentOperation? @relation(fields: [agentOperationId], references: [id], onDelete: SetNull)
 
   @@index([action, resourceId])
   @@index([agencyId, createdAt])
+  @@index([agentGrantId, createdAt])
+  @@index([agentOperationId, createdAt])
   @@map("audit_logs")
+}
+
+// External personal-agent grants. Provider tokens and secret references never belong here.
+model AgentGrant {
+  id            String    @id @default(uuid())
+  agencyId      String    @map("agency_id")
+  ownerSubject  String    @map("owner_subject")
+  oauthClientId String    @map("oauth_client_id")
+  displayName   String    @map("display_name")
+  permissions   Json
+  state         String    @default("active")
+  lastUsedAt    DateTime? @map("last_used_at")
+  revokedAt     DateTime? @map("revoked_at")
+  revokedBy     String?   @map("revoked_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  operations AgentOperation[]
+  auditLogs  AuditLog[]
+
+  @@unique([agencyId, ownerSubject, oauthClientId])
+  @@index([agencyId, state])
+  @@index([oauthClientId, state])
+  @@map("agent_grants")
+}
+
+// Durable approval and execution state for agent-initiated actions.
+model AgentOperation {
+  id                 String    @id @default(uuid())
+  grantId            String    @map("grant_id")
+  agencyId           String    @map("agency_id")
+  actionType         String    @map("action_type")
+  riskClass          String    @map("risk_class")
+  inputSnapshot      Json      @map("input_snapshot")
+  inputHash          String    @map("input_hash")
+  approvalPreview    Json?     @map("approval_preview")
+  idempotencyKey     String    @map("idempotency_key")
+  status             String
+  decidedBy          String?   @map("decided_by")
+  decidedAt          DateTime? @map("decided_at")
+  executionStartedAt DateTime? @map("execution_started_at")
+  completedAt        DateTime? @map("completed_at")
+  result             Json?
+  failureCode        String?   @map("failure_code")
+  failureMessage     String?   @map("failure_message") @db.Text
+  retryable          Boolean   @default(false)
+  expiresAt          DateTime? @map("expires_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  grant     AgentGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+  agency    Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  auditLogs AuditLog[]
+
+  @@unique([grantId, idempotencyKey])
+  @@index([agencyId, status, createdAt])
+  @@index([grantId, status, createdAt])
+  @@index([status, expiresAt])
+  @@map("agent_operations")
 }
 
 // Authorization verification tracking (for platform-native identity flow)
@@ -331,28 +403,28 @@ model AuthorizationVerification {
 }
 
 model GoogleNativeGrant {
-  id                  String    @id @default(uuid())
-  accessRequestId     String    @map("access_request_id")
-  connectionId        String    @map("connection_id")
-  product             String
-  assetId             String    @map("asset_id")
-  assetName           String?   @map("asset_name")
-  grantMode           String    @map("grant_mode")
-  requestedRole       String?   @map("requested_role")
-  recipientEmail      String?   @map("recipient_email")
-  managerCustomerId   String?   @map("manager_customer_id")
-  providerResourceName String?  @map("provider_resource_name")
-  providerExternalId  String?   @map("provider_external_id")
-  nativeGrantState    String    @map("native_grant_state")
-  lastAttemptAt       DateTime? @map("last_attempt_at")
-  verifiedAt          DateTime? @map("verified_at")
-  lastErrorCode       String?   @map("last_error_code")
-  lastErrorMessage    String?   @map("last_error_message") @db.Text
-  metadata            Json?
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
+  id                   String    @id @default(uuid())
+  accessRequestId      String    @map("access_request_id")
+  connectionId         String    @map("connection_id")
+  product              String
+  assetId              String    @map("asset_id")
+  assetName            String?   @map("asset_name")
+  grantMode            String    @map("grant_mode")
+  requestedRole        String?   @map("requested_role")
+  recipientEmail       String?   @map("recipient_email")
+  managerCustomerId    String?   @map("manager_customer_id")
+  providerResourceName String?   @map("provider_resource_name")
+  providerExternalId   String?   @map("provider_external_id")
+  nativeGrantState     String    @map("native_grant_state")
+  lastAttemptAt        DateTime? @map("last_attempt_at")
+  verifiedAt           DateTime? @map("verified_at")
+  lastErrorCode        String?   @map("last_error_code")
+  lastErrorMessage     String?   @map("last_error_message") @db.Text
+  metadata             Json?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  accessRequest AccessRequest   @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
+  accessRequest AccessRequest    @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
   connection    ClientConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([connectionId, product, assetId, grantMode])
@@ -611,31 +683,31 @@ model AffiliateCommission {
 /// OAuth state tokens for CSRF protection during OAuth flows.
 /// Replaces Redis-based storage with Postgres for durability.
 model OAuthStateToken {
-  id          String   @id @default(uuid())
-  stateToken  String   @unique @map("state_token")
-  agencyId    String?  @map("agency_id")
+  id          String  @id @default(uuid())
+  stateToken  String  @unique @map("state_token")
+  agencyId    String? @map("agency_id")
   platform    String
-  userEmail   String?  @map("user_email")
-  redirectUrl String?  @map("redirect_url")
+  userEmail   String? @map("user_email")
+  redirectUrl String? @map("redirect_url")
 
   // For client authorization flows
-  accessRequestId      String?  @map("access_request_id")
-  accessRequestToken   String?  @map("access_request_token")
-  clientEmail          String?  @map("client_email")
+  accessRequestId    String? @map("access_request_id")
+  accessRequestToken String? @map("access_request_token")
+  clientEmail        String? @map("client_email")
 
   // Platform-specific parameters (e.g., Shopify shop name)
-  shop                 String?
-  metadata             Json?
+  shop     String?
+  metadata Json?
 
   // Security
-  signature            String   // HMAC signature for tamper prevention
-  timestamp            BigInt   @map("timestamp") // Unix timestamp in milliseconds
+  signature String // HMAC signature for tamper prevention
+  timestamp BigInt @map("timestamp") // Unix timestamp in milliseconds
 
   // TTL and single-use
-  expiresAt            DateTime @map("expires_at")
-  consumedAt           DateTime? @map("consumed_at")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
 
-  createdAt            DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([stateToken, expiresAt])
   @@index([expiresAt, consumedAt]) // For cleanup queries
@@ -645,15 +717,15 @@ model OAuthStateToken {
 /// PKCE code verifiers for OAuth flows requiring PKCE (e.g., Klaviyo).
 /// Replaces Redis-based storage with Postgres for durability.
 model PkceVerifier {
-  id        String    @id @default(uuid())
-  stateKey  String    @unique @map("state_key") // OAuth state used as key
-  verifier  String    // PKCE code verifier
+  id       String @id @default(uuid())
+  stateKey String @unique @map("state_key") // OAuth state used as key
+  verifier String // PKCE code verifier
 
   // TTL and single-use
-  expiresAt DateTime  @map("expires_at")
+  expiresAt  DateTime  @map("expires_at")
   consumedAt DateTime? @map("consumed_at")
 
-  createdAt DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([stateKey, expiresAt])
   @@index([expiresAt, consumedAt]) // For cleanup queries

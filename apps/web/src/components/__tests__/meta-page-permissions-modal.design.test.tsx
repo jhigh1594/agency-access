@@ -11,7 +11,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain slate colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -22,7 +22,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain green colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -32,7 +32,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain blue colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -42,7 +42,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain indigo colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -52,7 +52,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain gray colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -62,7 +62,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should use LazyMotion-safe m components instead of motion components', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -75,7 +75,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain soft shadows (shadow-2xl)', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -85,7 +85,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should not contain rounded-xl or rounded-2xl', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 
@@ -95,7 +95,7 @@ describe('PagePermissionModal - Static Design Validation', () => {
     it('should use coral for primary actions', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/meta-page-permissions-modal.tsx',
+        'src/components/meta-page-permissions-modal.tsx',
         'utf-8'
       );
 

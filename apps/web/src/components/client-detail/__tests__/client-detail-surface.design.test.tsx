@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const REPO_ROOT = '/Users/jhigh/agency-access-platform';
+const REPO_ROOT = path.resolve(process.cwd(), '../..');
 
 const CLIENT_DETAIL_FILES = [
   'apps/web/src/app/(authenticated)/clients/[id]/page.tsx',

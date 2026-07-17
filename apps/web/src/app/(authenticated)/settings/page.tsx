@@ -20,6 +20,7 @@ import {
 import { BillingTab } from '@/components/settings/billing';
 import { UsageOverviewCard } from '@/components/settings/usage-overview-card';
 import { WebhookSettingsTab } from '@/components/settings/webhooks';
+import { AgentsSettingsTab } from '@/components/settings/agents';
 
 function GeneralTabContent() {
   return (
@@ -40,6 +41,7 @@ export default function SettingsPage() {
           generalContent={<GeneralTabContent />}
           billingContent={<BillingTab />}
           webhooksContent={<WebhookSettingsTab />}
+          agentsContent={<AgentsSettingsTab />}
         />
       </Reveal>
     </Suspense>

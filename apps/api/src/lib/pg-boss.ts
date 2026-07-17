@@ -29,6 +29,7 @@ export interface JobRegistry {
 
   // Cleanup jobs
   'cleanup-expired-requests': { type: 'delete-expired-requests' };
+  'cleanup-agent-operations': { type: 'sanitize-agent-operations' };
 
   // Trial expiration
   'trial-expiration-check': { type: 'check-expired-trials' };

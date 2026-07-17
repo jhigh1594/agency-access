@@ -227,6 +227,160 @@ export type ConnectionStatus = z.infer<typeof ConnectionStatusSchema>;
 export const AuthorizationStatusSchema = z.enum(['active', 'expired', 'invalid', 'revoked']);
 export type AuthorizationStatus = z.infer<typeof AuthorizationStatusSchema>;
 
+// Agent-native access operations
+export const AgentPermissionSchema = z.enum([
+  'workspace:read',
+  'agency:write',
+  'clients:read',
+  'clients:write',
+  'templates:read',
+  'connections:read',
+  'connections:handoff',
+  'requests:read',
+  'requests:prepare',
+  'requests:dispatch',
+  'requests:cancel',
+  'operations:read',
+]);
+export type AgentPermission = z.infer<typeof AgentPermissionSchema>;
+
+export const AgentGrantStateSchema = z.enum(['active', 'revoked']);
+export type AgentGrantState = z.infer<typeof AgentGrantStateSchema>;
+
+export const AgentRiskClassSchema = z.enum([
+  'read',
+  'reversible',
+  'consequential',
+  'human_only',
+]);
+export type AgentRiskClass = z.infer<typeof AgentRiskClassSchema>;
+
+export const AgentOperationStatusSchema = z.enum([
+  'prepared',
+  'pending_approval',
+  'approved',
+  'executing',
+  'succeeded',
+  'failed_retryable',
+  'failed_terminal',
+  'declined',
+  'expired',
+  'canceled',
+]);
+export type AgentOperationStatus = z.infer<typeof AgentOperationStatusSchema>;
+
+export const AgentCompletionStateSchema = z.enum([
+  'pending',
+  'partial',
+  'completed',
+  'expired',
+  'revoked',
+  'invalid',
+  'follow_up_needed',
+]);
+export type AgentCompletionState = z.infer<typeof AgentCompletionStateSchema>;
+
+export const AgentWorkspacePaginationSchema = z
+  .object({
+    cursor: z.string().min(1).optional(),
+    limit: z.number().int().min(1).max(100).default(25),
+  })
+  .strict();
+export type AgentWorkspacePagination = z.infer<typeof AgentWorkspacePaginationSchema>;
+
+export const AgentGrantSchema = z
+  .object({
+    id: z.string().min(1),
+    agencyId: z.string().min(1),
+    ownerSubject: z.string().min(1),
+    oauthClientId: z.string().min(1),
+    displayName: z.string().min(1).max(120),
+    permissions: z.array(AgentPermissionSchema).min(1),
+    state: AgentGrantStateSchema,
+    lastUsedAt: z.string().datetime().nullable().optional(),
+    revokedAt: z.string().datetime().nullable().optional(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .strict();
+export type AgentGrant = z.infer<typeof AgentGrantSchema>;
+
+export const AgentApprovalPreviewSchema = z
+  .object({
+    agency: z.object({ id: z.string().min(1), name: z.string().min(1) }).strict(),
+    client: z
+      .object({ id: z.string().min(1), name: z.string().min(1) })
+      .strict()
+      .nullable()
+      .optional(),
+    platforms: z.array(z.string().min(1)),
+    permissions: z.array(z.string().min(1)),
+    externalEffect: z.string().min(1).max(500),
+    requestingAgent: z
+      .object({
+        grantId: z.string().min(1),
+        oauthClientId: z.string().min(1),
+        displayName: z.string().min(1),
+      })
+      .strict(),
+    expiresAt: z.string().datetime(),
+    changes: z.array(
+      z
+        .object({
+          field: z.string().min(1),
+          before: z.string().nullable(),
+          after: z.string().nullable(),
+        })
+        .strict()
+    ),
+  })
+  .strict();
+export type AgentApprovalPreview = z.infer<typeof AgentApprovalPreviewSchema>;
+
+export const AgentOperationResultSchema = z
+  .object({
+    resourceType: z.string().min(1).nullable().optional(),
+    resourceId: z.string().min(1).nullable().optional(),
+    completionState: AgentCompletionStateSchema.optional(),
+    message: z.string().max(1000),
+    retryable: z.boolean(),
+    remediation: z.array(z.string().max(500)).default([]),
+  })
+  .strict();
+export type AgentOperationResult = z.infer<typeof AgentOperationResultSchema>;
+
+export const AgentOperationSchema = z
+  .object({
+    id: z.string().min(1),
+    grantId: z.string().min(1),
+    agencyId: z.string().min(1),
+    actionType: z.string().min(1).max(120),
+    riskClass: AgentRiskClassSchema,
+    status: AgentOperationStatusSchema,
+    idempotencyKey: z.string().min(1).max(200),
+    inputHash: z.string().min(1).max(128),
+    approvalPreview: AgentApprovalPreviewSchema.nullable().optional(),
+    result: AgentOperationResultSchema.nullable().optional(),
+    expiresAt: z.string().datetime().nullable().optional(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .strict()
+  .superRefine((operation, context) => {
+    if (
+      operation.riskClass === 'consequential' &&
+      operation.status === 'pending_approval' &&
+      !operation.approvalPreview
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['approvalPreview'],
+        message: 'Consequential pending operations require an approval preview',
+      });
+    }
+  });
+export type AgentOperation = z.infer<typeof AgentOperationSchema>;
+
 // Agency member roles
 export const AgencyRoleSchema = z.enum(['admin', 'member', 'viewer']);
 export type AgencyRole = z.infer<typeof AgencyRoleSchema>;

@@ -11,7 +11,7 @@ describe('DeleteClientModal - Static Design Validation', () => {
     it('should not contain slate colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
+        'src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 
@@ -21,7 +21,7 @@ describe('DeleteClientModal - Static Design Validation', () => {
     it('should not contain red colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
+        'src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 
@@ -33,7 +33,7 @@ describe('DeleteClientModal - Static Design Validation', () => {
     it('should not contain green colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
+        'src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 
@@ -45,7 +45,7 @@ describe('DeleteClientModal - Static Design Validation', () => {
     it('should not contain soft shadows (shadow-xl)', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
+        'src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 
@@ -55,7 +55,7 @@ describe('DeleteClientModal - Static Design Validation', () => {
     it('should use shared Button primitives for danger actions', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
+        'src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 
@@ -66,7 +66,7 @@ describe('DeleteClientModal - Static Design Validation', () => {
     it('should use teal for success states', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/DeleteClientModal.tsx',
+        'src/components/client-detail/DeleteClientModal.tsx',
         'utf-8'
       );
 

@@ -27,6 +27,24 @@ services:
         sync: false
       - key: CLERK_SECRET_KEY
         sync: false
+      - key: CLERK_OAUTH_ISSUER
+        sync: false
+      - key: CLERK_OAUTH_VERIFY_URL
+        value: https://api.clerk.com/v1/oauth_applications/access_tokens/verify
+      - key: AGENT_NATIVE_ENABLED
+        value: false
+      - key: AGENT_NATIVE_AGENCY_ALLOWLIST
+        sync: false
+      - key: AGENT_MCP_RESOURCE_URL
+        sync: false
+      - key: AGENT_READ_RATE_LIMIT
+        value: 120
+      - key: AGENT_MUTATION_RATE_LIMIT
+        value: 30
+      - key: AGENT_AGENCY_RATE_LIMIT
+        value: 300
+      - key: AGENT_RATE_LIMIT_WINDOW_SECONDS
+        value: 60
       - key: INFISICAL_CLIENT_ID
         sync: false
       - key: INFISICAL_CLIENT_SECRET

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 
 const FILES = [
-  '/Users/jhigh/agency-access-platform/apps/web/src/app/(authenticated)/internal/admin/page.tsx',
-  '/Users/jhigh/agency-access-platform/apps/web/src/app/(authenticated)/internal/admin/agencies/page.tsx',
-  '/Users/jhigh/agency-access-platform/apps/web/src/app/(authenticated)/internal/admin/subscriptions/page.tsx',
-  '/Users/jhigh/agency-access-platform/apps/web/src/components/internal-admin/admin-stat-card.tsx',
-  '/Users/jhigh/agency-access-platform/apps/web/src/components/internal-admin/admin-table-shell.tsx',
+  'src/app/(authenticated)/internal/admin/page.tsx',
+  'src/app/(authenticated)/internal/admin/agencies/page.tsx',
+  'src/app/(authenticated)/internal/admin/subscriptions/page.tsx',
+  'src/components/internal-admin/admin-stat-card.tsx',
+  'src/components/internal-admin/admin-table-shell.tsx',
 ];
 
 const FORBIDDEN_COLOR_PATTERNS = [

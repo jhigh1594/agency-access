@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { prisma } from '@/lib/prisma';
 
-describe('Schema Integration Tests', () => {
+describe.skipIf(!process.env.DATABASE_URL)('Schema Integration Tests', () => {
   // Test data cleanup
   let testAgencyId: string;
   let testClientId: string;

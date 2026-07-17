@@ -1052,11 +1052,11 @@ function getIdentityFromConnection(connection: {
 /**
  * Get access request by ID
  */
-export async function getAccessRequestById(id: string) {
+export async function getAccessRequestById(id: string, agencyId?: string) {
   try {
-    const accessRequest = await prisma.accessRequest.findUnique({
-      where: { id },
-    });
+    const accessRequest = agencyId
+      ? await prisma.accessRequest.findFirst({ where: { id, agencyId } })
+      : await prisma.accessRequest.findUnique({ where: { id } });
 
     if (!accessRequest) {
       return {
@@ -1172,6 +1172,17 @@ export async function getAccessRequestById(id: string) {
         message: 'Failed to retrieve access request',
       },
     };
+  }
+}
+
+export async function findByAgentOperation(agencyId: string, operationId: string) {
+  try {
+    const accessRequest = await prisma.accessRequest.findFirst({
+      where: { agencyId, externalReference: `agent-operation:${operationId}` },
+    });
+    return { data: accessRequest, error: null };
+  } catch {
+    return { data: null, error: { code: 'INTERNAL_ERROR', message: 'Failed to locate agent access request' } };
   }
 }
 
@@ -1656,6 +1667,7 @@ export async function deleteExpiredRequests() {
 export const accessRequestService = {
   createAccessRequest,
   getAccessRequestById,
+  findByAgentOperation,
   getAccessRequestByToken,
   getAgencyAccessRequests,
   getDashboardAccessRequestSummaries,

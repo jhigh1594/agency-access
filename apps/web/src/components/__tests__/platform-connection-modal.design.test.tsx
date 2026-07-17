@@ -38,7 +38,7 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
       // Read component file and check for hardcoded generic colors
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'src/components/platform-connection-modal.tsx',
         'utf-8'
       );
 
@@ -49,7 +49,7 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
     it('should not contain indigo-600 in template', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'src/components/platform-connection-modal.tsx',
         'utf-8'
       );
 
@@ -60,7 +60,7 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
     it('should not contain blue-700 for refresh buttons', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'src/components/platform-connection-modal.tsx',
         'utf-8'
       );
 
@@ -80,7 +80,7 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
     it('should contain shadow-brutalist classes', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'src/components/platform-connection-modal.tsx',
         'utf-8'
       );
 
@@ -93,7 +93,7 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
     it('should contain border-black classes', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'src/components/platform-connection-modal.tsx',
         'utf-8'
       );
 
@@ -106,7 +106,7 @@ describe('PlatformConnectionModal - Static Design Validation', () => {
     it('should use m components instead of motion components under LazyMotion strict mode', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/platform-connection-modal.tsx',
+        'src/components/platform-connection-modal.tsx',
         'utf-8'
       );
 

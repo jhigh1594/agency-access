@@ -32,6 +32,7 @@ export const ClientError = {
 
 // Input types
 export interface CreateClientDto {
+  id?: string;
   agencyId: string;
   name: string;
   company: string;
@@ -70,7 +71,7 @@ export interface PaginatedResult<T> {
  * @throws {Error} CLIENT_INVALID_EMAIL if email format is invalid
  */
 export async function createClient(dto: CreateClientDto): Promise<Client> {
-  const { agencyId, email, language = 'en', ...rest } = dto;
+  const { id, agencyId, email, language = 'en', ...rest } = dto;
 
   // Validate email format
   if (!EMAIL_REGEX.test(email)) {
@@ -93,6 +94,7 @@ export async function createClient(dto: CreateClientDto): Promise<Client> {
   const client = await prisma.client.create({
     data: {
       ...rest,
+      ...(id ? { id } : {}),
       agencyId,
       email,
       language,
@@ -148,12 +150,23 @@ export async function getClients(
  */
 export async function getClientById(
   id: string,
-  _agencyId: string
+  agencyId: string
 ): Promise<Client | null> {
-  return prisma.client.findUnique({
-    where: { id },
+  return prisma.client.findFirst({
+    where: { id, agencyId },
   });
 }
+
+export const clientService = {
+  createClient,
+  getClients,
+  getClientById,
+  updateClient,
+  findClientByEmail,
+  deleteClient,
+  getClientsWithConnections,
+  getClientDetail,
+};
 
 /**
  * Update a client
@@ -166,8 +179,8 @@ export async function updateClient(
   dto: UpdateClientDto
 ): Promise<Client | null> {
   // Check if client exists
-  const existing = await prisma.client.findUnique({
-    where: { id },
+  const existing = await prisma.client.findFirst({
+    where: { id, agencyId },
   });
 
   if (!existing) {

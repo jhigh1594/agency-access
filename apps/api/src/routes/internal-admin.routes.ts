@@ -11,6 +11,7 @@ import { requireInternalAdmin } from '@/middleware/internal-admin.js';
 import { internalAdminService } from '@/services/internal-admin.service.js';
 import { subscriptionService } from '@/services/subscription.service.js';
 import type { SubscriptionTier } from '@agency-platform/shared';
+import { agentTelemetryService } from '@/services/agent-telemetry.service.js';
 
 interface InternalAdminRouteOptions {
   allowlist?: {
@@ -52,6 +53,10 @@ export async function internalAdminRoutes(
       fastify.log.error({ error }, 'Error in GET /internal-admin/overview');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch overview', 500);
     }
+  });
+
+  fastify.get('/internal-admin/agent-metrics', async (_request, reply) => {
+    return sendSuccess(reply, agentTelemetryService.snapshot());
   });
 
   fastify.get('/internal-admin/agencies', async (request, reply) => {

@@ -66,6 +66,20 @@ const envSchema = z.object({
   // Clerk Authentication
   CLERK_PUBLISHABLE_KEY: z.string(),
   CLERK_SECRET_KEY: z.string(),
+  CLERK_OAUTH_ISSUER: z.string().url().optional(),
+
+  // External personal-agent access
+  AGENT_NATIVE_ENABLED: booleanish(false),
+  AGENT_NATIVE_AGENCY_ALLOWLIST: z.string().optional(),
+  AGENT_MCP_RESOURCE_URL: z.string().url().optional(),
+  CLERK_OAUTH_VERIFY_URL: z
+    .string()
+    .url()
+    .default('https://api.clerk.com/v1/oauth_applications/access_tokens/verify'),
+  AGENT_READ_RATE_LIMIT: z.coerce.number().int().min(1).default(120),
+  AGENT_MUTATION_RATE_LIMIT: z.coerce.number().int().min(1).default(30),
+  AGENT_AGENCY_RATE_LIMIT: z.coerce.number().int().min(1).default(300),
+  AGENT_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().min(1).default(60),
 
   // Infisical (Secrets Management)
   INFISICAL_CLIENT_ID: z.string(),
@@ -232,6 +246,23 @@ if (parsedEnv.NODE_ENV === 'production') {
   if (!hasProductionSecret(process.env.OAUTH_STATE_HMAC_SECRET)) {
     throw new Error('OAUTH_STATE_HMAC_SECRET must be set to at least 32 characters in production');
   }
+
+  if (parsedEnv.AGENT_NATIVE_ENABLED) {
+    if (!parsedEnv.CLERK_OAUTH_ISSUER || !parsedEnv.AGENT_MCP_RESOURCE_URL) {
+      throw new Error(
+        'CLERK_OAUTH_ISSUER and AGENT_MCP_RESOURCE_URL are required when agent-native access is enabled'
+      );
+    }
+    if (
+      new URL(parsedEnv.CLERK_OAUTH_ISSUER).protocol !== 'https:' ||
+      new URL(parsedEnv.AGENT_MCP_RESOURCE_URL).protocol !== 'https:'
+    ) {
+      throw new Error('Agent OAuth issuer and MCP resource URLs must use HTTPS in production');
+    }
+    if (parseCsvList(parsedEnv.AGENT_NATIVE_AGENCY_ALLOWLIST).length === 0) {
+      throw new Error('AGENT_NATIVE_AGENCY_ALLOWLIST must include at least one agency when enabled');
+    }
+  }
 }
 
 const FRONTEND_URL = parsedEnv.FRONTEND_URL ?? 'http://localhost:3000';
@@ -242,6 +273,11 @@ const INTERNAL_ADMIN_EMAILS = parseCsvList(parsedEnv.INTERNAL_ADMIN_EMAILS);
 const TRUST_PROXY_IPS = parseCsvList(parsedEnv.TRUST_PROXY_IPS);
 const DASHBOARD_SUMMARY_LIMITS_ENABLED =
   parsedEnv.DASHBOARD_SUMMARY_LIMITS_ENABLED ?? true;
+const CLERK_OAUTH_ISSUER =
+  parsedEnv.CLERK_OAUTH_ISSUER ?? 'https://clerk.invalid';
+const AGENT_MCP_RESOURCE_URL =
+  parsedEnv.AGENT_MCP_RESOURCE_URL ?? `${API_URL}/mcp`;
+const AGENT_NATIVE_AGENCY_ALLOWLIST = parseCsvList(parsedEnv.AGENT_NATIVE_AGENCY_ALLOWLIST);
 
 export const env = {
   ...parsedEnv,
@@ -252,4 +288,7 @@ export const env = {
   INTERNAL_ADMIN_EMAILS,
   TRUST_PROXY_IPS,
   DASHBOARD_SUMMARY_LIMITS_ENABLED,
+  CLERK_OAUTH_ISSUER,
+  AGENT_MCP_RESOURCE_URL,
+  AGENT_NATIVE_AGENCY_ALLOWLIST,
 };

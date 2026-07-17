@@ -4,7 +4,7 @@ import fs from 'node:fs';
 describe('Sidebar Navigation Design System Compliance', () => {
   it('uses semantic nav landmark in authenticated layout', () => {
     const layoutCode = fs.readFileSync(
-      '/Users/jhigh/agency-access-platform/apps/web/src/app/(authenticated)/layout.tsx',
+      'src/app/(authenticated)/layout.tsx',
       'utf-8'
     );
 
@@ -13,7 +13,7 @@ describe('Sidebar Navigation Design System Compliance', () => {
 
   it('avoids hardcoded neutral color classes in sidebar navigation', () => {
     const sidebarCode = fs.readFileSync(
-      '/Users/jhigh/agency-access-platform/apps/web/src/components/ui/sidebar.tsx',
+      'src/components/ui/sidebar.tsx',
       'utf-8'
     );
 
