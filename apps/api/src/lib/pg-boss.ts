@@ -171,14 +171,16 @@ export async function enqueueJob<K extends JobName>(
   const pgBoss = await getPgBoss();
 
   const jobOptions: SendOptions = {
-    startAfter: options?.startAfter,
-    singletonKey: options?.singletonKey,
+    ...(options?.startAfter !== undefined ? { startAfter: options.startAfter } : {}),
+    ...(options?.singletonKey !== undefined ? { singletonKey: options.singletonKey } : {}),
     retryLimit: options?.retryLimit ?? 0,
     retryDelay: options?.retryDelay ?? 0,
     retryBackoff: options?.retryBackoff ?? false,
-    expireInSeconds: options?.expireInSeconds,
-    keepUntil: options?.keepUntil,
-    priority: options?.priority,
+    ...(options?.expireInSeconds !== undefined
+      ? { expireInSeconds: options.expireInSeconds }
+      : {}),
+    ...(options?.keepUntil !== undefined ? { keepUntil: options.keepUntil } : {}),
+    ...(options?.priority !== undefined ? { priority: options.priority } : {}),
   };
 
   const jobId = await pgBoss.send(name, data, jobOptions);

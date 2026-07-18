@@ -39,6 +39,12 @@ const SAFE_MANAGER_LINK_FALLBACK_ERROR_CODES = new Set([
   'USER_PERMISSION_DENIED',
 ]);
 
+const DEVELOPER_TOKEN_ACCESS_ERROR_CODES = new Set([
+  'DEVELOPER_TOKEN_NOT_APPROVED',
+  'DEVELOPER_TOKEN_NOT_ON_ALLOWLIST',
+  'SERVICE_ACCESS_DENIED',
+]);
+
 type AccessRequestLike = {
   id: string;
   agencyId: string;
@@ -636,21 +642,7 @@ async function executeGoogleNativeGrant(
     } catch (error) {
       const normalizedError = normalizeNativeGrantExecutionError(error);
 
-      // Check if this error is due to insufficient API access level (Explorer Access vs Basic Access)
-      const isInsufficientAccessError = (err: { code?: string }): boolean => {
-        const INSUFFICIENT_ACCESS_ERROR_CODES = new Set([
-          'AUTHORIZATION_ERROR',
-          'USER_PERMISSION_DENIED',
-          'NO_OPERATIONS_WITH_REQUESTED_SCOPES',
-          'CUSTOMER_NOT_SERVED_BY_USER',
-          'CUSTOMER_NOT_ENABLED',
-          'ACCOUNT_NOT_FOUND',
-        ]);
-        return Boolean(err.code && INSUFFICIENT_ACCESS_ERROR_CODES.has(err.code));
-      };
-
-      if (isInsufficientAccessError(normalizedError)) {
-        // This is a non-retryable error due to insufficient developer token access level
+      if (DEVELOPER_TOKEN_ACCESS_ERROR_CODES.has(normalizedError.code)) {
         const failureMetadata = mergeMetadata(grant.metadata, {
           latestProviderStatus: latestProviderStatus || null,
           lastExecutionError: {
@@ -694,7 +686,7 @@ async function executeGoogleNativeGrant(
           },
           error: {
             code: 'INSUFFICIENT_API_ACCESS',
-            message: `Google Ads API operation failed: ${normalizedError.message}. This error typically occurs when your developer token has Explorer Access (test accounts only) instead of Basic Access (production accounts). Please request Basic Access approval for your developer token at https://ads.google.com/aw/apiprojects. Only approved tokens can connect to the API for production Google Ads accounts.`,
+            message: `Google Ads API operation failed: ${normalizedError.message}. Confirm that the developer token is approved for this service and that its permissible use includes user management in the Google Ads API Center.`,
             details: {
               retryable: false,
               originalCode: normalizedError.code,
