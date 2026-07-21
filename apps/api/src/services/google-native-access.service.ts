@@ -8,6 +8,7 @@ import {
   type GoogleProductGrantLifecycle,
 } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
+import { resolveGoogleNativeGrantDispatchMode } from '@/lib/worker-runtime';
 import { auditService } from '@/services/audit.service';
 import { googleAdsConnector } from '@/services/connectors/google-ads';
 import { googleNativeGrantService } from '@/services/google-native-grant.service';
@@ -891,6 +892,7 @@ async function planGoogleNativeGrants(
 ): Promise<ServiceResult<{ selectedAssets: Record<string, unknown>; googleGrantLifecycle?: GoogleProductGrantLifecycle }>> {
   try {
     const selectedAssetIds = getSelectedAssetIds(input.platform, input.selectedAssets);
+    let inlineGrantLifecycle: GoogleProductGrantLifecycle | undefined;
 
     if (selectedAssetIds.length === 0) {
       return {
@@ -982,16 +984,33 @@ async function planGoogleNativeGrants(
       }
 
       if (supportsQueuedExecution(input.platform, plannedMode.mode)) {
-        await queueGrantExecution(grantResult.data.id);
+        const dispatchMode = resolveGoogleNativeGrantDispatchMode(
+          process.env.BACKGROUND_WORKERS_ENABLED
+        );
+
+        if (dispatchMode === 'inline') {
+          const executionResult = await executeGoogleNativeGrant(grantResult.data.id);
+          if (executionResult.error) {
+            return {
+              data: null,
+              error: executionResult.error,
+            };
+          }
+          inlineGrantLifecycle = executionResult.data?.googleGrantLifecycle;
+        } else {
+          await queueGrantExecution(grantResult.data.id);
+        }
       }
     }
 
-    const googleGrantLifecycle = evaluateGoogleProductFulfillment({
-      productId: input.platform,
-      hasOAuthAuthorization: true,
-      fulfillmentMode: plannedMode.mode,
-      grantStatus: 'pending',
-    });
+    const googleGrantLifecycle =
+      inlineGrantLifecycle ||
+      evaluateGoogleProductFulfillment({
+        productId: input.platform,
+        hasOAuthAuthorization: true,
+        fulfillmentMode: plannedMode.mode,
+        grantStatus: 'pending',
+      });
 
     return {
       data: {

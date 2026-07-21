@@ -1,16 +1,11 @@
-export type WorkerRuntimeMode = 'all' | 'google-native-only' | 'disabled';
+export type GoogleNativeGrantDispatchMode = 'queued' | 'inline';
 
-export function resolveWorkerRuntimeMode(input: {
-  backgroundWorkersEnabled: boolean;
-  googleAdsDeveloperToken?: string;
-}): WorkerRuntimeMode {
-  if (input.backgroundWorkersEnabled) {
-    return 'all';
-  }
+const FALSE_VALUES = new Set(['false', '0', 'no', 'off']);
 
-  if (input.googleAdsDeveloperToken?.trim()) {
-    return 'google-native-only';
-  }
+export function resolveGoogleNativeGrantDispatchMode(
+  backgroundWorkersEnabled: string | undefined
+): GoogleNativeGrantDispatchMode {
+  const normalized = backgroundWorkersEnabled?.trim().toLowerCase();
 
-  return 'disabled';
+  return normalized && FALSE_VALUES.has(normalized) ? 'inline' : 'queued';
 }

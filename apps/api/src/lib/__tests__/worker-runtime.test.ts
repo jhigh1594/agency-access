@@ -1,25 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { resolveWorkerRuntimeMode } from '../worker-runtime.js';
+import { resolveGoogleNativeGrantDispatchMode } from '../worker-runtime.js';
 
-describe('resolveWorkerRuntimeMode', () => {
-  it('starts every handler when general background workers are enabled', () => {
-    expect(resolveWorkerRuntimeMode({
-      backgroundWorkersEnabled: true,
-      googleAdsDeveloperToken: undefined,
-    })).toBe('all');
+describe('resolveGoogleNativeGrantDispatchMode', () => {
+  it('queues grants when general background workers are enabled', () => {
+    expect(resolveGoogleNativeGrantDispatchMode('true')).toBe('queued');
   });
 
-  it('keeps the product-critical Google grant handler running when general workers are disabled', () => {
-    expect(resolveWorkerRuntimeMode({
-      backgroundWorkersEnabled: false,
-      googleAdsDeveloperToken: 'standard-developer-token',
-    })).toBe('google-native-only');
-  });
+  it.each(['false', '0', 'no', 'off'])(
+    'executes grants inline when general workers use the disabled value %s',
+    (value) => {
+      expect(resolveGoogleNativeGrantDispatchMode(value)).toBe('inline');
+    }
+  );
 
-  it('disables the queue runtime when neither general workers nor Google Ads grants are configured', () => {
-    expect(resolveWorkerRuntimeMode({
-      backgroundWorkersEnabled: false,
-      googleAdsDeveloperToken: undefined,
-    })).toBe('disabled');
+  it('uses the enabled default when the environment variable is omitted', () => {
+    expect(resolveGoogleNativeGrantDispatchMode(undefined)).toBe('queued');
   });
 });
