@@ -530,11 +530,12 @@ export function PlatformAuthWizard({
       setIsProcessing(true);
       setError(null);
 
-      // Save assets for each product in the group
-      // We'll iterate through products and save them
-      const savePromises = products.map((p) => {
+      // Each request merges one product into the connection's grantedAssets JSON.
+      // Keep these writes sequential so concurrent read-modify-write cycles cannot
+      // overwrite another product's selection.
+      for (const p of products) {
         const selectedAssets = groupAssets[p.product] || {};
-        return fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
+        const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -543,16 +544,17 @@ export function PlatformAuthWizard({
             selectedAssets,
           }),
         });
-      });
 
-      const responses = await Promise.all(savePromises);
-      
-      for (const response of responses) {
-        const json = await parseJsonResponse<{ error?: { message?: string } }>(response, {
+        const json = await parseJsonResponse<{
+          error?: { message?: string; details?: unknown };
+        }>(response, {
           fallbackErrorMessage: 'Failed to save some selected assets',
         });
         if (json.error) {
-          throw new Error(json.error.message || 'Failed to save some selected assets');
+          const detail = typeof json.error.details === 'string' ? ` (${json.error.details})` : '';
+          throw new Error(
+            `${p.product}: ${json.error.message || 'Failed to save selected assets'}${detail}`
+          );
         }
       }
 

@@ -38,6 +38,7 @@ import { agentOperationRoutes } from './routes/agent-operations.js';
 import { mcpRoutes } from './routes/mcp.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 import { prisma } from './lib/prisma.js';
+import { resolveWorkerRuntimeMode } from './lib/worker-runtime.js';
 
 const trustProxy = env.TRUST_PROXY_IPS.length > 0 ? env.TRUST_PROXY_IPS : false;
 
@@ -220,7 +221,7 @@ const start = async () => {
       }
     }
 
-    // Start pg-boss job handlers
+    // Start the full pg-boss runtime.
     const startJobHandlers = async () => {
       try {
         const { getPgBoss, scheduleJob, ensureAllQueues } = await import('./lib/pg-boss.js');
@@ -249,8 +250,23 @@ const start = async () => {
       }
     };
 
-    if (env.BACKGROUND_WORKERS_ENABLED) {
+    const workerRuntimeMode = resolveWorkerRuntimeMode({
+      backgroundWorkersEnabled: env.BACKGROUND_WORKERS_ENABLED,
+      googleAdsDeveloperToken: env.GOOGLE_ADS_DEVELOPER_TOKEN,
+    });
+
+    if (workerRuntimeMode === 'all') {
       await startJobHandlers();
+    } else if (workerRuntimeMode === 'google-native-only') {
+      const { getPgBoss, ensureQueue } = await import('./lib/pg-boss.js');
+      const { startGoogleNativeGrantHandler } = await import('./lib/job-handlers.js');
+
+      await getPgBoss();
+      await ensureQueue('google-native-grant');
+      await startGoogleNativeGrantHandler();
+      fastify.log.info(
+        'General background workers disabled; product-critical Google native grant worker started.'
+      );
     } else {
       fastify.log.info(
         'Background workers disabled (BACKGROUND_WORKERS_ENABLED=false). Job processing disabled.'

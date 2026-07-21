@@ -81,6 +81,14 @@ vi.mock('@/components/client-auth/GoogleAssetSelector', () => ({
             return;
           }
 
+          if (product === 'ga4') {
+            onSelectionChange({
+              properties: ['properties/456'],
+              availableAssetCount: 1,
+            });
+            return;
+          }
+
           onSelectionChange({
             adAccounts: ['customers/123'],
             availableAssetCount: 1,
@@ -670,6 +678,53 @@ describe('PlatformAuthWizard', () => {
     expect(screen.getByText(/No locations found yet/i)).toBeInTheDocument();
     expect(screen.getByText(/Follow-up needed/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
+  });
+
+  it('saves grouped Google products sequentially to preserve connection asset updates', async () => {
+    let resolveFirstSave!: (response: Response) => void;
+    const firstSave = new Promise<Response>((resolve) => {
+      resolveFirstSave = resolve;
+    });
+    const successfulResponse = {
+      ok: true,
+      text: async () => JSON.stringify({ data: { success: true }, error: null }),
+    } as Response;
+
+    vi.mocked(fetch)
+      .mockReturnValueOnce(firstSave)
+      .mockResolvedValueOnce(successfulResponse);
+
+    render(
+      <PlatformAuthWizard
+        platform="google"
+        platformName="Google"
+        products={[
+          { product: 'google_ads', accessLevel: 'admin' },
+          { product: 'ga4', accessLevel: 'admin' },
+        ]}
+        accessRequestToken="token-1"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+        completionActionLabel="Finish request"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /report assets for google_ads/i }));
+    fireEvent.click(screen.getByRole('button', { name: /report assets for ga4/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body))).toEqual(
+      expect.objectContaining({ platform: 'google_ads' })
+    );
+
+    resolveFirstSave(successfulResponse);
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(String(vi.mocked(fetch).mock.calls[1][1]?.body))).toEqual(
+      expect.objectContaining({ platform: 'ga4' })
+    );
   });
 
   it('advances Meta into the confirmation step when manual ad-account verification is partial', async () => {

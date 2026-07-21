@@ -1004,6 +1004,12 @@ async function planGoogleNativeGrants(
       error: null,
     };
   } catch (error) {
+    console.error('[planGoogleNativeGrants] failed', {
+      accessRequestId: input.accessRequest.id,
+      connectionId: input.connection.id,
+      platform: input.platform,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       data: null,
       error: {
