@@ -63,8 +63,8 @@ export function getInviteSecuritySummary(platforms: Platform[]): {
 
   if (usesOAuthFlow && usesManualFlow) {
     return {
-      badge: 'Platform-native access only',
-      detail: 'Some platforms use OAuth and others use platform-native invite steps. Passwords are never requested.',
+      badge: 'Secure — passwords never requested',
+      detail: 'You will connect some accounts directly and authorize others through official login screens.',
       usesOAuthFlow,
       usesManualFlow,
     };
@@ -72,16 +72,16 @@ export function getInviteSecuritySummary(platforms: Platform[]): {
 
   if (usesManualFlow) {
     return {
-      badge: 'Platform-native invite only',
-      detail: 'This request uses platform-native invite steps only. Passwords are never requested.',
+      badge: 'Secure — passwords never requested',
+      detail: 'You will invite your agency through each platform\'s own settings. No login credentials are shared.',
       usesOAuthFlow,
       usesManualFlow,
     };
   }
 
   return {
-    badge: 'OAuth only',
-    detail: 'This request uses official OAuth connections only. Passwords are never requested.',
+    badge: 'Secure — passwords never requested',
+    detail: 'You will authorize access through each platform\'s official login screen. Your credentials stay with the platform.',
     usesOAuthFlow,
     usesManualFlow,
   };

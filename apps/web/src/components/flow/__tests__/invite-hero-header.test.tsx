@@ -9,7 +9,7 @@ describe('InviteHeroHeader', () => {
         eyebrow="Request for Jon"
         title="Share account access"
         description="Review the request and continue."
-        badge="Platform-native access only"
+        badge="Secure — passwords never requested"
         stats={[
           { label: 'Requested by', value: 'Demo Agency' },
           { label: 'Platforms', value: 'Google, Mailchimp' },
