@@ -12,16 +12,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { PlatformIcon } from '@/components/ui/platform-icon';
 import { getTokenHealth, formatExpirationDate } from '@/lib/token-health';
 import { formatRelativeTime } from '@/components/ui/format-relative-time';
-
-// Platform display names
-const PLATFORM_NAMES: Record<string, string> = {
-  meta: 'Meta',
-  google: 'Google',
-  linkedin: 'LinkedIn',
-  tiktok: 'TikTok',
-  snapchat: 'Snapchat',
-  instagram: 'Instagram',
-};
+import { PLATFORM_NAMES, type Platform } from '@agency-platform/shared';
 
 export interface PlatformConnection {
   id: string;
@@ -49,7 +40,7 @@ export function PlatformConnectionRow({
   isRefreshing,
   isDisconnecting,
 }: PlatformConnectionRowProps) {
-  const platformName = PLATFORM_NAMES[connection.platform] || connection.platform;
+  const platformName = PLATFORM_NAMES[connection.platform as Platform] || connection.platform;
   const tokenHealth = getTokenHealth(connection.expiresAt || null);
 
   // Map status to StatusBadge type

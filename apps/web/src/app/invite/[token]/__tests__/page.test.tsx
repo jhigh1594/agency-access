@@ -285,7 +285,7 @@ describe('Invite Flow Page', () => {
     });
   });
 
-  it('lets the user return to the connect phase from the done step to review platform status', async () => {
+  it('shows a definitive done state without sending the user back to connect', async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.includes('/api/client/token-123/complete')) {
         return {
@@ -330,17 +330,125 @@ describe('Invite Flow Page', () => {
     await userEvent.click(await screen.findByRole('button', { name: /complete platform/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /back to connect/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /all set — you're done/i })).toBeInTheDocument();
+      expect(screen.getByText(/nothing else is needed from you/i)).toBeInTheDocument();
+      expect(screen.getByText(/you can safely close this window/i)).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /back to connect/i }));
+    expect(screen.queryByRole('button', { name: /back to connect/i })).not.toBeInTheDocument();
+  });
+
+  it('skips intake for a returning visitor who already completed a platform', async () => {
+    sessionStorage.setItem('invite-progress:token-123', JSON.stringify(['google']));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [{ id: 'field-1', label: 'Company name', type: 'text', required: true }],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+              {
+                platformGroup: 'meta',
+                products: [{ product: 'meta_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {}, meta: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      }))
+    );
+
+    render(<InvitePage />);
 
     await waitFor(() => {
-      expect(screen.getAllByText(/review connected platforms/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/access confirmed for this platform/i)).toBeInTheDocument();
+      expect(screen.getByText('Active platform: Meta')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText(/all set/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /continue to connect/i })).not.toBeInTheDocument();
+  });
+
+  it('shows completion failure instead of success and retries directly', async () => {
+    let completionAttempts = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('/api/client/token-123/complete')) {
+        completionAttempts += 1;
+        if (completionAttempts === 1) {
+          return {
+            ok: false,
+            json: async () => ({ error: { message: 'Finalization service unavailable' } }),
+          } as Response;
+        }
+
+        return {
+          ok: true,
+          json: async () => ({ data: { success: true }, error: null }),
+        } as Response;
+      }
+
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'request-1',
+            agencyId: 'agency-1',
+            agencyName: 'Demo Agency',
+            clientName: 'Client',
+            clientEmail: 'client@test.com',
+            status: 'pending',
+            uniqueToken: 'token-123',
+            expiresAt: new Date().toISOString(),
+            intakeFields: [],
+            branding: {},
+            platforms: [
+              {
+                platformGroup: 'google',
+                products: [{ product: 'google_ads', accessLevel: 'admin' }],
+              },
+            ],
+            manualInviteTargets: { google: {} },
+            authorizationProgress: { completedPlatforms: [], isComplete: false },
+          },
+          error: null,
+        }),
+      } as Response;
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<InvitePage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /continue to connect/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /complete platform/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /almost done — finalize failed/i })).toBeInTheDocument();
+      expect(screen.getByText(/finalization service unavailable/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('heading', { name: /all set/i })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /retry finalization/i }));
+
+    await waitFor(() => {
+      expect(completionAttempts).toBe(2);
+      expect(screen.getByRole('heading', { name: /all set — you're done/i })).toBeInTheDocument();
+    });
   });
 
   it('keeps the connect step visible until a platform is completed', async () => {

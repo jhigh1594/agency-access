@@ -17,20 +17,9 @@ import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Mail, Info, Building2, ExternalLink } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
+import { PLATFORM_NAMES, type Platform } from '@agency-platform/shared';
 import { Button } from '@/components/ui/button';
 import { resolveApiUrl } from '@/lib/api/api-env';
-
-// Platform display names
-const PLATFORM_NAMES: Record<string, string> = {
-  kit: 'Kit',
-  mailchimp: 'Mailchimp',
-  beehiiv: 'Beehiiv',
-  klaviyo: 'Klaviyo',
-  snapchat: 'Snapchat',
-  pinterest: 'Pinterest',
-  shopify: 'Shopify',
-  zapier: 'Zapier',
-};
 
 // Platforms that use Business ID instead of email
 const BUSINESS_ID_PLATFORMS = ['pinterest'];
@@ -61,7 +50,7 @@ export function ManualInvitationModal({
   const isBusinessIdPlatform = BUSINESS_ID_PLATFORMS.includes(platform);
   const isShopifyPlatform = platform === 'shopify';
   const isSnapchatPlatform = platform === 'snapchat';
-  const platformName = PLATFORM_NAMES[platform] || platform;
+  const platformName = PLATFORM_NAMES[platform as Platform] || platform;
 
   // Reset form when modal opens
   const handleOpenChange = (open: boolean) => {

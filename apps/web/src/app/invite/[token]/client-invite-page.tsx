@@ -14,7 +14,7 @@ import { InviteLoadStateCard } from '@/components/flow/invite-load-state-card';
 import { InviteTrustNote } from '@/components/flow/invite-trust-note';
 import { Button, SingleSelect } from '@/components/ui';
 import { PlatformIcon } from '@/components/ui/platform-icon';
-import { PLATFORM_NAMES } from '@agency-platform/shared';
+import { ACCESS_LEVEL_DESCRIPTIONS, PLATFORM_NAMES } from '@agency-platform/shared';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
 import { resolveApiUrl } from '@/lib/api/api-env';
 import {
@@ -22,7 +22,7 @@ import {
   isClientInviteManualCallbackPlatform,
 } from '@/lib/client-invite-platforms';
 import { buildInvitePlatformQueue } from '@/lib/invite-platform-queue';
-import type { ClientAccessRequestPayload, Platform } from '@agency-platform/shared';
+import type { AccessLevel, ClientAccessRequestPayload, Platform } from '@agency-platform/shared';
 
 const PlatformAuthWizard = dynamic(
   () =>
@@ -53,17 +53,6 @@ const SESSION_STORAGE_PREFIX = 'invite-progress:';
 
 function toTitleCase(str: string): string {
   return str.replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-const ACCESS_LEVEL_DISPLAY: Record<string, string> = {
-  admin: 'Full access',
-  standard: 'Standard access',
-  read_only: 'Read only',
-  email_only: 'Email only',
-};
-
-function formatAccessLevelLabel(value: string): string {
-  return ACCESS_LEVEL_DISPLAY[value] ?? value.replace(/_/g, ' ');
 }
 
 function buildPlatformSummary(platforms: Platform[]): string {
@@ -255,7 +244,7 @@ export default function ClientAuthorizationPage({
     const hasIntakeFields = (loadedPayload.intakeFields?.length || 0) > 0;
     const hasStartedConnecting = mergedCompleted.size > 0;
 
-    setPhase(hasIntakeFields || !hasStartedConnecting ? 'intake' : 'platforms');
+    setPhase(hasStartedConnecting ? 'platforms' : hasIntakeFields ? 'intake' : 'platforms');
   }, [loadedPayload, storageKey, token, urlConnectionId, urlPlatform, urlStep, urlView]);
 
   useEffect(() => {
@@ -323,10 +312,31 @@ export default function ClientAuthorizationPage({
 
   const handleRetryComplete = async () => {
     setCompletionError(null);
-    completionSubmittedRef.current = false;
     setIsReviewingConnectStatus(false);
-    setPhase('platforms');
-    setTimeout(() => setPhase('complete'), 0);
+    try {
+      const response = await fetch(resolveApiUrl(`/api/client/${token}/complete`), {
+        method: 'POST',
+      });
+      const result = await response.json();
+      if (!response.ok || result.error) {
+        throw new Error(result.error?.message || 'Failed to finalize authorization');
+      }
+      completionSubmittedRef.current = true;
+      void capturePosthogEvent('client_authorization_completed', {
+        access_request_token: token,
+        agency_name: data?.agencyName,
+        client_name: data?.clientName,
+        platforms_completed: Array.from(completedPlatforms),
+        total_platforms: data?.platforms?.length || 0,
+      });
+      sessionStorage.removeItem(storageKey);
+    } catch (error) {
+      setCompletionError(
+        error instanceof Error
+          ? error.message
+          : 'Authorization was completed, but we could not finalize status. Retry below.'
+      );
+    }
   };
 
   const handleIntakeSubmit = (event: React.FormEvent) => {
@@ -598,7 +608,7 @@ export default function ClientAuthorizationPage({
                               key={`${platform}:${product.product}`}
                               className="rounded-full border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground"
                             >
-                              {`${PLATFORM_NAMES[product.product as Platform] || product.product} · ${formatAccessLevelLabel(product.accessLevel)}`}
+                        {`${PLATFORM_NAMES[product.product as Platform] || product.product} · ${ACCESS_LEVEL_DESCRIPTIONS[product.accessLevel as AccessLevel]?.title ?? product.accessLevel.replace(/_/g, ' ')}`}
                             </span>
                           ))}
                         </div>
@@ -748,50 +758,57 @@ export default function ClientAuthorizationPage({
 
       {phase === 'complete' && (
         <div className="rounded-lg border-2 border-black bg-card p-8 shadow-brutalist text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-teal bg-teal/10">
-            <Check className="h-8 w-8 text-teal" />
-          </div>
-
-          <h2 className="text-2xl font-semibold text-ink font-display">All set</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {data.agencyName} now has access to the accounts you approved.
-          </p>
-
-          <div className="mt-6 rounded-lg border border-border bg-muted/10 p-4 text-left">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Connected Platforms</p>
-            <p className="mt-2 text-sm text-ink">
-              {Array.from(completedPlatforms)
-                .map((platform) => PLATFORM_NAMES[platform])
-                .join(', ') || 'No platforms connected'}
-            </p>
-          </div>
-
           {completionError ? (
-            <div className="mt-4 rounded-lg border border-coral/30 bg-coral/10 p-4 text-left">
-              <p className="text-sm text-coral">{completionError}</p>
+            <>
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-coral bg-coral/10">
+                <RefreshCw className="h-8 w-8 text-coral" />
+              </div>
+              <h2 className="text-2xl font-semibold text-ink font-display">
+                Almost done — finalize failed
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                All platforms are connected, but we couldn&apos;t confirm completion with your
+                agency.
+              </p>
+              <div className="mt-4 rounded-lg border border-coral/30 bg-coral/10 p-4 text-left">
+                <p className="text-sm text-coral">{completionError}</p>
+              </div>
               <Button
                 className="mt-3"
-                variant="secondary"
+                variant="primary"
                 leftIcon={<RefreshCw className="h-4 w-4" />}
                 onClick={handleRetryComplete}
               >
                 Retry Finalization
               </Button>
-            </div>
-          ) : null}
-
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setIsReviewingConnectStatus(true);
-                setPhase('platforms');
-              }}
-            >
-              Back to connect
-            </Button>
-            <p className="text-xs text-muted-foreground">You can now close this window.</p>
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-teal bg-teal/10">
+                <Check className="h-8 w-8 text-teal" />
+              </div>
+              <h2 className="text-2xl font-semibold text-ink font-display">
+                All set — you&apos;re done
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {data.agencyName} now has access to the accounts you approved. Nothing else is
+                needed from you.
+              </p>
+              <div className="mt-6 rounded-lg border border-border bg-muted/10 p-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Connected Platforms
+                </p>
+                <p className="mt-2 text-sm text-ink">
+                  {Array.from(completedPlatforms)
+                    .map((platform) => PLATFORM_NAMES[platform])
+                    .join(', ') || 'No platforms connected'}
+                </p>
+              </div>
+            </>
+          )}
+          <p className="mt-6 text-sm text-muted-foreground">
+            You can safely close this window.
+          </p>
         </div>
       )}
     </InviteFlowShell>

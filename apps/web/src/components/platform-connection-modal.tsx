@@ -14,17 +14,8 @@ import { X, RefreshCw, Unlink, Plus, Loader2, AlertCircle, CheckCircle2, Externa
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { PLATFORM_NAMES, type Platform } from '@agency-platform/shared';
 import { resolveApiUrl } from '@/lib/api/api-env';
-
-// Platform display names
-const PLATFORM_NAMES: Record<string, string> = {
-  meta: 'Meta',
-  google: 'Google',
-  linkedin: 'LinkedIn',
-  tiktok: 'TikTok',
-  snapchat: 'Snapchat',
-  instagram: 'Instagram',
-};
 
 interface PlatformConnection {
   platform: string;
@@ -332,7 +323,9 @@ export function PlatformConnectionModal({
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <h3 className="font-semibold text-ink">
-                          {connection.name || PLATFORM_NAMES[connection.platform] || connection.platform}
+                          {connection.name ||
+                            PLATFORM_NAMES[connection.platform as Platform] ||
+                            connection.platform}
                         </h3>
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClass(
@@ -441,7 +434,10 @@ export function PlatformConnectionModal({
                   </div>
                   <p className="text-sm text-gray-600 mb-6">
                     Are you sure you want to disconnect{' '}
-                    <strong>{PLATFORM_NAMES[disconnectPlatform] || disconnectPlatform}</strong>?
+                    <strong>
+                      {PLATFORM_NAMES[disconnectPlatform as Platform] || disconnectPlatform}
+                    </strong>
+                    ?
                     This will revoke all access to this platform for delegated access clients.
                   </p>
                   <div className="flex gap-3">
