@@ -241,10 +241,9 @@ export default function ClientAuthorizationPage({
       return;
     }
 
-    const hasIntakeFields = (loadedPayload.intakeFields?.length || 0) > 0;
     const hasStartedConnecting = mergedCompleted.size > 0;
 
-    setPhase(hasStartedConnecting ? 'platforms' : hasIntakeFields ? 'intake' : 'platforms');
+    setPhase(hasStartedConnecting ? 'platforms' : 'intake');
   }, [loadedPayload, storageKey, token, urlConnectionId, urlPlatform, urlStep, urlView]);
 
   useEffect(() => {

@@ -1116,7 +1116,7 @@ describe('Invite Flow Page', () => {
         expect(screen.getByText(/confirm which accounts to share below/i)).toBeInTheDocument();
         expect(screen.getByText(/share account access with client/i)).toBeInTheDocument();
         expect(screen.getAllByText('Google').length).toBeGreaterThan(0);
-        expect(screen.getByText('Google Ads · Full access')).toBeInTheDocument();
+        expect(screen.getByText('Google Ads · Admin Access')).toBeInTheDocument();
         expect(screen.getByRole('img', { name: /demo agency logo/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /continue to connect/i })).toBeInTheDocument();
       });
