@@ -14,6 +14,7 @@ import { X, RefreshCw, Unlink, Plus, Loader2, AlertCircle, CheckCircle2, Externa
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 // Platform display names
 const PLATFORM_NAMES: Record<string, string> = {
@@ -70,7 +71,7 @@ export function PlatformConnectionModal({
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${effectiveAgencyId}`,
+        resolveApiUrl(`/agency-platforms/available?agencyId=${effectiveAgencyId}`),
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -91,7 +92,7 @@ export function PlatformConnectionModal({
     mutationFn: async (platform: string) => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/refresh`,
+        resolveApiUrl(`/agency-platforms/${platform}/refresh`),
         {
           method: 'POST',
           headers: {
@@ -121,7 +122,7 @@ export function PlatformConnectionModal({
     mutationFn: async (platform: string) => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,
+        resolveApiUrl(`/agency-platforms/${platform}`),
         {
           method: 'DELETE',
           headers: {

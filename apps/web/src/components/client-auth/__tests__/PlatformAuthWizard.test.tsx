@@ -26,7 +26,7 @@ vi.mock('@/components/client-auth/PlatformWizardCard', () => ({
 }));
 
 vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
-  MetaAssetSelector: ({ onSelectionChange }: any) => (
+  MetaAssetSelector: ({ onSelectionChange, onUseDifferentAdministrator }: any) => (
     <div>
       <div>Meta Asset Selector</div>
       <button
@@ -61,6 +61,9 @@ vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
         }
       >
         Select Meta Instagram Assets
+      </button>
+      <button type="button" onClick={onUseDifferentAdministrator}>
+        Use Different Meta Administrator
       </button>
     </div>
   ),
@@ -513,9 +516,9 @@ describe('PlatformAuthWizard', () => {
     expect(screen.queryByRole('button', { name: /review access confirmation/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_ads/i }));
-    expect(screen.getByRole('button', { name: /save selected accounts/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share access/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /save selected accounts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
@@ -531,6 +534,7 @@ describe('PlatformAuthWizard', () => {
       expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
     });
 
+    fireEvent.click(screen.getByRole('button', { name: /see which accounts you shared/i }));
     expect(screen.getByText('LinkedIn Ads')).toBeInTheDocument();
   });
 
@@ -566,15 +570,16 @@ describe('PlatformAuthWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_pages/i }));
 
     expect(
-      await screen.findByRole('button', { name: /continue with follow-up needed/i })
+      await screen.findByRole('button', { name: /share access/i })
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
     });
 
+    fireEvent.click(screen.getByRole('button', { name: /see which accounts you shared/i }));
     expect(screen.getByText('LinkedIn Pages')).toBeInTheDocument();
     expect(screen.getByText(/No pages found yet/i)).toBeInTheDocument();
   });
@@ -614,12 +619,13 @@ describe('PlatformAuthWizard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_ads/i }));
     fireEvent.click(screen.getByRole('button', { name: /report assets for linkedin_pages/i }));
-    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
     });
 
+    fireEvent.click(screen.getByRole('button', { name: /see which accounts you shared/i }));
     expect(screen.getByText('LinkedIn Ads')).toBeInTheDocument();
     expect(screen.getByText('LinkedIn Pages')).toBeInTheDocument();
   });
@@ -654,19 +660,20 @@ describe('PlatformAuthWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /report assets for google_business_profile/i }));
 
     expect(
-      await screen.findByRole('button', { name: /continue with follow-up needed/i })
+      await screen.findByRole('button', { name: /share access/i })
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
     });
 
     expect(
-      screen.getByText(/connected successfully, but some requested google products still need follow-up/i)
+      screen.getByText(/some google products still need follow-up/i)
     ).toBeInTheDocument();
-    expect(screen.getByText('Google Business Profile')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /see which accounts you shared/i }));
+    expect(screen.getByText('Business Profile')).toBeInTheDocument();
     expect(screen.getByText(/No locations found yet/i)).toBeInTheDocument();
     expect(screen.getByText(/Follow-up needed/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
@@ -708,7 +715,7 @@ describe('PlatformAuthWizard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /select meta assets/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /save selected accounts/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
@@ -726,8 +733,9 @@ describe('PlatformAuthWizard', () => {
     });
 
     expect(
-      screen.getByText(/some selected meta accounts still need follow-up/i)
+      screen.getByText(/some meta accounts still need follow-up/i)
     ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /see which accounts you shared/i }));
     expect(
       screen.getByText(/still pending still needs manual meta sharing/i)
     ).toBeInTheDocument();
@@ -770,18 +778,39 @@ describe('PlatformAuthWizard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /select meta instagram assets/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /save selected accounts/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /connected/i })).toBeInTheDocument();
     });
 
     expect(
-      screen.getByText(/some selected meta accounts still need follow-up/i)
+      screen.getByText(/some meta accounts still need follow-up/i)
     ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /see which accounts you shared/i }));
     expect(
       screen.getByText(/shop ig requires manual follow-up because instagram automation is not supported yet/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
+  });
+
+  it('returns to Meta connection for a different administrator while keeping the same invite', async () => {
+    render(
+      <PlatformAuthWizard
+        platform="meta"
+        platformName="Meta"
+        products={[{ product: 'meta_ads', accessLevel: 'admin' }]}
+        accessRequestToken="same-invite-token"
+        onComplete={onCompleteMock}
+        initialConnectionId="conn-1"
+        initialStep={2}
+      />
+    );
+
+    expect(screen.getByText('Meta Asset Selector')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /use different meta administrator/i }));
+
+    expect(await screen.findByRole('heading', { name: /connect meta/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /connect meta/i })).toBeInTheDocument();
   });
 });

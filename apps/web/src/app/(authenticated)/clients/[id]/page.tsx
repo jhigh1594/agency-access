@@ -18,6 +18,8 @@ import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ClientDetailHeader, ClientStats, ClientTabs } from '@/components/client-detail';
 import type { ClientDetailResponse } from '@agency-platform/shared';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -29,14 +31,13 @@ export default function ClientDetailPage() {
     queryFn: async () => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${clientId}/detail`, {
+      const response = await fetch(resolveApiUrl(`/api/clients/${clientId}/detail`), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch client');
+        throw new Error(await extractApiErrorMessage(response, 'Failed to fetch client'));
       }
       return response.json() as Promise<{ data: ClientDetailResponse }>;
     },

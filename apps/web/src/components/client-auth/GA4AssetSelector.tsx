@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { Loader2 } from 'lucide-react';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface GA4Assets {
   id: string;
@@ -43,9 +44,8 @@ export function GA4AssetSelector({
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/assets/ga4?connectionId=${encodeURIComponent(sessionId)}`
+        resolveApiUrl(`/api/client/${accessRequestToken}/assets/ga4?connectionId=${encodeURIComponent(sessionId)}`)
       );
       const json = await response.json();
 

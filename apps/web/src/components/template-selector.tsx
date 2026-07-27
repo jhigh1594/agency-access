@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { Star, LayoutTemplate, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { AccessRequestTemplate } from '@agency-platform/shared';
@@ -20,20 +21,21 @@ interface TemplateSelectorProps {
 }
 
 export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: TemplateSelectorProps) {
+  const { getToken } = useAuth();
   const [templates, setTemplates] = useState<AccessRequestTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadTemplates() {
       const { getAgencyTemplates } = await import('@/lib/api/templates');
-      const result = await getAgencyTemplates(agencyId);
+      const result = await getAgencyTemplates(agencyId, getToken);
       if (result.data) {
         setTemplates(result.data);
       }
       setLoading(false);
     }
     loadTemplates();
-  }, [agencyId]);
+  }, [agencyId, getToken]);
 
   if (loading) {
     return (

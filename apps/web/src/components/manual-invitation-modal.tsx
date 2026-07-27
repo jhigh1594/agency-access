@@ -18,6 +18,7 @@ import { X, Loader2, Mail, Info, Building2, ExternalLink } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 // Platform display names
 const PLATFORM_NAMES: Record<string, string> = {
@@ -82,8 +83,8 @@ export function ManualInvitationModal({
     mutationFn: async (inputValue: string) => {
       const token = await getToken();
       const endpoint = mode === 'edit'
-        ? `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/manual-invitation`
-        : `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/manual-connect`;
+        ? resolveApiUrl(`/agency-platforms/${platform}/manual-invitation`)
+        : resolveApiUrl(`/agency-platforms/${platform}/manual-connect`);
 
       const method = mode === 'edit' ? 'PATCH' : 'POST';
 

@@ -397,6 +397,12 @@ Google:  https://your-app.onrender.com/invite/oauth-callback?platform=google
 6. ✅ Monitor logs for errors
 7. ✅ Set up error tracking (Sentry recommended)
 
+### Outcome-based Meta rollout gate
+
+Configure `META_LOGIN_FOR_BUSINESS_CONFIG_ID` on the API and `NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID` on the web app. Keep `META_OUTCOME_ACCESS_ENABLED=false` until a Meta test business proves destination readiness, exact assigned-user task read-back, manual partner-share verification, and linked Instagram relationship behavior. Use `META_OUTCOME_ACCESS_AGENCY_IDS` for a comma-separated pilot cohort; requests that already contain a recipe snapshot continue through the outcome flow even when broad rollout is disabled.
+
+The rollout flag does not replace readiness. Each receiving Business Portfolio must pass the live system-user administrator check before it can be selected for a new request.
+
 ---
 
 ## Support Resources

@@ -8,11 +8,14 @@ import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { FlowShell } from '@/components/flow/flow-shell';
 import { AccessLevelSelector } from '@/components/access-level-selector';
 import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform-selector';
+import { MetaOutcomeRequestFields } from '@/components/meta-outcome-request-fields';
 import { Button, SingleSelect } from '@/components/ui';
 import { getAccessRequest, updateAccessRequest } from '@/lib/api/access-requests';
 import type { AccessRequest } from '@/lib/api/access-requests';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 import { transformPlatformsForAPI } from '@/lib/transform-platforms';
-import type { AccessLevel } from '@agency-platform/shared';
+import { META_ACCESS_RECIPES, type AccessLevel, type MetaAccessRequestInput } from '@agency-platform/shared';
 import type { IntakeField } from '@/contexts/access-request-context';
 
 interface EditAccessRequestPageProps {
@@ -121,6 +124,9 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
   const [success, setSuccess] = useState<string | null>(null);
   const [initialSnapshot, setInitialSnapshot] = useState<string>('');
   const [advancedExpanded, setAdvancedExpanded] = useState(false);
+  const [metaAccess, setMetaAccess] = useState<MetaAccessRequestInput | null>(null);
+  const [convertingLegacyMeta, setConvertingLegacyMeta] = useState(false);
+  const [conversionConfirmed, setConversionConfirmed] = useState(false);
 
   const snapshot = useMemo(
     () =>
@@ -130,8 +136,11 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
         globalAccessLevel,
         intakeFields,
         branding,
+        metaAccess,
+        convertingLegacyMeta,
+        conversionConfirmed,
       }),
-    [externalReference, selectedPlatforms, globalAccessLevel, intakeFields, branding]
+    [externalReference, selectedPlatforms, globalAccessLevel, intakeFields, branding, metaAccess, convertingLegacyMeta, conversionConfirmed]
   );
   const hasUnsavedChanges = initialSnapshot !== '' && initialSnapshot !== snapshot;
 
@@ -167,6 +176,13 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       setGlobalAccessLevel(inferAccessLevel(requestData));
       setIntakeFields(normalizedFields);
       setBranding(nextBranding);
+      const storedMetaAccess = requestData.metaAccessConfig
+        ? {
+            recipeId: requestData.metaAccessConfig.recipeId,
+            destinationId: requestData.metaAccessConfig.destinationId,
+          }
+        : null;
+      setMetaAccess(storedMetaAccess);
 
       setInitialSnapshot(JSON.stringify({
         externalReference: requestData.externalReference || '',
@@ -174,6 +190,9 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
         globalAccessLevel: inferAccessLevel(requestData),
         intakeFields: normalizedFields,
         branding: nextBranding,
+        metaAccess: storedMetaAccess,
+        convertingLegacyMeta: false,
+        conversionConfirmed: false,
       }));
 
       setLoading(false);
@@ -191,7 +210,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       try {
         const token = await getToken();
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${request.agencyId}&status=active`,
+          resolveApiUrl(`/agency-platforms?agencyId=${request.agencyId}&status=active`),
           {
             headers: {
               ...(token && { Authorization: `Bearer ${token}` }),
@@ -200,6 +219,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
         );
 
         if (!response.ok) {
+          console.error(await extractApiErrorMessage(response, 'Failed to fetch connected platforms'));
           setConnectedPlatforms([]);
           return;
         }
@@ -315,6 +335,17 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       return;
     }
 
+    const hasMeta = (selectedPlatforms.meta || []).length > 0;
+    const wasOutcomeBased = Boolean(request?.metaAccessConfig);
+    if (hasMeta && (wasOutcomeBased || convertingLegacyMeta) && !metaAccess) {
+      setError('Choose a Meta outcome and ready receiving portfolio before saving.');
+      return;
+    }
+    if (hasMeta && !wasOutcomeBased && convertingLegacyMeta && !conversionConfirmed) {
+      setError('Confirm the Meta requirements change before converting this legacy request.');
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -330,6 +361,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
           primaryColor: branding.primaryColor || undefined,
           subdomain: branding.subdomain || undefined,
         },
+        ...((wasOutcomeBased || convertingLegacyMeta) && metaAccess ? { metaAccess } : {}),
       },
       getToken
     );
@@ -400,6 +432,52 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
             connectedPlatforms={mergedConnectedPlatforms}
             agencyId={request?.agencyId}
           />
+
+          {(selectedPlatforms.meta || []).length > 0 ? (
+            request?.metaAccessConfig || convertingLegacyMeta ? (
+              <div className="space-y-3">
+                <MetaOutcomeRequestFields
+                  agencyId={request?.agencyId}
+                  value={metaAccess}
+                  onChange={setMetaAccess}
+                  onProductsChange={(products) =>
+                    setSelectedPlatforms((current) => ({ ...current, meta: products }))
+                  }
+                />
+                {!request?.metaAccessConfig && metaAccess ? (
+                  <div className="rounded-lg border border-coral/30 bg-coral/5 p-4">
+                    <p className="text-sm font-semibold text-foreground">Requirements-change preview</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Legacy Meta products will be replaced by {META_ACCESS_RECIPES[metaAccess.recipeId].name} version {META_ACCESS_RECIPES[metaAccess.recipeId].version}, bound to destination {metaAccess.destinationId}.
+                    </p>
+                    <label className="mt-3 flex items-start gap-2 text-sm text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={conversionConfirmed}
+                        onChange={(event) => setConversionConfirmed(event.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-border"
+                      />
+                      I confirm this replaces the legacy Meta requirements with the minimum permissions shown above.
+                    </label>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                <p className="font-semibold">Legacy Meta request</p>
+                <p className="mt-1 text-xs">Saving other edits keeps the existing Meta requirements unchanged. AuthHub will not infer a recipe.</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => setConvertingLegacyMeta(true)}
+                >
+                  Convert to outcome-based Meta access
+                </Button>
+              </div>
+            )
+          ) : null}
         </div>
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">

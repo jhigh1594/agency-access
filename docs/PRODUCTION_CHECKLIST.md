@@ -160,3 +160,14 @@ GOOGLE_ADS_DEVELOPER_TOKEN=your-token  # Optional
 ## 📋 Full Documentation
 
 See [PRODUCTION_OAUTH_SETUP.md](./PRODUCTION_OAUTH_SETUP.md) for detailed setup instructions.
+
+## Meta outcome-access launch gate
+
+- [ ] `META_LOGIN_FOR_BUSINESS_CONFIG_ID` and `NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID` match the approved Meta configuration.
+- [ ] `META_OUTCOME_ACCESS_ENABLED=false` during the pilot; only approved agency IDs appear in `META_OUTCOME_ACCESS_AGENCY_IDS`.
+- [ ] Each receiving destination reports ready after live provider read-back of the matching `ADMIN` system user.
+- [ ] Provider sandbox proves the stored recipe tasks for Ad Accounts and Pages; no `MANAGE` task is inferred.
+- [ ] Manual fallback is verified using native assigned-user or partner access read-back.
+- [ ] Desktop and mobile invite runs cover no portfolio, portfolio choice, insufficient authority, handoff, popup cancellation/blocking, partial resume, and final diagnostics.
+- [ ] Audit logs contain outcome/error classes and resource IDs, never raw Meta tokens or provider payloads.
+- [ ] Deployment and production configuration changes have separate approval.

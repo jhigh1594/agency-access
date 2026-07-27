@@ -313,6 +313,7 @@ export function PlatformAuthWizard({
   const [tiktokShareResult, setTikTokShareResult] = useState<TikTokShareResponse | null>(null);
   const [isTikTokSharing, setIsTikTokSharing] = useState(false);
   const [tiktokShareError, setTikTokShareError] = useState<string | null>(null);
+  const [replacingMetaAdministrator, setReplacingMetaAdministrator] = useState(false);
 
   // Update state when initialStep or initialConnectionId props change (for test page)
   useEffect(() => {
@@ -387,10 +388,16 @@ export function PlatformAuthWizard({
           }
 
           setConnectionId(finalizeJson.data.connectionId);
+          setReplacingMetaAdministrator(false);
           setCurrentStep(2);
           setIsProcessing(false);
           return;
         } catch (popupErr) {
+          if (replacingMetaAdministrator) {
+            setError(popupErr instanceof Error ? popupErr.message : 'Could not switch Meta administrators. Your prior authorization remains usable.');
+            setIsProcessing(false);
+            return;
+          }
           // Fallback to redirect when popup fails (e.g. Firefox Enhanced Tracking Protection blocks Facebook SDK)
           const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-url`, {
             method: 'POST',
@@ -927,6 +934,14 @@ export function PlatformAuthWizard({
                               handleProductSelectionChange(p.product, selectedAssets);
                             }}
                             onError={setError}
+                            onUseDifferentAdministrator={() => {
+                              setReplacingMetaAdministrator(true);
+                              setConnectionId(null);
+                              setGroupAssets({});
+                              setAssetsSaved(false);
+                              setError(null);
+                              setCurrentStep(1);
+                            }}
                           />
                           {!connectionId && <AssetSelectorDisabled />}
                         </div>

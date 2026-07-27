@@ -25,6 +25,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useAuthOrBypass } from '@/lib/dev-auth';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 import { readPerfHarnessContext } from '@/lib/perf-harness';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 const DEV_BYPASS_TOKEN = 'dev-bypass-token';
 
@@ -78,7 +79,7 @@ function ConnectionsPageContent() {
 
       // Resolve the active principal's agency by clerk user/org id.
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
+        resolveApiUrl(`/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`),
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -168,7 +169,7 @@ function ConnectionsPageContent() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/available?agencyId=${agencyId}`,
+        resolveApiUrl(`/agency-platforms/available?agencyId=${agencyId}`),
         { headers, cache: 'no-store' }
       );
 
@@ -221,7 +222,7 @@ function ConnectionsPageContent() {
       const token = await getAuthToken();
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}/initiate`,
+        resolveApiUrl(`/agency-platforms/${platform}/initiate`),
         {
           method: 'POST',
           headers: {
@@ -266,7 +267,7 @@ function ConnectionsPageContent() {
       const token = await getAuthToken();
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/${platform}`,
+        resolveApiUrl(`/agency-platforms/${platform}`),
         {
           method: 'DELETE',
           headers: {

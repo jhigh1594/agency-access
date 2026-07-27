@@ -27,6 +27,15 @@ vi.mock('@/lib/prisma', () => ({
     agencyPlatformConnection: {
       update: vi.fn(),
     },
+    metaAgencyDestination: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      count: vi.fn(),
+      upsert: vi.fn(),
+      updateMany: vi.fn(),
+      update: vi.fn(),
+    },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -52,6 +61,80 @@ describe('MetaAssetsService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(prisma));
+  });
+
+  describe('receiving destinations', () => {
+    it('lazily seeds the legacy selected portfolio without rewriting metadata', async () => {
+      vi.mocked(agencyPlatformService.getConnection).mockResolvedValue({
+        data: {
+          id: 'conn-1',
+          status: 'active',
+          metadata: {
+            selectedBusinessId: 'biz-legacy',
+            selectedBusinessName: 'Legacy Portfolio',
+          },
+        },
+        error: null,
+      } as any);
+      vi.mocked(prisma.metaAgencyDestination.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: 'destination-1', businessId: 'biz-legacy', isDefault: true }] as any);
+      vi.mocked(prisma.metaAgencyDestination.upsert).mockResolvedValue({ id: 'destination-1' } as any);
+
+      const result = await metaAssetsService.listDestinations(agencyId);
+
+      expect(result.error).toBeNull();
+      expect(prisma.metaAgencyDestination.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { agencyId_businessId: { agencyId, businessId: 'biz-legacy' } },
+          create: expect.objectContaining({ isDefault: true }),
+        })
+      );
+      expect(agencyPlatformService.updateConnectionMetadata).not.toHaveBeenCalled();
+    });
+
+    it('registers a second portfolio and changes the default transactionally', async () => {
+      vi.mocked(agencyPlatformService.getConnection).mockResolvedValue({
+        data: { id: 'conn-1', status: 'active', metadata: {} },
+        error: null,
+      } as any);
+      vi.mocked(prisma.metaAgencyDestination.count).mockResolvedValue(1);
+      vi.mocked(prisma.metaAgencyDestination.upsert).mockResolvedValue({
+        id: 'destination-2',
+        agencyId,
+        businessId: 'biz-2',
+        isDefault: true,
+      } as any);
+
+      const result = await metaAssetsService.registerDestination(agencyId, {
+        businessId: 'biz-2',
+        name: 'Second Portfolio',
+        makeDefault: true,
+      });
+
+      expect(result.error).toBeNull();
+      expect(prisma.metaAgencyDestination.updateMany).toHaveBeenCalledWith({
+        where: { agencyId, isDefault: true },
+        data: { isDefault: false },
+      });
+      expect(prisma.metaAgencyDestination.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ isDefault: true }),
+          update: expect.objectContaining({ isDefault: true }),
+        })
+      );
+    });
+
+    it('does not allow another agency to select a destination', async () => {
+      vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue(null);
+
+      const result = await metaAssetsService.setDefaultDestination('agency-2', 'destination-1');
+
+      expect(result.data).toBeNull();
+      expect(result.error?.code).toBe('DESTINATION_NOT_FOUND');
+      expect(prisma.metaAgencyDestination.updateMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('getAssetsForBusiness', () => {
@@ -106,6 +189,31 @@ describe('MetaAssetsService', () => {
         { assetSelections: selections }
       );
       expect(result.error).toBeNull();
+    });
+  });
+
+  describe('saveAssetSettings', () => {
+    it('fails closed for catalog and dataset controls that are not fulfilled end to end', async () => {
+      vi.mocked(agencyPlatformService.updateConnectionMetadata).mockResolvedValue({ data: {}, error: null } as any);
+
+      await metaAssetsService.saveAssetSettings(agencyId, {
+        adAccount: { enabled: true, permissionLevel: 'analyze' },
+        page: { enabled: true, permissionLevel: 'analyze' },
+        catalog: { enabled: true, permissionLevel: 'manage' },
+        dataset: { enabled: true, requestFullAccess: true },
+        instagramAccount: { enabled: true, requestFullAccess: false },
+      });
+
+      expect(agencyPlatformService.updateConnectionMetadata).toHaveBeenCalledWith(
+        agencyId,
+        'meta',
+        {
+          assetSettings: expect.objectContaining({
+            catalog: expect.objectContaining({ enabled: false }),
+            dataset: { enabled: false, requestFullAccess: false },
+          }),
+        }
+      );
     });
   });
 

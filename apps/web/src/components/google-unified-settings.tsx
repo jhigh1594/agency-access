@@ -26,6 +26,7 @@ import {
   ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface GoogleUnifiedSettingsProps {
   agencyId: string;
@@ -105,7 +106,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
       const token = await getToken();
       const response = await fetch(
         // Always refresh from Google APIs when opening Manage Assets so we don't rely on cached metadata.
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${agencyId}&refresh=true`,
+        resolveApiUrl(`/agency-platforms/google/accounts?agencyId=${agencyId}&refresh=true`),
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -127,7 +128,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings?agencyId=${agencyId}`,
+        resolveApiUrl(`/agency-platforms/google/asset-settings?agencyId=${agencyId}`),
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -150,7 +151,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
   const { mutate: saveSettings, isPending: isSavingSettings } = useMutation({
     mutationFn: async (newSettings: GoogleAssetSettings) => {
       const token = await getToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings`, {
+      const response = await fetch(resolveApiUrl('/agency-platforms/google/asset-settings'), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +174,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
   const { mutate: saveAccount } = useMutation({
     mutationFn: async ({ product, accountId, accountName }: { product: string; accountId: string; accountName: string }) => {
       const token = await getToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/account`, {
+      const response = await fetch(resolveApiUrl('/agency-platforms/google/account'), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

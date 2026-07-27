@@ -72,6 +72,11 @@ export const grantMetaAccessSchema = z.object({
     .optional(),
 });
 
+export const metaPreflightQuerySchema = z.object({
+  connectionId: z.string().min(1),
+  businessId: z.string().min(1).optional(),
+});
+
 export const manualMetaAdAccountShareSchema = z.object({
   connectionId: z.string(),
 });

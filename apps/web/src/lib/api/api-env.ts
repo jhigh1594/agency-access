@@ -21,3 +21,11 @@ export function getApiBaseUrl(): string {
   return LOCAL_API_FALLBACK;
 }
 
+export function resolveApiUrl(endpoint: string): string {
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+
+  const baseUrl = getApiBaseUrl();
+  return `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+}

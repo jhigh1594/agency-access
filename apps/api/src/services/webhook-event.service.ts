@@ -43,6 +43,21 @@ interface AccessRequestWebhookEventInput {
       platform: string;
       status: string;
     }>;
+    metaGrants?: Array<{
+      assetId: string;
+      assetName?: string | null;
+      assetKind: string;
+      recipeId: string;
+      recipeVersion: number;
+      destinationId: string;
+      clientBusinessId: string;
+      grantMethod: string;
+      requestedTasks: unknown;
+      verifiedTasks: unknown;
+      status: string;
+      verifiedAt?: Date | null;
+      lastAttemptAt?: Date | null;
+    }>;
   }>;
   requestUrl: string;
   clientPortalUrl?: string;
@@ -87,10 +102,15 @@ export function normalizeGrantedAssetsToV2(
   platform: string,
   grantedAt?: Date | null,
   authorizationStatuses?: Array<{ platform: string; status: string }>,
+  metaGrants?: AccessRequestWebhookEventInput['connections'][number]['metaGrants'],
 ): WebhookConnectionAssetV2[] | undefined {
-  if (!grantedAssets || typeof grantedAssets !== 'object' || Array.isArray(grantedAssets)) {
+  const hasGrantedAssets = Boolean(
+    grantedAssets && typeof grantedAssets === 'object' && !Array.isArray(grantedAssets)
+  );
+  if (!hasGrantedAssets && (metaGrants || []).length === 0) {
     return undefined;
   }
+  const assetRecord = hasGrantedAssets ? grantedAssets! : {};
 
   /** Safely extract an asset array, filtering out malformed entries. */
   function safeAssetArray<T extends Record<string, unknown>>(
@@ -124,7 +144,38 @@ export function normalizeGrantedAssetsToV2(
 
   // Meta assets
   if (normalizedPlatform === 'meta') {
-    const adAccounts = safeAssetArray<{ id: string; name: string }>(grantedAssets.adAccounts, ['id', 'name']);
+    for (const grant of metaGrants || []) {
+      const connectionStatus = grant.status === 'verified'
+        ? 'Connected'
+        : grant.status === 'failed'
+          ? 'Failed'
+          : 'Pending';
+      assets.push({
+        assetId: grant.assetId,
+        assetName: grant.assetName || grant.assetId,
+        assetType: grant.assetKind === 'ad_account'
+          ? 'Ad Account'
+          : grant.assetKind === 'instagram_account'
+            ? 'Instagram Account'
+            : 'Page',
+        platform: 'Meta',
+        connectionStatus,
+        recipeId: grant.recipeId as WebhookConnectionAssetV2['recipeId'],
+        recipeVersion: grant.recipeVersion,
+        destinationId: grant.destinationId,
+        clientBusinessId: grant.clientBusinessId,
+        grantMethod: grant.grantMethod,
+        requestedTasks: Array.isArray(grant.requestedTasks) ? grant.requestedTasks.map(String) : [],
+        verifiedTasks: Array.isArray(grant.verifiedTasks) ? grant.verifiedTasks.map(String) : [],
+        nativeStatus: grant.status as WebhookConnectionAssetV2['nativeStatus'],
+        ...(grant.verifiedAt ? { verifiedAt: grant.verifiedAt.toISOString() } : {}),
+        ...(grant.lastAttemptAt ? { statusLastCheckedAt: grant.lastAttemptAt.toISOString() } : {}),
+      });
+    }
+
+    if ((metaGrants || []).length > 0) return assets;
+
+    const adAccounts = safeAssetArray<{ id: string; name: string }>(assetRecord.adAccounts, ['id', 'name']);
     for (const account of adAccounts) {
       assets.push({
         assetId: account.id,
@@ -137,7 +188,7 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const pages = safeAssetArray<{ id: string; name: string }>(grantedAssets.pages, ['id', 'name']);
+    const pages = safeAssetArray<{ id: string; name: string }>(assetRecord.pages, ['id', 'name']);
     for (const page of pages) {
       assets.push({
         assetId: page.id,
@@ -150,7 +201,7 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const instagramAccounts = safeAssetArray<{ id: string; username: string }>(grantedAssets.instagramAccounts, ['id', 'username']);
+    const instagramAccounts = safeAssetArray<{ id: string; username: string }>(assetRecord.instagramAccounts, ['id', 'username']);
     for (const ig of instagramAccounts) {
       assets.push({
         assetId: ig.id,
@@ -163,7 +214,7 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const catalogs = safeAssetArray<{ id: string; name: string }>(grantedAssets.productCatalogs, ['id', 'name']);
+    const catalogs = safeAssetArray<{ id: string; name: string }>(assetRecord.productCatalogs, ['id', 'name']);
     for (const catalog of catalogs) {
       assets.push({
         assetId: catalog.id,
@@ -178,7 +229,7 @@ export function normalizeGrantedAssetsToV2(
 
   // Google assets
   if (normalizedPlatform === 'google') {
-    const adsAccounts = safeAssetArray<{ id: string; name: string; status: string }>(grantedAssets.adsAccounts, ['id', 'name']);
+    const adsAccounts = safeAssetArray<{ id: string; name: string; status: string }>(assetRecord.adsAccounts, ['id', 'name']);
     for (const account of adsAccounts) {
       const isFailed = account.status === 'FAILED' || account.status === 'NOT_GRANTED';
       assets.push({
@@ -193,7 +244,7 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const analyticsProperties = safeAssetArray<{ id: string; name: string; displayName?: string }>(grantedAssets.analyticsProperties, ['id', 'name']);
+    const analyticsProperties = safeAssetArray<{ id: string; name: string; displayName?: string }>(assetRecord.analyticsProperties, ['id', 'name']);
     for (const prop of analyticsProperties) {
       assets.push({
         assetId: prop.id,
@@ -208,7 +259,7 @@ export function normalizeGrantedAssetsToV2(
 
   // LinkedIn assets
   if (normalizedPlatform === 'linkedin') {
-    const linkedinAds = safeAssetArray<{ id: string; name: string }>(grantedAssets.adsAccounts, ['id', 'name']);
+    const linkedinAds = safeAssetArray<{ id: string; name: string }>(assetRecord.adsAccounts, ['id', 'name']);
     for (const account of linkedinAds) {
       assets.push({
         assetId: account.id,
@@ -220,7 +271,7 @@ export function normalizeGrantedAssetsToV2(
       });
     }
 
-    const linkedinPages = safeAssetArray<{ id: string; name: string }>(grantedAssets.pages, ['id', 'name']);
+    const linkedinPages = safeAssetArray<{ id: string; name: string }>(assetRecord.pages, ['id', 'name']);
     for (const page of linkedinPages) {
       assets.push({
         assetId: page.id,
@@ -277,6 +328,7 @@ function buildAccessRequestWebhookEventV2(input: AccessRequestWebhookEventInput)
           primaryPlatform,
           connection.grantedAt ?? undefined,
           connection.authorizationStatuses,
+          connection.metaGrants,
         );
 
         return {

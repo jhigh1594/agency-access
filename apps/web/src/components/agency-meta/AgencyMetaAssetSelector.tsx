@@ -11,6 +11,7 @@ import {
 import { PermissionSelect } from './PermissionSelect';
 import { SingleSelect } from '@/components/ui/single-select';
 import { Search, Loader2, AlertCircle } from 'lucide-react';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface AgencyMetaAssetSelectorProps {
   businessId: string;
@@ -38,7 +39,7 @@ export function AgencyMetaAssetSelector({
   const { data: assetsResponse, isLoading, error } = useQuery<{ data: MetaAllAssets }>({
     queryKey: ['meta-assets', businessId, agencyId],
     queryFn: async () => {
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/assets/${businessId}`);
+      const url = new URL(resolveApiUrl(`/agency-platforms/meta/assets/${businessId}`));
       if (agencyId) url.searchParams.append('agencyId', agencyId);
       
       const token = await getToken();

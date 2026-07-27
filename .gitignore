@@ -72,3 +72,4 @@ __pycache__/
 .cursor/hooks/state/
 .claude/worktrees/
 .codex/skills/
+.worktrees/

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { PinterestBusinessIdInput } from './pinterest-business-id-input';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface PinterestConnectionFlowProps {
   agencyId: string;
@@ -30,7 +31,7 @@ export function PinterestConnectionFlow({
   const saveBusinessId = useMutation({
     mutationFn: async (businessId: string) => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/pinterest/business-id`,
+        resolveApiUrl('/agency-platforms/pinterest/business-id'),
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

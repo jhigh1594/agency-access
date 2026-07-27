@@ -1,156 +1,18 @@
-# AGENTS.md
+# Agency Access Codex Workspace
 
-Guidance for agentic coding tools working in this repository. Follow these rules to stay consistent with existing architecture, security, and quality expectations.
+This is the working repository and knowledge base for AuthHub, an agency client-access and onboarding product. Use it to research, plan, implement, review, and verify work without losing the distinction between current facts and historical plans.
 
-## Repo Structure
-- apps/web: Next.js 16 frontend (App Router, TypeScript, TailwindCSS, Clerk)
-- apps/api: Fastify backend (TypeScript, Prisma, PostgreSQL, BullMQ, Redis)
-- packages/shared: Shared TypeScript types and Zod schemas
+Start with:
 
-## Tools
-- **gws** (Google Workspace CLI): `gws` or `npx gws` — Drive, Gmail, Calendar, Sheets, Docs, etc. One-time auth: `gws auth setup` then `gws auth login`. See [github.com/googleworkspace/cli](https://github.com/googleworkspace/cli).
+- `docs/workspace/context.md` — product and user context
+- `docs/workspace/preferences.md` — collaboration preferences
+- `docs/workspace/status.md` — current priorities, active work, and gaps
+- `docs/workspace/source-map.md` — authority order and where facts live
+- `docs/workspace/workflow.md` — inspect, execute, and verify loop
+- `docs/workspace/review.md` — review and handoff standard
 
-## Commands (run from repo root unless noted)
-### Development
-- npm run dev: start web (3000) + api (3001)
-- npm run dev:web: start frontend only
-- npm run dev:api: start backend only
+Current user instructions and approvals outrank every file. For current behavior, verify live state when available, then code, schema, configuration, and tests; do not treat an old plan or status document as proof.
 
-### Build / Lint / Typecheck
-- npm run build: build shared, api, web
-- npm run lint: lint all workspaces
-- npm run typecheck: type-check all workspaces
+Before claiming important work is complete, run checks proportionate to the change, inspect the resulting diff, and report failures or unverified assumptions. Preserve unrelated changes in the dirty worktree.
 
-### Tests
-- npm run test: run all workspace tests
-- npm run test --workspace=apps/api
-- npm run test --workspace=apps/web
-- npm run test --workspace=packages/shared
-
-### Single Test Examples
-- apps/api: cd apps/api && npm test src/services/__tests__/connection.service.test.ts
-- apps/web: cd apps/web && npm test src/app/(authenticated)/connections/__tests__/page.test.tsx
-- packages/shared: cd packages/shared && npm test src/__tests__/types.test.ts
-
-### Watch / Coverage
-- apps/api: cd apps/api && npm test -- --watch
-- packages/shared: cd packages/shared && npm run test:coverage
-
-## Cursor / Copilot Rules
-- No .cursor/rules, .cursorrules, or .github/copilot-instructions.md found in this repo.
-
-## Test-Driven Development (MUST FOLLOW)
-- Write failing tests before implementation code (Red → Green → Refactor).
-- One test per behavior; keep tests descriptive of behavior.
-- Exceptions: config files, type-only definitions (no runtime validation), and styling/CSS changes.
-
-## API Contracts and Error Handling
-- Success response shape:
-  { data: T }
-- Error response shape:
-  { error: { code: string; message: string; details?: any } }
-- In Fastify routes, return 400 for validation errors and throw unexpected errors to Fastify’s error handler.
-- On the frontend, check for error in the response and throw with the error message.
-- Frontend API calls: use getApiBaseUrl() (apps/web/src/lib/api/api-env) for base URL and extractApiErrorMessage() or extractMessageFromBody() (apps/web/src/lib/api/extract-error.ts) so users see actual backend messages; backend uses custom error handler so unhandled errors return { error: { code, message } }.
-
-## Security and Architecture (Non-Negotiable)
-- NEVER store OAuth tokens in PostgreSQL. Always use Infisical and store only secretId references.
-- Log all token access in AuditLog with user email, IP, timestamp, action, and metadata.
-- Use Redis-backed OAuth state tokens for CSRF protection (oauth-state.service.ts).
-- Access requests expire after 7 days by default.
-
-## Shared Types and Schemas
-- Use shared types from @agency-platform/shared in both frontend and backend.
-- When adding a shared type:
-  1) Update packages/shared/src/types.ts
-  2) Export from packages/shared/src/index.ts
-  3) Add Zod runtime validation where needed
-
-## Code Style Guidelines
-### Imports
-- Prefer workspace aliases when available (e.g., @/lib/..., @/services/...).
-- Use @agency-platform/shared for shared types instead of duplicating enums.
-- Group imports by: external libs, internal aliases, relative paths.
-
-### Formatting
-- Follow existing TypeScript/TSX style; keep lines readable and functions focused.
-- Avoid unnecessary comments; add only when logic is non-obvious.
-
-### Types
-- Prefer explicit types on public functions and exported values.
-- Use Zod schemas for runtime validation of inputs and env vars.
-- Avoid any when possible; if necessary, document why.
-
-### Naming
-- camelCase for variables/functions, PascalCase for components/classes, UPPER_SNAKE for constants.
-- Name files after their primary export or feature (e.g., access-request.service.ts).
-
-### Error Handling
-- Return typed error objects with code/message in services where applicable.
-- Preserve existing error codes (INVALID_TOKEN, VALIDATION_ERROR, NOT_FOUND, UNAUTHORIZED, FORBIDDEN, PLATFORM_ERROR).
-
-### Logging
-- Backend should use structured logging (Pino) via the existing logger utilities.
-- Avoid console.log in production paths; allowed in one-off scripts.
-
-## OAuth and Connectors
-- Connector configs live in apps/api/src/services/connectors/registry.config.ts.
-- Extend BaseConnector for standard OAuth flows; override only platform-specific behavior.
-- Store platform metadata in PlatformAuthorization.metadata as JSON.
-
-## Database and Env Changes
-- For new env vars: update apps/api/src/lib/env.ts and apps/api/.env.example.
-- Prisma changes: update schema, then run db:push and db:generate (apps/api).
-
-## UI / Frontend Notes
-- Use @tanstack/react-query for server data.
-- Keep UI flows consistent with existing patterns (shadcn/ui components).
-- For UI testing, use the /browse command for automated browser flows.
-- Public Next.js routes behind Clerk must be added to the allowlist in [apps/web/src/proxy.ts](/Users/jhigh/agency-access-platform/apps/web/src/proxy.ts). If you add a new marketing page, invite/token flow, redirect handler, or any route that must work before sign-in, update `isPublicRoute` in the same change.
-- Treat referral and token entry points as public-by-default unless there is a strong reason not to. A missed allowlist entry can make a working page look broken by redirecting into Clerk instead of rendering the route.
-- When changing public-route behavior, add or update a focused proxy test in [apps/web/src/__tests__/proxy.test.ts](/Users/jhigh/agency-access-platform/apps/web/src/__tests__/proxy.test.ts) so Clerk interception regressions are caught quickly.
-- For non-HTML routes served by Next.js (e.g. sitemap.xml, robots.txt), exclude by exact path in the proxy matcher regex — early returns inside the `clerkMiddleware` callback are unreliable for preventing redirect loops
-
-### UI/UX Patterns
-- Card footers with CTAs should use compact padding (py-3) to avoid excessive whitespace below buttons
-- Multi-step wizard footers benefit from a security note + primary CTA pattern (Lock icon + descriptive text + button)
-- Avoid rendering redundant action docks when review cards already provide complete context; one clear CTA per screen reduces cognitive friction
-- Platform icon integration via PlatformIcon component (with size tokens) improves visual recognition in lists of requested platforms
-- Access level labels should use friendly terminology ("Full access" not "admin") to reduce client anxiety
-- Step indicator chips benefit from numeric prefixes ("1 · SETUP") for clarity of active step
-- Inline CTAs in footers are preferred over floating docks when the triggering context is visible above the fold
-
-## Vercel Build and Next.js
-- **Commit new modules before deploy**: Any file the app imports must be in the repo. Untracked files cause "Module not found" on Vercel.
-- **Design-system / showcase pages**: Use actual component prop names and types (e.g. StatusBadge `status`/`badgeVariant`, HealthBadge `health`, PlatformIcon `size` as token not number). Check component source when adding examples.
-- **Shared types**: Use properties that exist on the type (e.g. PlatformProduct has `id`, not `product`).
-- **Test files and tsconfig**: Exclude `src/test/**`, `**/__tests__/**`, `**/*.test.ts`, `**/*.test.tsx` from apps/web tsconfig so Next build does not type-check Vitest-only code (avoids missing globals/module errors).
-- **Vitest + Tailwind breakpoints**: In jsdom, stub `window.matchMedia` so queries like `(min-width: 640px)` match when tests need `sm:` and up responsive styles.
-- **useSearchParams**: Wrap usage in a Suspense boundary when the page is statically generated. Extract the part that calls useSearchParams into an inner component and wrap it in `<Suspense>` in the page export.
-- **Install command**: Use `npm install --no-audit` (not `npm ci`) for Vercel; `npm ci` deletes `node_modules` on every run and bypasses Vercel's build cache, doubling install time
-- **Scoped workspace install breaks builds**: `npm ci --workspace=packages/shared --workspace=apps/web` does not install root devDependencies (e.g. TypeScript); full install is required
-- **npm --omit flag**: Only accepts `dev`, `optional`, `peer` — not `audit`; use `--no-audit` instead
-- **INP / interaction paths**: Speed Insights is loaded via deferred analytics. Field INP samples per route are often small until traffic grows; use lab profiling plus `npm run perf:web:inp-smoke` (Vitest smoke for dashboard create, invite shell, access-request edit save) and the `web-client-perf-gate` workflow on PRs touching `apps/web`.
-
-## Workflow Expectations
-- Don’t edit or revert unrelated changes in a dirty worktree.
-- Keep refactors behavior-preserving unless explicitly requested.
-- Keep modifications scoped, and add tests when behavior changes.
-- When deleting an entity that appears in list or dashboard views (e.g. client), invalidate relevant caches (e.g. dashboard key) and ensure list queries exclude orphaned rows (e.g. filter where clientId is not null) so the UI updates immediately.
-
-## Learned User Preferences
-- Prefer atomic commits; when multiple logical changes exist, ask user to choose scope (e.g. A/B/C options) rather than committing everything
-
-## Learned Workspace Facts
-- Set BULLMQ_WORKERS_ENABLED=false in Render for pre-launch to minimize Upstash Redis usage (BullMQ workers poll ~800K commands/day with zero traffic)
-- .codex/skills is required for Codex to discover skills; Cursor loads from both workspace and plugins, which can cause duplicate skills to appear
-- Manage-assets modal: Google Ads access method (MCC vs email) is inline in the Google Ads product row when enabled; agencies can switch between modes
-- Blog posts live in apps/web/content/blog/*.md (one Markdown file per post with YAML frontmatter); blog-data.ts loads from these files; quote frontmatter string values that contain colons (e.g. `title: "Before: after"`) so gray-matter does not throw YAMLException on Vercel builds
-- Comparison/alternatives pages are defined in apps/web/src/lib/comparison-data.ts, not in content/
-- Prisma migration SQL must use actual table names from @@map (e.g. subscriptions), not model names (e.g. Subscription)
-- Skip when committing: next-env.d.ts (auto-generated), __pycache__, .serena, .worktrees
-- gws auth setup requires gcloud; use manual OAuth (Cloud Console → Desktop app client → ~/.config/gws/client_secret.json) when gcloud is not installed
-- When Cursor is slow in this repo: ensure .cursorignore excludes node_modules, .next, .agents, .claude, .codex, .aipmos (skills still load by path; node_modules should never be indexed)
-- Use `git worktree remove <path> --force` when a worktree has uncommitted changes and must be removed
-- Public contact for marketing/support surfaces is support@authhub.co; obfuscate addresses in public HTML/JSON-LD to reduce spam harvesting
-- Google OAuth app verification: demo flow and scope explanation notes live in docs/google-oauth-verification-demo-script.md
+Get approval before deployments, production configuration/data/schema changes, destructive actions, spending, external communications, credential handling beyond approved local configuration, or git commit/push/PR actions. Also ask before making a product or scope decision that is not already authorized. Read-only inspection, research, and scoped local edits or tests explicitly requested by the user do not need a second approval.

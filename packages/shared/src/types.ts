@@ -365,6 +365,183 @@ export const MetaClientAuthorizationMetadataSchema = z.object({
 });
 export type MetaClientAuthorizationMetadata = z.infer<typeof MetaClientAuthorizationMetadataSchema>;
 
+// Outcome-based Meta access contracts. Recipe definitions use abstract capabilities;
+// only the API policy mapper may translate these into provider task names.
+export const MetaAccessRecipeIdSchema = z.enum([
+  'meta_run_ads',
+  'meta_organic_social',
+  'meta_view_only_audit',
+]);
+export type MetaAccessRecipeId = z.infer<typeof MetaAccessRecipeIdSchema>;
+
+export const MetaRecipeAssetKindSchema = z.enum(['ad_account', 'page', 'instagram_account']);
+export type MetaRecipeAssetKind = z.infer<typeof MetaRecipeAssetKindSchema>;
+
+export const MetaAccessCapabilitySchema = z.enum([
+  'ad_account_advertise',
+  'ad_account_analyze',
+  'page_advertise',
+  'page_publish',
+  'page_moderate',
+  'page_message',
+  'page_insights',
+  'instagram_linked_professional_account',
+]);
+export type MetaAccessCapability = z.infer<typeof MetaAccessCapabilitySchema>;
+
+export const MetaRecipeRequirementSchema = z.object({
+  assetKind: MetaRecipeAssetKindSchema,
+  required: z.boolean(),
+  relationship: z.enum(['standalone', 'linked_to_page']).default('standalone'),
+  capabilities: z.array(MetaAccessCapabilitySchema).min(1),
+});
+export type MetaRecipeRequirement = z.infer<typeof MetaRecipeRequirementSchema>;
+
+export const MetaAccessRecipeSchema = z.object({
+  id: MetaAccessRecipeIdSchema,
+  version: z.number().int().positive(),
+  name: z.string().min(1),
+  summary: z.string().min(1),
+  permissionSummary: z.array(z.string().min(1)).min(1),
+  requirements: z.array(MetaRecipeRequirementSchema).min(1),
+});
+export type MetaAccessRecipe = z.infer<typeof MetaAccessRecipeSchema>;
+
+export const META_ACCESS_RECIPES: Record<MetaAccessRecipeId, MetaAccessRecipe> = {
+  meta_run_ads: {
+    id: 'meta_run_ads',
+    version: 1,
+    name: 'Run Meta ads',
+    summary: 'Create and optimize campaigns, then review performance.',
+    permissionSummary: [
+      'Advertise and analyze selected Ad Accounts',
+      'Use selected Pages for advertising',
+      'Verify linked professional Instagram accounts through their Page relationship',
+    ],
+    requirements: [
+      {
+        assetKind: 'ad_account',
+        required: true,
+        relationship: 'standalone',
+        capabilities: ['ad_account_advertise', 'ad_account_analyze'],
+      },
+      {
+        assetKind: 'page',
+        required: true,
+        relationship: 'standalone',
+        capabilities: ['page_advertise', 'page_insights'],
+      },
+      {
+        assetKind: 'instagram_account',
+        required: false,
+        relationship: 'linked_to_page',
+        capabilities: ['instagram_linked_professional_account'],
+      },
+    ],
+  },
+  meta_organic_social: {
+    id: 'meta_organic_social',
+    version: 1,
+    name: 'Manage organic social',
+    summary: 'Publish, moderate, respond, and review organic Page performance.',
+    permissionSummary: [
+      'Publish and moderate selected Pages',
+      'Respond to Page messages',
+      'View Page insights',
+      'Verify linked professional Instagram accounts through their Page relationship',
+    ],
+    requirements: [
+      {
+        assetKind: 'page',
+        required: true,
+        relationship: 'standalone',
+        capabilities: ['page_publish', 'page_moderate', 'page_message', 'page_insights'],
+      },
+      {
+        assetKind: 'instagram_account',
+        required: false,
+        relationship: 'linked_to_page',
+        capabilities: ['instagram_linked_professional_account'],
+      },
+    ],
+  },
+  meta_view_only_audit: {
+    id: 'meta_view_only_audit',
+    version: 1,
+    name: 'View-only audit',
+    summary: 'Review performance without changing client assets.',
+    permissionSummary: [
+      'Analyze selected Ad Accounts',
+      'View selected Page insights',
+      'Observe linked professional Instagram relationships without changing them',
+    ],
+    requirements: [
+      {
+        assetKind: 'ad_account',
+        required: true,
+        relationship: 'standalone',
+        capabilities: ['ad_account_analyze'],
+      },
+      {
+        assetKind: 'page',
+        required: false,
+        relationship: 'standalone',
+        capabilities: ['page_insights'],
+      },
+      {
+        assetKind: 'instagram_account',
+        required: false,
+        relationship: 'linked_to_page',
+        capabilities: ['instagram_linked_professional_account'],
+      },
+    ],
+  },
+};
+
+export const MetaAccessRequestInputSchema = z
+  .object({
+    recipeId: MetaAccessRecipeIdSchema,
+    destinationId: z.string().min(1),
+  })
+  .strict();
+export type MetaAccessRequestInput = z.infer<typeof MetaAccessRequestInputSchema>;
+
+export const MetaAccessSnapshotRequirementSchema = MetaRecipeRequirementSchema.extend({
+  providerTasks: z.array(z.string().min(1)),
+});
+
+export const MetaAccessRequirementSnapshotSchema = z.object({
+  recipeId: MetaAccessRecipeIdSchema,
+  recipeVersion: z.number().int().positive(),
+  recipeName: z.string().min(1),
+  destinationId: z.string().min(1),
+  summary: z.string().min(1),
+  permissionSummary: z.array(z.string().min(1)).min(1),
+  requirements: z.array(MetaAccessSnapshotRequirementSchema).min(1),
+});
+export type MetaAccessRequirementSnapshot = z.infer<
+  typeof MetaAccessRequirementSnapshotSchema
+>;
+
+export const MetaAssetGrantLifecycleSchema = z.enum([
+  'pending',
+  'granting',
+  'verifying',
+  'verified',
+  'action_required',
+  'failed',
+]);
+export type MetaAssetGrantLifecycle = z.infer<typeof MetaAssetGrantLifecycleSchema>;
+
+export const MetaDestinationReadinessStatusSchema = z.enum([
+  'ready',
+  'action_needed',
+  'unavailable',
+]);
+export type MetaDestinationReadinessStatus = z.infer<
+  typeof MetaDestinationReadinessStatusSchema
+>;
+
 // Platform display names
 export const PLATFORM_NAMES: Record<Platform, string> = {
   google: 'Google',
@@ -1515,6 +1692,15 @@ export const WebhookConnectionAssetV2Schema = z.object({
   notes: z.string().optional(),
   linkToAsset: z.string().optional(),
   statusLastCheckedAt: z.string().datetime().optional(),
+  recipeId: MetaAccessRecipeIdSchema.optional(),
+  recipeVersion: z.number().int().positive().optional(),
+  destinationId: z.string().optional(),
+  clientBusinessId: z.string().optional(),
+  grantMethod: z.string().optional(),
+  requestedTasks: z.array(z.string()).optional(),
+  verifiedTasks: z.array(z.string()).optional(),
+  nativeStatus: MetaAssetGrantLifecycleSchema.optional(),
+  verifiedAt: z.string().datetime().optional(),
 });
 
 export type WebhookConnectionAssetV2 = z.infer<typeof WebhookConnectionAssetV2Schema>;

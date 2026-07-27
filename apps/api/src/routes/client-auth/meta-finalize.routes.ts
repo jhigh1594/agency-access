@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma.js';
 import type { Platform } from '@agency-platform/shared';
 import { metaClientFinalizeSchema } from './schemas.js';
 import { MetaConnector } from '../../services/connectors/meta.js';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Client invite Meta popup finalize flow.
@@ -116,15 +117,48 @@ export async function registerMetaFinalizeRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const secretName = infisical.generateSecretName(platform, clientConnection.id);
+      const existingAuthorization = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId: clientConnection.id,
+            platform,
+          },
+        },
+      });
+      const existingMetadata = existingAuthorization?.metadata &&
+        typeof existingAuthorization.metadata === 'object' &&
+        !Array.isArray(existingAuthorization.metadata)
+        ? existingAuthorization.metadata as Record<string, any>
+        : {};
+      const existingIdentityId = existingMetadata.metaClientPopup?.userId || existingMetadata.id;
+      const incomingIdentityId = userId || tokenMetadata.userId || userInfo.id;
+      const replacingIdentity = Boolean(
+        existingAuthorization && existingIdentityId && incomingIdentityId !== existingIdentityId
+      );
+      const priorSecretId = existingAuthorization?.secretId;
+      const secretName = replacingIdentity
+        ? infisical.generateSecretName(platform, `${clientConnection.id}_${randomUUID()}`)
+        : priorSecretId || infisical.generateSecretName(platform, clientConnection.id);
 
       await infisical.storeOAuthTokens(secretName, {
         accessToken: longLivedTokens.accessToken,
         expiresAt: longLivedTokens.expiresAt,
       });
 
+      const priorMeta = existingMetadata.meta && typeof existingMetadata.meta === 'object'
+        ? existingMetadata.meta as Record<string, any>
+        : {};
+      const verifiedLegacyGrants = Array.isArray(priorMeta.obo?.assetGrantResults)
+        ? priorMeta.obo.assetGrantResults.filter((grant: any) => grant?.status === 'verified')
+        : [];
       const metadata = {
+        ...existingMetadata,
         ...userInfo,
+        ...(replacingIdentity ? {
+          meta: verifiedLegacyGrants.length > 0
+            ? { obo: { assetGrantResults: verifiedLegacyGrants, lastVerifiedAt: priorMeta.obo?.lastVerifiedAt } }
+            : {},
+        } : {}),
         metaClientPopup: {
           authSource: 'js_sdk',
           userId: userId || tokenMetadata.userId || userInfo.id,
@@ -137,28 +171,50 @@ export async function registerMetaFinalizeRoutes(fastify: FastifyInstance) {
         },
       };
 
-      const platformAuth = await prisma.platformAuthorization.upsert({
-        where: {
-          connectionId_platform: {
+      try {
+        await prisma.platformAuthorization.upsert({
+          where: {
+            connectionId_platform: {
+              connectionId: clientConnection.id,
+              platform,
+            },
+          },
+          update: {
+            secretId: secretName,
+            expiresAt: longLivedTokens.expiresAt,
+            status: 'active',
+            metadata,
+          },
+          create: {
             connectionId: clientConnection.id,
             platform,
+            secretId: secretName,
+            expiresAt: longLivedTokens.expiresAt,
+            status: 'active',
+            metadata,
           },
-        },
-        update: {
-          secretId: secretName,
-          expiresAt: longLivedTokens.expiresAt,
-          status: 'active',
-          metadata,
-        },
-        create: {
-          connectionId: clientConnection.id,
-          platform,
-          secretId: secretName,
-          expiresAt: longLivedTokens.expiresAt,
-          status: 'active',
-          metadata,
-        },
-      });
+        });
+      } catch (error) {
+        if (replacingIdentity) await infisical.deleteOAuthTokens(secretName);
+        throw error;
+      }
+
+      if (replacingIdentity && priorSecretId && priorSecretId !== secretName) {
+        await infisical.deleteOAuthTokens(priorSecretId);
+        await auditService.createAuditLog({
+          agencyId: accessRequest.agencyId,
+          action: 'META_IDENTITY_REPLACED',
+          userEmail: stateData.clientEmail!,
+          resourceType: 'client_connection',
+          resourceId: clientConnection.id,
+          metadata: {
+            platform,
+            accessRequestId: stateData.accessRequestId!,
+            preservedVerifiedGrantCount: verifiedLegacyGrants.length,
+          },
+          request,
+        });
+      }
 
       await auditService.createAuditLog({
         agencyId: accessRequest.agencyId,

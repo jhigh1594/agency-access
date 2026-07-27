@@ -81,6 +81,8 @@ const envSchema = z.object({
   META_APP_ID: z.string(),
   META_APP_SECRET: z.string(),
   META_LOGIN_FOR_BUSINESS_CONFIG_ID: z.string().optional(),
+  META_OUTCOME_ACCESS_ENABLED: booleanish(false),
+  META_OUTCOME_ACCESS_AGENCY_IDS: z.string().optional(),
 
   // Kit (ConvertKit) OAuth
   KIT_CLIENT_ID: z.string().optional(),
@@ -242,6 +244,7 @@ const INTERNAL_ADMIN_EMAILS = parseCsvList(parsedEnv.INTERNAL_ADMIN_EMAILS);
 const TRUST_PROXY_IPS = parseCsvList(parsedEnv.TRUST_PROXY_IPS);
 const DASHBOARD_SUMMARY_LIMITS_ENABLED =
   parsedEnv.DASHBOARD_SUMMARY_LIMITS_ENABLED ?? true;
+const META_OUTCOME_ACCESS_AGENCY_IDS = parseCsvList(parsedEnv.META_OUTCOME_ACCESS_AGENCY_IDS);
 
 export const env = {
   ...parsedEnv,
@@ -252,4 +255,5 @@ export const env = {
   INTERNAL_ADMIN_EMAILS,
   TRUST_PROXY_IPS,
   DASHBOARD_SUMMARY_LIMITS_ENABLED,
+  META_OUTCOME_ACCESS_AGENCY_IDS,
 };

@@ -7,6 +7,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import posthog from 'posthog-js';
@@ -30,6 +31,7 @@ export function SaveAsTemplateModal({
   onClose,
   onSave,
 }: SaveAsTemplateModalProps) {
+  const { getToken } = useAuth();
   const { state } = useAccessRequest();
   const checkQuota = useQuotaCheck();
   const [name, setName] = useState('');
@@ -80,17 +82,20 @@ export function SaveAsTemplateModal({
     setSaving(true);
 
     try {
-      const result = await createTemplate({
-        agencyId,
-        name: name.trim(),
-        description: description.trim() || undefined,
-        platforms: state.selectedPlatforms,
-        globalAccessLevel: state.globalAccessLevel || 'standard',
-        intakeFields: state.intakeFields,
-        branding: state.branding,
-        isDefault,
-        createdBy,
-      });
+      const result = await createTemplate(
+        {
+          agencyId,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          platforms: state.selectedPlatforms,
+          globalAccessLevel: state.globalAccessLevel || 'standard',
+          intakeFields: state.intakeFields,
+          branding: state.branding,
+          isDefault,
+          createdBy,
+        },
+        getToken
+      );
 
       if (result.error) {
         setError(result.error.message);

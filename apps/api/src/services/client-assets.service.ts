@@ -13,6 +13,7 @@
 
 import { logger } from '../lib/logger.js';
 import { MetaConnector } from './connectors/meta.js';
+import type { MetaAccessRequirementSnapshot, MetaRecipeAssetKind } from '@agency-platform/shared';
 
 export interface MetaAdAccount {
   id: string;
@@ -110,6 +111,125 @@ export interface MetaAssets {
   selectedBusinessId?: string;
   selectedBusinessName?: string;
   selectionRequired?: boolean;
+}
+
+export type MetaClientPreflightStatus =
+  | 'legacy'
+  | 'configuration_error'
+  | 'no_portfolio'
+  | 'selection_required'
+  | 'missing_recipe_assets'
+  | 'insufficient_authority'
+  | 'provider_error'
+  | 'ready';
+
+export type MetaClientPreflight = {
+  status: MetaClientPreflightStatus;
+  canContinue: boolean;
+  nextActor: 'client' | 'agency' | 'another_meta_admin';
+  message: string;
+  selectedBusinessId?: string;
+  missingAssetKinds?: MetaRecipeAssetKind[];
+  recoveryUrl?: string;
+  handoffAvailable: boolean;
+  businesses?: Array<{ id: string; name: string }>;
+};
+
+export function buildMetaClientPreflight(input: {
+  snapshot?: MetaAccessRequirementSnapshot | null;
+  assets?: MetaAssets | null;
+  configurationReady: boolean;
+  providerError?: unknown;
+}): MetaClientPreflight {
+  if (!input.snapshot) {
+    return {
+      status: 'legacy',
+      canContinue: true,
+      nextActor: 'client',
+      message: 'This request uses the legacy Meta access flow.',
+      handoffAvailable: true,
+    };
+  }
+
+  if (!input.configurationReady) {
+    return {
+      status: 'configuration_error',
+      canContinue: false,
+      nextActor: 'agency',
+      message: 'The agency must finish Meta Business Login and receiving-portfolio setup.',
+      handoffAvailable: false,
+    };
+  }
+
+  if (input.providerError) {
+    const message = input.providerError instanceof Error ? input.providerError.message : String(input.providerError);
+    const insufficientAuthority = /permission|admin|authority|not authorized|access denied/i.test(message);
+    return {
+      status: insufficientAuthority ? 'insufficient_authority' : 'provider_error',
+      canContinue: false,
+      nextActor: insufficientAuthority ? 'another_meta_admin' : 'client',
+      message: insufficientAuthority
+        ? 'This Meta identity cannot administer the selected portfolio and required assets.'
+        : 'Meta could not complete the preflight check. Retry without creating a new request.',
+      handoffAvailable: true,
+    };
+  }
+
+  const assets = input.assets;
+  if (!assets || (assets.businesses || []).length === 0) {
+    return {
+      status: 'no_portfolio',
+      canContinue: false,
+      nextActor: 'client',
+      message: 'Create or join a Meta Business Portfolio, then return and retry.',
+      recoveryUrl: 'https://business.facebook.com/settings',
+      handoffAvailable: true,
+    };
+  }
+
+  if (assets.selectionRequired || !assets.selectedBusinessId) {
+    return {
+      status: 'selection_required',
+      canContinue: false,
+      nextActor: 'client',
+      message: 'Choose the client Business Portfolio before selecting assets.',
+      handoffAvailable: true,
+      businesses: assets.businesses || [],
+    };
+  }
+
+  const counts: Record<MetaRecipeAssetKind, number> = {
+    ad_account: assets.adAccounts.length,
+    page: assets.pages.length,
+    instagram_account: assets.instagramAccounts.length,
+  };
+  const missingAssetKinds = input.snapshot.requirements
+    .filter((requirement) => requirement.required && counts[requirement.assetKind] === 0)
+    .map((requirement) => requirement.assetKind);
+
+  if (missingAssetKinds.length > 0) {
+    return {
+      status: 'missing_recipe_assets',
+      canContinue: false,
+      nextActor: 'client',
+      message: `The selected portfolio is missing required ${missingAssetKinds.join(' and ')} assets.`,
+      selectedBusinessId: assets.selectedBusinessId,
+      missingAssetKinds,
+      recoveryUrl: 'https://business.facebook.com/settings',
+      handoffAvailable: true,
+      businesses: assets.businesses || [],
+    };
+  }
+
+  return {
+    status: 'ready',
+    canContinue: true,
+    nextActor: 'client',
+    message: 'Portfolio and required assets are ready for selection. Native grants will still be verified after submission.',
+    selectedBusinessId: assets.selectedBusinessId,
+    handoffAvailable: true,
+    businesses: assets.businesses || [],
+  };
 }
 
 export class MetaBusinessPortfolioUnavailableError extends Error {

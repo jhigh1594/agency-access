@@ -21,6 +21,7 @@ import { Suspense, useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthOrBypass, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
+import { getApiBaseUrl } from '@/lib/api/api-env';
 import { TrialBanner } from '@/components/trial-banner';
 import { useSubscription } from '@/lib/query/billing';
 import { shouldEnforceOnboardingRedirect, type AgencyOnboardingStatusData } from '@/lib/query/onboarding';
@@ -122,6 +123,7 @@ function AuthenticatedLayoutInner({
           return;
         }
 
+        const apiBaseUrl = getApiBaseUrl();
         const checkKey = `${principalClerkId}:${pathname}`;
         if (agencyCheckDedup.has(checkKey)) {
           return;
@@ -130,7 +132,7 @@ function AuthenticatedLayoutInner({
 
         // Check if user has an agency by clerkUserId
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}&fields=id,name,email,clerkUserId`,
+          `${apiBaseUrl}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}&fields=id,name,email,clerkUserId`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -166,7 +168,7 @@ function AuthenticatedLayoutInner({
         }
 
         const onboardingResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/${agencyId}/onboarding-status`,
+          `${apiBaseUrl}/api/agencies/${agencyId}/onboarding-status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from './api-env';
+import { resolveApiUrl } from './api-env';
 
 export interface ApiErrorPayload {
   code: string;
@@ -25,15 +25,6 @@ interface AuthorizedApiFetchOptions extends Omit<RequestInit, 'headers'> {
   headers?: HeadersInit;
 }
 
-function resolveUrl(endpoint: string): string {
-  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-    return endpoint;
-  }
-
-  const baseUrl = getApiBaseUrl();
-  return `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
-}
-
 export async function authorizedApiFetch<TResponse = any>(
   endpoint: string,
   options: AuthorizedApiFetchOptions
@@ -55,7 +46,7 @@ export async function authorizedApiFetch<TResponse = any>(
     requestHeaders.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(resolveUrl(endpoint), {
+  const response = await fetch(resolveApiUrl(endpoint), {
     ...rest,
     method,
     headers: requestHeaders,
@@ -80,4 +71,3 @@ export async function authorizedApiFetch<TResponse = any>(
 
   return payload as TResponse;
 }
-

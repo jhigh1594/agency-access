@@ -46,6 +46,12 @@
       "sourceType": "github",
       "computedHash": "4756068d1b2f92ef4f6d1301094a9862ef275687d3dbf26fda5e52cae3fca4c1"
     },
+    "seo": {
+      "source": "iannuttall/seo",
+      "sourceType": "github",
+      "skillPath": "skills/seo/SKILL.md",
+      "computedHash": "52a4d93e8089b409ee1ed11f89f5b40431ab41f0e64d18e8b5b2833cd2ec972c"
+    },
     "shadcn": {
       "source": "vercel-labs/json-render",
       "sourceType": "github",

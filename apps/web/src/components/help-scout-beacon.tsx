@@ -5,7 +5,6 @@ import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass } from '@/lib/dev-auth';
 import { loadHelpScoutIdentity } from '@/lib/api/help-scout';
 
-const HELPSCOUT_BEACON_ID = '87caa405-9bd1-440e-9494-37567479c6ee';
 const HELPSCOUT_SCRIPT_SRC = 'https://beacon-v2.helpscout.net';
 const HELPSCOUT_SCRIPT_SELECTOR = 'script[data-helpscout-beacon="true"]';
 
@@ -53,11 +52,20 @@ function ensureBeaconScript() {
   document.head.appendChild(script);
 }
 
+function getHelpScoutBeaconId(): string | null {
+  return process.env.NEXT_PUBLIC_HELPSCOUT_BEACON_ID?.trim() || null;
+}
+
 export function HelpScoutBeacon() {
   const clerkAuth = useAuth();
   const { userId, isLoaded, isDevelopmentBypass } = useAuthOrBypass(clerkAuth);
 
   useEffect(() => {
+    const beaconId = getHelpScoutBeaconId();
+    if (!beaconId) {
+      return;
+    }
+
     if (isDevelopmentBypass) {
       return;
     }
@@ -68,11 +76,15 @@ export function HelpScoutBeacon() {
 
     window.Beacon = createBeaconStub(window.Beacon);
     ensureBeaconScript();
-    window.Beacon('init', HELPSCOUT_BEACON_ID);
+    window.Beacon('init', beaconId);
     window.__helpScoutBeaconInitialized = true;
   }, [isDevelopmentBypass]);
 
   useEffect(() => {
+    if (!getHelpScoutBeaconId()) {
+      return;
+    }
+
     if (!isLoaded || !userId || isDevelopmentBypass) {
       return;
     }

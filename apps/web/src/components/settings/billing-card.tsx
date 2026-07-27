@@ -26,6 +26,7 @@ import {
   type TierLimits,
 } from '@agency-platform/shared';
 import { useCreateCheckout, useOpenPortal } from '@/lib/query/billing';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface SubscriptionData {
   id: string;
@@ -60,7 +61,7 @@ export function BillingSettingsCard() {
 
       const token = await (window as any).Clerk.session.getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/${orgId}`,
+        resolveApiUrl(`/api/subscriptions/${orgId}`),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -86,7 +87,7 @@ export function BillingSettingsCard() {
 
       const token = await (window as any).Clerk.session.getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/${orgId}/tier`,
+        resolveApiUrl(`/api/subscriptions/${orgId}/tier`),
         {
           headers: {
             Authorization: `Bearer ${token}`,

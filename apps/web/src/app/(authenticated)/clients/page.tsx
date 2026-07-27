@@ -17,6 +17,8 @@ import { StatusBadge, PlatformIcon, EmptyState } from '@/components/ui';
 import { CreateClientModal } from '@/components/client-detail/CreateClientModal';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 import type { Platform } from '@agency-platform/shared';
 import type { StatusType } from '@/components/ui/status-badge';
 import { useSearchParams } from 'next/navigation';
@@ -65,7 +67,7 @@ function ClientsPageContent() {
     queryFn: async () => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`);
+      const url = new URL(resolveApiUrl('/api/clients'));
       if (searchQuery) url.searchParams.append('search', searchQuery);
       
       const response = await fetch(url.toString(), {
@@ -73,7 +75,7 @@ function ClientsPageContent() {
           Authorization: `Bearer ${token}`,
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch clients');
+      if (!response.ok) throw new Error(await extractApiErrorMessage(response, 'Failed to fetch clients'));
       return response.json();
     },
     enabled: true,

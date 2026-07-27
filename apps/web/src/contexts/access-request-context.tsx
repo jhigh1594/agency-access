@@ -10,7 +10,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { QueryClient } from '@tanstack/react-query';
-import { Client, AccessLevel, AccessRequestTemplate } from '@agency-platform/shared';
+import { Client, AccessLevel, AccessRequestTemplate, type MetaAccessRequestInput } from '@agency-platform/shared';
 import type { CreateAccessRequestPayload } from '@/lib/api/access-requests';
 import posthog from 'posthog-js';
 
@@ -45,6 +45,7 @@ export interface AccessRequestFormState {
   selectedPlatforms: Record<string, string[]>; // { google: ['google_ads', 'ga4'], meta: ['meta_ads'] }
   globalAccessLevel: AccessLevel | null;
   platformAccessLevels: Record<string, AccessLevel>; // Per-platform access level overrides
+  metaAccess: MetaAccessRequestInput | null;
 
   // Step 3: Intake Form Builder
   intakeFields: IntakeField[];
@@ -66,6 +67,7 @@ interface AccessRequestContextValue {
   updatePlatforms: (platforms: Record<string, string[]>) => void;
   updateAccessLevel: (level: AccessLevel) => void;
   updatePlatformAccessLevel: (group: string, level: AccessLevel) => void;
+  updateMetaAccess: (value: MetaAccessRequestInput | null) => void;
   updateIntakeFields: (fields: IntakeField[]) => void;
   updateBranding: (branding: Partial<BrandingConfig>) => void;
   setStep: (step: number) => void;
@@ -92,6 +94,7 @@ const initialState: AccessRequestFormState = {
   selectedPlatforms: {},
   globalAccessLevel: 'standard', // Smart default: standard access level
   platformAccessLevels: {}, // Per-platform access level overrides
+  metaAccess: null,
   intakeFields: [
     {
       id: '1',
@@ -200,6 +203,7 @@ export function AccessRequestProvider({
         ...prev,
         selectedPlatforms: platforms,
         platformAccessLevels: newPlatformAccessLevels,
+        metaAccess: (platforms.meta || []).length > 0 ? prev.metaAccess : null,
       };
     });
   }, []);
@@ -225,6 +229,10 @@ export function AccessRequestProvider({
       ...prev,
       platformAccessLevels: { ...prev.platformAccessLevels, [group]: level },
     }));
+  }, []);
+
+  const updateMetaAccess = useCallback((metaAccess: MetaAccessRequestInput | null) => {
+    setState((prev) => ({ ...prev, metaAccess }));
   }, []);
 
   const updateIntakeFields = useCallback((fields: IntakeField[]) => {
@@ -275,6 +283,10 @@ export function AccessRequestProvider({
 
           if (platformCount === 0) {
             return { valid: false, error: 'Please select at least one platform' };
+          }
+
+          if ((state.selectedPlatforms.meta || []).length > 0 && !state.metaAccess) {
+            return { valid: false, error: 'Choose a Meta outcome and a ready receiving portfolio' };
           }
 
           // Access level has default value (standard), so always valid
@@ -345,6 +357,7 @@ export function AccessRequestProvider({
           primaryColor: state.branding.primaryColor,
           subdomain: state.branding.subdomain || undefined,
         },
+        ...(state.metaAccess ? { metaAccess: state.metaAccess } : {}),
       };
 
       // Submit to API
@@ -431,6 +444,7 @@ export function AccessRequestProvider({
     updatePlatforms,
     updateAccessLevel,
     updatePlatformAccessLevel,
+    updateMetaAccess,
     updateIntakeFields,
     updateBranding,
     setStep,

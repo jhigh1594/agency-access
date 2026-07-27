@@ -14,6 +14,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface DeleteClientModalProps {
   client: {
@@ -51,7 +52,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
     mutationFn: async () => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${client.id}`, {
+      const response = await fetch(resolveApiUrl(`/api/clients/${client.id}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

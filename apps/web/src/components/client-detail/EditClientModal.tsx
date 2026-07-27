@@ -14,6 +14,7 @@ import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface EditClientModalProps {
   client: {
@@ -43,7 +44,7 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
     mutationFn: async (data: { name: string; company: string; website?: string }) => {
       const token = await getToken();
       if (!token) throw new Error('No auth token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients/${client.id}`, {
+      const response = await fetch(resolveApiUrl(`/api/clients/${client.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

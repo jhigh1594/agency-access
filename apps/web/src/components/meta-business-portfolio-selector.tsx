@@ -6,6 +6,7 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { Loader2, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
 import { SingleSelect } from '@/components/ui/single-select';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface Business {
   id: string;
@@ -36,7 +37,7 @@ export function MetaBusinessPortfolioSelector({
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/business-accounts?agencyId=${agencyId}&refresh=true`,
+        resolveApiUrl(`/agency-platforms/meta/business-accounts?agencyId=${agencyId}&refresh=true`),
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),

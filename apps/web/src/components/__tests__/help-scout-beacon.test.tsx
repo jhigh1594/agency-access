@@ -21,6 +21,8 @@ type BeaconStub = {
 const loadHelpScoutIdentityMock = vi.fn();
 const getTokenMock = vi.fn();
 const useAuthOrBypassMock = vi.fn();
+const TEST_BEACON_ID = '87caa405-9bd1-440e-9494-37567479c6ee';
+const ORIGINAL_ENV = { ...process.env };
 
 vi.mock('@/lib/api/help-scout', () => ({
   loadHelpScoutIdentity: (...args: unknown[]) => loadHelpScoutIdentityMock(...args),
@@ -55,9 +57,11 @@ describe('HelpScoutBeacon', () => {
       isLoaded: true,
       isDevelopmentBypass: false,
     });
+    process.env.NEXT_PUBLIC_HELPSCOUT_BEACON_ID = TEST_BEACON_ID;
   });
 
   afterEach(() => {
+    process.env = { ...ORIGINAL_ENV };
     vi.restoreAllMocks();
   });
 
@@ -85,7 +89,7 @@ describe('HelpScoutBeacon', () => {
       expect(window.Beacon?.readyQueue).toEqual([
         {
           method: 'init',
-          options: '87caa405-9bd1-440e-9494-37567479c6ee',
+          options: TEST_BEACON_ID,
           data: undefined,
         },
         {
@@ -118,7 +122,18 @@ describe('HelpScoutBeacon', () => {
     render(<HelpScoutBeacon />);
 
     expect(document.querySelectorAll('script[data-helpscout-beacon="true"]')).toHaveLength(0);
-    expect(beaconSpy).not.toHaveBeenCalledWith('init', '87caa405-9bd1-440e-9494-37567479c6ee');
+    expect(beaconSpy).not.toHaveBeenCalledWith('init', TEST_BEACON_ID);
+  });
+
+  it('does not load Beacon when no Beacon ID is configured', () => {
+    delete process.env.NEXT_PUBLIC_HELPSCOUT_BEACON_ID;
+
+    render(<HelpScoutBeacon />);
+
+    expect(document.querySelector('script[data-helpscout-beacon="true"]')).toBeNull();
+    expect(window.Beacon).toBeUndefined();
+    expect(window.__helpScoutBeaconInitialized).toBeUndefined();
+    expect(loadHelpScoutIdentityMock).not.toHaveBeenCalled();
   });
 
   it('does not load the Beacon script in development bypass mode', () => {
@@ -150,7 +165,7 @@ describe('HelpScoutBeacon', () => {
     const { unmount } = render(<HelpScoutBeacon />);
 
     await waitFor(() => {
-      expect(beaconSpy).toHaveBeenCalledWith('init', '87caa405-9bd1-440e-9494-37567479c6ee');
+      expect(beaconSpy).toHaveBeenCalledWith('init', TEST_BEACON_ID);
       expect(beaconSpy).toHaveBeenCalledWith('identify', {
         name: 'Alex Johnson',
         email: 'alex@example.com',

@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { useEffect, useRef, useState } from 'react';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
+import { getApiBaseUrl } from '@/lib/api/api-env';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 import { useUpdateAgencyOnboardingProgress } from '@/lib/query/onboarding';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { usePrefetchQuota, useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
@@ -155,7 +157,7 @@ export default function DashboardPage() {
         }
 
         const apiFetchStart = nowMs();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
           headers,
         });
         const dashboardApiMs = nowMs() - apiFetchStart;
@@ -180,7 +182,7 @@ export default function DashboardPage() {
         }
 
         if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
+          throw new Error(await extractApiErrorMessage(response, 'Failed to fetch dashboard data'));
         }
 
         const data = await response.json() as DashboardApiResponse;

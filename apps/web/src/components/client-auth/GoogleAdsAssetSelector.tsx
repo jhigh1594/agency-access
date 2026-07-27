@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { Loader2 } from 'lucide-react';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface GoogleAdsAccount {
   id: string;
@@ -43,9 +44,8 @@ export function GoogleAdsAssetSelector({
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/assets/google_ads?connectionId=${encodeURIComponent(sessionId)}`
+        resolveApiUrl(`/api/client/${accessRequestToken}/assets/google_ads?connectionId=${encodeURIComponent(sessionId)}`)
       );
       const json = await response.json();
 

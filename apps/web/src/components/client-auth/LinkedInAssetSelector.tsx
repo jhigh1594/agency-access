@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
+import { resolveApiUrl } from '@/lib/api/api-env';
 import {
   AssetSelectorEmpty,
   AssetSelectorError,
@@ -49,9 +50,8 @@ export function LinkedInAssetSelector({
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/assets/${product}?connectionId=${encodeURIComponent(sessionId)}`
+        resolveApiUrl(`/api/client/${accessRequestToken}/assets/${product}?connectionId=${encodeURIComponent(sessionId)}`)
       );
       const json = await response.json();
 

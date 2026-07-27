@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui';
 import { buildClientInviteConnectViewUrl } from '@/lib/client-invite-platforms';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
+import { resolveApiUrl } from '@/lib/api/api-env';
 import type { ClientAccessRequestPayload } from '@agency-platform/shared';
 
 interface ShopifyManualData {
@@ -83,7 +84,7 @@ export default function ShopifyManualPage() {
     phase,
     retry,
   } = useInviteRequestLoader<ShopifyManualData>({
-    endpoint: `${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`,
+    endpoint: resolveApiUrl(`/api/client/${token}`),
     source: 'manual-shopify',
     parseData: parseManualData,
   });
@@ -105,7 +106,7 @@ export default function ShopifyManualPage() {
     setSubmissionError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}/shopify/manual-connect`, {
+      const response = await fetch(resolveApiUrl(`/api/client/${token}/shopify/manual-connect`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

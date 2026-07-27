@@ -22,6 +22,7 @@ import { useState, FormEvent } from 'react';
 import { Loader2, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SingleSelect } from '@/components/ui/single-select';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 // Currency options with symbols
 const CURRENCIES = [
@@ -121,8 +122,7 @@ export function MetaAssetCreator({
       setState('loading');
       setErrorMessage(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/client/${accessRequestToken}/create/meta/ad-account`, {
+      const response = await fetch(resolveApiUrl(`/api/client/${accessRequestToken}/create/meta/ad-account`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

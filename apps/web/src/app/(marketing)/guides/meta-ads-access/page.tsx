@@ -213,7 +213,7 @@ export default function MetaAdsAccessGuidePage() {
               Method 2: Using AuthHub (5 minutes)
             </h3>
             <p className="font-mono text-sm text-foreground">
-              Send one link. Client signs in with Facebook, authorizes your agency, and selects ad accounts, pages, and catalogs to share. Add optional intake questions to the same flow. No Business ID hunting or separate forms.
+              Send one link. Client signs in with Facebook, chooses the correct Business Portfolio, and selects Ad Accounts and Pages. AuthHub verifies the requested access and identifies linked professional Instagram relationships or any manual follow-up. Add optional intake questions to the same flow.
             </p>
           </div>
         </div>

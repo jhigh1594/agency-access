@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { SingleSelect } from '@/components/ui/single-select';
 import { AssetSelectorEmpty, AssetSelectorError, AssetSelectorLoading } from './AssetSelectorStates';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface TikTokAdvertiser {
   id: string;
@@ -63,9 +64,8 @@ export function TikTokAssetSelector({
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/assets/tiktok?connectionId=${encodeURIComponent(sessionId)}`
+        resolveApiUrl(`/api/client/${accessRequestToken}/assets/tiktok?connectionId=${encodeURIComponent(sessionId)}`)
       );
       const json = await response.json();
 

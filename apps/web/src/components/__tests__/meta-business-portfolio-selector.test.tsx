@@ -135,7 +135,9 @@ describe('MetaBusinessPortfolioSelector', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
-      expect(screen.getByRole('option', { name: /Business One \(biz_1\)/ })).toBeInTheDocument();
     });
+
+    await user.click(screen.getByRole('combobox', { name: /business portfolio/i }));
+    expect(screen.getByRole('option', { name: /Business One \(biz_1\)/ })).toBeInTheDocument();
   });
 });

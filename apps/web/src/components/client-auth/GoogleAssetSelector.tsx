@@ -16,6 +16,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface GoogleAssetSelectorProps {
   sessionId: string; // connectionId
@@ -123,9 +124,8 @@ export function GoogleAssetSelector({
       setError(null);
 
       const platform = PRODUCT_TO_PLATFORM[product] || product;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/assets/${platform}?connectionId=${encodeURIComponent(sessionId)}`
+        resolveApiUrl(`/api/client/${accessRequestToken}/assets/${platform}?connectionId=${encodeURIComponent(sessionId)}`)
       );
       const json = await response.json();
 

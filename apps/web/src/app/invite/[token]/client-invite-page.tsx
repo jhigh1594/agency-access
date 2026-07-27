@@ -16,6 +16,7 @@ import { Button, SingleSelect } from '@/components/ui';
 import { PlatformIcon } from '@/components/ui/platform-icon';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
+import { resolveApiUrl } from '@/lib/api/api-env';
 import {
   getInviteSecuritySummary,
   isClientInviteManualCallbackPlatform,
@@ -115,7 +116,7 @@ export default function ClientAuthorizationPage({
     phase: loadPhase,
     retry: retryLoad,
   } = useInviteRequestLoader<ClientAccessRequestPayload>({
-    endpoint: `${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`,
+    endpoint: resolveApiUrl(`/api/client/${token}`),
     source: 'invite-core',
     serverInviteResult,
   });
@@ -289,7 +290,7 @@ export default function ClientAuthorizationPage({
     const submitCompletion = async () => {
       completionSubmittedRef.current = true;
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}/complete`, {
+        const response = await fetch(resolveApiUrl(`/api/client/${token}/complete`), {
           method: 'POST',
         });
 

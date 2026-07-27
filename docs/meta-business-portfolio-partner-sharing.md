@@ -494,24 +494,24 @@ For Ad Accounts, client must manually grant access in Meta Business Manager:
 
 ## Success Criteria
 
-1. ✅ Pages access is automatically granted after client saves selections
-2. ✅ Client sees clear success/failure feedback for Pages
-3. ✅ Ad Account sharing instructions are clear and easy to follow
-4. ✅ Client can copy Business Manager ID easily
-5. ✅ Client can mark ad account sharing as complete
-6. ✅ Error states are handled gracefully (missing Business ID, expired tokens)
-7. ✅ Grant results are stored in database for audit trail
-8. ✅ Works on mobile devices
-9. ✅ Supports multiple languages
-10. ✅ Hybrid approach balances automation with client control
+1. The request stores an immutable outcome recipe and receiving Business Portfolio.
+2. Provider tasks come only from that stored recipe snapshot.
+3. Page and Ad Account access counts as complete only after assigned-user read-back returns every requested task.
+4. Instagram is relationship-backed through a selected, verified Page; AuthHub does not claim an unsupported direct grant.
+5. Automatic failure converges on per-asset manual partner sharing and the same `Check access` verification record.
+6. Client preflight covers configuration, no portfolio, portfolio choice, missing assets, insufficient administrator authority, handoff, and safe retry.
+7. OAuth health remains separate from the last verified native grant state.
+8. Normalized grant records retain recipe, destination, client portfolio, method, tasks, timestamps, next actor, and safe error class.
+
+These criteria are implemented behind rollout controls. Mobile/desktop browser proof and Meta provider-sandbox read-back remain required before broad enablement.
 
 ## Future Enhancements
 
-1. **Ad Account Access Verification**: Verify ad account access was granted via API check (if Meta API supports it)
+1. **Provider proof expansion**: Maintain current sandbox evidence for every supported Meta task and partner-share read-back path.
 2. **Background Job**: Move Pages grant process to background job for better UX
 3. **Retry Logic**: Automatic retry for transient Page grant failures
 4. **Bulk Operations**: Optimize API calls for multiple pages
-5. **Access Level Selection**: Let client choose ADMIN vs ADVERTISER access level for ad accounts
+5. **Recipe expansion**: Add new outcomes only when their least-privilege provider mapping and verification behavior are proven.
 6. **Revocation**: Allow client to revoke access later
 7. **Progress Tracking**: Show which ad accounts have been shared vs pending
 
@@ -521,4 +521,3 @@ For Ad Accounts, client must manually grant access in Meta Business Manager:
 - Meta Business Manager Partner Documentation: https://developers.facebook.com/docs/marketing-api/reference/ad-account/assigned_users
 - Current implementation: `apps/web/src/components/client-auth/PlatformAuthWizard.tsx`
 - Agency Business Manager setup: `apps/api/src/routes/agency-platforms.ts`
-

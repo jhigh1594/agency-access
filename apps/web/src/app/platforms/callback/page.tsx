@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import posthog from 'posthog-js';
 import { MetaBusinessPortfolioSelector } from '@/components/meta-business-portfolio-selector';
+import { resolveApiUrl } from '@/lib/api/api-env';
 
 // Error message mapping
 const ERROR_MESSAGES: Record<string, string> = {
@@ -58,7 +59,7 @@ function CallbackPageContent() {
   const { mutate: completeMetaOauth, isPending: isSaving } = useMutation({
     mutationFn: async ({ businessId, businessName }: { businessId: string; businessName: string }) => {
       const token = await getToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/complete-oauth`, {
+      const response = await fetch(resolveApiUrl('/agency-platforms/meta/complete-oauth'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui';
 import { buildClientInviteConnectViewUrl } from '@/lib/client-invite-platforms';
 import { useInviteRequestLoader } from '@/lib/query/use-invite-request-loader';
+import { resolveApiUrl } from '@/lib/api/api-env';
 import type { ClientAccessRequestPayload } from '@agency-platform/shared';
 
 interface ManualPageData {
@@ -64,7 +65,7 @@ export default function KitManualPage() {
     phase,
     retry,
   } = useInviteRequestLoader<ManualPageData>({
-    endpoint: `${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}`,
+    endpoint: resolveApiUrl(`/api/client/${token}`),
     source: 'manual-kit',
     parseData: parseManualData,
   });
@@ -76,7 +77,7 @@ export default function KitManualPage() {
     setSubmissionError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/client/${token}/kit/manual-connect`, {
+      const response = await fetch(resolveApiUrl(`/api/client/${token}/kit/manual-connect`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

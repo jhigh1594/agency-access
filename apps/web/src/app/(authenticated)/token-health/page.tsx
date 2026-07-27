@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { StatCard, HealthBadge, ExpirationCountdown, PlatformIcon, formatRelativeTime } from '@/components/ui';
 import type { Platform, HealthStatus } from '@agency-platform/shared';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { extractApiErrorMessage } from '@/lib/api/extract-error';
 
 type TokenHealth = {
   id: string;
@@ -42,6 +44,7 @@ export default function TokenHealthPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [tokens, setTokens] = useState<TokenHealth[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<HealthFilter>('all');
   const [refreshing, setRefreshing] = useState<Set<string>>(new Set());
 
@@ -52,16 +55,21 @@ export default function TokenHealthPage() {
 
   const fetchTokenHealth = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/token-health`, {
+      const res = await fetch(resolveApiUrl('/api/token-health'), {
         headers: await getAuthHeaders(),
       });
+      if (!res.ok) {
+        throw new Error(await extractApiErrorMessage(res, 'Failed to fetch token health'));
+      }
       const result = await res.json();
       if (result.data) {
         setTokens(result.data);
       }
     } catch (err) {
       console.error('Failed to fetch token health:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch token health');
     } finally {
       setLoading(false);
     }
@@ -76,7 +84,7 @@ export default function TokenHealthPage() {
   const handleRefresh = async (tokenId: string, platform: Platform) => {
     setRefreshing(new Set(refreshing).add(tokenId));
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/token-refresh`, {
+      const res = await fetch(resolveApiUrl('/api/token-refresh'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,6 +93,9 @@ export default function TokenHealthPage() {
         body: JSON.stringify({ connectionId: tokens.find((t) => t.id === tokenId)?.connectionId, platform }),
       });
 
+      if (!res.ok) {
+        throw new Error(await extractApiErrorMessage(res, 'Failed to refresh token'));
+      }
       const result = await res.json();
       if (result.data) {
         // Refresh the list
@@ -92,6 +103,7 @@ export default function TokenHealthPage() {
       }
     } catch (err) {
       console.error('Failed to refresh token:', err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh token');
     } finally {
       setRefreshing((prev) => {
         const next = new Set(prev);
@@ -139,6 +151,12 @@ export default function TokenHealthPage() {
             <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
+
+        {error && (
+          <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            {error}
+          </div>
+        )}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard

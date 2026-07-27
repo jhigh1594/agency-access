@@ -5,6 +5,7 @@ import DashboardPage from '../page';
 
 const routerPush = vi.fn();
 const quotaMutateAsync = vi.fn();
+const getTokenMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: routerPush }),
@@ -37,7 +38,7 @@ vi.mock('next/link', () => ({
 
 vi.mock('@clerk/nextjs', () => ({
   useAuth: vi.fn(() => ({
-    getToken: vi.fn(),
+    getToken: getTokenMock,
     userId: 'user_123',
     orgId: null,
     isLoaded: true,
@@ -110,6 +111,7 @@ describe('DashboardPage behavior', () => {
       remaining: 100,
       currentTier: 'STARTER',
     });
+    getTokenMock.mockResolvedValue('test-token');
     useAgencyOnboardingStatusMock.mockReturnValue({
       data: null,
       isLoading: false,
@@ -418,6 +420,60 @@ describe('DashboardPage behavior', () => {
     render(<DashboardPage />);
 
     expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
+  });
+
+  it('fetches dashboard data through the normalized API base URL', async () => {
+    const originalApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com/';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        data: {
+          agency: {
+            id: 'agency_1',
+            name: 'Agency One',
+            email: 'owner@agency.test',
+          },
+          stats: {
+            totalRequests: 0,
+            pendingRequests: 0,
+            activeConnections: 0,
+            totalPlatforms: 0,
+          },
+          requests: [],
+          connections: [],
+        },
+        error: null,
+      }),
+    });
+    const originalFetch = global.fetch;
+    global.fetch = fetchMock as typeof fetch;
+
+    try {
+      useQueryMock.mockImplementation((options) => ({
+        data: undefined,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        options,
+      }));
+
+      render(<DashboardPage />);
+
+      const queryOptions = useQueryMock.mock.calls[0]?.[0];
+      await queryOptions.queryFn();
+
+      expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/api/dashboard', {
+        headers: {
+          Authorization: 'Bearer test-token',
+        },
+      });
+    } finally {
+      process.env.NEXT_PUBLIC_API_URL = originalApiUrl;
+      global.fetch = originalFetch;
+    }
   });
 
   it('disables Create Request and shows Checking immediately while quota check is pending', async () => {
