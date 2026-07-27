@@ -50,9 +50,16 @@ BACKGROUND_WORKERS_ENABLED=false
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_SKIP_AUTHENTICATED=true
 TRUST_PROXY_IPS=<Render trusted proxy CIDRs>
+AGENT_NATIVE_ENABLED=false
+AGENT_NATIVE_AGENCY_ALLOWLIST=<comma-separated agency UUIDs>
+AGENT_MCP_RESOURCE_URL=https://your-service.onrender.com/mcp
+CLERK_OAUTH_ISSUER=https://<your-clerk-issuer>
+CLERK_OAUTH_VERIFY_URL=https://api.clerk.com/v1/oauth_applications/access_tokens/verify
 ```
 
 Pre-launch deploys should keep `BACKGROUND_WORKERS_ENABLED=false` to avoid background polling cost while there is no customer traffic. Turn it on only when token refresh, notifications, scheduled webhooks, and other background jobs are intentionally part of the launch posture.
+
+Deploy the agent-native migration with `AGENT_NATIVE_ENABLED=false`, verify existing flows and the data invariants in `docs/agent-native-access-operations.md`, then enable only after the Clerk staging matrix and two-host MCP smoke pass. A production-enabled configuration fails startup when the issuer, HTTPS resource, or agency allowlist is missing.
 
 Production startup fails when `OAUTH_STATE_HMAC_SECRET` is missing or shorter than 32 characters. Sentry webhook delivery also fails closed in production unless `SENTRY_WEBHOOK_SECRET` is configured and incoming requests include a valid signature.
 

@@ -149,6 +149,12 @@ export async function startCleanupHandler(): Promise<void> {
       }
     }
   }, { teamSize: 1, teamConcurrency: 1 });
+
+  await registerHandler('cleanup-agent-operations', async () => {
+    const { agentOperationRetentionService } = await import('../services/agent-operation-retention.service.js');
+    const result = await agentOperationRetentionService.sanitizeExpiredSnapshots();
+    logger.info('Sanitized expired agent operation snapshots', { sanitized: result.sanitized });
+  }, { teamSize: 1, teamConcurrency: 1 });
 }
 
 /**
@@ -305,6 +311,7 @@ export async function scheduleRecurringJobs(): Promise<void> {
 
   // Cleanup - daily at 2 AM UTC
   await scheduleJob('cleanup-expired-requests', '0 2 * * *', { type: 'delete-expired-requests' });
+  await scheduleJob('cleanup-agent-operations', '30 2 * * *', { type: 'sanitize-agent-operations' });
 
   // Trial expiration - daily at 3 AM UTC
   await scheduleJob('trial-expiration-check', '0 3 * * *', { type: 'check-expired-trials' });

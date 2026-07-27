@@ -11,7 +11,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should not contain slate colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 
@@ -21,7 +21,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should not contain indigo colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 
@@ -31,7 +31,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should not contain red colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 
@@ -43,7 +43,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should not contain green colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 
@@ -55,7 +55,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should not contain soft shadows (shadow-xl)', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 
@@ -65,7 +65,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should use shared Button primitives for primary actions', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 
@@ -76,7 +76,7 @@ describe('EditClientModal - Static Design Validation', () => {
     it('should use teal for success states', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/client-detail/EditClientModal.tsx',
+        'src/components/client-detail/EditClientModal.tsx',
         'utf-8'
       );
 

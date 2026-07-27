@@ -45,8 +45,7 @@ lerna-debug.log*
 *.swo
 *~
 
-# Prisma
-apps/api/prisma/migrations/
+# Prisma migrations are production deployment artifacts and must be committed.
 
 # OS
 Thumbs.db

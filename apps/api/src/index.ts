@@ -33,6 +33,9 @@ import { helpScoutRoutes } from './routes/help-scout.js';
 import { affiliateRoutes } from './routes/affiliate.js';
 import { sentryWebhooksRoutes } from './routes/sentry-webhooks.js';
 import { sentryTestRoutes } from './routes/sentry-test.routes.js';
+import { agentGrantRoutes } from './routes/agent-grants.js';
+import { agentOperationRoutes } from './routes/agent-operations.js';
+import { mcpRoutes } from './routes/mcp.js';
 import { performanceOnRequest, performanceOnSend } from './middleware/performance.js';
 import { prisma } from './lib/prisma.js';
 
@@ -173,6 +176,11 @@ await fastify.register(helpScoutRoutes, { prefix: '/api' });
 await fastify.register(affiliateRoutes, { prefix: '/api' });
 await fastify.register(sentryWebhooksRoutes, { prefix: '/api' });
 await fastify.register(sentryTestRoutes); // No prefix - routes handle their own paths
+await fastify.register(agentGrantRoutes, { prefix: '/api' });
+await fastify.register(agentOperationRoutes, { prefix: '/api' });
+if (env.AGENT_NATIVE_ENABLED) {
+  await fastify.register(mcpRoutes);
+}
 
 // Health check and root routes
 fastify.get('/health', async () => {
@@ -205,6 +213,11 @@ const start = async () => {
       const { assertWebhookSchemaReady } = await import('./lib/webhook-schema-readiness.js');
       await assertWebhookSchemaReady();
       fastify.log.info('webhook schema readiness check passed');
+      if (env.AGENT_NATIVE_ENABLED) {
+        const { assertAgentSchemaReady } = await import('./lib/agent-schema-readiness.js');
+        await assertAgentSchemaReady();
+        fastify.log.info('agent schema readiness check passed');
+      }
     }
 
     // Start pg-boss job handlers

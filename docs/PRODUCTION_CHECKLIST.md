@@ -51,6 +51,19 @@ Required production controls:
 
 ## ⚠️ What Needs to Be Done
 
+### Agent-native access operations
+
+- [ ] Deploy the additive agent migration with `AGENT_NATIVE_ENABLED=false`.
+- [ ] Confirm existing agency, request, invite, OAuth, webhook, billing, and quota smoke tests.
+- [ ] Configure Clerk OAuth issuer, exact MCP resource, verification endpoint, and approved OAuth clients.
+- [ ] Exercise wrong issuer/audience/resource, expiry, local grant revocation, and authorization-server revocation in staging.
+- [ ] Add only confirmed design-partner agency UUIDs to `AGENT_NATIVE_AGENCY_ALLOWLIST`.
+- [ ] Complete the full loop and revocation with two current MCP hosts; record host versions and date.
+- [ ] Inspect agent metrics and verify no PII, token, API key, signing secret, or secret ID appears in responses or logs.
+- [ ] Rehearse `AGENT_NATIVE_ENABLED=false` rollback and retain additive security records.
+
+See `docs/agent-native-access-operations.md` for commands, invariants, troubleshooting, and rollback.
+
 ### 1. Environment Variables (Render)
 
 Set these in Render dashboard → Environment:

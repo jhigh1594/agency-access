@@ -74,11 +74,13 @@ export async function getAgencyTemplates(agencyId: string) {
 /**
  * Get a single template by ID
  */
-export async function getTemplate(templateId: string) {
+export async function getTemplate(templateId: string, agencyId?: string) {
   try {
-    const template = await prisma.accessRequestTemplate.findUnique({
-      where: { id: templateId },
-    });
+    const template = agencyId
+      ? await prisma.accessRequestTemplate.findFirst({ where: { id: templateId, agencyId } })
+      : await prisma.accessRequestTemplate.findUnique({
+          where: { id: templateId },
+        });
 
     if (!template) {
       return {

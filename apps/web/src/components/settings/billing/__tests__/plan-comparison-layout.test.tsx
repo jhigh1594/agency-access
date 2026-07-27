@@ -4,7 +4,7 @@ describe('PlanComparison layout classes', () => {
   it('uses responsive grid without horizontal scroll', () => {
     const fs = require('fs');
     const componentCode = fs.readFileSync(
-      '/Users/jhigh/agency-access-platform/apps/web/src/components/settings/billing/plan-comparison.tsx',
+      'src/components/settings/billing/plan-comparison.tsx',
       'utf-8'
     );
 
@@ -16,7 +16,7 @@ describe('PlanComparison layout classes', () => {
   it('keeps most popular badge inside card bounds', () => {
     const fs = require('fs');
     const componentCode = fs.readFileSync(
-      '/Users/jhigh/agency-access-platform/apps/web/src/components/settings/billing/plan-comparison.tsx',
+      'src/components/settings/billing/plan-comparison.tsx',
       'utf-8'
     );
 

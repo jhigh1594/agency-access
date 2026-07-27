@@ -11,7 +11,7 @@ describe('MultiSelectCombobox - Static Design Validation', () => {
     it('should not contain slate colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/ui/multi-select-combobox.tsx',
+        'src/components/ui/multi-select-combobox.tsx',
         'utf-8'
       );
 
@@ -22,7 +22,7 @@ describe('MultiSelectCombobox - Static Design Validation', () => {
     it('should not contain indigo colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/ui/multi-select-combobox.tsx',
+        'src/components/ui/multi-select-combobox.tsx',
         'utf-8'
       );
 
@@ -32,7 +32,7 @@ describe('MultiSelectCombobox - Static Design Validation', () => {
     it('should not contain red colors', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/ui/multi-select-combobox.tsx',
+        'src/components/ui/multi-select-combobox.tsx',
         'utf-8'
       );
 
@@ -44,7 +44,7 @@ describe('MultiSelectCombobox - Static Design Validation', () => {
     it('should not contain soft shadows (shadow-xl)', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/ui/multi-select-combobox.tsx',
+        'src/components/ui/multi-select-combobox.tsx',
         'utf-8'
       );
 
@@ -54,7 +54,7 @@ describe('MultiSelectCombobox - Static Design Validation', () => {
     it('should use coral for primary actions', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/ui/multi-select-combobox.tsx',
+        'src/components/ui/multi-select-combobox.tsx',
         'utf-8'
       );
 

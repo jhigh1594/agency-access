@@ -39,6 +39,8 @@ model Agency {
   webhookEndpoints    WebhookEndpoint[]
   webhookEvents       WebhookEvent[]
   metaDestinations    MetaAgencyDestination[]
+  agentGrants         AgentGrant[]
+  agentOperations     AgentOperation[]
 
   @@map("agencies")
 }
@@ -169,6 +171,7 @@ model AccessRequest {
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
+  @@index([agencyId, externalReference])
   @@index([clientId, createdAt])
   @@map("access_requests")
 }
@@ -299,13 +302,82 @@ model AuditLog {
   metadata           Json?
   ipAddress          String?  @map("ip_address")
   userAgent          String?  @map("user_agent")
+  actorType          String?  @map("actor_type")
+  actorId            String?  @map("actor_id")
+  agentGrantId       String?  @map("agent_grant_id")
+  agentOperationId   String?  @map("agent_operation_id")
+  oauthClientId      String?  @map("oauth_client_id")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  agency Agency? @relation(fields: [agencyId], references: [id])
+  agency         Agency?         @relation(fields: [agencyId], references: [id])
+  agentGrant     AgentGrant?     @relation(fields: [agentGrantId], references: [id], onDelete: SetNull)
+  agentOperation AgentOperation? @relation(fields: [agentOperationId], references: [id], onDelete: SetNull)
 
   @@index([action, resourceId])
   @@index([agencyId, createdAt])
+  @@index([agentGrantId, createdAt])
+  @@index([agentOperationId, createdAt])
   @@map("audit_logs")
+}
+
+// External personal-agent grants. Provider tokens and secret references never belong here.
+model AgentGrant {
+  id            String    @id @default(uuid())
+  agencyId      String    @map("agency_id")
+  ownerSubject  String    @map("owner_subject")
+  oauthClientId String    @map("oauth_client_id")
+  displayName   String    @map("display_name")
+  permissions   Json
+  state         String    @default("active")
+  lastUsedAt    DateTime? @map("last_used_at")
+  revokedAt     DateTime? @map("revoked_at")
+  revokedBy     String?   @map("revoked_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  agency     Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  operations AgentOperation[]
+  auditLogs  AuditLog[]
+
+  @@unique([agencyId, ownerSubject, oauthClientId])
+  @@index([agencyId, state])
+  @@index([oauthClientId, state])
+  @@map("agent_grants")
+}
+
+// Durable approval and execution state for agent-initiated actions.
+model AgentOperation {
+  id                 String    @id @default(uuid())
+  grantId            String    @map("grant_id")
+  agencyId           String    @map("agency_id")
+  actionType         String    @map("action_type")
+  riskClass          String    @map("risk_class")
+  inputSnapshot      Json      @map("input_snapshot")
+  inputHash          String    @map("input_hash")
+  approvalPreview    Json?     @map("approval_preview")
+  idempotencyKey     String    @map("idempotency_key")
+  status             String
+  decidedBy          String?   @map("decided_by")
+  decidedAt          DateTime? @map("decided_at")
+  executionStartedAt DateTime? @map("execution_started_at")
+  completedAt        DateTime? @map("completed_at")
+  result             Json?
+  failureCode        String?   @map("failure_code")
+  failureMessage     String?   @map("failure_message") @db.Text
+  retryable          Boolean   @default(false)
+  expiresAt          DateTime? @map("expires_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  grant     AgentGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+  agency    Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  auditLogs AuditLog[]
+
+  @@unique([grantId, idempotencyKey])
+  @@index([agencyId, status, createdAt])
+  @@index([grantId, status, createdAt])
+  @@index([status, expiresAt])
+  @@map("agent_operations")
 }
 
 // Authorization verification tracking (for platform-native identity flow)

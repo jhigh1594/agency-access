@@ -16,6 +16,7 @@ export interface SendEmailOptions {
   text?: string;
   from?: string;
   replyTo?: string | string[];
+  idempotencyKey?: string;
 }
 
 /**
@@ -35,6 +36,7 @@ export async function sendEmail(options: SendEmailOptions) {
       text,
       from = env.RESEND_FROM_EMAIL || 'AuthHub <notifications@notifications.authhub.co>',
       replyTo = env.RESEND_REPLY_TO_EMAIL,
+      idempotencyKey,
     } = options;
     
     // In development/test, we might want to log instead of sending if a real key isn't provided
@@ -50,7 +52,7 @@ export async function sendEmail(options: SendEmailOptions) {
       html,
       text,
       replyTo,
-    });
+    }, idempotencyKey ? { idempotencyKey } : undefined);
 
     if (result.error) {
       console.error('Resend error:', result.error);

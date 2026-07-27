@@ -8,6 +8,15 @@ import type {
   AffiliateAdminPartnerMutation,
   AffiliateAdminReferralDisqualificationInput,
 } from '@agency-platform/shared';
+import { agentTelemetryService } from '@/services/agent-telemetry.service.js';
+
+vi.mock('@/lib/env.js', () => ({
+  env: {
+    INTERNAL_ADMIN_USER_IDS: [],
+    INTERNAL_ADMIN_EMAILS: [],
+    NODE_ENV: 'test',
+  },
+}));
 
 vi.mock('@/services/internal-admin.service.js', () => ({
   internalAdminService: {
@@ -61,6 +70,7 @@ describe('Internal Admin Routes', () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
+    agentTelemetryService.resetForTests();
     app = Fastify();
     await app.register(internalAdminRoutes, {
       allowlist: {
@@ -69,6 +79,18 @@ describe('Internal Admin Routes', () => {
       },
     });
     vi.clearAllMocks();
+  });
+
+  it('exposes bounded agent metrics only to internal admins', async () => {
+    agentTelemetryService.recordApprovalDecision({ agencyId: 'agency-1', grantId: 'grant-1', operationId: 'op-1', decision: 'approved', latencyMs: 250 });
+    const response = await app.inject({
+      method: 'GET',
+      url: '/internal-admin/agent-metrics',
+      headers: { authorization: 'Bearer token', 'x-mock-user': 'admin_user|admin@example.com' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data).toMatchObject({ approvalDecisions: 1, averageApprovalLatencyMs: 250 });
   });
 
   afterEach(async () => {

@@ -11,7 +11,7 @@ describe('ScheduleDemoModal - Static Design Validation', () => {
     it('should not contain soft shadows (shadow-2xl)', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/marketing/schedule-demo-modal.tsx',
+        'src/components/marketing/schedule-demo-modal.tsx',
         'utf-8'
       );
 
@@ -21,7 +21,7 @@ describe('ScheduleDemoModal - Static Design Validation', () => {
     it('should use shadow-brutalist for main containers', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(
-        '/Users/jhigh/agency-access-platform/apps/web/src/components/marketing/schedule-demo-modal.tsx',
+        'src/components/marketing/schedule-demo-modal.tsx',
         'utf-8'
       );
 
