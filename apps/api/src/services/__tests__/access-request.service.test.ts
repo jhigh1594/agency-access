@@ -727,6 +727,27 @@ describe('AccessRequestService', () => {
   });
 
   describe('getAccessRequestById', () => {
+    it('scopes a request lookup to the agency when one is supplied', async () => {
+      vi.mocked(prisma.accessRequest.findFirst).mockResolvedValue(null);
+
+      const result = await accessRequestService.getAccessRequestById('request-1', 'agency-1');
+
+      expect(result).toMatchObject({ data: null, error: { code: 'NOT_FOUND' } });
+      expect(prisma.accessRequest.findFirst).toHaveBeenCalledWith({ where: { id: 'request-1', agencyId: 'agency-1' } });
+      expect(prisma.accessRequest.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('finds an access request created for an agent operation within its agency', async () => {
+      vi.mocked(prisma.accessRequest.findFirst).mockResolvedValue({ id: 'request-1', agencyId: 'agency-1' } as any);
+
+      const result = await accessRequestService.findByAgentOperation('agency-1', 'operation-1');
+
+      expect(result).toEqual({ data: { id: 'request-1', agencyId: 'agency-1' }, error: null });
+      expect(prisma.accessRequest.findFirst).toHaveBeenCalledWith({
+        where: { agencyId: 'agency-1', externalReference: 'agent-operation:operation-1' },
+      });
+    });
+
     it('returns pending Shopify submission state when Shopify is requested but not submitted', async () => {
       vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
         id: 'request-1',
