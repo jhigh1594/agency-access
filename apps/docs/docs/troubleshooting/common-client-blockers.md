@@ -1,7 +1,7 @@
 ---
 title: Common Client Blockers
 description: Diagnose the most frequent reasons a client request stalls and decide whether the fix is education, a different contact, or a replacement request.
-slug: /troubleshooting/common-client-blockers
+
 sidebar_position: 1
 keywords:
   - client onboarding blockers

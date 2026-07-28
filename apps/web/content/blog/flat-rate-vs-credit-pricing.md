@@ -2,9 +2,9 @@
 id: flat-rate-vs-credit-pricing
 title: Flat-Rate vs Credit Pricing for Agency Tools (2026)
 excerpt: >-
-  Your agency tool charges you $30 for onboarding one extra client. That's
-  not a typo — it's credit-based pricing. Here's the math that makes growing
-  agencies reconsider their entire tool stack.
+  Credit-based agency tools charge $30–$150 in surprise overages when you grow.
+  See the real per-client cost math for 3, 6, and 10 clients/month — and how
+  AuthHub's $29 flat-rate pricing eliminates overage risk entirely.
 category: operations
 stage: awareness
 publishedAt: '2026-03-31'
@@ -130,6 +130,8 @@ Credit-based pricing isn't always worse. It works for:
 
 If your agency consistently onboards 3+ clients per month, flat-rate pricing wins on cost. And it wins categorically on predictability.
 
+If you're currently using Leadsie and hitting overage charges, you're experiencing exactly the credit model described above. Leadsie's Starter plan runs $49/month for 3 credits; each additional client costs $30. AuthHub's flat-rate plan is $29/month with no credit limits — making it a direct Leadsie alternative for agencies onboarding more than 3 clients per month.
+
 ---
 
 ## Your Pricing Evaluation Checklist
@@ -146,4 +148,6 @@ The right pricing model is the one you never think about. If you're checking you
 
 ---
 
-**Your tool costs should be the most predictable line item on your P&L.** If they're not, [compare agency onboarding tools](/compare/leadsie-alternative) and find one that is.
+Your tool costs should be the most predictable line item on your P&L. AuthHub uses flat-rate pricing — $29/month whether you onboard 2 clients or 20.
+
+No credits, no overages, no surprises on your invoice. **[Start your free AuthHub trial →](https://authhub.co/signup)** — takes 2 minutes, no credit card required.

@@ -1,7 +1,7 @@
 ---
 title: Resend or Revoke a Request
 description: Decide when to resend an AuthHub request versus revoking it and creating a clean replacement for the client.
-slug: /requests-and-links/resend-or-revoke
+
 sidebar_position: 3
 keywords:
   - resend access request

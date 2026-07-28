@@ -1,7 +1,7 @@
 ---
 title: Send Your Link
 description: Share an AuthHub request link with the right client contact and reduce the back-and-forth that slows onboarding.
-slug: /requests-and-links/send-your-link
+
 sidebar_position: 1
 keywords:
   - send authhub link

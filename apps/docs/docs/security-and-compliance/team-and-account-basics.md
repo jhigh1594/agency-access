@@ -1,7 +1,7 @@
 ---
 title: Team and Account Basics
 description: Set expectations for how agency members should work inside AuthHub so access workflows stay attributable and operationally clean.
-slug: /security-and-compliance/team-and-account-basics
+
 sidebar_position: 3
 keywords:
   - team access

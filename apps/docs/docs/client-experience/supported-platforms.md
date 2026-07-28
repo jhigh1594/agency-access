@@ -1,7 +1,7 @@
 ---
 title: Supported Platforms Overview
 description: Review the major platforms AuthHub supports today and know when to send clients to a platform-specific guide instead of generic support copy.
-slug: /client-experience/supported-platforms
+
 sidebar_position: 3
 keywords:
   - supported platforms

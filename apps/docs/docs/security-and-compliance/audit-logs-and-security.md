@@ -1,7 +1,7 @@
 ---
 title: Audit Logs and Security
 description: Understand how AuthHub handles client authorization activity, audit visibility, and the security expectations around platform access workflows.
-slug: /security-and-compliance/audit-logs-and-security
+
 sidebar_position: 1
 keywords:
   - audit logs

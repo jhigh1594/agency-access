@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-27T03:29:15Z",
+  "title": "Design System: AuthHub",
+  "extensions": {
+    "colorMeta": {
+      "action-coral": {
+        "role": "primary",
+        "displayName": "Action Coral",
+        "canonical": "#FF6B35",
+        "tonalRamp": ["#421000", "#702000", "#A5350C", "#D94D20", "#FF6B35", "#FF9574", "#FFC1AD", "#FFF0E9"]
+      },
+      "progress-teal": {
+        "role": "secondary",
+        "displayName": "Progress Teal",
+        "canonical": "#00A896",
+        "tonalRamp": ["#002E29", "#004E45", "#007567", "#009887", "#00A896", "#4EC7B9", "#9DE3DA", "#E6F8F5"]
+      },
+      "signal-acid": {
+        "role": "tertiary",
+        "displayName": "Signal Acid",
+        "canonical": "#CCFF00",
+        "tonalRamp": ["#293300", "#465700", "#6D8700", "#97BA00", "#CCFF00", "#DBFF4D", "#EAFF99", "#F8FFE5"]
+      },
+      "interaction-violet": {
+        "role": "tertiary",
+        "displayName": "Interaction Violet",
+        "canonical": "#8B5CF6",
+        "tonalRamp": ["#211047", "#351B70", "#4E299E", "#6A3BD0", "#8B5CF6", "#AA8AF9", "#CCB9FC", "#F0EAFE"]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Warning Amber",
+        "canonical": "#B45309",
+        "tonalRamp": ["#351500", "#5A2500", "#813800", "#A84B04", "#B45309", "#D77A2A", "#EEAF73", "#FBE8D0"]
+      },
+      "canvas-white": {
+        "role": "neutral",
+        "displayName": "Canvas White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#262626", "#454545", "#666666", "#8A8A8A", "#B0B0B0", "#D0D0D0", "#EBEBEB", "#FFFFFF"]
+      },
+      "surface-paper": {
+        "role": "neutral",
+        "displayName": "Surface Paper",
+        "canonical": "#FAFAFA",
+        "tonalRamp": ["#242424", "#424242", "#626262", "#858585", "#AAAAAA", "#CACACA", "#E7E7E7", "#FAFAFA"]
+      },
+      "ink-black": {
+        "role": "neutral",
+        "displayName": "Ink Black",
+        "canonical": "#09090B",
+        "tonalRamp": ["#09090B", "#252529", "#44444A", "#66666E", "#8A8A93", "#B0B0B8", "#D6D6DB", "#F3F3F5"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Marketing headlines and rare welcome moments only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Major page and section orientation."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panels, dialogs, and workflow steps."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Operational copy and instructions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Controls, fields, statuses, and metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hard-control",
+        "value": "4px 4px 0 #000000",
+        "purpose": "Primary tactile controls and compact signature elements."
+      },
+      {
+        "name": "hard-emphasis",
+        "value": "6px 6px 0 #000000",
+        "purpose": "Hovered controls or one emphasized surface."
+      },
+      {
+        "name": "hard-feature",
+        "value": "8px 8px 0 #000000",
+        "purpose": "Rare large marketing or workflow focal points."
+      },
+      {
+        "name": "quiet-surface",
+        "value": "0 1px 2px rgba(0, 0, 0, 0.05)",
+        "purpose": "Subtle separation for standard cards and utility controls."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease-out",
+        "purpose": "Immediate hover and pressed feedback."
+      },
+      {
+        "name": "state-standard",
+        "value": "200ms ease-out",
+        "purpose": "Default control and navigation transitions."
+      },
+      {
+        "name": "panel",
+        "value": "250ms ease-in-out",
+        "purpose": "Mobile navigation panel state change."
+      }
+    ],
+    "breakpoints": [
+      {"name": "xs", "value": "480px"},
+      {"name": "sm", "value": "640px"},
+      {"name": "md", "value": "768px"},
+      {"name": "lg", "value": "1024px"},
+      {"name": "xl", "value": "1280px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The decisive workflow action with tactile structural feedback.",
+      "html": "<button class=\"ds-btn-primary\">Create request</button>",
+      "css": ".ds-btn-primary { min-height: 48px; padding: 12px 24px; border: 2px solid #09090B; border-radius: 12px; background: #FF6B35; color: #FFFFFF; font: 600 16px/1.25 Outfit, system-ui, sans-serif; box-shadow: 4px 4px 0 #000000; transition: transform 200ms ease-out, box-shadow 200ms ease-out, background 200ms ease-out; } .ds-btn-primary:hover { background: #E85D2B; transform: translateY(-2px); } .ds-btn-primary:active { transform: translate(2px, 2px); box-shadow: none; } .ds-btn-primary:focus-visible { outline: 2px solid #FF6B35; outline-offset: 3px; } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition: background 0s; } .ds-btn-primary:hover, .ds-btn-primary:active { transform: none; } }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A familiar neutral action that does not compete with the primary.",
+      "html": "<button class=\"ds-btn-secondary\">Save draft</button>",
+      "css": ".ds-btn-secondary { min-height: 48px; padding: 12px 24px; border: 2px solid #E7E7E7; border-radius: 12px; background: #FFFFFF; color: #09090B; font: 600 16px/1.25 Outfit, system-ui, sans-serif; transition: border-color 200ms ease-out, transform 200ms ease-out; } .ds-btn-secondary:hover { border-color: #09090B; transform: translateY(-2px); } .ds-btn-secondary:active { transform: none; } .ds-btn-secondary:focus-visible { outline: 2px solid #FF6B35; outline-offset: 3px; } @media (prefers-reduced-motion: reduce) { .ds-btn-secondary { transition: border-color 0s; } .ds-btn-secondary:hover { transform: none; } }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "A quiet, readable field with an unmistakable keyboard focus state.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Client name</span><input class=\"ds-input\" placeholder=\"Acme Agency\" /></label>",
+      "css": ".ds-field { display: grid; gap: 8px; color: #09090B; font-family: Outfit, system-ui, sans-serif; } .ds-field-label { font-size: 14px; font-weight: 600; line-height: 1.25; } .ds-input { min-height: 44px; padding: 12px 16px; border: 1px solid #E7E7E7; border-radius: 10px; background: #FFFFFF; color: #09090B; font: 400 16px/1.5 Outfit, system-ui, sans-serif; transition: border-color 200ms ease-out, box-shadow 200ms ease-out; } .ds-input::placeholder { color: #737373; } .ds-input:hover { border-color: #737373; } .ds-input:focus-visible { border-color: #FF6B35; outline: none; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #FF6B35; }"
+    },
+    {
+      "name": "Status Row",
+      "kind": "custom",
+      "description": "A redundant status pattern combining icon, text, color, and next action.",
+      "html": "<div class=\"ds-status\"><svg class=\"ds-status-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><div><strong>Google Ads connected</strong><span>Access verified just now</span></div></div>",
+      "css": ".ds-status { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid rgba(0,168,150,.3); border-radius: 12px; background: rgba(0,168,150,.08); color: #09090B; font-family: Outfit, system-ui, sans-serif; } .ds-status-icon { width: 20px; height: 20px; flex: none; color: #007F72; } .ds-status strong, .ds-status span { display: block; } .ds-status strong { font-size: 15px; font-weight: 600; } .ds-status span { margin-top: 2px; color: #595959; font-size: 14px; }"
+    },
+    {
+      "name": "Workspace Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "A flat routine container that keeps the workspace calm.",
+      "html": "<section class=\"ds-card\"><h3>Access request</h3><p>Review the selected platforms before sending.</p></section>",
+      "css": ".ds-card { padding: 24px; border: 1px solid #E7E7E7; border-radius: 12px; background: #FFFFFF; color: #09090B; font-family: Outfit, system-ui, sans-serif; box-shadow: 0 1px 2px rgba(0,0,0,.05); } .ds-card h3 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; } .ds-card p { margin: 8px 0 0; max-width: 65ch; color: #595959; font-size: 16px; line-height: 1.5; }"
+    },
+    {
+      "name": "Sidebar Link",
+      "kind": "nav",
+      "description": "A familiar navigation row with tonal active state and visible focus.",
+      "html": "<a class=\"ds-nav-link ds-nav-link-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/></svg><span>Dashboard</span></a>",
+      "css": ".ds-nav-link { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; color: #737373; text-decoration: none; font: 400 16px/1.25 Outfit, system-ui, sans-serif; transition: color 200ms ease-out, background 200ms ease-out; } .ds-nav-link svg { width: 24px; height: 24px; flex: none; } .ds-nav-link:hover { background: #F5F5F4; color: #09090B; } .ds-nav-link-active { background: #F5F5F4; color: #09090B; font-weight: 500; } .ds-nav-link:focus-visible { outline: 2px solid #FF6B35; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Operational Signal",
+    "overview": "AuthHub is a focused operational workspace where every visual decision helps an agency operator understand status and act. Coral signals a primary action, teal confirms progress, and hard-edged elevation marks controls that can be pressed or moved through a workflow. White and near-black surfaces keep the system legible and calm between those signals.\n\nThe system is confident, direct, and reassuring. Product surfaces use familiar controls, restrained color, and compact hierarchy; the more expressive Fraunces and Dela Gothic voices are reserved for marketing or exceptional display moments. AuthHub explicitly rejects generic polished SaaS assembled from interchangeable cards, gradients, and decorative metrics, playful consumer styling that trivializes sensitive access work, and developer-console density that makes clients feel unqualified.",
+    "keyCharacteristics": [
+      "Restrained neutral product surfaces with scarce, semantic color.",
+      "Tactile controls and structural hard shadows at moments of action.",
+      "Clear status distinctions that never rely on color alone.",
+      "Familiar product patterns with responsive, reduced-motion-aware feedback.",
+      "Editorial display typography only where design is serving communication, not routine operation."
+    ],
+    "rules": [
+      {"name": "The Signal Rarity Rule", "body": "Coral identifies the primary action, teal confirms progress, and acid marks exceptional attention. If several saturated colors compete in one region, the hierarchy is broken.", "section": "colors"},
+      {"name": "The Status Redundancy Rule", "body": "Every status color must be paired with plain-language text and, where practical, a distinct icon or shape.", "section": "colors"},
+      {"name": "The Product Voice Rule", "body": "Outfit is mandatory for operational UI. Display fonts never appear in buttons, field labels, navigation, tables, or status text.", "section": "typography"},
+      {"name": "The Read-It-Once Rule", "body": "Favor sentence case, concrete nouns, and explicit states. Uppercase tracking is reserved for rare, short labels; it is not a section scaffold.", "section": "typography"},
+      {"name": "The Structural Shadow Rule", "body": "A hard shadow must communicate pressability or deliberate hierarchy. Never pair a quiet one-pixel border with a wide soft decorative shadow.", "section": "elevation"},
+      {"name": "The Flat Workspace Rule", "body": "Routine dashboard regions remain flat. When every card is lifted, nothing is important.", "section": "elevation"}
+    ],
+    "dos": [
+      "Do reserve Action Coral for the primary action and Progress Teal for confirmed progress.",
+      "Do use Outfit throughout operational UI and preserve at least 44px touch targets.",
+      "Do distinguish complete, partial, pending, revoked, failed, and unknown states with text plus non-color cues.",
+      "Do use flat neutral workspace regions and spend hard shadows only on tactile or intentionally emphasized elements.",
+      "Do provide visible keyboard focus, reduced-motion behavior, responsive layouts, and WCAG 2.2 AA contrast.",
+      "Do explain the next required action and responsible actor beside errors or incomplete states."
+    ],
+    "donts": [
+      "Don't resemble generic polished SaaS assembled from interchangeable cards, gradients, and decorative metrics.",
+      "Don't use playful consumer styling that trivializes security-sensitive access work.",
+      "Don't reproduce the intimidating density, jargon, or visual austerity of a developer console.",
+      "Don't use color alone to communicate status, selection, error, or success.",
+      "Don't use display fonts in navigation, labels, buttons, tables, or routine product headings.",
+      "Don't repeat uppercase tracked eyebrows or numbered markers as section scaffolding.",
+      "Don't pair one-pixel borders with wide soft decorative shadows, use gradient text, or introduce decorative glassmorphism.",
+      "Don't exceed 16px corner radii on cards, sections, or inputs."
+    ]
+  }
+}

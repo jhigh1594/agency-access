@@ -1,7 +1,7 @@
 ---
 title: Fix Client Authorization Issues
 description: Troubleshoot cases where a client starts the flow but cannot finish due to platform errors, permission gaps, or expired request state.
-slug: /troubleshooting/client-auth-issues
+
 sidebar_position: 2
 keywords:
   - client authorization failed

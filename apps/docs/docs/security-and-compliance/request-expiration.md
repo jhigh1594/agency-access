@@ -1,7 +1,7 @@
 ---
 title: Request Expiration Behavior
 description: Learn how expiration affects access requests, how to recover from expired links, and how to keep agency workflows from stalling.
-slug: /security-and-compliance/request-expiration
+
 sidebar_position: 2
 keywords:
   - request expiration

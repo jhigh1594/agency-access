@@ -151,7 +151,7 @@ export default function RootLayout({
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var p=window.location.pathname;var m=p==='/'||p.startsWith('/pricing')||p.startsWith('/contact')||p.startsWith('/blog')||p.startsWith('/terms')||p.startsWith('/privacy-policy')||p.startsWith('/compare')||p.startsWith('/onboarding');if(m){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}})();`,
+            __html: `(function(){var p=window.location.pathname;var m=p==='/'||p.startsWith('/pricing')||p.startsWith('/contact')||p.startsWith('/about')||p.startsWith('/blog')||p.startsWith('/terms')||p.startsWith('/privacy-policy')||p.startsWith('/compare')||p.startsWith('/onboarding');if(m){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}})();`,
           }}
         />
         <RootProviders>{children}</RootProviders>

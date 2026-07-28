@@ -1,7 +1,7 @@
 ---
 title: Create Your First Request
 description: Launch your first AuthHub client authorization request in minutes and focus on the minimum setup needed for activation.
-slug: /getting-started/create-your-first-request
+
 sidebar_position: 1
 keywords:
   - first authhub request

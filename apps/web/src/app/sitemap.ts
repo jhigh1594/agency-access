@@ -50,6 +50,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry('/', buildDate, 'weekly', 1.0),
     entry('/pricing', buildDate, 'monthly', 0.9),
     entry('/blog', buildDate, 'daily', 0.9),
+    entry('/about', buildDate, 'monthly', 0.6),
     entry('/contact', buildDate, 'yearly', 0.6),
     entry('/affiliate', buildDate, 'monthly', 0.7),
     entry('/terms', buildDate, 'yearly', 0.3),

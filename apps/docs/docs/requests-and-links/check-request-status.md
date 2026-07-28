@@ -1,7 +1,7 @@
 ---
 title: Check Request Status
 description: Use AuthHub request status to understand whether a client has opened, started, completed, or stalled a platform authorization flow.
-slug: /requests-and-links/check-request-status
+
 sidebar_position: 2
 keywords:
   - authhub request status

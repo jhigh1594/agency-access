@@ -1,7 +1,7 @@
 ---
 title: What Clients See
 description: Understand the customer-facing AuthHub flow so your agency can set expectations before a client opens the authorization link.
-slug: /client-experience/what-clients-see
+
 sidebar_position: 1
 keywords:
   - client auth flow

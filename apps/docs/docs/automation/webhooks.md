@@ -1,7 +1,7 @@
 ---
 title: Webhooks
 description: Send signed AgencyAccess lifecycle events to your CRM, automation stack, or internal systems.
-slug: /automation/webhooks
+
 sidebar_position: 1
 keywords:
   - agencyaccess webhooks

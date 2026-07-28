@@ -1,7 +1,7 @@
 ---
 title: Agency Branding Basics
 description: Keep the client authorization flow on-brand without delaying onboarding or over-customizing the first request.
-slug: /client-experience/agency-branding-basics
+
 sidebar_position: 2
 keywords:
   - white label onboarding
