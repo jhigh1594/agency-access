@@ -46,13 +46,11 @@ export function HeroSection() {
             {/* Main Headline - Tighter leading, glitch effect */}
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.1] tracking-tight text-ink relative">
-                <div className="mb-2 sm:mb-3 md:mb-4">
-                  <span className="glitch-text inline-block">CLIENT ACCESS</span>
-                </div>
-                <div className="mb-2 sm:mb-3 md:mb-4 relative inline-block">
-                  <span className="glitch-text inline-block">IN 5 MINUTES</span>
+                Client OAuth Onboarding in{' '}
+                <span className="relative inline-block">
+                  <span className="text-coral">5 Minutes</span>
                   <svg
-                    className="absolute -bottom-6 md:-bottom-8 left-0 w-full"
+                    className="absolute -bottom-2 md:-bottom-3 left-0 w-full"
                     viewBox="0 0 200 16"
                     fill="none"
                     style={{ marginTop: '8px' }}
@@ -67,10 +65,8 @@ export function HeroSection() {
                       transition={{ duration: 1.5, delay: 1 }}
                     />
                   </svg>
-                </div>
-                <div>
-                  <span className="glitch-text inline-block">NOT 5 DAYS</span>
-                </div>
+                </span>
+                {' '}— Built for Agencies
               </h1>
             </Reveal>
 

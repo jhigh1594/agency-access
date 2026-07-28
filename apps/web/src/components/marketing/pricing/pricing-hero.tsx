@@ -47,8 +47,9 @@ export function PricingHero() {
 
           {/* Headline */}
           <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight mb-6 sm:mb-8 leading-[1.1] text-ink">
-            Stop wasting days on{' '}
-            <span className="text-coral italic">OAuth setup</span>
+            AuthHub Pricing: Automate{' '}
+            <span className="text-coral italic">OAuth Client Onboarding</span>{' '}
+            in 5 Minutes
           </h1>
 
           {/* Subheading */}
