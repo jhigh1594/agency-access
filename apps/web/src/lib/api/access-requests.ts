@@ -8,7 +8,6 @@
 import { PlatformGroupConfig } from '@/lib/transform-platforms';
 import { IntakeField } from '@/contexts/access-request-context';
 import { AuthorizedApiError, authorizedApiFetch } from './authorized-api-fetch';
-import type { MetaAccessRequestInput, MetaAccessRequirementSnapshot } from '@agency-platform/shared';
 
 // ============================================================
 // TYPES
@@ -27,7 +26,6 @@ export interface CreateAccessRequestPayload {
     primaryColor: string;
     subdomain?: string;
   };
-  metaAccess?: MetaAccessRequestInput;
 }
 
 export interface AccessRequest {
@@ -49,7 +47,6 @@ export interface AccessRequest {
     primaryColor: string;
     subdomain?: string;
   };
-  metaAccessConfig?: MetaAccessRequirementSnapshot;
   shopifySubmission?: {
     status: 'pending_client' | 'submitted' | 'legacy_unreadable';
     connectionId?: string;
@@ -82,7 +79,6 @@ export interface UpdateAccessRequestPayload {
     primaryColor?: string;
     subdomain?: string;
   };
-  metaAccess?: MetaAccessRequestInput;
 }
 
 export interface ApiError {

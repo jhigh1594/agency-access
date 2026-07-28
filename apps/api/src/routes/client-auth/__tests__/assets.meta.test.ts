@@ -8,17 +8,6 @@ import { auditService } from '@/services/audit.service';
 import { metaOBOService } from '@/services/meta-obo.service';
 import { metaPartnerService } from '@/services/meta-partner.service';
 import { MetaConnector } from '@/services/connectors/meta';
-import { metaGrantOrchestratorService } from '@/services/meta-grant-orchestrator.service';
-import { metaAccessPolicyService } from '@/services/meta-access-policy.service';
-import { metaAccessStatusService } from '@/services/meta-access-status.service';
-
-vi.mock('@/lib/env', () => ({
-  env: {
-    META_APP_ID: 'meta-app',
-    META_APP_SECRET: 'meta-secret',
-    META_LOGIN_FOR_BUSINESS_CONFIG_ID: 'meta-config',
-  },
-}));
 
 vi.mock('@/services/access-request.service', () => ({
   accessRequestService: {
@@ -55,14 +44,6 @@ vi.mock('@/services/meta-partner.service', () => ({
   },
 }));
 
-vi.mock('@/services/meta-grant-orchestrator.service', () => ({
-  metaGrantOrchestratorService: { execute: vi.fn() },
-}));
-
-vi.mock('@/services/meta-access-status.service', () => ({
-  metaAccessStatusService: { upsertGrant: vi.fn() },
-}));
-
 vi.mock('@/services/connectors/meta', async () => {
   const actual = await vi.importActual<typeof import('@/services/connectors/meta')>(
     '@/services/connectors/meta'
@@ -86,9 +67,6 @@ vi.mock('@/lib/prisma', () => ({
     },
     agencyPlatformConnection: {
       findUnique: vi.fn(),
-    },
-    metaAgencyDestination: {
-      findFirst: vi.fn(),
     },
   },
 }));
@@ -137,7 +115,6 @@ describe('Client Auth Asset Routes - Meta', () => {
     vi.mocked(infisical.getOAuthTokens).mockResolvedValue({
       accessToken: 'meta-access-token',
     } as any);
-    vi.mocked(metaAccessStatusService.upsertGrant).mockResolvedValue({ data: { id: 'grant-1' }, error: null } as any);
 
     global.fetch = vi.fn(async (input: any) => {
       const url = String(input);
@@ -224,50 +201,6 @@ describe('Client Auth Asset Routes - Meta', () => {
 
   afterEach(async () => {
     await app.close();
-  });
-
-  it('returns recipe-aware Meta preflight and persists the selected portfolio on the same authorization', async () => {
-    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
-      data: {
-        id: 'request-a',
-        agencyId: 'agency-a',
-        metaAccessConfig: metaAccessPolicyService.createSnapshot({
-          recipeId: 'meta_run_ads',
-          destinationId: 'destination-1',
-        }),
-      } as any,
-      error: null,
-    });
-    vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue({ id: 'destination-1' } as any);
-
-    const response = await app.inject({
-      method: 'GET',
-      url: '/client/token-a/meta/preflight?connectionId=conn-1&businessId=biz_client_2',
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json().data).toMatchObject({
-      status: 'ready',
-      canContinue: true,
-      selectedBusinessId: 'biz_client_2',
-      handoffAvailable: true,
-    });
-    expect(prisma.platformAuthorization.update).toHaveBeenCalledWith({
-      where: { id: 'pa-1' },
-      data: {
-        metadata: expect.objectContaining({
-          meta: expect.objectContaining({
-            selection: expect.objectContaining({ clientBusinessId: 'biz_client_2' }),
-          }),
-        }),
-      },
-    });
-    expect(auditService.createAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'META_PREFLIGHT_COMPLETED',
-        metadata: expect.objectContaining({ outcome: 'ready', recipeId: 'meta_run_ads' }),
-      })
-    );
   });
 
   it('returns business-scoped Meta assets and persists discovery metadata for the selected client business', async () => {
@@ -363,81 +296,6 @@ describe('Client Auth Asset Routes - Meta', () => {
         message: 'Selected Meta business portfolio is not available for this client user',
       },
     });
-  });
-
-  it('dispatches outcome requests to the snapshot-driven orchestrator and stored destination', async () => {
-    const snapshot = metaAccessPolicyService.createSnapshot({ recipeId: 'meta_run_ads', destinationId: 'destination-1' });
-    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
-      data: { id: 'request-a', agencyId: 'agency-a', metaAccessConfig: snapshot } as any,
-      error: null,
-    });
-    vi.mocked(prisma.platformAuthorization.findUnique).mockResolvedValue({
-      id: 'pa-1',
-      secretId: 'secret-1',
-      status: 'active',
-      metadata: {
-        selectedAssets: { meta_ads: { adAccounts: ['act-1'], pages: ['page-1'] } },
-        meta: { selection: { clientBusinessId: 'biz-client', clientBusinessName: 'Client', selectedAt: '2026-07-21T00:00:00.000Z' } },
-      },
-    } as any);
-    vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue({
-      id: 'destination-1',
-      businessId: 'agency-receiving-biz',
-      agencyConnection: {
-        businessId: 'agency-receiving-biz',
-        metadata: { partnerAdminSystemUserTokenSecretId: 'agency-partner-secret', systemUserId: 'agency-system-user' },
-      },
-    } as any);
-    vi.mocked(metaOBOService.getClientAccessTokenForOBO).mockResolvedValue({ data: { accessToken: 'client-admin-token' }, error: null });
-    vi.mocked(metaOBOService.ensureManagedBusinessRelationship).mockResolvedValue({
-      data: { status: 'linked', partnerBusinessId: 'agency-receiving-biz', clientBusinessId: 'biz-client' },
-      error: null,
-    } as any);
-    vi.mocked(metaOBOService.provisionClientBusinessSystemUserToken).mockResolvedValue({
-      data: {
-        status: 'ready', clientBusinessId: 'biz-client', systemUserId: 'client-system-user',
-        tokenSecretId: 'client-system-secret', scopes: ['ads_management'], lastAttemptAt: '2026-07-21T00:00:00.000Z',
-      },
-      error: null,
-    } as any);
-    vi.mocked(infisical.getOAuthTokens).mockImplementation(async (secretId: string) => ({
-      accessToken: secretId === 'client-system-secret' ? 'client-system-token' : 'partner-system-token',
-    }) as any);
-    vi.mocked(metaGrantOrchestratorService.execute).mockResolvedValue({
-      data: {
-        recipeId: 'meta_run_ads', recipeVersion: 1, destinationId: 'destination-1', status: 'verified',
-        grants: [
-          { assetId: 'act-1', assetKind: 'ad_account', requestedTasks: ['ADVERTISE', 'ANALYZE'], verifiedTasks: ['ADVERTISE', 'ANALYZE'], status: 'verified', grantMethod: 'automatic' },
-          { assetId: 'page-1', assetKind: 'page', requestedTasks: ['ADVERTISE', 'ANALYZE'], verifiedTasks: ['ADVERTISE', 'ANALYZE'], status: 'verified', grantMethod: 'automatic' },
-        ],
-      },
-      error: null,
-    } as any);
-
-    const response = await app.inject({
-      method: 'POST',
-      url: '/client/token-a/grant-meta-access',
-      payload: { connectionId: 'conn-1' },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json().data).toMatchObject({
-      success: true,
-      recipeId: 'meta_run_ads',
-      destinationId: 'destination-1',
-    });
-    expect(metaGrantOrchestratorService.execute).toHaveBeenCalledWith(expect.objectContaining({
-      accessRequestId: 'request-a',
-      clientBusinessId: 'biz-client',
-      clientSystemUserAccessToken: 'client-system-token',
-      selectedAssets: {
-        ad_account: [{ id: 'act-1' }],
-        page: [{ id: 'page-1' }],
-        instagram_account: [],
-      },
-    }));
-    expect(metaPartnerService.grantPageAccess).not.toHaveBeenCalled();
-    expect(metaPartnerService.grantAdAccountAccess).not.toHaveBeenCalled();
   });
 
   it('verifies Meta page and ad-account grants through the OBO flow before marking success', async () => {
@@ -961,17 +819,6 @@ describe('Client Auth Asset Routes - Meta', () => {
   });
 
   it('verifies manually shared Meta ad accounts by checking agency business visibility', async () => {
-    vi.mocked(accessRequestService.getAccessRequestByToken).mockResolvedValue({
-      data: {
-        id: 'request-a',
-        agencyId: 'agency-a',
-        metaAccessConfig: metaAccessPolicyService.createSnapshot({
-          recipeId: 'meta_run_ads',
-          destinationId: 'destination-1',
-        }),
-      } as any,
-      error: null,
-    });
     vi.mocked(prisma.platformAuthorization.findUnique).mockResolvedValue({
       id: 'pa-1',
       connectionId: 'conn-1',
@@ -989,12 +836,6 @@ describe('Client Auth Asset Routes - Meta', () => {
           },
         },
         meta: {
-          selection: {
-            clientBusinessId: 'client-business-1',
-            clientBusinessName: 'Client Portfolio',
-            selectedAt: '2026-03-11T09:00:00.000Z',
-            source: 'user_selection',
-          },
           obo: {
             assetGrantResults: [
               {
@@ -1041,15 +882,6 @@ describe('Client Auth Asset Routes - Meta', () => {
       secretId: 'agency-meta-secret',
       metadata: {
         selectedBusinessName: 'Outdoor DIY',
-      },
-    } as any);
-    vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue({
-      id: 'destination-1',
-      businessId: 'partner-bm-1',
-      name: 'Outdoor DIY',
-      agencyConnection: {
-        id: 'agency-meta-1',
-        secretId: 'agency-meta-secret',
       },
     } as any);
 
@@ -1113,21 +945,6 @@ describe('Client Auth Asset Routes - Meta', () => {
     });
 
     expect(getAllAssetsSpy).toHaveBeenCalledWith('agency-meta-access-token', 'partner-bm-1');
-    expect(metaAccessStatusService.upsertGrant).toHaveBeenCalledTimes(2);
-    expect(metaAccessStatusService.upsertGrant).toHaveBeenCalledWith(expect.objectContaining({
-      destinationId: 'destination-1',
-      clientBusinessId: 'client-business-1',
-      assetId: 'act_2a',
-      requestedTasks: ['ADVERTISE', 'ANALYZE'],
-      verifiedTasks: ['ADVERTISE', 'ANALYZE'],
-      grantMethod: 'manual_partner_share',
-      status: 'verified',
-    }));
-    expect(metaAccessStatusService.upsertGrant).toHaveBeenCalledWith(expect.objectContaining({
-      assetId: 'act_missing',
-      status: 'action_required',
-      nextActor: 'client',
-    }));
     expect(prisma.platformAuthorization.update).toHaveBeenCalledWith({
       where: { id: 'pa-1' },
       data: {

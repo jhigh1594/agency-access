@@ -28,10 +28,6 @@ import {
   AccessRequestUpdatePayloadSchema,
   ClientDetailResponse,
   GoogleAdsAccount,
-  META_ACCESS_RECIPES,
-  MetaAccessRequestInputSchema,
-  MetaAccessRequirementSnapshotSchema,
-  MetaAssetGrantLifecycleSchema,
 } from '../types';
 
 // Type imports for TypeScript validation
@@ -231,63 +227,6 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       };
       expect(portfolio.id).toBe('biz-123');
       expect(portfolio.name).toBe('My Business');
-    });
-  });
-
-  describe('Meta outcome access contracts', () => {
-    it('exposes three stable first-release recipes without catalog or dataset requirements', () => {
-      expect(Object.keys(META_ACCESS_RECIPES)).toEqual([
-        'meta_run_ads',
-        'meta_organic_social',
-        'meta_view_only_audit',
-      ]);
-
-      for (const recipe of Object.values(META_ACCESS_RECIPES)) {
-        expect(recipe.version).toBe(1);
-        expect(recipe.requirements.map((requirement) => requirement.assetKind)).not.toEqual(
-          expect.arrayContaining(['catalog', 'dataset'])
-        );
-      }
-    });
-
-    it('accepts only recipe and destination as request inputs', () => {
-      expect(
-        MetaAccessRequestInputSchema.parse({
-          recipeId: 'meta_run_ads',
-          destinationId: 'destination-1',
-        })
-      ).toEqual({ recipeId: 'meta_run_ads', destinationId: 'destination-1' });
-
-      expect(() =>
-        MetaAccessRequestInputSchema.parse({
-          recipeId: 'meta_run_ads',
-          destinationId: 'destination-1',
-          providerTasks: ['MANAGE'],
-        })
-      ).toThrow();
-    });
-
-    it('validates immutable snapshots and the canonical grant lifecycle', () => {
-      const snapshot = MetaAccessRequirementSnapshotSchema.parse({
-        recipeId: 'meta_view_only_audit',
-        recipeVersion: 1,
-        recipeName: 'View-only audit',
-        destinationId: 'destination-1',
-        summary: 'Review performance without changing client assets.',
-        permissionSummary: ['Analyze ad account performance', 'View Page insights'],
-        requirements: [
-          {
-            assetKind: 'ad_account',
-            required: true,
-            capabilities: ['ad_account_analyze'],
-            providerTasks: ['ANALYZE'],
-          },
-        ],
-      });
-
-      expect(snapshot.recipeId).toBe('meta_view_only_audit');
-      expect(MetaAssetGrantLifecycleSchema.parse('action_required')).toBe('action_required');
-      expect(() => MetaAssetGrantLifecycleSchema.parse('unverified_success')).toThrow();
     });
   });
 

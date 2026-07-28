@@ -55,18 +55,6 @@ interface MetaAssets {
   }>;
 }
 
-interface MetaPreflight {
-  status: 'legacy' | 'configuration_error' | 'no_portfolio' | 'selection_required' | 'missing_recipe_assets' | 'insufficient_authority' | 'provider_error' | 'ready';
-  canContinue: boolean;
-  nextActor: 'client' | 'agency' | 'another_meta_admin';
-  message: string;
-  selectedBusinessId?: string;
-  missingAssetKinds?: string[];
-  recoveryUrl?: string;
-  handoffAvailable: boolean;
-  businesses?: Array<{ id: string; name: string }>;
-}
-
 interface MetaAssetSelectorProps {
   sessionId: string;
   accessRequestToken: string;
@@ -90,7 +78,6 @@ interface MetaAssetSelectorProps {
     allInstagramAccounts?: MetaAssets['instagramAccounts'];
   }) => void;
   onError?: (error: string) => void;
-  onUseDifferentAdministrator?: () => void;
 }
 
 export function MetaAssetSelector({
@@ -100,7 +87,6 @@ export function MetaAssetSelector({
   allowedAssetTypes = ['ad_account', 'page', 'instagram'],
   onSelectionChange,
   onError,
-  onUseDifferentAdministrator,
 }: MetaAssetSelectorProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [assets, setAssets] = useState<MetaAssets | null>(null);
@@ -108,8 +94,6 @@ export function MetaAssetSelector({
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const [selectedBusinessName, setSelectedBusinessName] = useState<string | null>(null);
   const [pendingBusinessId, setPendingBusinessId] = useState('');
-  const [preflight, setPreflight] = useState<MetaPreflight | null>(null);
-  const [handoffCopied, setHandoffCopied] = useState(false);
 
   // Selection state
   const [selectedAdAccounts, setSelectedAdAccounts] = useState<Set<string>>(new Set());
@@ -165,34 +149,15 @@ export function MetaAssetSelector({
         query.set('businessId', requestedBusinessId);
       }
 
-      const preflightResponse = await fetch(
-        `${apiUrl}/api/client/${accessRequestToken}/meta/preflight?${query.toString()}`
+      const response = await fetch(
+        `${apiUrl}/api/client/${accessRequestToken}/assets/meta_ads?${query.toString()}`
       );
-      const preflightJson = await parseJsonResponse<{ data?: MetaPreflight; error?: { message?: string } }>(
-        preflightResponse,
-        { fallbackErrorMessage: 'Failed to check Meta access readiness' }
+      const json = await parseJsonResponse<{ data?: MetaAssets; error?: { message?: string } }>(
+        response,
+        {
+          fallbackErrorMessage: 'Failed to load accounts',
+        }
       );
-      if (preflightJson.error) {
-        throw new Error(preflightJson.error.message || 'Failed to check Meta access readiness');
-      }
-      const nextPreflight = preflightJson.data?.status ? preflightJson.data : null;
-      setPreflight(nextPreflight);
-      if (nextPreflight && !nextPreflight.canContinue) {
-        setAssets((current) => current ? { ...current, businesses: nextPreflight.businesses || current.businesses } : null);
-        setPendingBusinessId(requestedBusinessId || '');
-        return;
-      }
-
-      const prefetchedAssets = !nextPreflight && preflightJson.data && 'adAccounts' in preflightJson.data
-        ? preflightJson.data as unknown as MetaAssets
-        : null;
-
-      const json = prefetchedAssets
-        ? { data: prefetchedAssets, error: undefined }
-        : await parseJsonResponse<{ data?: MetaAssets; error?: { message?: string } }>(
-            await fetch(`${apiUrl}/api/client/${accessRequestToken}/assets/meta_ads?${query.toString()}`),
-            { fallbackErrorMessage: 'Failed to load accounts' }
-          );
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to load accounts');
@@ -313,76 +278,6 @@ export function MetaAssetSelector({
         message={error}
         onRetry={fetchAssets}
       />
-    );
-  }
-
-  if (preflight && !preflight.canContinue) {
-    const choosePortfolio = preflight.status === 'selection_required';
-    const businesses = preflight.businesses || [];
-    const copyHandoff = async () => {
-      await navigator.clipboard?.writeText(window.location.href);
-      setHandoffCopied(true);
-    };
-
-    return (
-      <div className="space-y-4 border-2 border-black dark:border-white bg-[rgb(var(--card))] p-6" role="status">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[rgb(var(--coral))]">Meta preflight</p>
-          <h3 className="mt-1 text-lg font-bold text-[rgb(var(--ink))] font-display">
-            {preflight.status === 'configuration_error' ? 'Agency setup needed' :
-              preflight.status === 'no_portfolio' ? 'No Business Portfolio found' :
-              preflight.status === 'selection_required' ? 'Choose a Business Portfolio' :
-              preflight.status === 'missing_recipe_assets' ? 'Required Meta assets are missing' :
-              preflight.status === 'insufficient_authority' ? 'A Meta administrator is needed' :
-              'Meta could not complete the check'}
-          </h3>
-          <p className="mt-2 text-sm text-[rgb(var(--muted-foreground))]">{preflight.message}</p>
-        </div>
-
-        {choosePortfolio ? (
-          <div className="space-y-3">
-            <SingleSelect
-              options={businesses.map((portfolio) => ({ value: portfolio.id, label: `${portfolio.name} (${portfolio.id})` }))}
-              value={pendingBusinessId}
-              onChange={setPendingBusinessId}
-              placeholder="Select a portfolio..."
-              ariaLabel="Business Portfolio"
-            />
-            <button
-              type="button"
-              disabled={!pendingBusinessId}
-              onClick={() => void fetchAssets(pendingBusinessId)}
-              className="min-h-[44px] border-2 border-black dark:border-white bg-[rgb(var(--ink))] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-            >
-              Use this portfolio
-            </button>
-          </div>
-        ) : null}
-
-        <div className="flex flex-wrap gap-3">
-          {preflight.recoveryUrl ? (
-            <a href={preflight.recoveryUrl} target="_blank" rel="noreferrer" className="min-h-[44px] border-2 border-black dark:border-white px-4 py-2 text-sm font-bold">
-              Open Meta Business Settings
-            </a>
-          ) : null}
-          {preflight.nextActor !== 'agency' ? (
-            <button type="button" onClick={() => void fetchAssets(pendingBusinessId || undefined)} className="min-h-[44px] border-2 border-black dark:border-white px-4 py-2 text-sm font-bold">
-              Retry preflight
-            </button>
-          ) : null}
-          {preflight.handoffAvailable ? (
-            <button type="button" onClick={() => void copyHandoff()} className="min-h-[44px] border-2 border-black dark:border-white px-4 py-2 text-sm font-bold">
-              {handoffCopied ? 'Invite link copied' : 'Send to another administrator'}
-            </button>
-          ) : null}
-          {preflight.handoffAvailable && onUseDifferentAdministrator ? (
-            <button type="button" onClick={onUseDifferentAdministrator} className="min-h-[44px] bg-[rgb(var(--coral))] px-4 py-2 text-sm font-bold text-white">
-              Use a different Meta administrator
-            </button>
-          ) : null}
-        </div>
-        <p className="text-xs text-[rgb(var(--muted-foreground))]">Verified native access already completed for this request is preserved. If secure token replacement is unavailable, AuthHub keeps the prior authorization usable and asks the other administrator to open this same invite.</p>
-      </div>
     );
   }
 

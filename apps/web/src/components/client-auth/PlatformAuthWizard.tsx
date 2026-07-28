@@ -313,7 +313,6 @@ export function PlatformAuthWizard({
   const [tiktokShareResult, setTikTokShareResult] = useState<TikTokShareResponse | null>(null);
   const [isTikTokSharing, setIsTikTokSharing] = useState(false);
   const [tiktokShareError, setTikTokShareError] = useState<string | null>(null);
-  const [replacingMetaAdministrator, setReplacingMetaAdministrator] = useState(false);
 
   // Update state when initialStep or initialConnectionId props change (for test page)
   useEffect(() => {
@@ -388,16 +387,10 @@ export function PlatformAuthWizard({
           }
 
           setConnectionId(finalizeJson.data.connectionId);
-          setReplacingMetaAdministrator(false);
           setCurrentStep(2);
           setIsProcessing(false);
           return;
         } catch (popupErr) {
-          if (replacingMetaAdministrator) {
-            setError(popupErr instanceof Error ? popupErr.message : 'Could not switch Meta administrators. Your prior authorization remains usable.');
-            setIsProcessing(false);
-            return;
-          }
           // Fallback to redirect when popup fails (e.g. Firefox Enhanced Tracking Protection blocks Facebook SDK)
           const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-url`, {
             method: 'POST',
@@ -537,12 +530,11 @@ export function PlatformAuthWizard({
       setIsProcessing(true);
       setError(null);
 
-      // Each request merges one product into the connection's grantedAssets JSON.
-      // Keep these writes sequential so concurrent read-modify-write cycles cannot
-      // overwrite another product's selection.
-      for (const p of products) {
+      // Save assets for each product in the group
+      // We'll iterate through products and save them
+      const savePromises = products.map((p) => {
         const selectedAssets = groupAssets[p.product] || {};
-        const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
+        return fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -551,17 +543,16 @@ export function PlatformAuthWizard({
             selectedAssets,
           }),
         });
+      });
 
-        const json = await parseJsonResponse<{
-          error?: { message?: string; details?: unknown };
-        }>(response, {
+      const responses = await Promise.all(savePromises);
+
+      for (const response of responses) {
+        const json = await parseJsonResponse<{ error?: { message?: string } }>(response, {
           fallbackErrorMessage: 'Failed to save some selected assets',
         });
         if (json.error) {
-          const detail = typeof json.error.details === 'string' ? ` (${json.error.details})` : '';
-          throw new Error(
-            `${p.product}: ${json.error.message || 'Failed to save selected assets'}${detail}`
-          );
+          throw new Error(json.error.message || 'Failed to save some selected assets');
         }
       }
 
@@ -936,14 +927,6 @@ export function PlatformAuthWizard({
                               handleProductSelectionChange(p.product, selectedAssets);
                             }}
                             onError={setError}
-                            onUseDifferentAdministrator={() => {
-                              setReplacingMetaAdministrator(true);
-                              setConnectionId(null);
-                              setGroupAssets({});
-                              setAssetsSaved(false);
-                              setError(null);
-                              setCurrentStep(1);
-                            }}
                           />
                           {!connectionId && <AssetSelectorDisabled />}
                         </div>

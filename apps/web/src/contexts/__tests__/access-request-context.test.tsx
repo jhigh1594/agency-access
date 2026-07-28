@@ -46,7 +46,6 @@ describe('AccessRequestContext', () => {
       selectedPlatforms: {},
       globalAccessLevel: 'standard',
       platformAccessLevels: {},
-      metaAccess: null,
       intakeFields: [
         {
           id: '1',
@@ -329,19 +328,6 @@ describe('AccessRequestContext', () => {
       expect(result.current.validateStep(2)).toEqual({ valid: true });
     });
 
-    it('requires a Meta outcome and ready destination when Meta is selected', () => {
-      const { result } = renderHook(() => useAccessRequest(), { wrapper });
-
-      act(() => result.current.updatePlatforms({ meta: ['meta_ads'] }));
-      expect(result.current.validateStep(2)).toEqual({
-        valid: false,
-        error: 'Choose a Meta outcome and a ready receiving portfolio',
-      });
-
-      act(() => result.current.updateMetaAccess({ recipeId: 'meta_run_ads', destinationId: 'destination-1' }));
-      expect(result.current.validateStep(2)).toEqual({ valid: true });
-    });
-
     it('should validate Step 3 - always valid (optional)', () => {
       const { result } = renderHook(() => useAccessRequest(), { wrapper });
 
@@ -530,7 +516,6 @@ describe('AccessRequestContext', () => {
         });
         result.current.updateAccessLevel('standard'); // Global default
         result.current.updatePlatformAccessLevel('google', 'admin'); // Override for google
-        result.current.updateMetaAccess({ recipeId: 'meta_view_only_audit', destinationId: 'destination-1' });
       });
 
       // Submit
@@ -563,10 +548,6 @@ describe('AccessRequestContext', () => {
           expect.objectContaining({ product: 'meta_ads', accessLevel: 'standard' }),
         ])
       );
-      expect(payload.metaAccess).toEqual({
-        recipeId: 'meta_view_only_audit',
-        destinationId: 'destination-1',
-      });
     });
 
     it('should handle API errors', async () => {
@@ -729,7 +710,6 @@ describe('AccessRequestContext', () => {
         selectedPlatforms: {},
         globalAccessLevel: 'standard',
         platformAccessLevels: {},
-        metaAccess: null,
         intakeFields: [
           {
             id: '1',

@@ -20,15 +20,11 @@ import {
   type GoogleProductFulfillmentMode,
   type GoogleProductGrantLifecycle,
   type WebhookAccessRequestLifecycleEventType,
-  MetaAccessRequestInputSchema,
-  MetaAccessRequirementSnapshotSchema,
-  MetaClientAuthorizationMetadataSchema,
 } from '@agency-platform/shared';
 import { invalidateDashboardCache } from '@/lib/cache.js';
 import { env } from '@/lib/env.js';
 import { logger } from '@/lib/logger.js';
 import { webhookEventService } from '@/services/webhook-event.service.js';
-import { metaAccessPolicyService } from '@/services/meta-access-policy.service.js';
 
 const LegacyPlatformSchema = z.enum([
   'whatsapp_business',
@@ -56,8 +52,6 @@ const createAccessRequestSchema = z.object({
       accountId: z.string().min(1).optional(), // Per-request override (e.g. google_ads)
     })
   ).min(1, 'At least one platform must be selected'),
-  metaAccess: MetaAccessRequestInputSchema.optional(),
-  metaAccessConfig: z.never().optional(),
   intakeFields: z.array(
     z.object({
       id: z.string().optional(), // Frontend may send id
@@ -83,8 +77,6 @@ const updateAccessRequestSchema = z.object({
       accessLevel: z.enum(['manage', 'view_only']),
     })
   ).min(1).optional(),
-  metaAccess: MetaAccessRequestInputSchema.optional(),
-  metaAccessConfig: z.never().optional(),
   intakeFields: z.array(
     z.object({
       id: z.string().optional(),
@@ -177,50 +169,6 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
       };
     }
 
-    const includesMeta = validated.platforms.some((entry) => PLATFORM_GROUP_MAP[entry.platform] === 'meta');
-    const metaOutcomeRequired = Boolean(
-      env.META_OUTCOME_ACCESS_ENABLED || env.META_OUTCOME_ACCESS_AGENCY_IDS?.includes(validated.agencyId)
-    );
-    if (includesMeta && !validated.metaAccess && metaOutcomeRequired) {
-      return {
-        data: null,
-        error: {
-          code: 'META_OUTCOME_ACCESS_REQUIRED',
-          message: 'Choose a Meta outcome and ready receiving portfolio for this request',
-        },
-      };
-    }
-
-    let metaAccessConfig: ReturnType<typeof metaAccessPolicyService.createSnapshot> | undefined;
-    if (validated.metaAccess) {
-      if (!includesMeta) {
-        return {
-          data: null,
-          error: { code: 'META_RECIPE_WITHOUT_META', message: 'Select Meta before choosing a Meta access outcome' },
-        };
-      }
-
-      const destination = await prisma.metaAgencyDestination.findFirst({
-        where: {
-          id: validated.metaAccess.destinationId,
-          agencyId: validated.agencyId,
-          readinessStatus: 'ready',
-        },
-        select: { id: true },
-      });
-      if (!destination) {
-        return {
-          data: null,
-          error: {
-            code: 'META_DESTINATION_NOT_READY',
-            message: 'The selected Meta receiving destination needs a new readiness check',
-          },
-        };
-      }
-
-      metaAccessConfig = metaAccessPolicyService.createSnapshot(validated.metaAccess);
-    }
-
     // Check if subdomain is already taken (if provided)
     if (validated.branding?.subdomain) {
       // Query all access requests for this agency and check branding JSON
@@ -291,7 +239,6 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         platforms: validated.platforms as any,
         intakeFields: normalizedIntakeFields as any,
         branding: validated.branding as any,
-        metaAccessConfig: metaAccessConfig as any,
         status: 'pending',
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       },
@@ -899,7 +846,6 @@ export async function emitAccessRequestLifecycleWebhook(input: {
         createdAt: true,
         authorizedAt: true,
         expiresAt: true,
-        metaAccessConfig: true,
         client: {
           select: {
             id: true,
@@ -939,24 +885,6 @@ export async function emitAccessRequestLifecycleWebhook(input: {
           select: {
             platform: true,
             status: true,
-            metadata: true,
-          },
-        },
-        metaAssetGrants: {
-          select: {
-            assetId: true,
-            assetName: true,
-            assetKind: true,
-            recipeId: true,
-            recipeVersion: true,
-            destinationId: true,
-            clientBusinessId: true,
-            grantMethod: true,
-            requestedTasks: true,
-            verifiedTasks: true,
-            status: true,
-            verifiedAt: true,
-            lastAttemptAt: true,
           },
         },
       },
@@ -970,38 +898,12 @@ export async function emitAccessRequestLifecycleWebhook(input: {
     const apiVersion = (endpoint.preferredApiVersion as string) || '2026-03-08';
 
     // Build V2 connection data with raw grantedAssets for V2 payload builder
-    const metaSnapshot = MetaAccessRequirementSnapshotSchema.safeParse(accessRequest.metaAccessConfig);
-    const connectionsWithV2Data = connections.map((conn, idx) => {
-      const source = clientConnections[idx];
-      const metaAuthorization = source?.authorizations.find(
-        (authorization) => normalizePlatformGroup(authorization.platform) === 'meta'
-      );
-      const rootMetadata = metaAuthorization?.metadata
-        && typeof metaAuthorization.metadata === 'object'
-        && !Array.isArray(metaAuthorization.metadata)
-        ? metaAuthorization.metadata as Record<string, unknown>
-        : {};
-      const metaMetadata = MetaClientAuthorizationMetadataSchema.safeParse(rootMetadata.meta);
-      const activeClientBusinessId = metaMetadata.success
-        ? metaMetadata.data.selection?.clientBusinessId
-        : undefined;
-      const metaGrants = metaSnapshot.success
-        ? (source?.metaAssetGrants || []).filter((grant) =>
-            grant.destinationId === metaSnapshot.data.destinationId
-            && grant.recipeId === metaSnapshot.data.recipeId
-            && grant.recipeVersion === metaSnapshot.data.recipeVersion
-            && (!activeClientBusinessId || grant.clientBusinessId === activeClientBusinessId)
-          )
-        : [];
-
-      return {
-        ...conn,
-        grantedAssets: (source?.grantedAssets as Record<string, unknown> | null) ?? null,
-        grantedAt: source?.createdAt ?? null,
-        authorizationStatuses: source?.authorizations.map(({ platform, status }) => ({ platform, status })),
-        metaGrants,
-      };
-    });
+    const connectionsWithV2Data = connections.map((conn, idx) => ({
+      ...conn,
+      grantedAssets: (clientConnections[idx]?.grantedAssets as Record<string, unknown> | null) ?? null,
+      grantedAt: clientConnections[idx]?.createdAt ?? null,
+      authorizationStatuses: clientConnections[idx]?.authorizations,
+    }));
 
     const payload = webhookEventService.buildAccessRequestWebhookEvent({
       type: eventType,
@@ -1150,11 +1052,11 @@ function getIdentityFromConnection(connection: {
 /**
  * Get access request by ID
  */
-export async function getAccessRequestById(id: string, agencyId?: string) {
+export async function getAccessRequestById(id: string) {
   try {
-    const accessRequest = agencyId
-      ? await prisma.accessRequest.findFirst({ where: { id, agencyId } })
-      : await prisma.accessRequest.findUnique({ where: { id } });
+    const accessRequest = await prisma.accessRequest.findUnique({
+      where: { id },
+    });
 
     if (!accessRequest) {
       return {
@@ -1270,17 +1172,6 @@ export async function getAccessRequestById(id: string, agencyId?: string) {
         message: 'Failed to retrieve access request',
       },
     };
-  }
-}
-
-export async function findByAgentOperation(agencyId: string, operationId: string) {
-  try {
-    const accessRequest = await prisma.accessRequest.findFirst({
-      where: { agencyId, externalReference: `agent-operation:${operationId}` },
-    });
-    return { data: accessRequest, error: null };
-  } catch {
-    return { data: null, error: { code: 'INTERNAL_ERROR', message: 'Failed to locate agent access request' } };
   }
 }
 
@@ -1530,7 +1421,6 @@ export async function updateAccessRequest(
         id: true,
         status: true,
         agencyId: true,
-        metaAccessConfig: true,
       },
     });
 
@@ -1555,36 +1445,7 @@ export async function updateAccessRequest(
     }
 
     const validated = updateAccessRequestSchema.parse(input);
-    const { metaAccess, ...validatedFields } = validated;
-    const updateData: Record<string, unknown> = { ...validatedFields };
-    const updateIncludesMeta = validated.platforms?.some(
-      (entry) => PLATFORM_GROUP_MAP[entry.platform] === 'meta'
-    );
-    if (validated.platforms && (metaAccess || existing.metaAccessConfig) && !updateIncludesMeta) {
-      return {
-        data: null,
-        error: {
-          code: 'META_RECIPE_WITHOUT_META',
-          message: 'Keep Meta selected while this request has an outcome-based Meta recipe',
-        },
-      };
-    }
-    if (metaAccess) {
-      const destination = await prisma.metaAgencyDestination.findFirst({
-        where: { id: metaAccess.destinationId, agencyId: existing.agencyId, readinessStatus: 'ready' },
-        select: { id: true },
-      });
-      if (!destination) {
-        return {
-          data: null,
-          error: {
-            code: 'META_DESTINATION_NOT_READY',
-            message: 'The selected Meta receiving destination needs a new readiness check',
-          },
-        };
-      }
-      updateData.metaAccessConfig = metaAccessPolicyService.createSnapshot(metaAccess) as any;
-    }
+    const updateData: Record<string, unknown> = { ...validated };
     if (validated.status === 'completed') {
       updateData.authorizedAt = new Date();
     }
@@ -1795,7 +1656,6 @@ export async function deleteExpiredRequests() {
 export const accessRequestService = {
   createAccessRequest,
   getAccessRequestById,
-  findByAgentOperation,
   getAccessRequestByToken,
   getAgencyAccessRequests,
   getDashboardAccessRequestSummaries,

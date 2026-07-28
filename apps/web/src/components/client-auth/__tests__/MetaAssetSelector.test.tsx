@@ -99,14 +99,15 @@ describe('MetaAssetSelector', () => {
 
     expect(await screen.findByText(/select business portfolio/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText(/business portfolio/i));
-    fireEvent.click(screen.getByRole('option', { name: /Client Two \(biz_2\)/i }));
+    fireEvent.change(screen.getByLabelText(/business portfolio/i), {
+      target: { value: 'biz_2' },
+    });
     fireEvent.click(screen.getByRole('button', { name: /load accounts/i }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenNthCalledWith(
         2,
-        'https://api.example.com/api/client/token-1/meta/preflight?connectionId=conn-1&businessId=biz_2'
+        'https://api.example.com/api/client/token-1/assets/meta_ads?connectionId=conn-1&businessId=biz_2'
       );
     });
 
@@ -176,82 +177,11 @@ describe('MetaAssetSelector', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenNthCalledWith(
         2,
-        'https://api.example.com/api/client/token-1/meta/preflight?connectionId=conn-1&businessId=biz_2'
+        'https://api.example.com/api/client/token-1/assets/meta_ads?connectionId=conn-1&businessId=biz_2'
       );
     });
 
     fireEvent.click(screen.getByRole('button', { name: /switch business/i }));
     expect(await screen.findByText(/select business portfolio/i)).toBeInTheDocument();
-  });
-
-  it.each([
-    ['configuration_error', 'Agency setup needed'],
-    ['no_portfolio', 'No Business Portfolio found'],
-    ['missing_recipe_assets', 'Required Meta assets are missing'],
-    ['insufficient_authority', 'A Meta administrator is needed'],
-    ['provider_error', 'Meta could not complete the check'],
-  ])('renders the %s preflight branch without exposing asset selection', async (status, title) => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      text: async () => JSON.stringify({
-        data: {
-          status,
-          canContinue: false,
-          nextActor: status === 'configuration_error' ? 'agency' : status === 'insufficient_authority' ? 'another_meta_admin' : 'client',
-          message: `Preflight ${status}`,
-          handoffAvailable: status !== 'configuration_error',
-          ...(status === 'no_portfolio' || status === 'missing_recipe_assets'
-            ? { recoveryUrl: 'https://business.facebook.com/settings' }
-            : {}),
-        },
-        error: null,
-      }),
-    } as Response));
-
-    render(
-      <MetaAssetSelector
-        sessionId="conn-1"
-        accessRequestToken="token-1"
-        onSelectionChange={() => {}}
-      />
-    );
-
-    expect(await screen.findByText(title)).toBeInTheDocument();
-    expect(screen.queryByText('Select ad accounts...')).not.toBeInTheDocument();
-  });
-
-  it('copies the same invite and lets a different Meta administrator resume without clearing verified work', async () => {
-    const onUseDifferentAdministrator = vi.fn();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      text: async () => JSON.stringify({
-        data: {
-          status: 'insufficient_authority',
-          canContinue: false,
-          nextActor: 'another_meta_admin',
-          message: 'A portfolio administrator must continue.',
-          handoffAvailable: true,
-        },
-        error: null,
-      }),
-    } as Response));
-
-    render(
-      <MetaAssetSelector
-        sessionId="conn-1"
-        accessRequestToken="token-1"
-        onSelectionChange={() => {}}
-        onUseDifferentAdministrator={onUseDifferentAdministrator}
-      />
-    );
-
-    fireEvent.click(await screen.findByRole('button', { name: /send to another administrator/i }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(window.location.href));
-    expect(screen.getByText(/verified native access already completed.*preserved/i)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /use a different meta administrator/i }));
-    expect(onUseDifferentAdministrator).toHaveBeenCalledOnce();
   });
 });
