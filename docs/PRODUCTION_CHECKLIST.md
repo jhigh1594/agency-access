@@ -177,7 +177,6 @@ See [PRODUCTION_OAUTH_SETUP.md](./PRODUCTION_OAUTH_SETUP.md) for detailed setup 
 ## Meta outcome-access launch gate
 
 - [ ] `META_LOGIN_FOR_BUSINESS_CONFIG_ID` and `NEXT_PUBLIC_META_LOGIN_FOR_BUSINESS_CONFIG_ID` match the approved Meta configuration.
-- [ ] `META_OUTCOME_ACCESS_ENABLED=false` during the pilot; only approved agency IDs appear in `META_OUTCOME_ACCESS_AGENCY_IDS`.
 - [ ] Each receiving destination reports ready after live provider read-back of the matching `ADMIN` system user.
 - [ ] Provider sandbox proves the stored recipe tasks for Ad Accounts and Pages; no `MANAGE` task is inferred.
 - [ ] Manual fallback is verified using native assigned-user or partner access read-back.

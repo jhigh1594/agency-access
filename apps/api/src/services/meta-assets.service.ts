@@ -18,150 +18,6 @@ function buildPartnerAdminSystemUserSecretName(agencyId: string, businessId: str
  */
 export const metaAssetsService = {
   /**
-   * List agency-scoped receiving destinations. A legacy selected portfolio is
-   * seeded lazily so existing agencies retain their current default.
-   */
-  async listDestinations(agencyId: string): Promise<{ data: any[] | null; error: any }> {
-    try {
-      const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
-      if (connectionResult.error || !connectionResult.data) {
-        return { data: null, error: connectionResult.error || { code: 'CONNECTION_NOT_FOUND', message: 'Meta connection not found' } };
-      }
-
-      let destinations = await prisma.metaAgencyDestination.findMany({
-        where: { agencyId },
-        orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
-      });
-
-      if (destinations.length === 0) {
-        const metadata = (connectionResult.data.metadata as Record<string, unknown> | null) || {};
-        const businessId = typeof metadata.selectedBusinessId === 'string' ? metadata.selectedBusinessId : undefined;
-        const name = typeof metadata.selectedBusinessName === 'string' ? metadata.selectedBusinessName : businessId;
-
-        if (businessId && name) {
-          await prisma.metaAgencyDestination.upsert({
-            where: { agencyId_businessId: { agencyId, businessId } },
-            create: {
-              agencyId,
-              agencyConnectionId: connectionResult.data.id,
-              businessId,
-              name,
-              isDefault: true,
-              readinessStatus: 'action_needed',
-            },
-            update: { name, agencyConnectionId: connectionResult.data.id },
-          });
-          destinations = await prisma.metaAgencyDestination.findMany({
-            where: { agencyId },
-            orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
-          });
-        }
-      }
-
-      return { data: destinations, error: null };
-    } catch (error) {
-      return {
-        data: null,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to list Meta receiving destinations',
-          details: error instanceof Error ? error.message : String(error),
-        },
-      };
-    }
-  },
-
-  async registerDestination(
-    agencyId: string,
-    input: { businessId: string; name: string; makeDefault?: boolean }
-  ): Promise<{ data: any | null; error: any }> {
-    try {
-      const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
-      if (connectionResult.error || !connectionResult.data) {
-        return { data: null, error: connectionResult.error || { code: 'CONNECTION_NOT_FOUND', message: 'Meta connection not found' } };
-      }
-
-      const destination = await prisma.$transaction(async (tx) => {
-        const existingCount = await tx.metaAgencyDestination.count({ where: { agencyId } });
-        const makeDefault = input.makeDefault === true || existingCount === 0;
-        if (makeDefault) {
-          await tx.metaAgencyDestination.updateMany({
-            where: { agencyId, isDefault: true },
-            data: { isDefault: false },
-          });
-        }
-
-        return tx.metaAgencyDestination.upsert({
-          where: { agencyId_businessId: { agencyId, businessId: input.businessId } },
-          create: {
-            agencyId,
-            agencyConnectionId: connectionResult.data!.id,
-            businessId: input.businessId,
-            name: input.name,
-            isDefault: makeDefault,
-            readinessStatus: 'action_needed',
-          },
-          update: {
-            agencyConnectionId: connectionResult.data!.id,
-            name: input.name,
-            ...(makeDefault ? { isDefault: true } : {}),
-          },
-        });
-      });
-
-      return { data: destination, error: null };
-    } catch (error) {
-      return {
-        data: null,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to register Meta receiving destination',
-          details: error instanceof Error ? error.message : String(error),
-        },
-      };
-    }
-  },
-
-  async setDefaultDestination(
-    agencyId: string,
-    destinationId: string
-  ): Promise<{ data: any | null; error: any }> {
-    try {
-      const destination = await prisma.metaAgencyDestination.findFirst({
-        where: { id: destinationId, agencyId },
-      });
-      if (!destination) {
-        return {
-          data: null,
-          error: { code: 'DESTINATION_NOT_FOUND', message: 'Meta receiving destination not found' },
-        };
-      }
-
-      const updated = await prisma.$transaction(async (tx) => {
-        await tx.metaAgencyDestination.updateMany({
-          where: { agencyId, isDefault: true },
-          data: { isDefault: false },
-        });
-        return tx.metaAgencyDestination.update({
-          where: { id: destinationId },
-          data: { isDefault: true },
-        });
-      });
-
-      return { data: updated, error: null };
-    } catch (error) {
-      return {
-        data: null,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to change the default Meta destination',
-          details: error instanceof Error ? error.message : String(error),
-        },
-      };
-    }
-  },
-
-  /**
    * Save selected Business Portfolio for a Meta connection
    * 
    * Stores the Business Manager ID in both:
@@ -369,13 +225,8 @@ export const metaAssetsService = {
     data: any;
     error: any;
   }> {
-    const supportedSettings: MetaAssetSettings = {
-      ...settings,
-      catalog: { ...settings.catalog, enabled: false },
-      dataset: { ...settings.dataset, enabled: false, requestFullAccess: false },
-    };
     return agencyPlatformService.updateConnectionMetadata(agencyId, 'meta', {
-      assetSettings: supportedSettings,
+      assetSettings: settings,
     });
   },
 
@@ -407,8 +258,8 @@ export const metaAssetsService = {
         data: {
           adAccount: { enabled: true, permissionLevel: 'analyze' },
           page: { enabled: true, permissionLevel: 'analyze', limitPermissions: false },
-          catalog: { enabled: false, permissionLevel: 'analyze' },
-          dataset: { enabled: false, requestFullAccess: false },
+          catalog: { enabled: true, permissionLevel: 'analyze' },
+          dataset: { enabled: true, requestFullAccess: false },
           instagramAccount: { enabled: true, requestFullAccess: false },
         },
         error: null,

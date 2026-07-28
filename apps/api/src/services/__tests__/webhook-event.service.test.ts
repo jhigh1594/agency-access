@@ -570,43 +570,6 @@ describe('webhook-event.service', () => {
       expect(result).toBeUndefined();
     });
 
-    it('prefers normalized Meta grants and includes outcome verification fields', () => {
-      const result = normalizeGrantedAssetsToV2(
-        null,
-        'partial',
-        'meta',
-        null,
-        undefined,
-        [{
-          assetId: 'act_123',
-          assetName: 'Paid Social',
-          assetKind: 'ad_account',
-          recipeId: 'meta_run_ads',
-          recipeVersion: 1,
-          destinationId: 'destination-1',
-          clientBusinessId: 'client-business-1',
-          grantMethod: 'manual_partner_share',
-          requestedTasks: ['ADVERTISE', 'ANALYZE'],
-          verifiedTasks: ['ADVERTISE', 'ANALYZE'],
-          status: 'verified',
-          verifiedAt: new Date('2026-07-21T02:00:00.000Z'),
-          lastAttemptAt: new Date('2026-07-21T02:00:00.000Z'),
-        }],
-      );
-
-      expect(result).toEqual([expect.objectContaining({
-        assetId: 'act_123',
-        connectionStatus: 'Connected',
-        recipeId: 'meta_run_ads',
-        destinationId: 'destination-1',
-        grantMethod: 'manual_partner_share',
-        requestedTasks: ['ADVERTISE', 'ANALYZE'],
-        verifiedTasks: ['ADVERTISE', 'ANALYZE'],
-        nativeStatus: 'verified',
-        verifiedAt: '2026-07-21T02:00:00.000Z',
-      })]);
-    });
-
     it('handles non-array values for asset fields', () => {
       const result = normalizeGrantedAssetsToV2(
         { adAccounts: 'not-an-array', pages: 42 },

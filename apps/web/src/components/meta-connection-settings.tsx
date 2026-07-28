@@ -19,7 +19,6 @@ import {
   ShoppingBag,
   AlertCircle
 } from 'lucide-react';
-import { resolveApiUrl } from '@/lib/api/api-env';
 
 interface MetaConnectionSettingsProps {
   agencyId: string;
@@ -38,7 +37,7 @@ export function MetaConnectionSettings({ agencyId }: MetaConnectionSettingsProps
     queryFn: async () => {
       const token = await getToken();
       const response = await fetch(
-        resolveApiUrl(`/agency-platforms/meta/asset-settings?agencyId=${agencyId}`),
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings?agencyId=${agencyId}`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -61,7 +60,7 @@ export function MetaConnectionSettings({ agencyId }: MetaConnectionSettingsProps
   const { mutate: saveSettings, isPending: isSaving } = useMutation({
     mutationFn: async (newSettings: MetaAssetSettings) => {
       const token = await getToken();
-      const response = await fetch(resolveApiUrl('/agency-platforms/meta/asset-settings'), {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/meta/asset-settings`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

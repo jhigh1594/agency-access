@@ -12,7 +12,7 @@ import { m, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Link2, ChevronDown, Check, Minus } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type MetaAccessRequestInput, type Platform } from '@agency-platform/shared';
+import { PLATFORM_HIERARCHY, ACCESS_LEVEL_DESCRIPTIONS, type AccessLevel, type Platform } from '@agency-platform/shared';
 import { Button, PlatformIcon } from '@/components/ui';
 import { SingleSelect } from '@/components/ui/single-select';
 import { buildInviteUrl } from '@/lib/app-url';
@@ -21,8 +21,6 @@ import { UpgradeModal } from '@/components/upgrade-modal';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import type { GoogleAdsAccount } from '@agency-platform/shared';
 import { cn } from '@/lib/utils';
-import { resolveApiUrl } from '@/lib/api/api-env';
-import { MetaOutcomeRequestFields } from '@/components/meta-outcome-request-fields';
 
 interface CreateRequestModalProps {
   client: {
@@ -55,7 +53,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [googleAdsAccountId, setGoogleAdsAccountId] = useState<string>('');
-  const [metaAccess, setMetaAccess] = useState<MetaAccessRequestInput | null>(null);
 
   // Fetch Google accounts and asset settings for Google Ads account picker
   const { data: googleData } = useQuery({
@@ -64,10 +61,10 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
       if (!orgId || !getToken) return null;
       const token = await getToken();
       const [accountsRes, settingsRes] = await Promise.all([
-        fetch(resolveApiUrl(`/agency-platforms/google/accounts?agencyId=${orgId}&refresh=false`), {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${orgId}&refresh=false`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }),
-        fetch(resolveApiUrl(`/agency-platforms/google/asset-settings?agencyId=${orgId}`), {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings?agencyId=${orgId}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }),
       ]);
@@ -96,10 +93,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
     );
     if (match) setGoogleAdsAccountId(match.id);
   }, [selectedPlatforms, mccCustomerId, adsAccounts, googleAdsAccountId]);
-
-  useEffect(() => {
-    if ((selectedPlatforms.meta || []).length === 0 && metaAccess) setMetaAccess(null);
-  }, [selectedPlatforms.meta, metaAccess]);
 
   // Toggle platform group expansion
   const toggleGroup = (groupKey: string) => {
@@ -178,7 +171,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
         throw new Error('Please select at least one platform');
       }
 
-      const response = await fetch(resolveApiUrl('/api/access-requests'), {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/access-requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +185,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           externalReference: externalReference.trim() || undefined,
           platforms,
           globalAccessLevel,
-          ...(metaAccess ? { metaAccess } : {}),
         }),
       });
 
@@ -266,11 +258,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
 
     if (isProductSelected('google', 'google_ads') && !googleAdsAccountId) {
       setErrorMessage('Please select a Google Ads account');
-      return;
-    }
-
-    if ((selectedPlatforms.meta || []).length > 0 && !metaAccess) {
-      setErrorMessage('Choose a Meta outcome and a ready receiving portfolio');
       return;
     }
 
@@ -568,17 +555,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                     })}
                   </div>
 
-                  {(selectedPlatforms.meta || []).length > 0 ? (
-                    <div className="mt-4">
-                      <MetaOutcomeRequestFields
-                        agencyId={orgId || undefined}
-                        value={metaAccess}
-                        onChange={setMetaAccess}
-                        onProductsChange={(products) => setSelectedPlatforms((current) => ({ ...current, meta: products }))}
-                      />
-                    </div>
-                  ) : null}
-
                   {totalSelected === 0 && (
                     <p className="mt-3 text-xs text-muted-foreground">
                       Click a platform to expand and select products, or use the checkbox to select all.
@@ -589,7 +565,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                 {/* Step 2: Access Level */}
                 <div className="px-6 py-4 border-b border-border">
                   <h3 className="text-sm font-semibold text-foreground mb-4">
-                    2. Select Access Level for non-Meta platforms <span className="text-coral">*</span>
+                    2. Select Access Level <span className="text-coral">*</span>
                   </h3>
 
                   <div className="space-y-3">

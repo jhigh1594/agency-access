@@ -201,12 +201,10 @@ describe('MetaUnifiedSettings', () => {
     renderWithQueryClient(<MetaUnifiedSettings agencyId="agency-1" />);
 
     await waitFor(() => {
-      expect(screen.getByText('Receiving Business Portfolios')).toBeInTheDocument();
+      expect(screen.getByText('Meta Business Portfolio')).toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole('combobox', { name: /add receiving business portfolio/i })).toBeInTheDocument();
-    });
+    expect(screen.getByRole('combobox')).toHaveTextContent('Business One (biz_1)');
   });
 
   it('keeps the stored portfolio visible and shows a warning when refresh fails', async () => {
@@ -247,9 +245,7 @@ describe('MetaUnifiedSettings', () => {
     });
 
     expect(await screen.findByText(/showing the last synced portfolios/i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByRole('combobox', { name: /add receiving business portfolio/i })).toBeInTheDocument();
-    });
+    expect(screen.getByRole('combobox')).toHaveTextContent('Business One (biz_1)');
   });
 
   it('does not render the removed configuration overview block', async () => {
@@ -282,11 +278,9 @@ describe('MetaUnifiedSettings', () => {
 
     renderWithQueryClient(<MetaUnifiedSettings agencyId="agency-1" />);
 
-    expect(await screen.findByRole('heading', { name: /receiving business portfolios/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^business portfolio$/i })).toBeInTheDocument();
     expect(screen.queryByText(/configuration overview/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/current meta setup/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/^catalog$/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/^dataset$/i)).not.toBeInTheDocument();
   });
 
   it('lets the user log in again to refresh the portfolio snapshot from Meta', async () => {
@@ -342,5 +336,7 @@ describe('MetaUnifiedSettings', () => {
         }),
       });
     });
+
+    expect(await screen.findByText(/Meta login refreshed/i)).toBeInTheDocument();
   });
 });

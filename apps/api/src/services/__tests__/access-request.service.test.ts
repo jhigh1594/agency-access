@@ -8,7 +8,6 @@ import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import { queueWebhookDelivery } from '@/lib/queue-helpers';
 import * as accessRequestService from '@/services/access-request.service';
-import { env } from '@/lib/env';
 
 // Mock env first to prevent Zod validation errors
 vi.mock('@/lib/env', () => ({
@@ -16,8 +15,6 @@ vi.mock('@/lib/env', () => ({
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     CLERK_PUBLISHABLE_KEY: 'pk_test_key',
     CLERK_SECRET_KEY: 'sk_test_secret_key',
-    META_OUTCOME_ACCESS_ENABLED: false,
-    META_OUTCOME_ACCESS_AGENCY_IDS: [],
   },
 }));
 
@@ -55,9 +52,6 @@ vi.mock('@/lib/prisma', () => ({
     agencyPlatformConnection: {
       findMany: vi.fn(),
     },
-    metaAgencyDestination: {
-      findFirst: vi.fn(),
-    },
     clientConnection: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -85,7 +79,6 @@ describe('AccessRequestService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
-    Object.assign(env, { META_OUTCOME_ACCESS_ENABLED: false, META_OUTCOME_ACCESS_AGENCY_IDS: [] });
   });
 
   afterEach(() => {
@@ -93,114 +86,6 @@ describe('AccessRequestService', () => {
   });
 
   describe('createAccessRequest', () => {
-    it('requires outcome-based Meta only for enabled agencies while legacy remains available elsewhere', async () => {
-      Object.assign(env, { META_OUTCOME_ACCESS_ENABLED: false, META_OUTCOME_ACCESS_AGENCY_IDS: ['agency-1'] });
-      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ id: 'agency-1' } as any);
-
-      const gated = await accessRequestService.createAccessRequest({
-        agencyId: 'agency-1',
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
-      });
-
-      expect(gated.error?.code).toBe('META_OUTCOME_ACCESS_REQUIRED');
-      expect(prisma.accessRequest.create).not.toHaveBeenCalled();
-
-      Object.assign(env, { META_OUTCOME_ACCESS_AGENCY_IDS: [] });
-      vi.mocked(prisma.accessRequest.create).mockImplementation(async ({ data }: any) => ({ id: 'legacy-request', ...data }));
-      const legacy = await accessRequestService.createAccessRequest({
-        agencyId: 'agency-1',
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
-      });
-
-      expect(legacy.error).toBeNull();
-      expect((vi.mocked(prisma.accessRequest.create).mock.calls.at(-1)?.[0].data as any).metaAccessConfig).toBeUndefined();
-    });
-
-    it('derives and stores a Meta recipe snapshot for a ready destination', async () => {
-      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ id: 'agency-1' } as any);
-      vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue({
-        id: 'destination-1',
-        agencyId: 'agency-1',
-        readinessStatus: 'ready',
-      } as any);
-      vi.mocked(prisma.accessRequest.create).mockImplementation(async ({ data }: any) => ({
-        id: 'request-1',
-        ...data,
-      }));
-
-      const result = await accessRequestService.createAccessRequest({
-        agencyId: 'agency-1',
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-        platforms: [
-          { platform: 'meta_ads', accessLevel: 'manage' },
-          { platform: 'google_ads', accessLevel: 'view_only' },
-        ],
-        metaAccess: { recipeId: 'meta_view_only_audit', destinationId: 'destination-1' },
-      });
-
-      expect(result.error).toBeNull();
-      expect(prisma.accessRequest.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          platforms: expect.arrayContaining([{ platform: 'google_ads', accessLevel: 'view_only' }]),
-          metaAccessConfig: expect.objectContaining({
-            recipeId: 'meta_view_only_audit',
-            recipeVersion: 1,
-            destinationId: 'destination-1',
-          }),
-        }),
-      });
-      const createData = vi.mocked(prisma.accessRequest.create).mock.calls[0]?.[0].data as any;
-      expect(createData.metaAccessConfig.requirements.flatMap((item: any) => item.providerTasks)).not.toContain('MANAGE');
-    });
-
-    it('rejects a Meta recipe when its destination is no longer ready', async () => {
-      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ id: 'agency-1' } as any);
-      vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue(null);
-
-      const result = await accessRequestService.createAccessRequest({
-        agencyId: 'agency-1',
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
-        metaAccess: { recipeId: 'meta_run_ads', destinationId: 'destination-1' },
-      });
-
-      expect(result.data).toBeNull();
-      expect(result.error?.code).toBe('META_DESTINATION_NOT_READY');
-      expect(prisma.accessRequest.create).not.toHaveBeenCalled();
-    });
-
-    it('rejects caller-supplied Meta tasks or snapshot fields', async () => {
-      const result = await accessRequestService.createAccessRequest({
-        agencyId: 'agency-1',
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
-        metaAccess: {
-          recipeId: 'meta_run_ads',
-          destinationId: 'destination-1',
-          providerTasks: ['MANAGE'],
-        },
-      } as any);
-
-      expect(result.data).toBeNull();
-      expect(result.error?.code).toBe('VALIDATION_ERROR');
-
-      const snapshotResult = await accessRequestService.createAccessRequest({
-        agencyId: 'agency-1',
-        clientName: 'Test Client',
-        clientEmail: 'client@test.com',
-        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
-        metaAccessConfig: { recipeId: 'meta_run_ads', providerTasks: ['MANAGE'] },
-      } as any);
-      expect(snapshotResult.error?.code).toBe('VALIDATION_ERROR');
-    });
-
     it('should create a new access request with unique token', async () => {
       const mockAgency = {
         id: 'agency-1',
@@ -1121,55 +1006,6 @@ describe('AccessRequestService', () => {
   });
 
   describe('updateAccessRequest', () => {
-    it('stores a newly confirmed Meta outcome snapshot only for a Meta request', async () => {
-      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
-        id: 'request-1',
-        status: 'pending',
-        agencyId: 'agency-1',
-        metaAccessConfig: null,
-      } as any);
-      vi.mocked(prisma.metaAgencyDestination.findFirst).mockResolvedValue({ id: 'destination-1' } as any);
-      vi.mocked(prisma.accessRequest.update).mockImplementation(async ({ data }: any) => ({
-        id: 'request-1',
-        status: 'pending',
-        ...data,
-      }));
-
-      const result = await accessRequestService.updateAccessRequest('request-1', {
-        platforms: [{ platform: 'meta_ads', accessLevel: 'manage' }],
-        metaAccess: { recipeId: 'meta_run_ads', destinationId: 'destination-1' },
-      });
-
-      expect(result.error).toBeNull();
-      expect(prisma.accessRequest.update).toHaveBeenCalledWith({
-        where: { id: 'request-1' },
-        data: expect.objectContaining({
-          metaAccessConfig: expect.objectContaining({
-            recipeId: 'meta_run_ads',
-            destinationId: 'destination-1',
-          }),
-        }),
-      });
-    });
-
-    it('rejects a Meta outcome update when the edited request no longer includes Meta', async () => {
-      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
-        id: 'request-1',
-        status: 'pending',
-        agencyId: 'agency-1',
-        metaAccessConfig: null,
-      } as any);
-
-      const result = await accessRequestService.updateAccessRequest('request-1', {
-        platforms: [{ platform: 'google_ads', accessLevel: 'manage' }],
-        metaAccess: { recipeId: 'meta_run_ads', destinationId: 'destination-1' },
-      });
-
-      expect(result.error?.code).toBe('META_RECIPE_WITHOUT_META');
-      expect(prisma.metaAgencyDestination.findFirst).not.toHaveBeenCalled();
-      expect(prisma.accessRequest.update).not.toHaveBeenCalled();
-    });
-
     it('should reject updates for non-editable request statuses', async () => {
       vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue({
         id: 'request-1',

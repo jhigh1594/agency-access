@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildMetaClientPreflight, clientAssetsService } from '../client-assets.service.js';
-import { metaAccessPolicyService } from '../meta-access-policy.service.js';
+import { clientAssetsService } from '../client-assets.service.js';
 
 describe('ClientAssetsService - Meta', () => {
   beforeEach(() => {
@@ -178,81 +177,6 @@ describe('ClientAssetsService - Meta', () => {
       clientAssetsService.fetchMetaAssets('token-123', 'biz_missing')
     ).rejects.toMatchObject({
       code: 'INVALID_META_BUSINESS_PORTFOLIO',
-    });
-  });
-});
-
-describe('buildMetaClientPreflight', () => {
-  const snapshot = metaAccessPolicyService.createSnapshot({
-    recipeId: 'meta_run_ads',
-    destinationId: 'destination-1',
-  });
-
-  it('requires portfolio selection before asset selection when multiple portfolios are visible', () => {
-    const result = buildMetaClientPreflight({
-      snapshot,
-      configurationReady: true,
-      assets: {
-        businesses: [{ id: 'biz-1', name: 'One' }, { id: 'biz-2', name: 'Two' }],
-        selectionRequired: true,
-        adAccounts: [],
-        pages: [],
-        instagramAccounts: [],
-      },
-    });
-
-    expect(result).toMatchObject({
-      status: 'selection_required',
-      canContinue: false,
-      nextActor: 'client',
-    });
-  });
-
-  it('provides recovery and handoff when the identity has no portfolio', () => {
-    const result = buildMetaClientPreflight({
-      snapshot,
-      configurationReady: true,
-      assets: { businesses: [], adAccounts: [], pages: [], instagramAccounts: [] },
-    });
-
-    expect(result).toMatchObject({
-      status: 'no_portfolio',
-      canContinue: false,
-      handoffAvailable: true,
-      recoveryUrl: 'https://business.facebook.com/settings',
-    });
-  });
-
-  it('names missing required recipe assets and does not allow continuation', () => {
-    const result = buildMetaClientPreflight({
-      snapshot,
-      configurationReady: true,
-      assets: {
-        businesses: [{ id: 'biz-1', name: 'One' }],
-        selectedBusinessId: 'biz-1',
-        adAccounts: [],
-        pages: [{ id: 'page-1', name: 'Page' }],
-        instagramAccounts: [],
-      },
-    });
-
-    expect(result).toMatchObject({
-      status: 'missing_recipe_assets',
-      missingAssetKinds: ['ad_account'],
-    });
-  });
-
-  it('classifies provider permission failures as an administrator handoff', () => {
-    const result = buildMetaClientPreflight({
-      snapshot,
-      configurationReady: true,
-      providerError: new Error('Permissions error: user is not an admin'),
-    });
-
-    expect(result).toMatchObject({
-      status: 'insufficient_authority',
-      nextActor: 'another_meta_admin',
-      handoffAvailable: true,
     });
   });
 });

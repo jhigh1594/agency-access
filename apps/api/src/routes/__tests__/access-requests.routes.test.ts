@@ -77,34 +77,6 @@ describe('Access Requests Routes - Platform Connection Validation', () => {
   });
 
   describe('POST /access-requests - payload normalization', () => {
-    it('passes only recipe and destination inputs for outcome-based Meta access', async () => {
-      vi.mocked(accessRequestService.createAccessRequest).mockResolvedValue({
-        data: { id: 'req-1', agencyId: 'agency-1' } as any,
-        error: null,
-      });
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/access-requests',
-        payload: {
-          clientName: 'John Doe',
-          clientEmail: 'john@client.com',
-          platforms: [
-            { platformGroup: 'meta', products: [{ product: 'meta_ads', accessLevel: 'admin' }] },
-          ],
-          metaAccess: { recipeId: 'meta_run_ads', destinationId: 'destination-1' },
-        },
-      });
-
-      expect(response.statusCode).toBe(201);
-      expect(accessRequestService.createAccessRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          agencyId: 'agency-1',
-          metaAccess: { recipeId: 'meta_run_ads', destinationId: 'destination-1' },
-        })
-      );
-    });
-
     it('should accept Record<string, string[]> platform payloads', async () => {
       vi.mocked(accessRequestService.createAccessRequest).mockResolvedValue({
         data: { id: 'req-1', agencyId: 'agency-1' } as any,

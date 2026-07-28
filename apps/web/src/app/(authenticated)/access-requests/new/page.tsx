@@ -27,7 +27,6 @@ import { AccessLevelSelector } from '@/components/access-level-selector';
 import { SaveAsTemplateModal } from '@/components/save-as-template-modal';
 import { FlowShell } from '@/components/flow/flow-shell';
 import { SingleSelect } from '@/components/ui/single-select';
-import { MetaOutcomeRequestFields } from '@/components/meta-outcome-request-fields';
 
 // Context & Utilities
 import { AccessRequestProvider, useAccessRequest } from '@/contexts/access-request-context';
@@ -35,8 +34,6 @@ import type { IntakeField } from '@/contexts/access-request-context';
 import { getPlatformCount } from '@/lib/transform-platforms';
 import { useAuthOrBypass } from '@/lib/dev-auth';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
-import { resolveApiUrl } from '@/lib/api/api-env';
-import { extractApiErrorMessage } from '@/lib/api/extract-error';
 
 // ============================================================
 // WIZARD CONTENT (Inner Component)
@@ -55,7 +52,6 @@ function AccessRequestWizardContent() {
     updatePlatforms,
     updateAccessLevel,
     updatePlatformAccessLevel,
-    updateMetaAccess,
     updateIntakeFields,
     updateBranding,
     setStep,
@@ -82,14 +78,14 @@ function AccessRequestWizardContent() {
       const token = await getToken();
 
       const response = await fetch(
-        resolveApiUrl(`/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`),
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         }
       );
-      if (!response.ok) throw new Error(await extractApiErrorMessage(response, 'Failed to fetch agency'));
+      if (!response.ok) throw new Error('Failed to fetch agency');
       const result = await response.json();
       return result.data?.[0] || null;
     },
@@ -119,14 +115,14 @@ function AccessRequestWizardContent() {
       if (!agencyId) return [];
       const token = await getToken();
       const response = await fetch(
-        resolveApiUrl(`/agency-platforms?agencyId=${agencyId}&status=active`),
+        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${agencyId}&status=active`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         }
       );
-      if (!response.ok) throw new Error(await extractApiErrorMessage(response, 'Failed to fetch platforms'));
+      if (!response.ok) throw new Error('Failed to fetch platforms');
       const result = await response.json();
       const activeConnections = Array.isArray(result.data) ? result.data : [];
 
@@ -366,9 +362,6 @@ function AccessRequestWizardContent() {
                 selectedAccessLevel={state.globalAccessLevel ?? undefined}
                 onSelectionChange={updateAccessLevel}
               />
-              {(state.selectedPlatforms.meta || []).length > 0 ? (
-                <p className="-mt-4 text-xs text-muted-foreground">This access level applies to non-Meta platforms. Meta permissions come from the outcome below.</p>
-              ) : null}
 
               {/* Platform Selection Section */}
               <div>
@@ -391,17 +384,6 @@ function AccessRequestWizardContent() {
                 platformAccessLevels={state.platformAccessLevels}
                 onPlatformAccessLevelChange={updatePlatformAccessLevel}
               />
-
-              {(state.selectedPlatforms.meta || []).length > 0 ? (
-                <div className="mt-4">
-                  <MetaOutcomeRequestFields
-                    agencyId={agencyId}
-                    value={state.metaAccess}
-                    onChange={updateMetaAccess}
-                    onProductsChange={(products) => updatePlatforms({ ...state.selectedPlatforms, meta: products })}
-                  />
-                </div>
-              ) : null}
 
               {/* Info about connecting more platforms */}
               {platformConnections.filter((p: any) => p.connected).length > 0 && (

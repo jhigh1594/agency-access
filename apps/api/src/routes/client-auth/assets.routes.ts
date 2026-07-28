@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { auditService } from '../../services/audit.service.js';
 import {
-  buildMetaClientPreflight,
   clientAssetsService,
   MetaBusinessPortfolioUnavailableError,
 } from '../../services/client-assets.service.js';
@@ -16,7 +15,6 @@ import { infisical } from '../../lib/infisical.js';
 import { prisma } from '../../lib/prisma.js';
 import {
   type MetaAssetKind,
-  MetaAccessRequirementSnapshotSchema,
   MetaClientAuthorizationMetadataSchema,
   type MetaAssetGrantResult,
   type MetaClientAuthorizationMetadata,
@@ -29,17 +27,13 @@ import {
   grantMetaAccessSchema,
   grantPagesAccessSchema,
   manualMetaAdAccountShareSchema,
-  metaPreflightQuerySchema,
   saveAssetsSchema,
   tiktokPartnerShareSchema,
   tiktokPartnerVerifySchema,
 } from './schemas.js';
 import { metaOBOService } from '@/services/meta-obo.service';
 import { metaPartnerService } from '@/services/meta-partner.service';
-import { metaGrantOrchestratorService } from '@/services/meta-grant-orchestrator.service';
-import { metaAccessStatusService } from '@/services/meta-access-status.service';
 import { MetaConnector } from '@/services/connectors/meta';
-import { env } from '@/lib/env';
 
 type ShareResultWithVerification = TikTokPartnerShareResultItem & { verified?: boolean };
 
@@ -340,106 +334,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
   }
 
-  fastify.get('/client/:token/meta/preflight', async (request, reply) => {
-    const { token } = request.params as { token: string };
-    const parsedQuery = metaPreflightQuerySchema.safeParse(request.query);
-    if (!parsedQuery.success) {
-      return reply.code(400).send({
-        data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'connectionId query parameter is required' },
-      });
-    }
-
-    const { connectionId, businessId } = parsedQuery.data;
-    const authContext = await resolveAuthorizedConnection(token, connectionId);
-    if (authContext.error || !authContext.accessRequest || !authContext.connection) {
-      const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
-      return reply.code(statusCode).send({ data: null, error: authContext.error });
-    }
-
-    const snapshotResult = MetaAccessRequirementSnapshotSchema.safeParse(
-      (authContext.accessRequest as any).metaAccessConfig
-    );
-    const snapshot = snapshotResult.success ? snapshotResult.data : null;
-    if (!snapshot) {
-      return reply.send({
-        data: buildMetaClientPreflight({ snapshot: null, configurationReady: true }),
-        error: null,
-      });
-    }
-
-    const [platformAuth, destination] = await Promise.all([
-      prisma.platformAuthorization.findUnique({
-        where: { connectionId_platform: { connectionId, platform: 'meta' } },
-      }),
-      prisma.metaAgencyDestination.findFirst({
-        where: {
-          id: snapshot.destinationId,
-          agencyId: authContext.accessRequest.agencyId,
-          readinessStatus: 'ready',
-        },
-        select: { id: true },
-      }),
-    ]);
-    const configurationReady = Boolean(
-      destination && env.META_APP_ID && env.META_APP_SECRET && env.META_LOGIN_FOR_BUSINESS_CONFIG_ID
-    );
-    if (!platformAuth || platformAuth.status !== 'active') {
-      return reply.code(409).send({
-        data: buildMetaClientPreflight({ snapshot, configurationReady, providerError: new Error('Meta authorization is not active') }),
-        error: null,
-      });
-    }
-
-    let preflight;
-    try {
-      const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
-      const assets = await clientAssetsService.fetchMetaAssets(tokens.accessToken, businessId);
-      preflight = buildMetaClientPreflight({ snapshot, assets, configurationReady });
-
-      const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
-      const now = new Date().toISOString();
-      await prisma.platformAuthorization.update({
-        where: { id: platformAuth.id },
-        data: {
-          metadata: {
-            ...rootMetadata,
-            meta: {
-              ...metaMetadata,
-              discovery: { availableBusinesses: assets.businesses || [], discoveredAt: now },
-              ...(assets.selectedBusinessId ? {
-                selection: {
-                  clientBusinessId: assets.selectedBusinessId,
-                  clientBusinessName: assets.selectedBusinessName,
-                  selectedAt: now,
-                  source: businessId ? 'user_selection' : 'auto_selected',
-                },
-              } : {}),
-            },
-          } as any,
-        },
-      });
-    } catch (error) {
-      preflight = buildMetaClientPreflight({ snapshot, configurationReady, providerError: error });
-    }
-
-    await auditService.createAuditLog({
-      agencyId: authContext.accessRequest.agencyId,
-      action: 'META_PREFLIGHT_COMPLETED',
-      userEmail: authContext.connection.clientEmail,
-      resourceType: 'client_connection',
-      resourceId: connectionId,
-      metadata: {
-        outcome: preflight.status,
-        selectedBusinessId: preflight.selectedBusinessId || businessId || null,
-        recipeId: snapshot.recipeId,
-      },
-      request,
-    });
-
-    return reply.send({ data: preflight, error: null });
-  });
-
   // Save selected assets for a platform
   fastify.post('/client/:token/save-assets', async (request, reply) => {
     const { token } = request.params as { token: string };
@@ -637,9 +531,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       }
       const connection = authContext.connection;
       const accessRequest = authContext.accessRequest;
-      const outcomeSnapshotResult = MetaAccessRequirementSnapshotSchema.safeParse(
-        (accessRequest as any).metaAccessConfig
-      );
 
       const platformAuth = await prisma.platformAuthorization.findUnique({
         where: {
@@ -704,24 +595,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
       }
 
-      let outcomeDestination: any = null;
-      const agencyConnection = outcomeSnapshotResult.success
-        ? (outcomeDestination = await prisma.metaAgencyDestination.findFirst({
-            where: {
-              id: outcomeSnapshotResult.data.destinationId,
-              agencyId: accessRequest.agencyId,
-              readinessStatus: 'ready',
-            },
-            include: { agencyConnection: true },
-          }))?.agencyConnection
-        : await prisma.agencyPlatformConnection.findUnique({
-            where: {
-              agencyId_platform: {
-                agencyId: accessRequest.agencyId,
-                platform: 'meta',
-              },
-            },
-          });
+      const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+        where: {
+          agencyId_platform: {
+            agencyId: accessRequest.agencyId,
+            platform: 'meta',
+          },
+        },
+      });
 
       if (!agencyConnection) {
         return reply.code(400).send({
@@ -736,7 +617,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
       const agencyMetadata = (agencyConnection.metadata as Record<string, unknown> | null) || {};
       const partnerBusinessId =
-        (outcomeSnapshotResult.success ? outcomeDestination?.businessId : null) ||
         agencyConnection.businessId ||
         (typeof agencyMetadata.selectedBusinessId === 'string'
           ? agencyMetadata.selectedBusinessId
@@ -891,98 +771,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         },
         request,
       });
-
-      if (outcomeSnapshotResult.success) {
-        const orchestration = await metaGrantOrchestratorService.execute({
-          agencyId: accessRequest.agencyId,
-          accessRequestId: accessRequest.id,
-          connectionId,
-          authorizationId: platformAuth.id,
-          clientBusinessId: selectedBusinessId,
-          clientSystemUserAccessToken: clientSystemUserTokens.accessToken,
-          selectedAssets: {
-            ad_account: selectedAdAccountIds.map((id) => ({ id })),
-            page: selectedPageIds.map((id) => ({ id })),
-            instagram_account: selectedInstagramIds.map((id) => ({ id })),
-          },
-        });
-        if (orchestration.error || !orchestration.data) {
-          return reply.code(400).send({ data: null, error: orchestration.error });
-        }
-
-        const outcomeGrantResults: MetaAssetGrantResult[] = orchestration.data.grants.map((grant: any) => ({
-          assetId: grant.assetId,
-          assetType: grant.assetKind,
-          requestedTasks: grant.requestedTasks,
-          status: grant.status === 'action_required' ? 'unresolved' : grant.status === 'granting' || grant.status === 'verifying' ? 'pending' : grant.status,
-          ...(grant.status === 'verified' ? { grantedAt: new Date().toISOString(), verifiedAt: new Date().toISOString() } : {}),
-          ...(grant.errorCode ? { errorCode: grant.errorCode } : {}),
-          ...(grant.errorMessage ? { errorMessage: grant.errorMessage } : {}),
-        }));
-        const verificationCompletedAt = new Date().toISOString();
-        await prisma.platformAuthorization.update({
-          where: { id: platformAuth.id },
-          data: {
-            metadata: {
-              ...rootMetadata,
-              meta: {
-                ...metaMetadata,
-                obo: {
-                  ...(metaMetadata.obo || {}),
-                  managedBusinessLink: managedBusinessLinkResult.data,
-                  clientSystemUser: clientSystemUserState,
-                  assetGrantResults: outcomeGrantResults,
-                  lastVerifiedAt: verificationCompletedAt,
-                },
-              },
-            },
-          },
-        });
-        const currentGrantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || {};
-        await prisma.clientConnection.update({
-          where: { id: connectionId },
-          data: {
-            grantedAssets: {
-              ...currentGrantedAssets,
-              meta: {
-                recipeId: orchestration.data.recipeId,
-                destinationId: orchestration.data.destinationId,
-                verifiedMetaAssetGrantStatus: orchestration.data.status,
-                verifiedMetaAssetGrantResults: outcomeGrantResults,
-                verifiedMetaAssetGrantAt: verificationCompletedAt,
-              },
-            },
-          },
-        });
-        await auditService.createAuditLog({
-          agencyId: accessRequest.agencyId,
-          action: 'META_OUTCOME_GRANTS_PROCESSED',
-          userEmail: connection.clientEmail,
-          resourceType: 'client_connection',
-          resourceId: connectionId,
-          metadata: {
-            recipeId: orchestration.data.recipeId,
-            destinationId: orchestration.data.destinationId,
-            verificationStatus: orchestration.data.status,
-            grantMethods: [...new Set(orchestration.data.grants.map((grant: any) => grant.grantMethod))],
-          },
-          request,
-        });
-        return reply.send({
-          data: {
-            success: orchestration.data.status === 'verified',
-            partial: orchestration.data.status !== 'verified',
-            selectedBusinessId,
-            selectedBusinessName,
-            recipeId: orchestration.data.recipeId,
-            destinationId: orchestration.data.destinationId,
-            managedBusinessLinkStatus: managedBusinessLinkResult.data.status,
-            clientSystemUserStatus: clientSystemUserState.status,
-            assetGrantResults: outcomeGrantResults,
-          },
-          error: null,
-        });
-      }
 
       const nextPageGrantResults: MetaAssetGrantResult[] = [];
       const nextAdAccountGrantResults: MetaAssetGrantResult[] = [];
@@ -1485,9 +1273,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const { rootMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
         const selectedMetaAssets = getSelectedMetaAssets(rootMetadata.selectedAssets);
         const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
-        const outcomeSnapshot = MetaAccessRequirementSnapshotSchema.safeParse(
-          (accessRequest as any).metaAccessConfig
-        );
 
         if (selectedAdAccounts.length === 0) {
           return reply.code(400).send({
@@ -1499,30 +1284,17 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           });
         }
 
-        const [agencyConnection, outcomeDestination] = await Promise.all([
-          prisma.agencyPlatformConnection.findUnique({
-            where: {
-              agencyId_platform: {
-                agencyId: accessRequest.agencyId,
-                platform: 'meta',
-              },
+        const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+          where: {
+            agencyId_platform: {
+              agencyId: accessRequest.agencyId,
+              platform: 'meta',
             },
-          }),
-          outcomeSnapshot.success
-            ? prisma.metaAgencyDestination.findFirst({
-                where: { id: outcomeSnapshot.data.destinationId, agencyId: accessRequest.agencyId },
-                select: { businessId: true, name: true },
-              })
-            : Promise.resolve(null),
-        ]);
+          },
+        });
 
-        const legacyPartner = resolveAgencyMetaBusinessDetails(agencyConnection);
-        const partnerBusinessId = outcomeSnapshot.success
-          ? outcomeDestination?.businessId
-          : legacyPartner.businessId;
-        const partnerBusinessName = outcomeSnapshot.success
-          ? outcomeDestination?.name
-          : legacyPartner.businessName;
+        const { businessId: partnerBusinessId, businessName: partnerBusinessName } =
+          resolveAgencyMetaBusinessDetails(agencyConnection);
 
         if (!partnerBusinessId) {
           return reply.code(400).send({
@@ -1640,9 +1412,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       }
       const connection = authContext.connection;
       const accessRequest = authContext.accessRequest;
-      const outcomeSnapshot = MetaAccessRequirementSnapshotSchema.safeParse(
-        (accessRequest as any).metaAccessConfig
-      );
 
       const platformAuth = await prisma.platformAuthorization.findUnique({
         where: {
@@ -1663,35 +1432,19 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const [agencyConnection, outcomeDestination] = await Promise.all([
-        prisma.agencyPlatformConnection.findUnique({
-          where: {
-            agencyId_platform: {
-              agencyId: accessRequest.agencyId,
-              platform: 'meta',
-            },
+      const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
+        where: {
+          agencyId_platform: {
+            agencyId: accessRequest.agencyId,
+            platform: 'meta',
           },
-        }),
-        outcomeSnapshot.success
-          ? prisma.metaAgencyDestination.findFirst({
-              where: { id: outcomeSnapshot.data.destinationId, agencyId: accessRequest.agencyId },
-              include: { agencyConnection: true },
-            })
-          : Promise.resolve(null),
-      ]);
+        },
+      });
 
-      const legacyPartner = resolveAgencyMetaBusinessDetails(agencyConnection);
-      const partnerBusinessId = outcomeSnapshot.success
-        ? outcomeDestination?.businessId
-        : legacyPartner.businessId;
-      const resolvedPartnerBusinessName = outcomeSnapshot.success
-        ? outcomeDestination?.name
-        : legacyPartner.businessName;
-      const partnerConnection = outcomeSnapshot.success
-        ? outcomeDestination?.agencyConnection
-        : agencyConnection;
+      const { businessId: partnerBusinessId, businessName: resolvedPartnerBusinessName } =
+        resolveAgencyMetaBusinessDetails(agencyConnection);
 
-      if (!partnerBusinessId || !partnerConnection?.secretId) {
+      if (!partnerBusinessId || !agencyConnection?.secretId) {
         return reply.code(400).send({
           data: null,
           error: {
@@ -1726,7 +1479,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           ? existingManualShare.partnerBusinessName
           : null) || resolvedPartnerBusinessName;
 
-      const agencyTokens = await infisical.getOAuthTokens(partnerConnection.secretId);
+      const agencyTokens = await infisical.getOAuthTokens(agencyConnection.secretId);
 
       await auditService.createAuditLog({
         agencyId: accessRequest.agencyId,
@@ -1737,7 +1490,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         metadata: {
           platform: 'meta',
           source: 'manual_ad_account_share_verification',
-          secretId: partnerConnection.secretId,
+          secretId: agencyConnection.secretId,
           partnerBusinessId,
         },
         request,
@@ -1769,53 +1522,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
                 errorMessage: META_MANUAL_AD_ACCOUNT_PENDING_MESSAGE,
               }
       );
-
-      if (outcomeSnapshot.success) {
-        const clientBusinessId = metaMetadata.selection?.clientBusinessId;
-        if (!clientBusinessId || !outcomeDestination) {
-          return reply.code(409).send({
-            data: null,
-            error: {
-              code: 'META_OUTCOME_CONTEXT_INCOMPLETE',
-              message: 'Choose the client portfolio and retry the stored receiving destination before checking access.',
-            },
-          });
-        }
-        const adAccountRequirement = outcomeSnapshot.data.requirements.find(
-          (requirement) => requirement.assetKind === 'ad_account'
-        );
-        for (const result of verificationResults) {
-          const verified = result.status === 'verified';
-          const persisted = await metaAccessStatusService.upsertGrant({
-            agencyId: accessRequest.agencyId,
-            accessRequestId: accessRequest.id,
-            connectionId,
-            authorizationId: platformAuth.id,
-            destinationId: outcomeSnapshot.data.destinationId,
-            clientBusinessId,
-            recipeId: outcomeSnapshot.data.recipeId,
-            recipeVersion: outcomeSnapshot.data.recipeVersion,
-            assetKind: 'ad_account',
-            assetId: result.assetId,
-            assetName: result.assetName,
-            requestedTasks: [...(adAccountRequirement?.providerTasks || [])],
-            verifiedTasks: verified ? [...(adAccountRequirement?.providerTasks || [])] : [],
-            grantMethod: 'manual_partner_share',
-            status: verified ? 'verified' : 'action_required',
-            nextActor: verified ? undefined : 'client',
-            lastErrorCode: verified ? undefined : result.errorCode,
-            lastErrorMessage: verified ? undefined : result.errorMessage,
-            grantedAt: verified ? new Date(verifiedAt) : undefined,
-            verifiedAt: verified ? new Date(verifiedAt) : undefined,
-          });
-          if (persisted.error) {
-            return reply.code(persisted.error.code === 'FORBIDDEN' ? 403 : 500).send({
-              data: null,
-              error: persisted.error,
-            });
-          }
-        }
-      }
 
       const adAccountGrantResults = toMetaAdAccountGrantResults(verificationResults);
       const mergedGrantResults = sortMetaAssetGrantResults(

@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { metaAssetsService } from '@/services/meta-assets.service';
-import { metaReadinessService } from '@/services/meta-readiness.service';
 import { googleAssetsService } from '@/services/google-assets.service';
 import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
@@ -264,53 +263,6 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       data: businessAccounts,
       error: null,
     });
-  });
-
-  fastify.get('/agency-platforms/meta/destinations', async (request, reply) => {
-    const { agencyId } = request.query as { agencyId?: string };
-    if (!agencyId) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' } });
-    }
-    if (!ensureAgencyAccess(request, reply, agencyId)) return;
-    const result = await metaAssetsService.listDestinations(agencyId);
-    return reply.code(result.error ? 400 : 200).send(result);
-  });
-
-  fastify.post('/agency-platforms/meta/destinations', async (request, reply) => {
-    const { agencyId, businessId, name, makeDefault } = request.body as {
-      agencyId?: string;
-      businessId?: string;
-      name?: string;
-      makeDefault?: boolean;
-    };
-    if (!agencyId || !businessId || !name) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'agencyId, businessId, and name are required' } });
-    }
-    if (!ensureAgencyAccess(request, reply, agencyId)) return;
-    const result = await metaAssetsService.registerDestination(agencyId, { businessId, name, makeDefault });
-    return reply.code(result.error ? 400 : 201).send(result);
-  });
-
-  fastify.patch('/agency-platforms/meta/destinations/:destinationId/default', async (request, reply) => {
-    const { destinationId } = request.params as { destinationId: string };
-    const { agencyId } = request.body as { agencyId?: string };
-    if (!agencyId) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' } });
-    }
-    if (!ensureAgencyAccess(request, reply, agencyId)) return;
-    const result = await metaAssetsService.setDefaultDestination(agencyId, destinationId);
-    return reply.code(result.error?.code === 'DESTINATION_NOT_FOUND' ? 404 : result.error ? 400 : 200).send(result);
-  });
-
-  fastify.post('/agency-platforms/meta/destinations/:destinationId/readiness', async (request, reply) => {
-    const { destinationId } = request.params as { destinationId: string };
-    const { agencyId } = request.body as { agencyId?: string };
-    if (!agencyId) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' } });
-    }
-    if (!ensureAgencyAccess(request, reply, agencyId)) return;
-    const result = await metaReadinessService.checkDestination(agencyId, destinationId);
-    return reply.code(result.error?.code === 'DESTINATION_NOT_FOUND' ? 404 : result.error ? 400 : 200).send(result);
   });
 
   /**
