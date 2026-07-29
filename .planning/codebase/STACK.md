@@ -83,7 +83,6 @@
 - @sentry/node 10.43.0 - Backend error tracking
 - @sentry/profiling-node 10.43.0 - Performance profiling
 - @vercel/analytics 1.6.1 - Web analytics
-- @vercel/speed-insights 1.3.1 - Performance insights
 - posthog-js 1.345.2 - Product analytics (web)
 
 ## Configuration

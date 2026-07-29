@@ -57,10 +57,6 @@
   - SDK: `@vercel/analytics/next`
   - Implementation: `apps/web/src/components/deferred-analytics.tsx`
 
-- Vercel Speed Insights - Performance insights
-  - SDK: `@vercel/speed-insights/next`
-  - Implementation: `apps/web/src/components/deferred-analytics.tsx`
-
 **Brand Assets:**
 - Brandfetch Logo API - Platform logos
   - Auth: `NEXT_PUBLIC_BRANDFETCH_CLIENT_ID`
