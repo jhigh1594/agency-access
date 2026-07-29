@@ -15,7 +15,7 @@
     "db:security:check": "node ./scripts/check-neon-security.mjs",
     "bench:security": "node ./scripts/benchmark-security-endpoints.mjs",
     "db:generate": "prisma generate",
-    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:deploy": "node ./scripts/migrate-deploy.mjs",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"

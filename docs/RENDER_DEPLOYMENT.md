@@ -109,7 +109,9 @@ cd apps/api
 DATABASE_URL="${MIGRATE_DATABASE_URL:-$DATABASE_URL}" PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy
 ```
 
-`MIGRATE_DATABASE_URL` should use a migration-capable database role. `DATABASE_URL` should use the least-privilege runtime role used by the API after migrations finish.
+`MIGRATE_DATABASE_URL` (or `DIRECT_URL`) should use a migration-capable database role AND point to the **direct (unpooled)** Neon hostname (e.g. `ep-xxxx.us-east-1.aws.neon.tech`, without `-pooler`). `DATABASE_URL` should use the least-privilege runtime role pointing to the pooled endpoint (`ep-xxxx-pooler.c-2.us-east-1.aws.neon.tech`).
+
+> **Important**: Running `prisma migrate deploy` against Neon's pooled endpoint (`-pooler`) fails with `Error: P1001: Can't reach database server` because PgBouncer in transaction pooling mode drops DDL and migration connections. Ensure `MIGRATE_DATABASE_URL` or `DIRECT_URL` uses the direct (unpooled) Neon connection string.
 
 The advisory lock is disabled for this Free-plan startup path because the previous live process can still hold pg-boss advisory locks while Render is starting the replacement process. Keep Render at one instance while using this startup migration pattern.
 
