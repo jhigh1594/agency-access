@@ -114,4 +114,120 @@ describe('agent grant routes security', () => {
     expect(response.statusCode).toBe(404);
     expect(agentGrantService.createOrReactivateGrant).not.toHaveBeenCalled();
   });
+
+  describe('offboarding permission validation', () => {
+    it('accepts a grant with offboarding:read and offboarding:prepare', async () => {
+      vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+        data: {
+          agencyId: 'agency-owner',
+          principalId: 'org-1',
+          agency: { id: 'agency-owner', name: 'Owner', email: 'owner@example.com' },
+        },
+        error: null,
+      });
+      vi.mocked(agentGrantService.createOrReactivateGrant).mockResolvedValue({
+        id: 'grant-ob-1',
+        permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+      } as any);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/agencies/agency-owner/agent-grants',
+        headers: { authorization: 'Bearer session' },
+        payload: {
+          oauthClientId: 'oauth-client-ob',
+          displayName: 'Offboarding agent',
+          permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(agentGrantService.createOrReactivateGrant).toHaveBeenCalledWith(
+        expect.objectContaining({
+          permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+        })
+      );
+    });
+
+    it('rejects a grant with an invalid offboarding permission', async () => {
+      vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+        data: {
+          agencyId: 'agency-owner',
+          principalId: 'org-1',
+          agency: { id: 'agency-owner', name: 'Owner', email: 'owner@example.com' },
+        },
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/agencies/agency-owner/agent-grants',
+        headers: { authorization: 'Bearer session' },
+        payload: {
+          oauthClientId: 'oauth-client-bad',
+          displayName: 'Bad agent',
+          permissions: ['workspace:read', 'offboarding:admin'],
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('VALIDATION_ERROR');
+      expect(agentGrantService.createOrReactivateGrant).not.toHaveBeenCalled();
+    });
+
+    it('rejects a grant update with an invalid offboarding permission', async () => {
+      vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+        data: {
+          agencyId: 'agency-owner',
+          principalId: 'org-1',
+          agency: { id: 'agency-owner', name: 'Owner', email: 'owner@example.com' },
+        },
+        error: null,
+      });
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/agencies/agency-owner/agent-grants/grant-1',
+        headers: { authorization: 'Bearer session' },
+        payload: {
+          permissions: ['workspace:read', 'offboarding:delete'],
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.code).toBe('VALIDATION_ERROR');
+      expect(agentGrantService.updateGrant).not.toHaveBeenCalled();
+    });
+
+    it('accepts a grant update adding offboarding:read and offboarding:prepare', async () => {
+      vi.mocked(authorization.resolvePrincipalAgency).mockResolvedValue({
+        data: {
+          agencyId: 'agency-owner',
+          principalId: 'org-1',
+          agency: { id: 'agency-owner', name: 'Owner', email: 'owner@example.com' },
+        },
+        error: null,
+      });
+      vi.mocked(agentGrantService.updateGrant).mockResolvedValue({
+        id: 'grant-1',
+        permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+      } as any);
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/agencies/agency-owner/agent-grants/grant-1',
+        headers: { authorization: 'Bearer session' },
+        payload: {
+          permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(agentGrantService.updateGrant).toHaveBeenCalledWith(
+        expect.objectContaining({
+          permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+        })
+      );
+    });
+  });
 });
