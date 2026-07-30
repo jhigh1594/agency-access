@@ -42,6 +42,7 @@ vi.mock('@/lib/prisma.js', () => ({
 
 vi.mock('@/lib/env.js', () => ({
   env: { FRONTEND_URL: 'https://app.example.com' },
+  isOffboardingEnabled: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock('@/lib/authorization.js', async (importOriginal) => {
