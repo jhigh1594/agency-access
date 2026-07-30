@@ -110,6 +110,9 @@ const envSchema = z.object({
   GOOGLE_ADS_DEVELOPER_TOKEN: z.string().optional(),
   GOOGLE_ADS_LOGIN_CUSTOMER_ID: z.string().optional(),
 
+  // Google Merchant Center API version
+  GOOGLE_MERCHANT_CENTER_API_VERSION: z.string().optional(),
+
   // TikTok OAuth
   TIKTOK_CLIENT_ID: z.string().optional(),
   TIKTOK_CLIENT_SECRET: z.string().optional(),

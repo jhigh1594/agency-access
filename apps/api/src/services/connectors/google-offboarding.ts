@@ -529,6 +529,7 @@ interface AdminGuardResult {
   allowed: boolean;
   outcome?: OffboardingProviderOutcome;
   reason?: string;
+  retryable?: boolean;
 }
 
 async function guardBusinessAdminRemoval(
