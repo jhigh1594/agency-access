@@ -15,7 +15,9 @@ export type AgentActionType =
   | 'access_request.dispatch'
   | 'access_request.cancel'
   | 'operation.read'
-  | 'provider.consent.complete';
+  | 'provider.consent.complete'
+  | 'offboarding.read'
+  | 'offboarding.prepare';
 
 export interface AgentActionPolicy {
   permission: AgentPermission | null;
@@ -37,6 +39,8 @@ const policies: Record<AgentActionType, AgentActionPolicy> = {
   'access_request.cancel': { permission: 'requests:cancel', riskClass: 'consequential' },
   'operation.read': { permission: 'operations:read', riskClass: 'read' },
   'provider.consent.complete': { permission: null, riskClass: 'human_only' },
+  'offboarding.read': { permission: 'offboarding:read', riskClass: 'read' },
+  'offboarding.prepare': { permission: 'offboarding:prepare', riskClass: 'reversible' },
 };
 
 export class AgentPolicyError extends Error {

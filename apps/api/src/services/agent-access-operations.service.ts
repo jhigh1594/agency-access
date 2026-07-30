@@ -16,6 +16,7 @@ import { agentOperationService } from '@/services/agent-operation.service.js';
 import { agentPolicyService } from '@/services/agent-policy.service.js';
 import { clientService } from '@/services/client.service.js';
 import { connectionService } from '@/services/connection.service.js';
+import { clientOffboardingService } from '@/services/client-offboarding.service.js';
 import { templateService } from '@/services/template.service.js';
 
 const PaginationSchema = z.object({ limit: z.number().int().min(1).max(100).default(25), offset: z.number().int().min(0).default(0) }).strict();
@@ -463,5 +464,61 @@ export const agentAccessOperationsService = {
         };
       },
     });
+  },
+
+  async prepareOffboarding(principal: AgentPrincipal, input: {
+    connectionId: string;
+    idempotencyKey: string;
+    intentHash: string;
+  }) {
+    agentPolicyService.authorize(principal, 'offboarding.prepare');
+    const { idempotencyKey, ...snapshotInput } = input;
+    const snapshot = z.object({
+      connectionId: z.string().min(1),
+      intentHash: z.string().min(1).max(128),
+    }).strict().parse(snapshotInput);
+
+    const connection = await agencyPlatformService.getConnections(principal.agencyId);
+    if (connection.error) throw new Error('Connection state is temporarily unavailable');
+    const belongsToAgency = (connection.data || []).some(
+      (c: any) => c.id === snapshot.connectionId || c.connectionId === snapshot.connectionId
+    );
+    if (!belongsToAgency) throw new Error('Connection not found in the authorized agency');
+
+    return agentOperationService.prepare({
+      principal,
+      actionType: 'offboarding.prepare',
+      idempotencyKey: input.idempotencyKey,
+      input: snapshot,
+    });
+  },
+
+  async getOffboardingRunState(principal: AgentPrincipal, runId: string) {
+    agentPolicyService.authorize(principal, 'offboarding.read');
+    const run = await clientOffboardingService.getRun({ runId });
+    if (!run) throw new Error('Offboarding run not found');
+
+    const runRecord = run as Record<string, unknown>;
+    if (runRecord.agencyId !== principal.agencyId) {
+      throw new Error('Offboarding run not found in the authorized agency');
+    }
+
+    await auditRead(principal, 'AGENT_OFFBOARDING_READ', 'google_offboarding_run', runId);
+
+    return {
+      id: runRecord.id,
+      status: runRecord.status,
+      connectionId: runRecord.connectionId,
+      finalOutcome: runRecord.finalOutcome || null,
+      items: Array.isArray(runRecord.items)
+        ? (runRecord.items as Array<Record<string, unknown>>).map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            classification: item.classification,
+            status: item.status,
+            providerOutcome: item.providerOutcome || null,
+          }))
+        : [],
+    };
   },
 };
