@@ -7,7 +7,10 @@ import type {
   GoogleTagManagerContainer,
   GoogleSearchConsoleSite,
   GoogleMerchantCenterAccount,
+  GooglePlatformProductId,
+  OffboardingItemClassification,
 } from '@agency-platform/shared';
+import { GOOGLE_PRODUCT_OAUTH_REQUIREMENTS } from '@agency-platform/shared';
 
 /**
  * Unified Google OAuth Connector
@@ -36,6 +39,29 @@ interface GoogleTokens {
   refreshToken?: string;
   expiresIn: number;
   expiresAt: Date;
+}
+
+export const MERCHANT_ACCOUNTS_V1_BASE_URL =
+  'https://merchantapi.googleapis.com/accounts/v1';
+
+export function isMerchantV1Ready(): boolean {
+  return env.GOOGLE_MERCHANT_CENTER_API_VERSION === 'v1';
+}
+
+export function evaluateOffboardingScopeReadiness(
+  grantedScopes: ReadonlySet<string>,
+  productId: GooglePlatformProductId
+): OffboardingItemClassification {
+  const requirement = GOOGLE_PRODUCT_OAUTH_REQUIREMENTS[productId];
+  if (!requirement || requirement.managementScopes.length === 0) {
+    return 'eligible_automatic';
+  }
+
+  const hasAllManagementScopes = requirement.managementScopes.every((scope) =>
+    grantedScopes.has(scope)
+  );
+
+  return hasAllManagementScopes ? 'eligible_automatic' : 'reconnect_required';
 }
 
 // Union type for all Google product accounts

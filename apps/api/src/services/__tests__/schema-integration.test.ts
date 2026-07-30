@@ -540,3 +540,83 @@ describe.skipIf(!process.env.DATABASE_URL)('Schema Integration Tests', () => {
     });
   });
 });
+
+describe('Google Client Offboarding Schema Integration', () => {
+  it('validates that Prisma client includes the new offboarding models', () => {
+    const { Prisma } = require('@prisma/client');
+    const modelNames = Object.keys(Prisma.ModelName || {});
+
+    expect(modelNames).toContain('GoogleOffboardingRun');
+    expect(modelNames).toContain('GoogleOffboardingItem');
+    expect(modelNames).toContain('GoogleOffboardingAttempt');
+  });
+
+  it('validates that offboarding model enums and fields are accessible via DMMF', () => {
+    const { Prisma } = require('@prisma/client');
+    const dmmf = Prisma.dmmf;
+
+    const runModel = dmmf.datamodel.models.find(
+      (m: { name: string }) => m.name === 'GoogleOffboardingRun'
+    );
+    expect(runModel).toBeDefined();
+    expect(runModel.fields.map((f: { name: string }) => f.name)).toContain('status');
+    expect(runModel.fields.map((f: { name: string }) => f.name)).toContain('idempotencyKey');
+    expect(runModel.fields.map((f: { name: string }) => f.name)).toContain('snapshotHash');
+    expect(runModel.fields.map((f: { name: string }) => f.name)).toContain('finalOutcome');
+
+    const itemModel = dmmf.datamodel.models.find(
+      (m: { name: string }) => m.name === 'GoogleOffboardingItem'
+    );
+    expect(itemModel).toBeDefined();
+    expect(itemModel.fields.map((f: { name: string }) => f.name)).toContain('classification');
+    expect(itemModel.fields.map((f: { name: string }) => f.name)).toContain('providerOutcome');
+    expect(itemModel.fields.map((f: { name: string }) => f.name)).toContain('attestedById');
+
+    const attemptModel = dmmf.datamodel.models.find(
+      (m: { name: string }) => m.name === 'GoogleOffboardingAttempt'
+    );
+    expect(attemptModel).toBeDefined();
+    expect(attemptModel.fields.map((f: { name: string }) => f.name)).toContain('action');
+    expect(attemptModel.fields.map((f: { name: string }) => f.name)).toContain('responseClassification');
+    expect(attemptModel.fields.map((f: { name: string }) => f.name)).not.toContain('updatedAt');
+  });
+
+  it('validates that offboarding models have correct table mappings', () => {
+    const { Prisma } = require('@prisma/client');
+    const dmmf = Prisma.dmmf;
+
+    const runModel = dmmf.datamodel.models.find(
+      (m: { name: string }) => m.name === 'GoogleOffboardingRun'
+    );
+    expect((runModel as any)?.dbName).toBe('google_offboarding_runs');
+
+    const itemModel = dmmf.datamodel.models.find(
+      (m: { name: string }) => m.name === 'GoogleOffboardingItem'
+    );
+    expect((itemModel as any)?.dbName).toBe('google_offboarding_items');
+
+    const attemptModel = dmmf.datamodel.models.find(
+      (m: { name: string }) => m.name === 'GoogleOffboardingAttempt'
+    );
+    expect((attemptModel as any)?.dbName).toBe('google_offboarding_attempts');
+  });
+
+  it('validates the clientOffboardingService can resolve types correctly', async () => {
+    const { clientOffboardingService } = await import('@/services/client-offboarding.service');
+
+    expect(clientOffboardingService).toBeDefined();
+    expect(typeof clientOffboardingService.prepare).toBe('function');
+    expect(typeof clientOffboardingService.transition).toBe('function');
+    expect(typeof clientOffboardingService.deriveRunStatus).toBe('function');
+    expect(typeof clientOffboardingService.serializeReceipt).toBe('function');
+    expect(typeof clientOffboardingService.updateItemSnapshot).toBe('function');
+    expect(typeof clientOffboardingService.recordAttemptUpdate).toBe('function');
+    expect(typeof clientOffboardingService.addAttempt).toBe('function');
+    expect(typeof clientOffboardingService.cancelRun).toBe('function');
+    expect(typeof clientOffboardingService.getRun).toBe('function');
+    expect(typeof clientOffboardingService.getItemAttempts).toBe('function');
+    expect(typeof clientOffboardingService.updateItemStatus).toBe('function');
+    expect(typeof clientOffboardingService.deriveRunOutcome).toBe('function');
+    expect(typeof clientOffboardingService.confirmRun).toBe('function');
+  });
+});

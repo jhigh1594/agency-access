@@ -96,6 +96,85 @@ describe('agent-grant.service', () => {
     });
   });
 
+  it('rejects an invalid offboarding permission on createOrReactivateGrant', async () => {
+    vi.mocked(prisma.agentGrant.upsert).mockResolvedValue({
+      id: 'grant-1',
+      agencyId: 'agency-1',
+      ownerSubject: 'user-1',
+      oauthClientId: 'oauth-client-1',
+      displayName: 'Personal agent',
+      permissions: ['workspace:read'],
+      state: 'active',
+    } as any);
+
+    await expect(
+      agentGrantService.createOrReactivateGrant({
+        agencyId: 'agency-1',
+        ownerSubject: 'user-1',
+        oauthClientId: 'oauth-client-1',
+        displayName: 'Personal agent',
+        permissions: ['offboarding:read', 'offboarding:admin'],
+        requestMetadata: { ipAddress: '127.0.0.1', userAgent: 'test' },
+      })
+    ).rejects.toThrow();
+
+    expect(prisma.agentGrant.upsert).not.toHaveBeenCalled();
+  });
+
+  it('accepts a grant with offboarding:read and offboarding:prepare permissions', async () => {
+    vi.mocked(prisma.agentGrant.upsert).mockResolvedValue({
+      id: 'grant-2',
+      agencyId: 'agency-1',
+      ownerSubject: 'user-1',
+      oauthClientId: 'oauth-client-2',
+      displayName: 'Offboarding agent',
+      permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+      state: 'active',
+    } as any);
+
+    const result = await agentGrantService.createOrReactivateGrant({
+      agencyId: 'agency-1',
+      ownerSubject: 'user-1',
+      oauthClientId: 'oauth-client-2',
+      displayName: 'Offboarding agent',
+      permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+      requestMetadata: { ipAddress: '127.0.0.1', userAgent: 'test' },
+    });
+
+    expect(result).toMatchObject({
+      id: 'grant-2',
+      permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+    });
+    expect(prisma.agentGrant.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+        }),
+      })
+    );
+  });
+
+  it('resolves an active grant with offboarding:read and offboarding:prepare', async () => {
+    vi.mocked(prisma.agentGrant.findFirst).mockResolvedValue({
+      id: 'grant-3',
+      agencyId: 'agency-1',
+      ownerSubject: 'user-1',
+      oauthClientId: 'oauth-client-3',
+      permissions: ['workspace:read', 'offboarding:read', 'offboarding:prepare'],
+      state: 'active',
+    } as any);
+
+    const grant = await agentGrantService.resolveActiveGrant({
+      ownerSubject: 'user-1',
+      oauthClientId: 'oauth-client-3',
+      clerkPrincipalId: 'org-1',
+    });
+
+    expect(grant).not.toBeNull();
+    expect(grant!.permissions).toContain('offboarding:read');
+    expect(grant!.permissions).toContain('offboarding:prepare');
+  });
+
   it('soft-revokes the grant and cancels pending non-executing operations atomically', async () => {
     vi.mocked(prisma.agentGrant.updateMany).mockResolvedValue({ count: 1 });
     vi.mocked(prisma.agentOperation.updateMany).mockResolvedValue({ count: 2 });

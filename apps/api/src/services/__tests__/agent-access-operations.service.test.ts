@@ -9,6 +9,7 @@ import { agencyPlatformService } from '@/services/agency-platform.service.js';
 import { accessRequestService } from '@/services/access-request.service.js';
 import { accessRequestNotificationService } from '@/services/access-request-notification.service.js';
 import { connectionService } from '@/services/connection.service.js';
+import { clientOffboardingService } from '@/services/client-offboarding.service.js';
 
 vi.mock('@/lib/env.js', () => ({ env: { FRONTEND_URL: 'https://app.example.com' } }));
 vi.mock('@/lib/prisma.js', () => ({ prisma: { agency: { findFirst: vi.fn(), findUnique: vi.fn() }, auditLog: { create: vi.fn() } } }));
@@ -20,10 +21,11 @@ vi.mock('@/services/agency.service.js', () => ({ agencyService: { updateAgency: 
 vi.mock('@/services/access-request.service.js', () => ({ accessRequestService: { getAgencyAccessRequests: vi.fn(), getAccessRequestById: vi.fn(), findByAgentOperation: vi.fn(), createAccessRequest: vi.fn(), cancelAccessRequest: vi.fn() } }));
 vi.mock('@/services/access-request-notification.service.js', () => ({ accessRequestNotificationService: { sendClientInvite: vi.fn() } }));
 vi.mock('@/services/agent-operation.service.js', () => ({ agentOperationService: { prepare: vi.fn(), execute: vi.fn(), getScoped: vi.fn() } }));
+vi.mock('@/services/client-offboarding.service.js', () => ({ clientOffboardingService: { getRun: vi.fn() } }));
 
 const principal: AgentPrincipal = {
   kind: 'agent', ownerSubject: 'user-1', agencyId: 'agency-1', oauthClientId: 'oauth-1', grantId: 'grant-1', displayName: 'Assistant',
-  permissions: ['workspace:read', 'clients:read', 'clients:write', 'templates:read', 'connections:read', 'connections:handoff', 'requests:read', 'requests:prepare', 'requests:dispatch', 'operations:read'],
+  permissions: ['workspace:read', 'clients:read', 'clients:write', 'templates:read', 'connections:read', 'connections:handoff', 'requests:read', 'requests:prepare', 'requests:dispatch', 'operations:read', 'offboarding:read', 'offboarding:prepare'],
   requestMetadata: { ipAddress: '127.0.0.1', userAgent: 'test', correlationId: 'req-1' },
 };
 
@@ -152,5 +154,68 @@ describe('agentAccessOperationsService', () => {
     const result = await agentAccessOperationsService.getRequestState(principal, 'request-1');
     expect(result).toMatchObject({ id: 'request-1', completionState: 'follow_up_needed', unresolvedProducts: ['ga4'] });
     expect(JSON.stringify(result)).not.toMatch(/never-return|private@example/);
+  });
+
+  describe('offboarding agent operations', () => {
+    it('prepares an offboarding operation with reversible risk class', async () => {
+      vi.mocked(agencyPlatformService.getConnections).mockResolvedValue({ data: [{ id: 'conn-1', connectionId: 'conn-1', status: 'active' }], error: null } as any);
+      vi.mocked(agentOperationService.prepare).mockResolvedValue({ id: 'op-off-1', status: 'prepared', riskClass: 'reversible' } as any);
+
+      const result = await agentAccessOperationsService.prepareOffboarding(principal, {
+        connectionId: 'conn-1',
+        idempotencyKey: 'off-prep-1',
+        intentHash: 'sha256-abc',
+      });
+
+      expect(result).toMatchObject({ id: 'op-off-1', status: 'prepared' });
+      expect(agentOperationService.prepare).toHaveBeenCalledWith(expect.objectContaining({
+        actionType: 'offboarding.prepare',
+        idempotencyKey: 'off-prep-1',
+      }));
+    });
+
+    it('rejects prepare for connection outside the agency', async () => {
+      vi.mocked(agencyPlatformService.getConnections).mockResolvedValue({ data: [{ id: 'conn-2', status: 'active' }], error: null } as any);
+
+      await expect(agentAccessOperationsService.prepareOffboarding(principal, {
+        connectionId: 'conn-external',
+        idempotencyKey: 'off-prep-2',
+        intentHash: 'sha256-xyz',
+      })).rejects.toThrow('Connection not found in the authorized agency');
+    });
+
+    it('reads offboarding run state with sanitized output', async () => {
+      vi.mocked(clientOffboardingService.getRun).mockResolvedValue({
+        id: 'run-1',
+        agencyId: 'agency-1',
+        connectionId: 'conn-1',
+        status: 'completed',
+        finalOutcome: 'completed',
+        items: [
+          { id: 'item-1', productId: 'google_ads', classification: 'eligible_automatic', status: 'revoked_verified', providerOutcome: 'deleted' },
+          { id: 'item-2', productId: 'google_search_console', classification: 'eligible_automatic', status: 'attestation_recorded', providerOutcome: 'manual_handoff' },
+        ],
+      });
+
+      const result = await agentAccessOperationsService.getOffboardingRunState(principal, 'run-1');
+
+      expect(result.id).toBe('run-1');
+      expect(result.status).toBe('completed');
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0]).toMatchObject({ productId: 'google_ads', status: 'revoked_verified' });
+      expect(JSON.stringify(result)).not.toContain('accessToken');
+    });
+
+    it('rejects read for offboarding run outside the agency', async () => {
+      vi.mocked(clientOffboardingService.getRun).mockResolvedValue({
+        id: 'run-2',
+        agencyId: 'agency-other',
+        connectionId: 'conn-2',
+        status: 'prepared',
+        items: [],
+      });
+
+      await expect(agentAccessOperationsService.getOffboardingRunState(principal, 'run-2')).rejects.toThrow('not found in the authorized agency');
+    });
   });
 });

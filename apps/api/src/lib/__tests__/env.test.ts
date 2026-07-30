@@ -322,4 +322,105 @@ describe('env contract', () => {
     expect(module.env.WEBHOOK_FAILURE_DISABLE_THRESHOLD).toBe(3);
     expect(module.env.WEBHOOK_MAX_ATTEMPTS).toBe(4);
   });
+
+  describe('Google client offboarding feature flag', () => {
+    it('defaults offboarding to disabled', async () => {
+      const module = await importEnvWith(withRequiredBase());
+      expect(module.env.GOOGLE_CLIENT_OFFBOARDING_ENABLED).toBe(false);
+      expect(module.env.GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED).toBe(false);
+    });
+
+    it('parses offboarding flags as booleans', async () => {
+      const module = await importEnvWith(withRequiredBase({
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: 'true',
+      }));
+      expect(module.env.GOOGLE_CLIENT_OFFBOARDING_ENABLED).toBe(true);
+      expect(module.env.GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED).toBe(true);
+    });
+
+    it('isOffboardingEnabled returns false when global flag is disabled', async () => {
+      const module = await importEnvWith(withRequiredBase({
+        GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: 'agency_1,agency_2',
+      }));
+      expect(module.isOffboardingEnabled('agency_1')).toBe(false);
+    });
+
+    it('isOffboardingEnabled returns false when no agencyId is provided', async () => {
+      const module = await importEnvWith(withRequiredBase({
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: 'agency_1',
+      }));
+      expect(module.isOffboardingEnabled()).toBe(false);
+      expect(module.isOffboardingEnabled(undefined)).toBe(false);
+    });
+
+    it('isOffboardingEnabled returns false when allowlist is empty', async () => {
+      const module = await importEnvWith(withRequiredBase({
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: undefined,
+      }));
+      expect(module.isOffboardingEnabled('agency_1')).toBe(false);
+    });
+
+    it('isOffboardingEnabled returns true only for allowlisted agencies', async () => {
+      const module = await importEnvWith(withRequiredBase({
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: 'agency_1,agency_2',
+      }));
+      expect(module.isOffboardingEnabled('agency_1')).toBe(true);
+      expect(module.isOffboardingEnabled('agency_2')).toBe(true);
+      expect(module.isOffboardingEnabled('agency_3')).toBe(false);
+    });
+
+    it('parses offboarding allowed agencies as trimmed array', async () => {
+      const module = await importEnvWith(withRequiredBase({
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: ' agency_a , agency_b ,,',
+      }));
+      expect(module.env.GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES).toEqual(['agency_a', 'agency_b']);
+    });
+
+    it('fails in production when offboarding enabled without Google OAuth credentials', async () => {
+      await expect(importEnvWith(withRequiredBase({
+        NODE_ENV: 'production',
+        FRONTEND_URL: 'https://app.example.com',
+        API_URL: 'https://api.example.com',
+        INFISICAL_ENVIRONMENT: 'production',
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_ID: undefined,
+        GOOGLE_CLIENT_SECRET: undefined,
+      }))).rejects.toThrow('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required when Google client offboarding is enabled');
+    });
+
+    it('fails in production when GA4 offboarding enabled without developer token', async () => {
+      await expect(importEnvWith(withRequiredBase({
+        NODE_ENV: 'production',
+        FRONTEND_URL: 'https://app.example.com',
+        API_URL: 'https://api.example.com',
+        INFISICAL_ENVIRONMENT: 'production',
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_ID: 'test-client-id',
+        GOOGLE_CLIENT_SECRET: 'test-client-secret',
+        OFFBOARDING_CAPABILITY_SECRET: 'test-cap-secret',
+        GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: 'true',
+        GOOGLE_ADS_DEVELOPER_TOKEN: undefined,
+      }))).rejects.toThrow('GOOGLE_ADS_DEVELOPER_TOKEN is required when the GA4 offboarding adapter is enabled');
+    });
+
+    it('allows GA4 offboarding enabled with developer token present', async () => {
+      await expect(importEnvWith(withRequiredBase({
+        NODE_ENV: 'production',
+        FRONTEND_URL: 'https://app.example.com',
+        API_URL: 'https://api.example.com',
+        INFISICAL_ENVIRONMENT: 'production',
+        GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
+        GOOGLE_CLIENT_ID: 'test-client-id',
+        GOOGLE_CLIENT_SECRET: 'test-client-secret',
+        OFFBOARDING_CAPABILITY_SECRET: 'test-cap-secret',
+        GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: 'true',
+        GOOGLE_ADS_DEVELOPER_TOKEN: 'test-dev-token',
+      }))).resolves.toBeDefined();
+    });
+  });
 });

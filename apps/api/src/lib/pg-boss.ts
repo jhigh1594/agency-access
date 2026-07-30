@@ -72,6 +72,9 @@ export interface JobRegistry {
       };
     };
   };
+
+  // Google client offboarding
+  'google-client-offboarding': { runId: string };
 }
 
 export type JobName = keyof JobRegistry;
@@ -154,6 +157,7 @@ export async function ensureAllQueues(): Promise<void> {
     'onboarding-email',
     'google-native-grant',
     'authorization-verification',
+    'google-client-offboarding',
   ];
 
   await Promise.all(queueNames.map(name => ensureQueue(name)));

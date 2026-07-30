@@ -77,11 +77,12 @@ export function ClientDetailHarness({ searchParams }: ClientDetailHarnessProps) 
         <ClientDetailHeader client={data.client} />
         <ClientStats stats={data.stats} />
         <ClientTabs
-          platformGroups={data.platformGroups}
-          accessRequests={data.accessRequests}
-          activity={data.activity}
-          initialExpandedPlatformGroup={initialExpandedPlatformGroup}
-        />
+            platformGroups={data.platformGroups}
+            accessRequests={data.accessRequests}
+            activity={data.activity}
+            clientId={data.client.id}
+            initialExpandedPlatformGroup={initialExpandedPlatformGroup}
+          />
       </div>
     </div>
   );

@@ -283,6 +283,41 @@ export async function startAuthorizationVerificationHandler(): Promise<void> {
 }
 
 /**
+ * Google Client Offboarding Handler
+ */
+export async function startGoogleClientOffboardingHandler(): Promise<void> {
+  await registerHandler('google-client-offboarding', async (job) => {
+    const { runId } = job.data as { runId: string };
+
+    const { executeRun, executeCleanup } = await import('@/services/google-offboarding-executor');
+    const runResult = await executeRun(runId);
+
+    if (runResult.errors.length > 0 && runResult.finalStatus === 'incomplete') {
+      logger.warn('Google client offboarding run completed with errors', {
+        runId,
+        errors: runResult.errors,
+      });
+      return;
+    }
+
+    try {
+      const cleanupResult = await executeCleanup(runId);
+      logger.info('Google client offboarding cleanup completed', {
+        runId,
+        cleanupResult: cleanupResult.cleanupResult,
+        finalStatus: cleanupResult.finalStatus,
+      });
+    } catch (cleanupError) {
+      logger.error('Google client offboarding cleanup failed', {
+        runId,
+        error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+      });
+      throw cleanupError;
+    }
+  }, { teamSize: 1, teamConcurrency: 1 });
+}
+
+/**
  * Start all job handlers
  */
 export async function startAllHandlers(): Promise<void> {
@@ -295,6 +330,7 @@ export async function startAllHandlers(): Promise<void> {
     startTrialExpirationHandler(),
     startGoogleNativeGrantHandler(),
     startAuthorizationVerificationHandler(),
+    startGoogleClientOffboardingHandler(),
   ]);
 
   logger.info('All pg-boss job handlers started');

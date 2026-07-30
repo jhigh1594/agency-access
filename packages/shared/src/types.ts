@@ -241,6 +241,8 @@ export const AgentPermissionSchema = z.enum([
   'requests:dispatch',
   'requests:cancel',
   'operations:read',
+  'offboarding:read',
+  'offboarding:prepare',
 ]);
 export type AgentPermission = z.infer<typeof AgentPermissionSchema>;
 
@@ -903,6 +905,82 @@ export const GOOGLE_PRODUCT_OAUTH_REQUIREMENTS: Record<
     managementScopes: [],
   },
 };
+
+// ======================================================================
+// Google Client Offboarding
+// ======================================================================
+
+export const OffboardingRunStatusSchema = z.enum([
+  'prepared',
+  'awaiting_approval',
+  'queued',
+  'executing',
+  'receipt_pending',
+  'completed',
+  'completed_with_manual_follow_up',
+  'incomplete',
+  'canceled',
+]);
+export type OffboardingRunStatus = z.infer<typeof OffboardingRunStatusSchema>;
+
+export const OffboardingItemStatusSchema = z.enum([
+  'pending',
+  'revoked_verified',
+  'already_absent',
+  'awaiting_client_approval',
+  'manual_action_required',
+  'reconnect_required',
+  'not_safely_reversible',
+  'failed_retryable',
+  'failed_terminal',
+  'attestation_recorded',
+]);
+export type OffboardingItemStatus = z.infer<typeof OffboardingItemStatusSchema>;
+
+export const OffboardingItemClassificationSchema = z.enum([
+  'eligible_automatic',
+  'manual_action_required',
+  'not_safely_reversible',
+  'reconnect_required',
+]);
+export type OffboardingItemClassification = z.infer<typeof OffboardingItemClassificationSchema>;
+
+export const OffboardingProviderOutcomeSchema = z.enum([
+  'deleted',
+  'already_absent',
+  'approval_pending',
+  'manual_handoff',
+  'reconnect_required',
+  'transient_failure',
+  'terminal_failure',
+  'verification_failed',
+]);
+export type OffboardingProviderOutcome = z.infer<typeof OffboardingProviderOutcomeSchema>;
+
+export const OffboardingItemSchema = z.object({
+  id: z.string(),
+  runId: z.string(),
+  productId: z.string(),
+  classification: OffboardingItemClassificationSchema,
+  status: OffboardingItemStatusSchema,
+  assetLabel: z.string(),
+  grantId: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type OffboardingItem = z.infer<typeof OffboardingItemSchema>;
+
+export const OffboardingRunSchema = z.object({
+  id: z.string(),
+  agencyId: z.string(),
+  connectionId: z.string(),
+  status: OffboardingRunStatusSchema,
+  idempotencyKey: z.string(),
+  snapshotHash: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type OffboardingRun = z.infer<typeof OffboardingRunSchema>;
 
 const DISCOVERY_ONLY_FULFILLMENT_MODES = new Set<GoogleProductFulfillmentMode>(['discovery']);
 

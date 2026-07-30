@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GoogleConnector } from '../google.js';
+import { GoogleConnector, evaluateOffboardingScopeReadiness, isMerchantV1Ready } from '../google.js';
 import { env } from '../../../lib/env.js';
 
 // Mock env used by GoogleConnector constructor
@@ -777,5 +777,64 @@ describe('GoogleConnector', () => {
         }),
       })
     );
+  });
+});
+
+describe('offboarding prerequisite checks', () => {
+  it('classifies GA4 as reconnect_required when analytics.manage.users scope is missing', () => {
+    const grantedScopes = new Set([
+      'https://www.googleapis.com/auth/analytics.readonly',
+      'openid',
+    ]);
+
+    const result = evaluateOffboardingScopeReadiness(grantedScopes, 'ga4');
+
+    expect(result).toBe('reconnect_required');
+  });
+
+  it('classifies GTM as reconnect_required when tagmanager.manage.users scope is missing', () => {
+    const grantedScopes = new Set([
+      'https://www.googleapis.com/auth/tagmanager.readonly',
+      'openid',
+    ]);
+
+    const result = evaluateOffboardingScopeReadiness(grantedScopes, 'google_tag_manager');
+
+    expect(result).toBe('reconnect_required');
+  });
+
+  it('classifies GA4 as eligible_automatic when management scope is present', () => {
+    const grantedScopes = new Set([
+      'https://www.googleapis.com/auth/analytics.readonly',
+      'https://www.googleapis.com/auth/analytics.manage.users',
+      'openid',
+    ]);
+
+    const result = evaluateOffboardingScopeReadiness(grantedScopes, 'ga4');
+
+    expect(result).toBe('eligible_automatic');
+  });
+
+  it('classifies products with no management scopes as eligible_automatic', () => {
+    const grantedScopes = new Set([
+      'https://www.googleapis.com/auth/adwords',
+    ]);
+
+    const result = evaluateOffboardingScopeReadiness(grantedScopes, 'google_ads');
+
+    expect(result).toBe('eligible_automatic');
+  });
+
+  it('returns isMerchantV1Ready false when GOOGLE_MERCHANT_CENTER_API_VERSION is not v1', () => {
+    expect(isMerchantV1Ready()).toBe(false);
+  });
+
+  it('returns isMerchantV1Ready true when GOOGLE_MERCHANT_CENTER_API_VERSION equals v1', () => {
+    env.GOOGLE_MERCHANT_CENTER_API_VERSION = 'v1';
+    try {
+      expect(isMerchantV1Ready()).toBe(true);
+    } finally {
+      delete (env as any).GOOGLE_MERCHANT_CENTER_API_VERSION;
+    }
   });
 });

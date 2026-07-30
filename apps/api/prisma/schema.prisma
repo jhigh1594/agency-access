@@ -39,8 +39,9 @@ model Agency {
   webhookEndpoints    WebhookEndpoint[]
   webhookEvents       WebhookEvent[]
   metaDestinations    MetaAgencyDestination[]
-  agentGrants         AgentGrant[]
-  agentOperations     AgentOperation[]
+  agentGrants            AgentGrant[]
+  agentOperations        AgentOperation[]
+  googleOffboardingRuns  GoogleOffboardingRun[]
 
   @@map("agencies")
 }
@@ -261,9 +262,10 @@ model ClientConnection {
 
   accessRequest      AccessRequest           @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
   agency             Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  authorizations     PlatformAuthorization[]
-  googleNativeGrants GoogleNativeGrant[]
-  metaAssetGrants    MetaAssetGrant[]
+  authorizations         PlatformAuthorization[]
+  googleNativeGrants     GoogleNativeGrant[]
+  googleOffboardingRuns  GoogleOffboardingRun[]
+  metaAssetGrants        MetaAssetGrant[]
 
   @@index([agencyId, status])
   @@index([agencyId, createdAt])
@@ -432,12 +434,83 @@ model GoogleNativeGrant {
 
   accessRequest AccessRequest    @relation(fields: [accessRequestId], references: [id], onDelete: Cascade)
   connection    ClientConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  offboardingItems GoogleOffboardingItem[]
 
   @@unique([connectionId, product, assetId, grantMode])
   @@index([accessRequestId, product, createdAt])
   @@index([connectionId, nativeGrantState, updatedAt])
   @@index([product, nativeGrantState, updatedAt])
   @@map("google_native_grants")
+}
+
+model GoogleOffboardingRun {
+  id                   String    @id @default(uuid())
+  agencyId             String    @map("agency_id")
+  connectionId         String    @map("connection_id")
+  status               String // "prepared | awaiting_approval | queued | executing | receipt_pending | completed | completed_with_manual_follow_up | incomplete | canceled"
+  idempotencyKey       String    @unique @map("idempotency_key")
+  snapshotHash         String    @map("snapshot_hash")
+  credentialGeneration String?   @map("credential_generation")
+  approvedById         String?   @map("approved_by_id")
+  approvedAt           DateTime? @map("approved_at")
+  finalOutcome         String?   @map("final_outcome") // "completed | completed_with_manual_follow_up | incomplete | canceled"
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  agency   Agency                   @relation(fields: [agencyId], references: [id], onDelete: Restrict)
+  connection ClientConnection       @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  items    GoogleOffboardingItem[]
+  attempts GoogleOffboardingAttempt[]
+
+  @@index([agencyId, createdAt])
+  @@index([connectionId, status])
+  @@map("google_offboarding_runs")
+}
+
+model GoogleOffboardingItem {
+  id               String    @id @default(uuid())
+  runId            String    @map("run_id")
+  productId        String    @map("product_id")
+  classification   String // "eligible_automatic | manual_action_required | not_safely_reversible | reconnect_required"
+  status           String // "pending | revoked_verified | already_absent | awaiting_client_approval | manual_action_required | reconnect_required | not_safely_reversible | failed_retryable | failed_terminal | attestation_recorded"
+  assetLabel       String    @map("asset_label")
+  grantId          String?   @map("grant_id")
+  providerOutcome  String?   @map("provider_outcome") // "deleted | already_absent | approval_pending | manual_handoff | reconnect_required | transient_failure | terminal_failure | verification_failed"
+  providerRequestId String? @map("provider_request_id")
+  reason           String?   @db.Text
+  attestedById     String?   @map("attested_by_id")
+  attestedAt       DateTime? @map("attested_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  run      GoogleOffboardingRun   @relation(fields: [runId], references: [id], onDelete: Restrict)
+  grant    GoogleNativeGrant?    @relation(fields: [grantId], references: [id], onDelete: Restrict)
+  attempts GoogleOffboardingAttempt[]
+
+  @@unique([runId, productId, assetLabel])
+  @@index([runId, productId])
+  @@index([grantId])
+  @@map("google_offboarding_items")
+}
+
+model GoogleOffboardingAttempt {
+  id                     String   @id @default(uuid())
+  itemId                 String   @map("item_id")
+  runId                  String   @map("run_id")
+  action                 String // "provider_call | verification | secret_cleanup | attestation"
+  providerOutcome        String?  @map("provider_outcome")
+  requestId              String?  @map("request_id")
+  responseClassification String? @map("response_classification") // "success | transient_failure | terminal_failure | verification_failed"
+  errorCode              String?  @map("error_code")
+  errorMessage           String?  @db.Text
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  item GoogleOffboardingItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  run  GoogleOffboardingRun  @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@index([itemId, createdAt])
+  @@index([runId, createdAt])
+  @@map("google_offboarding_attempts")
 }
 
 model MetaAgencyDestination {
