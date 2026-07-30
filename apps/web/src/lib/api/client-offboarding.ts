@@ -26,14 +26,15 @@ export interface OffboardingItemStatus {
   productName: string;
   status:
     | 'pending'
-    | 'in_progress'
-    | 'completed'
-    | 'completed_with_manual_follow_up'
-    | 'failed_retryable'
-    | 'failed_permanent'
+    | 'revoked_verified'
+    | 'already_absent'
     | 'awaiting_client_approval'
-    | 'not_applicable'
-    | 'skipped';
+    | 'manual_action_required'
+    | 'reconnect_required'
+    | 'not_safely_reversible'
+    | 'failed_retryable'
+    | 'failed_terminal'
+    | 'attestation_recorded';
   outcome?: string;
   nextAction?: string;
   secretCleanupResult?: 'deleted' | 'already_absent' | 'failed';
@@ -44,12 +45,15 @@ export interface OffboardingRun {
   id: string;
   connectionId: string;
   status:
-    | 'pending_confirmation'
+    | 'prepared'
+    | 'awaiting_approval'
+    | 'queued'
     | 'executing'
+    | 'receipt_pending'
     | 'completed'
     | 'completed_with_manual_follow_up'
     | 'incomplete'
-    | 'failed';
+    | 'canceled';
   items: OffboardingItemStatus[];
   startedAt?: string;
   completedAt?: string;

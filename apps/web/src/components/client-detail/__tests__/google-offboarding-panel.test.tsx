@@ -101,7 +101,7 @@ const RUN_COMPLETED_MIXED = {
         id: 'item-ads',
         product: 'google_ads',
         productName: 'Google Ads',
-        status: 'completed' as const,
+        status: 'revoked_verified' as const,
         outcome: 'Access revoked for 3 accounts',
         secretCleanupResult: 'deleted' as const,
       },
@@ -109,15 +109,15 @@ const RUN_COMPLETED_MIXED = {
         id: 'item-ga4',
         product: 'ga4',
         productName: 'Google Analytics 4',
-        status: 'completed' as const,
-        outcome: 'Property access removed',
+        status: 'already_absent' as const,
+        outcome: 'Property access already absent',
         secretCleanupResult: 'already_absent' as const,
       },
       {
         id: 'item-scv',
         product: 'google_search_console',
         productName: 'Search Console',
-        status: 'completed_with_manual_follow_up' as const,
+        status: 'attestation_recorded' as const,
         outcome: 'Ownership delegation removed; manual verification cleanup needed',
         nextAction: 'Remove site from Search Console settings manually',
         verificationMethod: 'human_reported' as const,
@@ -126,7 +126,7 @@ const RUN_COMPLETED_MIXED = {
         id: 'item-gmc',
         product: 'google_merchant_center',
         productName: 'Merchant Center',
-        status: 'failed_permanent' as const,
+        status: 'failed_terminal' as const,
         outcome: 'Could not revoke — account not accessible',
         nextAction: 'Contact Google Merchant Center support',
       },
@@ -272,22 +272,18 @@ describe('GoogleOffboardingPanel — full flow receipt rendering', () => {
       qc,
     );
 
-    // Step 1: Begin
     await user.click(screen.getByRole('button', { name: /begin offboarding/i }));
     await waitFor(() => {
       expect(screen.getAllByText('Automatic').length).toBeGreaterThanOrEqual(1);
     });
 
-    // Step 2: Preview confirm -> goes to confirming phase
     await user.click(screen.getByRole('button', { name: /confirm offboarding/i }));
 
-    // Step 3: Confirming phase confirm -> executes
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /^confirm offboarding$/i })).toBeInTheDocument();
     });
     await user.click(screen.getByRole('button', { name: /^confirm offboarding$/i }));
 
-    // Step 4: Receipt rendered
     await waitFor(() => {
       expect(screen.getByText(/Follow-up Required/)).toBeInTheDocument();
     });
@@ -296,8 +292,8 @@ describe('GoogleOffboardingPanel — full flow receipt rendering', () => {
     expect(screen.getByText('Google Analytics 4')).toBeInTheDocument();
     expect(screen.getByText('Search Console')).toBeInTheDocument();
     expect(screen.getByText('Merchant Center')).toBeInTheDocument();
-    expect(screen.getAllByText('Completed').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Needs follow-up')).toBeInTheDocument();
+    expect(screen.getAllByText('Revoked & verified').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Already absent').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Failed')).toBeInTheDocument();
     expect(screen.getByText(/Remove site from Search Console settings/)).toBeInTheDocument();
     expect(screen.getByText(/Contact Google Merchant Center support/)).toBeInTheDocument();
