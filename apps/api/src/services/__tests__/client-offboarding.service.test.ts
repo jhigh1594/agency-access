@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import { clientOffboardingService } from '@/services/client-offboarding.service';
+import {
+  executeRun,
+  executeCleanup,
+  buildReceipt,
+  dispatchOffboardingRun,
+} from '@/services/google-offboarding-executor';
+import { auditService } from '@/services/audit.service';
+import { infisical } from '@/lib/infisical';
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -21,6 +29,7 @@ vi.mock('@/lib/prisma', () => ({
       findMany: vi.fn(),
       createMany: vi.fn(),
       updateMany: vi.fn(),
+      update: vi.fn(),
       findFirst: vi.fn(),
     },
     googleOffboardingAttempt: {
@@ -38,7 +47,59 @@ vi.mock('@/lib/prisma', () => ({
     auditLog: {
       create: vi.fn(),
     },
+    platformAuthorization: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/token-lifecycle.service', () => ({
+  refreshClientPlatformAuthorization: vi.fn(),
+}));
+
+vi.mock('@/services/connectors/google-offboarding', () => ({
+  revokeAdsManagerLink: vi.fn(),
+  revokeAdsDirectUser: vi.fn(),
+  revokeAdsPendingInvitation: vi.fn(),
+  revokeGa4AccessBinding: vi.fn(),
+  revokeBusinessAdmin: vi.fn(),
+  revokeBusinessLocationAdmin: vi.fn(),
+  revokeGtmUserPermission: vi.fn(),
+  revokeMerchantUser: vi.fn(),
+  verifyAdsManagerLink: vi.fn(),
+  verifyAdsUserRemoved: vi.fn(),
+  verifyGa4BindingRemoved: vi.fn(),
+  verifyGtmPermissionRemoved: vi.fn(),
+  verifyMerchantUserRemoved: vi.fn(),
+  buildSearchConsoleHandoff: vi.fn().mockReturnValue({
+    success: true,
+    providerOutcome: 'manual_handoff',
+    reason: 'Search Console has no API. Remove manually.',
+    retryable: false,
+  }),
+  normalizeProviderError: vi.fn(),
+}));
+
+vi.mock('@/lib/infisical', () => ({
+  infisical: {
+    deleteOAuthTokens: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/client-offboarding.service', async () => {
+  const actual = await vi.importActual<typeof import('@/services/client-offboarding.service')>('@/services/client-offboarding.service');
+  return {
+    clientOffboardingService: {
+      ...actual.clientOffboardingService,
+      deriveRunOutcome: vi.fn().mockResolvedValue('completed'),
+    },
+  };
+});
+
+vi.mock('@/services/audit.service', () => ({
+  auditService: {
+    createAuditLog: vi.fn().mockResolvedValue({ data: { id: 'audit-1' }, error: null }),
   },
 }));
 
@@ -463,6 +524,449 @@ describe('client-offboarding.service', () => {
       const aggregate = await clientOffboardingService.deriveRunStatus({ runId: 'run-1' });
 
       expect(aggregate).toBe('completed_with_manual_follow_up');
+    });
+  });
+});
+
+describe('google-offboarding-executor', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(prisma));
+    process.env.BACKGROUND_WORKERS_ENABLED = 'true';
+  });
+
+  describe('idempotency', () => {
+    it('double confirmation causes one provider reversal per item', async () => {
+      const run = {
+        id: 'run-idem',
+        agencyId: 'agency-1',
+        connectionId: 'conn-1',
+        status: 'queued',
+        idempotencyKey: 'idem-key',
+        snapshotHash: 'hash-1',
+        credentialGeneration: null,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const item = {
+        id: 'item-1',
+        runId: 'run-idem',
+        productId: 'google_ads',
+        classification: 'eligible_automatic',
+        status: 'pending',
+        assetLabel: 'ads-123',
+        grantId: 'grant-1',
+        grant: {
+          id: 'grant-1',
+          product: 'google_ads',
+          assetId: '123',
+          assetName: 'Account 1',
+          grantMode: 'manager_link',
+          managerCustomerId: '456',
+          providerExternalId: 'link-789',
+        },
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+      vi.mocked(prisma.googleOffboardingItem.findMany)
+        .mockResolvedValueOnce([item] as any)
+        .mockResolvedValueOnce([]);
+      vi.mocked(prisma.googleOffboardingItem.updateMany)
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValueOnce({ count: 0 });
+      vi.mocked(prisma.googleOffboardingItem.update).mockResolvedValue(item as any);
+
+      const { revokeAdsManagerLink } = await import('@/services/connectors/google-offboarding');
+      vi.mocked(revokeAdsManagerLink).mockResolvedValue({
+        success: true,
+        providerOutcome: 'deleted',
+        retryable: false,
+      });
+
+      const tokenResult = { data: { accessToken: 'tok', outcome: 'still_valid' as const }, error: null };
+      const { refreshClientPlatformAuthorization } = await import('@/services/token-lifecycle.service');
+      vi.mocked(refreshClientPlatformAuthorization).mockResolvedValue(tokenResult as any);
+
+      await executeRun('run-idem');
+
+      const firstCall = vi.mocked(prisma.googleOffboardingItem.updateMany).mock.calls[0];
+      expect(firstCall?.[0]?.where?.status).toBe('pending');
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue({
+        ...run,
+        status: 'executing',
+      } as any);
+      const secondResult = await executeRun('run-idem');
+      expect(secondResult.errors).toHaveLength(1);
+      expect(secondResult.errors[0]).toMatch(/terminal|in-progress/);
+
+      expect(vi.mocked(revokeAdsManagerLink)).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('credential generation guard', () => {
+    it('blocks execution when credential generation changed after preparation', async () => {
+      const run = {
+        id: 'run-cred',
+        agencyId: 'agency-1',
+        connectionId: 'conn-very-long-id-12345678',
+        status: 'queued',
+        idempotencyKey: 'idem-cred',
+        snapshotHash: 'hash-1',
+        credentialGeneration: 'gen-oldvalue',
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+
+      await expect(executeRun('run-cred')).rejects.toThrow(/credential.*generation|mismatch/i);
+    });
+  });
+
+  describe('lease expiry / recovery', () => {
+    it('re-reads exact recorded target before repeat mutation', async () => {
+      const run = {
+        id: 'run-lease',
+        agencyId: 'agency-1',
+        connectionId: 'conn-lease',
+        status: 'queued',
+        idempotencyKey: 'idem-lease',
+        snapshotHash: 'hash-1',
+        credentialGeneration: null,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const item = {
+        id: 'item-lease',
+        runId: 'run-lease',
+        productId: 'google_ads',
+        classification: 'eligible_automatic',
+        status: 'pending',
+        assetLabel: 'ads-lease',
+        grantId: 'grant-lease',
+        grant: { id: 'grant-lease', product: 'google_ads', assetId: '999', assetName: 'Lease Account' },
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue([item] as any);
+      vi.mocked(prisma.googleOffboardingItem.updateMany).mockResolvedValue({ count: 1 });
+      vi.mocked(prisma.googleOffboardingItem.update).mockResolvedValue(item as any);
+
+      const { refreshClientPlatformAuthorization } = await import('@/services/token-lifecycle.service');
+      vi.mocked(refreshClientPlatformAuthorization).mockResolvedValue({
+        data: { accessToken: 'tok', outcome: 'still_valid' as const }, error: null,
+      } as any);
+
+      const { revokeAdsManagerLink } = await import('@/services/connectors/google-offboarding');
+      vi.mocked(revokeAdsManagerLink).mockResolvedValue({
+        success: false,
+        providerOutcome: 'transient_failure',
+        reason: 'Lease expired',
+        retryable: true,
+      });
+
+      vi.mocked(prisma.googleOffboardingItem.findMany)
+        .mockResolvedValueOnce([item] as any)
+        .mockResolvedValueOnce([]);
+
+      await executeRun('run-lease');
+
+      const claimCall = vi.mocked(prisma.googleOffboardingItem.updateMany).mock.calls[0];
+      expect(claimCall?.[0]?.where).toEqual(
+        expect.objectContaining({ id: 'item-lease', status: 'pending', runId: 'run-lease' }),
+      );
+    });
+  });
+
+  describe('dispatch mode', () => {
+    it('executes inline without queue access when workers disabled', async () => {
+      process.env.BACKGROUND_WORKERS_ENABLED = 'false';
+
+      const run = {
+        id: 'run-inline',
+        agencyId: 'agency-1',
+        connectionId: 'conn-inline',
+        status: 'queued',
+        idempotencyKey: 'idem-inline',
+        snapshotHash: 'hash-1',
+        credentialGeneration: null,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue([]);
+      vi.mocked(clientOffboardingService.deriveRunOutcome).mockResolvedValue('completed');
+
+      await dispatchOffboardingRun('run-inline');
+
+      expect(prisma.googleOffboardingRun.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'run-inline' },
+          data: expect.objectContaining({ status: 'executing' }),
+        }),
+      );
+    });
+
+    it('queues one singleton job when workers enabled', async () => {
+      process.env.BACKGROUND_WORKERS_ENABLED = 'true';
+
+      const mockEnqueue = vi.fn().mockResolvedValue('job-id-1');
+      vi.doMock('@/lib/pg-boss.js', () => ({
+        enqueueJob: mockEnqueue,
+      }));
+
+      await dispatchOffboardingRun('run-queued');
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        'google-client-offboarding',
+        { runId: 'run-queued' },
+        expect.objectContaining({
+          singletonKey: 'google-client-offboarding-run-queued',
+        }),
+      );
+
+      vi.doUnmock('@/lib/pg-boss.js');
+    });
+  });
+
+  describe('already-absent target', () => {
+    it('completes without destructive retry', async () => {
+      const run = {
+        id: 'run-absent',
+        agencyId: 'agency-1',
+        connectionId: 'conn-absent',
+        status: 'queued',
+        idempotencyKey: 'idem-absent',
+        snapshotHash: 'hash-1',
+        credentialGeneration: null,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const item = {
+        id: 'item-absent',
+        runId: 'run-absent',
+        productId: 'ga4',
+        classification: 'eligible_automatic',
+        status: 'pending',
+        assetLabel: 'ga4-123',
+        grantId: 'grant-absent',
+        grant: { id: 'grant-absent', product: 'ga4', assetId: 'prop-123', assetName: 'GA4 Prop' },
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue([item] as any);
+      vi.mocked(prisma.googleOffboardingItem.updateMany).mockResolvedValue({ count: 1 });
+      vi.mocked(prisma.googleOffboardingItem.update).mockResolvedValue(item as any);
+
+      const { refreshClientPlatformAuthorization } = await import('@/services/token-lifecycle.service');
+      vi.mocked(refreshClientPlatformAuthorization).mockResolvedValue({
+        data: { accessToken: 'tok', outcome: 'still_valid' as const }, error: null,
+      } as any);
+
+      const { revokeGa4AccessBinding } = await import('@/services/connectors/google-offboarding');
+      vi.mocked(revokeGa4AccessBinding).mockResolvedValue({
+        success: true,
+        providerOutcome: 'already_absent',
+        retryable: false,
+      });
+
+      vi.mocked(clientOffboardingService.deriveRunOutcome).mockResolvedValue('completed');
+
+      const result = await executeRun('run-absent');
+
+      expect(result.itemsProcessed).toBe(1);
+      expect(result.errors).toHaveLength(0);
+    });
+  });
+
+  describe('mixed batch cleanup', () => {
+    it('blocks cleanup on retryable failure', async () => {
+      const run = {
+        id: 'run-mixed',
+        agencyId: 'agency-1',
+        connectionId: 'conn-mixed',
+        status: 'executing',
+        idempotencyKey: 'idem-mixed',
+        snapshotHash: 'hash-1',
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const items = [
+        { id: 'item-ok', runId: 'run-mixed', productId: 'google_ads', classification: 'eligible_automatic', status: 'revoked_verified' },
+        { id: 'item-retry', runId: 'run-mixed', productId: 'ga4', classification: 'eligible_automatic', status: 'failed_retryable' },
+      ];
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue(items as any);
+
+      const result = await executeCleanup('run-mixed');
+
+      expect(result.cleanupResult).toBe('blocked');
+      expect(infisical.deleteOAuthTokens).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('secret cleanup', () => {
+    it('deletes secret and marks completed_with_manual_follow_up when manual Search Console items exist', async () => {
+      const run = {
+        id: 'run-cleanup',
+        agencyId: 'agency-1',
+        connectionId: 'conn-cleanup',
+        status: 'executing',
+        idempotencyKey: 'idem-cleanup',
+        snapshotHash: 'hash-1',
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const items = [
+        { id: 'item-sc', runId: 'run-cleanup', productId: 'google_search_console', classification: 'eligible_automatic', status: 'attestation_recorded' },
+        { id: 'item-ads', runId: 'run-cleanup', productId: 'google_ads', classification: 'eligible_automatic', status: 'revoked_verified' },
+      ];
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue(items as any);
+      vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({ id: 'conn-cleanup' } as any);
+      vi.mocked(prisma.platformAuthorization.findFirst).mockResolvedValue({ secretId: 'secret-1' } as any);
+      vi.mocked(infisical.deleteOAuthTokens).mockResolvedValue(undefined);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+
+      const result = await executeCleanup('run-cleanup');
+
+      expect(infisical.deleteOAuthTokens).toHaveBeenCalledWith('secret-1');
+      expect(result.cleanupResult).toBe('deleted');
+      expect(result.finalStatus).toBe('completed_with_manual_follow_up');
+    });
+
+    it('records cleanup failure without rewriting provider outcomes', async () => {
+      const run = {
+        id: 'run-cfail',
+        agencyId: 'agency-1',
+        connectionId: 'conn-cfail',
+        status: 'executing',
+        idempotencyKey: 'idem-cfail',
+        snapshotHash: 'hash-1',
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const items = [
+        { id: 'item-ok', runId: 'run-cfail', productId: 'google_ads', classification: 'eligible_automatic', status: 'revoked_verified' },
+      ];
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue(items as any);
+      vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({ id: 'conn-cfail' } as any);
+      vi.mocked(prisma.platformAuthorization.findFirst).mockResolvedValue({ secretId: 'secret-fail' } as any);
+      vi.mocked(infisical.deleteOAuthTokens).mockResolvedValue(undefined);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+
+      const result = await executeCleanup('run-cfail');
+
+      expect(result.cleanupResult).toBe('deleted');
+      expect(result.finalStatus).toBe('completed');
+      expect(prisma.googleOffboardingItem.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('sanitization', () => {
+    it('audit logs contain no tokens or secrets', async () => {
+      const run = {
+        id: 'run-san',
+        agencyId: 'agency-1',
+        connectionId: 'conn-san',
+        status: 'queued',
+        idempotencyKey: 'idem-san',
+        snapshotHash: 'hash-1',
+        credentialGeneration: null,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue([]);
+      vi.mocked(clientOffboardingService.deriveRunOutcome).mockResolvedValue('completed');
+
+      await executeRun('run-san');
+
+      for (const call of vi.mocked(auditService.createAuditLog).mock.calls) {
+        const args = call[0] as any;
+        const metadataStr = JSON.stringify(args?.metadata ?? {});
+        expect(metadataStr).not.toContain('accessToken');
+        expect(metadataStr).not.toContain('refreshToken');
+        expect(metadataStr).not.toContain('secret');
+        expect(metadataStr).not.toContain('ya29');
+      }
+    });
+
+    it('receipt contains no tokens or secrets', async () => {
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue({
+        id: 'run-rcp',
+        status: 'completed',
+      } as any);
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockResolvedValue([{
+        id: 'item-rcp',
+        runId: 'run-rcp',
+        productId: 'google_ads',
+        classification: 'eligible_automatic',
+        status: 'revoked_verified',
+        providerOutcome: 'deleted',
+        accessToken: 'ya29.super-secret-token',
+        tokenSecretId: 'secret-xyz',
+      }] as any);
+      vi.mocked(prisma.googleOffboardingAttempt.findMany).mockResolvedValue([{
+        id: 'att-rcp',
+        itemId: 'item-rcp',
+        runId: 'run-rcp',
+        action: 'provider_call',
+        providerOutcome: 'deleted',
+        responseBody: JSON.stringify({ accessToken: 'ya29.xxx', refreshToken: '1//yyy' }),
+      }] as any);
+
+      const receipt = await buildReceipt('run-rcp');
+      const receiptStr = JSON.stringify(receipt);
+
+      expect(receiptStr).not.toContain('ya29');
+      expect(receiptStr).not.toContain('secret-xyz');
+      expect(receiptStr).not.toContain('refreshToken');
     });
   });
 });
