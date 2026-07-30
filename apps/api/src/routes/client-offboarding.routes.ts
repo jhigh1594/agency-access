@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
 import { authenticate } from '@/middleware/auth.js';
+import { env, isOffboardingEnabled } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
 import { clientOffboardingService } from '@/services/client-offboarding.service.js';
 import { dispatchOffboardingRun } from '@/services/google-offboarding-executor.js';
@@ -159,6 +160,19 @@ async function ensureRunBelongsToAgency(runId: string, agencyId: string) {
 
 export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   const adminHooks = [authenticate(), requireAgencyAdmin];
+
+  fastify.addHook('onRequest', async (request, reply) => {
+    const { agencyId } = request.params as { agencyId?: string };
+    if (!isOffboardingEnabled(agencyId)) {
+      return reply.code(403).send({
+        data: null,
+        error: {
+          code: 'FEATURE_DISABLED',
+          message: 'Google client offboarding is not enabled for this agency',
+        },
+      });
+    }
+  });
 
   fastify.post('/agencies/:agencyId/connections/:connectionId/offboarding/prepare', { onRequest: adminHooks }, async (request, reply) => {
     const agencyId = enforceRouteAgency(request, reply);

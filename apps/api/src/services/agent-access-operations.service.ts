@@ -5,7 +5,7 @@ import {
   PlatformSchema,
   type AgentCompletionState,
 } from '@agency-platform/shared';
-import { env } from '@/lib/env.js';
+import { env, isOffboardingEnabled } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
 import type { AgentPrincipal } from '@/lib/agent-principal.js';
 import { accessRequestNotificationService } from '@/services/access-request-notification.service.js';
@@ -471,6 +471,9 @@ export const agentAccessOperationsService = {
     idempotencyKey: string;
     intentHash: string;
   }) {
+    if (!isOffboardingEnabled(principal.agencyId)) {
+      throw new Error('Google client offboarding is not enabled for this agency');
+    }
     agentPolicyService.authorize(principal, 'offboarding.prepare');
     const { idempotencyKey, ...snapshotInput } = input;
     const snapshot = z.object({
@@ -494,6 +497,9 @@ export const agentAccessOperationsService = {
   },
 
   async getOffboardingRunState(principal: AgentPrincipal, runId: string) {
+    if (!isOffboardingEnabled(principal.agencyId)) {
+      throw new Error('Google client offboarding is not enabled for this agency');
+    }
     agentPolicyService.authorize(principal, 'offboarding.read');
     const run = await clientOffboardingService.getRun({ runId });
     if (!run) throw new Error('Offboarding run not found');

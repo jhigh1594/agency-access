@@ -190,6 +190,11 @@ const envSchema = z.object({
   AFFILIATE_HOLD_DAYS: z.coerce.number().int().min(0).default(30),
   AFFILIATE_PORTAL_ENABLED: booleanish(false),
 
+  // Google Client Offboarding (feature-flagged, design-partner gate)
+  GOOGLE_CLIENT_OFFBOARDING_ENABLED: booleanish(false),
+  GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: z.string().optional(),
+  GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: booleanish(false),
+
   // Outbound webhook delivery
   WEBHOOK_DELIVERY_TIMEOUT_MS: z.coerce.number().int().min(1000).default(5000),
   WEBHOOK_FAILURE_DISABLE_THRESHOLD: z.coerce.number().int().min(1).default(5),
@@ -263,6 +268,19 @@ if (parsedEnv.NODE_ENV === 'production') {
       throw new Error('AGENT_NATIVE_AGENCY_ALLOWLIST must include at least one agency when enabled');
     }
   }
+
+  if (parsedEnv.GOOGLE_CLIENT_OFFBOARDING_ENABLED) {
+    if (!parsedEnv.GOOGLE_CLIENT_ID || !parsedEnv.GOOGLE_CLIENT_SECRET) {
+      throw new Error(
+        'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required when Google client offboarding is enabled'
+      );
+    }
+    if (parsedEnv.GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED && !parsedEnv.GOOGLE_ADS_DEVELOPER_TOKEN) {
+      throw new Error(
+        'GOOGLE_ADS_DEVELOPER_TOKEN is required when the GA4 offboarding adapter is enabled'
+      );
+    }
+  }
 }
 
 const FRONTEND_URL = parsedEnv.FRONTEND_URL ?? 'http://localhost:3000';
@@ -278,6 +296,16 @@ const CLERK_OAUTH_ISSUER =
 const AGENT_MCP_RESOURCE_URL =
   parsedEnv.AGENT_MCP_RESOURCE_URL ?? `${API_URL}/mcp`;
 const AGENT_NATIVE_AGENCY_ALLOWLIST = parseCsvList(parsedEnv.AGENT_NATIVE_AGENCY_ALLOWLIST);
+const GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES = parseCsvList(
+  parsedEnv.GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES
+);
+
+function isOffboardingEnabled(agencyId?: string): boolean {
+  if (!parsedEnv.GOOGLE_CLIENT_OFFBOARDING_ENABLED) return false;
+  if (!agencyId) return false;
+  if (GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES.length === 0) return false;
+  return GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES.includes(agencyId);
+}
 
 export const env = {
   ...parsedEnv,
@@ -291,4 +319,7 @@ export const env = {
   CLERK_OAUTH_ISSUER,
   AGENT_MCP_RESOURCE_URL,
   AGENT_NATIVE_AGENCY_ALLOWLIST,
+  GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES,
 };
+
+export { isOffboardingEnabled };
