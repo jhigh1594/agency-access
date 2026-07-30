@@ -194,6 +194,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_OFFBOARDING_ENABLED: booleanish(false),
   GOOGLE_CLIENT_OFFBOARDING_ALLOWED_AGENCIES: z.string().optional(),
   GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: booleanish(false),
+  OFFBOARDING_CAPABILITY_SECRET: z.string().min(1).optional(),
 
   // Outbound webhook delivery
   WEBHOOK_DELIVERY_TIMEOUT_MS: z.coerce.number().int().min(1000).default(5000),
@@ -273,6 +274,11 @@ if (parsedEnv.NODE_ENV === 'production') {
     if (!parsedEnv.GOOGLE_CLIENT_ID || !parsedEnv.GOOGLE_CLIENT_SECRET) {
       throw new Error(
         'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required when Google client offboarding is enabled'
+      );
+    }
+    if (!parsedEnv.OFFBOARDING_CAPABILITY_SECRET) {
+      throw new Error(
+        'OFFBOARDING_CAPABILITY_SECRET is required when Google client offboarding is enabled'
       );
     }
     if (parsedEnv.GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED && !parsedEnv.GOOGLE_ADS_DEVELOPER_TOKEN) {

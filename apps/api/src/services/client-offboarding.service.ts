@@ -53,77 +53,90 @@ export const clientOffboardingService = {
     idempotencyKey: string;
     intentHash: string;
   }) {
-    const existingRun = await prisma.googleOffboardingRun.findFirst({
-      where: {
-        idempotencyKey: input.idempotencyKey,
-        status: { notIn: [...TERMINAL_RUN_STATUSES] },
-      },
-    });
+    try {
+      const run = await prisma.$transaction(async (tx) => {
+        const existingRun = await tx.googleOffboardingRun.findFirst({
+          where: {
+            idempotencyKey: input.idempotencyKey,
+            status: { notIn: [...TERMINAL_RUN_STATUSES] },
+          },
+        });
 
-    if (existingRun) return existingRun;
+        if (existingRun) return existingRun;
 
-    const connection = await prisma.clientConnection.findUnique({
-      where: { id: input.connectionId },
-    });
+        const connection = await tx.clientConnection.findUnique({
+          where: { id: input.connectionId },
+        });
 
-    if (!connection || connection.agencyId !== input.agencyId) {
-      throw new Error('Connection not found or agency mismatch');
-    }
+        if (!connection || connection.agencyId !== input.agencyId) {
+          throw new Error('Connection not found or agency mismatch');
+        }
 
-    if (connection.status !== 'active') {
-      throw new Error('Connection is not active');
-    }
+        if (connection.status !== 'active') {
+          throw new Error('Connection is not active');
+        }
 
-    const activeRunCount = await prisma.googleOffboardingRun.count({
-      where: {
-        connectionId: input.connectionId,
-        status: { notIn: [...TERMINAL_RUN_STATUSES] },
-      },
-    });
+        const activeRunCount = await tx.googleOffboardingRun.count({
+          where: {
+            connectionId: input.connectionId,
+            status: { notIn: [...TERMINAL_RUN_STATUSES] },
+          },
+        });
 
-    if (activeRunCount > 0) {
-      throw new Error('An active offboarding run already exists for this connection');
-    }
+        if (activeRunCount > 0) {
+          throw new Error('An active offboarding run already exists for this connection');
+        }
 
-    const sourceGrants = await prisma.googleNativeGrant.findMany({
-      where: { connectionId: input.connectionId },
-    });
+        const sourceGrants = await tx.googleNativeGrant.findMany({
+          where: { connectionId: input.connectionId },
+        });
 
-    for (const grant of sourceGrants) {
-      if ((grant as Record<string, unknown>).agencyId &&
-          (grant as Record<string, unknown>).agencyId !== input.agencyId) {
-        throw new Error('Cross-agency source grant binding rejected');
-      }
-    }
+        for (const grant of sourceGrants) {
+          if ((grant as Record<string, unknown>).agencyId &&
+              (grant as Record<string, unknown>).agencyId !== input.agencyId) {
+            throw new Error('Cross-agency source grant binding rejected');
+          }
+        }
 
-    const run = await prisma.$transaction(async (tx) => {
-      const createdRun = await tx.googleOffboardingRun.create({
-        data: {
-          agencyId: input.agencyId,
-          connectionId: input.connectionId,
-          status: 'prepared',
-          idempotencyKey: input.idempotencyKey,
-          snapshotHash: input.intentHash,
-        },
+        const createdRun = await tx.googleOffboardingRun.create({
+          data: {
+            agencyId: input.agencyId,
+            connectionId: input.connectionId,
+            status: 'prepared',
+            idempotencyKey: input.idempotencyKey,
+            snapshotHash: input.intentHash,
+          },
+        });
+
+        if (sourceGrants.length > 0) {
+          await tx.googleOffboardingItem.createMany({
+            data: sourceGrants.map((grant) => ({
+              runId: createdRun.id,
+              productId: (grant as Record<string, unknown>).product as string,
+              classification: 'eligible_automatic',
+              status: 'pending',
+              assetLabel: `${(grant as Record<string, unknown>).product ?? 'unknown'}-${grant.id}`,
+              grantId: grant.id,
+            })),
+          });
+        }
+
+        return createdRun;
       });
 
-      if (sourceGrants.length > 0) {
-        await tx.googleOffboardingItem.createMany({
-          data: sourceGrants.map((grant) => ({
-            runId: createdRun.id,
-            productId: (grant as Record<string, unknown>).product as string,
-            classification: 'eligible_automatic',
-            status: 'pending',
-            assetLabel: `${(grant as Record<string, unknown>).product ?? 'unknown'}-${grant.id}`,
-            grantId: grant.id,
-          })),
+      return run;
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        const existingRun = await prisma.googleOffboardingRun.findFirst({
+          where: {
+            idempotencyKey: input.idempotencyKey,
+            status: { notIn: [...TERMINAL_RUN_STATUSES] },
+          },
         });
+        if (existingRun) return existingRun;
       }
-
-      return createdRun;
-    });
-
-    return run;
+      throw error;
+    }
   },
 
   async transition(input: {
@@ -226,7 +239,24 @@ export const clientOffboardingService = {
     });
   },
 
-  async deriveRunStatus(input: { runId: string }) {
+  async deriveRunStatus(input: { runId: string; assumeStatus?: string }) {
+    let currentStatus = input.assumeStatus;
+
+    if (!currentStatus) {
+      const run = await prisma.googleOffboardingRun.findUnique({
+        where: { id: input.runId },
+        select: { status: true },
+      });
+
+      if (!run) throw new Error('Run not found');
+      currentStatus = run.status;
+    }
+
+    const allowed = new Set(['executing', 'receipt_pending']);
+    if (!allowed.has(currentStatus)) {
+      throw new Error(`deriveRunStatus is only allowed from 'executing' or 'receipt_pending' (current: ${currentStatus})`);
+    }
+
     const items = await prisma.googleOffboardingItem.findMany({
       where: { runId: input.runId },
     });

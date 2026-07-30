@@ -68,14 +68,18 @@ vi.mock('@/middleware/auth.js', () => ({
 describe('client offboarding routes security', () => {
   let app: FastifyInstance;
 
+  const originalSecret = process.env.OFFBOARDING_CAPABILITY_SECRET;
+
   beforeEach(async () => {
     vi.clearAllMocks();
+    process.env.OFFBOARDING_CAPABILITY_SECRET = 'test-offboarding-secret-key';
     app = Fastify();
     await app.register(clientOffboardingRoutes);
     await app.ready();
   });
 
   afterEach(async () => {
+    process.env.OFFBOARDING_CAPABILITY_SECRET = originalSecret;
     await app.close();
   });
 

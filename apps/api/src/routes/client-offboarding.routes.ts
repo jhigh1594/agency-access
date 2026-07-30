@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
@@ -9,7 +9,6 @@ import { clientOffboardingService } from '@/services/client-offboarding.service.
 import { dispatchOffboardingRun } from '@/services/google-offboarding-executor.js';
 
 const CAPABILITY_EXPIRY_MS = 15 * 60 * 1000;
-const CAPABILITY_HMAC_SECRET = process.env.OFFBOARDING_CAPABILITY_SECRET || 'dev-offboarding-fallback-key';
 
 const PrepareBodySchema = z.object({
   idempotencyKey: z.string().min(1).max(200),
@@ -26,7 +25,11 @@ const AttestBodySchema = z.object({
 }).strict();
 
 function serverHmacSecret(): string {
-  return CAPABILITY_HMAC_SECRET;
+  const secret = process.env.OFFBOARDING_CAPABILITY_SECRET;
+  if (!secret) {
+    throw new Error('OFFBOARDING_CAPABILITY_SECRET is required when Google client offboarding is enabled');
+  }
+  return secret;
 }
 
 function buildCredentialGeneration(connectionId: string): string {
@@ -85,11 +88,11 @@ function parseCapability(token: string): {
     return { connectionId: '', runId: '', snapshotHash: '', credentialGeneration: '', action: '', approvingAdmin: '', expiresAt: 0, valid: false, reason: 'INVALID_SIGNATURE' };
   }
 
-  let sigMatch = true;
-  for (let i = 0; i < signature.length; i++) {
-    if (signature.charCodeAt(i) !== expectedSig.charCodeAt(i)) {
-      sigMatch = false;
-    }
+  let sigMatch: boolean;
+  try {
+    sigMatch = timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(expectedSig, 'utf8'));
+  } catch {
+    sigMatch = false;
   }
   if (!sigMatch) {
     return { connectionId: '', runId: '', snapshotHash: '', credentialGeneration: '', action: '', approvingAdmin: '', expiresAt: 0, valid: false, reason: 'INVALID_SIGNATURE' };
@@ -273,6 +276,10 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
       return reply.code(409).send({ data: null, error: { code: 'CREDENTIAL_GENERATION_CHANGED', message: 'Credential generation changed since preparation; prepare again' } });
     }
 
+    if (parsedCap.approvingAdmin !== subject) {
+      return reply.code(403).send({ data: null, error: { code: 'CAPABILITY_ADMIN_MISMATCH', message: 'Capability token was issued to a different admin' } });
+    }
+
     try {
       await clientOffboardingService.confirmRun({ runId: run.id, actorId: subject });
       await dispatchOffboardingRun(run.id);
@@ -316,6 +323,10 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
 
     const run = await prisma.googleOffboardingRun.findUnique({ where: { id: runId } });
     if (!run) return reply.code(404).send({ data: null, error: { code: 'RUN_NOT_FOUND', message: 'Offboarding run not found' } });
+
+    if (run.status !== 'incomplete' && run.status !== 'completed_with_manual_follow_up') {
+      return reply.code(409).send({ data: null, error: { code: 'INVALID_RUN_STATUS', message: `Retry is only allowed for 'incomplete' or 'completed_with_manual_follow_up' runs (current: ${run.status})` } });
+    }
 
     const retryableItems = await prisma.googleOffboardingItem.findMany({
       where: { runId, status: 'failed_retryable' },

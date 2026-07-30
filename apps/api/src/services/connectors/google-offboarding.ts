@@ -546,7 +546,7 @@ async function guardBusinessAdminRemoval(
     );
 
     if (!response.ok) {
-      return { allowed: true };
+      return { allowed: false, outcome: 'terminal_failure', reason: 'Guard check failed', retryable: true };
     }
 
     const data = await parseJsonBody(response);
@@ -573,7 +573,7 @@ async function guardBusinessAdminRemoval(
 
     return { allowed: true };
   } catch {
-    return { allowed: true };
+    return { allowed: false, outcome: 'terminal_failure', reason: 'Guard check failed', retryable: true };
   }
 }
 
@@ -750,7 +750,7 @@ async function guardMerchantUserRemoval(
     );
 
     if (!response.ok) {
-      return { allowed: true };
+      return { allowed: false, outcome: 'terminal_failure', reason: 'Guard check failed', retryable: true };
     }
 
     const data = await parseJsonBody(response);
@@ -788,7 +788,7 @@ async function guardMerchantUserRemoval(
 
     return { allowed: true };
   } catch {
-    return { allowed: true };
+    return { allowed: false, outcome: 'terminal_failure', reason: 'Guard check failed', retryable: true };
   }
 }
 

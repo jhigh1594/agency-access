@@ -533,13 +533,19 @@ describe('Merchant Center offboarding', () => {
   });
 
   it('returns already_absent when merchant user returns 404', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: false,
-      status: 404,
-      statusText: 'Not Found',
-      text: async () => 'Not Found',
-      json: async () => ({}),
-    } as Response);
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ users: [{ name: 'accounts/7890/users/other-admin', role: 'admin' }] }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not Found',
+        json: async () => ({}),
+      } as Response);
 
     const result = await revokeMerchantUser('tok', '7890', 'user1');
 

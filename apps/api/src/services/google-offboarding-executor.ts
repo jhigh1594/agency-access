@@ -369,7 +369,7 @@ export async function executeRun(runId: string): Promise<ExecuteRunResult> {
     });
   }
 
-  const finalStatus = await clientOffboardingService.deriveRunOutcome({ runId });
+  const finalStatus = await clientOffboardingService.deriveRunStatus({ runId, assumeStatus: 'executing' });
 
   return { runId, finalStatus, itemsProcessed, errors };
 }
@@ -425,8 +425,10 @@ export async function executeCleanup(runId: string): Promise<ExecuteCleanupResul
       try {
         await infisical.deleteOAuthTokens(auth.secretId);
         cleanupResult = 'deleted';
-      } catch {
-        cleanupResult = 'already_absent';
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : '';
+        const isNotFound = message.includes('404') || message.includes('not found') || message.includes('Not found');
+        cleanupResult = isNotFound ? 'already_absent' : 'failed';
       }
     }
   } else {

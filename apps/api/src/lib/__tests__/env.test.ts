@@ -402,6 +402,7 @@ describe('env contract', () => {
         GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
         GOOGLE_CLIENT_ID: 'test-client-id',
         GOOGLE_CLIENT_SECRET: 'test-client-secret',
+        OFFBOARDING_CAPABILITY_SECRET: 'test-cap-secret',
         GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: 'true',
         GOOGLE_ADS_DEVELOPER_TOKEN: undefined,
       }))).rejects.toThrow('GOOGLE_ADS_DEVELOPER_TOKEN is required when the GA4 offboarding adapter is enabled');
@@ -416,6 +417,7 @@ describe('env contract', () => {
         GOOGLE_CLIENT_OFFBOARDING_ENABLED: 'true',
         GOOGLE_CLIENT_ID: 'test-client-id',
         GOOGLE_CLIENT_SECRET: 'test-client-secret',
+        OFFBOARDING_CAPABILITY_SECRET: 'test-cap-secret',
         GOOGLE_CLIENT_OFFBOARDING_GA4_ENABLED: 'true',
         GOOGLE_ADS_DEVELOPER_TOKEN: 'test-dev-token',
       }))).resolves.toBeDefined();
