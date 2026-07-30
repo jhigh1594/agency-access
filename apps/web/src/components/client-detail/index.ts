@@ -6,3 +6,4 @@ export { ActivityTab } from './ActivityTab';
 export { RequestedAccessBoard } from './RequestedAccessBoard';
 export { EditClientModal } from './EditClientModal';
 export { DeleteClientModal } from './DeleteClientModal';
+export { GoogleOffboardingPanel } from './GoogleOffboardingPanel';

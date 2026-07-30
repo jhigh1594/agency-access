@@ -105,6 +105,20 @@ export default function ClientDetailPage() {
 
   const { client, stats, platformGroups, accessRequests, activity } = data.data;
 
+  const googleConnection = (() => {
+    const googleGroup = platformGroups.find((g) => g.platformGroup === 'google');
+    const activeRequest = accessRequests.find(
+      (r) =>
+        r.connectionStatus === 'active' &&
+        r.platforms.some((p) => p === 'google' || p.startsWith('google_')),
+    );
+    if (!googleGroup || !activeRequest?.connectionId) return undefined;
+    return {
+      connectionId: activeRequest.connectionId,
+      label: activeRequest.name,
+    };
+  })();
+
   return (
     <div className="flex-1 bg-paper p-8">
       <div className="max-w-7xl mx-auto">
@@ -131,6 +145,8 @@ export default function ClientDetailPage() {
             platformGroups={platformGroups}
             accessRequests={accessRequests}
             activity={activity}
+            clientId={clientId}
+            googleConnection={googleConnection}
           />
         </div>
       </div>
