@@ -35,12 +35,11 @@ export function registerClientsCommand(program: Command): void {
     });
 
   clients
-    .command('save')
-    .description('Create or update a client')
+    .command('create')
+    .description('Create a new client')
     .requiredOption('--name <name>', 'Client contact name')
     .requiredOption('--email <email>', 'Client email')
     .requiredOption('--company <company>', 'Company name')
-    .option('--id <id>', 'Client ID (for update)')
     .option('--website <url>', 'Client website')
     .option('--language <lang>', 'Client language', 'en')
     .requiredOption('--idempotency-key <key>', 'Idempotency key')
@@ -53,11 +52,41 @@ export function registerClientsCommand(program: Command): void {
           company: options.company,
           language: options.language,
         };
-        if (options.id) body.id = options.id;
         if (options.website) body.website = options.website;
 
         const data = await apiFetch('/api/clients', {
-          method: options.id ? 'PUT' : 'POST',
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: { 'X-Idempotency-Key': options.idempotencyKey },
+        });
+        outputJson(data, options.pretty);
+      } catch (error) {
+        handleError(error);
+      }
+    });
+
+  clients
+    .command('update')
+    .description('Update an existing client')
+    .requiredOption('--id <id>', 'Client ID')
+    .option('--name <name>', 'Client contact name')
+    .option('--email <email>', 'Client email')
+    .option('--company <company>', 'Company name')
+    .option('--website <url>', 'Client website')
+    .option('--language <lang>', 'Client language')
+    .requiredOption('--idempotency-key <key>', 'Idempotency key')
+    .option('--pretty', 'Pretty-print JSON', false)
+    .action(async (options) => {
+      try {
+        const body: Record<string, unknown> = { id: options.id };
+        if (options.name) body.name = options.name;
+        if (options.email) body.email = options.email;
+        if (options.company) body.company = options.company;
+        if (options.website) body.website = options.website;
+        if (options.language) body.language = options.language;
+
+        const data = await apiFetch(`/api/clients`, {
+          method: 'PUT',
           body: JSON.stringify(body),
           headers: { 'X-Idempotency-Key': options.idempotencyKey },
         });
