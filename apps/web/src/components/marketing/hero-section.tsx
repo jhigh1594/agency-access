@@ -46,9 +46,9 @@ export function HeroSection() {
             {/* Main Headline - Tighter leading, glitch effect */}
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.1] tracking-tight text-ink relative">
-                Client OAuth Onboarding in{' '}
+                Get Your First Client Live in{' '}
                 <span className="relative inline-block">
-                  <span className="text-coral">5 Minutes</span>
+                  <span className="text-coral">15 Minutes</span>
                   <svg
                     className="absolute -bottom-2 md:-bottom-3 left-0 w-full"
                     viewBox="0 0 200 16"
@@ -66,15 +66,14 @@ export function HeroSection() {
                     />
                   </svg>
                 </span>
-                {' '}— Built for Agencies
+                {' '}— Every Feature Thinks Like an Agent
               </h1>
             </Reveal>
 
             {/* Subheadline */}
             <Reveal delay={0.4}>
               <p className="font-mono text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 leading-tight opacity-90 mt-4 text-ink">
-                Join teams saving <span className="text-ink font-bold bg-teal/20 px-1 mx-1">hundreds of hours</span> every month.
-                Replace <span className="font-bold">47-email onboarding</span> with a <span className="text-ink font-bold bg-acid/20 px-1 mx-1">single link</span>.
+                Stop losing clients to broken automation. Agents make autonomous decisions across your entire workflow—no human bottlenecks, no waiting for approvals.
               </p>
             </Reveal>
 
@@ -129,8 +128,8 @@ export function HeroSection() {
                     <TrendingUp className="w-6 h-6" />
                   </div>
                   <div className="text-ink">
-                    <div className="font-dela text-sm">Avg. Savings</div>
-                    <div className="text-xs font-mono">10x Faster</div>
+                    <div className="font-dela text-sm">Client Activation</div>
+                    <div className="text-xs font-mono">15 Minutes Live</div>
                   </div>
                 </div>
               </div>
@@ -145,7 +144,7 @@ export function HeroSection() {
             >
               <div className="animate-float-pillar" style={{ animationDelay: '1s' }}>
                 <div className="flex items-center gap-2 font-dela text-sm">
-                  <Check className="w-4 h-4" /> Request Received. Access Granted
+                  <Check className="w-4 h-4" /> Agent-First Architecture Complete
                 </div>
               </div>
             </m.div>
@@ -174,7 +173,7 @@ export function HeroSection() {
                       <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-acid border-2 border-black animate-pulse" />
                     </div>
                   </div>
-                  <h3 className="text-center font-dela text-2xl md:text-3xl mb-2 text-ink">Connect Your Platforms</h3>
+                   <h3 className="text-center font-dela text-2xl md:text-3xl mb-2 text-ink">Agent-First Client Access</h3>
                   <p className="text-center text-gray-600 mb-6 text-sm font-mono">AuthHub is requesting access to:</p>
                   <div className="space-y-3 mb-6">
                     {['Meta Ads', 'Google Ads', 'GA4', 'LinkedIn Ads'].map((p, i) => (
