@@ -6,33 +6,33 @@ import { useMobile } from '@/hooks/use-mobile';
 const valueHighlights = [
   {
     badge: '01',
-    title: 'One Link Onboarding',
-    detail: 'Send one secure link for Meta, Google, LinkedIn, and more.',
+    title: 'One Link',
+    detail: 'One link replaces 47 emails across Meta, Google, LinkedIn, and more.',
   },
   {
     badge: '02',
     title: 'Built-In Token Refresh',
-    detail: 'Keep access alive automatically with no manual reconnect work.',
+    detail: 'Access never drops. Tokens auto-refresh before expiration.',
   },
   {
     badge: '03',
-    title: 'White-Label Client Experience',
-    detail: 'Add your logo, colors, and domain for a consistent handoff.',
+    title: 'White-Label',
+    detail: 'Your logo. Your domain. Your client never sees AuthHub.',
   },
   {
     badge: '04',
     title: 'Audit Logs Included',
-    detail: 'Track who accessed what and when for internal accountability.',
+    detail: 'Track who accessed what, when, and from where.',
   },
   {
     badge: '05',
-    title: 'Fast Client Setup',
-    detail: 'Turn day-long onboarding into a flow your clients can finish quickly.',
+    title: '5-Minute Setup',
+    detail: 'Replace a full day of onboarding with a 5-minute flow.',
   },
   {
     badge: '06',
     title: 'Platform Coverage',
-    detail: 'Manage paid media access across major ad and analytics platforms.',
+    detail: 'Meta Ads, Google Ads, GA4, LinkedIn, TikTok — one flow, all platforms.',
   },
 ];
 
@@ -45,7 +45,7 @@ export function SocialProofSection() {
     <section className="py-12 sm:py-16 border-y-2 border-black bg-paper relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-8 sm:mb-12">
         <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-center text-ink font-mono">
-          Built for faster onboarding and cleaner client handoffs
+          Built for faster onboarding. Cleaner handoffs. No exceptions.
         </p>
       </div>
 

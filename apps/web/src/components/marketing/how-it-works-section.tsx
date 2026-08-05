@@ -46,7 +46,7 @@ const steps = [
     description: 'Start working immediately. Access never expires, no more chasing clients for permissions.',
     icon: BarChart3,
     color: 'electric',
-    time: 'Forever',
+    time: 'Permanent',
   },
 ];
 
@@ -115,15 +115,14 @@ export function HowItWorksSection() {
 
               {/* Main headline with glitch effect */}
               <h2 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight mb-4 sm:mb-6 text-ink leading-[1.1]">
-                <span className="glitch-text inline-block">From Chaos</span>
+                <span className="glitch-text inline-block">From 47 emails</span>
                 <br />
-                <span className="text-coral">To Automation</span>
+                <span className="text-coral">to 1 link</span>
               </h2>
 
               {/* Subheadline */}
               <p className="font-mono text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-gray-600 leading-relaxed">
-                Replace days of back-and-forth emails with a single link. Your clients authorize
-                platforms, you get instant API access. Everyone wins.
+                Replace three days of back-and-forth emails with a single link. Your client authorizes their platforms. You get instant access. Everyone wins.
               </p>
             </div>
           </Reveal>
@@ -324,10 +323,10 @@ export function HowItWorksSection() {
 
                 <div className="relative z-10">
                   <h3 className="font-dela text-2xl sm:text-3xl md:text-4xl mb-4 tracking-tight text-ink">
-                    Ready to Automate?
+                    Cut onboarding from 3 days to 5 minutes.
                   </h3>
                   <p className="font-mono text-sm sm:text-base mb-6 text-gray-600 max-w-md mx-auto">
-                    Cut onboarding from days to minutes with one secure workflow.
+                    Start your free trial and send your first client link today.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <SignUpButton mode="modal">

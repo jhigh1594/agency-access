@@ -12,7 +12,7 @@ const CASE_STUDIES = [
     location: 'Austin, TX',
     image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800',
     quote:
-      'We were spending days just trying to get access to client accounts before we could even start building automations. AuthHub changed everything. Now our clients connect their platforms in 5 minutes, and we can start building workflows the same day instead of waiting a week.',
+      'We were spending days just trying to get access to client accounts before we could even start building automations. AuthHub changed everything. Now our clients connect their platforms in 5 minutes, and we can start building workflows the same day. That used to take a week.',
     author: 'AJ S.',
     role: 'Co-Founder',
     metrics: [
@@ -93,10 +93,10 @@ export function SuccessStoriesSection() {
               Real Results
             </div>
             <h2 className="font-dela text-4xl md:text-6xl tracking-tighter text-ink mt-2 mb-4">
-              SUCCESS STORIES
+              What Changes
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              See how teams like yours transformed client onboarding with AuthHub.
+              When onboarding takes 5 minutes instead of 3 days, everything changes.
             </p>
           </div>
         </Reveal>

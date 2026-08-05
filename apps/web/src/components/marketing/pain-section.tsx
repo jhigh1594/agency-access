@@ -242,7 +242,7 @@ export function PainSection() {
               >
                 ⚠️
               </m.span>
-              The Reality of Agency Onboarding
+              The Reality
               <m.span
                 animate={shouldAnimate ? { opacity: [1, 0.6, 1] } : undefined}
                 transition={{ duration: 2, repeat: Infinity, delay: 0.7 }}
@@ -263,11 +263,8 @@ export function PainSection() {
             </h2>
 
             {/* Subheadline */}
-            <p className="font-sans text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed text-gray-600">
-              "Insanity is doing the same thing over and over again and expecting different results."
-            </p>
-            <p className="font-mono text-sm sm:text-base font-bold text-coral mt-2">
-              Stop the insanity. One link. Full client access
+            <p className="font-mono text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed text-gray-600">
+              Stop the insanity. Send one link. Get full client access.
             </p>
           </div>
         </Reveal>
