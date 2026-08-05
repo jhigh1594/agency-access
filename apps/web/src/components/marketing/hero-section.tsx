@@ -39,16 +39,16 @@ export function HeroSection() {
             <Reveal delay={0.2}>
               <div className="inline-flex items-center gap-2 border-2 border-black bg-ink text-paper px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
                 <Globe size={14} />
-                #1 Client Access Platform
+                Client Access Platform
               </div>
             </Reveal>
 
             {/* Main Headline - Tighter leading, glitch effect */}
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.1] tracking-tight text-ink relative">
-                Client OAuth Onboarding in{' '}
+                Send one link. Your client is live in{' '}
                 <span className="relative inline-block">
-                  <span className="text-coral">5 Minutes</span>
+                  <span className="text-coral">5 minutes.</span>
                   <svg
                     className="absolute -bottom-2 md:-bottom-3 left-0 w-full"
                     viewBox="0 0 200 16"
@@ -66,15 +66,13 @@ export function HeroSection() {
                     />
                   </svg>
                 </span>
-                {' '}— Built for Agencies
               </h1>
             </Reveal>
 
             {/* Subheadline */}
             <Reveal delay={0.4}>
               <p className="font-mono text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 leading-tight opacity-90 mt-4 text-ink">
-                Join teams saving <span className="text-ink font-bold bg-teal/20 px-1 mx-1">hundreds of hours</span> every month.
-                Replace <span className="font-bold">47-email onboarding</span> with a <span className="text-ink font-bold bg-acid/20 px-1 mx-1">single link</span>.
+                Your client authorizes Meta, Google, GA4, and LinkedIn through one link. Your team and your AI agents start work the same day.
               </p>
             </Reveal>
 
@@ -129,8 +127,8 @@ export function HeroSection() {
                     <TrendingUp className="w-6 h-6" />
                   </div>
                   <div className="text-ink">
-                    <div className="font-dela text-sm">Avg. Savings</div>
-                    <div className="text-xs font-mono">10x Faster</div>
+                    <div className="font-dela text-sm">Client Activation</div>
+                    <div className="text-xs font-mono">Live in 5 Minutes</div>
                   </div>
                 </div>
               </div>
@@ -145,7 +143,7 @@ export function HeroSection() {
             >
               <div className="animate-float-pillar" style={{ animationDelay: '1s' }}>
                 <div className="flex items-center gap-2 font-dela text-sm">
-                  <Check className="w-4 h-4" /> Request Received. Access Granted
+                  <Check className="w-4 h-4" /> Built for Humans + Agents
                 </div>
               </div>
             </m.div>
@@ -174,7 +172,7 @@ export function HeroSection() {
                       <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-acid border-2 border-black animate-pulse" />
                     </div>
                   </div>
-                  <h3 className="text-center font-dela text-2xl md:text-3xl mb-2 text-ink">Connect Your Platforms</h3>
+                   <h3 className="text-center font-dela text-2xl md:text-3xl mb-2 text-ink">Client Access Request</h3>
                   <p className="text-center text-gray-600 mb-6 text-sm font-mono">AuthHub is requesting access to:</p>
                   <div className="space-y-3 mb-6">
                     {['Meta Ads', 'Google Ads', 'GA4', 'LinkedIn Ads'].map((p, i) => (

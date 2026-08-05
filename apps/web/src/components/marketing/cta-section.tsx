@@ -51,8 +51,8 @@ export function CTASection() {
               <span className="text-coral italic">Start scaling.</span>
             </h2>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-12 text-gray-600 leading-relaxed px-2 font-mono">
-              Built for teams that need faster onboarding,
-              cleaner handoffs, and fewer follow-up emails.
+              Your clients authorize their platforms in 5 minutes. Your team starts work the same day.
+              No follow-up emails. No Zoom calls. No waiting.
             </p>
 
             {/* CTAs - Brutalist */}

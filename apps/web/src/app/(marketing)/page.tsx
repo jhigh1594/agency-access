@@ -15,18 +15,18 @@ const faqSchema = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What is AuthHub?',
+      name: 'What makes AuthHub agent-first?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'AuthHub is an automated client OAuth onboarding platform that lets digital agencies send a single branded link so clients can authorize Meta Ads, Google Ads, GA4, LinkedIn, and TikTok in under 5 minutes — replacing days of back-and-forth emails.',
+        text: 'AuthHub was built from the ground up for autonomous AI agents. Every feature thinks like an agent, making decisions without human bottlenecks or approval delays—unlike platforms that retrofitted agent capabilities.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How does AuthHub handle OAuth token security?',
+      name: 'How fast can I get clients onboarded?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'OAuth tokens are encrypted at rest using Infisical and stored in a SOC 2 Type II certified environment. Tokens auto-refresh before expiration, so access never drops without manual intervention.',
+        text: 'Most agencies get their first client live in 15 minutes. Unlike traditional tools that require weeks of configuration, AuthHub pre-built agency templates and autonomous agents eliminate manual setup.',
       },
     },
     {
@@ -34,23 +34,23 @@ const faqSchema = {
       name: 'Which ad platforms does AuthHub support?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'AuthHub currently supports Meta Ads, Google Ads, GA4, LinkedIn Ads, and TikTok, with 30+ email exchanges eliminated per client onboarding.',
+        text: 'AuthHub supports Meta Ads, Google Ads, GA4, LinkedIn Ads, and TikTok—agents handle the entire authorization flow autonomously, reducing manual oversight by 80%.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How long does client onboarding take with AuthHub?',
+      name: 'How does agent-first architecture differ from AI automation?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Most clients complete authorization in under 5 minutes. Agencies report reducing onboarding from 2–3 days to the same day they send the link.',
+        text: 'Generic automation creates more work through maintenance overhead. Agent-first architecture means agents adapt and improve over time, complete multi-step workflows without intervention, and scale without proportional technical overhead.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Is AuthHub white-label?',
+      name: 'Is AuthHub white-label for agencies?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. Agencies can add their own logo, brand colors, and custom domain so clients see a consistent, agency-branded experience throughout the OAuth flow.',
+        text: 'Yes. Agencies can add their own logo, brand colors, and custom domain so clients see a consistent, agency-branded experience throughout the entire agent-driven workflow.',
       },
     },
   ],

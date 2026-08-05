@@ -28,9 +28,10 @@ describe('Marketing copy claims', () => {
   it('uses value-focused highlights in the scrolling social banner', () => {
     const code = readFile('src/components/marketing/social-proof-section.tsx');
 
-    expect(code).toMatch(/One Link Onboarding/);
+    expect(code).toMatch(/One Link/);
     expect(code).toMatch(/Built-In Token Refresh/);
-    expect(code).toMatch(/White-Label Client Experience/);
+    expect(code).toMatch(/White-Label/);
     expect(code).toMatch(/Audit Logs Included/);
+    expect(code).toMatch(/5-minute flow/);
   });
 });

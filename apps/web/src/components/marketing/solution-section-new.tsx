@@ -173,7 +173,7 @@ function AfterState() {
       <div className="absolute bottom-4 left-4 right-4">
         <div className="bg-card/90 border-2 border-black rounded-lg p-3 text-center">
           <div className="font-mono text-xs text-gray-700">
-            <span className="font-bold text-[#00A896]">94% faster</span> onboarding
+            <span className="font-bold text-[#00A896]">3 days down to 5 minutes</span>
           </div>
         </div>
       </div>
