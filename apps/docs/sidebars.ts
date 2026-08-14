@@ -33,6 +33,14 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Agents & CLI',
+      items: [
+        'agentic-workflows/connect-an-agent',
+        'developer-tools/authhub-cli',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Troubleshooting',
       items: [
         'troubleshooting/common-client-blockers',
