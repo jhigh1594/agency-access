@@ -1,27 +1,18 @@
 import { env } from '../../lib/env.js';
 import type { AccessLevel } from '@agency-platform/shared';
+import { BaseConnector, type NormalizedTokenResponse } from './base.connector.js';
+import { getGoogleUserInfo } from './google.js';
 
 /**
  * Google Analytics 4 (GA4) OAuth Connector
  *
- * Handles OAuth 2.0 flow for Google Analytics Admin API
+ * OAuth transport (auth URL, token exchange, refresh) is inherited from
+ * BaseConnector via the `ga4` registry entry. Google Analytics specifics —
+ * token verification against the Analytics Admin API and property access
+ * verification — stay here.
  *
  * Documentation: https://developers.google.com/analytics/devguides/config/mgmt/v3
  */
-
-interface GoogleTokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
-}
-
-interface GATokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn: number;
-  expiresAt: Date;
-}
 
 interface GA4Property {
   id: string;
@@ -30,115 +21,31 @@ interface GA4Property {
   permissions: string[];
 }
 
-export class GA4Connector {
-  private readonly clientId: string;
-  private readonly clientSecret: string;
-  private readonly redirectUri: string;
-
+export class GA4Connector extends BaseConnector {
   constructor() {
-    // Use unified Google OAuth credentials (shared across all Google products)
-    this.clientId = env.GOOGLE_CLIENT_ID || '';
-    this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    this.redirectUri = `${env.API_URL}/agency-platforms/ga4/callback`;
+    super('ga4');
   }
 
-  /**
-   * Generate OAuth authorization URL
-   *
-   * @param state - CSRF protection token
-   * @param scopes - OAuth scopes to request
-   * @param redirectUri - Optional override for redirect URI
-   * @returns Authorization URL
-   */
-  getAuthUrl(
-    state: string,
-    scopes: string[] = ['https://www.googleapis.com/auth/analytics.readonly'],
-    redirectUri?: string
-  ): string {
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: redirectUri ?? this.redirectUri,
-      state,
-      scope: scopes.join(' '),
-      response_type: 'code',
-      access_type: 'offline', // Enable refresh tokens
-      prompt: 'consent', // Force consent to get refresh token
-    });
-
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  // All Google products share one OAuth client (the "google" platform group),
+  // so the per-platform env lookup in BaseConnector must map to the shared keys.
+  // Empty string (not a throw) preserves the historic tolerance for an
+  // unconfigured client id.
+  protected override getClientId(): string {
+    return env.GOOGLE_CLIENT_ID || '';
   }
 
-  /**
-   * Exchange authorization code for access token
-   *
-   * @param code - Authorization code from OAuth callback
-   * @param redirectUri - Optional override for redirect URI
-   * @returns Access token with refresh token
-   */
-  async exchangeCode(code: string, redirectUri?: string): Promise<GATokens> {
-    const body = new URLSearchParams({
-      code,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      redirect_uri: redirectUri ?? this.redirectUri,
-      grant_type: 'authorization_code',
-    });
+  protected override getClientSecret(): string {
+    return env.GOOGLE_CLIENT_SECRET || '';
+  }
 
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`GA4 token exchange failed: ${error}`);
-    }
-
-    const data = (await response.json()) as GoogleTokenResponse;
-
+  normalizeResponse(data: {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+  }): NormalizedTokenResponse {
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      expiresIn: data.expires_in,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-    };
-  }
-
-  /**
-   * Refresh access token using refresh token
-   *
-   * @param refreshToken - Refresh token from initial exchange
-   * @returns New access token
-   */
-  async refreshToken(refreshToken: string): Promise<GATokens> {
-    const body = new URLSearchParams({
-      refresh_token: refreshToken,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      grant_type: 'refresh_token',
-    });
-
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`GA4 token refresh failed: ${error}`);
-    }
-
-    const data = (await response.json()) as GoogleTokenResponse;
-
-    return {
-      accessToken: data.access_token,
-      refreshToken, // Keep the same refresh token
       expiresIn: data.expires_in,
       expiresAt: new Date(Date.now() + data.expires_in * 1000),
     };
@@ -202,7 +109,7 @@ export class GA4Connector {
         };
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         accountSummaries?: Array<{
           account?: string;
           displayName?: string;
@@ -278,23 +185,7 @@ export class GA4Connector {
     email: string;
     name: string;
   }> {
-    const response = await fetch(
-      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`,
-      { method: 'GET' }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google user info fetch failed: ${error}`);
-    }
-
-    const data = (await response.json()) as {
-      id: string;
-      email: string;
-      name: string;
-    };
-
-    return data;
+    return getGoogleUserInfo(accessToken);
   }
 }
 

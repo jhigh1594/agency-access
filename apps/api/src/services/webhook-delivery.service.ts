@@ -25,16 +25,6 @@ const MAX_RESPONSE_SNIPPET_LENGTH = 1000;
 const WEBHOOK_RETRY_BASE_DELAY_MS = 30_000;
 const WEBHOOK_RETRY_MAX_DELAY_MS = 15 * 60 * 1000;
 
-function buildTimeoutSignal(timeoutMs: number): AbortSignal {
-  if (typeof AbortSignal.timeout === 'function') {
-    return AbortSignal.timeout(timeoutMs);
-  }
-
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), timeoutMs);
-  return controller.signal;
-}
-
 function toSnippet(value: string | null | undefined): string | null {
   if (!value) {
     return null;
@@ -132,7 +122,7 @@ export async function deliverWebhookEvent(
         method: 'POST',
         headers,
         body: payload,
-        signal: buildTimeoutSignal(env.WEBHOOK_DELIVERY_TIMEOUT_MS),
+        signal: AbortSignal.timeout(env.WEBHOOK_DELIVERY_TIMEOUT_MS),
       });
       const responseText = toSnippet(await response.text());
       const deliveredAt = new Date();

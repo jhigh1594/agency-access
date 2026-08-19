@@ -1,3 +1,5 @@
+import { buildAdsHeaders, normalizeCustomerId } from './google.js';
+
 type OffboardingProviderOutcome =
   | 'deleted'
   | 'already_absent'
@@ -83,27 +85,12 @@ function buildBearerHeaders(accessToken: string): Record<string, string> {
   };
 }
 
-function buildAdsHeaders(accessToken: string, loginCustomerId?: string): Record<string, string> {
+function resolveAdsDeveloperToken(): string {
   const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
   if (!developerToken) {
     throw new Error('GOOGLE_ADS_DEVELOPER_TOKEN not configured');
   }
-
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${accessToken}`,
-    'developer-token': developerToken,
-    'Content-Type': 'application/json',
-  };
-
-  if (loginCustomerId) {
-    headers['login-customer-id'] = loginCustomerId;
-  }
-
-  return headers;
-}
-
-function normalizeCustomerId(customerId: string): string {
-  return customerId.replace(/^customers\//, '').replace(/\D/g, '');
+  return developerToken;
 }
 
 async function parseJsonBody(response: Response): Promise<Record<string, unknown>> {
@@ -129,7 +116,7 @@ export async function revokeAdsManagerLink(
       `https://googleads.googleapis.com/v18/customers/${customerId}/customerManagerLinks:mutate`,
       {
         method: 'POST',
-        headers: buildAdsHeaders(token, customerId),
+        headers: buildAdsHeaders(token, resolveAdsDeveloperToken(), customerId),
         body: JSON.stringify({
           operation: {
             update: {
@@ -173,7 +160,7 @@ export async function revokeAdsDirectUser(
       `https://googleads.googleapis.com/v18/customers/${customerId}/customerUserAccesses:mutate`,
       {
         method: 'POST',
-        headers: buildAdsHeaders(token, customerId),
+        headers: buildAdsHeaders(token, resolveAdsDeveloperToken(), customerId),
         body: JSON.stringify({
           operation: {
             remove: `customers/${customerId}/customerUserAccesses/${userId}`,
@@ -213,7 +200,7 @@ export async function revokeAdsPendingInvitation(
       `https://googleads.googleapis.com/v18/customers/${customerId}/customerUserAccessInvitations:mutate`,
       {
         method: 'POST',
-        headers: buildAdsHeaders(token, customerId),
+        headers: buildAdsHeaders(token, resolveAdsDeveloperToken(), customerId),
         body: JSON.stringify({
           operation: {
             remove: `customers/${customerId}/customerUserAccessInvitations/${invitationId}`,
@@ -261,7 +248,7 @@ export async function verifyAdsManagerLink(
       `https://googleads.googleapis.com/v18/customers/${customerId}/googleAds:searchStream`,
       {
         method: 'POST',
-        headers: buildAdsHeaders(token, customerId),
+        headers: buildAdsHeaders(token, resolveAdsDeveloperToken(), customerId),
         body: JSON.stringify({ query }),
       },
     );
@@ -323,7 +310,7 @@ export async function verifyAdsUserRemoved(
       `https://googleads.googleapis.com/v18/customers/${customerId}/customerUserAccesses/${userId}`,
       {
         method: 'GET',
-        headers: buildAdsHeaders(token, customerId),
+        headers: buildAdsHeaders(token, resolveAdsDeveloperToken(), customerId),
       },
     );
 

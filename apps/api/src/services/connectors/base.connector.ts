@@ -467,7 +467,7 @@ export abstract class BaseConnector {
   async verifyClientAccess?(
     agencyAccessToken: string,
     clientEmail: string,
-    requiredAccessLevel: AccessLevel
+    ...args: any[]
   ): Promise<{
     hasAccess: boolean;
     accessLevel: AccessLevel;

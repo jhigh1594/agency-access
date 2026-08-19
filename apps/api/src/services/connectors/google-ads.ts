@@ -1,27 +1,18 @@
 import { env } from '../../lib/env.js';
 import type { AccessLevel } from '@agency-platform/shared';
+import { BaseConnector, type NormalizedTokenResponse } from './base.connector.js';
+import { buildAdsHeaders, getGoogleUserInfo, normalizeCustomerId } from './google.js';
 
 /**
  * Google Ads OAuth Connector
  *
- * Handles OAuth 2.0 flow for Google Ads API
+ * OAuth transport (auth URL, token exchange, refresh) is inherited from
+ * BaseConnector via the `google_ads` registry entry. Ads specifics stay here:
+ * developer-token headers, manager-link invitations, and user-access
+ * verification against the Google Ads API.
  *
  * Documentation: https://developers.google.com/google-ads/api/docs/oauth/overview
  */
-
-interface GoogleTokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
-}
-
-interface GoogleTokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn: number;
-  expiresAt: Date;
-}
 
 interface GoogleAdsUserAccess {
   userAccess: {
@@ -111,15 +102,34 @@ type ParsedGoogleAdsErrorPayload = {
   };
 };
 
-export class GoogleAdsConnector {
-  private readonly clientId: string;
-  private readonly clientSecret: string;
-  private readonly redirectUri: string;
-
+export class GoogleAdsConnector extends BaseConnector {
   constructor() {
-    this.clientId = env.GOOGLE_CLIENT_ID || '';
-    this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    this.redirectUri = `${env.API_URL}/agency-platforms/google_ads/callback`;
+    super('google_ads');
+  }
+
+  // All Google products share one OAuth client (the "google" platform group),
+  // so the per-platform env lookup in BaseConnector must map to the shared keys.
+  // Empty string (not a throw) preserves the historic tolerance for an
+  // unconfigured client id.
+  protected override getClientId(): string {
+    return env.GOOGLE_CLIENT_ID || '';
+  }
+
+  protected override getClientSecret(): string {
+    return env.GOOGLE_CLIENT_SECRET || '';
+  }
+
+  normalizeResponse(data: {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+  }): NormalizedTokenResponse {
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresIn: data.expires_in,
+      expiresAt: new Date(Date.now() + data.expires_in * 1000),
+    };
   }
 
   private getDeveloperToken(): string {
@@ -130,24 +140,6 @@ export class GoogleAdsConnector {
     }
 
     return developerToken;
-  }
-
-  private normalizeCustomerId(customerId: string): string {
-    return customerId.replace(/^customers\//, '').replace(/\D/g, '');
-  }
-
-  private buildHeaders(accessToken: string, loginCustomerId?: string): Record<string, string> {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${accessToken}`,
-      'developer-token': this.getDeveloperToken(),
-      'Content-Type': 'application/json',
-    };
-
-    if (loginCustomerId) {
-      headers['login-customer-id'] = loginCustomerId;
-    }
-
-    return headers;
   }
 
   private isRetryableGoogleAdsError(code: string, statusCode?: number): boolean {
@@ -223,108 +215,6 @@ export class GoogleAdsConnector {
   }
 
   /**
-   * Generate OAuth authorization URL
-   *
-   * @param state - CSRF protection token
-   * @param scopes - OAuth scopes to request
-   * @param redirectUri - Optional override for redirect URI
-   * @returns Authorization URL
-   */
-  getAuthUrl(
-    state: string,
-    scopes: string[] = ['https://www.googleapis.com/auth/adwords'],
-    redirectUri?: string
-  ): string {
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: redirectUri ?? this.redirectUri,
-      state,
-      scope: scopes.join(' '),
-      response_type: 'code',
-      access_type: 'offline', // Enable refresh tokens
-      prompt: 'consent', // Force consent to get refresh token
-    });
-
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-  }
-
-  /**
-   * Exchange authorization code for access token
-   *
-   * @param code - Authorization code from OAuth callback
-   * @param redirectUri - Optional override for redirect URI
-   * @returns Access token with refresh token
-   */
-  async exchangeCode(code: string, redirectUri?: string): Promise<GoogleTokens> {
-    const body = new URLSearchParams({
-      code,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      redirect_uri: redirectUri ?? this.redirectUri,
-      grant_type: 'authorization_code',
-    });
-
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google Ads token exchange failed: ${error}`);
-    }
-
-    const data = (await response.json()) as GoogleTokenResponse;
-
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresIn: data.expires_in,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-    };
-  }
-
-  /**
-   * Refresh access token using refresh token
-   *
-   * @param refreshToken - Refresh token from initial exchange
-   * @returns New access token
-   */
-  async refreshToken(refreshToken: string): Promise<GoogleTokens> {
-    const body = new URLSearchParams({
-      refresh_token: refreshToken,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      grant_type: 'refresh_token',
-    });
-
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google Ads token refresh failed: ${error}`);
-    }
-
-    const data = (await response.json()) as GoogleTokenResponse;
-
-    return {
-      accessToken: data.access_token,
-      refreshToken, // Keep the same refresh token
-      expiresIn: data.expires_in,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-    };
-  }
-
-  /**
    * Verify token is still valid
    *
    * @param accessToken - Token to verify
@@ -336,7 +226,7 @@ export class GoogleAdsConnector {
         'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           method: 'GET',
-          headers: this.buildHeaders(accessToken),
+          headers: buildAdsHeaders(accessToken, this.getDeveloperToken()),
         }
       );
 
@@ -374,7 +264,7 @@ export class GoogleAdsConnector {
         'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           method: 'GET',
-          headers: this.buildHeaders(agencyAccessToken),
+          headers: buildAdsHeaders(agencyAccessToken, this.getDeveloperToken()),
         }
       );
 
@@ -447,14 +337,14 @@ export class GoogleAdsConnector {
   async createManagerLinkInvitation(
     input: CreateManagerLinkInvitationInput
   ): Promise<{ resourceName: string }> {
-    const managerCustomerId = this.normalizeCustomerId(input.managerCustomerId);
-    const clientCustomerId = this.normalizeCustomerId(input.clientCustomerId);
+    const managerCustomerId = normalizeCustomerId(input.managerCustomerId);
+    const clientCustomerId = normalizeCustomerId(input.clientCustomerId);
 
     const response = await fetch(
       `https://googleads.googleapis.com/v22/customers/${managerCustomerId}/customerClientLinks:mutate`,
       {
         method: 'POST',
-        headers: this.buildHeaders(input.accessToken, managerCustomerId),
+        headers: buildAdsHeaders(input.accessToken, this.getDeveloperToken(), managerCustomerId),
         body: JSON.stringify({
           operation: {
             create: {
@@ -485,8 +375,8 @@ export class GoogleAdsConnector {
   async findManagerLink(
     input: FindManagerLinkInput
   ): Promise<{ managerLinkId: string; resourceName: string; status: string } | null> {
-    const managerCustomerId = this.normalizeCustomerId(input.managerCustomerId);
-    const clientCustomerId = this.normalizeCustomerId(input.clientCustomerId);
+    const managerCustomerId = normalizeCustomerId(input.managerCustomerId);
+    const clientCustomerId = normalizeCustomerId(input.clientCustomerId);
     const query = [
       'SELECT customer_client_link.resource_name,',
       'customer_client_link.client_customer,',
@@ -500,7 +390,7 @@ export class GoogleAdsConnector {
       `https://googleads.googleapis.com/v22/customers/${managerCustomerId}/googleAds:searchStream`,
       {
         method: 'POST',
-        headers: this.buildHeaders(input.accessToken, managerCustomerId),
+        headers: buildAdsHeaders(input.accessToken, this.getDeveloperToken(), managerCustomerId),
         body: JSON.stringify({ query }),
       }
     );
@@ -543,8 +433,8 @@ export class GoogleAdsConnector {
   async verifyManagerLink(
     input: VerifyManagerLinkInput
   ): Promise<{ isLinked: boolean; status?: string; managerLinkId?: string }> {
-    const managerCustomerId = this.normalizeCustomerId(input.managerCustomerId);
-    const clientCustomerId = this.normalizeCustomerId(input.clientCustomerId);
+    const managerCustomerId = normalizeCustomerId(input.managerCustomerId);
+    const clientCustomerId = normalizeCustomerId(input.clientCustomerId);
     const managerLinkId = String(input.managerLinkId);
     const query = [
       'SELECT customer_manager_link.manager_customer,',
@@ -559,7 +449,7 @@ export class GoogleAdsConnector {
       `https://googleads.googleapis.com/v22/customers/${clientCustomerId}/googleAds:searchStream`,
       {
         method: 'POST',
-        headers: this.buildHeaders(input.accessToken, managerCustomerId),
+        headers: buildAdsHeaders(input.accessToken, this.getDeveloperToken(), managerCustomerId),
         body: JSON.stringify({ query }),
       }
     );
@@ -604,13 +494,13 @@ export class GoogleAdsConnector {
   async createUserAccessInvitation(
     input: CreateUserAccessInvitationInput
   ): Promise<{ resourceName: string }> {
-    const clientCustomerId = this.normalizeCustomerId(input.clientCustomerId);
+    const clientCustomerId = normalizeCustomerId(input.clientCustomerId);
 
     const response = await fetch(
       `https://googleads.googleapis.com/v22/customers/${clientCustomerId}/customerUserAccessInvitations:mutate`,
       {
         method: 'POST',
-        headers: this.buildHeaders(input.accessToken),
+        headers: buildAdsHeaders(input.accessToken, this.getDeveloperToken()),
         body: JSON.stringify({
           operation: {
             create: {
@@ -646,7 +536,7 @@ export class GoogleAdsConnector {
     emailAddress: string;
     accessRole?: string;
   } | null> {
-    const clientCustomerId = this.normalizeCustomerId(input.clientCustomerId);
+    const clientCustomerId = normalizeCustomerId(input.clientCustomerId);
     const query = [
       'SELECT customer_user_access_invitation.resource_name,',
       'customer_user_access_invitation.invitation_id,',
@@ -660,7 +550,7 @@ export class GoogleAdsConnector {
       `https://googleads.googleapis.com/v22/customers/${clientCustomerId}/googleAds:searchStream`,
       {
         method: 'POST',
-        headers: this.buildHeaders(input.accessToken),
+        headers: buildAdsHeaders(input.accessToken, this.getDeveloperToken()),
         body: JSON.stringify({ query }),
       }
     );
@@ -710,7 +600,7 @@ export class GoogleAdsConnector {
   async verifyUserAccess(
     input: VerifyUserAccessInput
   ): Promise<{ hasAccess: boolean; accessRole?: string; emailAddress?: string }> {
-    const clientCustomerId = this.normalizeCustomerId(input.clientCustomerId);
+    const clientCustomerId = normalizeCustomerId(input.clientCustomerId);
     const query = [
       'SELECT customer_user_access.email_address,',
       'customer_user_access.access_role',
@@ -722,7 +612,7 @@ export class GoogleAdsConnector {
       `https://googleads.googleapis.com/v22/customers/${clientCustomerId}/googleAds:searchStream`,
       {
         method: 'POST',
-        headers: this.buildHeaders(input.accessToken),
+        headers: buildAdsHeaders(input.accessToken, this.getDeveloperToken()),
         body: JSON.stringify({ query }),
       }
     );
@@ -771,23 +661,7 @@ export class GoogleAdsConnector {
     email: string;
     name: string;
   }> {
-    const response = await fetch(
-      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`,
-      { method: 'GET' }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google user info fetch failed: ${error}`);
-    }
-
-    const data = (await response.json()) as {
-      id: string;
-      email: string;
-      name: string;
-    };
-
-    return data;
+    return getGoogleUserInfo(accessToken);
   }
 }
 

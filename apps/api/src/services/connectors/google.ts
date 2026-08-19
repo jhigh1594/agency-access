@@ -11,6 +11,7 @@ import type {
   OffboardingItemClassification,
 } from '@agency-platform/shared';
 import { GOOGLE_PRODUCT_OAUTH_REQUIREMENTS } from '@agency-platform/shared';
+import { BaseConnector, type NormalizedTokenResponse } from './base.connector.js';
 
 /**
  * Unified Google OAuth Connector
@@ -26,20 +27,6 @@ import { GOOGLE_PRODUCT_OAUTH_REQUIREMENTS } from '@agency-platform/shared';
  *
  * Documentation: https://developers.google.com/identity/protocols/oauth2
  */
-
-interface GoogleTokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
-}
-
-interface GoogleTokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn: number;
-  expiresAt: Date;
-}
 
 export const MERCHANT_ACCOUNTS_V1_BASE_URL =
   'https://merchantapi.googleapis.com/accounts/v1';
@@ -62,6 +49,68 @@ export function evaluateOffboardingScopeReadiness(
   );
 
   return hasAllManagementScopes ? 'eligible_automatic' : 'reconnect_required';
+}
+
+/**
+ * Build Google Ads API request headers.
+ * Single owner for the Ads header shape used by the Ads connector and the
+ * offboarding flows: Bearer token, developer-token, JSON content type, and
+ * the optional login-customer-id for manager-account context.
+ */
+export function buildAdsHeaders(
+  accessToken: string,
+  developerToken: string,
+  loginCustomerId?: string
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+    'developer-token': developerToken,
+    'Content-Type': 'application/json',
+  };
+
+  if (loginCustomerId) {
+    headers['login-customer-id'] = loginCustomerId;
+  }
+
+  return headers;
+}
+
+/**
+ * Strip the customers/ resource prefix and any non-digit characters
+ * (e.g. dashes) from a Google Ads customer id. Single owner for the
+ * digit-only normalization used across Ads connectors and services.
+ */
+export function normalizeCustomerId(customerId: string): string {
+  return customerId.replace(/^customers\//, '').replace(/\D/g, '');
+}
+
+/**
+ * Fetch the Google OAuth profile for an access token (query-param form).
+ * Single owner for the Google userinfo request shared by all Google
+ * product connectors.
+ */
+export async function getGoogleUserInfo(accessToken: string): Promise<{
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
+}> {
+  const response = await fetch(
+    `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`,
+    { method: 'GET' }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Google user info fetch failed: ${error}`);
+  }
+
+  return (await response.json()) as {
+    id: string;
+    email: string;
+    name: string;
+    picture?: string;
+  };
 }
 
 // Union type for all Google product accounts
@@ -92,26 +141,34 @@ export type GoogleProduct =
   | 'google_search_console'
   | 'google_merchant_center';
 
-export class GoogleConnector {
-  private readonly clientId: string;
-  private readonly clientSecret: string;
-  private readonly redirectUri: string;
-
-  // Combined OAuth scopes for all Google products
-  private readonly DEFAULT_SCOPES = [
-    'https://www.googleapis.com/auth/adwords',
-    'https://www.googleapis.com/auth/analytics.readonly',
-    'https://www.googleapis.com/auth/business.manage',
-    'https://www.googleapis.com/auth/tagmanager.readonly',
-    'https://www.googleapis.com/auth/webmasters',
-    'https://www.googleapis.com/auth/content',
-  ];
-
+export class GoogleConnector extends BaseConnector {
   constructor() {
-    this.clientId = env.GOOGLE_CLIENT_ID || '';
-    this.clientSecret = env.GOOGLE_CLIENT_SECRET || '';
-    const backendUrl = env.API_URL || `http://localhost:${env.PORT}`;
-    this.redirectUri = `${backendUrl}/agency-platforms/google/callback`;
+    super('google');
+  }
+
+  // All Google products share one OAuth client (the "google" platform group),
+  // so the per-platform env lookup in BaseConnector must map to the shared keys.
+  // Empty string (not a throw) preserves the historic tolerance for an
+  // unconfigured client id.
+  protected override getClientId(): string {
+    return env.GOOGLE_CLIENT_ID || '';
+  }
+
+  protected override getClientSecret(): string {
+    return env.GOOGLE_CLIENT_SECRET || '';
+  }
+
+  normalizeResponse(data: {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+  }): NormalizedTokenResponse {
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresIn: data.expires_in,
+      expiresAt: new Date(Date.now() + data.expires_in * 1000),
+    };
   }
 
   private appendPageToken(url: string, pageToken?: string): string {
@@ -129,24 +186,6 @@ export class GoogleConnector {
     }
 
     return String(value).replace(/^customers\//, '').replace(/-/g, '');
-  }
-
-  private getGoogleAdsHeaders(
-    accessToken: string,
-    developerToken: string,
-    loginCustomerId?: string
-  ): Record<string, string> {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${accessToken}`,
-      'developer-token': developerToken,
-      'Content-Type': 'application/json',
-    };
-
-    if (loginCustomerId) {
-      headers['login-customer-id'] = loginCustomerId;
-    }
-
-    return headers;
   }
 
   private formatGoogleAdsCustomerId(customerId: string): string {
@@ -185,92 +224,6 @@ export class GoogleConnector {
   }
 
   /**
-   * Generate OAuth authorization URL with combined scopes
-   */
-  getAuthUrl(state: string, scopes: string[] = this.DEFAULT_SCOPES, redirectUri?: string): string {
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: redirectUri ?? this.redirectUri,
-      state,
-      scope: scopes.join(' '),
-      response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent',
-    });
-
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-  }
-
-  /**
-   * Exchange authorization code for access token
-   */
-  async exchangeCode(code: string, redirectUri?: string): Promise<GoogleTokens> {
-    const body = new URLSearchParams({
-      code,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      redirect_uri: redirectUri ?? this.redirectUri,
-      grant_type: 'authorization_code',
-    });
-
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google token exchange failed: ${error}`);
-    }
-
-    const data = (await response.json()) as GoogleTokenResponse;
-
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresIn: data.expires_in,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-    };
-  }
-
-  /**
-   * Refresh access token using refresh token
-   */
-  async refreshToken(refreshToken: string): Promise<GoogleTokens> {
-    const body = new URLSearchParams({
-      refresh_token: refreshToken,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      grant_type: 'refresh_token',
-    });
-
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google token refresh failed: ${error}`);
-    }
-
-    const data = (await response.json()) as GoogleTokenResponse;
-
-    return {
-      accessToken: data.access_token,
-      refreshToken,
-      expiresIn: data.expires_in,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-    };
-  }
-
-  /**
    * Verify token is still valid
    */
   async verifyToken(accessToken: string): Promise<boolean> {
@@ -295,24 +248,7 @@ export class GoogleConnector {
     name: string;
     picture?: string;
   }> {
-    const response = await fetch(
-      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`,
-      { method: 'GET' }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Google user info fetch failed: ${error}`);
-    }
-
-    const data = (await response.json()) as {
-      id: string;
-      email: string;
-      name: string;
-      picture?: string;
-    };
-
-    return data;
+    return getGoogleUserInfo(accessToken);
   }
 
   /**
@@ -430,7 +366,7 @@ export class GoogleConnector {
         'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           method: 'GET',
-          headers: this.getGoogleAdsHeaders(accessToken, developerToken, configuredLoginCustomerId || undefined),
+          headers: buildAdsHeaders(accessToken, developerToken, configuredLoginCustomerId || undefined),
         }
       );
 
@@ -527,7 +463,7 @@ export class GoogleConnector {
             `https://googleads.googleapis.com/v22/customers/${queryCustomerId}/googleAds:search`,
             {
               method: 'POST',
-              headers: this.getGoogleAdsHeaders(accessToken, developerToken, loginCustomerId),
+              headers: buildAdsHeaders(accessToken, developerToken, loginCustomerId),
               body: JSON.stringify({ query }),
             }
           );
@@ -563,7 +499,7 @@ export class GoogleConnector {
             `https://googleads.googleapis.com/v22/customers/${customerId}`,
             {
               method: 'GET',
-              headers: this.getGoogleAdsHeaders(accessToken, developerToken, loginCustomerId),
+              headers: buildAdsHeaders(accessToken, developerToken, loginCustomerId),
             }
           );
           if (!resp.ok) {

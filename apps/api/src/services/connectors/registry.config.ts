@@ -103,9 +103,15 @@ export const PLATFORM_CONFIGS: Partial<Record<Platform, PlatformOAuthConfig>> = 
     verifyUrl: 'https://www.googleapis.com/oauth2/v2/tokeninfo',
     supportsRefreshTokens: true,
     apiHeaders: {}, // Google Ads requires developer-token, but it's API-specific
+    // Combined OAuth scopes for every Google product (order matters: the
+    // unified Google connector authorizes all products in one consent).
     defaultScopes: [
       'https://www.googleapis.com/auth/adwords',
       'https://www.googleapis.com/auth/analytics.readonly',
+      'https://www.googleapis.com/auth/business.manage',
+      'https://www.googleapis.com/auth/tagmanager.readonly',
+      'https://www.googleapis.com/auth/webmasters',
+      'https://www.googleapis.com/auth/content',
     ],
   },
 

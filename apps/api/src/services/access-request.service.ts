@@ -25,6 +25,7 @@ import { invalidateDashboardCache } from '@/lib/cache.js';
 import { env } from '@/lib/env.js';
 import { logger } from '@/lib/logger.js';
 import { webhookEventService } from '@/services/webhook-event.service.js';
+import { normalizeCustomerId } from '@/services/connectors/google.js';
 
 const LegacyPlatformSchema = z.enum([
   'whatsapp_business',
@@ -578,7 +579,7 @@ function resolveGoogleDefaultFulfillmentMode(
 
   const managerCustomerId =
     typeof managementSettings.managerCustomerId === 'string'
-      ? managementSettings.managerCustomerId.replace(/\D/g, '')
+      ? normalizeCustomerId(managementSettings.managerCustomerId)
       : '';
 
   if (!managerCustomerId) {

@@ -227,39 +227,11 @@ export class MetaConnector {
   }
 
   /**
-   * Verify token is still valid
-   *
-   * @param accessToken - Token to verify
-   * @returns Whether token is valid
+   * Fetch token metadata from Meta's debug_token endpoint.
+   * Single owner for the Graph debug_token request shared by verifyToken
+   * and getTokenMetadata.
    */
-  async verifyToken(accessToken: string): Promise<boolean> {
-    try {
-      const params = new URLSearchParams({
-        input_token: accessToken,
-        access_token: `${this.appId}|${this.appSecret}`, // App access token
-      });
-
-      const response = await fetch(
-        `https://graph.facebook.com/v21.0/debug_token?${params.toString()}`,
-        { method: 'GET' }
-      );
-
-      if (!response.ok) return false;
-
-      const data = (await response.json()) as { data?: { is_valid?: boolean } };
-      return data.data?.is_valid === true;
-    } catch {
-      return false;
-    }
-  }
-
-  async getTokenMetadata(accessToken: string): Promise<{
-    scopes: string[];
-    expiresAt?: Date;
-    dataAccessExpiresAt?: Date;
-    userId?: string;
-    isValid: boolean;
-  }> {
+  private async fetchDebugToken(accessToken: string): Promise<MetaDebugTokenResponse> {
     const params = new URLSearchParams({
       input_token: accessToken,
       access_token: `${this.appId}|${this.appSecret}`,
@@ -275,7 +247,32 @@ export class MetaConnector {
       throw new Error(`Meta debug_token fetch failed: ${error}`);
     }
 
-    const data = (await response.json()) as MetaDebugTokenResponse;
+    return (await response.json()) as MetaDebugTokenResponse;
+  }
+
+  /**
+   * Verify token is still valid
+   *
+   * @param accessToken - Token to verify
+   * @returns Whether token is valid
+   */
+  async verifyToken(accessToken: string): Promise<boolean> {
+    try {
+      const data = await this.fetchDebugToken(accessToken);
+      return data.data?.is_valid === true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getTokenMetadata(accessToken: string): Promise<{
+    scopes: string[];
+    expiresAt?: Date;
+    dataAccessExpiresAt?: Date;
+    userId?: string;
+    isValid: boolean;
+  }> {
+    const data = await this.fetchDebugToken(accessToken);
     const payload = data.data;
 
     return {
