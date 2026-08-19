@@ -12,7 +12,6 @@ import { env } from './lib/env.js';
 import { getCorsOptions } from './lib/cors.js';
 import { authenticate, optionalAuthenticate } from './middleware/auth.js';
 import { extractClientIp } from './lib/ip.js';
-import { oauthTestRoutes } from './routes/oauth-test.js';
 import { agencyRoutes } from './routes/agencies.js';
 import { accessRequestRoutes } from './routes/access-requests.js';
 import { tokenHealthRoutes } from './routes/token-health.js';
@@ -156,7 +155,6 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 // using Clerk's backend SDK which properly handles RS256 tokens
 
 // Register routes
-await fastify.register(oauthTestRoutes);
 await fastify.register(agencyRoutes, { prefix: '/api' });
 await fastify.register(accessRequestRoutes, { prefix: '/api' });
 await fastify.register(tokenHealthRoutes, { prefix: '/api' });

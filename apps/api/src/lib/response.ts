@@ -81,33 +81,3 @@ export function sendNotFound(
 ): void {
   sendError(reply, 'NOT_FOUND', message, 404);
 }
-
-/**
- * Send conflict error (409 status code)
- */
-export function sendConflict(
-  reply: any,
-  message: string
-): void {
-  sendError(reply, 'CONFLICT', message, 409);
-}
-
-/**
- * Send unauthorized error (401 status code)
- */
-export function sendUnauthorized(
-  reply: any,
-  message: string = 'Unauthorized'
-): void {
-  sendError(reply, 'UNAUTHORIZED', message, 401);
-}
-
-/**
- * Send forbidden error (403 status code)
- */
-export function sendForbidden(
-  reply: any,
-  message: string = 'Forbidden'
-): void {
-  sendError(reply, 'FORBIDDEN', message, 403);
-}

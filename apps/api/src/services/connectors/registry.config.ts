@@ -400,22 +400,3 @@ export function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
   }
   return config;
 }
-
-/**
- * Get all configured platforms
- *
- * @returns Array of platform identifiers
- */
-export function getConfiguredPlatforms(): Platform[] {
-  return Object.keys(PLATFORM_CONFIGS) as Platform[];
-}
-
-/**
- * Check if a platform has a configuration
- *
- * @param platform - Platform identifier
- * @returns Whether platform is configured
- */
-export function hasPlatformConfig(platform: Platform): boolean {
-  return platform in PLATFORM_CONFIGS;
-}

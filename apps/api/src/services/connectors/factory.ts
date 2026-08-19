@@ -16,7 +16,7 @@ import { tiktokConnector } from './tiktok.js';
 // Export new hybrid architecture components
 export { BaseConnector, ConnectorError } from './base.connector.js';
 export type { NormalizedTokenResponse } from './base.connector.js';
-export { PLATFORM_CONFIGS, getPlatformConfig, hasPlatformConfig } from './registry.config.js';
+export { PLATFORM_CONFIGS, getPlatformConfig } from './registry.config.js';
 
 /**
  * ============================================================================
@@ -167,23 +167,4 @@ export function getConnector(platform: Platform): PlatformConnector {
   }
 
   return connector;
-}
-
-/**
- * Check if a connector exists for a platform
- *
- * @param platform - The platform identifier
- * @returns Whether a connector is available
- */
-export function hasConnector(platform: Platform): boolean {
-  return platform in connectors;
-}
-
-/**
- * Get all available platform connectors
- *
- * @returns Array of platform identifiers that have connectors
- */
-export function getAvailablePlatforms(): Platform[] {
-  return Object.keys(connectors) as Platform[];
 }
