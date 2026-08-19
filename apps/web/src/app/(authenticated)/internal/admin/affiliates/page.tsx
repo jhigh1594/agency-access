@@ -144,6 +144,19 @@ export default function InternalAdminAffiliatesPage() {
   const canGoBack = page > 1;
   const canGoForward = data.items.length === PAGE_SIZE && page * PAGE_SIZE < data.total;
 
+  /** Runs a mutation and surfaces its success text or a fallback error message. */
+  async function runAdminAction(action: () => Promise<string>, fallbackError: string) {
+    try {
+      const text = await action();
+      setMessages({ type: 'success', text });
+    } catch (mutationError) {
+      setMessages({
+        type: 'error',
+        text: mutationError instanceof Error ? mutationError.message : fallbackError,
+      });
+    }
+  }
+
   async function handleReviewDecision(nextStatus: 'approved' | 'rejected') {
     if (!selectedPartner) return;
 
@@ -158,7 +171,7 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       await updatePartnerMutation.mutateAsync({
         partnerId: selectedPartner.id,
         status: nextStatus,
@@ -166,18 +179,8 @@ export default function InternalAdminAffiliatesPage() {
         commissionDurationMonths: selectedPartner.commissionDurationMonths,
         internalNotes: notes || undefined,
       });
-      setMessages({
-        type: 'success',
-        text: nextStatus === 'approved'
-          ? 'Affiliate partner approved.'
-          : 'Affiliate partner rejected.',
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to update affiliate partner.',
-      });
-    }
+      return nextStatus === 'approved' ? 'Affiliate partner approved.' : 'Affiliate partner rejected.';
+    }, 'Unable to update affiliate partner.');
   }
 
   async function handleDisableLink(linkId: string) {
@@ -186,21 +189,13 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       await disableLinkMutation.mutateAsync({
         linkId,
         internalNotes: internalNotes || undefined,
       });
-      setMessages({
-        type: 'success',
-        text: 'Affiliate link disabled.',
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to disable affiliate link.',
-      });
-    }
+      return 'Affiliate link disabled.';
+    }, 'Unable to disable affiliate link.');
   }
 
   async function handleDisqualifyReferral(referralId: string) {
@@ -228,22 +223,14 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       await disqualifyReferralMutation.mutateAsync({
         referralId,
         reason: reason.trim(),
         internalNotes: internalNotes.trim(),
       });
-      setMessages({
-        type: 'success',
-        text: 'Affiliate referral disqualified and unpaid commissions voided.',
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to disqualify affiliate referral.',
-      });
-    }
+      return 'Affiliate referral disqualified and unpaid commissions voided.';
+    }, 'Unable to disqualify affiliate referral.');
   }
 
   async function handleAdjustCommissionAmount(commissionId: string, currentAmountCents: number) {
@@ -273,22 +260,14 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       await adjustCommissionMutation.mutateAsync({
         commissionId,
         amountCents,
         internalNotes: internalNotes.trim(),
       });
-      setMessages({
-        type: 'success',
-        text: 'Affiliate commission amount updated.',
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to adjust affiliate commission.',
-      });
-    }
+      return 'Affiliate commission amount updated.';
+    }, 'Unable to adjust affiliate commission.');
   }
 
   async function handleAdjustCommissionStatus(commissionId: string, nextStatus: 'approved' | 'void') {
@@ -307,24 +286,14 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       await adjustCommissionMutation.mutateAsync({
         commissionId,
         status: nextStatus,
         internalNotes: internalNotes.trim(),
       });
-      setMessages({
-        type: 'success',
-        text: nextStatus === 'approved'
-          ? 'Affiliate commission approved.'
-          : 'Affiliate commission voided.',
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to update affiliate commission.',
-      });
-    }
+      return nextStatus === 'approved' ? 'Affiliate commission approved.' : 'Affiliate commission voided.';
+    }, 'Unable to update affiliate commission.');
   }
 
   async function handleGeneratePayoutBatch() {
@@ -336,38 +305,22 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       const batch = await generatePayoutBatchMutation.mutateAsync({
         periodStart: `${payoutPeriodStart}T00:00:00.000Z`,
         periodEnd: `${payoutPeriodEnd}T23:59:59.999Z`,
         notes: payoutNotes.trim() || undefined,
       });
-      setMessages({
-        type: 'success',
-        text: `Payout batch ${batch.id} generated and ready for export.`,
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to generate payout batch.',
-      });
-    }
+      return `Payout batch ${batch.id} generated and ready for export.`;
+    }, 'Unable to generate payout batch.');
   }
 
   async function handleExportPayoutBatch(batchId: string) {
-    try {
+    await runAdminAction(async () => {
       const exportPayload = await exportPayoutBatchMutation.mutateAsync({ batchId });
       downloadCsv(exportPayload.fileName, exportPayload.csv);
-      setMessages({
-        type: 'success',
-        text: `${exportPayload.fileName} exported for manual payout processing.`,
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to export payout batch.',
-      });
-    }
+      return `${exportPayload.fileName} exported for manual payout processing.`;
+    }, 'Unable to export payout batch.');
   }
 
   async function handleResolveReferralReview(
@@ -418,28 +371,19 @@ export default function InternalAdminAffiliatesPage() {
       return;
     }
 
-    try {
+    await runAdminAction(async () => {
       await resolveReferralReviewMutation.mutateAsync({
         referralId,
         resolution,
         reason: reason.trim(),
         internalNotes: internalNotes.trim(),
       });
-      setMessages({
-        type: 'success',
-        text:
-          resolution === 'clear'
-            ? 'Referral cleared for normal payout flow.'
-            : resolution === 'keep_review_required'
-              ? 'Referral kept in the fraud review queue.'
-              : 'Referral disqualified and unpaid commissions voided.',
-      });
-    } catch (mutationError) {
-      setMessages({
-        type: 'error',
-        text: mutationError instanceof Error ? mutationError.message : 'Unable to resolve fraud review.',
-      });
-    }
+      return resolution === 'clear'
+        ? 'Referral cleared for normal payout flow.'
+        : resolution === 'keep_review_required'
+          ? 'Referral kept in the fraud review queue.'
+          : 'Referral disqualified and unpaid commissions voided.';
+    }, 'Unable to resolve fraud review.');
   }
 
   const isMutationPending =

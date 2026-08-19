@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -76,6 +77,109 @@ interface GoogleAccountsResponse {
   merchantCenterAccounts: GoogleMerchantCenterAccount[];
   hasAccess: boolean;
 }
+
+// Google account sections rendered when the agency has Google access.
+const GOOGLE_ACCOUNT_SECTIONS: Array<{
+  key: string;
+  title: string;
+  items: (google: GoogleAccountsResponse) => Array<{ id: string; body: ReactNode }>;
+}> = [
+  {
+    key: 'adsAccounts',
+    title: 'Google Ads Accounts',
+    items: (google) =>
+      google.adsAccounts.map((account) => ({
+        id: account.id,
+        body: (
+          <>
+            <p className="font-medium">{getGoogleAdsAccountLabel(account)}</p>
+            <p className="text-sm text-gray-600">ID: {account.id}</p>
+            <span className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs mt-1">
+              {account.status}
+            </span>
+          </>
+        ),
+      })),
+  },
+  {
+    key: 'analyticsProperties',
+    title: 'Google Analytics Properties',
+    items: (google) =>
+      google.analyticsProperties.map((property) => ({
+        id: property.id,
+        body: (
+          <>
+            <p className="font-medium">{property.displayName}</p>
+            <p className="text-sm text-gray-600">Account: {property.accountName}</p>
+            <p className="text-sm text-gray-600">ID: {property.id}</p>
+          </>
+        ),
+      })),
+  },
+  {
+    key: 'businessAccounts',
+    title: 'Google Business Profiles',
+    items: (google) =>
+      google.businessAccounts.map((account) => ({
+        id: account.id,
+        body: (
+          <>
+            <p className="font-medium">{account.name}</p>
+            <p className="text-sm text-gray-600">ID: {account.id}</p>
+            {account.locationCount && (
+              <p className="text-sm text-gray-600">{account.locationCount} locations</p>
+            )}
+          </>
+        ),
+      })),
+  },
+  {
+    key: 'tagManagerContainers',
+    title: 'Google Tag Manager Containers',
+    items: (google) =>
+      google.tagManagerContainers.map((container) => ({
+        id: container.id,
+        body: (
+          <>
+            <p className="font-medium">{container.name}</p>
+            <p className="text-sm text-gray-600">Account: {container.accountName}</p>
+            <p className="text-sm text-gray-600">Container ID: {container.id}</p>
+          </>
+        ),
+      })),
+  },
+  {
+    key: 'searchConsoleSites',
+    title: 'Search Console Sites',
+    items: (google) =>
+      google.searchConsoleSites.map((site) => ({
+        id: site.id,
+        body: (
+          <>
+            <p className="font-medium text-sm break-all">{site.url}</p>
+            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mt-1">
+              {site.permissionLevel}
+            </span>
+          </>
+        ),
+      })),
+  },
+  {
+    key: 'merchantCenterAccounts',
+    title: 'Merchant Center Accounts',
+    items: (google) =>
+      google.merchantCenterAccounts.map((account) => ({
+        id: account.id,
+        body: (
+          <>
+            <p className="font-medium">{account.name}</p>
+            <p className="text-sm text-gray-600">ID: {account.id}</p>
+            {account.websiteUrl && <p className="text-sm text-gray-600">{account.websiteUrl}</p>}
+          </>
+        ),
+      })),
+  },
+];
 
 // Meta business account types
 interface MetaBusinessAccount {
@@ -414,116 +518,30 @@ export default function PlatformsPage() {
                 <p className="text-gray-600">Loading Google accounts...</p>
               ) : googleAccounts && googleAccounts.hasAccess ? (
                 <div className="space-y-6">
-                  {/* Google Ads */}
-                  {googleAccounts.adsAccounts.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-blue-900 mb-2">Google Ads Accounts ({googleAccounts.adsAccounts.length})</h3>
-                      <div className="space-y-2">
-                        {googleAccounts.adsAccounts.map((account) => (
-                          <div key={account.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium">{getGoogleAdsAccountLabel(account)}</p>
-                            <p className="text-sm text-gray-600">ID: {account.id}</p>
-                            <span className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs mt-1">
-                              {account.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {GOOGLE_ACCOUNT_SECTIONS.map((section) => {
+                    const items = section.items(googleAccounts);
+                    if (items.length === 0) return null;
 
-                  {/* Google Analytics */}
-                  {googleAccounts.analyticsProperties.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-blue-900 mb-2">Google Analytics Properties ({googleAccounts.analyticsProperties.length})</h3>
-                      <div className="space-y-2">
-                        {googleAccounts.analyticsProperties.map((property) => (
-                          <div key={property.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium">{property.displayName}</p>
-                            <p className="text-sm text-gray-600">Account: {property.accountName}</p>
-                            <p className="text-sm text-gray-600">ID: {property.id}</p>
-                          </div>
-                        ))}
+                    return (
+                      <div key={section.key}>
+                        <h3 className="font-semibold text-blue-900 mb-2">
+                          {section.title} ({items.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {items.map((item) => (
+                            <div key={item.id} className="bg-gray-50 p-3 rounded border">
+                              {item.body}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Google Business Profile */}
-                  {googleAccounts.businessAccounts.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-blue-900 mb-2">Google Business Profiles ({googleAccounts.businessAccounts.length})</h3>
-                      <div className="space-y-2">
-                        {googleAccounts.businessAccounts.map((account) => (
-                          <div key={account.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium">{account.name}</p>
-                            <p className="text-sm text-gray-600">ID: {account.id}</p>
-                            {account.locationCount && (
-                              <p className="text-sm text-gray-600">{account.locationCount} locations</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Google Tag Manager */}
-                  {googleAccounts.tagManagerContainers.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-blue-900 mb-2">Google Tag Manager Containers ({googleAccounts.tagManagerContainers.length})</h3>
-                      <div className="space-y-2">
-                        {googleAccounts.tagManagerContainers.map((container) => (
-                          <div key={container.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium">{container.name}</p>
-                            <p className="text-sm text-gray-600">Account: {container.accountName}</p>
-                            <p className="text-sm text-gray-600">Container ID: {container.id}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Google Search Console */}
-                  {googleAccounts.searchConsoleSites.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-blue-900 mb-2">Search Console Sites ({googleAccounts.searchConsoleSites.length})</h3>
-                      <div className="space-y-2">
-                        {googleAccounts.searchConsoleSites.map((site) => (
-                          <div key={site.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium text-sm break-all">{site.url}</p>
-                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mt-1">
-                              {site.permissionLevel}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Google Merchant Center */}
-                  {googleAccounts.merchantCenterAccounts.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-blue-900 mb-2">Merchant Center Accounts ({googleAccounts.merchantCenterAccounts.length})</h3>
-                      <div className="space-y-2">
-                        {googleAccounts.merchantCenterAccounts.map((account) => (
-                          <div key={account.id} className="bg-gray-50 p-3 rounded border">
-                            <p className="font-medium">{account.name}</p>
-                            <p className="text-sm text-gray-600">ID: {account.id}</p>
-                            {account.websiteUrl && (
-                              <p className="text-sm text-gray-600">{account.websiteUrl}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
 
                   {/* No accounts message */}
-                  {googleAccounts.adsAccounts.length === 0 &&
-                   googleAccounts.analyticsProperties.length === 0 &&
-                   googleAccounts.businessAccounts.length === 0 &&
-                   googleAccounts.tagManagerContainers.length === 0 &&
-                   googleAccounts.searchConsoleSites.length === 0 &&
-                   googleAccounts.merchantCenterAccounts.length === 0 && (
+                  {GOOGLE_ACCOUNT_SECTIONS.every(
+                    (section) => section.items(googleAccounts).length === 0
+                  ) && (
                     <div className="text-center py-8 bg-gray-50 rounded">
                       <p className="text-gray-600">No Google accounts found.</p>
                       <p className="text-sm text-gray-500 mt-1">

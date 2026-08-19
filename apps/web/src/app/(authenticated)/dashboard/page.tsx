@@ -302,6 +302,28 @@ export default function DashboardPage() {
     }
   };
 
+  // Shared Create Request button (header + Recent Access Requests panel).
+  const createRequestButton = (
+    <Button
+      type="button"
+      variant="brutalist-rounded"
+      size="sm"
+      data-testid="dashboard-create-request"
+      onClick={handleCreateRequest}
+      disabled={isCreatingRequest}
+      aria-busy={isCreatingRequest}
+      aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
+      className="px-6 sm:px-8 normal-case font-semibold tracking-normal hover:translate-x-0 hover:bg-coral/90 disabled:pointer-events-none disabled:opacity-80"
+    >
+      {isCreatingRequest ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+      ) : (
+        <Plus className="h-4 w-4 shrink-0" aria-hidden />
+      )}
+      {isCreatingRequest ? 'Checking…' : 'Create Request'}
+    </Button>
+  );
+
   // Track dashboard view in PostHog (only once per mount)
   useEffect(() => {
     if (agency && !hasTrackedView.current) {
@@ -434,24 +456,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
-          <Button
-            type="button"
-            variant="brutalist-rounded"
-            size="sm"
-            data-testid="dashboard-create-request"
-            onClick={handleCreateRequest}
-            disabled={isCreatingRequest}
-            aria-busy={isCreatingRequest}
-            aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
-            className="px-6 sm:px-8 normal-case font-semibold tracking-normal hover:translate-x-0 hover:bg-coral/90 disabled:pointer-events-none disabled:opacity-80"
-          >
-            {isCreatingRequest ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
-            ) : (
-              <Plus className="h-4 w-4 shrink-0" aria-hidden />
-            )}
-            {isCreatingRequest ? 'Checking…' : 'Create Request'}
-          </Button>
+          {createRequestButton}
         </div>
 
         {trialBanner && (
@@ -536,24 +541,7 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <Button
-              type="button"
-              variant="brutalist-rounded"
-              size="sm"
-              data-testid="dashboard-create-request"
-              onClick={handleCreateRequest}
-              disabled={isCreatingRequest}
-              aria-busy={isCreatingRequest}
-              aria-label={isCreatingRequest ? 'Checking quota before opening new request' : 'Create access request'}
-              className="px-6 sm:px-8 normal-case font-semibold tracking-normal hover:translate-x-0 hover:bg-coral/90 disabled:pointer-events-none disabled:opacity-80"
-            >
-              {isCreatingRequest ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
-              ) : (
-                <Plus className="h-4 w-4 shrink-0" aria-hidden />
-              )}
-              {isCreatingRequest ? 'Checking…' : 'Create Request'}
-            </Button>
+            {createRequestButton}
           </div>
 
           {requests.length === 0 ? (
