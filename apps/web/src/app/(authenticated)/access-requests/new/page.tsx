@@ -33,6 +33,7 @@ import { AccessRequestProvider, useAccessRequest } from '@/contexts/access-reque
 import type { IntakeField } from '@/contexts/access-request-context';
 import { getPlatformCount } from '@/lib/transform-platforms';
 import { useAuthOrBypass } from '@/lib/dev-auth';
+import { useUserAgency, fetchActiveAgencyPlatformConnections } from '@/hooks/use-user-agency';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 
 // ============================================================
@@ -69,27 +70,8 @@ function AccessRequestWizardContent() {
 
   const principalClerkId = orgId || userId;
 
-  // Fetch agency by clerkUserId - matches connections page approach
-  const { data: agencyData } = useQuery({
-    queryKey: ['user-agency', principalClerkId],
-    queryFn: async () => {
-      if (!principalClerkId) return null;
-      const token = await getToken();
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`,
-        {
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Failed to fetch agency');
-      const result = await response.json();
-      return result.data?.[0] || null;
-    },
-    enabled: !!principalClerkId,
-  });
+  // Fetch agency by clerkUserId - shared hook with the connections page
+  const { data: agencyData } = useUserAgency();
 
   // Use the agency's UUID id
   const agencyId = agencyData?.id;
@@ -112,20 +94,9 @@ function AccessRequestWizardContent() {
     queryKey: ['active-agency-platform-connections', agencyId],
     queryFn: async () => {
       if (!agencyId) return [];
-      const token = await getToken();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${agencyId}&status=active`,
-        {
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Failed to fetch platforms');
-      const result = await response.json();
-      const activeConnections = Array.isArray(result.data) ? result.data : [];
+      const activeConnections = await fetchActiveAgencyPlatformConnections(agencyId, getToken);
 
-      return activeConnections.map((connection: any) => ({
+      return activeConnections.map((connection) => ({
         platform: connection.platform,
         name: PLATFORM_NAMES[connection.platform as keyof typeof PLATFORM_NAMES] || connection.platform,
         connected: true,
@@ -133,8 +104,8 @@ function AccessRequestWizardContent() {
         connectedEmail:
           connection.agencyEmail ||
           connection.connectedBy ||
-          connection.metadata?.email ||
-          connection.metadata?.userEmail,
+          (connection.metadata?.email as string | undefined) ||
+          (connection.metadata?.userEmail as string | undefined),
         connectedAt: connection.connectedAt,
         expiresAt: connection.expiresAt,
         metadata: connection.metadata,

@@ -22,12 +22,11 @@ import { ManageAssetsModalShell } from '@/components/manage-assets-modal-shell';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { AnimatePresence } from 'framer-motion';
-import { useAuthOrBypass } from '@/lib/dev-auth';
+import { DEV_BYPASS_TOKEN, useAuthOrBypass } from '@/lib/dev-auth';
+import { useUserAgency } from '@/hooks/use-user-agency';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 import { readPerfHarnessContext } from '@/lib/perf-harness';
 import { resolveApiUrl } from '@/lib/api/api-env';
-
-const DEV_BYPASS_TOKEN = 'dev-bypass-token';
 
 function ConnectionsPageContent() {
   const router = useRouter();
@@ -66,33 +65,8 @@ function ConnectionsPageContent() {
     return null;
   };
 
-  const { data: agencyData } = useQuery({
-    queryKey: ['user-agency', principalClerkId],
-    queryFn: async () => {
-      if (!principalClerkId) {
-        return null;
-      }
-
-      // Get Clerk session token for authenticated request
-      const token = await getAuthToken();
-
-      // Resolve the active principal's agency by clerk user/org id.
-      const response = await fetch(
-        resolveApiUrl(`/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}`),
-        {
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Failed to fetch agency');
-      const result = await response.json();
-      return result.data?.[0] || null;
-    },
-    enabled: !!principalClerkId,
-    staleTime: 30 * 60 * 1000, // 30 minutes - agency data rarely changes
-    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour (garbage collection time)
-  });
+  // Resolve the active principal's agency by clerk user/org id.
+  const { data: agencyData } = useUserAgency({ principalClerkId, getAuthToken });
 
   const agencyId = agencyData?.id ?? null;
 

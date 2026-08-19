@@ -25,9 +25,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SubscriptionTier, MetricType, TierLimits } from '@agency-platform/shared';
-import { getApiBaseUrl } from '@/lib/api/api-env';
-
-const API_URL = getApiBaseUrl();
+import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
 
 // ============================================================
 // TYPES
@@ -69,20 +67,10 @@ export function useQuota() {
     queryFn: async () => {
       if (!orgId) throw new Error('No organization ID');
 
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/api/quota`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const payload = await authorizedApiFetch<{ data?: UsageSnapshot }>('/api/quota', {
+        getToken,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch quota information');
-      }
-
-      const result = await response.json();
-      return result.data as UsageSnapshot;
+      return payload.data as UsageSnapshot;
     },
     enabled: !!orgId,
     staleTime: 30_000, // 30 seconds
@@ -101,27 +89,19 @@ export function useQuotaCheck() {
     mutationFn: async (input: QuotaCheckInput): Promise<QuotaCheckResult> => {
       if (!orgId) throw new Error('No organization ID');
 
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/api/quota/check`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(input),
-      });
-
-      if (!response.ok) {
-        // Handle quota exceeded (429) or other errors
-        if (response.status === 429) {
-          const error = await response.json();
-          throw new QuotaExceededError(error.error);
+      try {
+        const payload = await authorizedApiFetch<{ data?: QuotaCheckResult }>('/api/quota/check', {
+          getToken,
+          method: 'POST',
+          body: JSON.stringify(input),
+        });
+        return payload.data as QuotaCheckResult;
+      } catch (err) {
+        if (err instanceof AuthorizedApiError && err.status === 429) {
+          throw new QuotaExceededError(err);
         }
-        throw new Error('Failed to check quota');
+        throw err;
       }
-
-      const result = await response.json();
-      return result.data as QuotaCheckResult;
     },
     onSuccess: () => {
       // Invalidate usage query to get fresh data
@@ -172,18 +152,16 @@ export function usePrefetchQuota() {
   return async () => {
     if (!orgId) return;
 
-    const token = await getToken();
-    if (!token) return;
+    // ponytail: authorizedApiFetch throws on null token; prefetch is best-effort, keep the skip.
+    if (!(await getToken())) return;
 
     await queryClient.prefetchQuery({
       queryKey: ['quota', 'usage', orgId],
       queryFn: async () => {
-        const response = await fetch(`${API_URL}/api/quota`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const payload = await authorizedApiFetch<{ data?: UsageSnapshot }>('/api/quota', {
+          getToken,
         });
-        if (!response.ok) throw new Error('Failed to fetch quota');
-        const result = await response.json();
-        return result.data as UsageSnapshot;
+        return payload.data as UsageSnapshot;
       },
     });
   };

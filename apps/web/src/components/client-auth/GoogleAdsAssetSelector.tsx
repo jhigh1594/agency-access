@@ -9,6 +9,7 @@ import { AssetGroup, type Asset } from './AssetGroup';
 import { Loader2 } from 'lucide-react';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface GoogleAdsAccount {
   id: string;
@@ -47,7 +48,9 @@ export function GoogleAdsAssetSelector({
       const response = await fetch(
         resolveApiUrl(`/api/client/${accessRequestToken}/assets/google_ads?connectionId=${encodeURIComponent(sessionId)}`)
       );
-      const json = await response.json();
+      const json = await parseJsonResponse<{ data?: GoogleAdsAccount[]; error?: { message?: string } }>(response, {
+        fallbackErrorMessage: 'Failed to load accounts',
+      });
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to load accounts');

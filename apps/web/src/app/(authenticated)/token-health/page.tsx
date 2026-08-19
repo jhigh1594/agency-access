@@ -24,7 +24,7 @@ import {
 import { StatCard, HealthBadge, ExpirationCountdown, PlatformIcon, formatRelativeTime } from '@/components/ui';
 import type { Platform, HealthStatus } from '@agency-platform/shared';
 import { resolveApiUrl } from '@/lib/api/api-env';
-import { extractApiErrorMessage } from '@/lib/api/extract-error';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 type TokenHealth = {
   id: string;
@@ -60,10 +60,10 @@ export default function TokenHealthPage() {
       const res = await fetch(resolveApiUrl('/api/token-health'), {
         headers: await getAuthHeaders(),
       });
-      if (!res.ok) {
-        throw new Error(await extractApiErrorMessage(res, 'Failed to fetch token health'));
-      }
-      const result = await res.json();
+      // Missing-token degradation is deliberate: getAuthHeaders may send no Authorization header.
+      const result = await parseJsonResponse<{ data?: TokenHealth[] }>(res, {
+        fallbackErrorMessage: 'Failed to fetch token health',
+      });
       if (result.data) {
         setTokens(result.data);
       }
@@ -93,10 +93,9 @@ export default function TokenHealthPage() {
         body: JSON.stringify({ connectionId: tokens.find((t) => t.id === tokenId)?.connectionId, platform }),
       });
 
-      if (!res.ok) {
-        throw new Error(await extractApiErrorMessage(res, 'Failed to refresh token'));
-      }
-      const result = await res.json();
+      const result = await parseJsonResponse<{ data?: unknown }>(res, {
+        fallbackErrorMessage: 'Failed to refresh token',
+      });
       if (result.data) {
         // Refresh the list
         await fetchTokenHealth();

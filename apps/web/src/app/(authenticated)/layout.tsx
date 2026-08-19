@@ -21,7 +21,7 @@ import { Suspense, useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthOrBypass, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
-import { getApiBaseUrl } from '@/lib/api/api-env';
+import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
 import { TrialBanner } from '@/components/trial-banner';
 import { useSubscription } from '@/lib/query/billing';
 import { shouldEnforceOnboardingRedirect, type AgencyOnboardingStatusData } from '@/lib/query/onboarding';
@@ -123,39 +123,24 @@ function AuthenticatedLayoutInner({
           return;
         }
 
-        const apiBaseUrl = getApiBaseUrl();
         const checkKey = `${principalClerkId}:${pathname}`;
         if (agencyCheckDedup.has(checkKey)) {
           return;
         }
         agencyCheckDedup.add(checkKey);
 
-        // Check if user has an agency by clerkUserId
-        const response = await fetch(
-          `${apiBaseUrl}/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}&fields=id,name,email,clerkUserId`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        // Token is already resolved above; authorizedApiFetch re-reads it identically.
+        const getToken = async () => token;
+
+        // Check if user has an agency by clerkUserId.
+        // Fail-open degradation is deliberate: on any error, let the user through.
+        const result = await authorizedApiFetch<{
+          data?: Array<{ id?: string }>;
+        }>(
+          `/api/agencies?clerkUserId=${encodeURIComponent(principalClerkId)}&fields=id,name,email,clerkUserId`,
+          { getToken }
         );
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Failed to fetch agencies:', response.status, errorText);
-          // On error, don't block the user - let them through
-          return;
-        }
-        
-        const result = await response.json();
-        
-        // Check for API-level errors
-        if (result.error) {
-          console.error('API error fetching agencies:', result.error);
-          // On error, don't block the user - let them through
-          return;
-        }
-        
+
         // If no agency found, redirect to unified onboarding
         if (!result.data || result.data.length === 0) {
           router.replace('/onboarding/unified');
@@ -167,24 +152,11 @@ function AuthenticatedLayoutInner({
           return;
         }
 
-        const onboardingResponse = await fetch(
-          `${apiBaseUrl}/api/agencies/${agencyId}/onboarding-status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!onboardingResponse.ok) {
-          return;
-        }
-
-        const onboardingResult = await onboardingResponse.json() as {
+        const onboardingResult = await authorizedApiFetch<{
           data?: AgencyOnboardingStatusData;
-          error?: { code: string; message: string };
-        };
-        if (onboardingResult.error || !onboardingResult.data) {
+        }>(`/api/agencies/${agencyId}/onboarding-status`, { getToken });
+
+        if (!onboardingResult.data) {
           return;
         }
 

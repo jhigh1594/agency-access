@@ -19,6 +19,7 @@ import { buildInviteUrl } from '@/lib/app-url';
 import { useQuotaCheck, QuotaExceededError } from '@/lib/query/quota';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
+import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
 import type { GoogleAdsAccount } from '@agency-platform/shared';
 import { cn } from '@/lib/utils';
 
@@ -59,21 +60,25 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
     queryKey: ['google-accounts-and-settings', orgId],
     queryFn: async () => {
       if (!orgId || !getToken) return null;
-      const token = await getToken();
-      const [accountsRes, settingsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/accounts?agencyId=${orgId}&refresh=false`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/agency-platforms/google/asset-settings?agencyId=${orgId}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }),
-      ]);
-      if (!accountsRes.ok || !settingsRes.ok) return null;
-      const [accountsJson, settingsJson] = await Promise.all([accountsRes.json(), settingsRes.json()]);
-      return {
-        adsAccounts: accountsJson?.data?.adsAccounts ?? [],
-        settings: settingsJson?.data ?? null,
-      };
+      try {
+        const [accountsPayload, settingsPayload] = await Promise.all([
+          authorizedApiFetch<{ data?: { adsAccounts?: GoogleAdsAccount[] } }>(
+            `/agency-platforms/google/accounts?agencyId=${orgId}&refresh=false`,
+            { getToken }
+          ),
+          authorizedApiFetch<{ data?: any }>(
+            `/agency-platforms/google/asset-settings?agencyId=${orgId}`,
+            { getToken }
+          ),
+        ]);
+        return {
+          adsAccounts: accountsPayload?.data?.adsAccounts ?? [],
+          settings: settingsPayload?.data ?? null,
+        };
+      } catch {
+        // ponytail: the account picker is an enhancement; degrade to empty picker, never block request creation.
+        return null;
+      }
     },
     enabled: Boolean(orgId),
     staleTime: 2 * 60 * 1000,
@@ -163,20 +168,15 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   // Create access request mutation
   const createMutation = useMutation({
     mutationFn: async () => {
-      const token = await getToken();
-      if (!token) throw new Error('No auth token');
       const platforms = transformPlatformsForAPI();
 
       if (platforms.length === 0) {
         throw new Error('Please select at least one platform');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/access-requests`, {
+      return authorizedApiFetch('/api/access-requests', {
+        getToken,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           agencyId: orgId,
           clientId: client.id,
@@ -187,13 +187,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           globalAccessLevel,
         }),
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to create access request');
-      }
-
-      return response.json();
     },
     onSuccess: (result) => {
       // Invalidate queries

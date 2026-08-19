@@ -8,6 +8,9 @@
 export const DEV_USER_ID = 'dev_user_test_123456789';
 const DEV_ORG_ID = 'dev_org_test_987654321';
 
+/** Bearer token accepted by the API when NEXT_PUBLIC_BYPASS_AUTH is active in development. */
+export const DEV_BYPASS_TOKEN = 'dev-bypass-token';
+
 const DEV_BYPASS_SIGNED_OUT_KEY = 'dev_bypass_signed_out';
 const PERF_HARNESS_TOKEN_KEY = '__perf_auth_token';
 

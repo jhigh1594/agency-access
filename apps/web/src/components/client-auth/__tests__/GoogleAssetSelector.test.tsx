@@ -47,7 +47,15 @@ describe('GoogleAssetSelector', () => {
     const onSelectionChange = vi.fn();
 
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       json: async () => ({
+        data: [
+          { id: 'customers/123', name: 'Account 123' },
+          { id: 'customers/456', name: 'Account 456' },
+        ],
+        error: null,
+      }),
+      text: async () => JSON.stringify({
         data: [
           { id: 'customers/123', name: 'Account 123' },
           { id: 'customers/456', name: 'Account 456' },
@@ -80,7 +88,12 @@ describe('GoogleAssetSelector', () => {
 
   it('shows Business Profile empty-state copy as locations with follow-up guidance', async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       json: async () => ({
+        data: [],
+        error: null,
+      }),
+      text: async () => JSON.stringify({
         data: [],
         error: null,
       }),
@@ -153,7 +166,12 @@ describe('GoogleAssetSelector', () => {
 
     await act(async () => {
       resolveBusinessResponse?.({
+        ok: true,
         json: async () => ({
+          data: [],
+          error: null,
+        }),
+        text: async () => JSON.stringify({
           data: [],
           error: null,
         }),
@@ -171,7 +189,15 @@ describe('GoogleAssetSelector', () => {
 
     await act(async () => {
       resolveAdsResponse?.({
+        ok: true,
         json: async () => ({
+          data: [
+            { id: 'customers/123', name: 'Account 123' },
+            { id: 'customers/456', name: 'Account 456' },
+          ],
+          error: null,
+        }),
+        text: async () => JSON.stringify({
           data: [
             { id: 'customers/123', name: 'Account 123' },
             { id: 'customers/456', name: 'Account 456' },
@@ -194,7 +220,29 @@ describe('GoogleAssetSelector', () => {
 
   it('formats Google Ads asset labels with account title and formatted ID', async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       json: async () => ({
+        data: [
+          {
+            id: '6449142979',
+            name: 'Pillar AI Agency MCC',
+            formattedId: '644-914-2979',
+            nameSource: 'hierarchy',
+            type: 'google_ads',
+            status: 'active',
+          },
+          {
+            id: '5497559774',
+            name: 'Google Ads account • 549-755-9774',
+            formattedId: '549-755-9774',
+            nameSource: 'fallback',
+            type: 'google_ads',
+            status: 'active',
+          },
+        ],
+        error: null,
+      }),
+      text: async () => JSON.stringify({
         data: [
           {
             id: '6449142979',
@@ -236,7 +284,12 @@ describe('GoogleAssetSelector', () => {
     const parentSelectionSpy = vi.fn();
 
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       json: async () => ({
+        data: [{ id: 'customers/123', name: 'Account 123' }],
+        error: null,
+      }),
+      text: async () => JSON.stringify({
         data: [{ id: 'customers/123', name: 'Account 123' }],
         error: null,
       }),

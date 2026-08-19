@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getApiBaseUrl } from '@/lib/api/api-env';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { DEV_BYPASS_TOKEN } from '@/lib/dev-auth';
 import {
   AffiliateAdminCommissionAdjustmentSchema,
   AffiliateAdminFraudQueueSchema,
@@ -26,17 +27,32 @@ import {
   type WebhookDeliverySummary,
 } from '@agency-platform/shared';
 
-const API_URL = getApiBaseUrl();
-const DEV_BYPASS_TOKEN = 'dev-bypass-token';
 const IS_DEV_BYPASS_ENABLED =
   process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true' &&
   process.env.NODE_ENV === 'development';
 
-async function fetchInternalAdmin<T>(path: string, token: string): Promise<T> {
-  const response = await fetch(`${API_URL}/api/internal-admin${path}`, {
+interface InternalAdminRequest {
+  method?: 'POST' | 'PUT' | 'DELETE';
+  /** Request body value; JSON-encoded by the helper. */
+  body?: unknown;
+  /** Error message used when the API error carries none of its own. */
+  fallbackErrorMessage?: string;
+}
+
+async function fetchInternalAdmin<T>(
+  path: string,
+  token: string,
+  request: InternalAdminRequest = {}
+): Promise<T> {
+  const { method = 'GET', body, fallbackErrorMessage } = request;
+
+  const response = await fetch(resolveApiUrl(`/api/internal-admin${path}`), {
+    method,
     headers: {
+      ...(body !== undefined && { 'Content-Type': 'application/json' }),
       Authorization: `Bearer ${token}`,
     },
+    ...(body !== undefined && { body: JSON.stringify(body) }),
     cache: 'no-store',
   });
 
@@ -50,12 +66,16 @@ async function fetchInternalAdmin<T>(path: string, token: string): Promise<T> {
     }
   }
 
-  if (!response.ok) {
-    throw new Error(payload?.error?.message || `Internal admin request failed (${response.status})`);
+  if (!response.ok || payload?.error) {
+    throw new Error(
+      payload?.error?.message ||
+        fallbackErrorMessage ||
+        `Internal admin request failed (${response.status})`
+    );
   }
 
-  if (!payload || payload.error) {
-    throw new Error(payload?.error?.message || 'Empty API response');
+  if (!payload) {
+    throw new Error('Empty API response');
   }
 
   return payload.data as T;
@@ -362,31 +382,16 @@ export function useInternalAdminGenerateAffiliatePayoutBatch() {
   return useMutation({
     mutationFn: async ({ periodStart, periodEnd, notes }: GenerateAffiliatePayoutBatchInput) => {
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/payout-batches`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ periodStart, periodEnd, notes }),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      const data = await fetchInternalAdmin<AffiliateAdminPayoutBatchListItem>(
+        '/affiliate/payout-batches',
+        token,
+        {
+          method: 'POST',
+          body: { periodStart, periodEnd, notes },
+          fallbackErrorMessage: 'Failed to generate affiliate payout batch',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to generate affiliate payout batch');
-      }
-
-      return AffiliateAdminPayoutBatchListItemSchema.parse(payload.data) as AffiliateAdminPayoutBatchListItem;
+      );
+      return AffiliateAdminPayoutBatchListItemSchema.parse(data) as AffiliateAdminPayoutBatchListItem;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-payout-batches'] });
@@ -414,29 +419,12 @@ export function useInternalAdminExportAffiliatePayoutBatch() {
   return useMutation({
     mutationFn: async ({ batchId }: { batchId: string }) => {
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/payout-batches/${batchId}/export`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
-        }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to export affiliate payout batch');
-      }
-
-      return AffiliateAdminPayoutBatchExportSchema.parse(payload.data) as AffiliateAdminPayoutBatchExport;
+      const data = await fetchInternalAdmin<AffiliateAdminPayoutBatchExport>(
+        `/affiliate/payout-batches/${batchId}/export`,
+        token,
+        { method: 'POST', fallbackErrorMessage: 'Failed to export affiliate payout batch' }
+      );
+      return AffiliateAdminPayoutBatchExportSchema.parse(data) as AffiliateAdminPayoutBatchExport;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-payout-batches'] });
@@ -455,31 +443,15 @@ export function useInternalAdminResolveAffiliateReferralReview() {
     }: AffiliateAdminReferralReviewResolutionInput & { referralId: string }) => {
       const validated = AffiliateAdminReferralReviewResolutionSchema.parse(input);
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/referrals/${referralId}/review`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(validated),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin<{ id: string; status: string }>(
+        `/affiliate/referrals/${referralId}/review`,
+        token,
+        {
+          method: 'POST',
+          body: validated,
+          fallbackErrorMessage: 'Failed to resolve affiliate referral review',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to resolve affiliate referral review');
-      }
-
-      return payload.data as { id: string; status: string };
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-fraud-queue'] });
@@ -496,31 +468,15 @@ export function useInternalAdminUpgradeSubscription() {
   return useMutation({
     mutationFn: async ({ agencyId, newTier, updateBehavior }: UpgradeSubscriptionInput) => {
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/subscriptions/${agencyId}/upgrade`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ newTier, updateBehavior }),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin(
+        `/subscriptions/${agencyId}/upgrade`,
+        token,
+        {
+          method: 'POST',
+          body: { newTier, updateBehavior },
+          fallbackErrorMessage: 'Failed to upgrade subscription',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to upgrade subscription');
-      }
-
-      return payload.data;
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'overview'] });
@@ -537,31 +493,15 @@ export function useInternalAdminCancelSubscription() {
   return useMutation({
     mutationFn: async ({ agencyId, cancelAtPeriodEnd }: CancelSubscriptionInput) => {
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/subscriptions/${agencyId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ cancelAtPeriodEnd }),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin(
+        `/subscriptions/${agencyId}/cancel`,
+        token,
+        {
+          method: 'POST',
+          body: { cancelAtPeriodEnd },
+          fallbackErrorMessage: 'Failed to cancel subscription',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to cancel subscription');
-      }
-
-      return payload.data;
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'overview'] });
@@ -598,31 +538,15 @@ export function useInternalAdminUpdateAffiliatePartner() {
     mutationFn: async ({ partnerId, ...input }: AffiliateAdminPartnerMutation & { partnerId: string }) => {
       const validated = AffiliateAdminPartnerMutationSchema.parse(input);
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/partners/${partnerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(validated),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin(
+        `/affiliate/partners/${partnerId}`,
+        token,
+        {
+          method: 'POST',
+          body: validated,
+          fallbackErrorMessage: 'Failed to update affiliate partner',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to update affiliate partner');
-      }
-
-      return payload.data;
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-partners'] });
@@ -652,31 +576,15 @@ export function useInternalAdminDisableAffiliateLink() {
   return useMutation({
     mutationFn: async ({ linkId, internalNotes }: { linkId: string; internalNotes?: string }) => {
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/links/${linkId}/disable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ internalNotes }),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin<{ id: string; status: string }>(
+        `/affiliate/links/${linkId}/disable`,
+        token,
+        {
+          method: 'POST',
+          body: { internalNotes },
+          fallbackErrorMessage: 'Failed to disable affiliate link',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to disable affiliate link');
-      }
-
-      return payload.data as { id: string; status: string };
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-partners'] });
@@ -696,31 +604,15 @@ export function useInternalAdminDisqualifyAffiliateReferral() {
     }: AffiliateAdminReferralDisqualificationInput & { referralId: string }) => {
       const validated = AffiliateAdminReferralDisqualificationSchema.parse(input);
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/referrals/${referralId}/disqualify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(validated),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin<{ id: string; status: string }>(
+        `/affiliate/referrals/${referralId}/disqualify`,
+        token,
+        {
+          method: 'POST',
+          body: validated,
+          fallbackErrorMessage: 'Failed to disqualify affiliate referral',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to disqualify affiliate referral');
-      }
-
-      return payload.data as { id: string; status: string };
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-partners'] });
@@ -740,31 +632,15 @@ export function useInternalAdminAdjustAffiliateCommission() {
     }: AffiliateAdminCommissionAdjustment & { commissionId: string }) => {
       const validated = AffiliateAdminCommissionAdjustmentSchema.parse(input);
       const token = await getAdminToken();
-      const response = await fetch(`${API_URL}/api/internal-admin/affiliate/commissions/${commissionId}/adjust`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(validated),
-        cache: 'no-store',
-      });
-
-      const rawBody = await response.text();
-      let payload: any = null;
-      if (rawBody) {
-        try {
-          payload = JSON.parse(rawBody);
-        } catch {
-          throw new Error(`Invalid API response (${response.status})`);
+      return fetchInternalAdmin<{ id: string; status: string; amount: number }>(
+        `/affiliate/commissions/${commissionId}/adjust`,
+        token,
+        {
+          method: 'POST',
+          body: validated,
+          fallbackErrorMessage: 'Failed to adjust affiliate commission',
         }
-      }
-
-      if (!response.ok || payload?.error) {
-        throw new Error(payload?.error?.message || 'Failed to adjust affiliate commission');
-      }
-
-      return payload.data as { id: string; status: string; amount: number };
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['internal-admin', 'affiliate-partners'] });

@@ -12,6 +12,7 @@ import { Button, SingleSelect } from '@/components/ui';
 import { getAccessRequest, updateAccessRequest } from '@/lib/api/access-requests';
 import type { AccessRequest } from '@/lib/api/access-requests';
 import { transformPlatformsForAPI } from '@/lib/transform-platforms';
+import { fetchActiveAgencyPlatformConnections } from '@/hooks/use-user-agency';
 import type { AccessLevel } from '@agency-platform/shared';
 import type { IntakeField } from '@/contexts/access-request-context';
 
@@ -189,32 +190,17 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
 
     const loadConnections = async () => {
       try {
-        const token = await getToken();
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/agency-platforms?agencyId=${request.agencyId}&status=active`,
-          {
-            headers: {
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-          }
-        );
-
-        if (!response.ok) {
-          setConnectedPlatforms([]);
-          return;
-        }
-
-        const payload = await response.json();
-        const data = Array.isArray(payload.data) ? payload.data : [];
-        const normalized = data.map((item: any) => ({
+        const data = await fetchActiveAgencyPlatformConnections(request.agencyId, getToken);
+        const normalized = data.map((item) => ({
           platform: normalizeConnectedPlatformToGroup(item.platform),
           name: item.name || item.platform,
           connected: item.connected === true || item.status === 'active' || item.status === undefined,
           status: item.status,
-          connectedEmail: item.agencyEmail || item.connectedBy || item.metadata?.email,
+          connectedEmail: item.agencyEmail || item.connectedBy || (item.metadata?.email as string | undefined),
         }));
         setConnectedPlatforms(normalized);
       } catch {
+        // ponytail: deliberate degradation — connection status is advisory, never block editing.
         setConnectedPlatforms([]);
       }
     };

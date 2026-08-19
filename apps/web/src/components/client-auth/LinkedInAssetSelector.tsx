@@ -3,6 +3,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 import {
   AssetSelectorEmpty,
   AssetSelectorError,
@@ -53,7 +54,10 @@ export function LinkedInAssetSelector({
       const response = await fetch(
         resolveApiUrl(`/api/client/${accessRequestToken}/assets/${product}?connectionId=${encodeURIComponent(sessionId)}`)
       );
-      const json = await response.json();
+      const json = await parseJsonResponse<{ data?: LinkedInAsset[]; error?: { message?: string } }>(response, {
+        fallbackErrorMessage:
+          product === 'linkedin_pages' ? 'Failed to load LinkedIn Pages' : 'Failed to load ad accounts',
+      });
 
       if (json.error) {
         throw new Error(

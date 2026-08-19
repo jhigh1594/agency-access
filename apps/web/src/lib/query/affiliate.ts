@@ -12,11 +12,8 @@ import {
   type AffiliatePortalLinkCreateInput,
 } from '@agency-platform/shared';
 
-import { getApiBaseUrl } from '@/lib/api/api-env';
-import { useAuthOrBypass } from '@/lib/dev-auth';
-
-const API_URL = getApiBaseUrl();
-const DEV_BYPASS_TOKEN = 'dev-bypass-token';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { DEV_BYPASS_TOKEN, useAuthOrBypass } from '@/lib/dev-auth';
 
 function isDevBypassEnabled() {
   return process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true' &&
@@ -28,7 +25,7 @@ async function fetchAffiliatePortal<T>(
   token: string,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(`${API_URL}/api/affiliate${path}`, {
+  const response = await fetch(resolveApiUrl(`/api/affiliate${path}`), {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,

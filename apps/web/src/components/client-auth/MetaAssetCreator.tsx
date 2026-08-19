@@ -22,6 +22,8 @@ import { useState, FormEvent } from 'react';
 import { CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SingleSelect } from '@/components/ui/single-select';
+import { resolveApiUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 // Currency options with symbols
 const CURRENCIES = [
@@ -121,20 +123,25 @@ export function MetaAssetCreator({
       setState('loading');
       setErrorMessage(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/client/${accessRequestToken}/create/meta/ad-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          connectionId,
-          businessId,
-          name: accountName.trim(),
-          currency,
-          timezoneId,
-        } as CreateAdAccountRequest),
-      });
+      const response = await fetch(
+        resolveApiUrl(`/api/client/${accessRequestToken}/create/meta/ad-account`),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            connectionId,
+            businessId,
+            name: accountName.trim(),
+            currency,
+            timezoneId,
+          } as CreateAdAccountRequest),
+        }
+      );
 
-      const json = await response.json();
+      const json = await parseJsonResponse<{
+        data?: CreateAdAccountResponse;
+        error?: { message?: string };
+      }>(response, { fallbackErrorMessage: 'Failed to create ad account' });
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to create ad account');

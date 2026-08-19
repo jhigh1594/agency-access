@@ -5,6 +5,7 @@ import { AssetGroup, type Asset } from './AssetGroup';
 import { SingleSelect } from '@/components/ui/single-select';
 import { AssetSelectorEmpty, AssetSelectorError, AssetSelectorLoading } from './AssetSelectorStates';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface TikTokAdvertiser {
   id: string;
@@ -67,9 +68,12 @@ export function TikTokAssetSelector({
       const response = await fetch(
         resolveApiUrl(`/api/client/${accessRequestToken}/assets/tiktok?connectionId=${encodeURIComponent(sessionId)}`)
       );
-      const json = await response.json();
+      const json = await parseJsonResponse<{
+        data?: TikTokAssetsResponse;
+        error?: { message?: string };
+      }>(response, { fallbackErrorMessage: 'Failed to load TikTok ad accounts' });
 
-      if (!response.ok || json.error) {
+      if (json.error) {
         throw new Error(json.error?.message || 'Failed to load TikTok ad accounts');
       }
 

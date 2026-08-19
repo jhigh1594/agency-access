@@ -43,6 +43,24 @@ describe('TikTokAssetSelector', () => {
         },
         error: null,
       }),
+      text: async () => JSON.stringify({
+        data: {
+          advertisers: [
+            { id: 'adv_1', name: 'Advertiser 1', status: 'STATUS_ENABLE' },
+            { id: 'adv_2', name: 'Advertiser 2', status: 'STATUS_ENABLE' },
+          ],
+          businessCenters: [
+            { id: 'bc_1', name: 'Business Center 1' },
+          ],
+          businessCenterAssets: [
+            {
+              bcId: 'bc_1',
+              advertisers: [{ id: 'adv_1', name: 'Advertiser 1', status: 'STATUS_ENABLE' }],
+            },
+          ],
+        },
+        error: null,
+      }),
     } as Response);
 
     render(
@@ -74,6 +92,24 @@ describe('TikTokAssetSelector', () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({
+        data: {
+          advertisers: [
+            { id: 'adv_1', name: 'Advertiser 1' },
+            { id: 'adv_2', name: 'Advertiser 2' },
+          ],
+          businessCenters: [
+            { id: 'bc_1', name: 'Business Center 1' },
+          ],
+          businessCenterAssets: [
+            {
+              bcId: 'bc_1',
+              advertisers: [{ id: 'adv_1', name: 'Advertiser 1' }],
+            },
+          ],
+        },
+        error: null,
+      }),
+      text: async () => JSON.stringify({
         data: {
           advertisers: [
             { id: 'adv_1', name: 'Advertiser 1' },

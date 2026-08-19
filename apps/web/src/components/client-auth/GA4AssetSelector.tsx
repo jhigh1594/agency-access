@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { AssetGroup, type Asset } from './AssetGroup';
 import { Loader2 } from 'lucide-react';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface GA4Assets {
   id: string;
@@ -47,7 +48,9 @@ export function GA4AssetSelector({
       const response = await fetch(
         resolveApiUrl(`/api/client/${accessRequestToken}/assets/ga4?connectionId=${encodeURIComponent(sessionId)}`)
       );
-      const json = await response.json();
+      const json = await parseJsonResponse<{ data?: GA4Assets[]; error?: { message?: string } }>(response, {
+        fallbackErrorMessage: 'Failed to load properties',
+      });
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to load properties');

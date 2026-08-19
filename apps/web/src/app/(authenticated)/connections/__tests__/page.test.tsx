@@ -61,6 +61,7 @@ vi.mock('@clerk/nextjs', () => ({
 }));
 
 vi.mock('@/lib/dev-auth', () => ({
+  DEV_BYPASS_TOKEN: 'dev-bypass-token',
   useAuthOrBypass: () => devAuthState,
 }));
 

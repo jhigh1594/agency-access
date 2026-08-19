@@ -17,6 +17,7 @@ import { AssetGroup, type Asset } from './AssetGroup';
 import { AssetSelectorLoading, AssetSelectorError, AssetSelectorEmpty } from './AssetSelectorStates';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { parseJsonResponse } from '@/lib/api/parse-json-response';
 
 interface GoogleAssetSelectorProps {
   sessionId: string; // connectionId
@@ -127,7 +128,9 @@ export function GoogleAssetSelector({
       const response = await fetch(
         resolveApiUrl(`/api/client/${accessRequestToken}/assets/${platform}?connectionId=${encodeURIComponent(sessionId)}`)
       );
-      const json = await response.json();
+      const json = await parseJsonResponse<{ data?: unknown; error?: { message?: string } }>(response, {
+        fallbackErrorMessage: 'Failed to load accounts',
+      });
 
       if (json.error) {
         throw new Error(json.error.message || 'Failed to load accounts');
