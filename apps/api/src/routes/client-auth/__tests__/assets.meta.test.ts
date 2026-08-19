@@ -1048,4 +1048,147 @@ describe('Client Auth Asset Routes - Meta', () => {
     expect(prisma.clientConnection.update).not.toHaveBeenCalled();
     expect(auditService.createAuditLog).not.toHaveBeenCalled();
   });
+
+  it('writes discovery metadata once and skips the write when a consecutive fetch is unchanged', async () => {
+    const requestUrl = '/client/token-a/assets/meta_ads?connectionId=conn-1&businessId=biz_client_2';
+
+    const first = await app.inject({
+      method: 'GET',
+      url: requestUrl,
+    });
+    expect(first.statusCode).toBe(200);
+    expect(prisma.platformAuthorization.update).toHaveBeenCalledTimes(1);
+
+    const persistedWrite = vi.mocked(prisma.platformAuthorization.update).mock.calls[0][0] as any;
+    vi.mocked(prisma.platformAuthorization.findUnique).mockResolvedValue({
+      id: 'pa-1',
+      connectionId: 'conn-1',
+      platform: 'meta',
+      secretId: 'secret-1',
+      status: 'active',
+      metadata: persistedWrite.data.metadata,
+    } as any);
+
+    const second = await app.inject({
+      method: 'GET',
+      url: requestUrl,
+    });
+    expect(second.statusCode).toBe(200);
+    expect(prisma.platformAuthorization.update).toHaveBeenCalledTimes(1);
+    expect(second.json().data).toEqual(first.json().data);
+  });
+
+  it('applies and verifies every selected page and ad account when several assets are selected', async () => {
+    vi.mocked(prisma.platformAuthorization.findUnique).mockResolvedValue({
+      id: 'pa-1',
+      connectionId: 'conn-1',
+      platform: 'meta',
+      secretId: 'secret-1',
+      status: 'active',
+      metadata: {
+        selectedAssets: {
+          meta_ads: {
+            pages: ['page_1', 'page_2', 'page_3'],
+            adAccounts: ['act_1', 'act_2'],
+          },
+        },
+        meta: {
+          selection: {
+            clientBusinessId: 'biz_client_2',
+            clientBusinessName: 'Client Two',
+            selectedAt: '2026-03-11T10:00:00.000Z',
+          },
+        },
+      },
+    } as any);
+
+    vi.mocked(prisma.agencyPlatformConnection.findUnique).mockResolvedValue({
+      id: 'agency-meta-1',
+      agencyId: 'agency-a',
+      platform: 'meta',
+      businessId: 'partner-bm-1',
+      metadata: {
+        partnerAdminSystemUserTokenSecretId: 'agency-partner-secret',
+      },
+    } as any);
+
+    vi.mocked(metaOBOService.getClientAccessTokenForOBO).mockResolvedValue({
+      data: {
+        accessToken: 'client-admin-user-token',
+      },
+      error: null,
+    });
+    vi.mocked(metaOBOService.ensureManagedBusinessRelationship).mockResolvedValue({
+      data: {
+        status: 'linked',
+        partnerBusinessId: 'partner-bm-1',
+        clientBusinessId: 'biz_client_2',
+        establishedAt: '2026-03-11T10:01:00.000Z',
+        lastAttemptAt: '2026-03-11T10:01:00.000Z',
+      },
+      error: null,
+    } as any);
+    vi.mocked(metaOBOService.provisionClientBusinessSystemUserToken).mockResolvedValue({
+      data: {
+        status: 'ready',
+        clientBusinessId: 'biz_client_2',
+        appId: 'test-meta-app-id',
+        scopes: ['ads_management', 'ads_read', 'business_management'],
+        systemUserId: 'client-system-user-1',
+        tokenSecretId: 'client-system-user-secret',
+        provisionedAt: '2026-03-11T10:02:00.000Z',
+        lastAttemptAt: '2026-03-11T10:02:00.000Z',
+      },
+      error: null,
+    } as any);
+
+    vi.mocked(infisical.getOAuthTokens).mockImplementation(async (secretId: string) => {
+      if (secretId === 'agency-partner-secret') {
+        return { accessToken: 'partner-admin-system-user-token' } as any;
+      }
+
+      if (secretId === 'client-system-user-secret') {
+        return { accessToken: 'client-system-user-token' } as any;
+      }
+
+      return { accessToken: 'meta-access-token' } as any;
+    });
+
+    vi.mocked(metaPartnerService.grantPageAccess).mockResolvedValue();
+    vi.mocked(metaPartnerService.verifyPageAccess).mockResolvedValue({
+      verified: true,
+      assignedTasks: ['MANAGE', 'CREATE_CONTENT', 'MODERATE', 'ADVERTISE'],
+    });
+    vi.mocked(metaPartnerService.grantAdAccountAccess).mockResolvedValue();
+    vi.mocked(metaPartnerService.verifyAdAccountAccess).mockResolvedValue({
+      verified: true,
+      assignedTasks: ['MANAGE', 'ADVERTISE', 'ANALYZE'],
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/client/token-a/grant-meta-access',
+      payload: {
+        connectionId: 'conn-1',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(metaPartnerService.grantPageAccess).toHaveBeenCalledTimes(3);
+    expect(metaPartnerService.verifyPageAccess).toHaveBeenCalledTimes(3);
+    expect(metaPartnerService.grantAdAccountAccess).toHaveBeenCalledTimes(2);
+    expect(metaPartnerService.verifyAdAccountAccess).toHaveBeenCalledTimes(2);
+
+    const results = response.json().data.assetGrantResults as Array<{ assetId: string; assetType: string; status: string }>;
+    expect(results).toHaveLength(5);
+    expect(results.every((result) => result.status === 'verified')).toBe(true);
+    expect(results.filter((result) => result.assetType === 'page').map((result) => result.assetId)).toEqual([
+      'page_1',
+      'page_2',
+      'page_3',
+    ]);
+    expect(
+      results.filter((result) => result.assetType === 'ad_account').map((result) => result.assetId)
+    ).toEqual(['act_1', 'act_2']);
+  });
 });

@@ -53,16 +53,16 @@ export function mapAccessLevelToTikTokRole(accessLevel: AccessLevel | string): T
   throw new Error(`Unsupported access level: ${accessLevel}`);
 }
 
+const SHARE_CONCURRENCY = 5;
+
 class TikTokPartnerService {
   async shareAdvertiserAssets(input: TikTokPartnerShareRequest): Promise<TikTokPartnerShareResult> {
     const advertiserIds = Array.from(new Set(input.advertiserIds.filter(Boolean)));
     const alreadyGranted = new Set(input.alreadyGrantedAdvertiserIds || []);
-    const results: TikTokPartnerShareResultItem[] = [];
 
-    for (const advertiserId of advertiserIds) {
+    const shareOne = async (advertiserId: string): Promise<TikTokPartnerShareResultItem> => {
       if (alreadyGranted.has(advertiserId)) {
-        results.push({ advertiserId, status: 'already_granted' });
-        continue;
+        return { advertiserId, status: 'already_granted' };
       }
 
       try {
@@ -73,14 +73,25 @@ class TikTokPartnerService {
           advertiserId,
           advertiserRole: input.advertiserRole,
         });
-        results.push({ advertiserId, status: 'granted' });
+        return { advertiserId, status: 'granted' };
       } catch (error) {
-        results.push({
+        return {
           advertiserId,
           status: 'failed',
           error: error instanceof Error ? error.message : String(error),
-        });
+        };
       }
+    };
+
+    // Bounded fan-out, order preserved: each result lands at its input index.
+    const results: TikTokPartnerShareResultItem[] = new Array(advertiserIds.length);
+    for (let start = 0; start < advertiserIds.length; start += SHARE_CONCURRENCY) {
+      const chunk = advertiserIds.slice(start, start + SHARE_CONCURRENCY);
+      await Promise.all(
+        chunk.map(async (advertiserId, index) => {
+          results[start + index] = await shareOne(advertiserId);
+        })
+      );
     }
 
     return {

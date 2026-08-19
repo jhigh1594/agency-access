@@ -265,6 +265,16 @@ export async function executeRun(runId: string): Promise<ExecuteRunResult> {
   let itemsProcessed = 0;
   const errors: string[] = [];
 
+  // run.connectionId is constant for the whole loop: fetch the token once and
+  // reuse it. A failed fetch is not memoized, so per-item retry behavior is kept.
+  let cachedToken: string | null = null;
+  const nextAccessToken = async (): Promise<string | null> => {
+    if (cachedToken) return cachedToken;
+    const token = await getFreshAccessToken(run.connectionId);
+    if (token) cachedToken = token;
+    return token;
+  };
+
   for (const item of items) {
     const claimed = await claimItem(item.id, runId);
     if (!claimed) {
@@ -272,7 +282,7 @@ export async function executeRun(runId: string): Promise<ExecuteRunResult> {
       continue;
     }
 
-    const token = await getFreshAccessToken(run.connectionId);
+    const token = await nextAccessToken();
     if (!token) {
       await prisma.googleOffboardingItem.update({
         where: { id: item.id },

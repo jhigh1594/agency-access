@@ -571,6 +571,80 @@ describe('google-offboarding-executor', () => {
     });
   });
 
+  describe('token reuse', () => {
+    it('fetches the access token once for a multi-item run and processes every item', async () => {
+      const run = {
+        id: 'run-tok',
+        agencyId: 'agency-1',
+        connectionId: 'conn-tok',
+        status: 'queued',
+        idempotencyKey: 'idem-tok',
+        snapshotHash: 'hash-1',
+        credentialGeneration: null,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      };
+
+      const grant = {
+        id: 'grant-tok',
+        product: 'google_ads',
+        assetId: '123',
+        assetName: 'Token Account',
+        grantMode: 'manager_link',
+        managerCustomerId: '456',
+        providerExternalId: 'link-tok',
+      };
+      const items = ['item-tok-1', 'item-tok-2', 'item-tok-3'].map((id) => ({
+        id,
+        runId: 'run-tok',
+        productId: 'google_ads',
+        classification: 'eligible_automatic',
+        status: 'pending',
+        assetLabel: `ads-${id}`,
+        grantId: 'grant-tok',
+        grant,
+        createdAt: NOW.toISOString(),
+        updatedAt: NOW.toISOString(),
+      }));
+
+      vi.mocked(prisma.googleOffboardingRun.findUnique).mockResolvedValue(run as any);
+      vi.mocked(prisma.googleOffboardingRun.update).mockImplementation(async (args: any) => ({
+        ...run,
+        ...args.data,
+      } as any));
+      // mockReset drops stale mockResolvedValueOnce queues left by earlier tests
+      // (clearAllMocks only clears call counts), so every claim resolves count: 1.
+      vi.mocked(prisma.googleOffboardingItem.findMany).mockReset();
+      vi.mocked(prisma.googleOffboardingItem.updateMany).mockReset();
+      vi.mocked(prisma.googleOffboardingItem.findMany)
+        .mockResolvedValueOnce(items as any)
+        .mockResolvedValue([]);
+      vi.mocked(prisma.googleOffboardingItem.updateMany).mockResolvedValue({ count: 1 });
+      vi.mocked(prisma.googleOffboardingItem.update).mockResolvedValue(items[0] as any);
+
+      const { refreshClientPlatformAuthorization } = await import('@/services/token-lifecycle.service');
+      vi.mocked(refreshClientPlatformAuthorization).mockResolvedValue({
+        data: { accessToken: 'tok', outcome: 'still_valid' as const },
+        error: null,
+      } as any);
+
+      const { revokeAdsManagerLink } = await import('@/services/connectors/google-offboarding');
+      vi.mocked(revokeAdsManagerLink).mockResolvedValue({
+        success: true,
+        providerOutcome: 'deleted',
+        retryable: false,
+      });
+
+      const result = await executeRun('run-tok');
+
+      expect(refreshClientPlatformAuthorization).toHaveBeenCalledTimes(1);
+      expect(refreshClientPlatformAuthorization).toHaveBeenCalledWith('conn-tok', 'google');
+      expect(revokeAdsManagerLink).toHaveBeenCalledTimes(3);
+      expect(result.itemsProcessed).toBe(3);
+      expect(result.errors).toHaveLength(0);
+    });
+  });
+
   describe('credential generation guard', () => {
     it('blocks execution when credential generation changed after preparation', async () => {
       const run = {

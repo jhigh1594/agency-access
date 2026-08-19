@@ -49,6 +49,29 @@ describe('TikTokPartnerService', () => {
     expect(result.success).toBe(false);
   });
 
+  it('preserves input order across chunk boundaries when sharing many advertisers', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ code: 0, message: 'OK' }),
+    } as Response);
+
+    const advertiserIds = ['adv_1', 'adv_2', 'adv_3', 'adv_4', 'adv_5', 'adv_6', 'adv_7'];
+
+    const result = await tiktokPartnerService.shareAdvertiserAssets({
+      accessToken: 'token-123',
+      clientBusinessCenterId: 'bc_client_1',
+      agencyBusinessCenterId: 'bc_agency_1',
+      advertiserIds,
+      advertiserRole: 'OPERATOR',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.results).toHaveLength(7);
+    expect(result.results.every((item) => item.status === 'granted')).toBe(true);
+    expect(result.results.map((item) => item.advertiserId)).toEqual(advertiserIds);
+    expect(fetch).toHaveBeenCalledTimes(7);
+  });
+
   it('verifies partner share using bc/partner/asset/get', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,

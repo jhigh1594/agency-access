@@ -245,6 +245,46 @@ function sortMetaAssetGrantResults(assetGrantResults: MetaAssetGrantResult[]): M
   );
 }
 
+const ASSET_OPERATION_CONCURRENCY = 5;
+
+// Bounded fan-out, order preserved: each result lands at its input index.
+async function mapInChunks<T, R>(items: T[], mapper: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  for (let start = 0; start < items.length; start += ASSET_OPERATION_CONCURRENCY) {
+    const chunk = items.slice(start, start + ASSET_OPERATION_CONCURRENCY);
+    await Promise.all(
+      chunk.map((item, index) =>
+        mapper(item).then((result) => {
+          results[start + index] = result;
+        })
+      )
+    );
+  }
+  return results;
+}
+
+// True when the next discovery snapshot differs from the stored one only in
+// refresh timestamps (discoveredAt/selectedAt) — the metadata write can be skipped.
+function metaDiscoveryContentUnchanged(
+  stored: MetaClientAuthorizationMetadata,
+  next: MetaClientAuthorizationMetadata
+): boolean {
+  if (
+    JSON.stringify(stored.discovery?.availableBusinesses ?? null) !==
+    JSON.stringify(next.discovery?.availableBusinesses ?? null)
+  ) {
+    return false;
+  }
+
+  if (!next.selection) return true;
+
+  return (
+    stored.selection?.clientBusinessId === next.selection.clientBusinessId &&
+    stored.selection?.clientBusinessName === next.selection.clientBusinessName &&
+    stored.selection?.source === next.selection.source
+  );
+}
+
 function resolveAgencyMetaBusinessDetails(connection: {
   businessId?: string | null;
   metadata?: unknown;
@@ -571,6 +611,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         userEmail: connection.clientEmail,
         ipAddress: request.ip,
         purpose: 'meta_asset_grant',
+        authorization: platformAuth,
       });
 
       if (clientAccessTokenResult.error || !clientAccessTokenResult.data) {
@@ -681,49 +722,47 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         request,
       });
 
-      const nextPageGrantResults: MetaAssetGrantResult[] = [];
-      const nextAdAccountGrantResults: MetaAssetGrantResult[] = [];
-      const nextInstagramGrantResults: MetaAssetGrantResult[] = [];
+      const clientSystemUserAccessToken = clientSystemUserTokens.accessToken;
+      const clientSystemUserId = clientSystemUserState.systemUserId;
 
-      for (const pageId of selectedPageIds) {
+      const grantPage = async (pageId: string): Promise<MetaAssetGrantResult> => {
         const grantedAt = new Date().toISOString();
         try {
           await metaPartnerService.grantPageAccess(
-            clientSystemUserTokens.accessToken,
+            clientSystemUserAccessToken,
             pageId,
-            clientSystemUserState.systemUserId,
+            clientSystemUserId,
             META_PAGE_TASKS
           );
           const verification = await metaPartnerService.verifyPageAccess(
-            clientSystemUserTokens.accessToken,
+            clientSystemUserAccessToken,
             pageId,
-            clientSystemUserState.systemUserId,
+            clientSystemUserId,
             META_PAGE_TASKS
           );
 
           if (verification.verified) {
-            nextPageGrantResults.push({
+            return {
               assetId: pageId,
               assetType: 'page',
               requestedTasks: META_PAGE_TASKS,
               status: 'verified',
               grantedAt,
               verifiedAt: new Date().toISOString(),
-            });
-          } else {
-            nextPageGrantResults.push({
-              assetId: pageId,
-              assetType: 'page',
-              requestedTasks: META_PAGE_TASKS,
-              status: 'failed',
-              grantedAt,
-              errorCode: 'META_ASSET_VERIFICATION_FAILED',
-              errorMessage:
-                'Meta did not report the expected page tasks for the assigned system user',
-            });
+            };
           }
+          return {
+            assetId: pageId,
+            assetType: 'page',
+            requestedTasks: META_PAGE_TASKS,
+            status: 'failed',
+            grantedAt,
+            errorCode: 'META_ASSET_VERIFICATION_FAILED',
+            errorMessage:
+              'Meta did not report the expected page tasks for the assigned system user',
+          };
         } catch (error) {
-          nextPageGrantResults.push({
+          return {
             assetId: pageId,
             assetType: 'page',
             requestedTasks: META_PAGE_TASKS,
@@ -731,49 +770,48 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
             grantedAt,
             errorCode: 'META_ASSET_GRANT_FAILED',
             errorMessage: error instanceof Error ? error.message : 'Unknown page grant error',
-          });
+          };
         }
-      }
+      };
 
-      for (const adAccountId of selectedAdAccountIds) {
+      const grantAdAccount = async (adAccountId: string): Promise<MetaAssetGrantResult> => {
         const grantedAt = new Date().toISOString();
         try {
           await metaPartnerService.grantAdAccountAccess(
-            clientSystemUserTokens.accessToken,
+            clientSystemUserAccessToken,
             adAccountId,
-            clientSystemUserState.systemUserId,
+            clientSystemUserId,
             META_AD_ACCOUNT_TASKS
           );
           const verification = await metaPartnerService.verifyAdAccountAccess(
-            clientSystemUserTokens.accessToken,
+            clientSystemUserAccessToken,
             adAccountId,
-            clientSystemUserState.systemUserId,
+            clientSystemUserId,
             META_AD_ACCOUNT_TASKS
           );
 
           if (verification.verified) {
-            nextAdAccountGrantResults.push({
+            return {
               assetId: adAccountId,
               assetType: 'ad_account',
               requestedTasks: META_AD_ACCOUNT_TASKS,
               status: 'verified',
               grantedAt,
               verifiedAt: new Date().toISOString(),
-            });
-          } else {
-            nextAdAccountGrantResults.push({
-              assetId: adAccountId,
-              assetType: 'ad_account',
-              requestedTasks: META_AD_ACCOUNT_TASKS,
-              status: 'failed',
-              grantedAt,
-              errorCode: 'META_ASSET_VERIFICATION_FAILED',
-              errorMessage:
-                'Meta did not report the expected ad account tasks for the assigned system user',
-            });
+            };
           }
+          return {
+            assetId: adAccountId,
+            assetType: 'ad_account',
+            requestedTasks: META_AD_ACCOUNT_TASKS,
+            status: 'failed',
+            grantedAt,
+            errorCode: 'META_ASSET_VERIFICATION_FAILED',
+            errorMessage:
+              'Meta did not report the expected ad account tasks for the assigned system user',
+          };
         } catch (error) {
-          nextAdAccountGrantResults.push({
+          return {
             assetId: adAccountId,
             assetType: 'ad_account',
             requestedTasks: META_AD_ACCOUNT_TASKS,
@@ -782,9 +820,13 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
             errorCode: 'META_ASSET_GRANT_FAILED',
             errorMessage:
               error instanceof Error ? error.message : 'Unknown ad account grant error',
-          });
+          };
         }
-      }
+      };
+
+      const nextPageGrantResults = await mapInChunks(selectedPageIds, grantPage);
+      const nextAdAccountGrantResults = await mapInChunks(selectedAdAccountIds, grantAdAccount);
+      const nextInstagramGrantResults: MetaAssetGrantResult[] = [];
 
       for (const instagramId of selectedInstagramIds) {
         nextInstagramGrantResults.push({
@@ -1680,8 +1722,9 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         alreadyGrantedAdvertiserIds: previouslyGrantedAdvertiserIds,
       });
 
-      const verifiedResults: ShareResultWithVerification[] = await Promise.all(
-        shareOutcome.results.map(async (result) => {
+      const verifiedResults: ShareResultWithVerification[] = await mapInChunks(
+        shareOutcome.results,
+        async (result) => {
           if (result.status === 'failed') {
             return { ...result, verified: false };
           }
@@ -1706,7 +1749,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
             ...result,
             verified: true,
           };
-        })
+        }
       );
 
       const success = verifiedResults.every((item) => item.status !== 'failed');
@@ -1851,8 +1894,9 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         return sendValidationError(reply, 'At least one advertiser must be selected before verification');
       }
 
-      const results: ShareResultWithVerification[] = await Promise.all(
-        effectiveAdvertiserIds.map(async (advertiserId) => {
+      const results: ShareResultWithVerification[] = await mapInChunks(
+        effectiveAdvertiserIds,
+        async (advertiserId) => {
           const verified = await tiktokPartnerService.verifyAdvertiserShare({
             accessToken: tokens.accessToken!,
             clientBusinessCenterId,
@@ -1866,7 +1910,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
             verified,
             error: verified ? undefined : 'Advertiser is not shared with agency business center',
           };
-        })
+        }
       );
 
       const success = results.every((item) => item.status !== 'failed');
@@ -1971,66 +2015,34 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         return sendError(reply, 'TOKEN_NOT_FOUND', 'OAuth tokens not found in secure storage', 500);
       }
 
-      if (authPlatform === 'tiktok' && authContext.accessRequest) {
-        await auditService.createAuditLog({
-          agencyId: authContext.accessRequest.agencyId,
-          action: 'TIKTOK_TOKEN_READ',
-          userEmail: authContext.connection?.clientEmail,
-          resourceType: 'client_connection',
-          resourceId: connectionId,
-          metadata: {
-            platform: platformParam,
-            source: 'client_assets_fetch',
-          },
-          request,
-        });
-      }
+      const tokenReadAction =
+        authPlatform === 'tiktok'
+          ? 'TIKTOK_TOKEN_READ'
+          : authPlatform === 'google'
+            ? 'GOOGLE_TOKEN_READ'
+            : authPlatform === 'linkedin'
+              ? 'LINKEDIN_TOKEN_READ'
+              : authPlatform === 'meta'
+                ? 'META_TOKEN_READ'
+                : null;
 
-      if (authPlatform === 'google' && authContext.accessRequest) {
-        await auditService.createAuditLog({
-          agencyId: authContext.accessRequest.agencyId,
-          action: 'GOOGLE_TOKEN_READ',
-          userEmail: authContext.connection?.clientEmail,
-          resourceType: 'client_connection',
-          resourceId: connectionId,
-          metadata: {
-            platform: platformParam,
-            source: 'client_assets_fetch',
-          },
-          request,
-        });
-      }
-
-      if (authPlatform === 'linkedin' && authContext.accessRequest) {
-        await auditService.createAuditLog({
-          agencyId: authContext.accessRequest.agencyId,
-          action: 'LINKEDIN_TOKEN_READ',
-          userEmail: authContext.connection?.clientEmail,
-          resourceType: 'client_connection',
-          resourceId: connectionId,
-          metadata: {
-            platform: platformParam,
-            source: 'client_assets_fetch',
-          },
-          request,
-        });
-      }
-
-      if (authPlatform === 'meta' && authContext.accessRequest) {
-        await auditService.createAuditLog({
-          agencyId: authContext.accessRequest.agencyId,
-          action: 'META_TOKEN_READ',
-          userEmail: authContext.connection?.clientEmail,
-          resourceType: 'client_connection',
-          resourceId: connectionId,
-          metadata: {
-            platform: platformParam,
-            source: 'client_assets_fetch',
-            businessId: businessId || null,
-          },
-          request,
-        });
-      }
+      // Started immediately so the audit write runs concurrently with the asset fetch.
+      const tokenReadAudit =
+        tokenReadAction && authContext.accessRequest
+          ? auditService.createAuditLog({
+              agencyId: authContext.accessRequest.agencyId,
+              action: tokenReadAction,
+              userEmail: authContext.connection?.clientEmail,
+              resourceType: 'client_connection',
+              resourceId: connectionId,
+              metadata: {
+                platform: platformParam,
+                source: 'client_assets_fetch',
+                ...(authPlatform === 'meta' ? { businessId: businessId || null } : {}),
+              },
+              request,
+            })
+          : null;
 
       let assets;
       const platformStr = String(platform);
@@ -2065,15 +2077,17 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           };
         }
 
-        await prisma.platformAuthorization.update({
-          where: { id: platformAuth.id },
-          data: {
-            metadata: {
-              ...rootMetadata,
-              meta: nextMeta,
-            } as any,
-          },
-        });
+        if (!metaDiscoveryContentUnchanged(metaMetadata, nextMeta)) {
+          await prisma.platformAuthorization.update({
+            where: { id: platformAuth.id },
+            data: {
+              metadata: {
+                ...rootMetadata,
+                meta: nextMeta,
+              } as any,
+            },
+          });
+        }
       } else if (platform === 'linkedin_ads') {
         assets = await clientAssetsService.fetchLinkedInAdAccounts(tokens.accessToken);
       } else if (platform === 'linkedin_pages') {
@@ -2123,6 +2137,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         assets = await googleConnector.getAccountsForProduct(platformStr as GoogleProduct, tokens.accessToken);
       } else {
         return sendError(reply, 'UNSUPPORTED_PLATFORM', `Platform ${platform} not yet supported for asset fetching`, 400);
+      }
+
+      if (tokenReadAudit) {
+        await tokenReadAudit;
       }
 
       return reply.send({

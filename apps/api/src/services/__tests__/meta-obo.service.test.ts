@@ -217,4 +217,50 @@ describe('MetaOBOService', () => {
       },
     });
   });
+
+  it('runs a steady-state OBO flow against a pre-fetched authorization row with a single read', async () => {
+    const authorization = {
+      id: 'auth-1',
+      connectionId: 'conn-1',
+      secretId: 'meta_client_secret',
+      metadata: {
+        selectedAssets: {
+          meta_ads: { adAccounts: ['act_1'] },
+        },
+      },
+    };
+
+    vi.mocked(prisma.platformAuthorization.findUnique).mockResolvedValue(authorization as any);
+    vi.mocked(prisma.platformAuthorization.update).mockResolvedValue({ id: 'auth-1' } as any);
+    vi.mocked(infisical.getOAuthTokens).mockResolvedValue({ accessToken: 'client-user-token' });
+    vi.mocked(createAuditLog).mockResolvedValue({ data: {}, error: null } as any);
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    } as Response);
+
+    const tokenResult = await metaOBOService.getClientAccessTokenForOBO({
+      authorizationId: 'auth-1',
+      connectionId: 'conn-1',
+      purpose: 'meta_asset_grant',
+      authorization,
+    } as any);
+    expect(tokenResult.error).toBeNull();
+    expect(tokenResult.data?.accessToken).toBe('client-user-token');
+    expect(infisical.getOAuthTokens).toHaveBeenCalledWith('meta_client_secret');
+
+    const linkResult = await metaOBOService.ensureManagedBusinessRelationship({
+      authorizationId: 'auth-1',
+      connectionId: 'conn-1',
+      partnerBusinessId: 'partner-bm-1',
+      clientBusinessId: 'client-bm-1',
+      clientBusinessAdminAccessToken: 'client-user-token',
+    });
+    expect(linkResult.error).toBeNull();
+
+    expect(prisma.platformAuthorization.findUnique).toHaveBeenCalledTimes(1);
+    expect(prisma.platformAuthorization.findUnique).toHaveBeenCalledWith({
+      where: { id: 'auth-1' },
+    });
+  });
 });

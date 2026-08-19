@@ -172,16 +172,17 @@ class MetaOBOService {
     userEmail?: string;
     ipAddress?: string;
     purpose: string;
+    // Pre-fetched authorization row (same id). When supplied the re-read is skipped;
+    // only secretId is consumed, so no freshness requirement applies.
+    authorization?: PlatformAuthorizationRecord;
   }): Promise<ServiceResult<{ accessToken: string }>> {
-    const authorizationResult = await this.getAuthorization(input.authorizationId);
-    if (authorizationResult.error || !authorizationResult.data) {
+    const authorization = input.authorization ?? (await this.getAuthorization(input.authorizationId)).data;
+    if (!authorization) {
       return {
         data: null,
-        error: authorizationResult.error,
+        error: createServiceError('NOT_FOUND', 'Meta platform authorization not found'),
       };
     }
-
-    const authorization = authorizationResult.data;
 
     try {
       const tokens = await infisical.getOAuthTokens(authorization.secretId);
