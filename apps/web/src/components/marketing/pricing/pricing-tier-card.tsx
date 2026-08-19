@@ -27,7 +27,6 @@ interface PricingTierCardProps {
   buttonText: string;
   buttonVariant?: 'brutalist' | 'brutalist-rounded' | 'brutalist-ghost' | 'brutalist-ghost-rounded';
   billingInterval?: 'monthly' | 'yearly'; // Pass through for checkout
-  onUpgradeClick?: () => void; // Optional click handler for upsell CTAs
 }
 
 export function PricingTierCard({
@@ -45,7 +44,6 @@ export function PricingTierCard({
   buttonText,
   buttonVariant = 'brutalist',
   billingInterval = 'monthly',
-  onUpgradeClick,
 }: PricingTierCardProps) {
   // Normalize display aliases to backend tiers expected by onboarding/subscriptions.
   const DISPLAY_TO_BACKEND: Record<'STARTER' | 'GROWTH' | 'AGENCY' | 'SCALE', 'STARTER' | 'AGENCY' | 'PRO'> = {

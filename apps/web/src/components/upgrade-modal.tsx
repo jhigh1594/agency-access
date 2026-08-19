@@ -11,21 +11,19 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, TrendingUp, Check, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { SUBSCRIPTION_TIER_NAMES, type SubscriptionTier, TIER_LIMITS } from '@agency-platform/shared';
+import { SUBSCRIPTION_TIER_NAMES, TIER_LIMITS } from '@agency-platform/shared';
 import type { QuotaExceededError } from '@/lib/query/quota';
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   quotaError: QuotaExceededError;
-  currentTier: SubscriptionTier;
 }
 
 export function UpgradeModal({
   isOpen,
   onClose,
   quotaError,
-  currentTier,
 }: UpgradeModalProps) {
   const router = useRouter();
 

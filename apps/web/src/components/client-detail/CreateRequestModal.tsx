@@ -48,8 +48,8 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [createdRequest, setCreatedRequest] = useState<{ id: string; uniqueToken: string } | null>(null);
+  const success = createdRequest !== null;
   const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [googleAdsAccountId, setGoogleAdsAccountId] = useState<string>('');
@@ -202,7 +202,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
       queryClient.invalidateQueries({ queryKey: ['access-requests'] });
 
       setCreatedRequest(result.data);
-      setSuccess(true);
 
       // Auto-close after 3 seconds to allow user to copy link
       setTimeout(() => {
@@ -643,7 +642,6 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
           setQuotaError(null);
         }}
         quotaError={quotaError}
-        currentTier={quotaError.currentTier}
       />
     )}
   </>

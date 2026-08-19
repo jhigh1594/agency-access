@@ -69,7 +69,6 @@ export interface OnboardingState {
   currentStep: number;
   completedSteps: Set<number>;
   startedAt: number; // Timestamp when onboarding started
-  stepDurations: Record<number, number>; // Time spent on each step
 
   // Agency profile (Screen 1)
   agencyName: string;
@@ -290,7 +289,6 @@ const initialState: OnboardingState = {
   currentStep: 0,
   completedSteps: new Set<number>(),
   startedAt: Date.now(),
-  stepDurations: {},
 
   // Agency profile
   agencyName: '',

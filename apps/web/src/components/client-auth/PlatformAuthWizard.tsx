@@ -28,7 +28,6 @@ import { AutomaticPagesGrant } from './AutomaticPagesGrant';
 import { AdAccountSharingInstructions } from './AdAccountSharingInstructions';
 import type { ManualMetaShareCompletionResult } from './AdAccountSharingInstructions';
 import { StepHelpText } from './StepHelpText';
-import { AssetSelectorDisabled } from './AssetSelectorDisabled';
 import { PlatformIcon, Button } from '@/components/ui';
 import { PLATFORM_NAMES } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
@@ -87,6 +86,10 @@ function supportsAssetSelection(product: string): boolean {
 
 function isGoogleProduct(product: string): boolean {
   return product.startsWith('google_') || product === 'ga4';
+}
+
+function clampStep(step: number): 1 | 2 | 3 {
+  return step > 3 ? 3 : step as 1 | 2 | 3;
 }
 
 function hasNoAssetsFollowUp(product: string, assets: any): boolean {
@@ -293,7 +296,7 @@ export function PlatformAuthWizard({
   // All platforms use 3 steps: Connect → Choose Accounts & Grant Access → Done
   const metaNeedsGrantStep = platform === 'meta' && primaryMetaAssetProduct !== null;
   const maxSteps = 3;
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep ? (initialStep > 3 ? 3 : initialStep as 1 | 2 | 3) : 1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep ? clampStep(initialStep) : 1);
   const [connectionId, setConnectionId] = useState<string | null>(initialConnectionId || null);
   const [groupAssets, setGroupAssets] = useState<Record<string, any>>({});
   const [isProcessing, setIsProcessing] = useState(false);
@@ -317,7 +320,7 @@ export function PlatformAuthWizard({
   // Update state when initialStep or initialConnectionId props change (for test page)
   useEffect(() => {
     if (initialStep) {
-      setCurrentStep(initialStep > 3 ? 3 : initialStep as 1 | 2 | 3);
+      setCurrentStep(clampStep(initialStep));
     }
   }, [initialStep]);
 
@@ -326,6 +329,11 @@ export function PlatformAuthWizard({
       setConnectionId(initialConnectionId);
     }
   }, [initialConnectionId]);
+
+  // Derived Meta asset state (single source for grant-step decisions)
+  const metaAdAssets = groupAssets['meta_ads'] || {};
+  const hasMetaPages = (metaAdAssets.pages?.length ?? 0) > 0;
+  const hasMetaAdAccounts = (metaAdAssets.adAccounts?.length ?? 0) > 0;
 
   // Step 1: Initiate OAuth (or Meta popup)
   const handleConnectClick = async () => {
@@ -390,7 +398,7 @@ export function PlatformAuthWizard({
           setCurrentStep(2);
           setIsProcessing(false);
           return;
-        } catch (popupErr) {
+        } catch {
           // Fallback to redirect when popup fails (e.g. Firefox Enhanced Tracking Protection blocks Facebook SDK)
           const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/oauth-url`, {
             method: 'POST',
@@ -635,34 +643,19 @@ export function PlatformAuthWizard({
         }
       }
 
-      // Expand "Grant Access" section if needed
-      if (metaNeedsGrantStep) {
-        const metaAssets = groupAssets['meta_ads'] || {};
-        const hasPages = (metaAssets.pages?.length ?? 0) > 0;
-        const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
-        if (hasPages || hasAdAccounts) {
-          setChooseAccountsExpanded(false);
-          setGrantAccessExpanded(true);
-        }
-      }
-
       // After saving, stay on step 2 to show grant access UI (for Meta) or go to final step
       // For Meta with pages/ad accounts, grant access is shown in step 2
       // For other platforms or Meta without grant needs, go to final step
       if (metaNeedsGrantStep) {
-        const metaAssets = groupAssets['meta_ads'] || {};
-        const hasPages = (metaAssets.pages?.length ?? 0) > 0;
-        const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
-        
-        // Stay on step 2 to show grant access UI
-        if (hasPages || hasAdAccounts) {
-          // Already on step 2, grant access UI will appear below
+        if (hasMetaPages || hasMetaAdAccounts) {
+          // Stay on step 2 to show grant access UI
+          setChooseAccountsExpanded(false);
+          setGrantAccessExpanded(true);
         } else {
           setCurrentStep(3);
         }
-      } else if (platform === 'tiktok') {
-        // Progress is controlled by the partner-share automation result above.
-      } else {
+      } else if (platform !== 'tiktok') {
+        // TikTok progress is controlled by the partner-share automation result above.
         setCurrentStep(3);
       }
     } catch (err) {
@@ -928,7 +921,6 @@ export function PlatformAuthWizard({
                             }}
                             onError={setError}
                           />
-                          {!connectionId && <AssetSelectorDisabled />}
                         </div>
                       )}
 
@@ -948,7 +940,6 @@ export function PlatformAuthWizard({
                             onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
                             onError={setError}
                           />
-                          {!connectionId && <AssetSelectorDisabled />}
                         </div>
                       )}
 
@@ -960,7 +951,6 @@ export function PlatformAuthWizard({
                             onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
                             onError={setError}
                           />
-                          {!connectionId && <AssetSelectorDisabled />}
                         </div>
                       )}
 
@@ -973,7 +963,6 @@ export function PlatformAuthWizard({
                             onSelectionChange={(assets) => handleProductSelectionChange(p.product, assets)}
                             onError={setError}
                           />
-                          {!connectionId && <AssetSelectorDisabled />}
                         </div>
                       )}
                     </div>
@@ -1004,11 +993,7 @@ export function PlatformAuthWizard({
 
           {/* Section Divider for Meta Grant Access */}
           {platform === 'meta' && metaNeedsGrantStep && connectionId && assetsSaved && (() => {
-            const metaAssets = groupAssets['meta_ads'] || {};
-            const hasPages = (metaAssets.pages?.length ?? 0) > 0;
-            const hasAdAccounts = (metaAssets.adAccounts?.length ?? 0) > 0;
-
-            if (!hasPages && !hasAdAccounts) {
+            if (!hasMetaPages && !hasMetaAdAccounts) {
               return null;
             }
 
@@ -1494,22 +1479,7 @@ export function PlatformAuthWizard({
       totalSteps={maxSteps}
       chrome="minimal"
     >
-      {stepContent ?? (
-        <div className="text-center space-y-3 py-6">
-          <h3 className="text-lg font-bold text-[var(--ink)] font-display">Connect {platformName}</h3>
-          <p className="text-sm text-muted-foreground">
-            Sign in to {platformName} and approve access.
-          </p>
-          <Button
-            onClick={handleConnectClick}
-            isLoading={isProcessing}
-            variant="brutalist-rounded"
-            size="lg"
-          >
-            Connect {platformName}
-          </Button>
-        </div>
-      )}
+      {stepContent}
     </PlatformWizardCard>
   );
 }

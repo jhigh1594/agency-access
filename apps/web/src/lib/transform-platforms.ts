@@ -97,34 +97,3 @@ export function getGroupCount(selection: Record<string, string[]>): number {
   return Object.entries(selection).filter(([_, products]) => products.length > 0).length;
 }
 
-/**
- * Check if any platforms are selected
- */
-export function hasPlatformsSelected(selection: Record<string, string[]>): boolean {
-  return getPlatformCount(selection) > 0;
-}
-
-/**
- * Get list of all selected product IDs (flat array)
- */
-export function getSelectedProductIds(selection: Record<string, string[]>): string[] {
-  return Object.values(selection).flat();
-}
-
-/**
- * Get human-readable summary of selection
- * Example: "5 products across 2 platforms"
- */
-export function getSelectionSummary(selection: Record<string, string[]>): string {
-  const productCount = getPlatformCount(selection);
-  const groupCount = getGroupCount(selection);
-
-  if (productCount === 0) {
-    return 'No platforms selected';
-  }
-
-  const productsText = productCount === 1 ? 'product' : 'products';
-  const platformsText = groupCount === 1 ? 'platform' : 'platforms';
-
-  return `${productCount} ${productsText} across ${groupCount} ${platformsText}`;
-}

@@ -191,16 +191,6 @@ export function HierarchicalPlatformSelector({
     [selectedPlatforms]
   );
 
-  const getGroupSelectAllState = useCallback(
-    (groupKey: string, productCount: number) => {
-      const selection = selectedPlatforms[groupKey] || [];
-      if (selection.length === 0) return { checked: false, indeterminate: false };
-      if (selection.length === productCount) return { checked: true, indeterminate: false };
-      return { checked: false, indeterminate: true };
-    },
-    [selectedPlatforms]
-  );
-
   const isProductSelected = useCallback(
     (groupKey: string, productId: string) => {
       return (selectedPlatforms[groupKey] || []).includes(productId);

@@ -70,12 +70,10 @@ export function HealthBadge({ health, size = 'md' }: HealthBadgeProps) {
 
 interface ExpirationCountdownProps {
   daysUntilExpiry: number;
-  health: HealthStatus;
 }
 
 export function ExpirationCountdown({
   daysUntilExpiry,
-  health,
 }: ExpirationCountdownProps) {
   const isUrgent = daysUntilExpiry <= 2;
 

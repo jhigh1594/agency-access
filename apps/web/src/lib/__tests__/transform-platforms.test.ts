@@ -9,9 +9,6 @@ import {
   transformPlatformsForAPI,
   getPlatformCount,
   getGroupCount,
-  hasPlatformsSelected,
-  getSelectedProductIds,
-  getSelectionSummary,
 } from '../transform-platforms';
 import type { AccessLevel } from '@agency-platform/shared';
 
@@ -334,98 +331,3 @@ describe('getGroupCount', () => {
   });
 });
 
-describe('hasPlatformsSelected', () => {
-  it('should return false for empty selection', () => {
-    expect(hasPlatformsSelected({})).toBe(false);
-  });
-
-  it('should return false when all groups are empty', () => {
-    expect(hasPlatformsSelected({ google: [], meta: [] })).toBe(false);
-  });
-
-  it('should return true when at least one product is selected', () => {
-    expect(hasPlatformsSelected({ google: ['google_ads'] })).toBe(true);
-  });
-
-  it('should return true for multiple selections', () => {
-    const selection = {
-      google: ['google_ads', 'ga4'],
-      meta: ['meta_ads'],
-    };
-    expect(hasPlatformsSelected(selection)).toBe(true);
-  });
-});
-
-describe('getSelectedProductIds', () => {
-  it('should return empty array for empty selection', () => {
-    expect(getSelectedProductIds({})).toEqual([]);
-  });
-
-  it('should return flat array of product IDs', () => {
-    const selection = {
-      google: ['google_ads', 'ga4'],
-      meta: ['meta_ads'],
-      linkedin: ['linkedin_ads'],
-    };
-
-    const result = getSelectedProductIds(selection);
-
-    expect(result).toEqual(['google_ads', 'ga4', 'meta_ads', 'linkedin_ads']);
-  });
-
-  it('should include empty groups', () => {
-    const selection = {
-      google: ['google_ads'],
-      meta: [],
-      linkedin: ['linkedin_ads'],
-    };
-
-    const result = getSelectedProductIds(selection);
-
-    expect(result).toEqual(['google_ads', 'linkedin_ads']);
-  });
-});
-
-describe('getSelectionSummary', () => {
-  it('should return "No platforms selected" for empty selection', () => {
-    expect(getSelectionSummary({})).toBe('No platforms selected');
-  });
-
-  it('should handle singular product and platform', () => {
-    expect(getSelectionSummary({ google: ['google_ads'] })).toBe('1 product across 1 platform');
-  });
-
-  it('should handle plural products, singular platform', () => {
-    expect(getSelectionSummary({ google: ['google_ads', 'ga4'] })).toBe(
-      '2 products across 1 platform'
-    );
-  });
-
-  it('should handle singular product, plural platforms', () => {
-    const selection = {
-      google: ['google_ads'],
-      meta: [],
-      linkedin: ['linkedin_ads'],
-    };
-    expect(getSelectionSummary(selection)).toBe('2 products across 2 platforms');
-  });
-
-  it('should handle plural products and platforms', () => {
-    const selection = {
-      google: ['google_ads', 'ga4', 'google_tag_manager'],
-      meta: ['meta_ads', 'instagram'],
-      linkedin: ['linkedin_ads'],
-    };
-    expect(getSelectionSummary(selection)).toBe('6 products across 3 platforms');
-  });
-
-  it('should ignore empty groups in count', () => {
-    const selection = {
-      google: ['google_ads', 'ga4'],
-      meta: [],
-      linkedin: ['linkedin_ads'],
-      tiktok: [],
-    };
-    expect(getSelectionSummary(selection)).toBe('3 products across 2 platforms');
-  });
-});

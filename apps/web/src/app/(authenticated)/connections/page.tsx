@@ -41,7 +41,6 @@ function ConnectionsPageContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [connectingPlatform, setConnectingPlatform] = useState<Platform | null>(null);
   const [disconnectingPlatform, setDisconnectingPlatform] = useState<Platform | null>(null);
-  const [agencyId, setAgencyId] = useState<string | null>(null);
   const [managingMetaAssets, setManagingMetaAssets] = useState(false);
   const [managingGoogleAssets, setManagingGoogleAssets] = useState(false);
 
@@ -95,14 +94,7 @@ function ConnectionsPageContent() {
     gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour (garbage collection time)
   });
 
-  // IMPORTANT: React Query v5 removed the `onSuccess` callback option.
-  // To perform actions after data loads, use useEffect with data as dependency.
-  // See: https://tanstack.com/query/latest/docs/react/guides/migrating-to-v5#removed-onsuccess-callback
-  useEffect(() => {
-    if (agencyData?.id) {
-      setAgencyId(agencyData.id);
-    }
-  }, [agencyData]);
+  const agencyId = agencyData?.id ?? null;
 
   const handleManageMetaAssets = () => {
     setManagingMetaAssets(!managingMetaAssets);

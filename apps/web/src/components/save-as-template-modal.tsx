@@ -253,7 +253,6 @@ export function SaveAsTemplateModal({
           setQuotaError(null);
         }}
         quotaError={quotaError}
-        currentTier={quotaError.currentTier}
       />
     )}
   </>

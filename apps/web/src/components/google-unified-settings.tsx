@@ -485,10 +485,6 @@ function ProductCard({
   tooltip,
   warningMessage,
 }: ProductCardProps) {
-  // Updated per design critique:
-  // - Let the outer `ManageAssetsSectionCard` be the brutalist anchor.
-  // - Product rows should feel structured but lighter, not like stacked hero cards.
-  // - Disabled state still reads as clearly disabled via opacity and softer border.
   return (
     <div
       className={cn(

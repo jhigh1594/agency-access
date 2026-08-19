@@ -684,7 +684,6 @@ export default function DashboardPage() {
               setQuotaError(null);
             }}
             quotaError={quotaError}
-            currentTier={quotaError.currentTier}
           />
         )}
       </div>

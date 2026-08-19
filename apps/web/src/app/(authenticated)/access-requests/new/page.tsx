@@ -14,7 +14,7 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Plus, Trash2, Check, Loader2, AlertCircle, Save, Shield, ChevronDown } from 'lucide-react';
 import { m, AnimatePresence } from 'framer-motion';
@@ -43,7 +43,6 @@ function AccessRequestWizardContent() {
   const clerkAuth = useAuth();
   const { userId, orgId } = useAuthOrBypass(clerkAuth);
   const { getToken } = clerkAuth;
-  useUser();
   const router = useRouter();
   const {
     state,

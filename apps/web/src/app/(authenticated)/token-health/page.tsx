@@ -290,7 +290,6 @@ export default function TokenHealthPage() {
                     <div className="col-span-3">
                       <ExpirationCountdown
                         daysUntilExpiry={token.daysUntilExpiry}
-                        health={token.health}
                       />
                     </div>
 

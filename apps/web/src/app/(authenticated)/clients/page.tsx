@@ -299,7 +299,6 @@ function ClientsPageContent() {
             setQuotaError(null);
           }}
           quotaError={quotaError}
-          currentTier={quotaError.currentTier}
         />
       )}
     </div>
