@@ -13,7 +13,7 @@ import { connectionService } from '../services/connection.service.js';
 import { agencyService } from '@/services/agency.service.js';
 import { subscriptionService } from '@/services/subscription.service.js';
 import { getCached, CacheKeys, CacheTTL } from '../lib/cache.js';
-import { createHash } from 'crypto';
+import { computeEtag } from '@/lib/etag.js';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
 import { env } from '@/lib/env.js';
@@ -159,9 +159,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
             trialBanner,
           };
 
-          const etag = createHash('md5')
-            .update(JSON.stringify(payload))
-            .digest('hex');
+          const etag = computeEtag(payload);
 
           return {
             data: {

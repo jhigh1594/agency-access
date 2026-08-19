@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
 import { agencyPlatformService } from '@/services/agency-platform.service';
 import { PLATFORM_NAMES, getPlatformCategory, SUPPORTED_PLATFORMS } from './constants.js';
-import { createHash } from 'crypto';
+import { computeEtag } from '@/lib/etag.js';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { sendError, sendValidationError } from '../../lib/response.js';
@@ -140,9 +140,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
     });
 
     // Generate ETag for conditional requests (based on data hash)
-    const etag = createHash('md5')
-      .update(JSON.stringify(availablePlatforms))
-      .digest('hex');
+    const etag = computeEtag(availablePlatforms);
 
     // Check for conditional request (If-None-Match header)
     const ifNoneMatch = request.headers['if-none-match'];
