@@ -264,6 +264,42 @@ export default function ClientAuthorizationPage({
     });
   }, [phase, platformQueue.activePlatform?.platformGroup]);
 
+  /**
+   * Posts the completion call for both the auto-submit effect and the manual
+   * retry button. Marks completionSubmittedRef on success and clears it on
+   * failure so either path can retry.
+   */
+  const finalizeCompletion = async () => {
+    try {
+      const response = await fetch(resolveApiUrl(`/api/client/${token}/complete`), {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+      if (!response.ok || result.error) {
+        throw new Error(result.error?.message || 'Failed to finalize authorization');
+      }
+
+      completionSubmittedRef.current = true;
+      void capturePosthogEvent('client_authorization_completed', {
+        access_request_token: token,
+        agency_name: data?.agencyName,
+        client_name: data?.clientName,
+        platforms_completed: Array.from(completedPlatforms),
+        total_platforms: data?.platforms?.length || 0,
+      });
+
+      sessionStorage.removeItem(storageKey);
+    } catch (error) {
+      completionSubmittedRef.current = false;
+      setCompletionError(
+        error instanceof Error
+          ? error.message
+          : 'Authorization was completed, but we could not finalize status. Retry below.'
+      );
+    }
+  };
+
   useEffect(() => {
     if (!data) return;
     if (isReviewingConnectStatus) return;
@@ -277,33 +313,7 @@ export default function ClientAuthorizationPage({
 
     const submitCompletion = async () => {
       completionSubmittedRef.current = true;
-      try {
-        const response = await fetch(resolveApiUrl(`/api/client/${token}/complete`), {
-          method: 'POST',
-        });
-
-        const result = await response.json();
-        if (!response.ok || result.error) {
-          throw new Error(result.error?.message || 'Failed to finalize authorization');
-        }
-
-        void capturePosthogEvent('client_authorization_completed', {
-          access_request_token: token,
-          agency_name: data.agencyName,
-          client_name: data.clientName,
-          platforms_completed: Array.from(completedPlatforms),
-          total_platforms: data.platforms.length,
-        });
-
-        sessionStorage.removeItem(storageKey);
-      } catch (error) {
-        completionSubmittedRef.current = false;
-        setCompletionError(
-          error instanceof Error
-            ? error.message
-            : 'Authorization was completed, but we could not finalize status. Retry below.'
-        );
-      }
+      await finalizeCompletion();
     };
 
     submitCompletion();
@@ -312,30 +322,7 @@ export default function ClientAuthorizationPage({
   const handleRetryComplete = async () => {
     setCompletionError(null);
     setIsReviewingConnectStatus(false);
-    try {
-      const response = await fetch(resolveApiUrl(`/api/client/${token}/complete`), {
-        method: 'POST',
-      });
-      const result = await response.json();
-      if (!response.ok || result.error) {
-        throw new Error(result.error?.message || 'Failed to finalize authorization');
-      }
-      completionSubmittedRef.current = true;
-      void capturePosthogEvent('client_authorization_completed', {
-        access_request_token: token,
-        agency_name: data?.agencyName,
-        client_name: data?.clientName,
-        platforms_completed: Array.from(completedPlatforms),
-        total_platforms: data?.platforms?.length || 0,
-      });
-      sessionStorage.removeItem(storageKey);
-    } catch (error) {
-      setCompletionError(
-        error instanceof Error
-          ? error.message
-          : 'Authorization was completed, but we could not finalize status. Retry below.'
-      );
-    }
+    await finalizeCompletion();
   };
 
   const handleIntakeSubmit = (event: React.FormEvent) => {
@@ -402,6 +389,78 @@ export default function ClientAuthorizationPage({
   const layoutMode = phase === 'intake' ? 'focused' : 'split';
   const isConnectStatusReview = phase === 'platforms' && isComplete && isReviewingConnectStatus;
 
+  // Per-phase hero and rail copy.
+  const phaseCopyByPhase: Record<PagePhase, {
+    eyebrow?: string;
+    title: string;
+    description: string;
+    stats: Array<{ label: string; value: string }>;
+    railObjective: string;
+    railActionLabel: string;
+  }> = {
+    intake: {
+      eyebrow: undefined,
+      title: `Share account access with ${toTitleCase(data.clientName)}`,
+      description:
+        intakeFields.length > 0
+          ? 'Share a few details, then confirm which accounts to share.'
+          : 'Confirm which accounts to share below, then continue.',
+      stats: [
+        { label: 'From', value: data.agencyName },
+        { label: 'Next', value: 'Confirm what will be shared' },
+      ],
+      railObjective: 'Finish the remaining platform connection steps.',
+      railActionLabel: 'Complete current platform step',
+    },
+    platforms: {
+      eyebrow: `Request for ${toTitleCase(data.clientName)}`,
+      title: isConnectStatusReview
+        ? 'Review connected platforms'
+        : activePlatformName
+        ? `Complete ${activePlatformName} access`
+        : 'Complete account access',
+      description: isConnectStatusReview
+        ? 'Review which platforms are connected or return to the final confirmation.'
+        : activePlatformName
+        ? `Finish ${activePlatformName} first, then continue through the remaining requested platforms.`
+        : 'Finish the remaining platform connection steps.',
+      stats: [
+        { label: 'Platforms', value: platformSummary || 'No platforms requested' },
+        {
+          label: 'Next',
+          value: isConnectStatusReview
+            ? 'Return to final confirmation'
+            : activePlatformName
+            ? `Complete ${activePlatformName}`
+            : 'Review completion',
+        },
+      ],
+      railObjective: isConnectStatusReview
+        ? 'Review what was connected before closing the request.'
+        : 'Finish the remaining platform connection steps.',
+      railActionLabel: isConnectStatusReview
+        ? 'Return to final confirmation'
+        : 'Complete current platform step',
+    },
+    complete: {
+      eyebrow: `Request for ${toTitleCase(data.clientName)}`,
+      title: `Share account access with ${toTitleCase(data.clientName)}`,
+      description: `Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`,
+      stats: [
+        { label: 'Requested by', value: data.agencyName },
+        {
+          label: 'Recipient',
+          value: data.clientEmail ? `${toTitleCase(data.clientName)} · ${data.clientEmail}` : toTitleCase(data.clientName),
+        },
+        { label: 'Platforms', value: platformSummary || 'No platforms requested' },
+        { label: 'Next', value: 'Review the completed authorization' },
+      ],
+      railObjective: 'Review your completed authorizations.',
+      railActionLabel: 'Authorization complete',
+    },
+  };
+  const phaseCopy = phaseCopyByPhase[phase];
+
   return (
     <InviteFlowShell
       title={data.agencyName}
@@ -410,70 +469,16 @@ export default function ClientAuthorizationPage({
       hideStepChipsOnMobile
       header={
         <InviteHeroHeader
-          eyebrow={
-            phase === 'intake'
-              ? undefined
-              : `Request for ${toTitleCase(data.clientName)}`
-          }
-          title={
-            phase === 'platforms'
-              ? isConnectStatusReview
-                ? 'Review connected platforms'
-                : activePlatformName
-                ? `Complete ${activePlatformName} access`
-                : 'Complete account access'
-              : `Share account access with ${toTitleCase(data.clientName)}`
-          }
-          description={
-            phase === 'platforms'
-              ? isConnectStatusReview
-                ? 'Review which platforms are connected or return to the final confirmation.'
-                : activePlatformName
-                ? `Finish ${activePlatformName} first, then continue through the remaining requested platforms.`
-                : 'Finish the remaining platform connection steps.'
-              : phase === 'intake'
-                ? intakeFields.length > 0
-                  ? 'Share a few details, then confirm which accounts to share.'
-                  : 'Confirm which accounts to share below, then continue.'
-                : `Review the request, confirm the access levels below, and continue only with the accounts you want to share. ${data.agencyName} requested access to ${platformSummary || 'your requested platforms'}.`
-          }
+          eyebrow={phaseCopy.eyebrow}
+          title={phaseCopy.title}
+          description={phaseCopy.description}
           badge={securitySummary.badge}
           logoUrl={data.branding?.logoUrl}
           logoAlt={`${data.agencyName} logo`}
           density="compact"
           statsLayout="inline"
           hideInlineStatsOnMobile
-          stats={
-            phase === 'platforms'
-              ? [
-                  { label: 'Platforms', value: platformSummary || 'No platforms requested' },
-                  {
-                    label: 'Next',
-                    value: isConnectStatusReview
-                      ? 'Return to final confirmation'
-                      : activePlatformName
-                      ? `Complete ${activePlatformName}`
-                      : 'Review completion',
-                  },
-                ]
-              : phase === 'intake'
-                ? [
-                    { label: 'From', value: data.agencyName },
-                    { label: 'Next', value: 'Confirm what will be shared' },
-                  ]
-                : [
-                    { label: 'Requested by', value: data.agencyName },
-                    {
-                      label: 'Recipient',
-                      value: data.clientEmail ? `${toTitleCase(data.clientName)} · ${data.clientEmail}` : toTitleCase(data.clientName),
-                    },
-                    { label: 'Platforms', value: platformSummary || 'No platforms requested' },
-                    {
-                      label: 'Next',
-                      value: 'Review the completed authorization',
-                    },
-                  ]
-          }
+          stats={phaseCopy.stats}
         />
       }
       step={currentStep}
@@ -482,23 +487,13 @@ export default function ClientAuthorizationPage({
       layoutMode={layoutMode}
       rail={
         <InviteStickyRail
-          objective={
-            phase === 'complete'
-              ? 'Review your completed authorizations.'
-              : isConnectStatusReview
-              ? 'Review what was connected before closing the request.'
-              : 'Finish the remaining platform connection steps.'
-          }
+          objective={phaseCopy.railObjective}
           securityNote={securitySummary.detail}
           identities={railIdentities}
           completedCount={completedPlatforms.size}
           totalCount={requestedPlatforms.length || 1}
           actionStatus={{
-            label: phase === 'complete'
-              ? 'Authorization complete'
-              : isConnectStatusReview
-              ? 'Return to final confirmation'
-              : 'Complete current platform step',
+            label: phaseCopy.railActionLabel,
             disabledReason:
               phase === 'platforms' && requestedPlatforms.length > completedPlatforms.size
                 ? 'Continue becomes available after platform step completion.'
