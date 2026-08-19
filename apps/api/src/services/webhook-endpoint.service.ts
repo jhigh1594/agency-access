@@ -5,19 +5,9 @@ import { infisical } from '@/lib/infisical';
 import { auditService } from '@/services/audit.service';
 
 import { WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2 } from '@agency-platform/shared';
+import type { ServiceError, ServiceResult } from '@/lib/service-result';
 
 const VALID_API_VERSIONS = [WEBHOOK_API_VERSION_V1, WEBHOOK_API_VERSION_V2] as const;
-
-interface ServiceError {
-  code: string;
-  message: string;
-  details?: any;
-}
-
-interface ServiceResult<T> {
-  data: T | null;
-  error: ServiceError | null;
-}
 
 const WebhookEndpointMutationSchema = z.object({
   url: z.string().url(),

@@ -16,11 +16,7 @@ import type {
   AffiliatePartnerStatus,
 } from '@agency-platform/shared';
 import { getTierLimitsConfig, type SubscriptionTier } from '@agency-platform/shared';
-
-interface ServiceResult<T> {
-  data: T | null;
-  error: { code: string; message: string } | null;
-}
+import type { ServiceResult } from '@/lib/service-result.js';
 
 type InternalSubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing' | 'incomplete_expired';
 

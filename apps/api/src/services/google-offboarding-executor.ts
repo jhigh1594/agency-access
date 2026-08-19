@@ -32,13 +32,6 @@ type ExecuteCleanupResult = {
   finalStatus: string;
 };
 
-const FROZEN_ITEM_STATUSES = new Set([
-  'revoked_verified',
-  'already_absent',
-  'attestation_recorded',
-  'failed_terminal',
-]);
-
 function buildCredentialGeneration(connectionId: string): string {
   return `gen-${connectionId.slice(0, 8)}`;
 }

@@ -24,25 +24,6 @@ const ACCESS_LEVEL_MAP: Record<string, 'manage' | 'view_only'> = {
   view_only: 'view_only',
 };
 
-function toPlatformGroup(platform: string): string {
-  if (!platform) return '';
-  if (
-    platform === 'ga4' ||
-    platform === 'youtube_studio' ||
-    platform === 'display_video_360' ||
-    platform.startsWith('google_')
-  ) {
-    return 'google';
-  }
-  if (platform === 'instagram' || platform === 'whatsapp_business' || platform.startsWith('meta_')) {
-    return 'meta';
-  }
-  if (platform.startsWith('linkedin')) return 'linkedin';
-  if (platform.startsWith('tiktok')) return 'tiktok';
-  if (platform.startsWith('snapchat')) return 'snapchat';
-  return platform.split('_')[0] || platform;
-}
-
 function normalizePlatformsPayload(platforms: any): Array<{ platform: string; accessLevel: 'manage' | 'view_only'; accountId?: string }> {
   if (Array.isArray(platforms)) {
     return platforms.flatMap((entry: any) => {

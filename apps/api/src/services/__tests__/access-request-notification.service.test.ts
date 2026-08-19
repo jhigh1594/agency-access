@@ -5,6 +5,7 @@ import { accessRequestNotificationService } from '@/services/access-request-noti
 vi.mock('@/services/email.service.js', () => ({ sendEmail: vi.fn() }));
 vi.mock('@/lib/env.js', () => ({
   env: { FRONTEND_URL: 'https://app.example.com', RESEND_FROM_EMAIL: 'AuthHub <test@example.com>' },
+  frontendBaseUrl: () => 'https://app.example.com',
 }));
 
 describe('accessRequestNotificationService', () => {

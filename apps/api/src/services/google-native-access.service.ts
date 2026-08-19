@@ -17,17 +17,7 @@ import {
   refreshClientPlatformAuthorization,
 } from '@/services/token-lifecycle.service';
 import type { Prisma } from '@prisma/client';
-
-type ServiceError = {
-  code: string;
-  message: string;
-  details?: unknown;
-};
-
-type ServiceResult<T> = {
-  data: T | null;
-  error: ServiceError | null;
-};
+import type { ServiceError, ServiceResult } from '@/lib/service-result';
 
 type NativeGrantExecutionError = {
   code: string;

@@ -22,11 +22,7 @@ import {
   buildDefaultAffiliateCommissionScheduleFromEnv,
   evaluateAffiliateReferralRisk,
 } from './affiliate-program.service.js';
-
-interface ServiceResult<T> {
-  data: T | null;
-  error: { code: string; message: string; details?: any } | null;
-}
+import type { ServiceResult } from '@/lib/service-result.js';
 
 interface RegisterClickInput {
   referrer?: string | null;

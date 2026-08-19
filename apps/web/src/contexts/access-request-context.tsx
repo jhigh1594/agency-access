@@ -10,22 +10,17 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { QueryClient } from '@tanstack/react-query';
-import { Client, AccessLevel, AccessRequestTemplate } from '@agency-platform/shared';
-import type { CreateAccessRequestPayload } from '@/lib/api/access-requests';
+import { Client, AccessLevel, AccessRequestTemplate, IntakeField } from '@agency-platform/shared';
+import { transformPlatformsForAPI } from '@/lib/transform-platforms';
+import { createAccessRequest, type CreateAccessRequestPayload } from '@/lib/api/access-requests';
 import posthog from 'posthog-js';
 
 // ============================================================
 // TYPES
 // ============================================================
 
-export interface IntakeField {
-  id: string;
-  label: string;
-  type: 'text' | 'email' | 'phone' | 'url' | 'dropdown' | 'textarea';
-  required: boolean;
-  options?: string[];
-  order: number;
-}
+// Re-exported so existing consumers keep importing IntakeField from this module.
+export type { IntakeField };
 
 export interface BrandingConfig {
   logoUrl: string;
@@ -320,10 +315,6 @@ export function AccessRequestProvider({
     setState((prev) => ({ ...prev, submitting: true, error: null }));
 
     try {
-      // Import dynamically to avoid circular dependencies
-      const { transformPlatformsForAPI } = await import('@/lib/transform-platforms');
-      const { createAccessRequest } = await import('@/lib/api/access-requests');
-
       // Transform platforms to API format
       const platformsConfig = transformPlatformsForAPI(
         state.selectedPlatforms,

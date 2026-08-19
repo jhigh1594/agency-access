@@ -1,4 +1,5 @@
 import { env } from '../../lib/env.js';
+import { META_GRAPH_VERSION } from '../../lib/meta-constants.js';
 import type { AccessLevel, MetaAdAccount, MetaPage, MetaInstagramAccount, MetaProductCatalog, MetaAllAssets } from '@agency-platform/shared';
 
 /**
@@ -103,7 +104,7 @@ export class MetaConnector {
       params.set('scope', scopesToUse.join(','));
     }
 
-    return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
+    return `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth?${params.toString()}`;
   }
 
   /**
@@ -122,7 +123,7 @@ export class MetaConnector {
     });
 
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/oauth/access_token?${params.toString()}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token?${params.toString()}`,
       { method: 'GET' }
     );
 
@@ -160,7 +161,7 @@ export class MetaConnector {
     });
 
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/oauth/access_token?${params.toString()}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token?${params.toString()}`,
       { method: 'GET' }
     );
 
@@ -214,7 +215,7 @@ export class MetaConnector {
     name: string;
   }> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/me?fields=id,name&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -238,7 +239,7 @@ export class MetaConnector {
     });
 
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/debug_token?${params.toString()}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/debug_token?${params.toString()}`,
       { method: 'GET' }
     );
 
@@ -293,7 +294,7 @@ export class MetaConnector {
    */
   async revokeToken(accessToken: string): Promise<void> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/me/permissions?access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/me/permissions?access_token=${accessToken}`,
       { method: 'DELETE' }
     );
 
@@ -397,7 +398,7 @@ export class MetaConnector {
     };
 
     const queuedBusinessIds = await fetchBusinessCollection(
-      'https://graph.facebook.com/v21.0/me/businesses?fields=id,name,vertical_name,verification_status',
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/me/businesses?fields=id,name,vertical_name,verification_status`,
       (payload) => (payload.data || []) as Array<{
         id: string;
         name: string;
@@ -408,7 +409,7 @@ export class MetaConnector {
 
     try {
       const businessUserBusinessIds = await fetchBusinessCollection(
-        'https://graph.facebook.com/v21.0/me/business_users?fields=business{id,name,verification_status}',
+        `https://graph.facebook.com/${META_GRAPH_VERSION}/me/business_users?fields=business{id,name,verification_status}`,
         (payload) =>
           ((payload.data || []) as Array<{
             business?: {
@@ -446,7 +447,7 @@ export class MetaConnector {
 
       try {
         const managedBusinessIds = await fetchBusinessCollection(
-          `https://graph.facebook.com/v21.0/${currentBusinessId}/managed_businesses?fields=id,name,vertical_name,verification_status`,
+          `https://graph.facebook.com/${META_GRAPH_VERSION}/${currentBusinessId}/managed_businesses?fields=id,name,vertical_name,verification_status`,
           (payload) => (payload.data || []) as Array<{
             id: string;
             name: string;
@@ -475,7 +476,7 @@ export class MetaConnector {
    */
   async getAdAccounts(accessToken: string, businessId: string): Promise<MetaAdAccount[]> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}/owned_ad_accounts?fields=id,name,account_status,currency&access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}/owned_ad_accounts?fields=id,name,account_status,currency&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -506,7 +507,7 @@ export class MetaConnector {
    */
   async getPages(accessToken: string, businessId: string): Promise<MetaPage[]> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}/owned_pages?fields=id,name,category,tasks&access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}/owned_pages?fields=id,name,category,tasks&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -537,7 +538,7 @@ export class MetaConnector {
    */
   async getInstagramAccounts(accessToken: string, businessId: string): Promise<MetaInstagramAccount[]> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}/instagram_accounts?fields=id,username,profile_picture_url&access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}/instagram_accounts?fields=id,username,profile_picture_url&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -566,7 +567,7 @@ export class MetaConnector {
    */
   async getProductCatalogs(accessToken: string, businessId: string): Promise<MetaProductCatalog[]> {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}/owned_product_catalogs?fields=id,name,catalog_type&access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}/owned_product_catalogs?fields=id,name,catalog_type&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -596,7 +597,7 @@ export class MetaConnector {
   async getAllAssets(accessToken: string, businessId: string): Promise<MetaAllAssets> {
     // Fetch business name first
     const businessResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}?fields=name&access_token=${accessToken}`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}?fields=name&access_token=${accessToken}`,
       { method: 'GET' }
     );
 
@@ -657,7 +658,7 @@ export class MetaConnector {
       // Query the agency's Business Manager to check partnerships
       // This returns all businesses the agency manages
       const businessResponse = await fetch(
-        `https://graph.facebook.com/v21.0/${businessId}?fields=name,id&access_token=${agencyAccessToken}`,
+        `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}?fields=name,id&access_token=${agencyAccessToken}`,
         { method: 'GET' }
       );
 
@@ -741,7 +742,7 @@ export class MetaConnector {
     });
 
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}/adaccounts`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}/adaccounts`,
       {
         method: 'POST',
         headers: {
@@ -804,7 +805,7 @@ export class MetaConnector {
     });
 
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${businessId}/product_catalogs`,
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/${businessId}/product_catalogs`,
       {
         method: 'POST',
         headers: {

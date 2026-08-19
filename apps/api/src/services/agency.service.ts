@@ -11,8 +11,10 @@ import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 import { creem } from '@/lib/creem.js';
 import { getProductId } from '@/config/creem.config';
 import {
+  AgencyRoleSchema,
   UnifiedOnboardingProgressSchema,
   UnifiedOnboardingStatusSchema,
+  type AgencyRole,
   type UnifiedOnboardingProgress,
   type UnifiedOnboardingStatus,
 } from '@agency-platform/shared';
@@ -31,7 +33,7 @@ const createAgencySchema = z.object({
 
 const inviteMemberSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['admin', 'member', 'viewer']),
+  role: AgencyRoleSchema,
 });
 
 const updateAgencySchema = z.object({
@@ -704,10 +706,10 @@ export async function inviteMember(agencyId: string, input: InviteMemberInput) {
 /**
  * Update member role
  */
-export async function updateMemberRole(memberId: string, role: 'admin' | 'member' | 'viewer') {
+export async function updateMemberRole(memberId: string, role: AgencyRole) {
   try {
     // Validate role
-    const validRoles = ['admin', 'member', 'viewer'];
+    const validRoles = AgencyRoleSchema.options;
     if (!validRoles.includes(role)) {
       return {
         data: null,
@@ -833,7 +835,7 @@ export async function removeMember(memberId: string) {
 export async function updateMemberRoleForAgency(
   memberId: string,
   principalAgencyId: string,
-  role: 'admin' | 'member' | 'viewer'
+  role: AgencyRole
 ) {
   const member = await prisma.agencyMember.findFirst({
     where: { id: memberId },
@@ -1083,7 +1085,7 @@ export async function updateOnboardingProgress(
  */
 export async function bulkInviteMembers(
   agencyId: string,
-  invitations: Array<{ email: string; role: 'admin' | 'member' | 'viewer' }>
+  invitations: Array<{ email: string; role: AgencyRole }>
 ) {
   try {
     // Verify agency exists
@@ -1105,7 +1107,7 @@ export async function bulkInviteMembers(
     const bulkInviteSchema = z.array(
       z.object({
         email: z.string().email(),
-        role: z.enum(['admin', 'member', 'viewer']),
+        role: AgencyRoleSchema,
       })
     );
 

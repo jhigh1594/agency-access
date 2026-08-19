@@ -1,16 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
-
-type ServiceError = {
-  code: string;
-  message: string;
-  details?: unknown;
-};
-
-type ServiceResult<T> = {
-  data: T | null;
-  error: ServiceError | null;
-};
+import type { ServiceError, ServiceResult } from '@/lib/service-result';
 
 export type UpsertGoogleNativeGrantInput = {
   accessRequestId: string;

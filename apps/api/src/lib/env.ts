@@ -332,3 +332,8 @@ export const env = {
 };
 
 export { isOffboardingEnabled };
+
+/** Frontend base URL without a trailing slash (for building links sent to users). */
+export function frontendBaseUrl(): string {
+  return env.FRONTEND_URL.replace(/\/$/, '');
+}

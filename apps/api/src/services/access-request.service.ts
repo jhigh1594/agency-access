@@ -16,6 +16,7 @@ import {
   type DashboardRequestSummary,
   GOOGLE_PLATFORM_PRODUCT_IDS,
   evaluateGoogleProductFulfillment,
+  platformGroupOf,
   type GooglePlatformProductId,
   type GoogleProductFulfillmentMode,
   type GoogleProductGrantLifecycle,
@@ -100,35 +101,6 @@ const updateAccessRequestSchema = z.object({
 
 export type CreateAccessRequestInput = z.infer<typeof createAccessRequestSchema>;
 export type UpdateAccessRequestInput = z.infer<typeof updateAccessRequestSchema>;
-
-/**
- * Platform group mapping - defined once at module load time
- * Maps platform products to their parent groups
- */
-const PLATFORM_GROUP_MAP: Record<string, string> = {
-  // Google products
-  'google_ads': 'google',
-  'ga4': 'google',
-  'google_tag_manager': 'google',
-  'google_merchant_center': 'google',
-  'google_search_console': 'google',
-  'youtube_studio': 'google',
-  'google_business_profile': 'google',
-  'display_video_360': 'google',
-  // Meta products
-  'meta_ads': 'meta',
-  'meta_pages': 'meta',
-  'instagram': 'meta',
-  'whatsapp_business': 'meta',
-  // Other platforms (standalone)
-  'linkedin': 'linkedin',
-  'linkedin_ads': 'linkedin',
-  'linkedin_pages': 'linkedin',
-  'tiktok': 'tiktok',
-  'tiktok_ads': 'tiktok',
-  'snapchat': 'snapchat',
-  'snapchat_ads': 'snapchat',
-};
 
 /**
  * Access level mapping - defined once at module load time
@@ -289,7 +261,7 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
 function transformPlatformsToHierarchical(platforms: any[]): any[] {
   // Group platforms by platformGroup
   const grouped = platforms.reduce((acc, platform) => {
-    const platformGroup = PLATFORM_GROUP_MAP[platform.platform] || platform.platform;
+    const platformGroup = platformGroupOf(platform.platform);
 
     if (!acc[platformGroup]) {
       acc[platformGroup] = [];
@@ -312,12 +284,7 @@ function transformPlatformsToHierarchical(platforms: any[]): any[] {
 }
 
 function normalizePlatformGroup(platform: string): string {
-  if (PLATFORM_GROUP_MAP[platform]) {
-    return PLATFORM_GROUP_MAP[platform];
-  }
-
-  // Already a top-level group (e.g. google, meta, beehiiv, kit, pinterest).
-  return platform;
+  return platformGroupOf(platform);
 }
 
 function extractDashboardPlatformGroups(platforms: unknown): string[] {

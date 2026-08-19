@@ -18,6 +18,7 @@ import {
   MetaClientAuthorizationMetadataSchema,
   type MetaAssetGrantResult,
   type MetaClientAuthorizationMetadata,
+  platformGroupOf,
   type GooglePlatformProductId,
   type Platform,
 } from '@agency-platform/shared';
@@ -387,26 +388,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       const platformStr = String(platform);
-      const platformMap: Record<string, Platform> = {
-        google_ads: 'google',
-        ga4: 'google',
-        google_business_profile: 'google',
-        google_tag_manager: 'google',
-        google_search_console: 'google',
-        google_merchant_center: 'google',
-        meta_ads: 'meta',
-        meta_pages: 'meta',
-        linkedin_ads: 'linkedin',
-        linkedin_pages: 'linkedin',
-        instagram: 'meta',
-        mailchimp: 'mailchimp',
-        pinterest: 'pinterest',
-        klaviyo: 'klaviyo',
-        shopify: 'shopify',
-        tiktok: 'tiktok',
-        tiktok_ads: 'tiktok',
-      };
-      const authPlatform = platformMap[platformStr] || (platform as Platform);
+      const authPlatform = platformGroupOf(platformStr) as Platform;
 
       const existingAuth = await prisma.platformAuthorization.findUnique({
         where: {
@@ -1962,28 +1944,8 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       return reply.code(statusCode).send({ data: null, error: authContext.error });
     }
 
-    const platformMap: Record<string, Platform> = {
-      google_ads: 'google',
-      ga4: 'google',
-      google_business_profile: 'google',
-      google_tag_manager: 'google',
-      google_search_console: 'google',
-      google_merchant_center: 'google',
-      meta_ads: 'meta',
-      meta_pages: 'meta',
-      linkedin_ads: 'linkedin',
-      linkedin_pages: 'linkedin',
-      instagram: 'meta',
-      mailchimp: 'mailchimp',
-      pinterest: 'pinterest',
-      klaviyo: 'klaviyo',
-      shopify: 'shopify',
-      tiktok: 'tiktok',
-      tiktok_ads: 'tiktok',
-    };
-
     const platform = platformParam as Platform;
-    const authPlatform = platformMap[platformParam] || platform;
+    const authPlatform = platformGroupOf(platformParam) as Platform;
 
     const platformAuth = await prisma.platformAuthorization.findUnique({
       where: {

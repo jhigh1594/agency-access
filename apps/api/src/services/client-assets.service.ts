@@ -12,6 +12,7 @@
  */
 
 import { logger } from '../lib/logger.js';
+import { META_GRAPH_VERSION } from '../lib/meta-constants.js';
 import { MetaConnector } from './connectors/meta.js';
 
 export interface MetaAdAccount {
@@ -123,8 +124,7 @@ export class MetaBusinessPortfolioUnavailableError extends Error {
 }
 
 class ClientAssetsService {
-  private readonly GRAPH_API_VERSION = 'v21.0';
-  private readonly GRAPH_API_BASE = `https://graph.facebook.com/${this.GRAPH_API_VERSION}`;
+  private readonly GRAPH_API_BASE = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
   private readonly LINKEDIN_API_VERSION = '202601';
 
   private getLinkedInHeaders(accessToken: string): Record<string, string> {

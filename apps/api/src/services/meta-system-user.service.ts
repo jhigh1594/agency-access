@@ -1,5 +1,6 @@
 import { env } from '@/lib/env';
 import { infisical } from '@/lib/infisical';
+import { META_GRAPH_VERSION } from '@/lib/meta-constants';
 
 interface CreateSystemUserResponse {
   id: string; // App-scoped System User ID
@@ -26,8 +27,7 @@ const DEFAULT_PARTNER_ADMIN_SYSTEM_USER_SCOPES = [
 ];
 
 class MetaSystemUserService {
-  private readonly META_GRAPH_VERSION = 'v21.0';
-  private readonly META_GRAPH_URL = `https://graph.facebook.com/${this.META_GRAPH_VERSION}`;
+  private readonly META_GRAPH_URL = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
 
   private async readGraphError(
     response: Response,

@@ -16,6 +16,7 @@ import Link from 'next/link';
 import posthog from 'posthog-js';
 import { MetaBusinessPortfolioSelector } from '@/components/meta-business-portfolio-selector';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { PLATFORM_NAMES, type Platform } from '@agency-platform/shared';
 
 // Error message mapping
 const ERROR_MESSAGES: Record<string, string> = {
@@ -24,13 +25,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   CALLBACK_FAILED: 'An unexpected error occurred during connection. Please try again.',
   CONNECTOR_NOT_IMPLEMENTED: 'This platform connection is not yet available.',
   PLATFORM_ALREADY_CONNECTED: 'This platform is already connected to your agency.',
-};
-
-// Platform display names
-const PLATFORM_NAMES: Record<string, string> = {
-  meta: 'Meta',
-  google: 'Google',
-  linkedin: 'LinkedIn',
 };
 
 function CallbackPageContent() {
@@ -48,7 +42,7 @@ function CallbackPageContent() {
   const connectionId = searchParams.get('connectionId');
   const agencyIdParam = searchParams.get('agencyId');
 
-  const platformName = platform ? PLATFORM_NAMES[platform] || platform : 'Platform';
+  const platformName = platform ? PLATFORM_NAMES[platform as Platform] || platform : 'Platform';
   const errorMessage = errorCode
     ? ERROR_MESSAGES[errorCode] || 'Something went wrong. Please try again.'
     : null;

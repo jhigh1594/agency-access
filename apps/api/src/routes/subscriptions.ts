@@ -14,7 +14,7 @@ import { FastifyInstance } from 'fastify';
 import { subscriptionService } from '../services/subscription.service.js';
 import { tierLimitsService } from '../services/tier-limits.service.js';
 import { sendError, sendSuccess, sendValidationError, sendNotFound } from '../lib/response.js';
-import { SubscriptionTier } from '@agency-platform/shared';
+import { SubscriptionTierSchema, SubscriptionTier } from '@agency-platform/shared';
 import { authenticate } from '@/middleware/auth.js';
 import { resolvePrincipalAgency } from '@/lib/authorization.js';
 
@@ -65,7 +65,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       const agencyId = (request as any).principalAgencyId as string;
 
       // Validate tier
-      const validTiers: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
+      const validTiers: SubscriptionTier[] = SubscriptionTierSchema.options;
       if (!validTiers.includes(body.tier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }
@@ -403,7 +403,7 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       }
 
       // Validate tier
-      const validTiers: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
+      const validTiers: SubscriptionTier[] = SubscriptionTierSchema.options;
       if (!validTiers.includes(body.newTier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }

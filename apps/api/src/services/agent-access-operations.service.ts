@@ -3,9 +3,10 @@ import {
   PLATFORM_NAMES,
   SUPPORTED_CONNECTION_PLATFORMS,
   PlatformSchema,
+  platformGroupOf,
   type AgentCompletionState,
 } from '@agency-platform/shared';
-import { env, isOffboardingEnabled } from '@/lib/env.js';
+import { frontendBaseUrl, isOffboardingEnabled } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
 import type { AgentPrincipal } from '@/lib/agent-principal.js';
 import { accessRequestNotificationService } from '@/services/access-request-notification.service.js';
@@ -34,10 +35,6 @@ const CancelSnapshotSchema = z.object({ requestId: z.string().min(1), currentSta
 
 class RetryableAgentEffectError extends Error {
   readonly retryable = true;
-}
-
-function baseUrl() {
-  return env.FRONTEND_URL.replace(/\/$/, '');
 }
 
 function safeAgencySettings(settings: unknown) {
@@ -120,15 +117,6 @@ function completionState(status: string, unresolvedCount: number): AgentCompleti
   return 'invalid';
 }
 
-function connectionPlatform(platform: string): string {
-  if (platform === 'google_ads' || platform === 'ga4') return 'google';
-  if (platform === 'meta_ads' || platform === 'meta_pages' || platform === 'instagram') return 'meta';
-  if (platform === 'tiktok_ads') return 'tiktok';
-  if (platform === 'linkedin_ads' || platform === 'linkedin_pages') return 'linkedin';
-  if (platform === 'snapchat_ads') return 'snapchat';
-  return platform;
-}
-
 export const agentAccessOperationsService = {
   async getWorkspaceContext(principal: AgentPrincipal, paginationInput: { limit?: number; offset?: number } = {}) {
     agentPolicyService.authorize(principal, 'workspace.read');
@@ -176,14 +164,14 @@ export const agentAccessOperationsService = {
     if (result.error) throw new Error('Connection readiness is temporarily unavailable');
     const byPlatform = new Map((result.data || []).map((connection: any) => [connection.platform, connection]));
     const connections = platforms.map((platform) => {
-      const connection: any = byPlatform.get(platform) || byPlatform.get(connectionPlatform(platform));
+      const connection: any = byPlatform.get(platform) || byPlatform.get(platformGroupOf(platform));
       const state = connection?.status || 'missing';
       const healthy = state === 'active';
       return {
         platform,
         state,
         healthy,
-        ...(healthy ? {} : { handoffUrl: `${baseUrl()}/settings?tab=connections&platform=${encodeURIComponent(platform)}` }),
+        ...(healthy ? {} : { handoffUrl: `${frontendBaseUrl()}/settings?tab=connections&platform=${encodeURIComponent(platform)}` }),
       };
     });
     await auditRead(principal, 'AGENT_READINESS_READ', 'agency', principal.agencyId);
@@ -453,7 +441,7 @@ export const agentAccessOperationsService = {
       operationId: operation.id,
       effect: async (rawSnapshot) => {
         const snapshot = z.object({ platform: PlatformSchema }).strict().parse(rawSnapshot);
-        const handoffUrl = `${baseUrl()}/settings?tab=connections&platform=${encodeURIComponent(snapshot.platform)}`;
+        const handoffUrl = `${frontendBaseUrl()}/settings?tab=connections&platform=${encodeURIComponent(snapshot.platform)}`;
         return {
           resourceType: 'agency',
           resourceId: principal.agencyId,

@@ -11,7 +11,11 @@ import { accessRequestNotificationService } from '@/services/access-request-noti
 import { connectionService } from '@/services/connection.service.js';
 import { clientOffboardingService } from '@/services/client-offboarding.service.js';
 
-vi.mock('@/lib/env.js', () => ({ env: { FRONTEND_URL: 'https://app.example.com' } }));
+vi.mock('@/lib/env.js', () => ({
+  env: { FRONTEND_URL: 'https://app.example.com' },
+  frontendBaseUrl: () => 'https://app.example.com',
+  isOffboardingEnabled: () => false,
+}));
 vi.mock('@/lib/prisma.js', () => ({ prisma: { agency: { findFirst: vi.fn(), findUnique: vi.fn() }, auditLog: { create: vi.fn() } } }));
 vi.mock('@/services/client.service.js', () => ({ clientService: { getClients: vi.fn(), getClientById: vi.fn(), createClient: vi.fn(), updateClient: vi.fn() } }));
 vi.mock('@/services/template.service.js', () => ({ templateService: { getAgencyTemplates: vi.fn(), getTemplate: vi.fn() } }));

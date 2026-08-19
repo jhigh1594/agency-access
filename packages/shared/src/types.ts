@@ -1258,6 +1258,22 @@ export const PLATFORM_HIERARCHY: Record<string, PlatformGroup> = {
   },
 };
 
+// Inverted PLATFORM_HIERARCHY lookup: product id -> group key, group key -> itself.
+const PLATFORM_GROUP_BY_PRODUCT: ReadonlyMap<string, string> = new Map(
+  Object.entries(PLATFORM_HIERARCHY).flatMap(([groupKey, group]): [string, string][] => [
+    [groupKey, groupKey],
+    ...group.products.map((product): [string, string] => [product.id, groupKey]),
+  ])
+);
+
+/**
+ * Resolve the platform group for a product id or group key.
+ * Unknown values return the input unchanged (identity fallback).
+ */
+export function platformGroupOf(platform: string): string {
+  return PLATFORM_GROUP_BY_PRODUCT.get(platform) ?? platform;
+}
+
 // Platform product configuration for access requests
 export interface PlatformProductConfig {
   product: string;

@@ -14,6 +14,7 @@ import { prisma } from '@/lib/prisma';
 import { creem } from '@/lib/creem';
 import { getProductId, getTierFromProductId } from '@/config/creem.config';
 import type { SubscriptionTier } from '@agency-platform/shared';
+import type { ServiceResult } from '@/lib/service-result';
 
 type BillingInterval = 'monthly' | 'yearly';
 
@@ -60,11 +61,6 @@ interface UpdateSeatCountParams {
   agencyId: string;
   seatCount: number;
   updateBehavior?: 'proration-charge-immediately' | 'proration-charge' | 'proration-none';
-}
-
-interface ServiceResult<T> {
-  data: T | null;
-  error: { code: string; message: string } | null;
 }
 
 interface BillingDetails {

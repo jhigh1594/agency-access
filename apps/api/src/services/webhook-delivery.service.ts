@@ -4,17 +4,7 @@ import { env } from '@/lib/env.js';
 import { infisical } from '@/lib/infisical.js';
 import { prisma } from '@/lib/prisma.js';
 import { signWebhookPayload } from '@/lib/webhook-signature.js';
-
-interface ServiceError {
-  code: string;
-  message: string;
-  details?: any;
-}
-
-interface ServiceResult<T> {
-  data: T | null;
-  error: ServiceError | null;
-}
+import type { ServiceError, ServiceResult } from '@/lib/service-result.js';
 
 const DeliveryInputSchema = z.object({
   eventId: z.string().min(1),

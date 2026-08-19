@@ -2,17 +2,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma.js';
 import { auditService } from '@/services/audit.service.js';
 import { webhookEventService } from '@/services/webhook-event.service.js';
-
-interface ServiceError {
-  code: string;
-  message: string;
-  details?: any;
-}
-
-interface ServiceResult<T> {
-  data: T | null;
-  error: ServiceError | null;
-}
+import type { ServiceError, ServiceResult } from '@/lib/service-result.js';
 
 const SendWebhookTestEventSchema = z.object({
   agencyId: z.string().min(1),

@@ -10,7 +10,7 @@ import { authenticate } from '@/middleware/auth.js';
 import { requireInternalAdmin } from '@/middleware/internal-admin.js';
 import { internalAdminService } from '@/services/internal-admin.service.js';
 import { subscriptionService } from '@/services/subscription.service.js';
-import type { SubscriptionTier } from '@agency-platform/shared';
+import { SubscriptionTierSchema, type SubscriptionTier } from '@agency-platform/shared';
 import { agentTelemetryService } from '@/services/agent-telemetry.service.js';
 
 interface InternalAdminRouteOptions {
@@ -240,7 +240,7 @@ export async function internalAdminRoutes(
         return sendValidationError(reply, 'newTier is required');
       }
 
-      const validTiers: SubscriptionTier[] = ['STARTER', 'GROWTH', 'AGENCY'];
+      const validTiers: SubscriptionTier[] = SubscriptionTierSchema.options;
       if (!validTiers.includes(body.newTier)) {
         return sendValidationError(reply, 'Invalid subscription tier');
       }

@@ -5,17 +5,7 @@ import {
   getPlatformTokenCapability,
   type Platform,
 } from '@agency-platform/shared';
-
-type ServiceError = {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-};
-
-type ServiceResult<T> = {
-  data: T | null;
-  error: ServiceError | null;
-};
+import type { ServiceError, ServiceResult } from '@/lib/service-result';
 
 type RefreshOutcome = 'refreshed' | 'still_valid';
 

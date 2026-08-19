@@ -9,17 +9,8 @@ import { env } from '@/lib/env';
 import { infisical } from '@/lib/infisical';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/services/audit.service';
-
-type ServiceError = {
-  code: string;
-  message: string;
-  details?: unknown;
-};
-
-type ServiceResult<T> = {
-  data: T | null;
-  error: ServiceError | null;
-};
+import type { ServiceError, ServiceResult } from '@/lib/service-result';
+import { META_GRAPH_VERSION } from '@/lib/meta-constants';
 
 type PlatformAuthorizationRecord = {
   id: string;
@@ -86,7 +77,7 @@ function buildManagedBusinessesUrl(
   clientBusinessAdminAccessToken: string
 ): string {
   const url = new URL(
-    `https://graph.facebook.com/v21.0/${partnerBusinessId}/managed_businesses`
+    `https://graph.facebook.com/${META_GRAPH_VERSION}/${partnerBusinessId}/managed_businesses`
   );
   url.searchParams.set('existing_client_business_id', clientBusinessId);
   url.searchParams.set('access_token', clientBusinessAdminAccessToken);
@@ -98,7 +89,7 @@ function buildClientSystemUserTokenUrl(
   scopes: string[],
   partnerBusinessAdminSystemUserAccessToken: string
 ): string {
-  const url = new URL(`https://graph.facebook.com/v21.0/${clientBusinessId}/access_token`);
+  const url = new URL(`https://graph.facebook.com/${META_GRAPH_VERSION}/${clientBusinessId}/access_token`);
   url.searchParams.set('scope', scopes.join(','));
   url.searchParams.set('app_id', env.META_APP_ID);
   url.searchParams.set('access_token', partnerBusinessAdminSystemUserAccessToken);
@@ -106,7 +97,7 @@ function buildClientSystemUserTokenUrl(
 }
 
 function buildGraphMeUrl(accessToken: string): string {
-  const url = new URL('https://graph.facebook.com/v21.0/me');
+  const url = new URL(`https://graph.facebook.com/${META_GRAPH_VERSION}/me`);
   url.searchParams.set('access_token', accessToken);
   return url.toString();
 }

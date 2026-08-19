@@ -1,4 +1,4 @@
-import { env } from '@/lib/env.js';
+import { frontendBaseUrl } from '@/lib/env.js';
 import { sendEmail } from '@/services/email.service.js';
 
 function escapeHtml(value: string): string {
@@ -19,7 +19,7 @@ export const accessRequestNotificationService = {
     clientEmail: string;
     agencyName: string;
   }) {
-    const baseUrl = env.FRONTEND_URL.replace(/\/$/, '');
+    const baseUrl = frontendBaseUrl();
     const authorizationUrl = `${baseUrl}/client/${encodeURIComponent(input.uniqueToken)}`;
     const result = await sendEmail({
       to: input.clientEmail,

@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 import {
   GOOGLE_PLATFORM_PRODUCT_IDS,
   evaluateGoogleProductFulfillment,
+  platformGroupOf,
   type ClientLanguage,
   type GooglePlatformProductId,
   type GoogleProductFulfillmentMode,
@@ -413,23 +414,6 @@ export interface ClientDetailResponse {
   }>;
 }
 
-const PLATFORM_GROUP_MAP: Record<string, string> = {
-  google_ads: 'google',
-  ga4: 'google',
-  google_business_profile: 'google',
-  google_tag_manager: 'google',
-  google_search_console: 'google',
-  google_merchant_center: 'google',
-  meta_ads: 'meta',
-  meta_pages: 'meta',
-  instagram: 'meta',
-  whatsapp_business: 'meta',
-  linkedin_ads: 'linkedin',
-  linkedin_pages: 'linkedin',
-  snapchat_ads: 'snapchat',
-  tiktok_ads: 'tiktok',
-};
-
 const ASSET_SELECTING_PRODUCTS = new Set([
   'google_ads',
   'ga4',
@@ -498,7 +482,7 @@ const GOOGLE_DEFAULT_FULFILLMENT_MODE: Record<
 };
 
 function normalizePlatformGroup(platform: string): string {
-  return PLATFORM_GROUP_MAP[platform] || platform;
+  return platformGroupOf(platform);
 }
 
 function isActiveAuthorizationStatus(status?: string | null): boolean {

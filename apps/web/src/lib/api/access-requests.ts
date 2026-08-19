@@ -6,7 +6,7 @@
  */
 
 import { PlatformGroupConfig } from '@/lib/transform-platforms';
-import { IntakeField } from '@/contexts/access-request-context';
+import type { IntakeField } from '@agency-platform/shared';
 import { AuthorizedApiError, authorizedApiFetch } from './authorized-api-fetch';
 
 // ============================================================

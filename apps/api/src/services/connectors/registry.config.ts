@@ -1,4 +1,5 @@
 import type { Platform } from '@agency-platform/shared';
+import { META_GRAPH_VERSION } from '../../lib/meta-constants.js';
 
 /**
  * Platform OAuth Registry Configuration
@@ -154,48 +155,48 @@ export const PLATFORM_CONFIGS: Partial<Record<Platform, PlatformOAuthConfig>> = 
 
   meta: {
     name: 'Meta',
-    authUrl: 'https://www.facebook.com/v20.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token`,
     scopeSeparator: ',',
-    version: 'v20.0',
+    version: META_GRAPH_VERSION,
     requiresLongLivedExchange: true, // Meta-specific: 2hr → 60 day token
-    userInfoUrl: 'https://graph.facebook.com/v20.0/me',
+    userInfoUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/me`,
     supportsRefreshTokens: false, // Meta uses long-lived tokens instead
     defaultScopes: ['ads_management', 'ads_read', 'business_management', 'pages_read_engagement'],
   },
 
   meta_ads: {
     name: 'Meta Ads',
-    authUrl: 'https://www.facebook.com/v20.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token`,
     scopeSeparator: ',',
-    version: 'v20.0',
+    version: META_GRAPH_VERSION,
     requiresLongLivedExchange: true,
-    userInfoUrl: 'https://graph.facebook.com/v20.0/me',
+    userInfoUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/me`,
     supportsRefreshTokens: false,
     defaultScopes: ['ads_management', 'ads_read', 'business_management', 'pages_read_engagement'],
   },
 
   meta_pages: {
     name: 'Meta Pages',
-    authUrl: 'https://www.facebook.com/v20.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token`,
     scopeSeparator: ',',
-    version: 'v20.0',
+    version: META_GRAPH_VERSION,
     requiresLongLivedExchange: true,
-    userInfoUrl: 'https://graph.facebook.com/v20.0/me',
+    userInfoUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/me`,
     supportsRefreshTokens: false,
     defaultScopes: ['business_management', 'pages_read_engagement'],
   },
 
   instagram: {
     name: 'Instagram',
-    authUrl: 'https://www.facebook.com/v20.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v20.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/oauth/access_token`,
     scopeSeparator: ',',
-    version: 'v20.0',
+    version: META_GRAPH_VERSION,
     requiresLongLivedExchange: true,
-    userInfoUrl: 'https://graph.facebook.com/v20.0/me',
+    userInfoUrl: `https://graph.facebook.com/${META_GRAPH_VERSION}/me`,
     supportsRefreshTokens: false,
     defaultScopes: ['business_management', 'pages_read_engagement'],
   },

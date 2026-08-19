@@ -7,7 +7,7 @@ const TERMINAL_RUN_STATUSES = new Set([
   'canceled',
 ]);
 
-const FROZEN_ITEM_STATUSES = new Set([
+export const FROZEN_ITEM_STATUSES = new Set([
   'revoked_verified',
   'already_absent',
   'attestation_recorded',

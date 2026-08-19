@@ -323,6 +323,42 @@ describe('AccessRequestService', () => {
       ]);
     });
 
+    it('groups google_tag_manager under google and meta_ads under meta', async () => {
+      const mockRequest = {
+        id: 'request-gtm',
+        uniqueToken: 'gtmtoken1',
+        clientName: 'Test Client',
+        clientEmail: 'client@test.com',
+        agencyId: 'agency-1',
+        expiresAt: new Date(Date.now() + 100000),
+        platforms: [
+          { platform: 'google_tag_manager', accessLevel: 'manage' },
+          { platform: 'meta_ads', accessLevel: 'manage' },
+        ],
+        intakeFields: [],
+        branding: {},
+      };
+
+      vi.mocked(prisma.accessRequest.findUnique).mockResolvedValue(mockRequest as any);
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({ name: 'Agency' } as any);
+      vi.mocked(prisma.agencyPlatformConnection.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.clientConnection.findMany).mockResolvedValue([]);
+
+      const result = await accessRequestService.getAccessRequestByToken('gtmtoken1');
+
+      expect(result.error).toBeNull();
+      expect(result.data?.platforms).toEqual([
+        {
+          platformGroup: 'google',
+          products: [{ product: 'google_tag_manager', accessLevel: 'admin', accounts: [] }],
+        },
+        {
+          platformGroup: 'meta',
+          products: [{ product: 'meta_ads', accessLevel: 'admin', accounts: [] }],
+        },
+      ]);
+    });
+
     it('does not count OAuth-only Google discovery as completed for native-grant-supported products', async () => {
       const mockRequest = {
         id: 'request-1',

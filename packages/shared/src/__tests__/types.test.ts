@@ -8,6 +8,7 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   PLATFORM_HIERARCHY,
+  platformGroupOf,
   PLATFORM_TOKEN_CAPABILITIES,
   getPlatformTokenCapability,
   AccessLevel,
@@ -214,6 +215,33 @@ describe('Phase 5: Shared Types - TDD Tests', () => {
       expect(PLATFORM_HIERARCHY.google.products.find(p => p.id === 'youtube_studio')).toBeUndefined();
       expect(PLATFORM_HIERARCHY.google.products.find(p => p.id === 'display_video_360')).toBeUndefined();
       expect(PLATFORM_HIERARCHY.meta.products.find(p => p.id === 'whatsapp_business')).toBeUndefined();
+    });
+  });
+
+  describe('platformGroupOf', () => {
+    it('maps Google product ids to the google group', () => {
+      expect(platformGroupOf('ga4')).toBe('google');
+      expect(platformGroupOf('google_ads')).toBe('google');
+      expect(platformGroupOf('google_tag_manager')).toBe('google');
+    });
+
+    it('maps Meta product ids to the meta group', () => {
+      expect(platformGroupOf('meta_ads')).toBe('meta');
+      expect(platformGroupOf('instagram')).toBe('meta');
+    });
+
+    it('returns group keys as themselves (identity)', () => {
+      expect(platformGroupOf('google')).toBe('google');
+      expect(platformGroupOf('meta')).toBe('meta');
+    });
+
+    it('returns standalone platform ids as themselves', () => {
+      expect(platformGroupOf('kit')).toBe('kit');
+      expect(platformGroupOf('beehiiv')).toBe('beehiiv');
+    });
+
+    it('returns unknown values unchanged (identity fallback)', () => {
+      expect(platformGroupOf('not_a_platform')).toBe('not_a_platform');
     });
   });
 

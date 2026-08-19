@@ -15,6 +15,8 @@
  * 4. Client's token is discarded after grant completes
  */
 
+import { META_GRAPH_VERSION } from '@/lib/meta-constants';
+
 export interface GrantAccessRequest {
   clientToken: string;
   agencyBusinessId: string; // Meta Business Manager ID
@@ -45,8 +47,7 @@ const DEFAULT_PAGE_TASKS = ['MANAGE', 'CREATE_CONTENT', 'MODERATE', 'ADVERTISE']
 const DEFAULT_AD_ACCOUNT_TASKS = ['MANAGE', 'ADVERTISE', 'ANALYZE'];
 
 class MetaPartnerService {
-  private readonly META_GRAPH_VERSION = 'v21.0';
-  private readonly META_GRAPH_URL = `https://graph.facebook.com/${this.META_GRAPH_VERSION}`;
+  private readonly META_GRAPH_URL = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
 
   private normalizeTasks(tasks: unknown): string[] {
     if (!Array.isArray(tasks)) {
