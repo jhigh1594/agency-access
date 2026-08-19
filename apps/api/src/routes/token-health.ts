@@ -11,6 +11,7 @@ import { connectionService } from '../services/connection.service.js';
 import { authenticate } from '@/middleware/auth.js';
 import { resolvePrincipalAgency, type AuthorizationError } from '@/lib/authorization.js';
 import { prisma } from '@/lib/prisma.js';
+import { sendValidationError } from '../lib/response.js';
 
 function sendRouteError(reply: FastifyReply, error: AuthorizationError, statusCode: number) {
   return reply.code(statusCode).send({
@@ -176,13 +177,7 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
     const { connectionId, platform } = request.body as { connectionId: string; platform: Platform };
 
     if (!connectionId || !platform) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'connectionId and platform are required',
-        },
-      });
+      return sendValidationError(reply, 'connectionId and platform are required');
     }
 
     const ownershipError = await ensureConnectionBelongsToAgency(connectionId, agencyId);

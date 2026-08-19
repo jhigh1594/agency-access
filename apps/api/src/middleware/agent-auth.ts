@@ -6,6 +6,7 @@ import { agentGrantService } from '@/services/agent-grant.service.js';
 import { agentRolloutService } from '@/services/agent-rollout.service.js';
 import { agentTelemetryService } from '@/services/agent-telemetry.service.js';
 import { env } from '@/lib/env.js';
+import { sendError } from '../lib/response.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -20,10 +21,7 @@ function sendAuthError(
   message: string,
   details?: Record<string, unknown>
 ) {
-  return reply.code(statusCode).send({
-    data: null,
-    error: { code, message, ...(details ? { details } : {}) },
-  });
+  return sendError(reply, code, message, statusCode, details || undefined);
 }
 
 export function authenticateAgent() {

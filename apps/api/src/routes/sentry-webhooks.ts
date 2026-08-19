@@ -15,6 +15,7 @@ import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { authenticate } from '@/middleware/auth.js';
 import { requireInternalAdmin } from '@/middleware/internal-admin.js';
+import { sendError } from '../lib/response.js';
 
 // Directory where Sentry task files will be created
 const SENTRY_TASKS_DIR = join(process.cwd(), '.claude', 'tasks', 'sentry-issues');
@@ -370,13 +371,7 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
         },
         '[SENTRY WEBHOOK] Signature verification is not configured in production'
       );
-      return reply.code(401).send({
-        data: null,
-        error: {
-          code: 'INVALID_SIGNATURE',
-          message: 'Webhook signature verification failed',
-        },
-      });
+      return sendError(reply, 'INVALID_SIGNATURE', 'Webhook signature verification failed', 401);
     }
 
     if (webhookSecret && !skipSignatureVerification && !verifySentrySignature(payloadString, signatureHeader, webhookSecret)) {
@@ -388,13 +383,7 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
         },
         '[SENTRY WEBHOOK] Signature verification failed'
       );
-      return reply.code(401).send({
-        data: null,
-        error: {
-          code: 'INVALID_SIGNATURE',
-          message: 'Webhook signature verification failed',
-        },
-      });
+      return sendError(reply, 'INVALID_SIGNATURE', 'Webhook signature verification failed', 401);
     }
 
     try {
@@ -439,14 +428,7 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
 
       if (!result.success) {
         fastify.log.error({ error: result.error }, 'Failed to create Sentry task file');
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'TASK_CREATION_FAILED',
-            message: 'Failed to create task file',
-            details: result.error,
-          },
-        });
+        return sendError(reply, 'TASK_CREATION_FAILED', 'Failed to create task file', 500, result.error,);
       }
 
       fastify.log.info(
@@ -469,14 +451,7 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
     } catch (error: any) {
       fastify.log.error({ error: error.message, stack: error.stack }, 'Sentry webhook processing failed');
 
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'WEBHOOK_PROCESSING_FAILED',
-          message: 'Webhook processing failed',
-          details: error.message,
-        },
-      });
+      return sendError(reply, 'WEBHOOK_PROCESSING_FAILED', 'Webhook processing failed', 500, error.message,);
     }
   });
 

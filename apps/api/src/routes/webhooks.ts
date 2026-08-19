@@ -31,6 +31,7 @@ import {
 } from '@agency-platform/shared';
 import { getTierFromProductId } from '@/config/creem.config';
 import { creem } from '@/lib/creem';
+import { sendError } from '../lib/response.js';
 
 type CreemEvent = {
   id: string;
@@ -154,14 +155,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
     if (body.preferredApiVersion !== undefined) {
       const versionParsed = WebhookApiVersionSchema.safeParse(body.preferredApiVersion);
       if (!versionParsed.success) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid preferredApiVersion',
-            details: versionParsed.error.flatten(),
-          },
-        });
+        return sendError(reply, 'VALIDATION_ERROR', 'Invalid preferredApiVersion', 400, versionParsed.error.flatten(),);
       }
       preferredApiVersion = versionParsed.data;
     }

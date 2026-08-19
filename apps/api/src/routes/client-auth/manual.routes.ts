@@ -5,6 +5,7 @@ import { accessRequestService } from '../../services/access-request.service.js';
 import { auditService } from '../../services/audit.service.js';
 import { prisma } from '../../lib/prisma.js';
 import { z } from 'zod';
+import { sendError } from '../../lib/response.js';
 
 export async function registerManualRoutes(fastify: FastifyInstance) {
   type EmailManualPlatform = 'beehiiv' | 'kit' | 'mailchimp' | 'klaviyo' | 'snapchat';
@@ -92,27 +93,14 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
       const validated = manualConnectSchema.safeParse(request.body);
       if (!validated.success) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid request data',
-            details: validated.error.errors,
-          },
-        });
+        return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
       }
 
       const { agencyEmail, clientEmail } = validated.data;
       const accessRequest = await accessRequestService.getAccessRequestByToken(token);
 
       if (accessRequest.error || !accessRequest.data) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'INVALID_TOKEN',
-            message: 'Access request not found or expired',
-          },
-        });
+        return sendError(reply, 'INVALID_TOKEN', 'Access request not found or expired', 404);
       }
 
       try {
@@ -166,13 +154,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
           agencyEmail,
         });
 
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'CONNECTION_CREATION_FAILED',
-            message: 'Failed to create connection. Please try again.',
-          },
-        });
+        return sendError(reply, 'CONNECTION_CREATION_FAILED', 'Failed to create connection. Please try again.', 500);
       }
     };
   };
@@ -237,14 +219,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
   const validated = manualConnectSchema.safeParse(request.body);
   if (!validated.success) {
-    return reply.code(400).send({
-      data: null,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Invalid request data',
-        details: validated.error.errors,
-      },
-    });
+    return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
   }
 
   const { businessId, clientEmail } = validated.data;
@@ -252,13 +227,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
   const accessRequest = await accessRequestService.getAccessRequestByToken(token);
 
   if (accessRequest.error || !accessRequest.data) {
-    return reply.code(404).send({
-      data: null,
-      error: {
-        code: 'INVALID_TOKEN',
-        message: 'Access request not found or expired',
-      },
-    });
+    return sendError(reply, 'INVALID_TOKEN', 'Access request not found or expired', 404);
   }
 
   try {
@@ -311,13 +280,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
       businessId,
     });
 
-    return reply.code(500).send({
-      data: null,
-      error: {
-        code: 'CONNECTION_CREATION_FAILED',
-        message: 'Failed to create connection. Please try again.',
-      },
-    });
+    return sendError(reply, 'CONNECTION_CREATION_FAILED', 'Failed to create connection. Please try again.', 500);
   }
 });
 
@@ -337,14 +300,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
     const validated = manualConnectSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
     }
 
     const { shopDomain, collaboratorCode, clientEmail } = validated.data;
@@ -352,13 +308,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
     const accessRequest = await accessRequestService.getAccessRequestByToken(token);
     if (accessRequest.error || !accessRequest.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'INVALID_TOKEN',
-          message: 'Access request not found or expired',
-        },
-      });
+      return sendError(reply, 'INVALID_TOKEN', 'Access request not found or expired', 404);
     }
 
     try {
@@ -383,13 +333,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
           : undefined;
 
       if (existingConnection && existingPlatform && existingPlatform !== 'shopify') {
-        return reply.code(409).send({
-          data: null,
-          error: {
-            code: 'CONNECTION_CONFLICT',
-            message: 'This access request already has a non-Shopify connection',
-          },
-        });
+        return sendError(reply, 'CONNECTION_CONFLICT', 'This access request already has a non-Shopify connection', 409);
       }
 
       const connection = await saveManualConnection({
@@ -433,13 +377,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
         shopDomain,
       });
 
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'CONNECTION_CREATION_FAILED',
-          message: 'Failed to create connection. Please try again.',
-        },
-      });
+      return sendError(reply, 'CONNECTION_CREATION_FAILED', 'Failed to create connection. Please try again.', 500);
     }
   });
 }

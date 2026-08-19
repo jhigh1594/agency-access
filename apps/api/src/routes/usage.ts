@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service.js';
 import { UsageSnapshot, MetricUsage } from '@agency-platform/shared';
 import { authenticate } from '@/middleware/auth.js';
+import { sendError } from '../lib/response.js';
 
 export async function usageRoutes(fastify: FastifyInstance) {
   /**
@@ -38,7 +39,7 @@ export async function usageRoutes(fastify: FastifyInstance) {
       // Fetch tier from Clerk metadata
       const tierResult = await clerkMetadataService.getSubscriptionTier(userId);
       if (tierResult.error || !tierResult.data) {
-        return reply.code(404).send({ data: null, error: { code: 'TIER_NOT_FOUND', message: 'Subscription tier not found' } });
+        return sendError(reply, 'TIER_NOT_FOUND', 'Subscription tier not found', 404);
       }
 
       // Fetch agency from database
@@ -47,7 +48,7 @@ export async function usageRoutes(fastify: FastifyInstance) {
       });
 
       if (!agency) {
-        return reply.code(404).send({ data: null, error: { code: 'AGENCY_NOT_FOUND', message: 'Agency not found' } });
+        return sendError(reply, 'AGENCY_NOT_FOUND', 'Agency not found', 404);
       }
 
       // Fetch usage counters from database
@@ -103,14 +104,7 @@ export async function usageRoutes(fastify: FastifyInstance) {
 
       return { data: snapshot, error: null };
     } catch (error: any) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to fetch usage data',
-          details: error.message,
-        },
-      });
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch usage data', 500, error.message,);
     }
   });
 }

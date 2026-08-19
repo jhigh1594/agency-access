@@ -8,6 +8,7 @@ import { env } from '../../lib/env.js';
 import type { Platform } from '@agency-platform/shared';
 import { oauthExchangeSchema } from './schemas.js';
 import { sanitizeOAuthError } from '../../lib/errors.js';
+import { sendError } from '../../lib/response.js';
 
 export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
   // Exchange OAuth code for temporary session (token in path)
@@ -17,40 +18,21 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
 
     const validated = oauthExchangeSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid OAuth exchange data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid OAuth exchange data', 400, validated.error.errors,);
     }
 
     const { code, state, platform: platformFromRequest } = validated.data;
 
     const stateResult = await oauthStateService.validateState(state);
     if (stateResult.error || !stateResult.data) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'INVALID_STATE',
-          message: 'Invalid or expired OAuth state token',
-        },
-      });
+      return sendError(reply, 'INVALID_STATE', 'Invalid or expired OAuth state token', 400);
     }
 
     const stateData = stateResult.data;
     const platform = stateData.platform;
 
     if (platformFromRequest && platformFromRequest !== platform) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'PLATFORM_MISMATCH',
-          message: 'Platform does not match OAuth state',
-        },
-      });
+      return sendError(reply, 'PLATFORM_MISMATCH', 'Platform does not match OAuth state', 400);
     }
 
     try {
@@ -69,13 +51,7 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
       });
 
       if (!accessRequest) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'ACCESS_REQUEST_NOT_FOUND',
-            message: 'Access request not found',
-          },
-        });
+        return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
       }
 
       let clientConnection = await prisma.clientConnection.findFirst({
@@ -177,50 +153,25 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
   fastify.post('/client/oauth-exchange', async (request, reply) => {
     const validated = oauthExchangeSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid OAuth exchange data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid OAuth exchange data', 400, validated.error.errors,);
     }
 
     const { code, state, platform: platformFromRequest } = validated.data;
 
     const stateResult = await oauthStateService.validateState(state);
     if (stateResult.error || !stateResult.data) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'INVALID_STATE',
-          message: 'Invalid or expired OAuth state token',
-        },
-      });
+      return sendError(reply, 'INVALID_STATE', 'Invalid or expired OAuth state token', 400);
     }
 
     const stateData = stateResult.data;
     const platform = stateData.platform;
 
     if (platformFromRequest && platformFromRequest !== platform) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'PLATFORM_MISMATCH',
-          message: 'Platform does not match OAuth state',
-        },
-      });
+      return sendError(reply, 'PLATFORM_MISMATCH', 'Platform does not match OAuth state', 400);
     }
 
     if (!stateData.accessRequestToken) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'MISSING_TOKEN',
-          message: 'Access request token not found in OAuth state',
-        },
-      });
+      return sendError(reply, 'MISSING_TOKEN', 'Access request token not found in OAuth state', 400);
     }
 
     try {
@@ -239,13 +190,7 @@ export async function registerOAuthExchangeRoutes(fastify: FastifyInstance) {
       });
 
       if (!accessRequest) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'ACCESS_REQUEST_NOT_FOUND',
-            message: 'Access request not found',
-          },
-        });
+        return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
       }
 
       let clientConnection = await prisma.clientConnection.findFirst({

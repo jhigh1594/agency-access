@@ -5,6 +5,7 @@ import { authenticateAgent } from '@/middleware/agent-auth.js';
 import { createAgentMcpServer } from '@/services/mcp/agent-mcp-server.js';
 import { agentRateLimitService } from '@/services/agent-rate-limit.service.js';
 import { agentTelemetryService } from '@/services/agent-telemetry.service.js';
+import { sendError } from '../lib/response.js';
 
 function metadataUrl(): string {
   const resource = new URL(env.AGENT_MCP_RESOURCE_URL);
@@ -15,17 +16,17 @@ async function validateMcpEdge(request: FastifyRequest, reply: FastifyReply) {
   const resource = new URL(env.AGENT_MCP_RESOURCE_URL);
   const requestHost = request.headers.host?.toLowerCase();
   if (!requestHost || requestHost !== resource.host.toLowerCase()) {
-    return reply.code(421).send({ data: null, error: { code: 'MISDIRECTED_REQUEST', message: 'Request host does not match the MCP resource' } });
+    return sendError(reply, 'MISDIRECTED_REQUEST', 'Request host does not match the MCP resource', 421);
   }
   const origin = request.headers.origin;
   if (origin) {
     const allowedOrigins = new Set([resource.origin, env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null].filter(Boolean));
     if (!allowedOrigins.has(origin)) {
-      return reply.code(403).send({ data: null, error: { code: 'ORIGIN_NOT_ALLOWED', message: 'Origin is not allowed for the MCP resource' } });
+      return sendError(reply, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed for the MCP resource', 403);
     }
   }
   if (request.method === 'POST' && !request.headers['content-type']?.toLowerCase().startsWith('application/json')) {
-    return reply.code(415).send({ data: null, error: { code: 'UNSUPPORTED_MEDIA_TYPE', message: 'MCP requests require application/json' } });
+    return sendError(reply, 'UNSUPPORTED_MEDIA_TYPE', 'MCP requests require application/json', 415);
   }
 }
 

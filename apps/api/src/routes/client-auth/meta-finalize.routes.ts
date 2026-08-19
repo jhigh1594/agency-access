@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma.js';
 import type { Platform } from '@agency-platform/shared';
 import { metaClientFinalizeSchema } from './schemas.js';
 import { MetaConnector } from '../../services/connectors/meta.js';
+import { sendError } from '../../lib/response.js';
 
 /**
  * Client invite Meta popup finalize flow.
@@ -21,14 +22,7 @@ export async function registerMetaFinalizeRoutes(fastify: FastifyInstance) {
 
     const validated = metaClientFinalizeSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid Meta finalize payload',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid Meta finalize payload', 400, validated.error.errors,);
     }
 
     const { state, accessToken, userId, expiresIn, signedRequest, dataAccessExpirationTime } =
@@ -36,26 +30,14 @@ export async function registerMetaFinalizeRoutes(fastify: FastifyInstance) {
 
     const stateResult = await oauthStateService.validateState(state);
     if (stateResult.error || !stateResult.data) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'INVALID_STATE',
-          message: 'Invalid or expired OAuth state token',
-        },
-      });
+      return sendError(reply, 'INVALID_STATE', 'Invalid or expired OAuth state token', 400);
     }
 
     const stateData = stateResult.data;
     const platform = stateData.platform as Platform;
 
     if (platform !== 'meta' && platform !== 'meta_ads') {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'PLATFORM_MISMATCH',
-          message: 'Meta finalize only supports meta or meta_ads platform',
-        },
-      });
+      return sendError(reply, 'PLATFORM_MISMATCH', 'Meta finalize only supports meta or meta_ads platform', 400);
     }
 
     const accessRequest = await prisma.accessRequest.findUnique({
@@ -63,35 +45,17 @@ export async function registerMetaFinalizeRoutes(fastify: FastifyInstance) {
     });
 
     if (!accessRequest) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'ACCESS_REQUEST_NOT_FOUND',
-          message: 'Access request not found',
-        },
-      });
+      return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
     }
 
     if (accessRequest.uniqueToken !== token) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'TOKEN_MISMATCH',
-          message: 'Invite token does not match access request',
-        },
-      });
+      return sendError(reply, 'TOKEN_MISMATCH', 'Invite token does not match access request', 400);
     }
 
     const connector = new MetaConnector();
     const isValidToken = await connector.verifyToken(accessToken);
     if (!isValidToken) {
-      return reply.code(401).send({
-        data: null,
-        error: {
-          code: 'INVALID_TOKEN',
-          message: 'Meta login token is invalid. Please try logging in again.',
-        },
-      });
+      return sendError(reply, 'INVALID_TOKEN', 'Meta login token is invalid. Please try logging in again.', 401);
     }
 
     try {
@@ -184,13 +148,7 @@ export async function registerMetaFinalizeRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       fastify.log.error({ error }, 'Meta client finalize failed');
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'FINALIZE_FAILED',
-          message: error instanceof Error ? error.message : 'Failed to finalize Meta connection',
-        },
-      });
+      return sendError(reply, 'FINALIZE_FAILED', error instanceof Error ? error.message : 'Failed to finalize Meta connection', 500);
     }
   });
 }

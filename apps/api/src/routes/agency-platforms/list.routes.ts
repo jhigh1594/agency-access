@@ -5,6 +5,7 @@ import { PLATFORM_NAMES, getPlatformCategory, SUPPORTED_PLATFORMS } from './cons
 import { createHash } from 'crypto';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 export async function registerListRoutes(fastify: FastifyInstance) {
   /**
@@ -28,13 +29,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
       });
 
       if (!agency) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AGENCY_NOT_FOUND',
-            message: 'Agency not found for the provided clerkUserId',
-          },
-        });
+        return sendError(reply, 'AGENCY_NOT_FOUND', 'Agency not found for the provided clerkUserId', 404);
       }
 
       actualAgencyId = agency.id;
@@ -70,13 +65,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
     const principalAgencyId = (request as any).principalAgencyId as string;
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
 
     // If agencyId is a valid UUID (not a Clerk ID), use it directly
@@ -91,13 +80,7 @@ export async function registerListRoutes(fastify: FastifyInstance) {
       });
 
       if (agencyResult.error) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: agencyResult.error.code,
-            message: agencyResult.error.message,
-          },
-        });
+        return sendError(reply, agencyResult.error.code, agencyResult.error.message, 404);
       }
 
       actualAgencyId = agencyResult.data!.agencyId;

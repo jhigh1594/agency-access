@@ -3,6 +3,7 @@ import { identityVerificationService } from '@/services/identity-verification.se
 import { SUPPORTED_PLATFORMS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { prisma } from '@/lib/prisma';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 export async function registerIdentityRoutes(fastify: FastifyInstance) {
   /**
@@ -19,13 +20,7 @@ export async function registerIdentityRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !platform || !connectedBy) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId, platform, and connectedBy are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId, platform, and connectedBy are required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -35,23 +30,11 @@ export async function registerIdentityRoutes(fastify: FastifyInstance) {
     }
 
     if (!SUPPORTED_PLATFORMS.includes(platform as any)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'UNSUPPORTED_PLATFORM',
-          message: `Platform "${platform}" is not supported`,
-        },
-      });
+      return sendError(reply, 'UNSUPPORTED_PLATFORM', `Platform "${platform}" is not supported`, 400);
     }
 
     if (platform === 'meta_ads' && !businessId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'businessId is required for Meta platform',
-        },
-      });
+      return sendValidationError(reply, 'businessId is required for Meta platform');
     }
 
     if (
@@ -61,13 +44,7 @@ export async function registerIdentityRoutes(fastify: FastifyInstance) {
         platform === 'linkedin') &&
       !agencyEmail
     ) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyEmail is required for Google and LinkedIn platforms',
-        },
-      });
+      return sendValidationError(reply, 'agencyEmail is required for Google and LinkedIn platforms');
     }
 
     const result = await identityVerificationService.createIdentityConnection({
@@ -100,13 +77,7 @@ export async function registerIdentityRoutes(fastify: FastifyInstance) {
     });
 
     if (!connection) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'CONNECTION_NOT_FOUND',
-          message: 'Connection not found',
-        },
-      });
+      return sendError(reply, 'CONNECTION_NOT_FOUND', 'Connection not found', 404);
     }
 
     const accessError = assertAgencyAccess(connection.agencyId, principalAgencyId);

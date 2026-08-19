@@ -3,6 +3,7 @@ import { beehiivVerificationService } from '../services/beehiiv-verification.ser
 import { authenticate } from '@/middleware/auth.js';
 import { resolvePrincipalAgency } from '@/lib/authorization.js';
 import { prisma } from '@/lib/prisma.js';
+import { sendError, sendValidationError } from '../lib/response.js';
 
 /**
  * Beehiiv API Routes
@@ -49,13 +50,7 @@ export async function beehiivRoutes(fastify: FastifyInstance) {
 
     // Validate required fields
     if (!clientPublicationId || !agencyApiKey) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Missing required fields: clientPublicationId and agencyApiKey are required',
-        },
-      });
+      return sendValidationError(reply, 'Missing required fields: clientPublicationId and agencyApiKey are required');
     }
 
     // Verify agency access and store connection
@@ -66,13 +61,7 @@ export async function beehiivRoutes(fastify: FastifyInstance) {
     );
 
     if (!result.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VERIFICATION_FAILED',
-          message: result.error ?? 'Verification failed',
-        },
-      });
+      return sendError(reply, 'VERIFICATION_FAILED', result.error ?? 'Verification failed', 400);
     }
 
     return {
@@ -106,13 +95,7 @@ export async function beehiivRoutes(fastify: FastifyInstance) {
     }
 
     if (!connectionId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Missing required field: connectionId',
-        },
-      });
+      return sendValidationError(reply, 'Missing required field: connectionId');
     }
 
     const connection = await prisma.agencyPlatformConnection.findFirst({
@@ -125,13 +108,7 @@ export async function beehiivRoutes(fastify: FastifyInstance) {
     });
 
     if (!connection) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'CONNECTION_NOT_FOUND',
-          message: 'Connection not found',
-        },
-      });
+      return sendError(reply, 'CONNECTION_NOT_FOUND', 'Connection not found', 404);
     }
 
     const isValid = await beehiivVerificationService.verifyConnection(connectionId);

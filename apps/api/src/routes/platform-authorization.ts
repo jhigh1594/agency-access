@@ -15,6 +15,7 @@ import { instructionGenerationService } from '../services/instruction-generation
 import { authorizationVerificationService } from '../services/authorization-verification.service.js';
 import { prisma } from '../lib/prisma.js';
 import type { AccessLevel } from '@agency-platform/shared';
+import { sendError, sendValidationError } from '../lib/response.js';
 
 export async function platformAuthorizationRoutes(fastify: FastifyInstance) {
   /**
@@ -60,13 +61,7 @@ export async function platformAuthorizationRoutes(fastify: FastifyInstance) {
     const connectionsResult = await agencyPlatformService.getConnections(accessRequest.agencyId);
 
     if (connectionsResult.error || !connectionsResult.data) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'CONNECTIONS_ERROR',
-          message: 'Failed to fetch platform connections',
-        },
-      });
+      return sendError(reply, 'CONNECTIONS_ERROR', 'Failed to fetch platform connections', 500);
     }
 
     // Filter to identity-mode connections and map by platform
@@ -211,13 +206,7 @@ export async function platformAuthorizationRoutes(fastify: FastifyInstance) {
     const { platform } = request.query as { platform?: string };
 
     if (!platform) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Platform query parameter is required',
-        },
-      });
+      return sendValidationError(reply, 'Platform query parameter is required');
     }
 
     const statusResult = await authorizationVerificationService.getVerificationStatus(

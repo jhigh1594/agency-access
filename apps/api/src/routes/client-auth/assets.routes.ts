@@ -34,6 +34,7 @@ import {
 import { metaOBOService } from '@/services/meta-obo.service';
 import { metaPartnerService } from '@/services/meta-partner.service';
 import { MetaConnector } from '@/services/connectors/meta';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 type ShareResultWithVerification = TikTokPartnerShareResultItem & { verified?: boolean };
 
@@ -340,14 +341,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = saveAssetsSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid asset selection data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid asset selection data', 400, validated.error.errors,);
     }
 
     const { connectionId, platform, selectedAssets } = validated.data;
@@ -373,16 +367,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
 
         if (orchestrationResult.error) {
-          return reply.code(500).send({
-            data: null,
-            error: {
-              code: orchestrationResult.error.code,
-              message: orchestrationResult.error.message,
-              ...(orchestrationResult.error.details
-                ? { details: orchestrationResult.error.details }
-                : {}),
-            },
-          });
+          return sendError(reply, orchestrationResult.error.code, orchestrationResult.error.message, 500, orchestrationResult.error.details || undefined);
         }
 
         if (orchestrationResult.data?.selectedAssets) {
@@ -489,13 +474,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'SAVE_ASSETS_ERROR',
-          message: `Failed to save selected assets: ${error}`,
-        },
-      });
+      return sendError(reply, 'SAVE_ASSETS_ERROR', `Failed to save selected assets: ${error}`, 500);
     }
   });
 
@@ -504,14 +483,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = grantMetaAccessSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
     }
 
     const {
@@ -542,13 +514,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!platformAuth) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found',
-          },
-        });
+        return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'Meta authorization not found', 404);
       }
 
       const requestedAssetTypes = new Set(assetTypes || ['page', 'ad_account', 'instagram_account']);
@@ -573,26 +539,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         selectedAdAccountIds.length === 0 &&
         selectedInstagramIds.length === 0
       ) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'NO_SELECTED_ASSETS',
-            message: 'No Meta assets have been selected for grant automation',
-          },
-        });
+        return sendError(reply, 'NO_SELECTED_ASSETS', 'No Meta assets have been selected for grant automation', 400);
       }
 
       const selectedBusinessId = requestedBusinessId || metaMetadata.selection?.clientBusinessId;
       const selectedBusinessName = metaMetadata.selection?.clientBusinessName;
 
       if (!selectedBusinessId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'META_BUSINESS_SELECTION_REQUIRED',
-            message: 'Client must select a Meta Business Portfolio before grants can run',
-          },
-        });
+        return sendError(reply, 'META_BUSINESS_SELECTION_REQUIRED', 'Client must select a Meta Business Portfolio before grants can run', 400);
       }
 
       const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
@@ -605,14 +559,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!agencyConnection) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'AGENCY_BUSINESS_ID_MISSING',
-            message:
-              'Agency must set up their Meta Business Manager ID before clients can grant access',
-          },
-        });
+        return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before clients can grant access', 400);
       }
 
       const agencyMetadata = (agencyConnection.metadata as Record<string, unknown> | null) || {};
@@ -623,14 +570,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           : null);
 
       if (!partnerBusinessId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'AGENCY_BUSINESS_ID_MISSING',
-            message:
-              'Agency must set up their Meta Business Manager ID before clients can grant access',
-          },
-        });
+        return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before clients can grant access', 400);
       }
 
       const partnerAdminSystemUserTokenSecretId =
@@ -639,14 +579,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           : null;
 
       if (!partnerAdminSystemUserTokenSecretId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'AGENCY_PARTNER_SYSTEM_USER_TOKEN_MISSING',
-            message:
-              'Agency must complete their Meta OBO setup before automated Meta grants can run',
-          },
-        });
+        return sendError(reply, 'AGENCY_PARTNER_SYSTEM_USER_TOKEN_MISSING', 'Agency must complete their Meta OBO setup before automated Meta grants can run', 400);
       }
 
       const clientAccessTokenResult = await metaOBOService.getClientAccessTokenForOBO({
@@ -743,13 +676,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       }
 
       if (!clientSystemUserState.tokenSecretId || !clientSystemUserState.systemUserId) {
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'META_OBO_SYSTEM_USER_INCOMPLETE',
-            message: 'Client Meta system-user state is missing required token metadata',
-          },
-        });
+        return sendError(reply, 'META_OBO_SYSTEM_USER_INCOMPLETE', 'Client Meta system-user state is missing required token metadata', 500);
       }
 
       const clientSystemUserTokens = await infisical.getOAuthTokens(
@@ -999,16 +926,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'META_GRANT_ACCESS_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to grant Meta asset access through OBO',
-        },
-      });
+      return sendError(reply, 'META_GRANT_ACCESS_ERROR', error instanceof Error ? error.message : 'Failed to grant Meta asset access through OBO', 500);
     }
   });
 
@@ -1016,24 +934,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
   fastify.post('/client/:token/grant-pages-access', async (request, reply) => {
     const validated = grantPagesAccessSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
     }
 
-    return reply.code(410).send({
-      data: null,
-      error: {
-        code: 'LEGACY_META_ROUTE_DISABLED',
-        message:
-          'Legacy Meta page grants are disabled. Use /grant-meta-access with page-only verification instead.',
-      },
-    });
+    return sendError(reply, 'LEGACY_META_ROUTE_DISABLED', 'Legacy Meta page grants are disabled. Use /grant-meta-access with page-only verification instead.', 410);
 
     /*
     const { connectionId, pageIds } = validated.data;
@@ -1060,34 +964,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!platformAuth) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found',
-          },
-        });
+        return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'Meta authorization not found', 404);
       }
 
       const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
       if (!tokens || !tokens.accessToken) {
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        });
+        return sendError(reply, 'TOKEN_NOT_FOUND', 'OAuth tokens not found in secure storage', 500);
       }
 
       if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'TOKEN_EXPIRED',
-            message: 'Your authorization has expired. Please reconnect.',
-          },
-        });
+        return sendError(reply, 'TOKEN_EXPIRED', 'Your authorization has expired. Please reconnect.', 400);
       }
 
       const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
@@ -1100,26 +986,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!agencyConnection) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'AGENCY_BUSINESS_ID_MISSING',
-            message: 'Agency must set up their Meta Business Manager ID before clients can grant access',
-          },
-        });
+        return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before clients can grant access', 400);
       }
 
       const metadata = (agencyConnection.metadata as any) || {};
       const agencySystemUserId = metadata.systemUserId;
 
       if (!agencySystemUserId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'AGENCY_SYSTEM_USER_MISSING',
-            message: 'Agency must complete their Meta setup by reconnecting their account before clients can grant access',
-          },
-        });
+        return sendError(reply, 'AGENCY_SYSTEM_USER_MISSING', 'Agency must complete their Meta setup by reconnecting their account before clients can grant access', 400);
       }
 
       // @ts-ignore - Dynamic import, module exists at runtime
@@ -1217,13 +1091,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'GRANT_ACCESS_ERROR',
-          message: `Failed to grant pages access: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        },
-      });
+      return sendError(reply, 'GRANT_ACCESS_ERROR', `Failed to grant pages access: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
     }
     */
   });
@@ -1233,14 +1101,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = manualMetaAdAccountShareSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
     }
 
     const { connectionId } = validated.data;
@@ -1261,13 +1122,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         });
 
         if (!platformAuth) {
-          return reply.code(404).send({
-            data: null,
-            error: {
-              code: 'AUTHORIZATION_NOT_FOUND',
-              message: 'Meta authorization not found',
-            },
-          });
+          return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'Meta authorization not found', 404);
         }
 
         const { rootMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
@@ -1275,13 +1130,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
 
         if (selectedAdAccounts.length === 0) {
-          return reply.code(400).send({
-            data: null,
-            error: {
-              code: 'NO_SELECTED_AD_ACCOUNTS',
-              message: 'No Meta ad accounts have been selected for manual sharing',
-            },
-          });
+          return sendError(reply, 'NO_SELECTED_AD_ACCOUNTS', 'No Meta ad accounts have been selected for manual sharing', 400);
         }
 
         const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
@@ -1297,14 +1146,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           resolveAgencyMetaBusinessDetails(agencyConnection);
 
         if (!partnerBusinessId) {
-          return reply.code(400).send({
-            data: null,
-            error: {
-              code: 'AGENCY_BUSINESS_ID_MISSING',
-              message:
-                'Agency must set up their Meta Business Manager ID before clients can share ad accounts',
-            },
-          });
+          return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before clients can share ad accounts', 400);
         }
 
         const startedAt = new Date().toISOString();
@@ -1371,16 +1213,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: authContext.error,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'META_MANUAL_SHARE_START_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to start manual Meta ad-account sharing',
-        },
-      });
+      return sendError(reply, 'META_MANUAL_SHARE_START_ERROR', error instanceof Error ? error.message : 'Failed to start manual Meta ad-account sharing', 500);
     }
   });
 
@@ -1389,14 +1222,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = manualMetaAdAccountShareSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
     }
 
     const { connectionId } = validated.data;
@@ -1423,13 +1249,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!platformAuth) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found',
-          },
-        });
+        return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'Meta authorization not found', 404);
       }
 
       const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
@@ -1445,14 +1265,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         resolveAgencyMetaBusinessDetails(agencyConnection);
 
       if (!partnerBusinessId || !agencyConnection?.secretId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'AGENCY_BUSINESS_ID_MISSING',
-            message:
-              'Agency must set up their Meta Business Manager ID before manual ad-account sharing can be verified',
-          },
-        });
+        return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before manual ad-account sharing can be verified', 400);
       }
 
       const { rootMetadata, metaMetadata } = readMetaClientAuthorizationMetadata(platformAuth.metadata);
@@ -1460,13 +1273,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       const selectedAdAccounts = extractSelectedMetaAdAccounts(selectedMetaAssets);
 
       if (selectedAdAccounts.length === 0) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'NO_SELECTED_AD_ACCOUNTS',
-            message: 'No Meta ad accounts have been selected for manual sharing',
-          },
-        });
+        return sendError(reply, 'NO_SELECTED_AD_ACCOUNTS', 'No Meta ad accounts have been selected for manual sharing', 400);
       }
 
       const currentGrantedAssets = (connection.grantedAssets as Record<string, unknown> | null) || {};
@@ -1614,16 +1421,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'META_MANUAL_SHARE_VERIFY_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to verify manual Meta ad-account sharing',
-        },
-      });
+      return sendError(reply, 'META_MANUAL_SHARE_VERIFY_ERROR', error instanceof Error ? error.message : 'Failed to verify manual Meta ad-account sharing', 500);
     }
   });
 
@@ -1634,13 +1432,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     try {
       const accessRequest = await accessRequestService.getAccessRequestByToken(token);
       if (accessRequest.error || !accessRequest.data) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'ACCESS_REQUEST_NOT_FOUND',
-            message: 'Access request not found',
-          },
-        });
+        return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
       }
 
       const agencyConnection = await prisma.agencyPlatformConnection.findUnique({
@@ -1653,13 +1445,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!agencyConnection) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AGENCY_BUSINESS_ID_MISSING',
-            message: 'Agency must set up their Meta Business Manager ID before clients can grant access',
-          },
-        });
+        return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before clients can grant access', 404);
       }
 
       const metadata = (agencyConnection.metadata as any) || {};
@@ -1667,13 +1453,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       const businessName = metadata.selectedBusinessName || metadata.businessName;
 
       if (!businessId) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AGENCY_BUSINESS_ID_MISSING',
-            message: 'Agency must set up their Meta Business Manager ID before clients can grant access',
-          },
-        });
+        return sendError(reply, 'AGENCY_BUSINESS_ID_MISSING', 'Agency must set up their Meta Business Manager ID before clients can grant access', 404);
       }
 
       return reply.send({
@@ -1684,13 +1464,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'FETCH_ERROR',
-          message: `Failed to fetch agency Business Manager ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        },
-      });
+      return sendError(reply, 'FETCH_ERROR', `Failed to fetch agency Business Manager ID: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
     }
   });
 
@@ -1700,24 +1474,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = adAccountsSharedSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request data', 400, validated.error.errors,);
     }
 
-    return reply.code(410).send({
-      data: null,
-      error: {
-        code: 'LEGACY_META_ROUTE_DISABLED',
-        message:
-          'Legacy Meta ad-account completion is disabled. Use the manual share verification flow instead.',
-      },
-    });
+    return sendError(reply, 'LEGACY_META_ROUTE_DISABLED', 'Legacy Meta ad-account completion is disabled. Use the manual share verification flow instead.', 410);
 
     /*
     const { connectionId, sharedAdAccountIds } = validated.data;
@@ -1769,13 +1529,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'UPDATE_ERROR',
-          message: `Failed to update ad account sharing status: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        },
-      });
+      return sendError(reply, 'UPDATE_ERROR', `Failed to update ad account sharing status: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
     }
     */
   });
@@ -1786,14 +1540,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = tiktokPartnerShareSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid TikTok partner-share payload',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid TikTok partner-share payload', 400, validated.error.errors,);
     }
 
     const { connectionId, advertiserIds, selectedBusinessCenterId } = validated.data;
@@ -1819,34 +1566,16 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!platformAuth) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'TikTok authorization not found',
-          },
-        });
+        return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'TikTok authorization not found', 404);
       }
 
       if (platformAuth.status !== 'active') {
-        return reply.code(403).send({
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_INACTIVE',
-            message: 'TikTok authorization is not active',
-          },
-        });
+        return sendError(reply, 'AUTHORIZATION_INACTIVE', 'TikTok authorization is not active', 403);
       }
 
       const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
       if (!tokens?.accessToken) {
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        });
+        return sendError(reply, 'TOKEN_NOT_FOUND', 'OAuth tokens not found in secure storage', 500);
       }
 
       const authMetadata = (platformAuth.metadata as Record<string, any> | null) || {};
@@ -1864,23 +1593,11 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       const clientBusinessCenterId = selectedBusinessCenterId || tiktokMetadata.selectedBusinessCenterId;
 
       if (!clientBusinessCenterId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'selectedBusinessCenterId is required for TikTok partner sharing',
-          },
-        });
+        return sendValidationError(reply, 'selectedBusinessCenterId is required for TikTok partner sharing');
       }
 
       if (effectiveAdvertiserIds.length === 0) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'At least one advertiser must be selected before partner sharing',
-          },
-        });
+        return sendValidationError(reply, 'At least one advertiser must be selected before partner sharing');
       }
 
       const agencyConnection = await prisma.agencyPlatformConnection.findFirst({
@@ -2073,13 +1790,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'TIKTOK_PARTNER_SHARE_ERROR',
-          message: `Failed to share TikTok partner access: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        },
-      });
+      return sendError(reply, 'TIKTOK_PARTNER_SHARE_ERROR', `Failed to share TikTok partner access: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
     }
   });
 
@@ -2089,14 +1800,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
 
     const validated = tiktokPartnerVerifySchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid TikTok verify payload',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid TikTok verify payload', 400, validated.error.errors,);
     }
 
     const { connectionId, advertiserIds } = validated.data;
@@ -2121,24 +1825,12 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!platformAuth) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'TikTok authorization not found',
-          },
-        });
+        return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'TikTok authorization not found', 404);
       }
 
       const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
       if (!tokens?.accessToken) {
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        });
+        return sendError(reply, 'TOKEN_NOT_FOUND', 'OAuth tokens not found in secure storage', 500);
       }
 
       const authMetadata = (platformAuth.metadata as Record<string, any> | null) || {};
@@ -2160,13 +1852,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         );
 
       if (!clientBusinessCenterId || !agencyBusinessCenterId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'TikTok business center IDs are required before verification',
-          },
-        });
+        return sendValidationError(reply, 'TikTok business center IDs are required before verification');
       }
 
       const effectiveAdvertiserIds = Array.from(
@@ -2180,13 +1866,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       );
 
       if (effectiveAdvertiserIds.length === 0) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'At least one advertiser must be selected before verification',
-          },
-        });
+        return sendValidationError(reply, 'At least one advertiser must be selected before verification');
       }
 
       const results: ShareResultWithVerification[] = await Promise.all(
@@ -2257,13 +1937,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'TIKTOK_VERIFY_ERROR',
-          message: `Failed to verify TikTok partner sharing: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        },
-      });
+      return sendError(reply, 'TIKTOK_VERIFY_ERROR', `Failed to verify TikTok partner sharing: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
     }
   });
 
@@ -2279,13 +1953,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!connectionId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'connectionId query parameter is required',
-        },
-      });
+      return sendValidationError(reply, 'connectionId query parameter is required');
     }
 
     const authContext = await resolveAuthorizedConnection(token, connectionId);
@@ -2327,36 +1995,18 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     });
 
     if (!platformAuth) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'AUTHORIZATION_NOT_FOUND',
-          message: 'Platform authorization not found for this connection',
-        },
-      });
+      return sendError(reply, 'AUTHORIZATION_NOT_FOUND', 'Platform authorization not found for this connection', 404);
     }
 
     if (platformAuth.status !== 'active') {
-      return reply.code(403).send({
-        data: null,
-        error: {
-          code: 'AUTHORIZATION_INACTIVE',
-          message: 'Platform authorization is not active',
-        },
-      });
+      return sendError(reply, 'AUTHORIZATION_INACTIVE', 'Platform authorization is not active', 403);
     }
 
     try {
       const tokens = await infisical.getOAuthTokens(platformAuth.secretId);
 
       if (!tokens) {
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        });
+        return sendError(reply, 'TOKEN_NOT_FOUND', 'OAuth tokens not found in secure storage', 500);
       }
 
       if (authPlatform === 'tiktok' && authContext.accessRequest) {
@@ -2470,13 +2120,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const metadata = (platformAuth.metadata as any) || {};
         const dc = metadata.dc;
         if (!dc) {
-          return reply.code(400).send({
-            data: null,
-            error: {
-              code: 'MISSING_METADATA',
-              message: 'Mailchimp data center (dc) not found in authorization metadata',
-            },
-          });
+          return sendError(reply, 'MISSING_METADATA', 'Mailchimp data center (dc) not found in authorization metadata', 400);
         }
         assets = await clientAssetsService.fetchMailchimpAssets(tokens.accessToken, dc);
       } else if (platform === 'pinterest') {
@@ -2487,13 +2131,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const metadata = (platformAuth.metadata as any) || {};
         const shop = metadata.shop;
         if (!shop) {
-          return reply.code(400).send({
-            data: null,
-            error: {
-              code: 'MISSING_METADATA',
-              message: 'Shopify shop name not found in authorization metadata',
-            },
-          });
+          return sendError(reply, 'MISSING_METADATA', 'Shopify shop name not found in authorization metadata', 400);
         }
         assets = await clientAssetsService.fetchShopifyAssets(tokens.accessToken, shop);
       } else if (platform === 'tiktok' || platform === 'tiktok_ads') {
@@ -2522,13 +2160,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         const googleConnector = new GoogleConnector();
         assets = await googleConnector.getAccountsForProduct(platformStr as GoogleProduct, tokens.accessToken);
       } else {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'UNSUPPORTED_PLATFORM',
-            message: `Platform ${platform} not yet supported for asset fetching`,
-          },
-        });
+        return sendError(reply, 'UNSUPPORTED_PLATFORM', `Platform ${platform} not yet supported for asset fetching`, 400);
       }
 
       return reply.send({
@@ -2537,22 +2169,10 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       if (error instanceof MetaBusinessPortfolioUnavailableError) {
-        return reply.code(error.statusCode).send({
-          data: null,
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        });
+        return sendError(reply, error.code, error.message, error.statusCode);
       }
 
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'ASSET_FETCH_ERROR',
-          message: `Failed to fetch assets: ${error}`,
-        },
-      });
+      return sendError(reply, 'ASSET_FETCH_ERROR', `Failed to fetch assets: ${error}`, 500);
     }
   });
 }

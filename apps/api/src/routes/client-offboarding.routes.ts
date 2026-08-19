@@ -7,6 +7,7 @@ import { env, isOffboardingEnabled } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
 import { clientOffboardingService } from '@/services/client-offboarding.service.js';
 import { dispatchOffboardingRun } from '@/services/google-offboarding-executor.js';
+import { sendError, sendValidationError } from '../lib/response.js';
 
 const CAPABILITY_EXPIRY_MS = 15 * 60 * 1000;
 
@@ -146,13 +147,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', async (request, reply) => {
     const { agencyId } = request.params as { agencyId?: string };
     if (!isOffboardingEnabled(agencyId)) {
-      return reply.code(403).send({
-        data: null,
-        error: {
-          code: 'FEATURE_DISABLED',
-          message: 'Google client offboarding is not enabled for this agency',
-        },
-      });
+      return sendError(reply, 'FEATURE_DISABLED', 'Google client offboarding is not enabled for this agency', 403);
     }
   });
 
@@ -166,7 +161,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
 
     const parsed = PrepareBodySchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'Invalid prepare input', details: parsed.error.flatten() } });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid prepare input', 400, parsed.error.flatten());
     }
 
     try {
@@ -199,7 +194,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
       return reply.send({ data: { ...sanitizedRun, capabilityToken }, error: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to prepare offboarding run';
-      return reply.code(400).send({ data: null, error: { code: 'PREPARE_FAILED', message } });
+      return sendError(reply, 'PREPARE_FAILED', message, 400);
     }
   });
 
@@ -213,11 +208,11 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
 
     const parsed = ConfirmBodySchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'Capability token is required' } });
+      return sendValidationError(reply, 'Capability token is required');
     }
 
     const subject = ownerSubject(request);
-    if (!subject) return reply.code(401).send({ data: null, error: { code: 'UNAUTHORIZED', message: 'Authenticated identity is required' } });
+    if (!subject) return sendError(reply, 'UNAUTHORIZED', 'Authenticated identity is required', 401);
 
     const run = await prisma.googleOffboardingRun.findFirst({
       where: { connectionId, agencyId, status: { in: ['prepared'] } },
@@ -225,38 +220,38 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
     });
 
     if (!run) {
-      return reply.code(404).send({ data: null, error: { code: 'RUN_NOT_FOUND', message: 'No prepared offboarding run found for this connection' } });
+      return sendError(reply, 'RUN_NOT_FOUND', 'No prepared offboarding run found for this connection', 404);
     }
 
     if (run.approvedAt) {
-      return reply.code(409).send({ data: null, error: { code: 'ALREADY_CONFIRMED', message: 'Run has already been confirmed' } });
+      return sendError(reply, 'ALREADY_CONFIRMED', 'Run has already been confirmed', 409);
     }
 
     if (!run.credentialGeneration) {
-      return reply.code(409).send({ data: null, error: { code: 'CAPABILITY_REQUIRED', message: 'Confirmation capability is required; call prepare first' } });
+      return sendError(reply, 'CAPABILITY_REQUIRED', 'Confirmation capability is required; call prepare first', 409);
     }
 
     const currentGeneration = run.credentialGeneration;
 
     const parsedCap = parseCapability(parsed.data.capabilityToken);
     if (!parsedCap.valid) {
-      return reply.code(403).send({ data: null, error: { code: 'CAPABILITY_INVALID', message: parsedCap.reason } });
+      return sendError(reply, 'CAPABILITY_INVALID', parsedCap.reason as string, 403);
     }
 
     if (parsedCap.runId !== run.id) {
-      return reply.code(403).send({ data: null, error: { code: 'CAPABILITY_MISMATCH', message: 'Capability does not match this run' } });
+      return sendError(reply, 'CAPABILITY_MISMATCH', 'Capability does not match this run', 403);
     }
 
     if (parsedCap.snapshotHash !== run.snapshotHash) {
-      return reply.code(409).send({ data: null, error: { code: 'SNAPSHOT_CHANGED', message: 'Offboarding snapshot changed since preparation; prepare again' } });
+      return sendError(reply, 'SNAPSHOT_CHANGED', 'Offboarding snapshot changed since preparation; prepare again', 409);
     }
 
     if (parsedCap.credentialGeneration !== currentGeneration) {
-      return reply.code(409).send({ data: null, error: { code: 'CREDENTIAL_GENERATION_CHANGED', message: 'Credential generation changed since preparation; prepare again' } });
+      return sendError(reply, 'CREDENTIAL_GENERATION_CHANGED', 'Credential generation changed since preparation; prepare again', 409);
     }
 
     if (parsedCap.approvingAdmin !== subject) {
-      return reply.code(403).send({ data: null, error: { code: 'CAPABILITY_ADMIN_MISMATCH', message: 'Capability token was issued to a different admin' } });
+      return sendError(reply, 'CAPABILITY_ADMIN_MISMATCH', 'Capability token was issued to a different admin', 403);
     }
 
     try {
@@ -267,7 +262,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
       return reply.send({ data: sanitizedRun, error: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to confirm offboarding run';
-      return reply.code(400).send({ data: null, error: { code: 'CONFIRM_FAILED', message } });
+      return sendError(reply, 'CONFIRM_FAILED', message, 400);
     }
   });
 
@@ -283,7 +278,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
     if (runError) return reply.code(404).send({ data: null, error: runError });
 
     const sanitizedRun = await clientOffboardingService.getRun({ runId });
-    if (!sanitizedRun) return reply.code(404).send({ data: null, error: { code: 'RUN_NOT_FOUND', message: 'Offboarding run not found' } });
+    if (!sanitizedRun) return sendError(reply, 'RUN_NOT_FOUND', 'Offboarding run not found', 404);
 
     const attempts = await clientOffboardingService.getItemAttempts({ itemId: '', runId });
     return reply.send({ data: { ...sanitizedRun, attempts }, error: null });
@@ -301,10 +296,10 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
     if (runError) return reply.code(404).send({ data: null, error: runError });
 
     const run = await prisma.googleOffboardingRun.findUnique({ where: { id: runId } });
-    if (!run) return reply.code(404).send({ data: null, error: { code: 'RUN_NOT_FOUND', message: 'Offboarding run not found' } });
+    if (!run) return sendError(reply, 'RUN_NOT_FOUND', 'Offboarding run not found', 404);
 
     if (run.status !== 'incomplete' && run.status !== 'completed_with_manual_follow_up') {
-      return reply.code(409).send({ data: null, error: { code: 'INVALID_RUN_STATUS', message: `Retry is only allowed for 'incomplete' or 'completed_with_manual_follow_up' runs (current: ${run.status})` } });
+      return sendError(reply, 'INVALID_RUN_STATUS', `Retry is only allowed for 'incomplete' or 'completed_with_manual_follow_up' runs (current: ${run.status})`, 409);
     }
 
     const retryableItems = await prisma.googleOffboardingItem.findMany({
@@ -312,7 +307,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
     });
 
     if (retryableItems.length === 0) {
-      return reply.code(400).send({ data: null, error: { code: 'NO_RETRYABLE_ITEMS', message: 'No retryable items found' } });
+      return sendError(reply, 'NO_RETRYABLE_ITEMS', 'No retryable items found', 400);
     }
 
     try {
@@ -327,7 +322,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
       return reply.send({ data: sanitizedRun, error: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to retry offboarding run';
-      return reply.code(400).send({ data: null, error: { code: 'RETRY_FAILED', message } });
+      return sendError(reply, 'RETRY_FAILED', message, 400);
     }
   });
 
@@ -343,20 +338,20 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
     if (runError) return reply.code(404).send({ data: null, error: runError });
 
     const subject = ownerSubject(request);
-    if (!subject) return reply.code(401).send({ data: null, error: { code: 'UNAUTHORIZED', message: 'Authenticated identity is required' } });
+    if (!subject) return sendError(reply, 'UNAUTHORIZED', 'Authenticated identity is required', 401);
 
     const parsed = AttestBodySchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'Item ID and attestation are required', details: parsed.error.flatten() } });
+      return sendError(reply, 'VALIDATION_ERROR', 'Item ID and attestation are required', 400, parsed.error.flatten());
     }
 
     const item = await prisma.googleOffboardingItem.findFirst({
       where: { id: parsed.data.itemId, runId },
     });
-    if (!item) return reply.code(404).send({ data: null, error: { code: 'ITEM_NOT_FOUND', message: 'Offboarding item not found' } });
+    if (!item) return sendError(reply, 'ITEM_NOT_FOUND', 'Offboarding item not found', 404);
 
     if (item.status !== 'manual_action_required' && item.status !== 'failed_retryable') {
-      return reply.code(400).send({ data: null, error: { code: 'ITEM_NOT_ATTESTABLE', message: 'Item is not in an attestable state' } });
+      return sendError(reply, 'ITEM_NOT_ATTESTABLE', 'Item is not in an attestable state', 400);
     }
 
     try {
@@ -381,7 +376,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
       return reply.send({ data: sanitizedRun, error: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to record attestation';
-      return reply.code(400).send({ data: null, error: { code: 'ATTESTATION_FAILED', message } });
+      return sendError(reply, 'ATTESTATION_FAILED', message, 400);
     }
   });
 }

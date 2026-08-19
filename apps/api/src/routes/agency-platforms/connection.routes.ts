@@ -3,6 +3,7 @@ import { agencyPlatformService } from '@/services/agency-platform.service';
 import { PLATFORM_CONNECTORS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { quotaEnforcementMiddleware } from '@/middleware/quota-enforcement.js';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 export async function registerConnectionRoutes(fastify: FastifyInstance) {
   /**
@@ -17,13 +18,7 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !revokedBy) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId and revokedBy are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId and revokedBy are required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -58,13 +53,7 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
     const { agencyId } = request.body as { agencyId?: string };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -76,24 +65,12 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
     const connectionResult = await agencyPlatformService.getConnection(agencyId, platform);
 
     if (connectionResult.error || !connectionResult.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'CONNECTION_NOT_FOUND',
-          message: 'Platform connection not found',
-        },
-      });
+      return sendError(reply, 'CONNECTION_NOT_FOUND', 'Platform connection not found', 404);
     }
 
     const ConnectorClass = PLATFORM_CONNECTORS[platform as keyof typeof PLATFORM_CONNECTORS];
     if (!ConnectorClass) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'CONNECTOR_NOT_IMPLEMENTED',
-          message: `OAuth connector for "${platform}" is not implemented yet`,
-        },
-      });
+      return sendError(reply, 'CONNECTOR_NOT_IMPLEMENTED', `OAuth connector for "${platform}" is not implemented yet`, 400);
     }
 
     try {
@@ -109,13 +86,7 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
       if (platform === 'meta' && 'getLongLivedToken' in connector) {
         newTokens = await (connector as any).getLongLivedToken(tokenResult.data);
       } else {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'REFRESH_NOT_SUPPORTED',
-            message: 'Token refresh not supported for this platform',
-          },
-        });
+        return sendError(reply, 'REFRESH_NOT_SUPPORTED', 'Token refresh not supported for this platform', 400);
       }
 
       const refreshResult = await agencyPlatformService.refreshConnection(
@@ -134,13 +105,7 @@ export async function registerConnectionRoutes(fastify: FastifyInstance) {
 
       return reply.send(refreshResult);
     } catch (error) {
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'REFRESH_FAILED',
-          message: 'Failed to refresh tokens',
-        },
-      });
+      return sendError(reply, 'REFRESH_FAILED', 'Failed to refresh tokens', 500);
     }
   });
 }

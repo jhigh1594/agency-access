@@ -6,6 +6,7 @@ import { extractClientIp, extractUserAgent } from '@/lib/ip.js';
 import { authenticate } from '@/middleware/auth.js';
 import { agentGrantService } from '@/services/agent-grant.service.js';
 import { agentRolloutService } from '@/services/agent-rollout.service.js';
+import { sendError } from '../lib/response.js';
 
 const CreateGrantSchema = z.object({
   oauthClientId: z.string().min(1).max(200),
@@ -47,25 +48,15 @@ export async function agentGrantRoutes(fastify: FastifyInstance) {
   fastify.post('/agencies/:id/agent-grants', { onRequest: ownerHooks }, async (request, reply) => {
     const agencyId = enforceRouteAgency(request, reply);
     if (!agencyId) return;
-    if (!agentRolloutService.isAgencyAllowed(agencyId)) return reply.code(404).send({ data: null, error: { code: 'NOT_FOUND', message: 'Agent access is not enabled for this agency' } });
+    if (!agentRolloutService.isAgencyAllowed(agencyId)) return sendError(reply, 'NOT_FOUND', 'Agent access is not enabled for this agency', 404);
     const subject = ownerSubject(request);
     if (!subject) {
-      return reply.code(401).send({
-        data: null,
-        error: { code: 'UNAUTHORIZED', message: 'Authenticated owner identity is required' },
-      });
+      return sendError(reply, 'UNAUTHORIZED', 'Authenticated owner identity is required', 401);
     }
 
     const parsed = CreateGrantSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid agent grant',
-          details: parsed.error.flatten(),
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid agent grant', 400, parsed.error.flatten(),);
     }
 
     const grant = await agentGrantService.createOrReactivateGrant({
@@ -81,11 +72,11 @@ export async function agentGrantRoutes(fastify: FastifyInstance) {
     const agencyId = enforceRouteAgency(request, reply);
     if (!agencyId) return;
     const subject = ownerSubject(request);
-    if (!subject) return reply.code(401).send({ data: null, error: { code: 'UNAUTHORIZED', message: 'Authenticated owner identity is required' } });
+    if (!subject) return sendError(reply, 'UNAUTHORIZED', 'Authenticated owner identity is required', 401);
 
     const parsed = UpdateGrantSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({ data: null, error: { code: 'VALIDATION_ERROR', message: 'Invalid agent grant update', details: parsed.error.flatten() } });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid agent grant update', 400, parsed.error.flatten());
     }
 
     const { grantId } = request.params as { grantId: string };
@@ -96,7 +87,7 @@ export async function agentGrantRoutes(fastify: FastifyInstance) {
       ...parsed.data,
       requestMetadata: requestMetadata(request),
     });
-    if (!grant) return reply.code(404).send({ data: null, error: { code: 'NOT_FOUND', message: 'Agent grant not found' } });
+    if (!grant) return sendError(reply, 'NOT_FOUND', 'Agent grant not found', 404);
     return reply.send({ data: grant });
   });
 
@@ -104,7 +95,7 @@ export async function agentGrantRoutes(fastify: FastifyInstance) {
     const agencyId = enforceRouteAgency(request, reply);
     if (!agencyId) return;
     const subject = ownerSubject(request);
-    if (!subject) return reply.code(401).send({ data: null, error: { code: 'UNAUTHORIZED', message: 'Authenticated owner identity is required' } });
+    if (!subject) return sendError(reply, 'UNAUTHORIZED', 'Authenticated owner identity is required', 401);
 
     const { grantId } = request.params as { grantId: string };
     const revoked = await agentGrantService.revokeGrant({
@@ -113,7 +104,7 @@ export async function agentGrantRoutes(fastify: FastifyInstance) {
       revokedBy: subject,
       requestMetadata: requestMetadata(request),
     });
-    if (!revoked) return reply.code(404).send({ data: null, error: { code: 'NOT_FOUND', message: 'Active agent grant not found' } });
+    if (!revoked) return sendError(reply, 'NOT_FOUND', 'Active agent grant not found', 404);
     return reply.send({ data: { id: grantId, state: 'revoked' } });
   });
 }

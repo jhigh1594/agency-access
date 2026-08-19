@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { submitIntakeSchema } from './schemas.js';
+import { sendError } from '../../lib/response.js';
 
 export async function registerIntakeRoutes(fastify: FastifyInstance) {
   // Submit intake form responses
@@ -21,14 +22,7 @@ export async function registerIntakeRoutes(fastify: FastifyInstance) {
 
     const validated = submitIntakeSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid intake responses',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid intake responses', 400, validated.error.errors,);
     }
 
     // TODO: Store intake responses temporarily

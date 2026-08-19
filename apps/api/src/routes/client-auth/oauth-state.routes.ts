@@ -6,6 +6,7 @@ import { env } from '../../lib/env.js';
 import { resolveGoogleOAuthScopes, type Platform } from '@agency-platform/shared';
 import { createOAuthStateSchema } from './schemas.js';
 import { resolveClientInviteCallbackUrl } from './redirect-uri.js';
+import { sendError } from '../../lib/response.js';
 
 export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
   function getRequestedGroupProductIds(
@@ -41,14 +42,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
 
     const validated = createOAuthStateSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid platform',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid platform', 400, validated.error.errors,);
     }
 
     const { platform } = validated.data;
@@ -104,14 +98,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
 
     const validated = createOAuthStateSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid platform',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid platform', 400, validated.error.errors,);
     }
 
     const { platform } = validated.data;
@@ -188,13 +175,7 @@ export async function registerOAuthStateRoutes(fastify: FastifyInstance) {
         error: null,
       });
     } catch (error) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'CONNECTOR_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to generate OAuth URL',
-        },
-      });
+      return sendError(reply, 'CONNECTOR_ERROR', error instanceof Error ? error.message : 'Failed to generate OAuth URL', 400);
     }
   });
 }

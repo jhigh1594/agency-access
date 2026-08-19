@@ -13,6 +13,7 @@ import { quotaMiddleware } from '../middleware/quota.middleware.js';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { requirePrincipalAgency } from '@/lib/agency-guard.js';
+import { sendError } from '../lib/response.js';
 
 const ACCESS_LEVEL_MAP: Record<string, 'manage' | 'view_only'> = {
   admin: 'manage',
@@ -278,16 +279,7 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
 
     const identityFields = ['clientName', 'clientEmail'].filter((field) => requestBody?.[field] !== undefined);
     if (identityFields.length > 0) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Client identity fields must be edited in client profile management',
-          details: {
-            fields: identityFields,
-          },
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Client identity fields must be edited in client profile management', 400, { fields: identityFields });
     }
 
     const transformedRequestBody = {

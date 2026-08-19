@@ -12,6 +12,7 @@ import { assertAgencyAccess } from '@/lib/authorization.js';
 import { infisical } from '@/lib/infisical.js';
 import { prisma } from '@/lib/prisma.js';
 import { createAuditLog } from '@/services/audit.service.js';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 // Meta business accounts response type
 interface MetaBusinessAccountsResponse {
@@ -45,23 +46,11 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     };
 
     if (!SUPPORTED_PLATFORMS.includes(platform as any)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'UNSUPPORTED_PLATFORM',
-          message: `Platform "${platform}" is not supported`,
-        },
-      });
+      return sendError(reply, 'UNSUPPORTED_PLATFORM', `Platform "${platform}" is not supported`, 400);
     }
 
     if (!agencyId || !userEmail) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId and userEmail are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId and userEmail are required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -71,14 +60,7 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     }
 
     if (platform === 'meta' && extraParams.useLegacyFallback !== true) {
-      return reply.code(410).send({
-        data: null,
-        error: {
-          code: 'LEGACY_META_OAUTH_DISABLED',
-          message:
-            'Meta now uses Business Login via the JS SDK. Reconnect from the app UI or pass useLegacyFallback=true only for rollback.',
-        },
-      });
+      return sendError(reply, 'LEGACY_META_OAUTH_DISABLED', 'Meta now uses Business Login via the JS SDK. Reconnect from the app UI or pass useLegacyFallback=true only for rollback.', 410);
     }
 
     const stateResult = await oauthStateService.createState({
@@ -104,24 +86,12 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     }
 
     if (MANUAL_PLATFORMS.includes(platform as any)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'MANUAL_INVITATION_PLATFORM',
-          message: `${platform} uses manual invitation flow, not OAuth`,
-        },
-      });
+      return sendError(reply, 'MANUAL_INVITATION_PLATFORM', `${platform} uses manual invitation flow, not OAuth`, 400);
     }
 
     const ConnectorClass = PLATFORM_CONNECTORS[platform as keyof typeof PLATFORM_CONNECTORS];
     if (!ConnectorClass) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'CONNECTOR_NOT_IMPLEMENTED',
-          message: `OAuth connector for "${platform}" is not implemented yet`,
-        },
-      });
+      return sendError(reply, 'CONNECTOR_NOT_IMPLEMENTED', `OAuth connector for "${platform}" is not implemented yet`, 400);
     }
 
     const connector = new ConnectorClass() as PlatformConnector;
@@ -150,13 +120,7 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     } catch (err) {
       if (err instanceof ConnectorError) {
         if (err.code === 'MISSING_CLIENT_ID' || err.code === 'MISSING_CLIENT_SECRET') {
-          return reply.code(503).send({
-            data: null,
-            error: {
-              code: err.code,
-              message: `${platform} integration is not configured. Add the required environment variables (e.g. ${platform.toUpperCase()}_CLIENT_ID, ${platform.toUpperCase()}_CLIENT_SECRET) to your .env file.`,
-            },
-          });
+          return sendError(reply, err.code, `${platform} integration is not configured. Add the required environment variables (e.g. ${platform.toUpperCase()}_CLIENT_ID, ${platform.toUpperCase()}_CLIENT_SECRET) to your .env file.`, 503);
         }
       }
       throw err;
@@ -183,13 +147,7 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !accessToken || !userEmail) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId, accessToken, and userEmail are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId, accessToken, and userEmail are required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -202,13 +160,7 @@ export async function registerOAuthRoutes(fastify: FastifyInstance) {
 
     const isValidToken = await connector.verifyToken(accessToken);
     if (!isValidToken) {
-      return reply.code(401).send({
-        data: null,
-        error: {
-          code: 'INVALID_TOKEN',
-          message: 'Meta Business Login token is invalid. Please try logging in again.',
-        },
-      });
+      return sendError(reply, 'INVALID_TOKEN', 'Meta Business Login token is invalid. Please try logging in again.', 401);
     }
 
     const [userInfo, tokenMetadata, longLivedTokens] = await Promise.all([

@@ -7,6 +7,7 @@
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { recordPerformanceMark } from './performance.js';
+import { sendError } from '../lib/response.js';
 
 type VerifiedAuthClaims = Record<string, unknown>;
 const AUTH_DURATION_MS = Symbol('auth-duration-ms');
@@ -97,36 +98,18 @@ export function authenticate() {
       }
 
       if (!request.headers.authorization?.startsWith('Bearer ')) {
-        return reply.code(401).send({
-          data: null,
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Missing or invalid Authorization header',
-          },
-        });
+        return sendError(reply, 'UNAUTHORIZED', 'Missing or invalid Authorization header', 401);
       }
 
       // Verify the token using Clerk's backend SDK.
       const verifiedDurationMs = await verifyBearerTokenFromRequest(request);
 
       if (verifiedDurationMs === null) {
-        return reply.code(401).send({
-          data: null,
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Invalid or expired authentication token',
-          },
-        });
+        return sendError(reply, 'UNAUTHORIZED', 'Invalid or expired authentication token', 401);
       }
 
     } catch (err) {
-      return reply.code(401).send({
-        data: null,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or missing authentication token',
-        },
-      });
+      return sendError(reply, 'UNAUTHORIZED', 'Invalid or missing authentication token', 401);
     } finally {
       recordPerformanceMark(request, 'auth', getAuthDurationMs(request) ?? (Date.now() - authStartMs));
     }

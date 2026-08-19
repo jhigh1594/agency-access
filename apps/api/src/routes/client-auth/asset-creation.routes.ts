@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { accessRequestService } from '../../services/access-request.service.js';
 import { metaAssetCreationService } from '../../services/meta-asset-creation.service.js';
 import { prisma } from '../../lib/prisma.js';
+import { sendError } from '../../lib/response.js';
 
 // Validation schemas
 const createAdAccountSchema = z.object({
@@ -87,14 +88,7 @@ export async function registerAssetCreationRoutes(fastify: FastifyInstance) {
     // Validate request body
     const validated = createAdAccountSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request parameters',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request parameters', 400, validated.error.errors,);
     }
 
     const { connectionId, businessId, name, currency, timezoneId } = validated.data;
@@ -149,14 +143,7 @@ export async function registerAssetCreationRoutes(fastify: FastifyInstance) {
     // Validate request body
     const validated = createProductCatalogSchema.safeParse(request.body);
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request parameters',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request parameters', 400, validated.error.errors,);
     }
 
     const { connectionId, businessId, name } = validated.data;
@@ -212,26 +199,13 @@ export async function registerAssetCreationRoutes(fastify: FastifyInstance) {
     // Validate businessId
     const validated = getLinksSchema.safeParse({ businessId });
     if (!validated.success) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Business ID is required',
-          details: validated.error.errors,
-        },
-      });
+      return sendError(reply, 'VALIDATION_ERROR', 'Business ID is required', 400, validated.error.errors,);
     }
 
     // Get access request to verify token is valid
     const accessRequest = await accessRequestService.getAccessRequestByToken(token);
     if (accessRequest.error || !accessRequest.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'ACCESS_REQUEST_NOT_FOUND',
-          message: 'Access request not found',
-        },
-      });
+      return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
     }
 
     // Get creation links
@@ -253,13 +227,7 @@ export async function registerAssetCreationRoutes(fastify: FastifyInstance) {
     // Get access request to verify token is valid
     const accessRequest = await accessRequestService.getAccessRequestByToken(token);
     if (accessRequest.error || !accessRequest.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'ACCESS_REQUEST_NOT_FOUND',
-          message: 'Access request not found',
-        },
-      });
+      return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
     }
 
     const currencies = metaAssetCreationService.getSupportedCurrencies();
@@ -280,13 +248,7 @@ export async function registerAssetCreationRoutes(fastify: FastifyInstance) {
     // Get access request to verify token is valid
     const accessRequest = await accessRequestService.getAccessRequestByToken(token);
     if (accessRequest.error || !accessRequest.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'ACCESS_REQUEST_NOT_FOUND',
-          message: 'Access request not found',
-        },
-      });
+      return sendError(reply, 'ACCESS_REQUEST_NOT_FOUND', 'Access request not found', 404);
     }
 
     const timezones = metaAssetCreationService.getSupportedTimezones();

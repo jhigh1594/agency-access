@@ -7,6 +7,7 @@ import { MetaConnector } from '@/services/connectors/meta';
 import { GoogleConnector } from '@/services/connectors/google';
 import type { GoogleAccountsResponse } from '@/services/connectors/google';
 import { assertAgencyAccess } from '@/lib/authorization.js';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 interface MetaBusinessAccountsResponse {
   businesses: Array<{
@@ -79,26 +80,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, 'google');
 
     if (connectionResult.error || !connectionResult.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'GOOGLE_NOT_CONNECTED',
-          message: 'Google is not connected. Please connect your Google account first.',
-        },
-      });
+      return sendError(reply, 'GOOGLE_NOT_CONNECTED', 'Google is not connected. Please connect your Google account first.', 404);
     }
 
     const connection = connectionResult.data;
@@ -143,14 +132,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           agencyId,
         });
 
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'FETCH_FAILED',
-            message: 'Failed to fetch Google accounts',
-            details: error instanceof Error ? error.message : 'Unknown error',
-          },
-        });
+        return sendError(reply, 'FETCH_FAILED', 'Failed to fetch Google accounts', 500, error instanceof Error ? error.message : 'Unknown error',);
       }
     }
 
@@ -158,13 +140,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const googleAccounts = meta?.googleAccounts as GoogleAccountsResponse | undefined;
 
     if (!googleAccounts) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'NO_ACCOUNTS_FOUND',
-          message: 'No Google accounts found. Try refreshing with ?refresh=true',
-        },
-      });
+      return sendError(reply, 'NO_ACCOUNTS_FOUND', 'No Google accounts found. Try refreshing with ?refresh=true', 404);
     }
 
     return reply.send({
@@ -184,26 +160,14 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
 
     if (connectionResult.error || !connectionResult.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'META_NOT_CONNECTED',
-          message: 'Meta is not connected. Please connect your Meta account first.',
-        },
-      });
+      return sendError(reply, 'META_NOT_CONNECTED', 'Meta is not connected. Please connect your Meta account first.', 404);
     }
 
     const connection = connectionResult.data;
@@ -235,14 +199,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
           error: null,
         });
       } catch (error) {
-        return reply.code(500).send({
-          data: null,
-          error: {
-            code: 'FETCH_FAILED',
-            message: 'Failed to fetch Meta business accounts',
-            details: error instanceof Error ? error.message : 'Unknown error',
-          },
-        });
+        return sendError(reply, 'FETCH_FAILED', 'Failed to fetch Meta business accounts', 500, error instanceof Error ? error.message : 'Unknown error',);
       }
     }
 
@@ -250,13 +207,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const businessAccounts = meta?.metaBusinessAccounts as MetaBusinessAccountsResponse | undefined;
 
     if (!businessAccounts) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'NO_ACCOUNTS_FOUND',
-          message: 'No Meta business accounts found. Try refreshing with ?refresh=true',
-        },
-      });
+      return sendError(reply, 'NO_ACCOUNTS_FOUND', 'No Meta business accounts found. Try refreshing with ?refresh=true', 404);
     }
 
     return reply.send({
@@ -278,13 +229,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !businessId || !businessName || !connectionId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId, businessId, businessName, and connectionId are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId, businessId, businessName, and connectionId are required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -304,13 +249,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
       });
 
       if (!connection) {
-        return reply.code(404).send({
-          data: null,
-          error: {
-            code: 'CONNECTION_NOT_FOUND',
-            message: 'Meta connection not found for this agency',
-          },
-        });
+        return sendError(reply, 'CONNECTION_NOT_FOUND', 'Meta connection not found for this agency', 404);
       }
 
       const safeConnection = {
@@ -344,13 +283,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
         agencyId,
         businessId,
       });
-      return reply.code(500).send({
-        data: null,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to complete Meta OAuth flow',
-        },
-      });
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to complete Meta OAuth flow', 500);
     }
   });
 
@@ -366,13 +299,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !businessId || !businessName) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId, businessId, and businessName are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId, businessId, and businessName are required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -396,13 +323,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !settings) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId and settings are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId and settings are required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -423,13 +344,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { agencyId } = request.query as { agencyId?: string };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -451,10 +366,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { agencyId } = request.query as { agencyId?: string };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -475,19 +387,13 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { agencyId } = request.query as { agencyId?: string };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'agencyId is required' },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
     const connectionResult = await agencyPlatformService.getConnection(agencyId, 'meta');
     if (connectionResult.error || !connectionResult.data) {
-      return reply.code(404).send({
-        data: null,
-        error: { code: 'META_NOT_CONNECTED', message: 'Meta is not connected' },
-      });
+      return sendError(reply, 'META_NOT_CONNECTED', 'Meta is not connected', 404);
     }
 
     const meta = connectionResult.data.metadata as any;
@@ -528,10 +434,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !selections) {
-      return reply.code(400).send({
-        data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'agencyId and selections are required' },
-      });
+      return sendValidationError(reply, 'agencyId and selections are required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -552,13 +455,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     const { agencyId } = request.query as { agencyId?: string };
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -582,13 +479,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !settings) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId and settings are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId and settings are required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 
@@ -622,13 +513,7 @@ export async function registerAssetRoutes(fastify: FastifyInstance) {
     };
 
     if (!agencyId || !product || !accountId || !accountName) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId, product, accountId, and accountName are required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId, product, accountId, and accountName are required');
     }
     if (!ensureAgencyAccess(request, reply, agencyId)) return;
 

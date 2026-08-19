@@ -9,6 +9,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@/lib/prisma.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service.js';
 import { MetricType, QuotaCheckResult, TIER_LIMITS, SubscriptionTier } from '@agency-platform/shared';
+import { sendError } from '../lib/response.js';
 
 export interface QuotaCheckOptions {
   metric: MetricType;
@@ -148,23 +149,11 @@ export function quotaEnforcementMiddleware(options: { metric: MetricType }) {
     } catch (error: any) {
       if (error.code === 'QUOTA_SERVICE_UNAVAILABLE') {
         console.error('[QUOTA_SERVICE] Service unavailable:', error.message);
-        return reply.code(503).send({
-          data: null,
-          error: {
-            code: 'QUOTA_SERVICE_UNAVAILABLE',
-            message: 'Unable to verify quota. Please try again later.',
-          },
-        });
+        return sendError(reply, 'QUOTA_SERVICE_UNAVAILABLE', 'Unable to verify quota. Please try again later.', 503);
       }
       // Log other errors for alerting but still fail-closed
       console.error('[QUOTA_SERVICE] Unexpected error:', error);
-      return reply.code(503).send({
-        data: null,
-        error: {
-          code: 'QUOTA_SERVICE_UNAVAILABLE',
-          message: 'Service temporarily unavailable.',
-        },
-      });
+      return sendError(reply, 'QUOTA_SERVICE_UNAVAILABLE', 'Service temporarily unavailable.', 503);
     }
   };
 }

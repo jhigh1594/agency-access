@@ -4,6 +4,7 @@ import type { Platform } from '@agency-platform/shared';
 import { PLATFORM_NAMES, MANUAL_PLATFORMS } from './constants.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { CacheKeys, deleteCache, invalidateDashboardCache } from '@/lib/cache.js';
+import { sendError, sendValidationError } from '../../lib/response.js';
 
 export async function registerManualRoutes(fastify: FastifyInstance) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,23 +23,11 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     };
 
     if (!MANUAL_PLATFORMS.includes(platform as any)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'UNSUPPORTED_PLATFORM',
-          message: `Platform "${platform}" does not support manual invitation flow. Supported platforms: ${MANUAL_PLATFORMS.join(', ')}`,
-        },
-      });
+      return sendError(reply, 'UNSUPPORTED_PLATFORM', `Platform "${platform}" does not support manual invitation flow. Supported platforms: ${MANUAL_PLATFORMS.join(', ')}`, 400);
     }
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -55,43 +44,19 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
 
     if (isPinterest) {
       if (!businessId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'businessId is required for Pinterest',
-          },
-        });
+        return sendValidationError(reply, 'businessId is required for Pinterest');
       }
 
       if (!pinterestBusinessIdRegex.test(businessId)) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'INVALID_BUSINESS_ID',
-            message: 'Pinterest Business ID must be 1-20 digits',
-          },
-        });
+        return sendError(reply, 'INVALID_BUSINESS_ID', 'Pinterest Business ID must be 1-20 digits', 400);
       }
     } else if (!isShopify) {
       if (!invitationEmail) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'invitationEmail is required',
-          },
-        });
+        return sendValidationError(reply, 'invitationEmail is required');
       }
 
       if (!emailRegex.test(invitationEmail)) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'INVALID_EMAIL',
-            message: 'Invalid email format',
-          },
-        });
+        return sendError(reply, 'INVALID_EMAIL', 'Invalid email format', 400);
       }
     }
 
@@ -101,13 +66,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     });
 
     if (agencyResult.error || !agencyResult.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'AGENCY_NOT_FOUND',
-          message: 'Agency not found',
-        },
-      });
+      return sendError(reply, 'AGENCY_NOT_FOUND', 'Agency not found', 404);
     }
 
     const actualAgencyId = agencyResult.data.agencyId;
@@ -121,13 +80,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     });
 
     if (existingConnection) {
-      return reply.code(409).send({
-        data: null,
-        error: {
-          code: 'PLATFORM_ALREADY_CONNECTED',
-          message: `${PLATFORM_NAMES[platform as Platform]} is already connected`,
-        },
-      });
+      return sendError(reply, 'PLATFORM_ALREADY_CONNECTED', `${PLATFORM_NAMES[platform as Platform]} is already connected`, 409);
     }
 
     const connection = await prisma.agencyPlatformConnection.create({
@@ -201,23 +154,11 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     };
 
     if (!MANUAL_PLATFORMS.includes(platform as any)) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'UNSUPPORTED_PLATFORM',
-          message: `Platform "${platform}" does not support manual invitation flow. Supported platforms: ${MANUAL_PLATFORMS.join(', ')}`,
-        },
-      });
+      return sendError(reply, 'UNSUPPORTED_PLATFORM', `Platform "${platform}" does not support manual invitation flow. Supported platforms: ${MANUAL_PLATFORMS.join(', ')}`, 400);
     }
 
     if (!agencyId) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'agencyId is required',
-        },
-      });
+      return sendValidationError(reply, 'agencyId is required');
     }
 
     const principalAgencyId = (request as any).principalAgencyId as string;
@@ -232,54 +173,24 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     const isPinterest = platform === 'pinterest';
     const isShopify = platform === 'shopify';
     if (isShopify) {
-      return reply.code(400).send({
-        data: null,
-        error: {
-          code: 'UNSUPPORTED_OPERATION',
-          message: 'Shopify store details are provided by the client during the access request flow.',
-        },
-      });
+      return sendError(reply, 'UNSUPPORTED_OPERATION', 'Shopify store details are provided by the client during the access request flow.', 400);
     }
 
     if (isPinterest) {
       if (!businessId) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'businessId is required for Pinterest',
-          },
-        });
+        return sendValidationError(reply, 'businessId is required for Pinterest');
       }
 
       if (!pinterestBusinessIdRegex.test(businessId)) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'INVALID_BUSINESS_ID',
-            message: 'Pinterest Business ID must be 1-20 digits',
-          },
-        });
+        return sendError(reply, 'INVALID_BUSINESS_ID', 'Pinterest Business ID must be 1-20 digits', 400);
       }
     } else {
       if (!invitationEmail) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'invitationEmail is required',
-          },
-        });
+        return sendValidationError(reply, 'invitationEmail is required');
       }
 
       if (!emailRegex.test(invitationEmail)) {
-        return reply.code(400).send({
-          data: null,
-          error: {
-            code: 'INVALID_EMAIL',
-            message: 'Invalid email format',
-          },
-        });
+        return sendError(reply, 'INVALID_EMAIL', 'Invalid email format', 400);
       }
     }
 
@@ -289,13 +200,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     });
 
     if (agencyResult.error || !agencyResult.data) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'AGENCY_NOT_FOUND',
-          message: 'Agency not found',
-        },
-      });
+      return sendError(reply, 'AGENCY_NOT_FOUND', 'Agency not found', 404);
     }
 
     const actualAgencyId = agencyResult.data.agencyId;
@@ -308,13 +213,7 @@ export async function registerManualRoutes(fastify: FastifyInstance) {
     });
 
     if (!existingConnection) {
-      return reply.code(404).send({
-        data: null,
-        error: {
-          code: 'CONNECTION_NOT_FOUND',
-          message: `No connection found for ${PLATFORM_NAMES[platform as Platform]}`,
-        },
-      });
+      return sendError(reply, 'CONNECTION_NOT_FOUND', `No connection found for ${PLATFORM_NAMES[platform as Platform]}`, 404);
     }
 
     const updatedConnection = await prisma.agencyPlatformConnection.update({
