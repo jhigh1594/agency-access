@@ -19,7 +19,7 @@ export const accessRequestNotificationService = {
     clientEmail: string;
     agencyName: string;
   }) {
-    const baseUrl = (env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const baseUrl = env.FRONTEND_URL.replace(/\/$/, '');
     const authorizationUrl = `${baseUrl}/client/${encodeURIComponent(input.uniqueToken)}`;
     const result = await sendEmail({
       to: input.clientEmail,

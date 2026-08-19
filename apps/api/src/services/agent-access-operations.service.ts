@@ -37,7 +37,7 @@ class RetryableAgentEffectError extends Error {
 }
 
 function baseUrl() {
-  return (env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  return env.FRONTEND_URL.replace(/\/$/, '');
 }
 
 function safeAgencySettings(settings: unknown) {

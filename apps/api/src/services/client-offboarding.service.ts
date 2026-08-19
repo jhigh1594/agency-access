@@ -91,13 +91,6 @@ export const clientOffboardingService = {
           where: { connectionId: input.connectionId },
         });
 
-        for (const grant of sourceGrants) {
-          if ((grant as Record<string, unknown>).agencyId &&
-              (grant as Record<string, unknown>).agencyId !== input.agencyId) {
-            throw new Error('Cross-agency source grant binding rejected');
-          }
-        }
-
         const createdRun = await tx.googleOffboardingRun.create({
           data: {
             agencyId: input.agencyId,
@@ -345,14 +338,6 @@ export const clientOffboardingService = {
     };
   },
 
-  async recordAttemptUpdate(_input: {
-    attemptId: string;
-    errorCode: string;
-    errorMessage: string;
-  }) {
-    throw new Error('Attempt records are insert-only and cannot be updated');
-  },
-
   async confirmRun(input: { runId: string; actorId: string }) {
     return this.transition({
       runId: input.runId,
@@ -361,23 +346,13 @@ export const clientOffboardingService = {
     });
   },
 
-  async cancelRun(input: { runId: string; actorId?: string }) {
-    return this.transition({
-      runId: input.runId,
-      to: 'canceled',
-      actorId: input.actorId,
-    });
-  },
-
   async deriveRunOutcome(input: { runId: string }) {
     const status = await this.deriveRunStatus(input);
 
-    if (status === 'completed' || status === 'completed_with_manual_follow_up' || status === 'incomplete') {
-      await prisma.googleOffboardingRun.update({
-        where: { id: input.runId },
-        data: { status, finalOutcome: status },
-      });
-    }
+    await prisma.googleOffboardingRun.update({
+      where: { id: input.runId },
+      data: { finalOutcome: status },
+    });
 
     return status;
   },

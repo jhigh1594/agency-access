@@ -373,46 +373,6 @@ describe('client-offboarding.service', () => {
 
       expect(prisma.googleOffboardingRun.create).not.toHaveBeenCalled();
     });
-
-    it('rejects cross-agency source grant binding', async () => {
-      vi.mocked(prisma.googleOffboardingRun.findFirst).mockResolvedValue(null);
-      vi.mocked(prisma.googleOffboardingRun.count).mockResolvedValue(0);
-      vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue({
-        id: 'conn-1',
-        agencyId: 'agency-1',
-        status: 'active',
-      } as any);
-      vi.mocked(prisma.googleNativeGrant.findMany).mockResolvedValue([
-        {
-          id: 'grant-x',
-          productId: 'google_ads',
-          fulfillmentMode: 'user_invite',
-          grantStatus: 'verified',
-          agencyId: 'agency-2',
-        },
-      ] as any);
-
-      await expect(
-        clientOffboardingService.prepare({
-          agencyId: 'agency-1',
-          connectionId: 'conn-1',
-          idempotencyKey: 'idem-cross',
-          intentHash: 'hash-cross',
-        })
-      ).rejects.toThrow(/cross.agency|agency.*mismatch|binding.*rejected|ownership/i);
-    });
-
-    it('prevents updating an attempt record (insert-only)', async () => {
-      vi.mocked(prisma.googleOffboardingAttempt.updateMany).mockResolvedValue({ count: 1 });
-
-      await expect(
-        clientOffboardingService.recordAttemptUpdate({
-          attemptId: 'attempt-1',
-          errorCode: 'PERMISSION_DENIED',
-          errorMessage: 'Insufficient scope',
-        })
-      ).rejects.toThrow(/insert.only|immutable|read.only|cannot.*update/i);
-    });
   });
 
   describe('mixed outcome aggregation', () => {

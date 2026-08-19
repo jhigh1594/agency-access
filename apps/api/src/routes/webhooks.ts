@@ -422,8 +422,6 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         throw error;
       }
 
-      // Log webhook for audit trail (upsert above handles this)
-
       if (payload.type === 'invoice.paid') {
         const invoice = getInvoicePayload(payload);
 
@@ -465,9 +463,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
           return reply.code(400).send({ error: 'Unknown product ID' });
         }
 
-        // Find agency by Creem customer ID
-        // Look up via Subscription model which has the creemCustomerId field
-        const agencyWithSubscription = await prisma.agency.findFirst({
+        const agency = await prisma.agency.findFirst({
           where: {
             subscription: {
               creemCustomerId: subscription.customer_id,
@@ -477,8 +473,6 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             subscription: true,
           },
         });
-
-        const agency = agencyWithSubscription;
 
         if (agency?.clerkUserId) {
           // Check if subscription was expired and is now being reactivated

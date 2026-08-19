@@ -27,7 +27,7 @@ export function registerOnboardingTools(server: McpServer, principal: AgentPrinc
       const data = {
         operationId: operation.id,
         status: operation.status,
-        approvalUrl: `${(env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '')}/agent-operations/${operation.id}`,
+        approvalUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/agent-operations/${operation.id}`,
         expiresAt: operation.expiresAt instanceof Date ? operation.expiresAt.toISOString() : operation.expiresAt || null,
       };
       return mcpStructuredResult(data, 'Client onboarding is prepared and waiting for agency owner approval.');
@@ -42,7 +42,7 @@ export function registerOnboardingTools(server: McpServer, principal: AgentPrinc
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
     }, async ({ requestId, idempotencyKey }) => {
       const operation: any = await agentAccessOperationsService.prepareCancelAccessRequest(principal, { requestId, idempotencyKey });
-      return mcpStructuredResult({ operationId: operation.id, status: operation.status, approvalUrl: `${(env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '')}/agent-operations/${operation.id}` }, 'Cancellation is prepared and waiting for owner approval.');
+      return mcpStructuredResult({ operationId: operation.id, status: operation.status, approvalUrl: `${env.FRONTEND_URL.replace(/\/$/, '')}/agent-operations/${operation.id}` }, 'Cancellation is prepared and waiting for owner approval.');
     });
   }
 

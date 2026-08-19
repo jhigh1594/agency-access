@@ -610,9 +610,7 @@ describe('Google Client Offboarding Schema Integration', () => {
     expect(typeof clientOffboardingService.deriveRunStatus).toBe('function');
     expect(typeof clientOffboardingService.serializeReceipt).toBe('function');
     expect(typeof clientOffboardingService.updateItemSnapshot).toBe('function');
-    expect(typeof clientOffboardingService.recordAttemptUpdate).toBe('function');
     expect(typeof clientOffboardingService.addAttempt).toBe('function');
-    expect(typeof clientOffboardingService.cancelRun).toBe('function');
     expect(typeof clientOffboardingService.getRun).toBe('function');
     expect(typeof clientOffboardingService.getItemAttempts).toBe('function');
     expect(typeof clientOffboardingService.updateItemStatus).toBe('function');
