@@ -78,11 +78,14 @@ export interface PlatformOAuthConfig {
  * Platform Configuration Registry
  *
  * Maps platform identifiers to their OAuth configurations.
+ * Partial: only platforms with a real OAuth flow have entries.
+ * Non-OAuth platforms (Kit, Beehiiv, Zapier — team invitation / API key
+ * flows) are intentionally absent; their connectors are standalone.
  *
  * NOTE: This config uses shared PLATFORM_SCOPES for the actual scope values.
  * The defaultScopes here are references for documentation and fallback.
  */
-export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
+export const PLATFORM_CONFIGS: Partial<Record<Platform, PlatformOAuthConfig>> = {
   // ========================================================================
   // GOOGLE PLATFORMS
   // ========================================================================
@@ -228,37 +231,6 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
   },
 
   // ========================================================================
-  // KIT PLATFORMS
-  // ========================================================================
-  // Note: Kit uses team invitation flow (manual), not OAuth
-  // This config is for type compatibility only
-  // OAuth implementation preserved in kit.ts connector (commented out)
-
-  kit: {
-    name: 'Kit',
-    authUrl: '', // Kit uses team invitation flow, not OAuth
-    tokenUrl: '',
-    scopeSeparator: ' ',
-    supportsRefreshTokens: false,
-    defaultScopes: [], // Kit uses team invitations, not OAuth scopes
-  },
-
-  // ========================================================================
-  // BEEHIIV PLATFORMS
-  // ========================================================================
-  // Note: Beehiiv uses API key authentication, not OAuth
-  // This config is for type compatibility only
-
-  beehiiv: {
-    name: 'Beehiiv',
-    authUrl: '', // Beehiiv uses API key auth, not OAuth
-    tokenUrl: '',
-    scopeSeparator: ' ',
-    supportsRefreshTokens: false,
-    defaultScopes: [], // Beehiiv uses API key, not OAuth scopes
-  },
-
-  // ========================================================================
   // TIKTOK PLATFORMS
   // ========================================================================
 
@@ -325,16 +297,17 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
   // ========================================================================
   // PINTEREST PLATFORMS
   // ========================================================================
-  // Note: Pinterest uses manual partnership flow (team invitation), not OAuth
-  // This config is for type compatibility only
 
   pinterest: {
     name: 'Pinterest',
-    authUrl: '', // Pinterest uses manual partnership flow, not OAuth
-    tokenUrl: '',
+    // Pinterest v5 OAuth endpoints
+    authUrl: 'https://www.pinterest.com/oauth/',
+    tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
     scopeSeparator: ',',
-    supportsRefreshTokens: false,
-    defaultScopes: [], // Pinterest uses manual partnership, not OAuth scopes
+    userInfoUrl: 'https://api.pinterest.com/v5/user_account',
+    // Access tokens expire in 30 days; refresh tokens are continuous
+    supportsRefreshTokens: true,
+    defaultScopes: ['ads:read', 'ads:write', 'user_accounts:read'],
   },
 
   // ========================================================================
@@ -370,33 +343,30 @@ export const PLATFORM_CONFIGS: Record<Platform, PlatformOAuthConfig> = {
     requiresShopContext: true,
     defaultScopes: ['read_products', 'read_orders', 'read_customers', 'read_marketing_events'],
   },
-
-  // ========================================================================
-  // ZAPIER PLATFORMS
-  // ========================================================================
-
-  zapier: {
-    name: 'Zapier',
-    authUrl: 'https://zapier.com/oauth/authorize',
-    tokenUrl: 'https://zapier.com/oauth/token',
-    scopeSeparator: ',',
-    userInfoUrl: 'https://api.zapier.com/v2/user',
-    supportsRefreshTokens: true,
-    defaultScopes: ['read', 'write'],
-  },
 };
+
+/**
+ * Typed error thrown when a platform has no OAuth configuration.
+ * Carries the platform identifier for upstream error mapping.
+ */
+export class PlatformNotConfiguredError extends Error {
+  constructor(public platform: Platform) {
+    super(`No OAuth configuration found for platform: ${platform}`);
+    this.name = 'PlatformNotConfiguredError';
+  }
+}
 
 /**
  * Get configuration for a platform
  *
  * @param platform - Platform identifier
  * @returns Platform OAuth configuration
- * @throws Error if platform config doesn't exist
+ * @throws PlatformNotConfiguredError if platform config doesn't exist
  */
 export function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
   const config = PLATFORM_CONFIGS[platform];
   if (!config) {
-    throw new Error(`No OAuth configuration found for platform: ${platform}`);
+    throw new PlatformNotConfiguredError(platform);
   }
   return config;
 }
