@@ -16,7 +16,7 @@
  */
 
 import { useState } from 'react';
-import { Loader2, ExternalLink, RefreshCw, CheckCircle2, X } from 'lucide-react';
+import { ExternalLink, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 

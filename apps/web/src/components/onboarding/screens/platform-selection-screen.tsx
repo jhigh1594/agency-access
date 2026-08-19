@@ -19,7 +19,7 @@
 
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Platform, PlatformSelection } from '@agency-platform/shared';
 import { PlatformSelectorGrid } from '../platform-selector-grid';
@@ -43,7 +43,7 @@ interface PlatformSelectionScreenProps {
 // Convert hierarchical format to flat array
 function selectionToFlat(selection: PlatformSelection): Platform[] {
   const flat: Platform[] = [];
-  for (const [group, platforms] of Object.entries(selection || {})) {
+  for (const [, platforms] of Object.entries(selection || {})) {
     if (platforms) {
       flat.push(...(platforms as Platform[]));
     }
@@ -71,7 +71,6 @@ function flatToSelection(platforms: Platform[]): PlatformSelection {
 export function PlatformSelectionScreen({
   selectedPlatforms,
   onUpdate,
-  onGenerate,
   loading,
 }: PlatformSelectionScreenProps) {
   // Convert to flat array for the grid component

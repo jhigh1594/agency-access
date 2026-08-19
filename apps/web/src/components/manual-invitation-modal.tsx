@@ -14,7 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Mail, Info, Building2, ExternalLink } from 'lucide-react';
+import { X, Mail, Info, Building2, ExternalLink } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { PLATFORM_NAMES, type Platform } from '@agency-platform/shared';

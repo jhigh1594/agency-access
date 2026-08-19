@@ -343,8 +343,7 @@ export function generateComparisonSchema(
  * Generate standalone FAQ schema for any page
  */
 export function generateFAQSchema(
-  faqs: BlogFAQ[],
-  pageUrl: string
+  faqs: BlogFAQ[]
 ): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
@@ -382,11 +381,8 @@ export function generateHowToSchema(
     estimatedCost?: string;
     steps: HowToStep[];
   },
-  pageUrl: string,
-  options: BlogSchemaOptions = {}
+  pageUrl: string
 ): Record<string, unknown> {
-  const opts = { ...defaultOptions, ...options };
-
   return {
     "@context": "https://schema.org",
     "@type": "HowTo",

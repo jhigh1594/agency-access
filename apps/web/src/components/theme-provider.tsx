@@ -37,7 +37,7 @@ export function useTheme() {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>('light');
-  const [mounted, setMounted] = useState(false);
+  const [, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);

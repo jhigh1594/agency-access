@@ -122,8 +122,6 @@ export function MetaPagePermissionsModal({
   };
 
   const allSelected = localPermissions.length === META_PAGE_PERMISSIONS.length;
-  const hasMaximumPermissions = localPermissions.includes('maximum_permissions');
-
   if (!isOpen) return null;
 
   return (
@@ -203,8 +201,6 @@ export function MetaPagePermissionsModal({
             <div className="space-y-3">
               {META_PAGE_PERMISSIONS.map((permission) => {
                 const isChecked = localPermissions.includes(permission.id);
-                const isMaximumPermissions = permission.id === 'maximum_permissions';
-
                 return (
                   <div
                     key={permission.id}

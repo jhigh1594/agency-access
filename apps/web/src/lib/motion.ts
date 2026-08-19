@@ -1,6 +1,5 @@
 'use client';
 
-import { motion, MotionProps } from 'framer-motion';
 
 /**
  * Motion optimization utilities for mobile performance

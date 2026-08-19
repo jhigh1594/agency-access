@@ -19,7 +19,7 @@
  */
 
 import { useState, FormEvent } from 'react';
-import { Loader2, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SingleSelect } from '@/components/ui/single-select';
 

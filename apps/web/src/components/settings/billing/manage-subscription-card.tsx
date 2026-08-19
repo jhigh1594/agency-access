@@ -85,7 +85,6 @@ export function ManageSubscriptionCard() {
   const currentTier = normalizeCurrentTier(subscription?.tier);
   const lifecycle = resolveBillingLifecycle(subscription);
   const currentTierRank = TIER_RANK[currentTier];
-  const isDowngrade = selectedTier ? TIER_RANK[selectedTier] < currentTierRank : false;
   const isUpgrade = selectedTier ? TIER_RANK[selectedTier] > currentTierRank : false;
   const canCancelSubscription = !!subscription;
   const preferredInterval = readBillingIntervalPreference(lifecycle === 'PAID' ? 'monthly' : 'yearly');

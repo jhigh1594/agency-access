@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, X, Loader2, AlertCircle, Check, Globe } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Check } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { Client } from '@agency-platform/shared';
 import { useAuthOrBypass } from '@/lib/dev-auth';
@@ -30,7 +30,7 @@ interface PaginatedClientsResponse {
   };
 }
 
-export function ClientSelector({ agencyId, onSelect, value }: ClientSelectorProps) {
+export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
   const clerkAuth = useAuth();
   const { getToken } = clerkAuth;
   const auth = useAuthOrBypass(clerkAuth);
