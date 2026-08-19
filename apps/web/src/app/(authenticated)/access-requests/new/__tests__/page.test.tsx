@@ -67,10 +67,6 @@ vi.mock('@/components/save-as-template-modal', () => ({
   SaveAsTemplateModal: () => null,
 }));
 
-vi.mock('@/components/platform-connection-modal', () => ({
-  PlatformConnectionModal: () => null,
-}));
-
 function renderWithProviders(component: ReactNode) {
   const queryClient = new QueryClient({
     defaultOptions: {
