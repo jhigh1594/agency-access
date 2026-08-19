@@ -482,41 +482,44 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             }, 'Reactivated previously expired subscription');
           }
 
-          // Update Clerk metadata with new tier
-          await clerkMetadataService.setSubscriptionTier(
-            agency.clerkUserId,
-            tier,
-            {
-              subscriptionId: subscription.id,
-              subscriptionStatus: subscription.status,
-              currentPeriodStart: new Date(subscription.current_period_start),
-              currentPeriodEnd: new Date(subscription.current_period_end),
-              trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end) : undefined,
-            }
-          );
-
-          // Update agency subscription tier in database
-          // Ensure agency.subscriptionTier is always set correctly
-          await prisma.agency.update({
-            where: { id: agency.id },
-            data: { subscriptionTier: tier },
-          });
-
-          // Also update subscription record if it exists
-          if (agency.subscription) {
-            await prisma.subscription.update({
-              where: { id: agency.subscription.id },
-              data: {
-                tier,
-                status: subscription.status,
+          // Independent writes — Clerk metadata, agency tier, and subscription
+          // record don't depend on each other; run them concurrently.
+          await Promise.all([
+            clerkMetadataService.setSubscriptionTier(
+              agency.clerkUserId,
+              tier,
+              {
+                subscriptionId: subscription.id,
+                subscriptionStatus: subscription.status,
                 currentPeriodStart: new Date(subscription.current_period_start),
                 currentPeriodEnd: new Date(subscription.current_period_end),
-                trialStart: subscription.trial_end ? null : new Date(),
-                trialEnd: subscription.trial_end ? new Date(subscription.trial_end) : null,
-                creemData: subscription as any,
-              },
-            });
-          }
+                trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end) : undefined,
+              }
+            ),
+
+            // Update agency subscription tier in database
+            // Ensure agency.subscriptionTier is always set correctly
+            prisma.agency.update({
+              where: { id: agency.id },
+              data: { subscriptionTier: tier },
+            }),
+
+            // Also update subscription record if it exists
+            agency.subscription
+              ? prisma.subscription.update({
+                  where: { id: agency.subscription.id },
+                  data: {
+                    tier,
+                    status: subscription.status,
+                    currentPeriodStart: new Date(subscription.current_period_start),
+                    currentPeriodEnd: new Date(subscription.current_period_end),
+                    trialStart: subscription.trial_end ? null : new Date(),
+                    trialEnd: subscription.trial_end ? new Date(subscription.trial_end) : null,
+                    creemData: subscription as any,
+                  },
+                })
+              : Promise.resolve(null),
+          ]);
         }
       }
 

@@ -32,6 +32,9 @@ vi.mock('@/lib/prisma', () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    auditLog: {
+      createMany: vi.fn(),
+    },
     accessRequest: {
       findUnique: vi.fn(),
     },
@@ -324,6 +327,100 @@ describe('ConnectionService', () => {
           health: 'expired',
         }),
       ]);
+    });
+
+    it('should skip live verification and audit rows for tokens beyond the near-expiry window', async () => {
+      const expiresAt = new Date(Date.now() + 45 * 24 * 60 * 60 * 1000);
+      vi.mocked(prisma.platformAuthorization.findMany).mockResolvedValue([
+        {
+          id: 'auth-google',
+          connectionId: 'connection-1',
+          platform: 'google_ads',
+          status: 'active',
+          expiresAt,
+          lastRefreshedAt: null,
+          secretId: 'secret-google',
+          connection: {
+            agencyId: 'agency-1',
+            clientEmail: 'client@example.com',
+          },
+        },
+      ] as any);
+
+      const result = await connectionService.getAgencyTokenHealth('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual([
+        expect.objectContaining({
+          id: 'auth-google',
+          health: 'healthy',
+        }),
+      ]);
+      expect(infisical.retrieveOAuthTokens).not.toHaveBeenCalled();
+      expect(verifyTokenMock).not.toHaveBeenCalled();
+      expect(prisma.auditLog.createMany).not.toHaveBeenCalled();
+    });
+
+    it('should verify near-expiry tokens exactly once each and write audit rows in one batch', async () => {
+      const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      vi.mocked(prisma.platformAuthorization.findMany).mockResolvedValue([
+        {
+          id: 'auth-google',
+          connectionId: 'connection-1',
+          platform: 'google_ads',
+          status: 'active',
+          expiresAt,
+          lastRefreshedAt: null,
+          secretId: 'secret-google',
+          connection: {
+            agencyId: 'agency-1',
+            clientEmail: 'client@example.com',
+          },
+        },
+        {
+          id: 'auth-meta',
+          connectionId: 'connection-2',
+          platform: 'meta_ads',
+          status: 'active',
+          expiresAt,
+          lastRefreshedAt: null,
+          secretId: 'secret-meta',
+          connection: {
+            agencyId: 'agency-1',
+            clientEmail: 'meta@example.com',
+          },
+        },
+      ] as any);
+      vi.mocked(infisical.retrieveOAuthTokens).mockResolvedValue({ accessToken: 'token' } as any);
+      verifyTokenMock.mockResolvedValue(true);
+
+      const result = await connectionService.getAgencyTokenHealth('agency-1');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual([
+        expect.objectContaining({ id: 'auth-google', health: 'expiring' }),
+        expect.objectContaining({ id: 'auth-meta', health: 'expiring' }),
+      ]);
+      expect(verifyTokenMock).toHaveBeenCalledTimes(2);
+      expect(infisical.retrieveOAuthTokens).toHaveBeenCalledTimes(2);
+      expect(prisma.auditLog.createMany).toHaveBeenCalledTimes(1);
+
+      const batch = vi.mocked(prisma.auditLog.createMany).mock.calls[0][0];
+      expect(batch.data).toHaveLength(2);
+      expect(batch.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            action: 'TOKEN_HEALTH_CHECK',
+            resourceId: 'connection-1',
+            metadata: { platform: 'google_ads', authorizationId: 'auth-google' },
+          }),
+          expect.objectContaining({
+            action: 'TOKEN_HEALTH_CHECK',
+            resourceId: 'connection-2',
+            metadata: { platform: 'meta_ads', authorizationId: 'auth-meta' },
+          }),
+        ])
+      );
     });
   });
 

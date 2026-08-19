@@ -19,9 +19,12 @@ export interface QuotaCheckOptions {
 
 /**
  * Check if agency has remaining quota
- * Returns quota status with allowed flag
+ * Returns quota status with allowed flag (plus currentTier so the 402
+ * handler does not need to re-fetch the tier from Clerk).
  */
-export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheckResult> {
+export type QuotaCheckResultWithTier = QuotaCheckResult & { currentTier?: SubscriptionTier };
+
+export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheckResultWithTier> {
   const { metric, agencyId, clerkUserId } = options;
 
   try {
@@ -55,11 +58,19 @@ export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheck
 
     // Unlimited seats for PRO tier
     if (limit === -1) {
-      return { allowed: true, metric, limit: -1, used, remaining: -1 };
+      return { allowed: true, metric, limit: -1, used, remaining: -1, currentTier: tier };
     }
 
     const remaining = Math.max(0, limit - used);
-    return { allowed: used < limit, metric, limit, used, remaining, resetsAt: counter?.resetAt ?? undefined };
+    return {
+      allowed: used < limit,
+      metric,
+      limit,
+      used,
+      remaining,
+      resetsAt: counter?.resetAt ?? undefined,
+      currentTier: tier,
+    };
   } catch (error: any) {
     // Re-throw if it's already a QuotaServiceUnavailableError
     if (error instanceof QuotaServiceUnavailableError) {
@@ -124,8 +135,8 @@ export function quotaEnforcementMiddleware(options: { metric: MetricType }) {
       const result = await checkQuota({ metric: options.metric, agencyId, clerkUserId: userId });
 
       if (!result.allowed) {
-        const tierResult = await clerkMetadataService.getSubscriptionTier(userId);
-        const currentTier = tierResult.data?.tier || 'STARTER';
+        // Tier comes from the checkQuota result — no second Clerk fetch.
+        const currentTier = result.currentTier ?? 'STARTER';
         const suggestedTier = currentTier === 'STARTER' ? 'AGENCY' : 'PRO';
 
         return reply.code(402).send({

@@ -8,12 +8,15 @@
 import { prisma } from '@/lib/prisma';
 import { emitAccessRequestLifecycleWebhook } from '@/services/access-request.service';
 
+/** Cap on concurrent webhook emissions so a large backlog stays bounded. */
+const WEBHOOK_CONCURRENCY = 10;
+
 /**
  * Find and expire all overdue pending access requests.
  *
- * For each expired request:
- * 1. Transition status from 'pending' to 'expired'
- * 2. Emit access_request.expired webhook event to the agency's endpoint
+ * 1. Transition every overdue request from 'pending' to 'expired' in one
+ *    bulk update (instead of one UPDATE per request).
+ * 2. Emit access_request.expired webhook events with bounded concurrency.
  */
 export async function checkExpiredRequests(): Promise<{ expired: number }> {
   const now = new Date();
@@ -29,24 +32,31 @@ export async function checkExpiredRequests(): Promise<{ expired: number }> {
     },
   });
 
-  let expired = 0;
-
-  for (const request of expiredRequests) {
-    await prisma.accessRequest.update({
-      where: { id: request.id },
-      data: { status: 'expired' },
-    });
-
-    await emitAccessRequestLifecycleWebhook({
-      accessRequestId: request.id,
-      previousStatus: request.status,
-      nextStatus: 'expired',
-    });
-
-    expired++;
+  if (expiredRequests.length === 0) {
+    return { expired: 0 };
   }
 
-  return { expired };
+  await prisma.accessRequest.updateMany({
+    where: {
+      id: { in: expiredRequests.map((request) => request.id) },
+      status: 'pending',
+    },
+    data: { status: 'expired' },
+  });
+
+  for (let i = 0; i < expiredRequests.length; i += WEBHOOK_CONCURRENCY) {
+    await Promise.all(
+      expiredRequests.slice(i, i + WEBHOOK_CONCURRENCY).map((request) =>
+        emitAccessRequestLifecycleWebhook({
+          accessRequestId: request.id,
+          previousStatus: request.status,
+          nextStatus: 'expired',
+        })
+      )
+    );
+  }
+
+  return { expired: expiredRequests.length };
 }
 
 // Standalone script support (ESM-compatible)

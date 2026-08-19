@@ -42,25 +42,24 @@ export async function startTokenRefreshHandlers(): Promise<void> {
       },
     });
 
-    let queued = 0;
-
-    for (const auth of expiringAuths) {
+    const eligibleAuths = expiringAuths.filter((auth) => {
       const capability = getPlatformTokenCapability(auth.platform as Platform);
+      return capability.connectionMethod === 'oauth' && capability.refreshStrategy === 'automatic';
+    });
 
-      if (capability.connectionMethod !== 'oauth' || capability.refreshStrategy !== 'automatic') {
-        continue;
-      }
-
-      await enqueueJob('token-refresh', {
+    // Independent singleton jobs (unique connectionId+platform pairs) —
+    // enqueue them concurrently instead of one INSERT round-trip each.
+    await Promise.all(eligibleAuths.map((auth) =>
+      enqueueJob('token-refresh', {
         connectionId: auth.connectionId,
         platform: auth.platform,
       }, {
         singletonKey: `refresh-${auth.connectionId}-${auth.platform}`,
         priority: 1,
-      });
-      queued += 1;
-    }
+      })
+    ));
 
+    const queued = eligibleAuths.length;
     logger.info(`Token refresh scan complete`, { queued });
   }, { teamSize: 1, teamConcurrency: 1 });
 

@@ -39,23 +39,25 @@ async function resolveAgencyIdOrReply(request: FastifyRequest, reply: FastifyRep
   return { agencyId: principal.data.agencyId, sent: null };
 }
 
-async function ensureConnectionBelongsToAgency(connectionId: string, agencyId: string) {
-  const connection = await prisma.clientConnection.findFirst({
+/**
+ * Agency-scoped connection fetch shared by the ownership guard and the
+ * handler, so a request reads the connection row once. Returns null when the
+ * connection does not exist or belongs to another agency.
+ */
+async function findAgencyConnection(connectionId: string, agencyId: string) {
+  return prisma.clientConnection.findFirst({
     where: {
       id: connectionId,
       agencyId,
     },
-    select: { id: true },
   });
+}
 
-  if (!connection) {
-    return {
-      code: 'CONNECTION_NOT_FOUND',
-      message: 'Connection not found',
-    };
-  }
-
-  return null;
+function connectionNotFound() {
+  return {
+    code: 'CONNECTION_NOT_FOUND',
+    message: 'Connection not found',
+  };
 }
 
 async function findAuthorizationForAgency(authorizationId: string, agencyId: string) {
@@ -129,21 +131,13 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
     if (!agencyId) return sent;
 
     const { id } = request.params as { id: string };
-    const ownershipError = await ensureConnectionBelongsToAgency(id, agencyId);
-    if (ownershipError) {
-      return sendRouteError(reply, ownershipError, 404);
+    // Single fetch: ownership check + response row.
+    const connection = await findAgencyConnection(id, agencyId);
+    if (!connection) {
+      return sendRouteError(reply, connectionNotFound(), 404);
     }
 
-    const result = await connectionService.getConnection(id);
-
-    if (result.error) {
-      return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send({
-        data: null,
-        error: result.error,
-      });
-    }
-
-    return reply.send(result);
+    return reply.send({ data: connection, error: null });
   });
 
   // Revoke connection
@@ -152,12 +146,13 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
     if (!agencyId) return sent;
 
     const { id } = request.params as { id: string };
-    const ownershipError = await ensureConnectionBelongsToAgency(id, agencyId);
-    if (ownershipError) {
-      return sendRouteError(reply, ownershipError, 404);
+    // Single fetch: ownership check + the row revokeConnection needs.
+    const connection = await findAgencyConnection(id, agencyId);
+    if (!connection) {
+      return sendRouteError(reply, connectionNotFound(), 404);
     }
 
-    const result = await connectionService.revokeConnection(id);
+    const result = await connectionService.revokeConnection(id, connection);
 
     if (result.error) {
       return reply.code(result.error.code === 'NOT_FOUND' ? 404 : 500).send({
@@ -180,9 +175,9 @@ export async function tokenHealthRoutes(fastify: FastifyInstance) {
       return sendValidationError(reply, 'connectionId and platform are required');
     }
 
-    const ownershipError = await ensureConnectionBelongsToAgency(connectionId, agencyId);
-    if (ownershipError) {
-      return sendRouteError(reply, ownershipError, 404);
+    const connection = await findAgencyConnection(connectionId, agencyId);
+    if (!connection) {
+      return sendRouteError(reply, connectionNotFound(), 404);
     }
 
     const result = await connectionService.refreshPlatformAuthorization(connectionId, platform);

@@ -356,6 +356,16 @@ export class QuotaService {
    * Get usage from Clerk private metadata (for cumulative metrics)
    */
   private async getClerkMetadataUsage(agencyId: string, metric: MetricType): Promise<number> {
+    const usageMap = await this.getClerkMetadataUsageMap(agencyId);
+    return usageMap[metric] ?? 0;
+  }
+
+  /**
+   * Fetch Clerk private-metadata usage for all cumulative metrics in one
+   * agency + one Clerk user read (client_onboards and platform_audits share
+   * the same user record).
+   */
+  private async getClerkMetadataUsageMap(agencyId: string): Promise<Record<string, number>> {
     try {
       const agency = await prisma.agency.findUnique({
         where: { id: agencyId },
@@ -363,7 +373,7 @@ export class QuotaService {
       });
 
       if (!agency?.clerkUserId) {
-        return 0;
+        return {};
       }
 
       const user = await this.clerkClient.users.getUser(agency.clerkUserId);
@@ -371,12 +381,15 @@ export class QuotaService {
 
       // Return usage from metadata if exists
       const quotaLimits = metadata.quotaLimits as Record<string, any> | undefined;
-      const metricData = quotaLimits?.[metric];
 
-      return metricData?.used || 0;
+      const usageMap: Record<string, number> = {};
+      for (const metric of ['client_onboards', 'platform_audits'] as const) {
+        usageMap[metric] = quotaLimits?.[metric]?.used || 0;
+      }
+      return usageMap;
     } catch (error) {
       console.error('Error fetching Clerk metadata:', error);
-      return 0;
+      return {};
     }
   }
 
@@ -489,13 +502,34 @@ export class QuotaService {
         'team_seats',
       ];
 
+      // Independent counts fetched in parallel; members/team_seats share one
+      // agencyMember count, client_onboards/platform_audits share one Clerk read.
+      const [accessRequestsUsed, clientsUsed, membersUsed, templatesUsed, clerkUsage] =
+        await Promise.all([
+          this.getActualUsage(agencyId, 'access_requests'),
+          this.getActualUsage(agencyId, 'clients'),
+          this.getActualUsage(agencyId, 'members'),
+          this.getActualUsage(agencyId, 'templates'),
+          this.getClerkMetadataUsageMap(agencyId),
+        ]);
+
+      const usedByMetric: Record<MetricType, number> = {
+        access_requests: accessRequestsUsed,
+        clients: clientsUsed,
+        members: membersUsed,
+        templates: templatesUsed,
+        client_onboards: clerkUsage.client_onboards ?? 0,
+        platform_audits: clerkUsage.platform_audits ?? 0,
+        team_seats: membersUsed,
+      };
+
       const usage: Partial<UsageSnapshot> = {
         currentTier: (tier || 'STARTER') as SubscriptionTier,
         updatedAt: new Date(),
       };
 
       for (const metric of metrics) {
-        const used = await this.getActualUsage(agencyId, metric);
+        const used = usedByMetric[metric];
         const metricMap: Record<MetricType, 'accessRequests' | 'clients' | 'members' | 'templates' | 'clientOnboards' | 'platformAudits' | 'teamSeats'> = {
           access_requests: 'accessRequests',
           clients: 'clients',

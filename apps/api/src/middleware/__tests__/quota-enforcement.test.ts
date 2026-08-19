@@ -242,6 +242,20 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
       );
     });
 
+    it('should fetch the Clerk tier exactly once on the 402 path', async () => {
+      (prisma.agencyUsageCounter.findUnique as any).mockResolvedValue({
+        count: 36, // At limit
+        resetAt: new Date('2025-01-01T00:00:00.000Z'),
+      });
+
+      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+
+      await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
+
+      expect(mockReply.code).toHaveBeenCalledWith(402);
+      expect(clerkMetadataService.getSubscriptionTier).toHaveBeenCalledTimes(1);
+    });
+
     it('should return 401 when user not authenticated', async () => {
       delete (mockRequest as any).user;
 

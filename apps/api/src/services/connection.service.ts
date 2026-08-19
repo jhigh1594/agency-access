@@ -19,6 +19,25 @@ import {
 import { z } from 'zod';
 import { invalidateDashboardCache } from '@/lib/cache.js';
 
+/**
+ * Live-verify window for agency token-health sweeps (getAgencyTokenHealth).
+ *
+ * The dashboard flags a token as "expiring" 7 days out (getTokenHealth in
+ * apps/web/src/lib/token-health.ts) and the token-refresh scan sweeps a 7-day
+ * horizon, so a live platform call on a token further out cannot change any
+ * status the UI acts on. The window is kept at 30 days — half the longest
+ * common access-token lifetime (60-day Meta/LinkedIn long-lived tokens) — so
+ * server-side revocations still surface well before the UI horizon; beyond
+ * that, tokens are reported from their stored expiry only.
+ */
+const AGENCY_LIVE_VERIFY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Cap on concurrent platform live-verify calls per agency health sweep,
+ * so one agency with many connections cannot fan out unbounded.
+ */
+const LIVE_VERIFY_CONCURRENCY = 5;
+
 function calculateHealthStatus(
   expiresAt: Date | null,
   platform: Platform,
@@ -52,16 +71,28 @@ function calculateHealthStatus(
   return { health: 'healthy', daysUntilExpiry };
 }
 
-async function resolveTokenHealth(input: {
-  authorizationId?: string;
-  connectionId: string;
-  platform: Platform;
-  status: string;
-  expiresAt: Date | null;
-  secretId?: string;
+type TokenHealthAudit = {
   agencyId?: string;
   userEmail?: string;
-}): Promise<{ health: HealthStatus; daysUntilExpiry: number }> {
+  resourceId: string;
+  resourceType: 'connection';
+  action: 'TOKEN_HEALTH_CHECK';
+  details: { platform: Platform; authorizationId?: string };
+};
+
+async function resolveTokenHealth(
+  input: {
+    authorizationId?: string;
+    connectionId: string;
+    platform: Platform;
+    status: string;
+    expiresAt: Date | null;
+    secretId?: string;
+    agencyId?: string;
+    userEmail?: string;
+  },
+  options: { liveVerifyWindowMs?: number } = {}
+): Promise<{ health: HealthStatus; daysUntilExpiry: number; audit?: TokenHealthAudit }> {
   const fallback = calculateHealthStatus(input.expiresAt, input.platform, input.status);
   const capability = getPlatformTokenCapability(input.platform);
 
@@ -72,13 +103,23 @@ async function resolveTokenHealth(input: {
     return fallback;
   }
 
+  // Outside the live-verify window: report from the stored expiry only —
+  // no Infisical read, no platform call, no audit row.
+  if (
+    options.liveVerifyWindowMs !== undefined
+    && capability.expiryBehavior !== 'non_expiring'
+    && (input.expiresAt === null || input.expiresAt.getTime() - Date.now() > options.liveVerifyWindowMs)
+  ) {
+    return fallback;
+  }
+
   try {
     const tokens = await infisical.retrieveOAuthTokens(input.secretId);
     if (!tokens?.accessToken) {
       return { health: 'expired', daysUntilExpiry: -1 };
     }
 
-    await auditService.createAuditLog({
+    const audit: TokenHealthAudit = {
       agencyId: input.agencyId,
       userEmail: input.userEmail,
       resourceId: input.connectionId,
@@ -88,16 +129,24 @@ async function resolveTokenHealth(input: {
         platform: input.platform,
         authorizationId: input.authorizationId,
       },
-    });
+    };
 
-    const connector = getConnector(input.platform);
-    const isValid = await connector.verifyToken(tokens.accessToken);
+    try {
+      const connector = getConnector(input.platform);
+      const isValid = await connector.verifyToken(tokens.accessToken);
 
-    if (!isValid) {
-      return { health: 'expired', daysUntilExpiry: -1 };
+      if (!isValid) {
+        return { health: 'expired', daysUntilExpiry: -1, audit };
+      }
+
+      return { ...fallback, audit };
+    } catch (error) {
+      if (fallback.health === 'expired') {
+        return { ...fallback, audit };
+      }
+
+      return { health: 'unknown', daysUntilExpiry: fallback.daysUntilExpiry, audit };
     }
-
-    return fallback;
   } catch (error) {
     if (fallback.health === 'expired') {
       return fallback;
@@ -332,13 +381,20 @@ export async function updatePlatformTokens(
   }
 }
 
+type ClientConnectionRow = NonNullable<Awaited<ReturnType<typeof prisma.clientConnection.findUnique>>>;
+
 /**
- * Revoke a connection and delete all tokens from Infisical
+ * Revoke a connection and delete all tokens from Infisical.
+ * `preloadedConnection` lets callers that already fetched (and agency-scoped)
+ * the row skip the duplicate read.
  */
-export async function revokeConnection(connectionId: string) {
+export async function revokeConnection(
+  connectionId: string,
+  preloadedConnection?: ClientConnectionRow
+) {
   try {
-    // Get connection with authorizations
-    const connection = await prisma.clientConnection.findUnique({
+    // Get connection with authorizations (or reuse the caller's fetch)
+    const connection = preloadedConnection ?? await prisma.clientConnection.findUnique({
       where: { id: connectionId },
     });
 
@@ -417,17 +473,25 @@ export async function getTokenHealth(connectionId: string) {
       },
     });
 
-    const healthRows = await Promise.all(authorizations.map(async (authorization) => ({
-      ...authorization,
-      ...(await resolveTokenHealth({
+    const healthRows = await Promise.all(authorizations.map(async (authorization) => {
+      const { audit, ...health } = await resolveTokenHealth({
         authorizationId: authorization.id,
         connectionId: authorization.connectionId,
         platform: authorization.platform as Platform,
         status: authorization.status,
         expiresAt: authorization.expiresAt,
         secretId: authorization.secretId,
-      })),
-    })));
+      });
+
+      if (audit) {
+        await auditService.createAuditLog(audit);
+      }
+
+      return {
+        ...authorization,
+        ...health,
+      };
+    }));
 
     return {
       data: healthRows,
@@ -476,8 +540,28 @@ export async function getAgencyTokenHealth(agencyId: string) {
       },
     });
 
-    const healthRows = await Promise.all(authorizations.map(async (authorization) => {
+    const audits: TokenHealthAudit[] = [];
+
+    const verifyOne = async (authorization: (typeof authorizations)[number]) => {
       const capability = getPlatformTokenCapability(authorization.platform as Platform);
+
+      const { audit, ...health } = await resolveTokenHealth(
+        {
+          authorizationId: authorization.id,
+          connectionId: authorization.connectionId,
+          platform: authorization.platform as Platform,
+          status: authorization.status,
+          expiresAt: authorization.expiresAt,
+          secretId: authorization.secretId,
+          agencyId: authorization.connection.agencyId,
+          userEmail: authorization.connection.clientEmail,
+        },
+        { liveVerifyWindowMs: AGENCY_LIVE_VERIFY_WINDOW_MS }
+      );
+
+      if (audit) {
+        audits.push(audit);
+      }
 
       return {
         id: authorization.id,
@@ -489,18 +573,20 @@ export async function getAgencyTokenHealth(agencyId: string) {
         lastRefreshedAt: authorization.lastRefreshedAt,
         canRefresh: capability.connectionMethod === 'oauth'
           && capability.refreshStrategy === 'automatic',
-        ...(await resolveTokenHealth({
-          authorizationId: authorization.id,
-          connectionId: authorization.connectionId,
-          platform: authorization.platform as Platform,
-          status: authorization.status,
-          expiresAt: authorization.expiresAt,
-          secretId: authorization.secretId,
-          agencyId: authorization.connection.agencyId,
-          userEmail: authorization.connection.clientEmail,
-        })),
+        ...health,
       };
-    }));
+    };
+
+    // Bounded fan-out: at most LIVE_VERIFY_CONCURRENCY verifications in flight,
+    // result order preserved (chunks run in order, Promise.all keeps chunk order).
+    const healthRows = [];
+    for (let i = 0; i < authorizations.length; i += LIVE_VERIFY_CONCURRENCY) {
+      const chunk = authorizations.slice(i, i + LIVE_VERIFY_CONCURRENCY);
+      healthRows.push(...await Promise.all(chunk.map(verifyOne)));
+    }
+
+    // One batched audit insert for every token access in this sweep.
+    await auditService.createAuditLogs(audits);
 
     return {
       data: healthRows,

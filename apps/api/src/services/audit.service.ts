@@ -223,7 +223,7 @@ export async function getConnectionAuditTrail(
  * Create a general audit log entry
  * For flexible logging when specific methods don't fit
  */
-export async function createAuditLog(input: {
+export type AuditLogInput = {
   agencyId?: string;
   userEmail?: string;
   action: string;
@@ -236,7 +236,9 @@ export async function createAuditLog(input: {
   userAgent?: string;
   details?: Record<string, any>;
   request?: FastifyRequest;
-}) {
+};
+
+export async function createAuditLog(input: AuditLogInput) {
   try {
     // Extract IP and user agent from request if provided
     const ipAddress = input.ipAddress || (input.request ? extractClientIp(input.request) : '0.0.0.0');
@@ -263,6 +265,43 @@ export async function createAuditLog(input: {
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to create audit log',
+      },
+    };
+  }
+}
+
+/**
+ * Create several audit log entries in a single insert.
+ * Same row shape as createAuditLog; use for batched writes
+ * (e.g. token-health sweeps that touch many tokens at once).
+ */
+export async function createAuditLogs(inputs: AuditLogInput[]) {
+  if (inputs.length === 0) {
+    return { data: { count: 0 }, error: null };
+  }
+
+  try {
+    const result = await prisma.auditLog.createMany({
+      data: inputs.map((input) => ({
+        agencyId: input.agencyId,
+        userEmail: input.userEmail,
+        action: input.action,
+        resourceType: input.resourceType,
+        resourceId: input.resourceId,
+        agencyConnectionId: input.agencyConnectionId,
+        metadata: input.details || input.metadata || {},
+        ipAddress: input.ipAddress || (input.request ? extractClientIp(input.request) : '0.0.0.0'),
+        userAgent: input.userAgent || (input.request ? extractUserAgent(input.request) : 'unknown'),
+      })),
+    });
+
+    return { data: result, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to create audit logs',
       },
     };
   }
@@ -319,6 +358,7 @@ export const auditService = {
   logTokenRefresh,
   logFailure,
   createAuditLog,
+  createAuditLogs,
   getConnectionAuditTrail,
   getSecurityEvents,
 };

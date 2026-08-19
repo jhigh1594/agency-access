@@ -36,16 +36,18 @@ export async function usageRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      // Fetch tier from Clerk metadata
-      const tierResult = await clerkMetadataService.getSubscriptionTier(userId);
+      // Tier and agency lookups are independent — fetch both at once.
+      // Check precedence (tier before agency) is preserved below.
+      const [tierResult, agency] = await Promise.all([
+        clerkMetadataService.getSubscriptionTier(userId),
+        prisma.agency.findUnique({
+          where: { clerkUserId: userId },
+        }),
+      ]);
+
       if (tierResult.error || !tierResult.data) {
         return sendError(reply, 'TIER_NOT_FOUND', 'Subscription tier not found', 404);
       }
-
-      // Fetch agency from database
-      const agency = await prisma.agency.findUnique({
-        where: { clerkUserId: userId },
-      });
 
       if (!agency) {
         return sendError(reply, 'AGENCY_NOT_FOUND', 'Agency not found', 404);

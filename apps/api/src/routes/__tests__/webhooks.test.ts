@@ -295,6 +295,27 @@ describe('Webhook Routes - TDD Tests', () => {
       expect(clerkMetadataService.setSubscriptionTier).not.toHaveBeenCalled();
     });
 
+    it('should write exactly one marker row for a new event', async () => {
+      const response = await injectSigned({
+        method: 'POST',
+        url: '/api/webhooks/creem',
+        payload: validPayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.payload)).toMatchObject({ received: true, processed: true });
+      expect(prisma.auditLog.create).toHaveBeenCalledTimes(1);
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: 'CREEM_WEBHOOK_subscription.created',
+            resourceId: 'evt_123',
+            resourceType: 'creem_webhook_marker',
+          }),
+        })
+      );
+    });
+
     it('should return 400 for unknown price ID', async () => {
       const invalidPayload = {
         ...validPayload,
