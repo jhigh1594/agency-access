@@ -26,7 +26,7 @@ const AttestBodySchema = z.object({
 }).strict();
 
 function serverHmacSecret(): string {
-  const secret = process.env.OFFBOARDING_CAPABILITY_SECRET;
+  const secret = env.OFFBOARDING_CAPABILITY_SECRET;
   if (!secret) {
     throw new Error('OFFBOARDING_CAPABILITY_SECRET is required when Google client offboarding is enabled');
   }

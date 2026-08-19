@@ -26,6 +26,11 @@ vi.mock('@/middleware/auth.js', () => ({
       : { sub: 'user_regular', email: 'user@example.com' };
   },
 }));
+vi.mock('@/lib/env.js', () => ({
+  // ponytail: proxy keeps the per-test process.env secret mutations working
+  env: new Proxy({}, { get: (_target, key: string) => process.env[key] }),
+}));
+
 vi.mock('@/middleware/internal-admin.js', () => ({
   requireInternalAdmin: () => async (request: any, reply: any) => {
     if (request.user?.sub !== 'user_admin') {

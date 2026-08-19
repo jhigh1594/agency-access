@@ -14,6 +14,7 @@ import { join } from 'path';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { authenticate } from '@/middleware/auth.js';
+import { env } from '@/lib/env.js';
 import { requireInternalAdmin } from '@/middleware/internal-admin.js';
 import { sendError } from '../lib/response.js';
 
@@ -356,8 +357,8 @@ export async function sentryWebhooksRoutes(fastify: FastifyInstance) {
 
     const payloadString = typeof rawBody === 'string' ? rawBody : JSON.stringify(payload ?? {});
 
-    // Get webhook secret from environment
-    const webhookSecret = process.env.SENTRY_WEBHOOK_SECRET;
+    // Get webhook secret from validated environment
+    const webhookSecret = env.SENTRY_WEBHOOK_SECRET;
     const isProduction = process.env.NODE_ENV === 'production';
 
     // Verify signature if secret is configured

@@ -10,7 +10,7 @@
 
 import { FastifyInstance } from 'fastify';
 import { quotaService } from '@/services/quota.service';
-import { verifyToken } from '@clerk/backend';
+import { verifyAuthToken } from '@/middleware/auth';
 import { type MetricType, MetricTypeSchema } from '@agency-platform/shared';
 
 export async function quotaRoutes(fastify: FastifyInstance) {
@@ -31,9 +31,7 @@ export async function quotaRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const verified = await verifyToken(token, {
-        secretKey: process.env.CLERK_SECRET_KEY,
-      });
+      const verified = (await verifyAuthToken(token)) as Record<string, unknown>;
 
       const orgId = verified.orgId as string | undefined;
       if (!orgId || typeof orgId !== 'string') {
@@ -88,9 +86,7 @@ export async function quotaRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const verified = await verifyToken(token, {
-        secretKey: process.env.CLERK_SECRET_KEY,
-      });
+      const verified = (await verifyAuthToken(token)) as Record<string, unknown>;
 
       const orgId = verified.orgId as string | undefined;
       if (!orgId || typeof orgId !== 'string') {

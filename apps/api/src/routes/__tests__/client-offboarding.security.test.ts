@@ -41,7 +41,13 @@ vi.mock('@/lib/prisma.js', () => ({
 }));
 
 vi.mock('@/lib/env.js', () => ({
-  env: { FRONTEND_URL: 'https://app.example.com' },
+  env: {
+    FRONTEND_URL: 'https://app.example.com',
+    // ponytail: live getter keeps the per-test process.env secret mutations working
+    get OFFBOARDING_CAPABILITY_SECRET() {
+      return process.env.OFFBOARDING_CAPABILITY_SECRET;
+    },
+  },
   isOffboardingEnabled: vi.fn().mockReturnValue(true),
 }));
 
