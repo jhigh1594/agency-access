@@ -1,10 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { resolveInternalAdminUser } from '@/lib/internal-admin-auth.js';
-
-interface InternalAdminAllowlist {
-  userIds: string[];
-  emails: string[];
-}
+import { resolveInternalAdminUser, type InternalAdminAllowlist } from '@/lib/internal-admin-auth.js';
 
 export function requireInternalAdmin(allowlist?: InternalAdminAllowlist) {
   return async (request: FastifyRequest, reply: FastifyReply) => {

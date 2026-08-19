@@ -16,7 +16,7 @@ export interface PrincipalAgencyData {
   };
 }
 
-interface AuthUserClaims {
+export interface AuthUserClaims {
   sub?: string;
   orgId?: string;
   email?: string;
@@ -25,11 +25,11 @@ interface AuthUserClaims {
   email_addresses?: Array<{ email_address?: string; emailAddress?: string }>;
 }
 
-function normalizeEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function resolveUserEmail(user: AuthUserClaims | undefined): string | undefined {
+export function resolveUserEmail(user: AuthUserClaims | undefined): string | undefined {
   const direct = user?.email || user?.email_address || user?.emailAddress;
   if (direct) return normalizeEmail(direct);
 

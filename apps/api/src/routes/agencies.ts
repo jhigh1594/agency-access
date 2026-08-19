@@ -10,7 +10,8 @@ import { agencyService } from '../services/agency.service.js';
 import { sendError, sendValidationError } from '../lib/response.js';
 import { authenticate } from '../middleware/auth.js';
 import { quotaMiddleware } from '../middleware/quota.middleware.js';
-import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
+import { requirePrincipalAgency } from '@/lib/agency-guard.js';
 
 export async function agencyRoutes(fastify: FastifyInstance) {
   // Add authentication middleware to all agency routes
@@ -19,22 +20,6 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   const getPrincipalId = (request: any): string | null => {
     const user = request.user as { sub?: string; orgId?: string } | undefined;
     return user?.orgId || user?.sub || null;
-  };
-
-  const requirePrincipalAgency = async (request: any, reply: any) => {
-    const principalResult = await resolvePrincipalAgency(request);
-    if (principalResult.error || !principalResult.data) {
-      const statusCode = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
-      sendError(
-        reply,
-        principalResult.error?.code || 'FORBIDDEN',
-        principalResult.error?.message || 'Unable to resolve agency for authenticated user',
-        statusCode
-      );
-      return null;
-    }
-
-    return principalResult.data;
   };
 
   const forbidIfAgencyMismatch = (reply: any, requestedAgencyId: string, principalAgencyId: string): boolean => {

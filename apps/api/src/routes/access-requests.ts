@@ -11,7 +11,8 @@ import { agencyPlatformService } from '../services/agency-platform.service.js';
 import { auditService } from '../services/audit.service.js';
 import { quotaMiddleware } from '../middleware/quota.middleware.js';
 import { authenticate } from '@/middleware/auth.js';
-import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
+import { requirePrincipalAgency } from '@/lib/agency-guard.js';
 
 const ACCESS_LEVEL_MAP: Record<string, 'manage' | 'view_only'> = {
   admin: 'manage',
@@ -97,22 +98,6 @@ function normalizePlatformsPayload(platforms: any): Array<{ platform: string; ac
 }
 
 export async function accessRequestRoutes(fastify: FastifyInstance) {
-  const requirePrincipalAgency = async (request: any, reply: any) => {
-    const principalResult = await resolvePrincipalAgency(request);
-    if (principalResult.error || !principalResult.data) {
-      const code = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
-      return reply.code(code).send({
-        data: null,
-        error: principalResult.error || {
-          code: 'FORBIDDEN',
-          message: 'Unable to resolve agency for authenticated user',
-        },
-      });
-    }
-
-    request.principalAgencyId = principalResult.data.agencyId;
-    request.agencyId = principalResult.data.agencyId;
-  };
 
   // Create access request
   fastify.post(

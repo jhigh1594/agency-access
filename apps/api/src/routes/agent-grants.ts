@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { AgentPermissionSchema } from '@agency-platform/shared';
-import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { enforceRouteAgency, requirePrincipalAgency } from '@/lib/agency-guard.js';
 import { extractClientIp, extractUserAgent } from '@/lib/ip.js';
 import { authenticate } from '@/middleware/auth.js';
 import { agentGrantService } from '@/services/agent-grant.service.js';
@@ -22,28 +22,6 @@ const UpdateGrantSchema = z
     message: 'At least one grant field is required',
   });
 
-async function requireAgencyOwner(request: FastifyRequest, reply: FastifyReply) {
-  const principal = await resolvePrincipalAgency(request);
-  if (principal.error || !principal.data) {
-    return reply.code(principal.error?.code === 'UNAUTHORIZED' ? 401 : 403).send({
-      data: null,
-      error: principal.error || { code: 'FORBIDDEN', message: 'Unable to resolve agency' },
-    });
-  }
-
-  (request as any).principalAgencyId = principal.data.agencyId;
-}
-
-function enforceRouteAgency(request: FastifyRequest, reply: FastifyReply): string | null {
-  const { id } = request.params as { id: string };
-  const accessError = assertAgencyAccess(id, (request as any).principalAgencyId);
-  if (accessError) {
-    void reply.code(403).send({ data: null, error: accessError });
-    return null;
-  }
-  return id;
-}
-
 function ownerSubject(request: FastifyRequest): string | null {
   const user = (request as any).user as { sub?: string } | undefined;
   return user?.sub || null;
@@ -58,7 +36,7 @@ function requestMetadata(request: FastifyRequest) {
 }
 
 export async function agentGrantRoutes(fastify: FastifyInstance) {
-  const ownerHooks = [authenticate(), requireAgencyOwner];
+  const ownerHooks = [authenticate(), requirePrincipalAgency];
 
   fastify.get('/agencies/:id/agent-grants', { onRequest: ownerHooks }, async (request, reply) => {
     const agencyId = enforceRouteAgency(request, reply);

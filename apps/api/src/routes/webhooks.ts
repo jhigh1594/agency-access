@@ -7,7 +7,8 @@
 
 import { FastifyInstance } from 'fastify';
 import { prisma } from '@/lib/prisma';
-import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { assertAgencyAccess } from '@/lib/authorization.js';
+import { requirePrincipalAgency } from '@/lib/agency-guard.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
 import { authenticate } from '@/middleware/auth.js';
 import { quotaEnforcementMiddleware } from '@/middleware/quota-enforcement.js';
@@ -95,21 +96,6 @@ function resolveActorEmail(request: any): string {
 }
 
 export async function webhookRoutes(fastify: FastifyInstance) {
-  const requirePrincipalAgency = async (request: any, reply: any) => {
-    const principalResult = await resolvePrincipalAgency(request);
-    if (principalResult.error || !principalResult.data) {
-      const code = principalResult.error?.code === 'UNAUTHORIZED' ? 401 : 403;
-      return reply.code(code).send({
-        data: null,
-        error: principalResult.error || {
-          code: 'FORBIDDEN',
-          message: 'Unable to resolve agency for authenticated user',
-        },
-      });
-    }
-
-    request.principalAgencyId = principalResult.data.agencyId;
-  };
 
   fastify.get('/agencies/:id/webhook-endpoint', {
     onRequest: [authenticate(), requirePrincipalAgency],

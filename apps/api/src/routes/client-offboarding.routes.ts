@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { enforceRouteAgency, requirePrincipalAgency } from '@/lib/agency-guard.js';
 import { authenticate } from '@/middleware/auth.js';
 import { env, isOffboardingEnabled } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
@@ -112,27 +112,6 @@ function parseCapability(token: string): {
   return { connectionId, runId, snapshotHash, credentialGeneration, action, approvingAdmin, expiresAt, valid: true };
 }
 
-async function requireAgencyAdmin(request: FastifyRequest, reply: FastifyReply) {
-  const principal = await resolvePrincipalAgency(request);
-  if (principal.error || !principal.data) {
-    return reply.code(principal.error?.code === 'UNAUTHORIZED' ? 401 : 403).send({
-      data: null,
-      error: principal.error || { code: 'FORBIDDEN', message: 'Unable to resolve agency' },
-    });
-  }
-  (request as any).principalAgencyId = principal.data.agencyId;
-  (request as any).principalId = principal.data.principalId;
-}
-
-function enforceRouteAgency(request: FastifyRequest, reply: FastifyReply): string | null {
-  const { agencyId } = request.params as { agencyId: string };
-  const accessError = assertAgencyAccess(agencyId, (request as any).principalAgencyId);
-  if (accessError) {
-    void reply.code(403).send({ data: null, error: accessError });
-    return null;
-  }
-  return agencyId;
-}
 
 function ownerSubject(request: FastifyRequest): string | null {
   const user = (request as any).user as { sub?: string } | undefined;
@@ -162,7 +141,7 @@ async function ensureRunBelongsToAgency(runId: string, agencyId: string) {
 }
 
 export async function clientOffboardingRoutes(fastify: FastifyInstance) {
-  const adminHooks = [authenticate(), requireAgencyAdmin];
+  const adminHooks = [authenticate(), requirePrincipalAgency];
 
   fastify.addHook('onRequest', async (request, reply) => {
     const { agencyId } = request.params as { agencyId?: string };
@@ -178,7 +157,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/agencies/:agencyId/connections/:connectionId/offboarding/prepare', { onRequest: adminHooks }, async (request, reply) => {
-    const agencyId = enforceRouteAgency(request, reply);
+    const agencyId = enforceRouteAgency(request, reply, 'agencyId');
     if (!agencyId) return;
 
     const { connectionId } = request.params as { connectionId: string };
@@ -225,7 +204,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/agencies/:agencyId/connections/:connectionId/offboarding/confirm', { onRequest: adminHooks }, async (request, reply) => {
-    const agencyId = enforceRouteAgency(request, reply);
+    const agencyId = enforceRouteAgency(request, reply, 'agencyId');
     if (!agencyId) return;
 
     const { connectionId } = request.params as { connectionId: string };
@@ -293,7 +272,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/agencies/:agencyId/connections/:connectionId/offboarding/runs/:runId', { onRequest: adminHooks }, async (request, reply) => {
-    const agencyId = enforceRouteAgency(request, reply);
+    const agencyId = enforceRouteAgency(request, reply, 'agencyId');
     if (!agencyId) return;
 
     const { connectionId, runId } = request.params as { connectionId: string; runId: string };
@@ -311,7 +290,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/agencies/:agencyId/connections/:connectionId/offboarding/runs/:runId/retry', { onRequest: adminHooks }, async (request, reply) => {
-    const agencyId = enforceRouteAgency(request, reply);
+    const agencyId = enforceRouteAgency(request, reply, 'agencyId');
     if (!agencyId) return;
 
     const { connectionId, runId } = request.params as { connectionId: string; runId: string };
@@ -353,7 +332,7 @@ export async function clientOffboardingRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/agencies/:agencyId/connections/:connectionId/offboarding/runs/:runId/attest', { onRequest: adminHooks }, async (request, reply) => {
-    const agencyId = enforceRouteAgency(request, reply);
+    const agencyId = enforceRouteAgency(request, reply, 'agencyId');
     if (!agencyId) return;
 
     const { connectionId, runId } = request.params as { connectionId: string; runId: string };

@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { assertAgencyAccess, resolvePrincipalAgency } from '@/lib/authorization.js';
+import { enforceRouteAgency, requirePrincipalAgency } from '@/lib/agency-guard.js';
 import { extractClientIp, extractUserAgent } from '@/lib/ip.js';
 import { authenticateAgent } from '@/middleware/agent-auth.js';
 import { authenticate } from '@/middleware/auth.js';
@@ -13,24 +13,9 @@ import { sanitizeOperationForAgent } from '@/lib/mcp-adapter.js';
 
 const DecisionSchema = z.object({ decision: z.enum(['approved', 'declined']) }).strict();
 
-async function requireOwnerAgency(request: FastifyRequest, reply: FastifyReply) {
-  const principal = await resolvePrincipalAgency(request);
-  if (principal.error || !principal.data) {
-    return reply.code(principal.error?.code === 'UNAUTHORIZED' ? 401 : 403).send({
-      data: null,
-      error: principal.error || { code: 'FORBIDDEN', message: 'Unable to resolve agency' },
-    });
-  }
-  (request as any).principalAgencyId = principal.data.agencyId;
-}
-
 function ownerRouteContext(request: FastifyRequest, reply: FastifyReply) {
-  const routeAgencyId = (request.params as { id: string }).id;
-  const accessError = assertAgencyAccess(routeAgencyId, (request as any).principalAgencyId);
-  if (accessError) {
-    void reply.code(403).send({ data: null, error: accessError });
-    return null;
-  }
+  const routeAgencyId = enforceRouteAgency(request, reply);
+  if (!routeAgencyId) return null;
   const subject = ((request as any).user as { sub?: string } | undefined)?.sub;
   if (!subject) {
     void reply.code(401).send({ data: null, error: { code: 'UNAUTHORIZED', message: 'Authenticated owner identity is required' } });
@@ -55,7 +40,7 @@ export async function agentOperationRoutes(fastify: FastifyInstance) {
     return reply.send({ data: sanitizeOperationForAgent(operation) });
   });
 
-  const ownerHooks = [authenticate(), requireOwnerAgency];
+  const ownerHooks = [authenticate(), requirePrincipalAgency];
 
   fastify.get('/agencies/:id/agent-operations/:operationId', { onRequest: ownerHooks }, async (request, reply) => {
     const owner = ownerRouteContext(request, reply);

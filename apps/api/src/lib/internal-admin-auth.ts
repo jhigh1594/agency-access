@@ -1,4 +1,5 @@
 import { env } from './env.js';
+import { normalizeEmail, resolveUserEmail, type AuthUserClaims } from './authorization.js';
 
 export interface InternalAdminUser {
   userId: string;
@@ -15,33 +16,9 @@ export interface InternalAdminAuthResult {
   error: InternalAdminAuthError | null;
 }
 
-interface AuthUserClaims {
-  sub?: string;
-  email?: string;
-  email_address?: string;
-  emailAddress?: string;
-  email_addresses?: Array<{ email_address?: string; emailAddress?: string }>;
-}
-
-interface InternalAdminAllowlist {
+export interface InternalAdminAllowlist {
   userIds: string[];
   emails: string[];
-}
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-function resolveUserEmail(user: AuthUserClaims): string | undefined {
-  const direct = user.email || user.email_address || user.emailAddress;
-  if (direct) return normalizeEmail(direct);
-
-  const firstEmail = user.email_addresses?.[0];
-  if (!firstEmail) return undefined;
-
-  const nested = firstEmail.email_address || firstEmail.emailAddress;
-  if (!nested) return undefined;
-  return normalizeEmail(nested);
 }
 
 export function resolveInternalAdminUser(
