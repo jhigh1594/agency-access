@@ -27,6 +27,7 @@ import { useUserAgency } from '@/hooks/use-user-agency';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
 import { readPerfHarnessContext } from '@/lib/perf-harness';
 import { resolveApiUrl } from '@/lib/api/api-env';
+import { isManualInvitePlatform } from '@/lib/client-invite-platforms';
 
 function ConnectionsPageContent() {
   const router = useRouter();
@@ -279,8 +280,7 @@ function ConnectionsPageContent() {
     setErrorMessage(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'snapchat', 'pinterest', 'shopify', 'zapier'];
-    if (manualPlatforms.includes(platform)) {
+    if (isManualInvitePlatform(platform)) {
       // Open manual invitation modal in create mode
       setManualInvitationPlatform(platform);
       setIsManualModalOpen(true);

@@ -28,3 +28,12 @@ export async function extractApiErrorMessage(
     return response.statusText || fallback;
   }
 }
+
+/**
+ * Extract a user-facing message from a thrown error.
+ * AuthorizedApiError and Error both expose `.message`; anything else
+ * returns the provided fallback.
+ */
+export function getApiErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}

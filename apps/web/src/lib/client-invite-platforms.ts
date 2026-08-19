@@ -2,6 +2,27 @@ import { getPlatformTokenCapability, type Platform } from '@agency-platform/shar
 
 type ClientInviteFlow = 'oauth' | 'manual';
 
+/**
+ * Platforms whose agency-side "connect" action opens the manual-invite modal
+ * (no standard OAuth). Single source of truth for the connections page,
+ * onboarding platform picker, and platform cards. Includes zapier — the
+ * onboarding copy previously omitted it (drift, fixed per refactor plan U11).
+ */
+export const MANUAL_INVITE_PLATFORMS: readonly string[] = [
+  'kit',
+  'mailchimp',
+  'beehiiv',
+  'klaviyo',
+  'snapchat',
+  'pinterest',
+  'shopify',
+  'zapier',
+];
+
+export function isManualInvitePlatform(platform: string): boolean {
+  return MANUAL_INVITE_PLATFORMS.includes(platform);
+}
+
 interface ClientInvitePlatformCapability {
   flow: ClientInviteFlow;
   manualRoute: string | null;

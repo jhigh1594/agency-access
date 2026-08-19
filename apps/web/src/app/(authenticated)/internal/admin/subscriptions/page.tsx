@@ -6,6 +6,7 @@ import type { SubscriptionTier } from '@agency-platform/shared';
 import { AdminTableShell } from '@/components/internal-admin';
 import { SingleSelect } from '@/components/ui';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { formatShortDate } from '@/lib/format';
 import {
   useInternalAdminCancelSubscription,
   useInternalAdminSubscriptions,
@@ -167,9 +168,7 @@ export default function InternalAdminSubscriptionsPage() {
                           <StatusBadge status={subscription.status as any} />
                         </td>
                         <td className="py-3 text-right text-ink">
-                          {subscription.currentPeriodEnd
-                            ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
-                            : 'n/a'}
+                          {formatShortDate(subscription.currentPeriodEnd)}
                         </td>
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center gap-2">

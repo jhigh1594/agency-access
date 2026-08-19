@@ -34,7 +34,7 @@ import type { IntakeField } from '@/contexts/access-request-context';
 import { getPlatformCount } from '@/lib/transform-platforms';
 import { useAuthOrBypass } from '@/lib/dev-auth';
 import { useUserAgency, fetchActiveAgencyPlatformConnections } from '@/hooks/use-user-agency';
-import { PLATFORM_NAMES } from '@agency-platform/shared';
+import { ACCESS_LEVEL_DESCRIPTIONS, PLATFORM_NAMES } from '@agency-platform/shared';
 
 // ============================================================
 // WIZARD CONTENT (Inner Component)
@@ -748,13 +748,7 @@ function AccessRequestWizardContent() {
                                       ? 'bg-teal/20 text-teal-90'
                                       : 'bg-accent text-foreground'
                                   }`}>
-                                    {level === 'admin'
-                                      ? 'Admin'
-                                      : level === 'standard'
-                                      ? 'Standard'
-                                      : level === 'read_only'
-                                      ? 'Read Only'
-                                      : 'Email Only'}
+                                    {ACCESS_LEVEL_DESCRIPTIONS[level]?.title.replace(' Access', '') ?? level}
                                   </span>
                                 </span>
                               );

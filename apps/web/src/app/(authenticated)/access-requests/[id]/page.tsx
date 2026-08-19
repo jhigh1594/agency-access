@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { useAuth } from '@clerk/nextjs';
 import { useAuthOrBypass } from '@/lib/dev-auth';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { getAccessRequest, getAuthorizationUrl } from '@/lib/api/access-requests';
 import type { AccessRequest } from '@/lib/api/access-requests';
 import {
@@ -24,7 +25,7 @@ export default function AccessRequestDetailPage({ params }: AccessRequestDetailP
   const [accessRequest, setAccessRequest] = useState<AccessRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
   const resolveApiToken = useMemo(
     () => async () => {
@@ -109,9 +110,7 @@ export default function AccessRequestDetailPage({ params }: AccessRequestDetailP
     }
 
     void trackAction('copy_link');
-    await navigator.clipboard.writeText(authorizationUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    await copy(authorizationUrl);
   };
 
   const handlePreviewLink = () => {

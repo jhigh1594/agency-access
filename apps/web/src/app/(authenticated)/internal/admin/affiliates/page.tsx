@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { AffiliateStatusChip } from '@/components/affiliate';
+import { formatShortDate, formatUsdFromCents } from '@/lib/format';
 import { AdminTableShell } from '@/components/internal-admin';
 import { SingleSelect } from '@/components/ui';
 import {
@@ -38,21 +39,9 @@ function getDefaultPayoutWindow() {
   };
 }
 
-function formatDate(value: string | null) {
-  if (!value) return 'n/a';
-  return new Date(value).toLocaleDateString();
-}
-
 function formatDateTime(value: string | null) {
   if (!value) return 'Not exported';
   return new Date(value).toLocaleString();
-}
-
-function formatCurrencyFromCents(value: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(value / 100);
 }
 
 function formatPercentFromBps(value: number) {
@@ -482,7 +471,7 @@ export default function InternalAdminAffiliatesPage() {
                           <AffiliateStatusChip status={partner.status} />
                         </td>
                         <td className="py-3 text-right text-ink">
-                          {formatDate(partner.appliedAt)}
+                          {formatShortDate(partner.appliedAt)}
                         </td>
                         <td className="py-3 text-right text-ink tabular-nums">
                           {partner.referralCount}
@@ -576,11 +565,11 @@ export default function InternalAdminAffiliatesPage() {
                       </div>
                       <div className="rounded-md border border-border bg-background p-3">
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Pending</p>
-                        <p className="mt-2 text-lg font-semibold text-ink">{formatCurrencyFromCents(partnerDetail.metrics.pendingCommissionCents)}</p>
+                        <p className="mt-2 text-lg font-semibold text-ink">{formatUsdFromCents(partnerDetail.metrics.pendingCommissionCents)}</p>
                       </div>
                       <div className="rounded-md border border-border bg-background p-3">
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Paid</p>
-                        <p className="mt-2 text-lg font-semibold text-ink">{formatCurrencyFromCents(partnerDetail.metrics.paidCommissionCents)}</p>
+                        <p className="mt-2 text-lg font-semibold text-ink">{formatUsdFromCents(partnerDetail.metrics.paidCommissionCents)}</p>
                       </div>
                     </div>
 
@@ -733,10 +722,10 @@ export default function InternalAdminAffiliatesPage() {
                                 <td className="py-3">
                                   <p className="font-medium text-ink">{commission.customerName}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    Revenue {formatCurrencyFromCents(commission.revenueAmountCents)} · Invoice {formatDate(commission.invoiceDate)}
+                                    Revenue {formatUsdFromCents(commission.revenueAmountCents)} · Invoice {formatShortDate(commission.invoiceDate)}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    Hold {formatDate(commission.holdUntil)} · {formatPercentFromBps(commission.commissionBps)}
+                                    Hold {formatShortDate(commission.holdUntil)} · {formatPercentFromBps(commission.commissionBps)}
                                   </p>
                                   {commission.notes ? (
                                     <p className="mt-1 text-xs text-muted-foreground">{commission.notes}</p>
@@ -746,7 +735,7 @@ export default function InternalAdminAffiliatesPage() {
                                   <AffiliateStatusChip status={commission.status} />
                                 </td>
                                 <td className="py-3 text-right tabular-nums">
-                                  {formatCurrencyFromCents(commission.amountCents)}
+                                  {formatUsdFromCents(commission.amountCents)}
                                 </td>
                                 <td className="py-3 text-right">
                                   <div className="flex flex-wrap justify-end gap-2">
@@ -890,7 +879,7 @@ export default function InternalAdminAffiliatesPage() {
                     <tr key={batch.id} className="border-b border-border/50 align-top">
                       <td className="py-3">
                         <p className="font-medium text-ink">
-                          {formatDate(batch.periodStart)} to {formatDate(batch.periodEnd)}
+                          {formatShortDate(batch.periodStart)} to {formatShortDate(batch.periodEnd)}
                         </p>
                         <p className="text-xs text-muted-foreground">{batch.notes || 'No notes'}</p>
                       </td>
@@ -898,7 +887,7 @@ export default function InternalAdminAffiliatesPage() {
                         <AffiliateStatusChip status={batch.status} />
                       </td>
                       <td className="py-3 text-right tabular-nums text-ink">{batch.commissionCount}</td>
-                      <td className="py-3 text-right tabular-nums text-ink">{formatCurrencyFromCents(batch.totalAmount)}</td>
+                      <td className="py-3 text-right tabular-nums text-ink">{formatUsdFromCents(batch.totalAmount)}</td>
                       <td className="py-3 text-right text-muted-foreground">{formatDateTime(batch.exportedAt)}</td>
                       <td className="py-3 text-right">
                         <button
@@ -969,7 +958,7 @@ export default function InternalAdminAffiliatesPage() {
                         <tr key={referral.id} className="border-b border-border/50 align-top">
                           <td className="py-3">
                             <p className="font-medium text-ink">{referral.referredAgencyName}</p>
-                            <p className="text-xs text-muted-foreground">{referral.partnerName} · {formatDate(referral.createdAt)}</p>
+                            <p className="text-xs text-muted-foreground">{referral.partnerName} · {formatShortDate(referral.createdAt)}</p>
                           </td>
                           <td className="py-3">
                             <div className="flex flex-wrap gap-1">
@@ -1047,8 +1036,8 @@ export default function InternalAdminAffiliatesPage() {
                           <td className="py-3">
                             <AffiliateStatusChip status={commission.status} />
                           </td>
-                          <td className="py-3 text-right tabular-nums text-ink">{formatCurrencyFromCents(commission.amountCents)}</td>
-                          <td className="py-3 text-right text-muted-foreground">{formatDate(commission.holdUntil)}</td>
+                          <td className="py-3 text-right tabular-nums text-ink">{formatUsdFromCents(commission.amountCents)}</td>
+                          <td className="py-3 text-right text-muted-foreground">{formatShortDate(commission.holdUntil)}</td>
                         </tr>
                       ))}
                     </tbody>

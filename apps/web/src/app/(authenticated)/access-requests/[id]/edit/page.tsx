@@ -11,7 +11,7 @@ import { HierarchicalPlatformSelector } from '@/components/hierarchical-platform
 import { Button, SingleSelect } from '@/components/ui';
 import { getAccessRequest, updateAccessRequest } from '@/lib/api/access-requests';
 import type { AccessRequest } from '@/lib/api/access-requests';
-import { transformPlatformsForAPI } from '@/lib/transform-platforms';
+import { transformPlatformsForAPI, normalizePlatformToGroup } from '@/lib/transform-platforms';
 import { fetchActiveAgencyPlatformConnections } from '@/hooks/use-user-agency';
 import type { AccessLevel } from '@agency-platform/shared';
 import type { IntakeField } from '@/contexts/access-request-context';
@@ -32,39 +32,6 @@ interface BrandingDraft {
   logoUrl: string;
   primaryColor: string;
   subdomain: string;
-}
-
-function normalizeConnectedPlatformToGroup(platform: string): string {
-  if (
-    platform === 'ga4' ||
-    platform === 'youtube_studio' ||
-    platform === 'display_video_360' ||
-    platform.startsWith('google_')
-  ) {
-    return 'google';
-  }
-
-  if (
-    platform === 'instagram' ||
-    platform === 'whatsapp_business' ||
-    platform.startsWith('meta_')
-  ) {
-    return 'meta';
-  }
-
-  if (platform.startsWith('linkedin')) {
-    return 'linkedin';
-  }
-
-  if (platform.startsWith('tiktok')) {
-    return 'tiktok';
-  }
-
-  if (platform.startsWith('snapchat')) {
-    return 'snapchat';
-  }
-
-  return platform;
 }
 
 function isEditable(status: AccessRequest['status']): boolean {
@@ -192,7 +159,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
       try {
         const data = await fetchActiveAgencyPlatformConnections(request.agencyId, getToken);
         const normalized = data.map((item) => ({
-          platform: normalizeConnectedPlatformToGroup(item.platform),
+          platform: normalizePlatformToGroup(item.platform),
           name: item.name || item.platform,
           connected: item.connected === true || item.status === 'active' || item.status === undefined,
           status: item.status,

@@ -2,6 +2,7 @@
 
 import { Platform, PLATFORM_NAMES } from '@agency-platform/shared';
 import { cn } from '@/lib/utils';
+import { isManualInvitePlatform } from '@/lib/client-invite-platforms';
 import { PlatformIcon } from '@/components/ui/platform-icon';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -43,8 +44,7 @@ export function PlatformCard({
   onEditEmail,
 }: PlatformCardProps) {
   const platformName = PLATFORM_NAMES[platform];
-  const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'snapchat', 'pinterest', 'shopify', 'zapier'];
-  const isManualPlatform = manualPlatforms.includes(platform);
+  const isManualPlatform = isManualInvitePlatform(platform);
   const isShopify = platform === 'shopify';
 
   const isFeatured = variant === 'featured';

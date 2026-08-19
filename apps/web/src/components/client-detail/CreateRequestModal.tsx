@@ -152,7 +152,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   const totalSelected = Object.values(selectedPlatforms).reduce((sum, products) => sum + products.length, 0);
 
   // Transform selected platforms to API format
-  const transformPlatformsForAPI = (): SelectedPlatform[] => {
+  const buildSelectedPlatforms = (): SelectedPlatform[] => {
     return Object.entries(selectedPlatforms)
       .filter(([, products]) => products.length > 0)
       .map(([groupKey, products]) => ({
@@ -168,7 +168,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
   // Create access request mutation
   const createMutation = useMutation({
     mutationFn: async () => {
-      const platforms = transformPlatformsForAPI();
+      const platforms = buildSelectedPlatforms();
 
       if (platforms.length === 0) {
         throw new Error('Please select at least one platform');

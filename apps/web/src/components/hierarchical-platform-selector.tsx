@@ -14,6 +14,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { ChevronDown, Check, Minus, AlertCircle, Link2, Edit, Mail } from 'lucide-react';
 import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { PLATFORM_HIERARCHY, AccessLevel, ACCESS_LEVEL_DESCRIPTIONS } from '@agency-platform/shared';
+import { normalizePlatformToGroup } from '@/lib/transform-platforms';
 import Link from 'next/link';
 import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { PlatformIcon } from '@/components/ui';
@@ -46,43 +47,6 @@ interface GroupState {
   [key: string]: boolean;
 }
 
-function normalizeConnectedPlatformToGroup(platform: string): string {
-  if (platform in PLATFORM_HIERARCHY) {
-    return platform;
-  }
-
-  if (
-    platform === 'ga4' ||
-    platform === 'youtube_studio' ||
-    platform === 'display_video_360' ||
-    platform.startsWith('google_')
-  ) {
-    return 'google';
-  }
-
-  if (
-    platform === 'instagram' ||
-    platform === 'whatsapp_business' ||
-    platform.startsWith('meta_')
-  ) {
-    return 'meta';
-  }
-
-  if (platform.startsWith('linkedin')) {
-    return 'linkedin';
-  }
-
-  if (platform.startsWith('tiktok')) {
-    return 'tiktok';
-  }
-
-  if (platform.startsWith('snapchat')) {
-    return 'snapchat';
-  }
-
-  return platform;
-}
-
 export function HierarchicalPlatformSelector({
   selectedPlatforms,
   onSelectionChange,
@@ -105,7 +69,7 @@ export function HierarchicalPlatformSelector({
     return new Set(
       connectedPlatforms
         .filter(p => p.connected)
-        .map(p => normalizeConnectedPlatformToGroup(p.platform))
+        .map(p => normalizePlatformToGroup(p.platform))
     );
   }, [connectedPlatforms]);
 

@@ -19,6 +19,7 @@ import { ManualInvitationModal } from '@/components/manual-invitation-modal';
 import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
 import { getGoogleAdsAccountLabel } from '@/lib/google-ads-account-label';
 import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-business-login';
+import { isManualInvitePlatform } from '@/lib/client-invite-platforms';
 
 // Google account types
 interface GoogleAdsAccount {
@@ -360,8 +361,7 @@ export default function PlatformsPage() {
     setError(null);
 
     // Check if this is a manual invitation platform
-    const manualPlatforms = ['kit', 'mailchimp', 'beehiiv', 'klaviyo', 'snapchat', 'pinterest', 'shopify'];
-    if (manualPlatforms.includes(platform)) {
+    if (isManualInvitePlatform(platform)) {
       // Open manual invitation modal
       setManualInvitationPlatform(platform);
       setIsManualModalOpen(true);

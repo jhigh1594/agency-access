@@ -24,7 +24,7 @@ export { EmptyState } from './empty-state';
 export { HealthBadge, ExpirationCountdown } from './health-badge';
 export type { HealthStatus } from './health-badge';
 
-export { formatRelativeTime, formatCountdown } from './format-relative-time';
+export { formatRelativeTime, formatRelativeTimeLong, formatCountdown } from './format-relative-time';
 
 export { PlatformCard } from './platform-card';
 

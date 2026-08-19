@@ -9,7 +9,23 @@
 
 import { Loader2, Link as LinkIcon } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { PlatformIcon } from '@/components/ui/platform-icon';
 import { PlatformConnectionRow, PlatformConnection } from './platform-connection-row';
+
+// Map raw connection status to StatusBadge type (same mapping as PlatformConnectionRow)
+function toStatusBadgeType(status: string): 'active' | 'expired' | 'invalid' | 'pending' {
+  switch (status) {
+    case 'active':
+      return 'active';
+    case 'expired':
+      return 'expired';
+    case 'invalid':
+      return 'invalid';
+    default:
+      return 'pending';
+  }
+}
 
 interface PlatformConnectionsTableProps {
   connections: PlatformConnection[];
@@ -104,7 +120,7 @@ export function PlatformConnectionsTable({
                 {/* Platform column (col-span-5) */}
                 <div className="col-span-5 flex items-center gap-3">
                   <div className="hidden sm:block">
-                    {/* Use PlatformIcon but hide on very small screens */}
+                    <PlatformIcon platform={connection.platform} size="sm" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">
@@ -120,17 +136,7 @@ export function PlatformConnectionsTable({
 
                 {/* Status column (col-span-4) */}
                 <div className="col-span-4">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                      connection.status === 'active'
-                        ? 'bg-green-100 text-green-800 border-green-200'
-                        : connection.status === 'expired'
-                        ? 'bg-red-100 text-red-800 border-red-200'
-                        : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                    }`}
-                  >
-                    {connection.status}
-                  </span>
+                  <StatusBadge status={toStatusBadgeType(connection.status)} size="sm" />
                 </div>
 
                 {/* Actions column (col-span-3) */}
@@ -180,11 +186,7 @@ export function PlatformConnectionsTable({
             {/* Platform header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                  <span className="text-white font-semibold">
-                    {connection.platform.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <PlatformIcon platform={connection.platform} size="md" />
                 <div>
                   <p className="font-medium text-foreground">
                     {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
@@ -192,17 +194,7 @@ export function PlatformConnectionsTable({
                   <p className="text-xs text-muted-foreground">{connection.connectedBy}</p>
                 </div>
               </div>
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                  connection.status === 'active'
-                    ? 'bg-green-100 text-green-800 border-green-200'
-                    : connection.status === 'expired'
-                    ? 'bg-red-100 text-red-800 border-red-200'
-                    : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                }`}
-              >
-                {connection.status}
-              </span>
+              <StatusBadge status={toStatusBadgeType(connection.status)} size="sm" />
             </div>
 
             {/* Connection details */}

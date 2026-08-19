@@ -3,6 +3,8 @@ import {
   getClientInvitePlatformCapability,
   getInviteSecuritySummary,
   isClientInviteManualCallbackPlatform,
+  MANUAL_INVITE_PLATFORMS,
+  isManualInvitePlatform,
 } from '../client-invite-platforms';
 
 describe('client invite platform capabilities', () => {
@@ -48,5 +50,26 @@ describe('client invite platform capabilities', () => {
   it('flags mailchimp manual callback handling as complete-on-return', () => {
     expect(isClientInviteManualCallbackPlatform('mailchimp')).toBe(true);
     expect(isClientInviteManualCallbackPlatform('google')).toBe(false);
+  });
+});
+
+describe('MANUAL_INVITE_PLATFORMS', () => {
+  it('includes all manual-invite platforms, including zapier (drift fix, U11)', () => {
+    expect(MANUAL_INVITE_PLATFORMS).toEqual([
+      'kit',
+      'mailchimp',
+      'beehiiv',
+      'klaviyo',
+      'snapchat',
+      'pinterest',
+      'shopify',
+      'zapier',
+    ]);
+  });
+
+  it('isManualInvitePlatform matches the constant', () => {
+    expect(isManualInvitePlatform('zapier')).toBe(true);
+    expect(isManualInvitePlatform('shopify')).toBe(true);
+    expect(isManualInvitePlatform('google')).toBe(false);
   });
 });

@@ -6,21 +6,16 @@
  */
 
 import { AccessLevel } from '@agency-platform/shared';
+import type {
+  PlatformGroupConfig,
+  PlatformProductConfig,
+} from '@agency-platform/shared';
 
 // ============================================================
-// TYPES
+// TYPES (re-exported from shared — single definition)
 // ============================================================
 
-export interface PlatformProductConfig {
-  product: string;
-  accessLevel: AccessLevel;
-  accounts: string[]; // Account IDs (empty for client_authorization flow)
-}
-
-export interface PlatformGroupConfig {
-  platformGroup: string;
-  products: PlatformProductConfig[];
-}
+export type { PlatformGroupConfig, PlatformProductConfig };
 
 // ============================================================
 // TRANSFORMATION
@@ -95,5 +90,46 @@ export function getPlatformCount(selection: Record<string, string[]>): number {
  */
 export function getGroupCount(selection: Record<string, string[]>): number {
   return Object.entries(selection).filter(([_, products]) => products.length > 0).length;
+}
+
+/**
+ * Normalize a connected platform id (product or group) to its platform group.
+ *
+ * Unlike the strict `platformGroupOf` in shared (hierarchy-only), this also
+ * maps legacy product ids absent from PLATFORM_HIERARCHY (youtube_studio,
+ * display_video_360, whatsapp_business) and unknown google_, meta_, linkedin,
+ * tiktok, or snapchat prefixed ids to their group.
+ */
+export function normalizePlatformToGroup(platform: string): string {
+  if (
+    platform === 'ga4' ||
+    platform === 'youtube_studio' ||
+    platform === 'display_video_360' ||
+    platform.startsWith('google_')
+  ) {
+    return 'google';
+  }
+
+  if (
+    platform === 'instagram' ||
+    platform === 'whatsapp_business' ||
+    platform.startsWith('meta_')
+  ) {
+    return 'meta';
+  }
+
+  if (platform.startsWith('linkedin')) {
+    return 'linkedin';
+  }
+
+  if (platform.startsWith('tiktok')) {
+    return 'tiktok';
+  }
+
+  if (platform.startsWith('snapchat')) {
+    return 'snapchat';
+  }
+
+  return platform;
 }
 

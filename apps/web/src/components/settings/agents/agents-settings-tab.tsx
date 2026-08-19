@@ -4,8 +4,8 @@ import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, Copy, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
 import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { getApiBaseUrl } from '@/lib/api/api-env';
 import { createAgentGrant, listAgentGrants, revokeAgentGrant, updateAgentGrant } from '@/lib/api/agents';
 import type { AgentPermission } from '@agency-platform/shared';
@@ -17,7 +17,7 @@ export function AgentsSettingsTab() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const principalClerkId = orgId || userId;
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard(1500);
   const endpoint = `${getApiBaseUrl()}/mcp`;
   const pendingOauthClientId = searchParams.get('connect');
   const agencyQuery = useQuery({
@@ -54,11 +54,7 @@ export function AgentsSettingsTab() {
       router.replace(`?${params.toString()}`, { scroll: false });
     },
   });
-  const copyEndpoint = async () => {
-    await navigator.clipboard.writeText(endpoint);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
-  };
+  const copyEndpoint = () => copy(endpoint);
 
   return (
     <section className="space-y-6" aria-labelledby="agents-heading">

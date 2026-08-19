@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 interface BusinessIdDisplayProps {
   businessId: string;
@@ -14,18 +14,9 @@ export function BusinessIdDisplay({
   businessName,
   onCopy,
 }: BusinessIdDisplayProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(businessId);
-      setCopied(true);
-      onCopy?.();
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
-    }
-  };
+  const handleCopy = () => copy(businessId, onCopy);
 
   return (
     <div className="space-y-2">

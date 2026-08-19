@@ -1,20 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 interface KitCopyButtonProps {
   text: string;
 }
 
 export function KitCopyButton({ text }: KitCopyButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const handleCopy = () => copy(text);
 
   return (
     <button

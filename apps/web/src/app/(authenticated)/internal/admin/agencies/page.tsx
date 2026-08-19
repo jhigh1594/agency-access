@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { AdminTableShell } from '@/components/internal-admin';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { formatShortDate } from '@/lib/format';
 import { useInternalAdminAgencies, useInternalAdminAgencyDetail } from '@/lib/query/internal-admin';
 
 const PAGE_SIZE = 20;
@@ -112,7 +113,7 @@ export default function InternalAdminAgenciesPage() {
                       </td>
                       <td className="py-3 text-right text-ink tabular-nums">{agency.memberCount}</td>
                       <td className="py-3 text-right text-ink">
-                        {new Date(agency.createdAt).toLocaleDateString()}
+                        {formatShortDate(agency.createdAt)}
                       </td>
                       <td className="py-3 text-right">
                         <button

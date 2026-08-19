@@ -23,6 +23,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Copy, Mail, Share2 } from 'lucide-react';
 import { bounceVariants, bounceTransition } from '@/lib/animations';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 // ============================================================
 // TYPES
@@ -49,24 +50,12 @@ export function SuccessLinkCard({
   onEmail,
   showQRCode = false,
 }: SuccessLinkCardProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const [showConfetti, setShowConfetti] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Copy to clipboard
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-
-      // Reset after 2 seconds
-      setTimeout(() => setCopied(false), 2000);
-
-      if (onCopy) onCopy();
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  }, [link, onCopy]);
+  const handleCopy = useCallback(() => copy(link, onCopy), [copy, link, onCopy]);
 
   // Send via email (mailto:)
   const handleEmail = useCallback(() => {

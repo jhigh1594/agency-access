@@ -23,24 +23,13 @@ import {
   useCreateAffiliatePortalLink,
 } from '@/lib/query/affiliate';
 import { useAuthOrBypass } from '@/lib/dev-auth';
+import { formatShortDate, formatUsdFromCents } from '@/lib/format';
 import {
   AFFILIATE_PROMO_KIT,
   buildAffiliateEmailSwipeText,
   buildAffiliatePositioningText,
   buildAffiliateSocialSwipeText,
 } from '@/lib/affiliate-promo-kit';
-
-function formatCommission(cents: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(cents / 100);
-}
-
-function formatDate(value: string | null) {
-  if (!value) return 'n/a';
-  return new Date(value).toLocaleDateString();
-}
 
 export default function PartnerPortalPage() {
   const clerkAuth = useAuth();
@@ -198,13 +187,13 @@ export default function PartnerPortalPage() {
         />
         <AffiliateMetricCard
           label="Pending"
-          value={formatCommission(data.metrics.pendingCommissionCents)}
+          value={formatUsdFromCents(data.metrics.pendingCommissionCents)}
           description="Unpaid commission balance"
           icon={<Wallet className="h-4 w-4" />}
         />
         <AffiliateMetricCard
           label="Paid"
-          value={formatCommission(data.metrics.paidCommissionCents)}
+          value={formatUsdFromCents(data.metrics.paidCommissionCents)}
           description="Commission paid to date"
           icon={<Wallet className="h-4 w-4" />}
         />
@@ -443,7 +432,7 @@ export default function PartnerPortalPage() {
                   render: (value, row) => (
                     <div>
                       <p className="font-medium text-ink">{String(value)}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(row.invoiceDate)}</p>
+                      <p className="text-xs text-muted-foreground">{formatShortDate(row.invoiceDate)}</p>
                     </div>
                   ),
                 },
@@ -451,7 +440,7 @@ export default function PartnerPortalPage() {
                   key: 'revenueAmountCents',
                   header: 'Revenue',
                   align: 'right',
-                  render: (value) => formatCommission(Number(value || 0)),
+                  render: (value) => formatUsdFromCents(Number(value || 0)),
                 },
                 {
                   key: 'amountCents',
@@ -459,7 +448,7 @@ export default function PartnerPortalPage() {
                   align: 'right',
                   render: (value, row) => (
                     <div className="space-y-1">
-                      <p>{formatCommission(Number(value || 0))}</p>
+                      <p>{formatUsdFromCents(Number(value || 0))}</p>
                       <p className="text-xs text-muted-foreground">{row.commissionBps / 100}% share</p>
                     </div>
                   ),
@@ -467,7 +456,7 @@ export default function PartnerPortalPage() {
                 {
                   key: 'holdUntil',
                   header: 'Hold Until',
-                  render: (value) => formatDate(String(value)),
+                  render: (value) => formatShortDate(String(value)),
                 },
                 {
                   key: 'status',
@@ -494,13 +483,13 @@ export default function PartnerPortalPage() {
                 {
                   key: 'periodStart',
                   header: 'Period',
-                  render: (value, row) => `${formatDate(String(value))} to ${formatDate(row.periodEnd)}`,
+                  render: (value, row) => `${formatShortDate(String(value))} to ${formatShortDate(row.periodEnd)}`,
                 },
                 {
                   key: 'totalAmountCents',
                   header: 'Amount',
                   align: 'right',
-                  render: (value) => formatCommission(Number(value || 0)),
+                  render: (value) => formatUsdFromCents(Number(value || 0)),
                 },
                 {
                   key: 'commissionCount',

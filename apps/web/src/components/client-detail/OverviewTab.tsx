@@ -17,6 +17,7 @@ import type {
 } from '@agency-platform/shared';
 import Link from 'next/link';
 import { RequestedAccessBoard } from './RequestedAccessBoard';
+import { formatMediumDate } from '@/lib/format';
 
 interface OverviewTabProps {
   platformGroups: ClientDetailPlatformGroup[];
@@ -60,15 +61,6 @@ export function OverviewTab({
     { value: 'expired', label: 'Expired' },
     { value: 'revoked', label: 'Revoked' },
   ];
-
-  // Format date
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -151,12 +143,12 @@ export function OverviewTab({
                     <div className="flex gap-6 text-sm text-muted-foreground">
                       <div>
                         <span className="font-medium text-muted">Created:</span>{' '}
-                        {formatDate(request.createdAt)}
+                        {formatMediumDate(request.createdAt)}
                       </div>
                       {request.authorizedAt && (
                         <div>
                           <span className="font-medium text-muted">Authorized:</span>{' '}
-                          {formatDate(request.authorizedAt)}
+                          {formatMediumDate(request.authorizedAt)}
                         </div>
                       )}
                     </div>

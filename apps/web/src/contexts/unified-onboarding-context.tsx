@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Client, Platform, AgencyRole, UnifiedOnboardingProgress } from '@agency-platform/shared';
 import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
+import { getApiErrorMessage } from '@/lib/api/extract-error';
 import { trackAffiliateEvent } from '@/lib/analytics/affiliate';
 import { buildAuthorizeUrl } from '@/lib/app-url';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
@@ -596,11 +597,7 @@ export function UnifiedOnboardingProvider({
         return;
       }
 
-      const errorMessage = err instanceof AuthorizedApiError
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : 'Failed to load clients';
+      const errorMessage = getApiErrorMessage(err, 'Failed to load clients');
 
       setState((prev) => ({
         ...prev,
@@ -810,11 +807,7 @@ export function UnifiedOnboardingProvider({
         accessLink,
       };
     } catch (err) {
-      const errorMessage = err instanceof AuthorizedApiError
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : 'Network error. Please try again.';
+      const errorMessage = getApiErrorMessage(err, 'Network error. Please try again.');
 
       trackOnboardingEvent('onboarding_step_failed', {
         step: state.currentStep,
@@ -874,11 +867,7 @@ export function UnifiedOnboardingProvider({
 
       router.push('/dashboard');
     } catch (err) {
-      const errorMessage = err instanceof AuthorizedApiError
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : 'Unable to finish setup right now.';
+      const errorMessage = getApiErrorMessage(err, 'Unable to finish setup right now.');
 
       setState((prev) => ({
         ...prev,
@@ -923,11 +912,7 @@ export function UnifiedOnboardingProvider({
       setState((prev) => ({ ...prev, loading: false }));
       return true;
     } catch (err) {
-      const errorMessage = err instanceof AuthorizedApiError
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : 'Network error. Please try again.';
+      const errorMessage = getApiErrorMessage(err, 'Network error. Please try again.');
 
       trackOnboardingEvent('onboarding_step_failed', {
         step: state.currentStep,
@@ -994,11 +979,7 @@ export function UnifiedOnboardingProvider({
         router.push('/dashboard');
       }
     } catch (err) {
-      const errorMessage = err instanceof AuthorizedApiError
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : 'Unable to complete onboarding.';
+      const errorMessage = getApiErrorMessage(err, 'Unable to complete onboarding.');
 
       setState((prev) => ({
         ...prev,

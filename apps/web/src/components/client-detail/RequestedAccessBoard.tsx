@@ -15,6 +15,7 @@ import {
   getPlatformGroupBadgeConfig,
   getProductBadgeConfig,
 } from './status-presentation';
+import { formatMediumDate } from '@/lib/format';
 
 interface RequestedAccessBoardProps {
   platformGroups: ClientDetailPlatformGroup[];
@@ -122,12 +123,7 @@ export function RequestedAccessBoard({
                           <p className="text-sm font-semibold text-foreground">{platformLabel}</p>
                           {group.latestRequestedAt ? (
                             <p className="text-xs text-muted-foreground">
-                              Last requested{' '}
-                              {new Date(group.latestRequestedAt).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
+                              Last requested {formatMediumDate(group.latestRequestedAt)}
                             </p>
                           ) : null}
                         </div>

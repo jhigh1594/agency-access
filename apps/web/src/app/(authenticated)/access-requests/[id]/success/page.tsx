@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { Check, Copy, ArrowLeft, Plus, ExternalLink, Mail } from 'lucide-react';
 import { getAccessRequest, getAuthorizationUrl } from '@/lib/api/access-requests';
 import { getPlatformCount } from '@/lib/transform-platforms';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Button } from '@/components/ui';
 import { FlowShell } from '@/components/flow/flow-shell';
 import type { AccessRequest } from '@/lib/api/access-requests';
@@ -18,9 +19,9 @@ export default function SuccessPage({ params }: SuccessPageProps) {
   const router = useRouter();
   const { getToken } = useAuth();
   const [accessRequest, setAccessRequest] = useState<AccessRequest | null>(null);
+  const { copied, copy } = useCopyToClipboard();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function loadAccessRequest() {
@@ -65,11 +66,9 @@ export default function SuccessPage({ params }: SuccessPageProps) {
     });
   }, [accessRequest]);
 
-  const handleCopyLink = async () => {
+  const handleCopyLink = () => {
     if (!authorizationUrl) return;
-    await navigator.clipboard.writeText(authorizationUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    void copy(authorizationUrl);
   };
 
   const emailHref = accessRequest

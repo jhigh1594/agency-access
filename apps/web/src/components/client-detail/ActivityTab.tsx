@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import { Clock, FileText, Link2, ShieldX, UserCheck } from 'lucide-react';
 import type { ClientActivityItem } from '@agency-platform/shared';
 import type { Platform } from '@agency-platform/shared';
-import { Card, EmptyState, PlatformIcon } from '@/components/ui';
+import { Card, EmptyState, PlatformIcon, formatRelativeTimeLong } from '@/components/ui';
 
 interface ActivityTabProps {
   activity: ClientActivityItem[];
@@ -34,27 +34,6 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 export function ActivityTab({ activity }: ActivityTabProps) {
-  // Format relative time
-  const getRelativeTime = (date: Date) => {
-    const now = new Date();
-    const timestamp = new Date(date);
-    const diffInMs = now.getTime() - timestamp.getTime();
-    const diffInMins = Math.floor(diffInMs / 60000);
-    const diffInHours = Math.floor(diffInMs / 3600000);
-    const diffInDays = Math.floor(diffInMs / 86400000);
-
-    if (diffInMins < 1) return 'Just now';
-    if (diffInMins < 60) return `${diffInMins} minute${diffInMins > 1 ? 's' : ''} ago`;
-    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-
-    return timestamp.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: timestamp.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    });
-  };
-
   return (
     <div>
       <h3 className="text-lg font-semibold text-foreground font-display mb-6">Activity Timeline</h3>
@@ -100,7 +79,7 @@ export function ActivityTab({ activity }: ActivityTabProps) {
 
               {/* Time */}
               <div className="text-xs text-muted-foreground flex-shrink-0">
-                {getRelativeTime(item.timestamp)}
+                {formatRelativeTimeLong(new Date(item.timestamp))}
               </div>
             </div>
           ))}

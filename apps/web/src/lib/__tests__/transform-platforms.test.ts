@@ -9,6 +9,7 @@ import {
   transformPlatformsForAPI,
   getPlatformCount,
   getGroupCount,
+  normalizePlatformToGroup,
 } from '../transform-platforms';
 import type { AccessLevel } from '@agency-platform/shared';
 
@@ -331,3 +332,28 @@ describe('getGroupCount', () => {
   });
 });
 
+
+describe('normalizePlatformToGroup', () => {
+  it('maps product ids and legacy ids to their groups like the former inline normalizers', () => {
+    expect(normalizePlatformToGroup('ga4')).toBe('google');
+    expect(normalizePlatformToGroup('youtube_studio')).toBe('google');
+    expect(normalizePlatformToGroup('display_video_360')).toBe('google');
+    expect(normalizePlatformToGroup('google_tag_manager')).toBe('google');
+    expect(normalizePlatformToGroup('instagram')).toBe('meta');
+    expect(normalizePlatformToGroup('whatsapp_business')).toBe('meta');
+    expect(normalizePlatformToGroup('meta_ads')).toBe('meta');
+    expect(normalizePlatformToGroup('linkedin_ads')).toBe('linkedin');
+    expect(normalizePlatformToGroup('tiktok_ads')).toBe('tiktok');
+    expect(normalizePlatformToGroup('snapchat_ads')).toBe('snapchat');
+  });
+
+  it('returns group keys and unknown values unchanged', () => {
+    expect(normalizePlatformToGroup('google')).toBe('google');
+    expect(normalizePlatformToGroup('meta')).toBe('meta');
+    expect(normalizePlatformToGroup('linkedin')).toBe('linkedin');
+    expect(normalizePlatformToGroup('tiktok')).toBe('tiktok');
+    expect(normalizePlatformToGroup('snapchat')).toBe('snapchat');
+    expect(normalizePlatformToGroup('kit')).toBe('kit');
+    expect(normalizePlatformToGroup('whitelabel')).toBe('whitelabel');
+  });
+});

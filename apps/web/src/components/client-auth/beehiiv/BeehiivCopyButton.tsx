@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 interface BeehiivCopyButtonProps {
   text: string;           // Text to copy
@@ -21,21 +21,9 @@ export function BeehiivCopyButton({
   label = 'Copy',
   className = '',
 }: BeehiivCopyButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-
-      // Reset after 2 seconds
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy text:', err);
-    }
-  };
+  const handleCopy = () => copy(text);
 
   const buttonClasses = [
     'inline-flex items-center gap-2 px-4 py-2',
