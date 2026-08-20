@@ -1,0 +1,269 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M0GFSF0KVF64PY89TF1WQCVR",
+  "session_id": "a9d1675b-bf35-433f-8f65-59cf6bdf8171",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-20T21:03:50.685489Z",
+  "branch": "codex/debug-tests-green",
+  "checkpoints_count": 10,
+  "save_step_count": 5,
+  "files_touched": [
+    "apps/web/src/components/marketing/hero-section.tsx"
+  ],
+  "agent": "Claude Code",
+  "model": "glm-5.3",
+  "turn_id": "b733c8a37cb8",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 255691,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 6101696,
+    "output_tokens": 11517,
+    "api_call_count": 59
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-call_39173c307d044a30be28dc60",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "hallmark"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "b733c8a37cb8",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 320,
+        "end": 321,
+        "entry_ids": [
+          "9b798490-ee39-480e-bac5-b74d9d936126"
+        ],
+        "tool_use_id": "call_39173c307d044a30be28dc60"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "call_39173c307d044a30be28dc60"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: hallmark",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-20T21:03:50.527528Z",
+    "agent_lines": 24,
+    "agent_removed": 1,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 24,
+    "total_lines_changed": 25,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 3192,
+      "user_lines_removed": 73,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/settings.json": 104,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "AGENTS.md": 12,
+        "CLAUDE.md": 1,
+        "apps/web/.gitignore": 3,
+        "apps/web/clerk.lock": 1,
+        "apps/web/next-env.d.ts": 1,
+        "docs/plans/2026-07-30-001-feat-google-client-offboarding-plan.md": 417,
+        "docs/plans/2026-08-18-001-refactor-codebase-simplification-pass-plan.md": 707,
+        "package-lock.json": 388,
+        "plans/marketing-site-copy-revamp.md": 246,
+        "plans/seo-keyword-strategy.md": 75,
+        "pnpm-lock.yaml": 600,
+        "pnpm-workspace.yaml": 2
+      },
+      "user_removed_per_file": {
+        ".claude/settings.json": 37,
+        "apps/web/next-env.d.ts": 1,
+        "package-lock.json": 35
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 846,
+      "user_lines_removed": 86,
+      "agent_lines_added": 2598,
+      "agent_lines_removed": 382,
+      "user_added_per_file": {
+        ".claude/settings.json": 104,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "apps/api/src/jobs/__tests__/trial-expiration.test.ts": 15,
+        "apps/api/src/routes/__tests__/agency-platforms.routes.test.ts": 10,
+        "apps/api/src/routes/__tests__/clients.routes.test.ts": 28,
+        "apps/api/src/routes/__tests__/meta-assets.routes.test.ts": 10,
+        "apps/api/src/routes/__tests__/usage.test.ts": 15,
+        "apps/api/src/routes/__tests__/webhook-settings.routes.test.ts": 3,
+        "apps/api/src/services/__tests__/agent-access-operations.service.test.ts": 1,
+        "apps/api/src/services/__tests__/clerk-metadata.service.test.ts": 5,
+        "apps/api/src/services/__tests__/client.service.test.ts": 20
+      },
+      "user_removed_per_file": {
+        ".claude/settings.json": 37,
+        "apps/api/src/routes/__tests__/clients.routes.test.ts": 14,
+        "apps/api/src/routes/__tests__/usage.test.ts": 11,
+        "apps/api/src/services/__tests__/agent-access-operations.service.test.ts": 1,
+        "apps/api/src/services/__tests__/clerk-metadata.service.test.ts": 5,
+        "apps/api/src/services/__tests__/client.service.test.ts": 18
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 743,
+      "user_lines_removed": 38,
+      "agent_lines_added": 2721,
+      "agent_lines_removed": 444,
+      "user_added_per_file": {
+        ".claude/settings.json": 104,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "apps/api/src/services/__tests__/schema-integration.test.ts": 3,
+        "packages/shared/src/__tests__/offboarding-types.test.ts": 1
+      },
+      "user_removed_per_file": {
+        ".claude/settings.json": 37,
+        "apps/api/src/services/__tests__/schema-integration.test.ts": 1
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 857,
+      "user_lines_removed": 938,
+      "agent_lines_added": 2725,
+      "agent_lines_removed": 445,
+      "user_added_per_file": {
+        ".claude/settings.json": 104,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "apps/web/src/app/(authenticated)/clients/page.tsx": 1,
+        "apps/web/src/app/__tests__/client-request-flow.design.test.ts": 1,
+        "apps/web/src/app/invite/[token]/__tests__/page.test.tsx": 1,
+        "apps/web/src/app/onboarding/__tests__/route-targets.test.ts": 2,
+        "apps/web/src/app/settings/platforms/__tests__/page.test.tsx": 8,
+        "apps/web/src/components/__tests__/access-level-selector.test.tsx": 25,
+        "apps/web/src/components/__tests__/client-selector.test.tsx": 2,
+        "apps/web/src/components/__tests__/hierarchical-platform-selector.supported-products.test.tsx": 2,
+        "apps/web/src/components/client-auth/PlatformAuthWizard.tsx": 3,
+        "apps/web/src/components/client-auth/__tests__/MetaAssetSelector.interaction.test.tsx": 2,
+        "apps/web/src/components/client-auth/__tests__/MetaAssetSelector.test.tsx": 2,
+        "apps/web/src/components/client-auth/__tests__/PlatformAuthWizard.test.tsx": 4,
+        "apps/web/src/components/client-auth/__tests__/PlatformAuthWizard.tiktok.test.tsx": 7,
+        "apps/web/src/components/client-auth/__tests__/TikTokAssetSelector.test.tsx": 3,
+        "apps/web/src/components/marketing/__tests__/hero-copy-rewrite-copy.claims.test.ts": 2,
+        "apps/web/src/components/marketing/__tests__/hero-section.auth-cta.test.tsx": 1,
+        "apps/web/src/components/marketing/__tests__/marketing-nav.test.tsx": 18,
+        "apps/web/src/components/onboarding/__tests__/platform-selector-grid.test.tsx": 1,
+        "apps/web/src/components/trial-banner.tsx": 2,
+        "apps/web/src/components/ui/__tests__/multi-select-combobox.design.test.tsx": 1,
+        "apps/web/src/components/ui/platform-icon.tsx": 4,
+        "apps/web/src/components/ui/stat-card.tsx": 2,
+        "apps/web/src/components/upgrade-modal.tsx": 22,
+        "apps/web/src/lib/__tests__/client-invite-platforms.test.ts": 2
+      },
+      "user_removed_per_file": {
+        ".claude/settings.json": 37,
+        "apps/web/src/app/(authenticated)/clients/page.tsx": 1,
+        "apps/web/src/app/__tests__/client-request-flow.design.test.ts": 1,
+        "apps/web/src/app/invite/[token]/__tests__/page.test.tsx": 1,
+        "apps/web/src/app/onboarding/__tests__/route-targets.test.ts": 1,
+        "apps/web/src/app/settings/platforms/__tests__/page.test.tsx": 493,
+        "apps/web/src/components/__tests__/access-level-selector.test.tsx": 310,
+        "apps/web/src/components/__tests__/client-selector.test.tsx": 3,
+        "apps/web/src/components/__tests__/hierarchical-platform-selector.supported-products.test.tsx": 2,
+        "apps/web/src/components/client-auth/PlatformAuthWizard.tsx": 9,
+        "apps/web/src/components/client-auth/__tests__/MetaAssetSelector.interaction.test.tsx": 1,
+        "apps/web/src/components/client-auth/__tests__/MetaAssetSelector.test.tsx": 3,
+        "apps/web/src/components/client-auth/__tests__/PlatformAuthWizard.test.tsx": 9,
+        "apps/web/src/components/client-auth/__tests__/PlatformAuthWizard.tiktok.test.tsx": 7,
+        "apps/web/src/components/client-auth/__tests__/TikTokAssetSelector.test.tsx": 4,
+        "apps/web/src/components/marketing/__tests__/hero-copy-rewrite-copy.claims.test.ts": 3,
+        "apps/web/src/components/marketing/__tests__/hero-section.auth-cta.test.tsx": 1,
+        "apps/web/src/components/marketing/__tests__/marketing-nav.test.tsx": 13,
+        "apps/web/src/components/marketing/__tests__/pricing-copy.claims.test.ts": 5,
+        "apps/web/src/components/onboarding/__tests__/platform-selector-grid.test.tsx": 1,
+        "apps/web/src/components/trial-banner.tsx": 2,
+        "apps/web/src/components/ui/__tests__/multi-select-combobox.design.test.tsx": 1,
+        "apps/web/src/components/ui/platform-icon.tsx": 4,
+        "apps/web/src/components/ui/stat-card.tsx": 2,
+        "apps/web/src/components/upgrade-modal.tsx": 22,
+        "apps/web/src/lib/__tests__/client-invite-platforms.test.ts": 2
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 739,
+      "user_lines_removed": 37,
+      "agent_lines_added": 2812,
+      "agent_lines_removed": 1346,
+      "user_added_per_file": {
+        ".claude/settings.json": 104,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147
+      },
+      "user_removed_per_file": {
+        ".claude/settings.json": 37
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 739,
+      "user_lines_removed": 37,
+      "agent_lines_added": 2820,
+      "agent_lines_removed": 1347,
+      "user_added_per_file": {
+        ".claude/settings.json": 104,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147
+      },
+      "user_removed_per_file": {
+        ".claude/settings.json": 37
+      }
+    }
+  ]
+}
