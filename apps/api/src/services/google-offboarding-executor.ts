@@ -32,6 +32,8 @@ type ExecuteCleanupResult = {
   finalStatus: string;
 };
 
+const STARTABLE_RUN_STATUSES = new Set(['prepared', 'queued']);
+
 function buildCredentialGeneration(connectionId: string): string {
   return `gen-${connectionId.slice(0, 8)}`;
 }
@@ -52,7 +54,12 @@ async function revokeProviderItem(
       id: string;
       product: string;
       assetId: string;
-      assetName: string;
+      assetName: string | null;
+      grantMode: string;
+      managerCustomerId: string | null;
+      recipientEmail: string | null;
+      providerExternalId: string | null;
+      providerResourceName: string | null;
     } | null;
   },
   token: string,
@@ -75,32 +82,28 @@ async function revokeProviderItem(
 
   switch (product) {
     case 'google_ads': {
-      const metadata = (grant as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-      const managerCustomerId = (grant as Record<string, unknown>).managerCustomerId as string | undefined;
-      const recipientEmail = (grant as Record<string, unknown>).recipientEmail as string | undefined;
-
       if (
-        (grant as Record<string, unknown>).grantMode === 'manager_link' &&
-        managerCustomerId &&
-        (grant as Record<string, unknown>).providerExternalId
+        grant.grantMode === 'manager_link' &&
+        grant.managerCustomerId &&
+        grant.providerExternalId
       ) {
         return revokeAdsManagerLink(
           token,
-          managerCustomerId,
-          (grant as Record<string, unknown>).providerExternalId as string,
+          grant.managerCustomerId,
+          grant.providerExternalId,
         );
       }
 
-      if (recipientEmail && (grant as Record<string, unknown>).providerExternalId) {
+      if (grant.recipientEmail && grant.providerExternalId) {
         return revokeAdsDirectUser(
           token,
           grant.assetId,
-          (grant as Record<string, unknown>).providerExternalId as string,
+          grant.providerExternalId,
         );
       }
 
-      if (recipientEmail && (grant as Record<string, unknown>).providerResourceName) {
-        const invitationId = ((grant as Record<string, unknown>).providerResourceName as string).split('/').pop();
+      if (grant.recipientEmail && grant.providerResourceName) {
+        const invitationId = grant.providerResourceName.split('/').pop();
         if (invitationId) {
           return revokeAdsPendingInvitation(token, grant.assetId, invitationId);
         }
@@ -115,8 +118,7 @@ async function revokeProviderItem(
     }
 
     case 'ga4': {
-      const metadata = (grant as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-      const bindingId = metadata?.providerExternalId as string | undefined;
+      const bindingId = grant.providerExternalId;
       if (!bindingId) {
         return {
           success: false,
@@ -134,8 +136,7 @@ async function revokeProviderItem(
       return revokeBusinessAdmin(token, grant.assetId, `accounts/${grant.assetId}/admins/-`);
 
     case 'google_tag_manager': {
-      const meta = (grant as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-      const permissionId = meta?.providerExternalId as string | undefined;
+      const permissionId = grant.providerExternalId;
       if (!permissionId) {
         return {
           success: false,
@@ -148,8 +149,7 @@ async function revokeProviderItem(
     }
 
     case 'google_merchant_center': {
-      const meta = (grant as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-      const userId = meta?.providerExternalId as string | undefined;
+      const userId = grant.providerExternalId;
       if (!userId) {
         return {
           success: false,
@@ -215,8 +215,7 @@ export async function executeRun(runId: string): Promise<ExecuteRunResult> {
     throw new Error(`Offboarding run ${runId} not found`);
   }
 
-  if (run.status === 'executing' || run.status === 'receipt_pending' || run.status === 'completed' ||
-      run.status === 'completed_with_manual_follow_up' || run.status === 'incomplete' || run.status === 'canceled') {
+  if (!STARTABLE_RUN_STATUSES.has(run.status)) {
     return {
       runId,
       finalStatus: run.status,
@@ -257,7 +256,19 @@ export async function executeRun(runId: string): Promise<ExecuteRunResult> {
       status: 'pending',
     },
     include: {
-      grant: { select: { id: true, product: true, assetId: true, assetName: true } },
+      grant: {
+        select: {
+          id: true,
+          product: true,
+          assetId: true,
+          assetName: true,
+          grantMode: true,
+          managerCustomerId: true,
+          recipientEmail: true,
+          providerExternalId: true,
+          providerResourceName: true,
+        },
+      },
     },
     orderBy: { createdAt: 'asc' },
   });
@@ -301,7 +312,7 @@ export async function executeRun(runId: string): Promise<ExecuteRunResult> {
       continue;
     }
 
-    const providerResult = await revokeProviderItem(item as any, token);
+    const providerResult = await revokeProviderItem(item, token);
     const terminal = deriveItemTerminalStatus(providerResult);
 
     await clientOffboardingService.addAttempt({
@@ -397,10 +408,11 @@ export async function executeCleanup(runId: string): Promise<ExecuteCleanupResul
     },
   });
 
+  const resolvedItemStatuses = new Set(['revoked_verified', 'already_absent']);
   for (const item of automaticItems) {
     if (item.productId === 'google_search_console') continue;
 
-    if (item.status !== 'revoked_verified' && item.status !== 'already_absent') {
+    if (!resolvedItemStatuses.has(item.status)) {
       return {
         runId,
         cleanupResult: 'blocked' as CleanupResult,
@@ -463,9 +475,7 @@ export async function executeCleanup(runId: string): Promise<ExecuteCleanupResul
   );
 
   let finalStatus: string;
-  if (cleanupResult === 'blocked') {
-    finalStatus = 'incomplete';
-  } else if (cleanupResult === 'failed') {
+  if (cleanupResult === 'blocked' || cleanupResult === 'failed') {
     finalStatus = 'incomplete';
   } else if (hasManualItems) {
     finalStatus = 'completed_with_manual_follow_up';

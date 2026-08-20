@@ -4,12 +4,14 @@ import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { AdminStatCard, AdminTableShell } from '@/components/internal-admin';
 import { useInternalAdminOverview } from '@/lib/query/internal-admin';
 
+const USD_FORMATTER = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 2,
+});
+
 function formatUsd(value: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(value);
+  return USD_FORMATTER.format(value);
 }
 
 export default function InternalAdminOverviewPage() {

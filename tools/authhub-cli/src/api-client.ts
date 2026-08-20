@@ -29,7 +29,8 @@ export async function apiFetch<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAccessToken();
+  const credentials = loadCredentials();
+  const token = credentials?.accessToken || null;
   if (!token) {
     const error = new Error('Not authenticated. Run `authhub login` first.') as Error & { code: string; status: number };
     error.code = 'UNAUTHORIZED';
@@ -37,7 +38,7 @@ export async function apiFetch<T = unknown>(
     throw error;
   }
 
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = credentials?.apiBaseUrl || process.env.AUTHHUB_API_URL || 'http://localhost:3001';
   const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
 
   const headers: Record<string, string> = {

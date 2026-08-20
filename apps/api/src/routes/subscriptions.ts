@@ -48,7 +48,6 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
   fastify.post('/subscriptions/checkout', async (request, reply) => {
     try {
       const body = request.body as {
-        agencyId: string;
         tier: SubscriptionTier;
         billingInterval?: BillingInterval;
         successUrl: string;
@@ -56,10 +55,10 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
       };
 
       // Validate required fields
-      if (!body.agencyId || !body.tier || !body.successUrl || !body.cancelUrl) {
+      if (!body.tier || !body.successUrl || !body.cancelUrl) {
         return sendValidationError(
           reply,
-          'agencyId, tier, successUrl, and cancelUrl are required'
+          'tier, successUrl, and cancelUrl are required'
         );
       }
       const agencyId = (request as any).principalAgencyId as string;
@@ -119,13 +118,12 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
   fastify.post('/subscriptions/portal', async (request, reply) => {
     try {
       const body = request.body as {
-        agencyId: string;
         returnUrl: string;
       };
 
       // Validate required fields
-      if (!body.agencyId || !body.returnUrl) {
-        return sendValidationError(reply, 'agencyId and returnUrl are required');
+      if (!body.returnUrl) {
+        return sendValidationError(reply, 'returnUrl is required');
       }
       const agencyId = (request as any).principalAgencyId as string;
 

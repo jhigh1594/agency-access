@@ -7,10 +7,10 @@
  * Shows connection status, platforms, and quick actions.
  */
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Search, Filter, Loader2, AlertCircle, ExternalLink, Plus } from 'lucide-react';
+import { Search, Filter, AlertCircle, ExternalLink, Plus } from 'lucide-react';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import Link from 'next/link';
 import { StatusBadge, PlatformIcon, EmptyState } from '@/components/ui';
@@ -49,10 +49,16 @@ function ClientsPageContent() {
   const initialEmail = searchParams.get('email');
   
   const [searchQuery, setSearchQuery] = useState(initialEmail || '');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialEmail || '');
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [quotaError, setQuotaError] = useState<QuotaExceededError | null>(null);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearchQuery(searchQuery), 250);
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery]);
 
   // Quota check hook
   const checkQuota = useQuotaCheck();
@@ -63,10 +69,10 @@ function ClientsPageContent() {
     isLoading: isLoadingClients,
     error: fetchError,
   } = useQuery({
-    queryKey: ['clients-with-connections', searchQuery],
+    queryKey: ['clients-with-connections', debouncedSearchQuery],
     queryFn: async () => {
       const url = new URL(resolveApiUrl('/api/clients'));
-      if (searchQuery) url.searchParams.append('search', searchQuery);
+      if (debouncedSearchQuery) url.searchParams.append('search', debouncedSearchQuery);
 
       return authorizedApiFetch(url.toString(), { getToken });
     },

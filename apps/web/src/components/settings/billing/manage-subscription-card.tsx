@@ -29,6 +29,7 @@ import { CancelSubscriptionModal } from './cancel-subscription-modal';
 import { Button } from '@/components/ui/button';
 import { readBillingIntervalPreference } from './billing-interval';
 import { resolveBillingLifecycle } from './billing-lifecycle';
+import { useTransientMessage } from '@/hooks/use-transient-message';
 
 type ManageableTier = 'STARTER' | 'GROWTH' | 'AGENCY';
 type CurrentTier = 'FREE' | ManageableTier;
@@ -60,8 +61,8 @@ export function ManageSubscriptionCard() {
   const [selectedTier, setSelectedTier] = useState<ManageableTier | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [updateBehavior, setUpdateBehavior] = useState<'immediate' | 'next-cycle'>('next-cycle');
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, showSuccessMessage, clearSuccessMessage] = useTransientMessage<string>();
+  const [errorMessage, showErrorMessage, clearErrorMessage] = useTransientMessage<string>();
 
   if (isLoading) {
     return (
@@ -92,8 +93,8 @@ export function ManageSubscriptionCard() {
   const handleTierChange = async () => {
     if (!selectedTier || selectedTier === currentTier) return;
 
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    clearErrorMessage();
+    clearSuccessMessage();
 
     try {
       if (currentTier === 'FREE') {
@@ -127,15 +128,14 @@ export function ManageSubscriptionCard() {
         updateBehavior,
       });
 
-      setSuccessMessage(
+      showSuccessMessage(
         `Successfully ${isUpgrade ? 'upgraded' : 'downgraded'} to ${getPricingTierNameFromSubscriptionTier(selectedTier)}`
       );
       setShowTierSelector(false);
       setSelectedTier(null);
 
-      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to update subscription');
+      showErrorMessage(error instanceof Error ? error.message : 'Failed to update subscription');
     }
   };
 
@@ -171,7 +171,7 @@ export function ManageSubscriptionCard() {
               <CheckCircle2 className="h-5 w-5 text-teal flex-shrink-0" />
               <p className="text-sm text-teal">{successMessage}</p>
               <button
-                onClick={() => setSuccessMessage(null)}
+                onClick={clearSuccessMessage}
                 className="ml-auto p-1 hover:bg-teal/20 rounded"
               >
                 <X className="h-4 w-4 text-teal" />
@@ -194,7 +194,7 @@ export function ManageSubscriptionCard() {
               <AlertCircle className="h-5 w-5 text-coral flex-shrink-0" />
               <p className="text-sm text-coral">{errorMessage}</p>
               <button
-                onClick={() => setErrorMessage(null)}
+                onClick={clearErrorMessage}
                 className="ml-auto p-1 hover:bg-coral/20 rounded"
               >
                 <X className="h-4 w-4 text-coral" />
@@ -248,7 +248,7 @@ export function ManageSubscriptionCard() {
                 onClick={() => {
                   setShowTierSelector(false);
                   setSelectedTier(null);
-                  setErrorMessage(null);
+                  clearErrorMessage();
                 }}
                 className="p-1 hover:bg-electric/10 rounded"
               >

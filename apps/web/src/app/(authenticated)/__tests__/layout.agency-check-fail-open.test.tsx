@@ -64,9 +64,13 @@ vi.mock('@/lib/query/billing', () => ({
   useSubscription: () => ({ data: null }),
 }));
 
-vi.mock('@/lib/query/onboarding', () => ({
-  shouldEnforceOnboardingRedirect: () => true,
-}));
+vi.mock('@/lib/query/onboarding', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/query/onboarding')>();
+  return {
+    ...actual,
+    shouldEnforceOnboardingRedirect: () => true,
+  };
+});
 
 vi.mock('@/lib/analytics/onboarding', () => ({
   trackOnboardingEvent: vi.fn(),
@@ -116,7 +120,7 @@ describe('AuthenticatedLayout agency-check fail-open degradation', () => {
   });
 
   it('renders children without redirect when the API answers non-ok', async () => {
-    // Distinct pathname: the module-level agencyCheckDedup set persists across tests.
+    // Distinct pathname keeps this test isolated from the shared layout cache.
     usePathnameMock.mockReturnValue('/clients-non-ok');
     fetchMock.mockResolvedValue({
       ok: false,

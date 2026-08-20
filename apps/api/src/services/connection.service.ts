@@ -413,8 +413,13 @@ export async function revokeConnection(
       where: { connectionId },
     });
 
-    // Delete all tokens from Infisical
-    for (const auth of authorizations) {
+    // Delete all tokens from Infisical in parallel. The connection can still be
+    // revoked when one provider secret is already missing or unavailable.
+    const deletionResults = await Promise.allSettled(
+      authorizations.map((auth) => infisical.deleteSecret(auth.secretId)),
+    );
+
+    for (const [index, auth] of authorizations.entries()) {
       if (auth.platform === 'tiktok' || auth.platform === 'tiktok_ads') {
         await auditService.createAuditLog({
           agencyId: connection.agencyId,
@@ -428,7 +433,22 @@ export async function revokeConnection(
           },
         });
       }
-      await infisical.deleteSecret(auth.secretId);
+
+      const deletion = deletionResults[index];
+      if (deletion.status === 'rejected') {
+        await auditService.createAuditLog({
+          agencyId: connection.agencyId,
+          userEmail: connection.clientEmail,
+          action: 'TOKEN_DELETION_FAILED',
+          resourceType: 'client_connection',
+          resourceId: connectionId,
+          metadata: {
+            platform: auth.platform,
+            secretId: auth.secretId,
+            error: deletion.reason instanceof Error ? deletion.reason.message : String(deletion.reason),
+          },
+        });
+      }
     }
 
     // Update connection status
@@ -443,7 +463,11 @@ export async function revokeConnection(
       data: { status: 'revoked' },
     });
 
-    return { data: connection, error: null };
+    return {
+      data: connection,
+      error: null,
+      partialFailure: deletionResults.some((result) => result.status === 'rejected'),
+    };
   } catch (error) {
     return {
       data: null,

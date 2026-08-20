@@ -21,7 +21,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Client, Platform, AgencyRole, UnifiedOnboardingProgress } from '@agency-platform/shared';
@@ -1099,7 +1099,7 @@ export function UnifiedOnboardingProvider({
   // CONTEXT VALUE
   // ============================================================
 
-  const value: UnifiedOnboardingContextValue = {
+  const value = useMemo<UnifiedOnboardingContextValue>(() => ({
     state,
     nextStep,
     prevStep,
@@ -1121,7 +1121,29 @@ export function UnifiedOnboardingProvider({
     skipOnboarding,
     setError,
     clearError,
-  };
+  }), [
+    state,
+    nextStep,
+    prevStep,
+    goToStep,
+    canGoNext,
+    canGoBack,
+    canSkip,
+    updateAgency,
+    updateClient,
+    updatePlatforms,
+    addTeamInvite,
+    removeTeamInvite,
+    updateTeamInviteRole,
+    loadExistingClients,
+    createAgencyAndAccessRequest,
+    deferUntilClientReady,
+    sendTeamInvites,
+    completeOnboarding,
+    skipOnboarding,
+    setError,
+    clearError,
+  ]);
 
   return (
     <UnifiedOnboardingContext.Provider value={value}>

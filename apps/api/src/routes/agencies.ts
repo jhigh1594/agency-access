@@ -9,7 +9,7 @@ import { FastifyInstance } from 'fastify';
 import { agencyService } from '../services/agency.service.js';
 import { sendError, sendValidationError } from '../lib/response.js';
 import { authenticate } from '../middleware/auth.js';
-import { quotaMiddleware } from '../middleware/quota.middleware.js';
+import { quotaEnforcementMiddleware } from '../middleware/quota-enforcement.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { requirePrincipalAgency } from '@/lib/agency-guard.js';
 
@@ -266,7 +266,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/agencies/:id/members',
     {
-      onRequest: [quotaMiddleware({
+      onRequest: [quotaEnforcementMiddleware({
         metric: 'team_seats',
         getAgencyId: (request) => (request.params as any).id,
       })],
@@ -291,7 +291,7 @@ export async function agencyRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/agencies/:id/members/bulk',
     {
-      onRequest: [quotaMiddleware({
+      onRequest: [quotaEnforcementMiddleware({
         metric: 'team_seats',
         getAgencyId: (request) => (request.params as any).id,
         requestedAmount: (request: any) => (request.body?.members?.length as number) || 1,

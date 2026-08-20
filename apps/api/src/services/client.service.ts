@@ -259,14 +259,17 @@ export async function deleteClient(
     return false;
   }
 
-  // Delete Infisical secrets for all platform authorizations before cascade
-  for (const req of existing.accessRequests ?? []) {
-    const conn = req.connection;
-    if (conn?.authorizations) {
-      for (const auth of conn.authorizations) {
-        await infisical.deleteSecret(auth.secretId);
-      }
-    }
+  // Delete all Infisical secrets before the cascade. Fail closed if any delete
+  // fails so the client row is not removed while secrets remain.
+  const authorizations = (existing.accessRequests ?? []).flatMap((req) =>
+    req.connection?.authorizations ?? [],
+  );
+  const deletionResults = await Promise.allSettled(
+    authorizations.map((auth) => infisical.deleteSecret(auth.secretId)),
+  );
+  const deletionFailure = deletionResults.find((result) => result.status === 'rejected');
+  if (deletionFailure) {
+    throw deletionFailure.reason;
   }
 
   await prisma.client.delete({

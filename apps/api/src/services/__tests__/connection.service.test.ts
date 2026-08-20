@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import * as connectionService from '@/services/connection.service';
 import { infisical } from '@/lib/infisical';
+import { auditService } from '@/services/audit.service';
 
 const { refreshClientPlatformAuthorizationMock, getConnectorMock, verifyTokenMock } = vi.hoisted(() => ({
   refreshClientPlatformAuthorizationMock: vi.fn(),
@@ -63,6 +64,17 @@ vi.mock('@/lib/infisical', () => ({
     deleteSecret: vi.fn(),
   },
 }));
+
+vi.mock('@/services/audit.service', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/audit.service')>();
+  return {
+    ...actual,
+    auditService: {
+      ...actual.auditService,
+      createAuditLog: vi.fn().mockResolvedValue({ data: null, error: null }),
+    },
+  };
+});
 
 describe('ConnectionService', () => {
   beforeEach(() => {
@@ -529,6 +541,36 @@ describe('ConnectionService', () => {
       expect(infisical.deleteSecret).toHaveBeenCalledTimes(2);
       expect(infisical.deleteSecret).toHaveBeenCalledWith('oauth_meta_ads_connection-1');
       expect(infisical.deleteSecret).toHaveBeenCalledWith('oauth_google_ads_connection-1');
+    });
+
+    it('should continue revocation when one secret deletion fails', async () => {
+      const mockConnection = {
+        id: 'connection-partial',
+        agencyId: 'agency-1',
+        clientEmail: 'client@example.com',
+      };
+      const mockAuthorizations = [
+        { platform: 'meta_ads', secretId: 'secret-ok' },
+        { platform: 'google_ads', secretId: 'secret-failed' },
+      ];
+
+      vi.mocked(prisma.clientConnection.findUnique).mockResolvedValue(mockConnection as any);
+      vi.mocked(prisma.clientConnection.update).mockResolvedValue(mockConnection as any);
+      vi.mocked(prisma.platformAuthorization.findMany).mockResolvedValue(mockAuthorizations as any);
+      vi.mocked(prisma.platformAuthorization.updateMany).mockResolvedValue({} as any);
+      vi.mocked(infisical.deleteSecret).mockImplementation(async (secretId) => {
+        if (secretId === 'secret-failed') throw new Error('Infisical unavailable');
+      });
+
+      const result = await connectionService.revokeConnection('connection-partial');
+
+      expect(result.error).toBeNull();
+      expect(result.partialFailure).toBe(true);
+      expect(prisma.clientConnection.update).toHaveBeenCalled();
+      expect(auditService.createAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+        action: 'TOKEN_DELETION_FAILED',
+        metadata: expect.objectContaining({ secretId: 'secret-failed', platform: 'google_ads' }),
+      }));
     });
   });
 

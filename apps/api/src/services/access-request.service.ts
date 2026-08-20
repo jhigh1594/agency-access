@@ -6,6 +6,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import {
@@ -120,6 +121,10 @@ export function generateUniqueToken(): string {
   return bytes.toString('hex').toLowerCase();
 }
 
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
 /**
  * Create a new access request
  */
@@ -144,18 +149,18 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
 
     // Check if subdomain is already taken (if provided)
     if (validated.branding?.subdomain) {
-      // Query all access requests for this agency and check branding JSON
-      const agencyRequests = await prisma.accessRequest.findMany({
-        where: { agencyId: validated.agencyId },
-        select: { branding: true },
+      const existingSubdomain = await prisma.accessRequest.findFirst({
+        where: {
+          agencyId: validated.agencyId,
+          branding: {
+            path: ['subdomain'],
+            equals: validated.branding.subdomain,
+          },
+        },
+        select: { id: true },
       });
 
-      const subdomainTaken = agencyRequests.some((req: any) => {
-        const branding = req.branding as any;
-        return branding?.subdomain === validated.branding?.subdomain;
-      });
-
-      if (subdomainTaken) {
+      if (existingSubdomain) {
         return {
           data: null,
           error: {
@@ -166,25 +171,48 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
       }
     }
 
-    // Generate unique token with retry on collision
-    let uniqueToken = generateUniqueToken();
-    let attempts = 0;
-    const maxAttempts = 5;
+    // Normalize intakeFields - add order if missing
+    const normalizedIntakeFields = validated.intakeFields?.map((field, index) => ({
+      ...field,
+      order: field.order ?? index,
+    }));
 
-    while (attempts < maxAttempts) {
-      const existingToken = await prisma.accessRequest.findUnique({
-        where: { uniqueToken },
-      });
-
-      if (!existingToken) {
-        break; // Found a unique token
+    let accessRequest;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        accessRequest = await prisma.accessRequest.create({
+          data: {
+            agencyId: validated.agencyId,
+            clientId: validated.clientId,
+            clientName: validated.clientName,
+            clientEmail: validated.clientEmail,
+            externalReference: validated.externalReference,
+            uniqueToken: generateUniqueToken(),
+            platforms: validated.platforms as any,
+            intakeFields: normalizedIntakeFields as any,
+            branding: validated.branding as any,
+            status: 'pending',
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+          },
+        });
+        break;
+      } catch (error) {
+        if (!isUniqueConstraintError(error) || attempt === 4) {
+          if (isUniqueConstraintError(error)) {
+            return {
+              data: null,
+              error: {
+                code: 'TOKEN_COLLISION',
+                message: 'Unable to generate unique token. Please try again.',
+              },
+            };
+          }
+          throw error;
+        }
       }
-
-      uniqueToken = generateUniqueToken();
-      attempts++;
     }
 
-    if (attempts >= maxAttempts) {
+    if (!accessRequest) {
       return {
         data: null,
         error: {
@@ -193,29 +221,6 @@ export async function createAccessRequest(input: CreateAccessRequestInput) {
         },
       };
     }
-
-    // Normalize intakeFields - add order if missing
-    const normalizedIntakeFields = validated.intakeFields?.map((field, index) => ({
-      ...field,
-      order: field.order ?? index,
-    }));
-
-    // Create the access request
-    const accessRequest = await prisma.accessRequest.create({
-      data: {
-        agencyId: validated.agencyId,
-        clientId: validated.clientId,
-        clientName: validated.clientName,
-        clientEmail: validated.clientEmail,
-        externalReference: validated.externalReference,
-        uniqueToken,
-        platforms: validated.platforms as any,
-        intakeFields: normalizedIntakeFields as any,
-        branding: validated.branding as any,
-        status: 'pending',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      },
-    });
 
     // Invalidate dashboard cache for this agency
     await invalidateDashboardCache(validated.agencyId);

@@ -12,23 +12,24 @@ import { getDocsUrl } from '@/lib/docs-url';
 import {
   LayoutDashboard,
   Network,
-  // Heart, // TODO: Re-enable when Token Health page is restored
+  Heart,
   Users,
   Settings,
   CircleHelp,
 } from 'lucide-react';
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthOrBypass, signOutDevBypass } from '@/lib/dev-auth';
 import { readPerfHarnessContext, startPerfTimer } from '@/lib/perf-harness';
 import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
 import { TrialBanner } from '@/components/trial-banner';
 import { useSubscription } from '@/lib/query/billing';
-import { shouldEnforceOnboardingRedirect, type AgencyOnboardingStatusData } from '@/lib/query/onboarding';
+import { shouldEnforceOnboardingRedirect, useAgencyOnboardingStatus, type AgencyOnboardingStatusData } from '@/lib/query/onboarding';
+import { useUserAgency } from '@/hooks/use-user-agency';
 import { trackOnboardingEvent } from '@/lib/analytics/onboarding';
 import { SUBSCRIPTION_TIER_NAMES } from '@agency-platform/shared';
 
-const agencyCheckDedup = new Set<string>();
+const agencyRedirectCache = new Map<string, boolean>();
 const inAppUserButtonAppearance = {
   elements: {
     userButtonTrigger: 'clerk-user-trigger',
@@ -90,6 +91,20 @@ function AuthenticatedLayoutInner({
   const isDashboardRootPath = pathname === '/dashboard';
   const { data: subscription } = useSubscription({ enabled: !isDashboardRootPath });
   const router = useRouter();
+  const previousPathname = useRef(pathname);
+  const sharedPrincipalId = !isDevelopmentBypass ? (orgId || userId) : null;
+  const getLayoutAuthToken = useCallback(
+    async () => (await clerkAuth.getToken()) || perfHarness?.token || null,
+    [clerkAuth, perfHarness?.token]
+  );
+  const { data: sharedAgency, isFetched: isAgencyFetched } = useUserAgency({
+    principalClerkId: sharedPrincipalId,
+    getAuthToken: getLayoutAuthToken,
+    enabled: !isDashboardRootPath && !!sharedPrincipalId,
+  });
+  const { data: sharedOnboardingStatus, isFetched: isOnboardingStatusFetched } = useAgencyOnboardingStatus(
+    runPerfAgencyCheck ? undefined : sharedAgency?.id
+  );
 
   // Redirect unauthenticated users (skip in bypass mode)
   if (!isDevelopmentBypass && isLoaded && !userId) {
@@ -99,6 +114,12 @@ function AuthenticatedLayoutInner({
   // Check if user has an agency and redirect to onboarding if needed
   useEffect(() => {
     const checkAgencyAndRedirect = async () => {
+      const wasOnboarding = previousPathname.current?.startsWith('/onboarding');
+      if (wasOnboarding && pathname && !pathname.startsWith('/onboarding')) {
+        agencyRedirectCache.clear();
+      }
+      previousPathname.current = pathname;
+
       // Skip if already on onboarding page
       if (!pathname || pathname.startsWith('/onboarding') || isDashboardRootPath) {
         return;
@@ -113,6 +134,30 @@ function AuthenticatedLayoutInner({
         return;
       }
 
+      if (!runPerfAgencyCheck) {
+        if (!isAgencyFetched || !sharedPrincipalId) return;
+        const cacheKey = `${sharedPrincipalId}:${sharedAgency?.id || 'none'}`;
+        const cachedDecision = agencyRedirectCache.get(cacheKey);
+        if (cachedDecision !== undefined) {
+          if (cachedDecision && sharedOnboardingStatus && !shouldEnforceOnboardingRedirect(sharedOnboardingStatus)) {
+            agencyRedirectCache.set(cacheKey, false);
+            return;
+          }
+          if (cachedDecision) router.replace('/onboarding/unified');
+          return;
+        }
+        if (!sharedAgency) {
+          agencyRedirectCache.set(cacheKey, true);
+          router.replace('/onboarding/unified');
+          return;
+        }
+        if (!isOnboardingStatusFetched || !sharedOnboardingStatus) return;
+        const shouldRedirect = shouldEnforceOnboardingRedirect(sharedOnboardingStatus);
+        agencyRedirectCache.set(cacheKey, shouldRedirect);
+        if (shouldRedirect) router.replace('/onboarding/unified');
+        return;
+      }
+
       let stopTimer: (() => void) | null = null;
       try {
         stopTimer = startPerfTimer('layout:agency-check');
@@ -124,10 +169,9 @@ function AuthenticatedLayoutInner({
         }
 
         const checkKey = `${principalClerkId}:${pathname}`;
-        if (agencyCheckDedup.has(checkKey)) {
+        if (agencyRedirectCache.has(checkKey)) {
           return;
         }
-        agencyCheckDedup.add(checkKey);
 
         // Token is already resolved above; authorizedApiFetch re-reads it identically.
         const getToken = async () => token;
@@ -143,6 +187,7 @@ function AuthenticatedLayoutInner({
 
         // If no agency found, redirect to unified onboarding
         if (!result.data || result.data.length === 0) {
+          agencyRedirectCache.set(checkKey, true);
           router.replace('/onboarding/unified');
           return;
         }
@@ -160,7 +205,9 @@ function AuthenticatedLayoutInner({
           return;
         }
 
-        if (shouldEnforceOnboardingRedirect(onboardingResult.data)) {
+        const shouldRedirect = shouldEnforceOnboardingRedirect(onboardingResult.data);
+        agencyRedirectCache.set(checkKey, shouldRedirect);
+        if (shouldRedirect) {
           trackOnboardingEvent('redirected_to_onboarding', {
             source: 'authenticated_layout',
             status: onboardingResult.data.status,
@@ -188,6 +235,11 @@ function AuthenticatedLayoutInner({
     runPerfAgencyCheck,
     perfHarness,
     isDashboardRootPath,
+    isAgencyFetched,
+    sharedPrincipalId,
+    sharedAgency,
+    isOnboardingStatusFetched,
+    sharedOnboardingStatus,
   ]);
 
   // Show loading state while auth loads.
@@ -218,14 +270,11 @@ function AuthenticatedLayoutInner({
         <Network className="h-6 w-6 flex-shrink-0" />
       ),
     },
-    // TODO: Token Health page commented out until future state is determined
-    // {
-    //   label: 'Token Health',
-    //   href: '/token-health',
-    //   icon: (
-    //     <Heart className="text-foreground h-6 w-6 flex-shrink-0" />
-    //   ),
-    // },
+    {
+      label: 'Token Health',
+      href: '/token-health',
+      icon: <Heart className="text-foreground h-6 w-6 flex-shrink-0" />,
+    },
     {
       label: 'Clients',
       href: '/clients',

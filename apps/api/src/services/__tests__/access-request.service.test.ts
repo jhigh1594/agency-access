@@ -6,6 +6,7 @@
 
 import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { queueWebhookDelivery } from '@/lib/queue-helpers';
 import * as accessRequestService from '@/services/access-request.service';
 
@@ -185,15 +186,15 @@ describe('AccessRequestService', () => {
       const mockAgency = { id: 'agency-1' };
       vi.mocked(prisma.agency.findUnique).mockResolvedValue(mockAgency as any);
 
-      // First call returns existing request (collision), second call returns null (unique)
-      vi.mocked(prisma.accessRequest.findUnique)
-        .mockResolvedValueOnce({ id: 'existing' } as any)
-        .mockResolvedValueOnce(null);
-
-      vi.mocked(prisma.accessRequest.create).mockResolvedValue({
-        id: 'request-1',
-        uniqueToken: 'a1b2c3d4e5f6',
-      } as any);
+      vi.mocked(prisma.accessRequest.create)
+        .mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError('unique', {
+          code: 'P2002',
+          clientVersion: 'test',
+        }))
+        .mockResolvedValue({
+          id: 'request-1',
+          uniqueToken: 'a1b2c3d4e5f6',
+        } as any);
 
       const result = await accessRequestService.createAccessRequest({
         agencyId: 'agency-1',

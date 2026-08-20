@@ -8,6 +8,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@/lib/prisma.js';
 import { clerkMetadataService } from '@/services/clerk-metadata.service.js';
+import { quotaService } from '@/services/quota.service.js';
 import { MetricType, QuotaCheckResult, TIER_LIMITS, SubscriptionTier } from '@agency-platform/shared';
 import { sendError } from '../lib/response.js';
 
@@ -15,6 +16,7 @@ export interface QuotaCheckOptions {
   metric: MetricType;
   agencyId: string;
   clerkUserId: string;
+  requestedAmount?: number;
 }
 
 /**
@@ -25,7 +27,21 @@ export interface QuotaCheckOptions {
 export type QuotaCheckResultWithTier = QuotaCheckResult & { currentTier?: SubscriptionTier };
 
 export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheckResultWithTier> {
-  const { metric, agencyId, clerkUserId } = options;
+  const { metric, agencyId, clerkUserId, requestedAmount = 1 } = options;
+
+  if (['access_requests', 'clients', 'members', 'templates'].includes(metric)) {
+    const result = await quotaService.checkQuota({
+      agencyId,
+      metric,
+      action: 'create',
+      requestedAmount,
+    });
+    return {
+      ...result,
+      limit: result.limit === 'unlimited' ? -1 : result.limit,
+      remaining: result.remaining === 'unlimited' ? -1 : result.remaining,
+    };
+  }
 
   try {
     const tierResult = await clerkMetadataService.getSubscriptionTier(clerkUserId);
@@ -63,7 +79,7 @@ export async function checkQuota(options: QuotaCheckOptions): Promise<QuotaCheck
 
     const remaining = Math.max(0, limit - used);
     return {
-      allowed: used < limit,
+      allowed: used + requestedAmount <= limit,
       metric,
       limit,
       used,
@@ -119,20 +135,33 @@ export async function incrementUsage(agencyId: string, metric: MetricType): Prom
  * Quota enforcement middleware factory
  * Checks quota before allowing action
  */
-export function quotaEnforcementMiddleware(options: { metric: MetricType }) {
+export interface QuotaMiddlewareOptions {
+  metric: MetricType;
+  getAgencyId?: (request: FastifyRequest) => string | undefined;
+  requestedAmount?: number | ((request: FastifyRequest) => number);
+}
+
+export function quotaEnforcementMiddleware(options: QuotaMiddlewareOptions) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
+    if (request.method === 'GET') return;
+
     const userId = (request as any).user?.sub;
     if (!userId) {
       return reply.code(401).send({ data: null, error: { code: 'UNAUTHORIZED' } });
     }
 
-    const agencyId = (request.body as any)?.agencyId || (request.params as any)?.agencyId;
+    const agencyId = options.getAgencyId?.(request)
+      || (request.body as any)?.agencyId
+      || (request.params as any)?.agencyId;
     if (!agencyId) {
       return reply.code(400).send({ data: null, error: { code: 'MISSING_AGENCY_ID' } });
     }
 
     try {
-      const result = await checkQuota({ metric: options.metric, agencyId, clerkUserId: userId });
+      const requestedAmount = typeof options.requestedAmount === 'function'
+        ? options.requestedAmount(request)
+        : options.requestedAmount ?? 1;
+      const result = await checkQuota({ metric: options.metric, agencyId, clerkUserId: userId, requestedAmount });
 
       if (!result.allowed) {
         // Tier comes from the checkQuota result — no second Clerk fetch.
@@ -188,7 +217,7 @@ export function incrementUsageMiddleware(metric: MetricType) {
   };
 }
 
-export const quotaMiddleware = {
+export const quotaEnforcement = {
   checkQuota,
   incrementUsage,
   enforcement: quotaEnforcementMiddleware,

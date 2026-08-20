@@ -25,7 +25,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SubscriptionTier, MetricType, TierLimits } from '@agency-platform/shared';
-import { authorizedApiFetch, AuthorizedApiError } from '@/lib/api/authorized-api-fetch';
+import { authorizedApiFetch } from '@/lib/api/authorized-api-fetch';
 
 // ============================================================
 // TYPES
@@ -89,19 +89,12 @@ export function useQuotaCheck() {
     mutationFn: async (input: QuotaCheckInput): Promise<QuotaCheckResult> => {
       if (!orgId) throw new Error('No organization ID');
 
-      try {
-        const payload = await authorizedApiFetch<{ data?: QuotaCheckResult }>('/api/quota/check', {
-          getToken,
-          method: 'POST',
-          body: JSON.stringify(input),
-        });
-        return payload.data as QuotaCheckResult;
-      } catch (err) {
-        if (err instanceof AuthorizedApiError && err.status === 429) {
-          throw new QuotaExceededError(err);
-        }
-        throw err;
-      }
+      const payload = await authorizedApiFetch<{ data?: QuotaCheckResult }>('/api/quota/check', {
+        getToken,
+        method: 'POST',
+        body: JSON.stringify(input),
+      });
+      return payload.data as QuotaCheckResult;
     },
     onSuccess: () => {
       // Invalidate usage query to get fresh data

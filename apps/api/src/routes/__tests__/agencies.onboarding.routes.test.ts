@@ -35,8 +35,8 @@ vi.mock('../../middleware/auth.js', () => ({
     request.user = { sub: 'user_123' };
   },
 }));
-vi.mock('../../middleware/quota.middleware.js', () => ({
-  quotaMiddleware: () => async () => {},
+vi.mock('../../middleware/quota-enforcement.js', () => ({
+  quotaEnforcementMiddleware: () => async () => {},
 }));
 
 describe('Agency Routes - Onboarding', () => {

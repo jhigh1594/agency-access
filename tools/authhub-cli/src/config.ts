@@ -21,7 +21,6 @@ export function getCredentialsDir(): string {
 
 export function loadCredentials(): AuthHubCredentials | null {
   try {
-    if (!fs.existsSync(CREDENTIALS_FILE)) return null;
     const raw = fs.readFileSync(CREDENTIALS_FILE, 'utf-8');
     return JSON.parse(raw) as AuthHubCredentials;
   } catch {
@@ -39,7 +38,9 @@ export function saveCredentials(credentials: AuthHubCredentials): void {
 }
 
 export function clearCredentials(): void {
-  if (fs.existsSync(CREDENTIALS_FILE)) {
+  try {
     fs.unlinkSync(CREDENTIALS_FILE);
+  } catch {
+    // Credentials are already clear when the file does not exist.
   }
 }

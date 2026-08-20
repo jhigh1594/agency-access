@@ -59,8 +59,6 @@ function StatTicker({ end, duration = 2, suffix = "" }: { end: number; duration?
   const [count, setCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const animationFrameRef = useRef<number | undefined>(undefined);
-  const lastUpdateTimeRef = useRef<number>(0);
   const { animationsReady } = useAnimationOrchestrator();
 
   // Intersection Observer - only start when animations are ready
@@ -95,12 +93,7 @@ function StatTicker({ end, duration = 2, suffix = "" }: { end: number; duration?
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / (duration * 1000), 1);
 
-      // Throttle: Only update if at least 16ms have passed (one frame)
-      if (currentTime - lastUpdateTimeRef.current >= 16) {
-        const newCount = Math.floor(progress * end);
-        setCount(newCount);
-        lastUpdateTimeRef.current = currentTime;
-      }
+      setCount(Math.floor(progress * end));
 
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(animate);

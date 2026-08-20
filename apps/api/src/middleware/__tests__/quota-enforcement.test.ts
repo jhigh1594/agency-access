@@ -26,7 +26,7 @@ vi.mock('@/services/clerk-metadata.service', () => ({
   },
 }));
 
-import { quotaMiddleware } from '../quota-enforcement';
+import { quotaEnforcement } from '../quota-enforcement';
 import { prisma } from '@/lib/prisma';
 import { clerkMetadataService } from '@/services/clerk-metadata.service';
 
@@ -36,7 +36,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
   let nextSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     // Default request with authenticated user
     mockRequest = {
@@ -80,7 +80,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
 
   describe('checkQuota', () => {
     it('should allow action when under limit', async () => {
-      const result = await quotaMiddleware.checkQuota({
+      const result = await quotaEnforcement.checkQuota({
         metric: 'client_onboards',
         agencyId: 'agency-123',
         clerkUserId: 'clerk_user_123',
@@ -99,7 +99,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         resetAt: new Date('2025-01-01T00:00:00.000Z'),
       });
 
-      const result = await quotaMiddleware.checkQuota({
+      const result = await quotaEnforcement.checkQuota({
         metric: 'client_onboards',
         agencyId: 'agency-123',
         clerkUserId: 'clerk_user_123',
@@ -109,10 +109,10 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
       expect(result.remaining).toBe(0);
     });
 
-    it('should allow unlimited team seats for PRO tier', async () => {
+    it('should allow unlimited team seats for AGENCY tier', async () => {
       (clerkMetadataService.getSubscriptionTier as any).mockResolvedValue({
         data: {
-          tier: 'PRO',
+          tier: 'AGENCY',
           privateMetadata: {
             quotaLimits: {
               teamSeats: { limit: -1, used: 100 },
@@ -122,7 +122,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         error: null,
       });
 
-      const result = await quotaMiddleware.checkQuota({
+      const result = await quotaEnforcement.checkQuota({
         metric: 'team_seats',
         agencyId: 'agency-123',
         clerkUserId: 'clerk_user_123',
@@ -136,7 +136,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
     it('should handle missing usage counter gracefully', async () => {
       (prisma.agencyUsageCounter.findUnique as any).mockResolvedValue(null);
 
-      const result = await quotaMiddleware.checkQuota({
+      const result = await quotaEnforcement.checkQuota({
         metric: 'client_onboards',
         agencyId: 'agency-123',
         clerkUserId: 'clerk_user_123',
@@ -152,14 +152,11 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         error: { code: 'CLERK_FETCH_FAILED' },
       });
 
-      const result = await quotaMiddleware.checkQuota({
+      await expect(quotaEnforcement.checkQuota({
         metric: 'client_onboards',
         agencyId: 'agency-123',
         clerkUserId: 'clerk_user_123',
-      });
-
-      // Should allow by default on error (fail open)
-      expect(result.allowed).toBe(true);
+      })).rejects.toMatchObject({ code: 'QUOTA_SERVICE_UNAVAILABLE' });
     });
   });
 
@@ -169,7 +166,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         count: 1,
       });
 
-      await quotaMiddleware.incrementUsage('agency-123', 'client_onboards');
+      await quotaEnforcement.incrementUsage('agency-123', 'client_onboards');
 
       expect(prisma.agencyUsageCounter.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -192,7 +189,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         count: 1,
       });
 
-      await quotaMiddleware.incrementUsage('agency-123', 'team_seats');
+      await quotaEnforcement.incrementUsage('agency-123', 'team_seats');
 
       expect(prisma.agencyUsageCounter.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -209,7 +206,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
 
   describe('enforcement middleware', () => {
     it('should allow request when under quota', async () => {
-      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+      const middleware = quotaEnforcement.enforcement({ metric: 'client_onboards' });
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -224,7 +221,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         resetAt: new Date('2025-01-01T00:00:00.000Z'),
       });
 
-      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+      const middleware = quotaEnforcement.enforcement({ metric: 'client_onboards' });
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -248,7 +245,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
         resetAt: new Date('2025-01-01T00:00:00.000Z'),
       });
 
-      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+      const middleware = quotaEnforcement.enforcement({ metric: 'client_onboards' });
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -259,7 +256,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
     it('should return 401 when user not authenticated', async () => {
       delete (mockRequest as any).user;
 
-      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+      const middleware = quotaEnforcement.enforcement({ metric: 'client_onboards' });
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -270,7 +267,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
       delete (mockRequest as any).body?.agencyId;
       delete (mockRequest as any).params?.agencyId;
 
-      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+      const middleware = quotaEnforcement.enforcement({ metric: 'client_onboards' });
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -291,11 +288,11 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
       });
 
       (prisma.agencyUsageCounter.findUnique as any).mockResolvedValue({
-        count: 120, // At AGENCY limit
+        count: 600, // At AGENCY limit
         resetAt: new Date('2025-01-01T00:00:00.000Z'),
       });
 
-      const middleware = quotaMiddleware.enforcement({ metric: 'client_onboards' });
+      const middleware = quotaEnforcement.enforcement({ metric: 'client_onboards' });
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -314,7 +311,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
     it('should increment usage after successful request', async () => {
       (prisma.agencyUsageCounter.upsert as any).mockResolvedValue({ count: 1 });
 
-      const middleware = quotaMiddleware.increment('client_onboards');
+      const middleware = quotaEnforcement.increment('client_onboards');
 
       // Fastify onSend hooks receive (request, reply, payload)
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply, null);
@@ -325,7 +322,7 @@ describe('Quota Enforcement Middleware - TDD Tests', () => {
     it('should not throw when increment fails', async () => {
       (prisma.agencyUsageCounter.upsert as any).mockRejectedValue(new Error('DB error'));
 
-      const middleware = quotaMiddleware.increment('client_onboards');
+      const middleware = quotaEnforcement.increment('client_onboards');
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply, null);

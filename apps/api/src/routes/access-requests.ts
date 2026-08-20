@@ -9,7 +9,7 @@ import { FastifyInstance } from 'fastify';
 import { accessRequestService } from '../services/access-request.service.js';
 import { agencyPlatformService } from '../services/agency-platform.service.js';
 import { auditService } from '../services/audit.service.js';
-import { quotaMiddleware } from '../middleware/quota.middleware.js';
+import { quotaEnforcementMiddleware } from '../middleware/quota-enforcement.js';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { requirePrincipalAgency } from '@/lib/agency-guard.js';
@@ -88,7 +88,7 @@ export async function accessRequestRoutes(fastify: FastifyInstance) {
       onRequest: [
         authenticate(),
         requirePrincipalAgency,
-        quotaMiddleware({
+        quotaEnforcementMiddleware({
           metric: 'access_requests',
           getAgencyId: (request) => (request as any).agencyId,
         }),

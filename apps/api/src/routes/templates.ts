@@ -7,7 +7,7 @@
 
 import { FastifyInstance } from 'fastify';
 import { templateService } from '../services/template.service.js';
-import { quotaMiddleware } from '../middleware/quota.middleware.js';
+import { quotaEnforcementMiddleware } from '../middleware/quota-enforcement.js';
 import { authenticate } from '@/middleware/auth.js';
 import { assertAgencyAccess } from '@/lib/authorization.js';
 import { requirePrincipalAgency } from '@/lib/agency-guard.js';
@@ -67,7 +67,7 @@ export async function templateRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/agencies/:agencyId/templates',
     {
-      onRequest: [quotaMiddleware({
+      onRequest: [quotaEnforcementMiddleware({
         metric: 'templates',
         getAgencyId: (request) => (request.params as any).agencyId,
       })],

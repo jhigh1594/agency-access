@@ -28,6 +28,7 @@ import { finalizeMetaBusinessLogin, launchMetaBusinessLogin } from '@/lib/meta-b
 import { readPerfHarnessContext } from '@/lib/perf-harness';
 import { resolveApiUrl } from '@/lib/api/api-env';
 import { isManualInvitePlatform } from '@/lib/client-invite-platforms';
+import { useTransientMessage } from '@/hooks/use-transient-message';
 
 function ConnectionsPageContent() {
   const router = useRouter();
@@ -37,8 +38,8 @@ function ConnectionsPageContent() {
   const { getToken } = clerkAuth;
   const { user } = useUser();
   const queryClient = useQueryClient();
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, showSuccessMessage, clearSuccessMessage] = useTransientMessage<string>();
+  const [errorMessage, showErrorMessage, clearErrorMessage] = useTransientMessage<string>();
   const [connectingPlatform, setConnectingPlatform] = useState<Platform | null>(null);
   const [disconnectingPlatform, setDisconnectingPlatform] = useState<Platform | null>(null);
   const [managingMetaAssets, setManagingMetaAssets] = useState(false);
@@ -93,7 +94,7 @@ function ConnectionsPageContent() {
         connection_source: 'oauth_callback',
       });
 
-      setSuccessMessage(`Successfully connected ${platform}!`);
+      showSuccessMessage(`Successfully connected ${platform}!`);
       if (agencyId) {
         queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
       }
@@ -101,15 +102,15 @@ function ConnectionsPageContent() {
       // Clear URL params
       router.replace('/connections');
 
-      setTimeout(() => setSuccessMessage(null), 5000);
+      clearErrorMessage();
     }
 
     if (error) {
-      setErrorMessage(`Failed to connect platform: ${error}`);
+      showErrorMessage(`Failed to connect platform: ${error}`);
       router.replace('/connections');
-      setTimeout(() => setErrorMessage(null), 5000);
+      clearSuccessMessage();
     }
-  }, [searchParams, queryClient, agencyId, router]);
+  }, [searchParams, queryClient, agencyId, router, showSuccessMessage, showErrorMessage, clearSuccessMessage, clearErrorMessage]);
 
   // Fetch all platforms with connection status (with ETag caching)
   const {
@@ -216,7 +217,7 @@ function ConnectionsPageContent() {
       window.location.href = data.data.authUrl;
     },
     onError: (error) => {
-      setErrorMessage((error as Error).message);
+      showErrorMessage((error as Error).message);
       setConnectingPlatform(null);
     },
   });
@@ -258,7 +259,7 @@ function ConnectionsPageContent() {
         platform: platform,
       });
 
-      setSuccessMessage(`Successfully disconnected ${platform}!`);
+      showSuccessMessage(`Successfully disconnected ${platform}!`);
       setDisconnectingPlatform(null);
       // Clear localStorage cache and bypass any cached fetch
       if (typeof window !== 'undefined' && agencyId) {
@@ -267,17 +268,17 @@ function ConnectionsPageContent() {
       }
       // Force immediate refetch so UI updates (invalidate + refetch; fetch uses cache: 'no-store')
       void queryClient.refetchQueries({ queryKey: ['available-platforms', agencyId] });
-      setTimeout(() => setSuccessMessage(null), 5000);
+      clearErrorMessage();
     },
     onError: (error) => {
-      setErrorMessage(`Failed to disconnect platform: ${(error as Error).message}`);
+      showErrorMessage(`Failed to disconnect platform: ${(error as Error).message}`);
       setDisconnectingPlatform(null);
-      setTimeout(() => setErrorMessage(null), 5000);
+      clearSuccessMessage();
     },
   });
 
   const handleConnect = (platform: Platform) => {
-    setErrorMessage(null);
+    clearErrorMessage();
 
     // Check if this is a manual invitation platform
     if (isManualInvitePlatform(platform)) {
@@ -293,7 +294,7 @@ function ConnectionsPageContent() {
   };
 
   const handleEditEmail = (platform: Platform, currentEmail: string) => {
-    setErrorMessage(null);
+    clearErrorMessage();
     setCurrentEmail(currentEmail);
     setIsEditingEmail(true);
     // Open manual invitation modal in edit mode
@@ -317,7 +318,7 @@ function ConnectionsPageContent() {
 
   const handleMetaConnect = async () => {
     if (!agencyId) {
-      setErrorMessage('Agency not found. Please complete onboarding first.');
+      showErrorMessage('Agency not found. Please complete onboarding first.');
       return;
     }
 
@@ -343,19 +344,17 @@ function ConnectionsPageContent() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['available-platforms', agencyId] });
-      setSuccessMessage('Successfully connected Meta!');
-      setTimeout(() => setSuccessMessage(null), 5000);
+      showSuccessMessage('Successfully connected Meta!');
     } catch (error) {
-      setErrorMessage((error as Error).message);
-      setTimeout(() => setErrorMessage(null), 5000);
+      showErrorMessage((error as Error).message);
     } finally {
       setConnectingPlatform(null);
     }
   };
 
   const handleDisconnect = (platform: Platform) => {
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    clearErrorMessage();
+    clearSuccessMessage();
     disconnectPlatform(platform);
   };
 

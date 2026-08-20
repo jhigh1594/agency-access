@@ -31,6 +31,7 @@ export interface UseUserAgencyOptions {
   principalClerkId?: string | null;
   /** Token resolver; defaults to the Clerk token. May return a dev-bypass token. */
   getAuthToken?: () => Promise<string | null>;
+  enabled?: boolean;
 }
 
 export function useUserAgency(options: UseUserAgencyOptions = {}) {
@@ -59,7 +60,7 @@ export function useUserAgency(options: UseUserAgencyOptions = {}) {
       const result = await response.json();
       return (result.data?.[0] as UserAgency | undefined) ?? null;
     },
-    enabled: !!principalClerkId,
+    enabled: options.enabled ?? !!principalClerkId,
     staleTime: 30 * 60 * 1000, // agency data rarely changes
     gcTime: 60 * 60 * 1000,
   });

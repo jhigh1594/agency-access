@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import * as clientService from '@/services/client.service';
+import { infisical } from '@/lib/infisical';
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
@@ -25,6 +26,10 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: vi.fn(),
     },
   },
+}));
+
+vi.mock('@/lib/infisical', () => ({
+  infisical: { deleteSecret: vi.fn() },
 }));
 
 const mockPrisma = vi.mocked(prisma);
@@ -350,6 +355,20 @@ describe('Phase 5: Client Service - TDD Tests', () => {
       const result = await clientService.deleteClient('client-1', 'agency-1');
 
       expect(result).toBe(false);
+      expect(mockPrisma.client.delete).not.toHaveBeenCalled();
+    });
+
+    it('should fail closed when secret deletion fails', async () => {
+      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
+        id: 'client-1',
+        agencyId: 'agency-1',
+        accessRequests: [{
+          connection: { authorizations: [{ secretId: 'secret-1' }] },
+        }],
+      } as any);
+      vi.mocked(infisical.deleteSecret).mockRejectedValue(new Error('Infisical unavailable'));
+
+      await expect(clientService.deleteClient('client-1', 'agency-1')).rejects.toThrow('Infisical unavailable');
       expect(mockPrisma.client.delete).not.toHaveBeenCalled();
     });
   });

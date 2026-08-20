@@ -7,7 +7,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { QueryClient } from '@tanstack/react-query';
 import { Client, AccessLevel, AccessRequestTemplate, IntakeField } from '@agency-platform/shared';
@@ -414,7 +414,7 @@ export function AccessRequestProvider({
   // CONTEXT VALUE
   // ============================================================
 
-  const value: AccessRequestContextValue = {
+  const value = useMemo<AccessRequestContextValue>(() => ({
     state,
     updateTemplate,
     updateClient,
@@ -429,7 +429,22 @@ export function AccessRequestProvider({
     submitRequest,
     resetForm,
     validateStep,
-  };
+  }), [
+    state,
+    updateTemplate,
+    updateClient,
+    updateExternalReference,
+    updatePlatforms,
+    updateAccessLevel,
+    updatePlatformAccessLevel,
+    updateIntakeFields,
+    updateBranding,
+    setStep,
+    setError,
+    submitRequest,
+    resetForm,
+    validateStep,
+  ]);
 
   return (
     <AccessRequestContext.Provider value={value}>{children}</AccessRequestContext.Provider>

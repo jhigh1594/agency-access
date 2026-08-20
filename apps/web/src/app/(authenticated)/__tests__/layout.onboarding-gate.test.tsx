@@ -64,10 +64,14 @@ vi.mock('@/lib/query/billing', () => ({
   useSubscription: () => ({ data: null }),
 }));
 
-vi.mock('@/lib/query/onboarding', () => ({
-  shouldEnforceOnboardingRedirect: (statusData: { status?: string } | null | undefined) =>
-    statusData?.status === 'in_progress' || statusData?.status === 'not_started',
-}));
+vi.mock('@/lib/query/onboarding', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/query/onboarding')>();
+  return {
+    ...actual,
+    shouldEnforceOnboardingRedirect: (statusData: { status?: string } | null | undefined) =>
+      statusData?.status === 'in_progress' || statusData?.status === 'not_started',
+  };
+});
 
 vi.mock('@/lib/analytics/onboarding', () => ({
   trackOnboardingEvent: vi.fn(),
@@ -140,7 +144,7 @@ describe('AuthenticatedLayout onboarding re-entry gate', () => {
     fetchMock
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ data: [{ id: 'agency-1' }], error: null }),
+        json: async () => ({ data: [{ id: 'agency-activated' }], error: null }),
       })
       .mockResolvedValueOnce({
         ok: true,

@@ -26,7 +26,9 @@ class InMemoryCache {
 
   constructor() {
     // Run cleanup every 5 minutes
-    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    const interval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    interval.unref?.();
+    this.cleanupInterval = interval;
   }
 
   /**
@@ -304,7 +306,6 @@ export const CacheTTL = {
 export class CacheStats {
   private hits = 0;
   private misses = 0;
-  private errors = 0;
 
   recordHit(): void {
     this.hits++;
@@ -314,16 +315,11 @@ export class CacheStats {
     this.misses++;
   }
 
-  recordError(): void {
-    this.errors++;
-  }
-
-  getStats(): { hits: number; misses: number; errors: number; hitRate: number } {
+  getStats(): { hits: number; misses: number; hitRate: number } {
     const total = this.hits + this.misses;
     return {
       hits: this.hits,
       misses: this.misses,
-      errors: this.errors,
       hitRate: total > 0 ? this.hits / total : 0,
     };
   }
@@ -331,7 +327,6 @@ export class CacheStats {
   reset(): void {
     this.hits = 0;
     this.misses = 0;
-    this.errors = 0;
   }
 }
 
@@ -344,7 +339,6 @@ export const cacheStats = new CacheStats();
 export function getCacheStats(): {
   hits: number;
   misses: number;
-  errors: number;
   hitRate: number;
   size: number;
   maxSize: number;

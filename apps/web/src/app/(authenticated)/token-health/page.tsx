@@ -81,8 +81,8 @@ export default function TokenHealthPage() {
     }
   }, [fetchTokenHealth, isLoaded, isSignedIn]);
 
-  const handleRefresh = async (tokenId: string, platform: Platform) => {
-    setRefreshing(new Set(refreshing).add(tokenId));
+  const handleRefresh = async (tokenId: string, platform: Platform, refetch = true) => {
+    setRefreshing((prev) => new Set(prev).add(tokenId));
     try {
       const res = await fetch(resolveApiUrl('/api/token-refresh'), {
         method: 'POST',
@@ -96,7 +96,7 @@ export default function TokenHealthPage() {
       const result = await parseJsonResponse<{ data?: unknown }>(res, {
         fallbackErrorMessage: 'Failed to refresh token',
       });
-      if (result.data) {
+      if (result.data && refetch) {
         // Refresh the list
         await fetchTokenHealth();
       }
@@ -114,9 +114,8 @@ export default function TokenHealthPage() {
 
   const handleRefreshAll = async () => {
     const expiringTokens = tokens.filter((t) => t.health === 'expiring' && t.canRefresh);
-    for (const token of expiringTokens) {
-      await handleRefresh(token.id, token.platform);
-    }
+    await Promise.all(expiringTokens.map((token) => handleRefresh(token.id, token.platform, false)));
+    await fetchTokenHealth();
   };
 
   const filteredTokens = tokens.filter((token) => {
@@ -312,7 +311,7 @@ export default function TokenHealthPage() {
                           isRefreshing
                             ? 'opacity-50 cursor-not-allowed'
                             : token.canRefresh
-                              ? 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+                              ? 'text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50'
                               : 'text-slate-300 cursor-not-allowed'
                         }`}
                       >

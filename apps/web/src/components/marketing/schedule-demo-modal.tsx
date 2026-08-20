@@ -70,28 +70,33 @@ export function ScheduleDemoModal({ isOpen, onClose }: ScheduleDemoModalProps) {
     };
 
     // Check if Cal is already loaded
+    let checkInterval: number | undefined;
+    let timeout: number | undefined;
+    let initTimeout: number | undefined;
+
     if ((window as any).Cal?.loaded) {
       // Small delay to ensure DOM is ready
-      setTimeout(initInline, 100);
+      initTimeout = window.setTimeout(initInline, 100);
     } else {
       // Wait for script to load
-      const checkInterval = setInterval(() => {
+      checkInterval = window.setInterval(() => {
         if ((window as any).Cal?.loaded && embedRef.current) {
-          clearInterval(checkInterval);
+          window.clearInterval(checkInterval);
           initInline();
         }
       }, 100);
 
       // Cleanup interval after 10 seconds
-      const timeout = setTimeout(() => {
-        clearInterval(checkInterval);
+      timeout = window.setTimeout(() => {
+        if (checkInterval) window.clearInterval(checkInterval);
       }, 10000);
-
-      return () => {
-        clearInterval(checkInterval);
-        clearTimeout(timeout);
-      };
     }
+
+    return () => {
+      if (checkInterval) window.clearInterval(checkInterval);
+      if (timeout) window.clearTimeout(timeout);
+      if (initTimeout) window.clearTimeout(initTimeout);
+    };
   }, [isOpen]);
 
   return (

@@ -20,7 +20,7 @@ import {
 } from '@/services/client.service';
 import type { ClientLanguage } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
-import { quotaMiddleware } from '@/middleware/quota.middleware';
+import { quotaEnforcementMiddleware } from '@/middleware/quota-enforcement.js';
 import { authenticate } from '@/middleware/auth.js';
 import { resolvePrincipalAgency } from '@/lib/authorization.js';
 
@@ -51,6 +51,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
   // Set 404 handler for this route scope
   fastify.setNotFoundHandler((request, reply) => {
     return reply.status(404).send({
+      data: null,
       error: {
         code: 'NOT_FOUND',
         message: 'Client not found',
@@ -83,7 +84,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/clients',
     {
-      onRequest: [quotaMiddleware({
+      onRequest: [quotaEnforcementMiddleware({
         metric: 'clients',
         getAgencyId: (request) => (request as any).agencyId,
       })],
@@ -95,6 +96,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
     const validationResult = createClientSchema.safeParse(request.body);
     if (!validationResult.success) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VALIDATION_ERROR',
           message: validationResult.error.errors[0].message,
@@ -112,6 +114,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
     } catch (error) {
       if (error instanceof Error && error.message.includes('EMAIL_EXISTS')) {
         return reply.code(409).send({
+          data: null,
           error: {
             code: 'EMAIL_EXISTS',
             message: 'A client with this email already exists',
@@ -135,6 +138,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
     const validationResult = getClientsSchema.safeParse(request.query);
     if (!validationResult.success) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VALIDATION_ERROR',
           message: validationResult.error.errors[0].message,
@@ -163,6 +167,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
 
     if (!client) {
       return reply.code(404).send({
+        data: null,
         error: {
           code: 'NOT_FOUND',
           message: 'Client not found',
@@ -185,6 +190,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
 
     if (!detail) {
       return reply.code(404).send({
+        data: null,
         error: {
           code: 'NOT_FOUND',
           message: 'Client not found',
@@ -207,6 +213,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
     const validationResult = updateClientSchema.safeParse(request.body);
     if (!validationResult.success) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VALIDATION_ERROR',
           message: validationResult.error.errors[0].message,
@@ -220,6 +227,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
 
       if (!client) {
         return reply.code(404).send({
+          data: null,
           error: {
             code: 'NOT_FOUND',
             message: 'Client not found',
@@ -231,6 +239,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
     } catch (error) {
       if (error instanceof Error && error.message.includes('EMAIL_EXISTS')) {
         return reply.code(409).send({
+          data: null,
           error: {
             code: 'EMAIL_EXISTS',
             message: 'A client with this email already exists',
@@ -255,6 +264,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
 
     if (!deleted) {
       return reply.code(404).send({
+        data: null,
         error: {
           code: 'NOT_FOUND',
           message: 'Client not found',
@@ -275,6 +285,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
 
     if (!email) {
       return reply.code(400).send({
+        data: null,
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Email query parameter is required',
@@ -286,6 +297,7 @@ export async function clientRoutes(fastify: FastifyInstance) {
 
     if (!client) {
       return reply.code(404).send({
+        data: null,
         error: {
           code: 'NOT_FOUND',
           message: 'Client not found',

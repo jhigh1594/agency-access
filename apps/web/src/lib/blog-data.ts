@@ -29,6 +29,8 @@ const VALID_STAGES: BlogStage[] = [
 
 type Frontmatter = Record<string, unknown>;
 type AuthorFrontmatter = Record<"name", unknown> & Record<string, unknown>;
+const postCache = new Map<string, BlogPost | undefined>();
+let allPostsCache: BlogPost[] | undefined;
 
 function isAuthorFrontmatter(value: unknown): value is AuthorFrontmatter {
   return typeof value === "object" && value !== null && "name" in value;
@@ -120,22 +122,28 @@ function getSlugs(): string[] {
 }
 
 function loadPostBySlug(slug: string): BlogPost | undefined {
+  if (postCache.has(slug)) return postCache.get(slug);
   const filePath = path.join(CONTENT_DIR, `${slug}.md`);
   if (!existsSync(filePath)) {
+    postCache.set(slug, undefined);
     return undefined;
   }
-  return parseFileToPost(filePath, slug);
+  const post = parseFileToPost(filePath, slug);
+  postCache.set(slug, post);
+  return post;
 }
 
 export function getBlogPosts(): BlogPost[] {
+  if (allPostsCache) return allPostsCache;
   const slugs = getSlugs();
   const posts = slugs
     .map((slug) => loadPostBySlug(slug))
     .filter((p): p is BlogPost => p !== undefined);
-  return posts.sort(
+  allPostsCache = posts.sort(
     (a, b) =>
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
   );
+  return allPostsCache;
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {

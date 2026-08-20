@@ -71,13 +71,22 @@ export function useBreakpoints() {
   useEffect(() => {
     const checkBreakpoints = () => {
       const width = window.innerWidth;
-      setBreakpoints({
+      const next = {
         isXs: width < 480,
         isSm: width < 640,
         isMd: width < 768,
         isLg: width < 1024,
         isXl: width < 1280,
-      });
+      };
+      setBreakpoints((current) => (
+        current.isXs === next.isXs &&
+        current.isSm === next.isSm &&
+        current.isMd === next.isMd &&
+        current.isLg === next.isLg &&
+        current.isXl === next.isXl
+          ? current
+          : next
+      ));
     };
 
     checkBreakpoints();

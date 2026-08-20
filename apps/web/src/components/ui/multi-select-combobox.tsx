@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ChevronDown, Check, Search } from 'lucide-react';
 
@@ -119,10 +119,12 @@ export function MultiSelectCombobox({
   }, [isOpen]);
 
   // Filter options based on search
-  const filteredOptions = options.filter((option) =>
-    option.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    option.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return options.filter((option) =>
+      option.name.toLowerCase().includes(query) || option.id.toLowerCase().includes(query)
+    );
+  }, [options, searchQuery]);
 
   // Get selected options
   const selectedOptions = options.filter((option) => selectedIds.has(option.id));

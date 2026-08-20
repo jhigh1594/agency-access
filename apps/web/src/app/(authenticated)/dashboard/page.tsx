@@ -36,8 +36,6 @@ import {
   type Platform,
 } from '@agency-platform/shared';
 
-// Simple in-memory ETag cache for conditional requests
-const etagCache = new Map<string, string>();
 const DASHBOARD_PERF_SAMPLE_RATE = 0.2;
 const dashboardSessionSeen = new Set<string>();
 
@@ -131,7 +129,6 @@ export default function DashboardPage() {
     queryKey: ['dashboard', principalId || 'anonymous'],
     queryFn: async () => {
       const principalKey = principalId || 'anonymous';
-      const cacheKey = `dashboard-${principalKey}`;
       const requestStart = nowMs();
 
       const stopTokenTimer = startPerfTimer('dashboard:token-fetch');
@@ -147,14 +144,9 @@ export default function DashboardPage() {
       const stopTimer = startPerfTimer('dashboard:data-fetch');
 
       try {
-        const etag = etagCache.get(cacheKey);
         const headers: Record<string, string> = {
           Authorization: `Bearer ${token}`,
         };
-
-        if (etag) {
-          headers['If-None-Match'] = etag;
-        }
 
         const apiFetchStart = nowMs();
         const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
@@ -163,35 +155,11 @@ export default function DashboardPage() {
         const dashboardApiMs = nowMs() - apiFetchStart;
         const cacheStatus = response.headers.get('X-Cache') || 'UNKNOWN';
 
-        if (response.status === 304) {
-          const cached = etagCache.get(`${cacheKey}-data`);
-          if (cached) {
-            const cachedResponse = JSON.parse(cached) as DashboardApiResponse;
-            const isColdSession = !dashboardSessionSeen.has(principalKey);
-            dashboardSessionSeen.add(principalKey);
-            void captureDashboardLoadPerf({
-              tokenFetchMs,
-              dashboardApiMs,
-              timeToDataMs: nowMs() - requestStart,
-              cacheStatus,
-              isColdSession,
-              principalId: principalKey,
-            });
-            return cachedResponse;
-          }
-        }
-
         if (!response.ok) {
           throw new Error(await extractApiErrorMessage(response, 'Failed to fetch dashboard data'));
         }
 
         const data = await response.json() as DashboardApiResponse;
-
-        const responseEtag = response.headers.get('ETag')?.replace(/"/g, '');
-        if (responseEtag) {
-          etagCache.set(cacheKey, responseEtag);
-          etagCache.set(`${cacheKey}-data`, JSON.stringify(data));
-        }
 
         const isColdSession = !dashboardSessionSeen.has(principalKey);
         dashboardSessionSeen.add(principalKey);

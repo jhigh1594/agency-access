@@ -524,7 +524,9 @@ describe('google-offboarding-executor', () => {
           assetName: 'Account 1',
           grantMode: 'manager_link',
           managerCustomerId: '456',
+          recipientEmail: null,
           providerExternalId: 'link-789',
+          providerResourceName: null,
         },
         createdAt: NOW.toISOString(),
         updatedAt: NOW.toISOString(),
@@ -592,7 +594,9 @@ describe('google-offboarding-executor', () => {
         assetName: 'Token Account',
         grantMode: 'manager_link',
         managerCustomerId: '456',
+        recipientEmail: null,
         providerExternalId: 'link-tok',
+        providerResourceName: null,
       };
       const items = ['item-tok-1', 'item-tok-2', 'item-tok-3'].map((id) => ({
         id,
@@ -805,7 +809,17 @@ describe('google-offboarding-executor', () => {
         status: 'pending',
         assetLabel: 'ga4-123',
         grantId: 'grant-absent',
-        grant: { id: 'grant-absent', product: 'ga4', assetId: 'prop-123', assetName: 'GA4 Prop' },
+        grant: {
+          id: 'grant-absent',
+          product: 'ga4',
+          assetId: 'prop-123',
+          assetName: 'GA4 Prop',
+          grantMode: 'user_invite',
+          managerCustomerId: null,
+          recipientEmail: null,
+          providerExternalId: 'binding-123',
+          providerResourceName: null,
+        },
         createdAt: NOW.toISOString(),
         updatedAt: NOW.toISOString(),
       };

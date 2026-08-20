@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Loader2, AlertCircle, Check } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { Client } from '@agency-platform/shared';
@@ -49,12 +49,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
 
-  // Load clients
-  useEffect(() => {
-    loadClients();
-  }, [searchQuery]);
-
-  const loadClients = async () => {
+  const loadClients = useCallback(async (query: string, signal: AbortSignal) => {
     setLoading(true);
     setError(null);
 
@@ -62,13 +57,14 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
       const token = await getToken();
       if (!token && !auth.isDevelopmentBypass) throw new Error('No auth token');
       const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
+      if (query) params.set('search', query);
       params.set('limit', '50');
 
       const response = await fetch(
         `${getApiBaseUrl()}/api/clients?${params.toString()}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
+          signal,
         }
       );
 
@@ -77,14 +73,32 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
       }
 
       const json = await response.json();
-      // Handle new format: { data: { data: Client[], pagination: {...} } }
-      const result: PaginatedClientsResponse = 'data' in json ? json.data : json;
-      setClients(result.data || []);
+      if (signal.aborted) return;
+      const result = Array.isArray(json?.data) ? json : json?.data ?? json;
+      setClients(Array.isArray(result) ? result : (result as PaginatedClientsResponse).data || []);
     } catch (err) {
+      if (signal.aborted) return;
       setError(err instanceof Error ? err.message : 'Failed to load clients');
     } finally {
-      setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
+  }, [auth.isDevelopmentBypass, getToken]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      void loadClients(searchQuery, controller.signal);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [loadClients, searchQuery]);
+
+  const refreshClients = () => {
+    const controller = new AbortController();
+    void loadClients(searchQuery, controller.signal);
   };
 
   const handleSelectClient = (client: Client) => {
@@ -138,7 +152,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
       setActiveTab('existing'); // Switch back to existing tab
       setNewClient({ name: '', company: '', email: '' });
       onSelect(createdClient);
-      loadClients(); // Refresh client list
+      refreshClients(); // Refresh client list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create client');
     } finally {
@@ -169,6 +183,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
         </button>
         <button
           type="button"
+          aria-label="Add new client"
           onClick={() => setActiveTab('new')}
           className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
             activeTab === 'new'
@@ -189,7 +204,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search existing clients..."
+              placeholder="Search clients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search clients"
@@ -212,7 +227,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
               <p className="text-muted-foreground text-base">Failed to load clients</p>
               <button
                 type="button"
-                onClick={loadClients}
+                onClick={refreshClients}
                 className="px-5 py-2.5 text-coral hover:text-coral/90 text-base rounded-lg hover:bg-muted/20 transition-colors"
               >
                 Retry
