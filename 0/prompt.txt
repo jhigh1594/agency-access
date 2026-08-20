@@ -1,0 +1,14 @@
+Run /compound-engineering:ce-work to execute the plan at docs/plans/2026-08-18-001-refactor-codebase-simplification-pass-plan.md (behavior-preserving four-wave codebase simplification pass; all review fixes already folded into the doc).
+
+Context: The plan was produced by a 12-agent review (~155 findings) plus doc review. It defines four risk-tier waves (Wave 1 delete dead code, Wave 2 extract helpers/consolidate copies, Wave 3 efficiency, Wave 4 sanctioned behavior changes) with implementation units U1–U20, atomic commits per theme, and gates (typecheck + lint + scoped tests) at each wave boundary. Baseline: typecheck clean; one pre-existing unrelated test failure in packages/shared offboarding-types.test.ts (vitest import in jest suite — not yours to fix, do not block on it).
+
+Rules:
+- Execute waves in order. Do not skip gates. Commit atomically per theme as the plan specifies.
+- Honor every constraint in the plan's appendices (esp. Appendix B learnings constraints: OAuth-state Redis fallback stays, Google per-product asset discovery survives connector consolidation, selector stale-response guards stay).
+- TDD where the plan demands test-first/characterization tests (U20 google-offboarding-executor, oauth-exchange handler merge).
+- If you hit a genuine blocker or a plan assumption proves wrong, stop and report it rather than improvising a behavior change outside the sanctioned list.
+- At the end, report: waves completed, commits made, gate results, anything deferred or skipped with reasons.
+
+---
+
+Before starting ce-work: do NOT work on main. First create and switch to a feature branch from current HEAD (e.g. git switch -c refactor/codebase-simplification-pass), then run /compound-engineering:ce-work on the plan at docs/plans/2026-08-18-001-refactor-codebase-simplification-pass-plan.md. All wave commits land on that branch. Leave the pre-existing uncommitted changes (AGENTS.md, CLAUDE.md, apps/web files, pnpm files, other docs/plans files) untouched — do not commit or revert them; only git add the files you actually change. Proceed autonomously through all four waves with gates. Report at completion.

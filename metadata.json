@@ -1,0 +1,57 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M0GA8XM2JHMWQV4Y1SW5D6TY",
+  "strategy": "manual-commit",
+  "branch": "refactor/simplification-pass",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "apps/api/src/middleware/__tests__/quota-enforcement.test.ts",
+    "apps/api/src/middleware/quota-enforcement.ts",
+    "apps/api/src/routes/access-requests.ts",
+    "apps/api/src/routes/subscriptions.ts",
+    "apps/api/src/routes/templates.ts",
+    "apps/api/src/services/__tests__/access-request.service.test.ts",
+    "apps/api/src/services/__tests__/client-offboarding.service.test.ts",
+    "apps/api/src/services/__tests__/connection.service.test.ts",
+    "apps/api/src/services/access-request.service.ts",
+    "apps/api/src/services/client.service.ts",
+    "apps/api/src/services/connection.service.ts",
+    "apps/api/src/services/google-offboarding-executor.ts",
+    "apps/web/src/app/(authenticated)/__tests__/layout.agency-check-fail-open.test.tsx",
+    "apps/web/src/app/(authenticated)/clients/page.tsx",
+    "apps/web/src/app/(authenticated)/connections/page.tsx",
+    "apps/web/src/app/(authenticated)/dashboard/page.tsx",
+    "apps/web/src/app/(authenticated)/layout.tsx",
+    "apps/web/src/app/(authenticated)/token-health/page.tsx",
+    "apps/web/src/components/client-selector.tsx",
+    "apps/web/src/components/platform-connections-table.tsx",
+    "apps/web/src/components/settings/billing/manage-subscription-card.tsx",
+    "apps/web/src/contexts/access-request-context.tsx",
+    "apps/web/src/contexts/unified-onboarding-context.tsx",
+    "apps/web/src/hooks/use-user-agency.ts",
+    "apps/web/src/lib/query/quota.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1509953,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 24949504,
+    "output_tokens": 81945,
+    "api_call_count": 199,
+    "subagent_tokens": {
+      "input_tokens": 2052343,
+      "cache_creation_tokens": 0,
+      "cache_read_tokens": 109944192,
+      "output_tokens": 413828,
+      "api_call_count": 949
+    }
+  }
+}

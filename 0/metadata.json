@@ -1,0 +1,142 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M0GA8XM2JHMWQV4Y1SW5D6TY",
+  "session_id": "c1950d03-9523-43b7-b109-77c9bdc5a3e9",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-20T19:27:25.932453Z",
+  "branch": "refactor/simplification-pass",
+  "checkpoints_count": 2,
+  "save_step_count": 2,
+  "files_touched": [
+    "apps/api/src/middleware/__tests__/quota-enforcement.test.ts",
+    "apps/api/src/middleware/quota-enforcement.ts",
+    "apps/api/src/routes/access-requests.ts",
+    "apps/api/src/routes/subscriptions.ts",
+    "apps/api/src/routes/templates.ts",
+    "apps/api/src/services/__tests__/access-request.service.test.ts",
+    "apps/api/src/services/__tests__/client-offboarding.service.test.ts",
+    "apps/api/src/services/__tests__/connection.service.test.ts",
+    "apps/api/src/services/access-request.service.ts",
+    "apps/api/src/services/client.service.ts",
+    "apps/api/src/services/connection.service.ts",
+    "apps/api/src/services/google-offboarding-executor.ts",
+    "apps/web/src/app/(authenticated)/__tests__/layout.agency-check-fail-open.test.tsx",
+    "apps/web/src/app/(authenticated)/clients/page.tsx",
+    "apps/web/src/app/(authenticated)/connections/page.tsx",
+    "apps/web/src/app/(authenticated)/dashboard/page.tsx",
+    "apps/web/src/app/(authenticated)/layout.tsx",
+    "apps/web/src/app/(authenticated)/token-health/page.tsx",
+    "apps/web/src/components/client-selector.tsx",
+    "apps/web/src/components/platform-connections-table.tsx",
+    "apps/web/src/components/settings/billing/manage-subscription-card.tsx",
+    "apps/web/src/contexts/access-request-context.tsx",
+    "apps/web/src/contexts/unified-onboarding-context.tsx",
+    "apps/web/src/hooks/use-user-agency.ts",
+    "apps/web/src/lib/query/quota.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "glm-5.3",
+  "turn_id": "e4c4cfc03691",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 1509953,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 24949504,
+    "output_tokens": 81945,
+    "api_call_count": 199,
+    "subagent_tokens": {
+      "input_tokens": 2052343,
+      "cache_creation_tokens": 0,
+      "cache_read_tokens": 109944192,
+      "output_tokens": 413828,
+      "api_call_count": 949
+    }
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-call_cea5ff93e93d4a34ae978d1c",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "compound-engineering:ce-work"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "e4c4cfc03691",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 15,
+        "end": 16,
+        "entry_ids": [
+          "38fc2985-9ad6-4bf2-ab95-d91d35b9cb89"
+        ],
+        "tool_use_id": "call_cea5ff93e93d4a34ae978d1c"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "call_cea5ff93e93d4a34ae978d1c"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: compound-engineering:ce-work",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-20T19:27:25.736229Z",
+    "agent_lines": 289,
+    "agent_removed": 484,
+    "human_added": 229,
+    "human_modified": 445,
+    "human_removed": 0,
+    "total_committed": 963,
+    "total_lines_changed": 1622,
+    "agent_percentage": 47.65721331689273,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 2454,
+      "user_lines_removed": 36,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".impeccable/hook.cache.json": 1,
+        "AGENTS.md": 12,
+        "CLAUDE.md": 1,
+        "apps/web/.gitignore": 3,
+        "apps/web/clerk.lock": 1,
+        "apps/web/next-env.d.ts": 1,
+        "docs/plans/2026-07-30-001-feat-google-client-offboarding-plan.md": 417,
+        "docs/plans/2026-08-18-001-refactor-codebase-simplification-pass-plan.md": 707,
+        "package-lock.json": 388,
+        "plans/marketing-site-copy-revamp.md": 246,
+        "plans/seo-keyword-strategy.md": 75,
+        "pnpm-lock.yaml": 600,
+        "pnpm-workspace.yaml": 2
+      },
+      "user_removed_per_file": {
+        "apps/web/next-env.d.ts": 1,
+        "package-lock.json": 35
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 1,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2453,
+      "agent_lines_removed": 36,
+      "user_added_per_file": {
+        ".impeccable/hook.cache.json": 1
+      }
+    }
+  ]
+}
