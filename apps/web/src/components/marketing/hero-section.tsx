@@ -72,7 +72,7 @@ export function HeroSection() {
             {/* Subheadline */}
             <Reveal delay={0.4}>
               <p className="font-mono text-lg sm:text-xl md:text-2xl max-w-xl mx-auto lg:mx-0 leading-tight opacity-90 mt-4 text-ink">
-                Your client authorizes Meta, Google, GA4, and LinkedIn through one link. Your team and your AI agents start work the same day.
+                Your client authorizes Meta, Google, GA4, LinkedIn, and more through one link. Your team and your AI agents start work the same day.
               </p>
             </Reveal>
 
@@ -102,6 +102,29 @@ export function HeroSection() {
                 </div>
               </Reveal>
             </div>
+
+            {/* Hallmark · component: trust strip · genre: brutalist/editorial · theme: project tokens
+             * states: static (non-interactive) · contrast: pass
+             * copy: real customers only — no invented metrics */}
+            <Reveal delay={0.6}>
+              <div className="w-full px-2 sm:px-0 mt-4 pt-5 border-t border-black/10">
+                <div className="flex flex-wrap items-baseline justify-center lg:justify-start gap-x-5 sm:gap-x-7 gap-y-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/40">
+                    Trusted by marketing agencies
+                  </span>
+                  <span aria-hidden="true" className="text-ink/20 font-mono text-xs">/</span>
+                  <span className="font-dela text-base sm:text-lg tracking-tight text-ink/50">
+                    Pillar AI
+                  </span>
+                  <span className="font-mono text-xs sm:text-sm uppercase tracking-[0.14em] text-ink/50">
+                    Elite Edge Media
+                  </span>
+                  <span className="text-base sm:text-lg font-semibold tracking-tight text-ink/50">
+                    Digital One
+                  </span>
+                </div>
+              </div>
+            </Reveal>
 
           </div>
 
