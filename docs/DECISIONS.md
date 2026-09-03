@@ -32,6 +32,24 @@ Record significant technical choices so future sessions (and humans) understand 
 
 ## Decisions
 
+### DEC-002: Business selection persisted by the creation service, not save-assets
+**Date:** 2026-09-03
+**Status:** Accepted
+
+**Context:** The Meta Business Portfolio creation flow (`meta-asset-creation.service.createBusiness`) must make the newly created business immediately usable by `grant-meta-access` in the same wizard pass. The frontend sends the business selection as extra fields on `save-assets`, but `saveAssetsSchema` is a plain `z.object` that strips unknown keys.
+
+**Decision:** `createBusiness` persists the selection server-side into `PlatformAuthorization.metadata.meta.selection` (with `source: 'created'`) and merges the business into `discovery.availableBusinesses` at creation time. The frontend refetch of `/assets/meta_ads?businessId=` is UX only.
+
+**Rationale:** `grant-meta-access` reads the business exclusively from `metadata.meta.selection.clientBusinessId` (assets.routes.ts). Persisting in the service keeps one source of truth and avoids widening `saveAssetsSchema` for a field only Meta business creation needs.
+
+**Alternatives considered:**
+1. Extend `saveAssetsSchema` to carry `selectedBusinessId` — rejected: widens a shared cross-platform schema for one platform's need and invites inconsistent states between the two writes.
+2. Have the frontend pass the business id to `grant-meta-access` directly — rejected: the grant route's contract is server-side state; mixing client-supplied business ids weakens authorization scoping.
+
+**Consequences:**
+- Positive: one-pass UX (create → share) works with zero wizard changes; refetch re-stamping `source` from `'created'` to `'user_selection'` is harmless.
+- Negative: two writers to `metadata.meta` (asset-discovery route and creation service); both must keep using the shared Zod schema for reads.
+
 ### DEC-001: Sentry Webhook Integration via Manual UI Setup
 **Date:** 2026-03-10
 **Status:** Accepted

@@ -27,7 +27,32 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
-## Session: 2026-08-20 — Lazyweb trust strip under hero CTAs
+## Session: 2026-09-03 — Meta Business Portfolio creation (Leadsie parity+)
+
+### What was done
+- Analyzed Leadsie's Facebook asset-creation flow (help article 44) and mapped it to our architecture. Finding: ad-account/catalog creation and the OBO grant engine already existed; the real gap was Business Manager creation for zero-portfolio clients.
+- Built the full creation path TDD-first (shared schema → connector → service → routes → components): `POST /me/businesses` on the client token, guided Page prerequisite check (`GET /me/accounts`), one-pass wizard flow (create BM → inline ad-account creator), and an unverified-business setup checklist with verification/payment deep links.
+- Contained refactor: extracted `getActiveClientAccessToken` in `meta-asset-creation.service.ts` (4 duplicated guard sequences → 1 helper).
+- Extended `/test/asset-creation` harness with the two new components; visual QA at desktop + mobile.
+
+### Files changed
+- `packages/shared/src/types.ts` (+test) — `selection.source` accepts `'created'`
+- `apps/api/src/services/connectors/meta.ts` (+test) — `getUserPages`, `createBusiness`, URL helpers
+- `apps/api/src/services/meta-asset-creation.service.ts` (+new test file) — `createBusiness`, `getUserPages`, token helper; `getAssetCreationLinks` extended
+- `apps/api/src/routes/client-auth/asset-creation.routes.ts` (+new test file) — 2 new endpoints
+- `apps/web/src/components/client-auth/MetaBusinessCreator.tsx` (new), `MetaBusinessSetupChecklist.tsx` (new), `MetaAssetSelector.tsx` (zero-portfolio branch, checklist, state resets) (+2 new test files)
+- `apps/web/src/app/test/asset-creation/page.tsx` — sections 5/6
+
+### Verification
+- api 1093 passed · web 811 passed · shared 149 passed · CLI 7 passed · typecheck clean. Visual QA via harness on port 3011 (`NEXT_PUBLIC_BYPASS_AUTH=true`; port 3000 was serving an unrelated process).
+
+### Decisions made
+- DEC-002: creation service persists business selection into `metadata.meta` (save-assets schema strips it; grant flow reads server-side state only).
+
+### Next steps
+- Live-Meta E2E checklist in `tasks/todo.md` (token scope, BM-limit error shape, primary_page claim, unverified-BM ad account, managed_businesses on fresh BM, deep-link URLs) — needs a throwaway test user with a Page but no BM.
+- Follow-up bug: `MetaAssetCreator` hardcoded timezone ids (1..16) vs backend sparse ids.
+
 
 ### What was done
 - Implemented Lazyweb recommendation "Agency logo strip under the CTAs" per the Markdown report (generic greyscale placeholder wordmarks, caption "Trusted by marketing agencies").
