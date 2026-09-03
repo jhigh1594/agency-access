@@ -145,8 +145,17 @@
   select {
     @apply bg-input text-foreground border-border rounded-md;
     @apply placeholder:text-muted-foreground;
-    @apply focus:ring-2 focus:ring-ring focus:border-ring focus:outline-none;
-    @apply transition-colors duration-200;
+    /* v2.0 two-ring focus: inner 3px coral stroke + outer 6px soft halo */
+    @apply focus:border-coral focus:outline-none;
+    @apply focus-visible:outline-[3px] focus-visible:outline-coral/25;
+    box-shadow: 0 0 0 0 rgb(var(--primary) / 0);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    box-shadow: 0 0 0 6px rgb(var(--primary) / 0.08);
   }
 
   /* Input text is white in dark mode for better readability */
@@ -166,11 +175,7 @@
   }
 
   /* Input focus visible for better accessibility */
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible {
-    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
-  }
+  /* v2.0: legacy ring focus replaced by the two-ring system above */
 
   /* Ensure dropdown triggers have white background in light mode */
   :root:not(.dark) select {

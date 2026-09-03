@@ -274,7 +274,7 @@ export default function DashboardPage() {
   const createRequestButton = (
     <Button
       type="button"
-      variant="brutalist-rounded"
+      variant="brutalist"
       size="sm"
       data-testid="dashboard-create-request"
       onClick={handleCreateRequest}
@@ -373,7 +373,7 @@ export default function DashboardPage() {
                   ? error.message
                   : 'An error occurred while loading the dashboard.'}
             </p>
-            <Button variant="brutalist-rounded" size="md" onClick={() => refetch()}>
+            <Button variant="brutalist" size="md" onClick={() => refetch()}>
               Retry
             </Button>
           </div>
@@ -393,7 +393,7 @@ export default function DashboardPage() {
             <p className="text-coral/90 mb-4">
               We couldn&apos;t find an agency associated with your account. Let&apos;s set one up.
             </p>
-            <Button variant="brutalist-rounded" size="md" asChild>
+            <Button variant="brutalist" size="md" asChild>
               <Link href="/onboarding/unified">
                 Complete Onboarding
               </Link>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Button variant="brutalist-rounded" size="md" asChild>
+              <Button variant="brutalist" size="md" asChild>
                 <Link
                   href="/onboarding/unified"
                   onClick={() => {

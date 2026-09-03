@@ -392,7 +392,7 @@ export function BlogPostTemplate({ post }: BlogPostTemplateProps) {
             {readTime} min read
           </span>
           <Button
-            variant="brutalist-ghost"
+            variant="secondary"
             size="sm"
             className="ml-auto"
             onClick={() => {

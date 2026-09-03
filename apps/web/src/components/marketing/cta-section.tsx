@@ -69,7 +69,7 @@ export function CTASection() {
                 </Button>
               </SignUpButton>
               <Button
-                variant="brutalist-ghost"
+                variant="secondary"
                 size="xl"
                 className="w-full sm:w-auto font-bold uppercase tracking-wider text-xs"
                 onClick={() => setIsDemoModalOpen(true)}

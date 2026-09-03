@@ -297,7 +297,7 @@ export function HeroCopyRewriteHowItWorksSection() {
                       </Button>
                     </SignUpButton>
                     <Button
-                      variant="brutalist-ghost"
+                      variant="secondary"
                       size="lg"
                       className="bg-transparent text-ink border-2 border-black hover:bg-ink hover:text-paper hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-brutalist-sm"
                       onClick={() => setIsDemoModalOpen(true)}

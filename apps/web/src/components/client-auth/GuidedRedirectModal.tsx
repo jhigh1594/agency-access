@@ -109,7 +109,7 @@ export function GuidedRedirectModal({
 
           {/* Open Business Manager Button */}
           <Button
-            variant="brutalist-rounded"
+            variant="brutalist"
             size="lg"
             onClick={handleOpenBusinessManager}
             rightIcon={<ExternalLink className="w-5 h-5" />}
@@ -140,7 +140,7 @@ export function GuidedRedirectModal({
         <div className="p-6 border-t-2 border-black dark:border-white bg-muted/20 dark:bg-muted/60">
           <div className="flex gap-3">
             <Button
-              variant="brutalist-ghost-rounded"
+              variant="secondary"
               size="md"
               onClick={onClose}
               className="flex-1"
@@ -148,7 +148,7 @@ export function GuidedRedirectModal({
               Cancel
             </Button>
             <Button
-              variant="brutalist-rounded"
+              variant="brutalist"
               size="md"
               onClick={handleRefresh}
               disabled={!confirmedCreated || isRefreshing || isRefreshingLocal}
@@ -243,7 +243,7 @@ export function GuidedRedirectCard({
 
       {/* Open Business Manager Button */}
       <Button
-        variant="brutalist-rounded"
+        variant="brutalist"
         size="md"
         onClick={handleOpenBusinessManager}
         rightIcon={<ExternalLink className="w-4 h-4" />}
@@ -271,7 +271,7 @@ export function GuidedRedirectCard({
 
       {/* Refresh Button */}
       <Button
-        variant="brutalist-ghost-rounded"
+        variant="secondary"
         size="sm"
         onClick={handleRefresh}
         disabled={!confirmedCreated || isRefreshing || isRefreshingLocal}

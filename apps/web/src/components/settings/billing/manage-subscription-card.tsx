@@ -391,7 +391,7 @@ export function ManageSubscriptionCard() {
                   Cancel
                 </Button>
                 <Button
-                  variant={isUpgrade ? 'success' : 'warning'}
+                  variant="primary"
                   onClick={handleTierChange}
                   disabled={upgradeMutation.isPending || createCheckoutMutation.isPending}
                 >

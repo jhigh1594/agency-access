@@ -149,7 +149,7 @@ export default function AssetCreationTestPage() {
                 Click "Create Ad Account" in Section 1 to see the form
               </p>
               <Button
-                variant="brutalist-rounded"
+                variant="brutalist"
                 onClick={() => setShowAdAccountCreator(true)}
               >
                 Show Form
@@ -215,7 +215,7 @@ export default function AssetCreationTestPage() {
                 Click "Create Page" in Section 3 to see the guided redirect card
               </p>
               <Button
-                variant="brutalist-rounded"
+                variant="brutalist"
                 onClick={() => setShowPageCreator(true)}
               >
                 Show Guided Card
@@ -277,13 +277,13 @@ export default function AssetCreationTestPage() {
                 brutalist-rounded
               </h3>
               <div className="flex flex-wrap gap-4">
-                <Button variant="brutalist-rounded" size="lg">
+                <Button variant="brutalist" size="lg">
                   Create Ad Account
                 </Button>
-                <Button variant="brutalist-rounded" size="lg" isLoading>
+                <Button variant="brutalist" size="lg" isLoading>
                   Creating...
                 </Button>
-                <Button variant="brutalist-rounded" size="lg" disabled>
+                <Button variant="brutalist" size="lg" disabled>
                   Disabled
                 </Button>
               </div>
@@ -295,13 +295,13 @@ export default function AssetCreationTestPage() {
                 brutalist-ghost-rounded
               </h3>
               <div className="flex flex-wrap gap-4">
-                <Button variant="brutalist-ghost-rounded" size="md">
+                <Button variant="secondary" size="md">
                   Create Another
                 </Button>
-                <Button variant="brutalist-ghost-rounded" size="md" isLoading>
+                <Button variant="secondary" size="md" isLoading>
                   Loading...
                 </Button>
-                <Button variant="brutalist-ghost-rounded" size="md" disabled>
+                <Button variant="secondary" size="md" disabled>
                   Disabled
                 </Button>
               </div>

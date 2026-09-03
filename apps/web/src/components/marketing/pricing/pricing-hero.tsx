@@ -69,7 +69,7 @@ export function PricingHero() {
           >
             <SignUpButton mode="modal">
               <Button
-                variant="brutalist-rounded"
+                variant="brutalist"
                 size="xl"
                 className="w-full sm:w-auto px-8 sm:px-12"
                 rightIcon={<ArrowRight size={20} />}
@@ -79,7 +79,7 @@ export function PricingHero() {
               </Button>
             </SignUpButton>
             <Button
-              variant="brutalist-ghost-rounded"
+              variant="secondary"
               size="xl"
               className="w-full sm:w-auto font-bold uppercase tracking-wider text-xs"
               onClick={() => {

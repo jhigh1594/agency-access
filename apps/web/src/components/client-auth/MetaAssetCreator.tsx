@@ -193,7 +193,7 @@ export function MetaAssetCreator({
         </p>
 
         <Button
-          variant="brutalist-ghost-rounded"
+          variant="secondary"
           size="sm"
           onClick={handleReset}
         >
@@ -219,7 +219,7 @@ export function MetaAssetCreator({
 
             <div className="flex gap-2">
               <Button
-                variant="brutalist-rounded"
+                variant="brutalist"
                 size="sm"
                 onClick={handleReset}
               >
@@ -303,7 +303,7 @@ export function MetaAssetCreator({
       {/* Submit Button - Brutalist Rounded */}
       <Button
         type="submit"
-        variant="brutalist-rounded"
+        variant="brutalist"
         size="lg"
         isLoading={state === 'loading'}
         disabled={!accountName.trim() || state === 'loading'}

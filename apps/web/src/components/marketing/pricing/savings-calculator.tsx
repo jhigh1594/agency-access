@@ -292,7 +292,7 @@ export function SavingsCalculator() {
                 {/* CTA */}
                 <SignUpButton mode="modal">
                   <Button
-                    variant="brutalist-rounded"
+                    variant="brutalist"
                     size="lg"
                     className="w-full"
                     rightIcon={<ArrowRight size={18} />}

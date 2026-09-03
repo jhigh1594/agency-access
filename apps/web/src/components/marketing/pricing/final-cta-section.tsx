@@ -58,7 +58,7 @@ export function FinalCTASection() {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8 sm:mb-12 px-2">
                 <SignUpButton mode="modal">
                   <Button
-                    variant="brutalist-rounded"
+                    variant="brutalist"
                     size="xl"
                     className="w-full sm:w-auto px-8 sm:px-12"
                     rightIcon={<ArrowRight size={20} />}
@@ -73,7 +73,7 @@ export function FinalCTASection() {
                   rel="noopener noreferrer"
                 >
                   <Button
-                    variant="brutalist-ghost-rounded"
+                    variant="secondary"
                     size="xl"
                     className="w-full sm:w-auto font-bold uppercase tracking-wider text-xs"
                   >

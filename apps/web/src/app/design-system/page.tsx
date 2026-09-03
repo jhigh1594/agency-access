@@ -90,7 +90,7 @@ export default function DesignSystemPage() {
               <div className="flex flex-wrap gap-4">
                 <Button variant="primary">Primary</Button>
                 <Button variant="secondary">Secondary</Button>
-                <Button variant="success">Success</Button>
+                <Button variant="primary">Success</Button>
                 <Button variant="danger">Danger</Button>
                 <Button variant="ghost">Ghost</Button>
               </div>
@@ -100,9 +100,9 @@ export default function DesignSystemPage() {
               <h3 className="font-sans text-sm font-medium text-muted-foreground mb-4">Brutalist Variants</h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="brutalist">Brutalist</Button>
-                <Button variant="brutalist-ghost">Brutalist Ghost</Button>
-                <Button variant="brutalist-rounded">Brutalist Rounded</Button>
-                <Button variant="brutalist-ghost-rounded">Brutalist Ghost Rounded</Button>
+                <Button variant="secondary">Brutalist Ghost</Button>
+                <Button variant="brutalist">Brutalist Rounded</Button>
+                <Button variant="secondary">Brutalist Ghost Rounded</Button>
               </div>
             </div>
 

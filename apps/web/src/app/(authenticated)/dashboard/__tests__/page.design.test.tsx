@@ -66,7 +66,7 @@ describe('Dashboard Page - Static Design Validation', () => {
       const componentCode = fs.readFileSync(COMPONENT_PATH, 'utf-8');
 
       // Coral is used either directly (bg-coral) or via brutalist Button variants
-      expect(componentCode).toMatch(/bg-coral|variant="brutalist-rounded"|variant="brutalist"/);
+      expect(componentCode).toMatch(/bg-coral|variant="brutalist"|variant="brutalist"/);
     });
 
     it('should use teal for success states', () => {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 interface ComparisonCTAProps {
-  variant?: 'brutalist' | 'brutalist-rounded';
+  variant?: 'brutalist' | 'secondary';
   size?: 'xl';
   children: React.ReactNode;
 }

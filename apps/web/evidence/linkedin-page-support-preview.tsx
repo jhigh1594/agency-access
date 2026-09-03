@@ -204,7 +204,7 @@ function Step2SelectionPreview() {
         description="Select the specific LinkedIn Pages you want to share."
         footer={
           <div className="flex justify-center">
-            <Button size="xl" variant="brutalist-rounded" disabled={selection.pages.length === 0}>
+            <Button size="xl" variant="brutalist" disabled={selection.pages.length === 0}>
               Share Access
             </Button>
           </div>
@@ -239,7 +239,7 @@ function ZeroPagesFollowUpPreview() {
         description="Connected successfully, but some requested LinkedIn products still need follow-up."
         footer={
           <div className="flex justify-center">
-            <Button size="xl" variant="brutalist-rounded">Finish preview</Button>
+            <Button size="xl" variant="brutalist">Finish preview</Button>
           </div>
         }
       >
@@ -272,7 +272,7 @@ function MixedSummaryPreview() {
         description="Access granted to the accounts you selected."
         footer={
           <div className="flex justify-center">
-            <Button size="xl" variant="brutalist-rounded">Finish preview</Button>
+            <Button size="xl" variant="brutalist">Finish preview</Button>
           </div>
         }
       >

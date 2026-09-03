@@ -82,7 +82,7 @@ export function HeroSection() {
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 w-full mt-6 self-stretch">
                   <SignUpButton mode="modal">
                     <Button
-                      variant="brutalist-rounded"
+                      variant="brutalist"
                       size="xl"
                       className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
                       rightIcon={<Zap size={18} />}
@@ -92,7 +92,7 @@ export function HeroSection() {
                     </Button>
                   </SignUpButton>
                   <Button
-                    variant="brutalist-ghost-rounded"
+                    variant="secondary"
                     size="xl"
                     className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
                     onClick={() => setIsDemoModalOpen(true)}
@@ -213,7 +213,7 @@ export function HeroSection() {
                       </m.div>
                     ))}
                   </div>
-                  <Button variant="brutalist-rounded" className="w-full h-12 text-sm font-bold group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
+                  <Button variant="brutalist" className="w-full h-12 text-sm font-bold group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
                     Grant Access
                   </Button>
                 </div>
