@@ -51,7 +51,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
     mockClerk.users.getUser.mockResolvedValue({
       publicMetadata: {
         subscriptionTier: 'STARTER',
-        tierName: 'Growth',
+        tierName: 'Starter',
         features: TIER_LIMITS.STARTER.features,
       },
       privateMetadata: {
@@ -79,7 +79,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
       expect(result.data?.tier).toBe('STARTER');
       expect(result.data?.publicMetadata).toEqual({
         subscriptionTier: 'STARTER',
-        tierName: 'Growth',
+        tierName: 'Starter',
         features: TIER_LIMITS.STARTER.features,
       });
       expect(mockClerk.users.updateUser).toHaveBeenCalledWith('user_123', {
@@ -99,7 +99,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
 
       expect(result.error).toBeNull();
       expect(result.data?.tier).toBe('AGENCY');
-      expect(result.data?.publicMetadata.tierName).toBe('Scale');
+      expect(result.data?.publicMetadata.tierName).toBe('Agency');
       expect(result.data?.privateMetadata.subscriptionStatus).toBe('trialing');
       expect(result.data?.privateMetadata.trialEndsAt).toBeDefined();
     });
@@ -108,7 +108,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
       const { createClerkClient } = await import('@clerk/backend');
       (createClerkClient as any).mockReturnValue(mockClerk);
 
-      const result = await clerkMetadataService.setSubscriptionTier('user_789', 'PRO');
+      const result = await clerkMetadataService.setSubscriptionTier('user_789', 'AGENCY');
 
       expect(result.error).toBeNull();
       expect(result.data?.privateMetadata.quotaLimits).toBeDefined();
@@ -139,7 +139,7 @@ describe('Clerk Metadata Service - TDD Tests', () => {
 
       expect(result.error).toBeNull();
       expect(result.data?.tier).toBe('STARTER');
-      expect(result.data?.publicMetadata.tierName).toBe('Growth');
+      expect(result.data?.publicMetadata.tierName).toBe('Starter');
       expect(result.data?.privateMetadata.quotaLimits).toBeDefined();
     });
 

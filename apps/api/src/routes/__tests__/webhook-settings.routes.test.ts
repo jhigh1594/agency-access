@@ -20,6 +20,9 @@ vi.mock('@/middleware/auth.js', () => ({
     request.user = { sub: 'user_123' };
   },
 }));
+vi.mock('@/middleware/quota-enforcement.js', () => ({
+  quotaEnforcementMiddleware: () => async () => undefined,
+}));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     auditLog: {

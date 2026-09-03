@@ -77,7 +77,8 @@ describe('MetaAssetSelector interactions', () => {
 
     await screen.findByText('Select Business Portfolio');
 
-    await user.selectOptions(screen.getByLabelText('Business Portfolio'), 'biz_client_2');
+    await user.click(screen.getByRole('combobox', { name: 'Business Portfolio' }));
+    await user.click(screen.getByRole('option', { name: /DogTimez Retail/ }));
     await user.click(screen.getByRole('button', { name: 'Load accounts' }));
 
     await screen.findByText('Sharing from DogTimez Retail');

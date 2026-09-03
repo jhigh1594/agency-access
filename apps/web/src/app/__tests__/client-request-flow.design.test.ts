@@ -47,7 +47,7 @@ describe('Client Request Flow Design Compliance', () => {
       'utf-8'
     );
     const inviteSource = readFileSync(
-      'src/app/invite/[token]/page.tsx',
+      'src/app/invite/[token]/client-invite-page.tsx',
       'utf-8'
     );
 

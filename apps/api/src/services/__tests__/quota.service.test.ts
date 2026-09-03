@@ -16,6 +16,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QuotaService } from '../quota.service';
 import { TIER_LIMITS, type SubscriptionTier, type MetricType } from '@agency-platform/shared';
+import { prisma } from '@/lib/prisma';
 
 // Mock dependencies
 vi.mock('@/lib/clerk', () => ({
@@ -56,6 +57,13 @@ describe('QuotaService', () => {
   beforeEach(() => {
     quotaService = new QuotaService();
     vi.clearAllMocks();
+    vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+      subscription: { tier: 'STARTER', status: 'active' },
+    } as any);
+    vi.mocked(prisma.client.count).mockResolvedValue(0);
+    vi.mocked(prisma.agencyMember.count).mockResolvedValue(0);
+    vi.mocked(prisma.accessRequest.count).mockResolvedValue(0);
+    vi.mocked(prisma.accessRequestTemplate.count).mockResolvedValue(0);
   });
 
   describe('checkQuota', () => {
@@ -72,6 +80,7 @@ describe('QuotaService', () => {
       };
 
       const mockCount = 3; // Under limit
+      vi.mocked(prisma.client.count).mockResolvedValue(mockCount);
 
       // Act
       const result = await quotaService.checkQuota({
@@ -95,6 +104,7 @@ describe('QuotaService', () => {
       const limit = TIER_LIMITS[tier].clients; // 5 for STARTER
 
       const mockCount = 5; // AT limit
+      vi.mocked(prisma.client.count).mockResolvedValue(mockCount);
 
       // Act
       const result = await quotaService.checkQuota({
@@ -107,13 +117,15 @@ describe('QuotaService', () => {
       // Assert - Strict enforcement: denied at limit
       expect(result.allowed).toBe(false);
       expect(result.remaining).toBe(0);
-      expect(result.suggestedTier).toBe('AGENCY');
+      expect(result.suggestedTier).toBe('GROWTH');
     });
 
-    it('should always allow actions for unlimited tier (ENTERPRISE)', async () => {
+    it('should always allow actions for unlimited team seats on AGENCY tier', async () => {
       // Arrange
-      const tier: SubscriptionTier = 'ENTERPRISE';
-      const metric: MetricType = 'clients';
+      const metric: MetricType = 'team_seats';
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        subscription: { tier: 'AGENCY', status: 'active' },
+      } as any);
 
       // Act
       const result = await quotaService.checkQuota({
@@ -130,10 +142,11 @@ describe('QuotaService', () => {
       expect(result.remaining).toBe('unlimited');
     });
 
-    it('should always allow actions for PRO tier (unlimited members)', async () => {
-      // Arrange - PRO has unlimited teamSeats (-1)
-      const tier: SubscriptionTier = 'PRO';
+    it('should always allow actions for unlimited team seats on AGENCY tier', async () => {
       const metric: MetricType = 'team_seats';
+      vi.mocked(prisma.agency.findUnique).mockResolvedValue({
+        subscription: { tier: 'AGENCY', status: 'active' },
+      } as any);
 
       // Act
       const result = await quotaService.checkQuota({
@@ -152,6 +165,7 @@ describe('QuotaService', () => {
       // Arrange
       const tier: SubscriptionTier = 'STARTER';
       const metric: MetricType = 'clients';
+      vi.mocked(prisma.client.count).mockResolvedValue(TIER_LIMITS.STARTER.clients);
 
       // Act - STARTER at limit for clients
       const result = await quotaService.checkQuota({
@@ -161,15 +175,16 @@ describe('QuotaService', () => {
         requestedAmount: 1,
       });
 
-      // Assert - Should suggest AGENCY (next tier up)
+      // Assert - GROWTH is the next tier up from STARTER
       expect(result.allowed).toBe(false);
-      expect(result.suggestedTier).toBe('AGENCY');
+      expect(result.suggestedTier).toBe('GROWTH');
     });
 
     it('should include upgrade URL in denied response', async () => {
       // Arrange
       const tier: SubscriptionTier = 'STARTER';
       const metric: MetricType = 'clients';
+      vi.mocked(prisma.client.count).mockResolvedValue(TIER_LIMITS.STARTER.clients);
 
       // Act
       const result = await quotaService.checkQuota({
@@ -182,7 +197,7 @@ describe('QuotaService', () => {
       // Assert
       expect(result.allowed).toBe(false);
       expect(result.upgradeUrl).toContain('/checkout');
-      expect(result.upgradeUrl).toContain('tier=AGENCY');
+      expect(result.upgradeUrl).toContain('tier=GROWTH');
     });
   });
 
@@ -226,6 +241,7 @@ describe('QuotaService', () => {
     });
 
     it('should return null for non-existent agency', async () => {
+      vi.mocked(prisma.agency.findUnique).mockResolvedValueOnce(null);
       // Act
       const usage = await quotaService.getUsage('non-existent-agency');
 

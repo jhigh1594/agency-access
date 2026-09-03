@@ -72,7 +72,7 @@ describe('TikTokAssetSelector', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('TikTok Ad Accounts')).toBeInTheDocument();
+      expect(screen.getByText('Advertiser 1')).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole('checkbox', { name: /advertiser 1/i, hidden: true }));
@@ -141,9 +141,8 @@ describe('TikTokAssetSelector', () => {
       expect(screen.getByLabelText('Business Center')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText('Business Center'), {
-      target: { value: 'bc_1' },
-    });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Business Center' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Business Center 1' }));
 
     await waitFor(() => {
       expect(

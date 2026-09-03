@@ -210,7 +210,7 @@ function ClientsPageContent() {
             {clients.map((client: Client) => (
               <div
                 key={client.id}
-                className="bg-card rounded-lg shadow-brutalist border border-black/10 p-6 hover:-translate-y-[-1px] hover:shadow-[5px_5px_0px_rgb(var(--border-hard))] transition-all duration-300"
+                className="bg-card rounded-lg shadow-brutalist border border-black/10 p-6 hover:translate-y-[-1px] hover:shadow-brutalist transition-all duration-300"
               >
                 {/* Client Info */}
                 <div className="flex items-start justify-between mb-4">

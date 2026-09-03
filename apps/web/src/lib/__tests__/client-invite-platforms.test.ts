@@ -40,8 +40,8 @@ describe('client invite platform capabilities', () => {
 
   it('reports mixed security copy when both oauth and manual platforms are requested', () => {
     expect(getInviteSecuritySummary(['google', 'mailchimp'])).toMatchObject({
-      badge: expect.stringMatching(/platform-native/i),
-      detail: expect.stringMatching(/oauth/i),
+      badge: expect.stringMatching(/secure — passwords never requested/i),
+      detail: expect.stringMatching(/official login screens/i),
       usesManualFlow: true,
       usesOAuthFlow: true,
     });

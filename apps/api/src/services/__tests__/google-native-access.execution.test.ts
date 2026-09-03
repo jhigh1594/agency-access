@@ -1,4 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const originalGoogleAdsDeveloperToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+beforeAll(() => {
+  process.env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-google-ads-developer-token';
+});
+afterAll(() => {
+  if (originalGoogleAdsDeveloperToken === undefined) {
+    delete process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+  } else {
+    process.env.GOOGLE_ADS_DEVELOPER_TOKEN = originalGoogleAdsDeveloperToken;
+  }
+});
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {

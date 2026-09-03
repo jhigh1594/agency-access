@@ -16,7 +16,7 @@ vi.mock('@/services/clerk-metadata.service', () => ({
   },
 }));
 
-vi.mock('@/lib/prisma', () => ({
+  vi.mock('@/lib/prisma', () => ({
   prisma: {
     agency: {
       findUnique: vi.fn(),
@@ -24,6 +24,11 @@ vi.mock('@/lib/prisma', () => ({
     agencyUsageCounter: {
       findMany: vi.fn(),
     },
+  },
+  }));
+vi.mock('@/middleware/auth', () => ({
+  authenticate: () => async (request: any) => {
+    if (request.headers['x-test-auth']) request.user = { sub: 'clerk_user_123' };
   },
 }));
 
@@ -35,10 +40,6 @@ describe('Usage Routes - TDD Tests', () => {
 
   beforeEach(async () => {
     app = Fastify();
-    // Register authenticate mock BEFORE registering routes
-    app.decorate('authenticate', async (request: any, reply: any) => {
-      request.user = { sub: 'clerk_user_123' };
-    });
     await app.register(usageRoutes, { prefix: '/api' });
     vi.clearAllMocks();
 
@@ -86,6 +87,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       expect(response.statusCode).toBe(200);
@@ -104,6 +106,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       const payload = JSON.parse(response.payload);
@@ -117,8 +120,8 @@ describe('Usage Routes - TDD Tests', () => {
     it('should handle unlimited seats for PRO tier', async () => {
       (clerkMetadataService.getSubscriptionTier as any).mockResolvedValue({
         data: {
-          tier: 'PRO',
-          publicMetadata: { tierName: 'Pro', features: [] },
+          tier: 'AGENCY',
+          publicMetadata: { tierName: 'Agency', features: [] },
           privateMetadata: {
             quotaLimits: {
               clientOnboards: { limit: 600, used: 100, resetsAt: '2025-01-01T00:00:00.000Z' },
@@ -140,6 +143,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       const payload = JSON.parse(response.payload);
@@ -151,11 +155,7 @@ describe('Usage Routes - TDD Tests', () => {
     });
 
     it('should return 401 when user not authenticated', async () => {
-      // Create new app instance without auth for this test
       const testApp = Fastify();
-      testApp.decorate('authenticate', async (request: any, reply: any) => {
-        // No user set - unauthenticated
-      });
       await testApp.register(usageRoutes, { prefix: '/api' });
 
       const response = await testApp.inject({
@@ -176,6 +176,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       expect(response.statusCode).toBe(404);
@@ -190,6 +191,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       expect(response.statusCode).toBe(404);
@@ -202,6 +204,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       const payload = JSON.parse(response.payload);
@@ -216,6 +219,7 @@ describe('Usage Routes - TDD Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/usage',
+        headers: { 'x-test-auth': 'true' },
       });
 
       const payload = JSON.parse(response.payload);

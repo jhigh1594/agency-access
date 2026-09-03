@@ -26,7 +26,7 @@ vi.mock('@/components/client-auth/PlatformWizardCard', () => ({
 }));
 
 vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
-  MetaAssetSelector: ({ onSelectionChange, onUseDifferentAdministrator }: any) => (
+  MetaAssetSelector: ({ onSelectionChange }: any) => (
     <div>
       <div>Meta Asset Selector</div>
       <button
@@ -61,9 +61,6 @@ vi.mock('@/components/client-auth/MetaAssetSelector', () => ({
         }
       >
         Select Meta Instagram Assets
-      </button>
-      <button type="button" onClick={onUseDifferentAdministrator}>
-        Use Different Meta Administrator
       </button>
     </div>
   ),
@@ -849,7 +846,7 @@ describe('PlatformAuthWizard', () => {
     expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
   });
 
-  it('returns to Meta connection for a different administrator while keeping the same invite', async () => {
+  it('keeps the current Meta selection flow for the same invite', () => {
     render(
       <PlatformAuthWizard
         platform="meta"
@@ -863,9 +860,7 @@ describe('PlatformAuthWizard', () => {
     );
 
     expect(screen.getByText('Meta Asset Selector')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /use different meta administrator/i }));
-
-    expect(await screen.findByRole('heading', { name: /connect meta/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /connect meta/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /choose accounts to share/i })).toBeInTheDocument();
+    expect(screen.getByText('Meta Asset Selector')).toBeInTheDocument();
   });
 });

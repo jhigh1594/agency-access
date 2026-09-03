@@ -101,7 +101,7 @@ describe('IdentityVerificationService', () => {
       expect(result.data).toBeNull();
       expect(result.error).toEqual({
         code: 'VALIDATION_ERROR',
-        message: 'Agency email is required for Google platform',
+        message: 'Agency email is required for GOOGLE platform',
       });
     });
 

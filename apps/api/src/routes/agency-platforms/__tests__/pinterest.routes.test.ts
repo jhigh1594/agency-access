@@ -34,6 +34,10 @@ describe('Pinterest Agency Platform Routes', () => {
     // Setup Fastify app
     app = Fastify();
 
+    app.addHook('onRequest', async (request) => {
+      (request as any).principalAgencyId = '01234567-0123-0123-0123-0123456789ab';
+    });
+
     // Register Pinterest routes with prefix (same as in index.ts)
     await app.register(pinterestRoutes, { prefix: '/agency-platforms/pinterest' });
 
@@ -170,7 +174,7 @@ describe('Pinterest Agency Platform Routes', () => {
         method: 'PATCH',
         url: '/agency-platforms/pinterest/business-id',
         payload: {
-          agencyId: '99999999-9999-9999-9999-999999999999', // Valid UUID format but non-existent
+          agencyId: testAgency.id,
           businessId: '664351519939856629',
         },
       });

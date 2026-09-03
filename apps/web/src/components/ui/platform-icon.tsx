@@ -51,13 +51,13 @@ export function PlatformIcon({
     return (
       <div className="inline-flex items-center gap-2">
         <div
-          className={'rounded-lg flex items-center justify-center bg-slate-200'}
+          className={'rounded-lg flex items-center justify-center bg-muted'}
           style={{ width: config.width, height: config.height }}
         >
-          <span className="text-slate-500 font-bold">{initial}</span>
+          <span className="text-muted-foreground font-bold">{initial}</span>
         </div>
         {showLabel && (
-          <span className={`${config.textSize} font-medium text-slate-900`}>
+          <span className={`${config.textSize} font-medium text-foreground`}>
             {platformName}
           </span>
         )}
@@ -85,7 +85,7 @@ export function PlatformIcon({
         />
       </div>
       {showLabel && (
-        <span className={`${config.textSize} font-medium text-slate-900`}>
+        <span className={`${config.textSize} font-medium text-foreground`}>
           {platformName}
         </span>
       )}

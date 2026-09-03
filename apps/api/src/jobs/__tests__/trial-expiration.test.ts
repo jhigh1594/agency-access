@@ -5,11 +5,16 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     subscription: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
     },
     agency: {
       update: vi.fn(),
     },
+    auditLog: {
+      create: vi.fn(),
+    },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -19,6 +24,15 @@ import { expireTrials } from '../trial-expiration';
 describe('expireTrials', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(prisma));
+    vi.mocked(prisma.subscription.findUnique).mockImplementation(async ({ where }: any) => ({
+      id: where.id,
+      agencyId: 'agency-1',
+      status: 'trialing',
+      tier: 'STARTER',
+      trialEnd: new Date('2026-02-20T00:00:00Z'),
+      cancelAtPeriodEnd: false,
+    }) as any);
   });
 
   it('should downgrade expired trialing subscriptions to FREE', async () => {
@@ -33,6 +47,7 @@ describe('expireTrials', () => {
     vi.mocked(prisma.subscription.findMany).mockResolvedValue([expiredSub] as any);
     vi.mocked(prisma.subscription.update).mockResolvedValue({} as any);
     vi.mocked(prisma.agency.update).mockResolvedValue({} as any);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as any);
 
     const result = await expireTrials();
 

@@ -25,6 +25,13 @@ vi.mock('@/services/oauth-state.service');
 vi.mock('@/services/identity-verification.service');
 vi.mock('@/services/connectors/meta');
 vi.mock('@/services/connectors/google');
+vi.mock('@/lib/authorization', () => ({
+  assertAgencyAccess: vi.fn(() => null),
+  resolvePrincipalAgency: vi.fn(async () => ({
+    data: { agencyId: 'agency-1', principalId: 'test-user' },
+    error: null,
+  })),
+}));
 
 // Mock env
 vi.mock('@/lib/env', () => ({
@@ -41,6 +48,9 @@ describe('Meta Assets Routes', () => {
 
   beforeEach(async () => {
     app = Fastify();
+    app.addHook('onRequest', async (request) => {
+      (request as any).user = { sub: 'test-user' };
+    });
     await app.register(agencyPlatformsRoutes);
     vi.clearAllMocks();
   });

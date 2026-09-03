@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import {
   AgentPermissionSchema,
   OffboardingItemClassificationSchema,
@@ -113,3 +112,4 @@ describe('google client offboarding shared contracts', () => {
     expect(() => OffboardingProviderOutcomeSchema.parse('unknown_error')).toThrow();
   });
 });
+import { describe, expect, it } from '@jest/globals';

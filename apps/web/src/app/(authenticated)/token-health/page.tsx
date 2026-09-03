@@ -65,7 +65,15 @@ export default function TokenHealthPage() {
         fallbackErrorMessage: 'Failed to fetch token health',
       });
       if (result.data) {
-        setTokens(result.data);
+        // JSON dates arrive as strings; coerce once at the boundary so the
+        // Date-typed fields below are real Date objects for every consumer.
+        setTokens(
+          result.data.map((t) => ({
+            ...t,
+            expiresAt: new Date(t.expiresAt),
+            lastRefreshedAt: t.lastRefreshedAt ? new Date(t.lastRefreshedAt) : null,
+          }))
+        );
       }
     } catch (err) {
       console.error('Failed to fetch token health:', err);

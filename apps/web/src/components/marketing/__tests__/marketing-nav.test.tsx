@@ -15,9 +15,11 @@ vi.mock('next/link', () => ({
 // Mock Next.js navigation
 const mockPathname = '/';
 const mockUsePathname = vi.fn(() => mockPathname);
+const mockPush = vi.fn();
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mockUsePathname(),
+  useRouter: () => ({ push: mockPush }),
 }));
 
 // Mock Clerk components
@@ -48,6 +50,8 @@ beforeEach(() => {
   mockUsePathname.mockReturnValue('/');
 });
 
+const featuresLinks = () => screen.getAllByRole('link', { name: 'Features' });
+
 describe('MarketingNav', () => {
   describe('Mobile Menu', () => {
     it('should toggle mobile menu when hamburger button is clicked', async () => {
@@ -61,9 +65,10 @@ describe('MarketingNav', () => {
       await user.click(menuButton);
       
       // Check that menu content is visible
-      expect(screen.getByText('Features')).toBeVisible();
-      expect(screen.getByText('How It Works')).toBeVisible();
-      expect(screen.getByText('Pricing')).toBeVisible();
+      expect(featuresLinks()).toHaveLength(2);
+      expect(featuresLinks()[1]).toBeVisible();
+      expect(screen.getAllByRole('link', { name: 'How It Works' })[1]).toBeVisible();
+      expect(screen.getAllByRole('link', { name: 'Pricing' })[1]).toBeVisible();
       
       // Hamburger button should now show "Close navigation menu"
       const closeNavButton = screen.getByLabelText('Close navigation menu');
@@ -87,7 +92,7 @@ describe('MarketingNav', () => {
       await user.click(backdrop);
 
       await waitFor(() => {
-        expect(screen.queryByText('Features')).not.toBeVisible();
+        expect(featuresLinks()).toHaveLength(1);
         expect(screen.getByLabelText('Open navigation menu')).toBeInTheDocument();
       });
     });
@@ -105,7 +110,7 @@ describe('MarketingNav', () => {
       await user.click(panelCloseButton);
 
       await waitFor(() => {
-        expect(screen.queryByText('Features')).not.toBeVisible();
+        expect(featuresLinks()).toHaveLength(1);
         expect(screen.getByLabelText('Open navigation menu')).toBeInTheDocument();
       });
     });
@@ -143,11 +148,11 @@ describe('MarketingNav', () => {
       await user.click(menuButton);
 
       // Click Features link (anchor link)
-      const featuresLink = screen.getByText('Features');
+      const featuresLink = featuresLinks()[1];
       await user.click(featuresLink);
 
       await waitFor(() => {
-        expect(screen.queryByText('Features')).not.toBeVisible();
+        expect(featuresLinks()).toHaveLength(1);
         expect(screen.getByLabelText('Open navigation menu')).toBeInTheDocument();
       });
     });
@@ -164,17 +169,17 @@ describe('MarketingNav', () => {
       
       // Backdrop should be z-[45]
       const backdrop = screen.getAllByTestId('motion-div')[0];
-      expect(backdrop).toHaveClass('z-[45]');
+      expect(backdrop).toHaveClass('z-[9998]');
       
       // Menu panel should have highest z-index z-[50]
       const menuPanel = screen.getAllByTestId('motion-div')[1];
-      expect(menuPanel).toHaveClass('z-[50]');
+      expect(menuPanel).toHaveClass('z-[9999]');
     });
 
     it('should have adequate touch target sizes (44px minimum)', () => {
       render(<MarketingNav />);
 
-      const menuButton = screen.getByLabelText('Open menu');
+      const menuButton = screen.getByLabelText('Open navigation menu');
       expect(menuButton).toHaveClass('min-h-[44px]', 'min-w-[44px]');
     });
 
@@ -203,14 +208,14 @@ describe('MarketingNav', () => {
       const menuButton = screen.getByLabelText('Open navigation menu');
       fireEvent.click(menuButton);
       
-      expect(screen.getByText('Features')).toBeVisible();
+      expect(featuresLinks()[1]).toBeVisible();
       
       // Change pathname
       mockUsePathname.mockReturnValue('/pricing');
       rerender(<MarketingNav />);
       
       waitFor(() => {
-        expect(screen.queryByText('Features')).not.toBeVisible();
+        expect(featuresLinks()).toHaveLength(1);
         expect(screen.getByLabelText('Open navigation menu')).toBeInTheDocument();
       });
     });
@@ -227,7 +232,7 @@ describe('MarketingNav', () => {
     it('should display desktop navigation on md screens and up', () => {
       render(<MarketingNav />);
 
-      const desktopNav = screen.getByText('Features').closest('div');
+      const desktopNav = featuresLinks()[0].closest('div');
       expect(desktopNav).toHaveClass('hidden', 'md:flex');
     });
   });

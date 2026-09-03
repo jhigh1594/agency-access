@@ -38,7 +38,8 @@ describe('Onboarding route targets', () => {
   it('resolves agency in authenticated layout using orgId before userId', () => {
     const layoutCode = readFile('src/app/(authenticated)/layout.tsx');
 
-    expect(layoutCode).toContain('const principalClerkId = orgId || userId');
+    expect(layoutCode).toContain('const sharedPrincipalId = !isDevelopmentBypass ? (orgId || userId) : null');
+    expect(layoutCode).toContain('principalClerkId: sharedPrincipalId');
     expect(layoutCode).toContain('clerkUserId=${encodeURIComponent(principalClerkId)}');
   });
 });

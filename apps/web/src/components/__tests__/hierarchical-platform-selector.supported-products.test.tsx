@@ -15,13 +15,13 @@ describe('HierarchicalPlatformSelector supported products', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /Google.*6 products/i }));
+    await user.click(screen.getByRole('button', { name: 'Google platform group' }));
     expect(screen.getByRole('checkbox', { name: /Google Ads$/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /Google Analytics 4$/i })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /YouTube Studio$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /Display & Video 360$/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Meta.*3 products/i }));
+    await user.click(screen.getByRole('button', { name: 'Meta platform group' }));
     expect(screen.getByRole('checkbox', { name: /Meta Ads$/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /Meta Pages$/i })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /WhatsApp Business$/i })).not.toBeInTheDocument();

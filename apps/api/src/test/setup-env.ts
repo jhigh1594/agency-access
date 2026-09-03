@@ -13,6 +13,7 @@ const testEnvDefaults: Record<string, string> = {
   META_APP_SECRET: 'test-meta-app-secret',
   CREEM_API_KEY: 'test-creem-api-key',
   CREEM_WEBHOOK_SECRET: 'test-creem-webhook-secret',
+  GOOGLE_ADS_DEVELOPER_TOKEN: 'test-google-ads-developer-token',
 };
 
 for (const [key, value] of Object.entries(testEnvDefaults)) {

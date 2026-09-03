@@ -143,7 +143,7 @@ describe('Phase 5: ClientSelector - TDD Tests', () => {
 
       await waitFor(() => {
         const acmeCard = screen.getByText('Acme Corporation').closest('[role="button"]');
-        expect(acmeCard).toHaveClass('border-indigo-500');
+        expect(acmeCard).toHaveClass('border-coral');
       });
     });
   });
@@ -255,9 +255,8 @@ describe('Phase 5: ClientSelector - TDD Tests', () => {
         expect(screen.getByText('Acme Corporation')).toBeInTheDocument();
       });
 
-      // Tab through clients
-      await user.tab();
       const firstClient = screen.getByRole('button', { name: /acme corporation/i });
+      firstClient.focus();
       expect(firstClient).toHaveFocus();
     });
 

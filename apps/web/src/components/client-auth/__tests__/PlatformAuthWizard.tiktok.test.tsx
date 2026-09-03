@@ -88,11 +88,11 @@ describe('PlatformAuthWizard - TikTok', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('TikTok Ad Accounts')).toBeInTheDocument();
+      expect(screen.getByText('TikTok Ads')).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByLabelText(/advertiser 1/i));
-    fireEvent.click(screen.getByRole('button', { name: /save selected accounts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Connected')).toBeInTheDocument();
@@ -173,11 +173,11 @@ describe('PlatformAuthWizard - TikTok', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('TikTok Ad Accounts')).toBeInTheDocument();
+      expect(screen.getByText('TikTok Ads')).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByLabelText(/advertiser 1/i));
-    fireEvent.click(screen.getByRole('button', { name: /save selected accounts/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/automation completed with issues/i)).toBeInTheDocument();
@@ -237,17 +237,17 @@ describe('PlatformAuthWizard - TikTok', () => {
     });
 
     expect(
-      screen.getByRole('button', { name: /continue with follow-up needed/i })
+      screen.getByRole('button', { name: /share access/i })
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /continue with follow-up needed/i }));
+    fireEvent.click(screen.getByRole('button', { name: /share access/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Connected')).toBeInTheDocument();
     });
 
     expect(
-      screen.getByText(/some requested tiktok products still need follow-up/i)
+      screen.getByText(/some tiktok products still need follow-up/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finish request/i })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);

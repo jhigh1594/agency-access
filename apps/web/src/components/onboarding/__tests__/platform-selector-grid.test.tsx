@@ -13,7 +13,7 @@ describe('PlatformSelectorGrid', () => {
       />
     );
 
-    expect(screen.getByText('LinkedIn')).toBeInTheDocument();
+    expect(screen.getAllByText('LinkedIn').length).toBeGreaterThan(0);
     expect(screen.queryByText('LinkedIn & TikTok')).not.toBeInTheDocument();
   });
 

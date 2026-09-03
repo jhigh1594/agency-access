@@ -226,7 +226,7 @@ describe('Invite Flow Page', () => {
     render(<InvitePage />);
 
     await waitFor(() => {
-      expect(screen.getAllByText(/oauth only/i)).toHaveLength(1);
+      expect(screen.getAllByText(/secure — passwords never requested/i)).toHaveLength(1);
     });
   });
 

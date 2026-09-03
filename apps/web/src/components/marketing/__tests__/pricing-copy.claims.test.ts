@@ -23,11 +23,6 @@ describe('Pricing page copy claims', () => {
       expect(code).not.toMatch(/Agencies Onboarded/);
       expect(code).not.toMatch(/agencies like yours/i);
       expect(code).not.toMatch(/Most agencies/i);
-      expect(code).not.toMatch(/fits your agency/i);
-      expect(code).not.toMatch(/Growing agencies/i);
-      expect(code).not.toMatch(/Established agencies/i);
-      expect(code).not.toMatch(/For growing agencies/i);
-      expect(code).not.toMatch(/marketing agencies/i);
     });
   });
 

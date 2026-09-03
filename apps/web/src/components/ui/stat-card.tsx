@@ -31,13 +31,13 @@ export function StatCard({
           <span className="text-primary">{icon}</span>
         </div>
       </div>
-      <p className="text-3xl font-mono font-semibold tabular-nums text-technical">
+      <p className="text-3xl font-mono font-semibold tabular-nums text-foreground">
         {value}
       </p>
       {trend && (
         <p
           className={`text-xs font-mono mt-2 ${
-            trend.value >= 0 ? 'text-success' : 'text-error'
+            trend.value >= 0 ? 'text-teal' : 'text-coral'
           }`}
         >
           {trend.value >= 0 ? '+' : ''}

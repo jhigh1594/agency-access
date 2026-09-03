@@ -58,7 +58,7 @@ describe('QuotaService effective tier resolution', () => {
     expect(result.allowed).toBe(false);
     expect(result.limit).toBe(1);
     expect(result.used).toBe(1);
-    expect(result.currentTier).toBe('FREE' as any);
+    expect(result.currentTier).toBe('STARTER');
     expect(result.suggestedTier).toBe('STARTER');
   });
 });

@@ -14,7 +14,7 @@ import { clientOffboardingService } from '@/services/client-offboarding.service.
 vi.mock('@/lib/env.js', () => ({
   env: { FRONTEND_URL: 'https://app.example.com' },
   frontendBaseUrl: () => 'https://app.example.com',
-  isOffboardingEnabled: () => false,
+  isOffboardingEnabled: () => true,
 }));
 vi.mock('@/lib/prisma.js', () => ({ prisma: { agency: { findFirst: vi.fn(), findUnique: vi.fn() }, auditLog: { create: vi.fn() } } }));
 vi.mock('@/services/client.service.js', () => ({ clientService: { getClients: vi.fn(), getClientById: vi.fn(), createClient: vi.fn(), updateClient: vi.fn() } }));

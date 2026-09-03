@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, TrendingUp, Check, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SUBSCRIPTION_TIER_NAMES, TIER_LIMITS } from '@agency-platform/shared';
@@ -71,7 +71,7 @@ export function UpgradeModal({
   } else if (typeof remaining === 'number' && remaining > (limit as number) * 0.2) {
     progressClassName += ' bg-teal';
   } else {
-    progressClassName += 'bg-yellow-500';
+    progressClassName += ' bg-warning';
   }
 
   const handleUpgrade = () => {
@@ -86,28 +86,28 @@ export function UpgradeModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-lg shadow-brutalist max-w-lg w-full border-2 border-black"
+            className="bg-card rounded-lg shadow-brutalist max-w-lg w-full border-2 border-black"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
               <h2 className="text-lg font-semibold text-ink">Upgrade Required</h2>
               <button
                 onClick={onClose}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1 hover:bg-muted rounded-lg transition-colors"
               >
-                <X className="h-5 w-5 text-gray-600" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
 
@@ -122,25 +122,25 @@ export function UpgradeModal({
                   <h3 className="text-lg font-semibold text-ink">
                     You've reached your {metricName} limit
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Upgrade to continue adding more {metricName.toLowerCase()}
                   </p>
                 </div>
               </div>
 
               {/* Current usage display */}
-              <div className="bg-gray-50 border-2 border-black rounded-lg p-4 mb-6">
+              <div className="bg-muted border-2 border-black rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-foreground">
                     {SUBSCRIPTION_TIER_NAMES[errorTier]} Plan
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {used} / {limitDisplay} used
                   </span>
                 </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <motion.div
+                <div className="w-full bg-border rounded-full h-3 overflow-hidden">
+                  <m.div
                     initial={{ width: 0 }}
                     animate={{ width: progressWidth }}
                     transition={{ duration: 0.5 }}
@@ -155,30 +155,30 @@ export function UpgradeModal({
                       Upgrade to {SUBSCRIPTION_TIER_NAMES[suggestedTier]} for more:
                     </h4>
                     <ul className="space-y-2">
-                      <li className="flex items-center gap-2 text-sm text-gray-700">
+                      <li className="flex items-center gap-2 text-sm text-foreground">
                         <Check className="h-4 w-4 text-teal" />
                         <span>
                           Up to <strong>{suggestedTierConfig.clients === -1 ? 'unlimited' : suggestedTierConfig.clients}</strong> clients
                         </span>
                       </li>
-                      <li className="flex items-center gap-2 text-sm text-gray-700">
+                      <li className="flex items-center gap-2 text-sm text-foreground">
                         <Check className="h-4 w-4 text-teal" />
                         <span>
                           Up to <strong>{suggestedTierConfig.members === -1 ? 'unlimited' : suggestedTierConfig.members}</strong> team members
                         </span>
                       </li>
-                      <li className="flex items-center gap-2 text-sm text-gray-700">
+                      <li className="flex items-center gap-2 text-sm text-foreground">
                         <Check className="h-4 w-4 text-teal" />
                         <span>
                           Up to <strong>{suggestedTierConfig.accessRequests === -1 ? 'unlimited' : suggestedTierConfig.accessRequests}</strong> access requests
                         </span>
                       </li>
                       {suggestedTierConfig.priceYearly && (
-                        <li className="flex items-center gap-2 text-sm text-gray-700 pt-2 border-t border-black/10">
+                        <li className="flex items-center gap-2 text-sm text-foreground pt-2 border-t border-black/10">
                           <span className="font-medium">
                             ${suggestedTierConfig.priceYearly}/month
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             (billed annually)
                           </span>
                         </li>
@@ -213,10 +213,10 @@ export function UpgradeModal({
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3 px-6 py-4 border-t-2 border-black/10 bg-gray-50 rounded-b-lg">
+              <div className="flex justify-end gap-3 px-6 py-4 border-t-2 border-black/10 bg-muted rounded-b-lg">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 border-2 border-black text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 border-2 border-black text-foreground rounded-lg hover:bg-muted transition-colors"
                 >
                   Maybe Later
                 </button>
@@ -229,8 +229,8 @@ export function UpgradeModal({
                 </button>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

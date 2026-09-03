@@ -538,11 +538,10 @@ export function PlatformAuthWizard({
       setIsProcessing(true);
       setError(null);
 
-      // Save assets for each product in the group
-      // We'll iterate through products and save them
-      const savePromises = products.map((p) => {
+      // Save each product in order because each response updates shared connection state.
+      for (const p of products) {
         const selectedAssets = groupAssets[p.product] || {};
-        return fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
+        const response = await fetch(`${apiBaseUrl}/api/client/${accessRequestToken}/save-assets`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -551,11 +550,6 @@ export function PlatformAuthWizard({
             selectedAssets,
           }),
         });
-      });
-
-      const responses = await Promise.all(savePromises);
-
-      for (const response of responses) {
         const json = await parseJsonResponse<{ error?: { message?: string } }>(response, {
           fallbackErrorMessage: 'Failed to save some selected assets',
         });

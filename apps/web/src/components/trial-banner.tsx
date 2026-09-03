@@ -45,8 +45,8 @@ export function TrialBanner({ trialEnd, tierName }: TrialBannerProps) {
   return (
     <div className={`relative flex items-center justify-between gap-4 px-4 py-3 text-sm ${
       isExpired
-        ? 'bg-red-600 text-white'
-        : 'bg-amber-500 text-white'
+        ? 'bg-coral text-white'
+        : 'bg-warning text-white'
     }`}>
       <div className="flex items-center gap-2 min-w-0">
         <AlertCircle className="h-4 w-4 flex-shrink-0" />

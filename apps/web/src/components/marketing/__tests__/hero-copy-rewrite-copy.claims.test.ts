@@ -12,9 +12,8 @@ describe('Hero copy rewrite preview copy guardrails', () => {
       'src/components/marketing/hero-copy-rewrite/hero-copy-rewrite-hero-section.tsx'
     );
 
-    expect(code).toMatch(/marketing agencies/i);
-    expect(code).toMatch(/client access software/i);
-    expect(code).toMatch(/onboarding a new client|during client onboarding/i);
+    expect(code).toMatch(/small agency owners and operators/i);
+    expect(code).toMatch(/client onboarding/i);
     expect(code).toMatch(/one branded link/i);
     expect(code).toMatch(/Meta/i);
     expect(code).toMatch(/Google Ads/i);

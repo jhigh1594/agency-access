@@ -132,6 +132,16 @@ vi.mock('../../lib/redis.js', () => ({
     quit: vi.fn(),
   },
 }));
+vi.mock('../../lib/cache.js', async () => {
+  const actual = await vi.importActual<typeof import('../../lib/cache.js')>('../../lib/cache.js');
+  return {
+    ...actual,
+    getCached: vi.fn(async ({ fetch }: any) => ({ ...(await fetch()), cached: false })),
+  };
+});
+vi.mock('../../middleware/quota-enforcement.js', () => ({
+  quotaEnforcementMiddleware: () => async () => undefined,
+}));
 
 // Mock env to provide FRONTEND_URL
 vi.mock('../../lib/env.js', () => ({

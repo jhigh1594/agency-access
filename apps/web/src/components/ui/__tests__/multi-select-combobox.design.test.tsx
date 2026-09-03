@@ -58,7 +58,7 @@ describe('MultiSelectCombobox - Static Design Validation', () => {
         'utf-8'
       );
 
-      expect(componentCode).toMatch(/bg-coral/);
+      expect(componentCode).toMatch(/bg-\[rgb\(var\(--coral\)\)\]/);
     });
   });
 });

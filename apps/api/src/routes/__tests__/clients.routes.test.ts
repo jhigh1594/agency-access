@@ -14,6 +14,7 @@ import * as clientService from '@/services/client.service';
 vi.mock('@/services/client.service', () => ({
   createClient: vi.fn(),
   getClients: vi.fn(),
+  getClientsWithConnections: vi.fn(),
   getClientById: vi.fn(),
   updateClient: vi.fn(),
   findClientByEmail: vi.fn(),
@@ -24,14 +25,29 @@ vi.mock('@/services/client.service', () => ({
     NOT_FOUND: 'CLIENT_NOT_FOUND',
   },
 }));
+vi.mock('@/middleware/quota-enforcement', () => ({
+  quotaEnforcementMiddleware: () => async () => undefined,
+}));
+vi.mock('@/lib/authorization', () => ({
+  resolvePrincipalAgency: vi.fn(async () => ({
+    data: { agencyId: 'agency-1', principalId: 'test-user', agency: { id: 'agency-1', name: 'Agency', email: 'test@example.com' } },
+    error: null,
+  })),
+}));
 
 describe('Phase 5: Clients Routes - TDD Tests', () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
     app = Fastify();
+    app.addHook('onRequest', async (request) => {
+      (request as any).user = { sub: 'test-user' };
+    });
     await app.register(clientRoutes, { prefix: '/api' });
     vi.clearAllMocks();
+    vi.mocked(clientService.getClientsWithConnections).mockImplementation((dto: any) =>
+      vi.mocked(clientService.getClients)(dto) as any
+    );
   });
 
   afterEach(async () => {
@@ -68,12 +84,14 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
       expect(response.statusCode).toBe(201);
       // Match excluding dates which are serialized differently
       expect(response.json()).toMatchObject({
-        id: 'client-1',
-        agencyId: 'agency-1',
-        name: 'John Smith',
-        company: 'Acme Corp',
-        email: 'john@acme.com',
-        language: 'en',
+        data: {
+          id: 'client-1',
+          agencyId: 'agency-1',
+          name: 'John Smith',
+          company: 'Acme Corp',
+          email: 'john@acme.com',
+          language: 'en',
+        },
       });
       expect(clientService.createClient).toHaveBeenCalledWith({
         agencyId: 'agency-1',
@@ -110,7 +128,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
       });
 
       expect(response.statusCode).toBe(201);
-      expect(response.json().language).toBe('en');
+      expect(response.json().data.language).toBe('en');
     });
 
     it('should return 400 for invalid email', async () => {
@@ -148,8 +166,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(409);
       expect(response.json()).toMatchObject({
-        errorCode: 'CLIENT_EMAIL_EXISTS',
-        message: expect.any(String),
+        error: { code: 'EMAIL_EXISTS', message: expect.any(String) },
       });
     });
 
@@ -204,8 +221,10 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toMatchObject({
-        data: mockClients,
-        pagination: { total: 2, limit: 50, offset: 0 },
+        data: {
+          data: mockClients,
+          pagination: { total: 2, limit: 50, offset: 0 },
+        },
       });
     });
 
@@ -222,7 +241,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(response.json().pagination).toEqual({ total: 10, limit: 5, offset: 5 });
+      expect(response.json().data.pagination).toEqual({ total: 10, limit: 5, offset: 5 });
       expect(clientService.getClients).toHaveBeenCalledWith({
         agencyId: 'agency-1',
         limit: 5,
@@ -291,7 +310,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual(mockClient);
+      expect(response.json()).toEqual({ data: mockClient });
       expect(clientService.getClientById).toHaveBeenCalledWith('client-1', 'agency-1');
     });
 
@@ -306,8 +325,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.json()).toMatchObject({
-        errorCode: 'CLIENT_NOT_FOUND',
-        message: expect.any(String),
+        error: { code: 'NOT_FOUND', message: expect.any(String) },
       });
     });
   });
@@ -335,7 +353,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual(mockUpdated);
+      expect(response.json()).toEqual({ data: mockUpdated });
       expect(clientService.updateClient).toHaveBeenCalledWith(
         'client-1',
         'agency-1',
@@ -355,8 +373,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.json()).toMatchObject({
-        errorCode: 'CLIENT_NOT_FOUND',
-        message: expect.any(String),
+        error: { code: 'NOT_FOUND', message: expect.any(String) },
       });
     });
 
@@ -372,8 +389,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(409);
       expect(response.json()).toMatchObject({
-        errorCode: 'CLIENT_EMAIL_EXISTS',
-        message: expect.any(String),
+        error: { code: 'EMAIL_EXISTS', message: expect.any(String) },
       });
     });
   });
@@ -403,8 +419,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.json()).toMatchObject({
-        errorCode: 'CLIENT_NOT_FOUND',
-        message: expect.any(String),
+        error: { code: 'NOT_FOUND', message: expect.any(String) },
       });
     });
   });
@@ -427,7 +442,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual(mockClient);
+      expect(response.json()).toEqual({ data: mockClient });
       expect(clientService.findClientByEmail).toHaveBeenCalledWith('agency-1', 'john@acme.com');
     });
 
@@ -442,8 +457,7 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.json()).toMatchObject({
-        errorCode: 'CLIENT_NOT_FOUND',
-        message: expect.any(String),
+        error: { code: 'NOT_FOUND', message: expect.any(String) },
       });
     });
 
@@ -460,12 +474,15 @@ describe('Phase 5: Clients Routes - TDD Tests', () => {
 
   describe('Authentication', () => {
     it('should return 401 without x-agency-id header', async () => {
-      const response = await app.inject({
+      const unauthenticatedApp = Fastify();
+      await unauthenticatedApp.register(clientRoutes, { prefix: '/api' });
+      const response = await unauthenticatedApp.inject({
         method: 'GET',
         url: '/api/clients',
       });
 
       expect(response.statusCode).toBe(401);
+      await unauthenticatedApp.close();
     });
   });
 });

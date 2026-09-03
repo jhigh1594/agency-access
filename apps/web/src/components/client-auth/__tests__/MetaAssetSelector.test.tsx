@@ -99,9 +99,8 @@ describe('MetaAssetSelector', () => {
 
     expect(await screen.findByText(/select business portfolio/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/business portfolio/i), {
-      target: { value: 'biz_2' },
-    });
+    fireEvent.click(screen.getByRole('combobox', { name: /business portfolio/i }));
+    fireEvent.click(screen.getByRole('option', { name: /Client Two/ }));
     fireEvent.click(screen.getByRole('button', { name: /load accounts/i }));
 
     await waitFor(() => {

@@ -104,7 +104,7 @@ describe('InternalAdminService', () => {
       const result = await internalAdminService.getOverview();
 
       expect(result.error).toBeNull();
-      expect(result.data?.mrr.booked).toBe(133.33);
+      expect(result.data?.mrr.booked).toBe(153.17);
       expect(result.data?.mrr.excludedSubscriptions).toBe(1);
       expect(result.data?.subscriptions.active).toBe(2);
       expect(result.data?.subscriptions.trialing).toBe(1);

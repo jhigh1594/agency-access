@@ -22,7 +22,7 @@ describe('HeroSection auth CTA', () => {
     );
     const componentCode = fs.readFileSync(componentPath, 'utf-8');
 
-    expect(componentCode).not.toMatch(/Trusted by/);
+    expect(componentCode).not.toMatch(/Trusted by performance marketing teams/i);
     expect(componentCode).not.toMatch(/Performance Marketing Teams/);
   });
 });

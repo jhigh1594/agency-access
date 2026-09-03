@@ -6,6 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { TIER_LIMITS } from '@agency-platform/shared';
 import { tierLimitsService } from '../tier-limits.service';
 import { prisma } from '@/lib/prisma';
 
@@ -49,7 +50,7 @@ describe('TierLimitsService', () => {
           status: 'active',
         },
       });
-      vi.mocked(prisma.accessRequest.count).mockResolvedValue(5);
+      vi.mocked(prisma.accessRequest.count).mockResolvedValue(4);
 
       const result = await tierLimitsService.checkTierLimit(
         mockAgencyId,
@@ -58,8 +59,8 @@ describe('TierLimitsService', () => {
 
       expect(result).toEqual({
         allowed: true,
-        limit: 10,
-        current: 5,
+        limit: TIER_LIMITS.STARTER.accessRequests,
+        current: 4,
         error: undefined,
       });
     });
@@ -71,7 +72,7 @@ describe('TierLimitsService', () => {
           status: 'active',
         },
       });
-      vi.mocked(prisma.accessRequest.count).mockResolvedValue(10);
+      vi.mocked(prisma.accessRequest.count).mockResolvedValue(TIER_LIMITS.STARTER.accessRequests);
 
       const result = await tierLimitsService.checkTierLimit(
         mockAgencyId,
@@ -80,24 +81,24 @@ describe('TierLimitsService', () => {
 
       expect(result).toEqual({
         allowed: false,
-        limit: 10,
-        current: 10,
+        limit: TIER_LIMITS.STARTER.accessRequests,
+        current: TIER_LIMITS.STARTER.accessRequests,
         error: 'TIER_LIMIT_EXCEEDED',
       });
     });
 
-    it('should allow unlimited for Enterprise tier', async () => {
+    it('should allow unlimited members for AGENCY tier', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
         subscription: {
-          tier: 'ENTERPRISE',
+          tier: 'AGENCY',
           status: 'active',
         },
       });
-      vi.mocked(prisma.accessRequest.count).mockResolvedValue(9999);
+      vi.mocked(prisma.agencyMember.count).mockResolvedValue(9999);
 
       const result = await tierLimitsService.checkTierLimit(
         mockAgencyId,
-        'access_requests'
+        'members'
       );
 
       expect(result).toEqual({
@@ -146,7 +147,7 @@ describe('TierLimitsService', () => {
         'members'
       );
       expect(membersResult.allowed).toBe(true);
-      expect(membersResult.limit).toBe(2);
+      expect(membersResult.limit).toBeUndefined();
 
       // Test templates
       vi.mocked(prisma.accessRequestTemplate.count).mockResolvedValue(1);
@@ -209,23 +210,23 @@ describe('TierLimitsService', () => {
 
       const result = await tierLimitsService.hasFeatureAccess(
         mockAgencyId,
-        'white_label'
+        'multi_brand'
       );
 
       expect(result).toBe(false);
     });
 
-    it('should return true for Enterprise (all features)', async () => {
+    it('should return true for AGENCY feature access', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
         subscription: {
-          tier: 'ENTERPRISE',
+          tier: 'AGENCY',
           status: 'active',
         },
       });
 
       const result = await tierLimitsService.hasFeatureAccess(
         mockAgencyId,
-        'white_label'
+        'multi_brand'
       );
 
       expect(result).toBe(true);
@@ -263,9 +264,9 @@ describe('TierLimitsService', () => {
         tier: 'STARTER',
         limits: {
           accessRequests: {
-            limit: 10,
+            limit: TIER_LIMITS.STARTER.accessRequests,
             used: 5,
-            remaining: 5,
+            remaining: 0,
           },
           clients: {
             limit: 5,
@@ -273,9 +274,9 @@ describe('TierLimitsService', () => {
             remaining: 3,
           },
           members: {
-            limit: 2,
+            limit: 'unlimited',
             used: 1,
-            remaining: 1,
+            remaining: -1,
           },
           templates: {
             limit: 3,
@@ -299,10 +300,10 @@ describe('TierLimitsService', () => {
       });
     });
 
-    it('should show unlimited for Enterprise tier', async () => {
+    it('should show current limits for AGENCY tier', async () => {
       vi.mocked(prisma.agency.findUnique).mockResolvedValue({
         subscription: {
-          tier: 'ENTERPRISE',
+          tier: 'AGENCY',
           status: 'active',
         },
       });
@@ -315,14 +316,14 @@ describe('TierLimitsService', () => {
 
       expect(result.data?.limits).toEqual({
         accessRequests: {
-          limit: 'unlimited',
+          limit: TIER_LIMITS.AGENCY.accessRequests,
           used: 9999,
-          remaining: -1,
+          remaining: 0,
         },
         clients: {
-          limit: 'unlimited',
+          limit: TIER_LIMITS.AGENCY.clients,
           used: 500,
-          remaining: -1,
+          remaining: 0,
         },
         members: {
           limit: 'unlimited',
@@ -330,9 +331,9 @@ describe('TierLimitsService', () => {
           remaining: -1,
         },
         templates: {
-          limit: 'unlimited',
+          limit: TIER_LIMITS.AGENCY.templates,
           used: 50,
-          remaining: -1,
+          remaining: 0,
         },
       });
     });

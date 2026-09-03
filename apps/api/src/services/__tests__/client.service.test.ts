@@ -36,7 +36,7 @@ const mockPrisma = vi.mocked(prisma);
 
 describe('Phase 5: Client Service - TDD Tests', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('createClient', () => {
@@ -230,18 +230,18 @@ describe('Phase 5: Client Service - TDD Tests', () => {
         email: 'findme@test.com',
       };
 
-      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue(mockClient);
+      vi.mocked(mockPrisma.client.findFirst).mockResolvedValue(mockClient);
 
       const result = await clientService.getClientById('client-1', 'agency-1');
 
       expect(result).toEqual(mockClient);
-      expect(mockPrisma.client.findUnique).toHaveBeenCalledWith({
-        where: { id: 'client-1' },
+      expect(mockPrisma.client.findFirst).toHaveBeenCalledWith({
+        where: { id: 'client-1', agencyId: 'agency-1' },
       });
     });
 
     it('should return null for non-existent client', async () => {
-      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue(null);
+      vi.mocked(mockPrisma.client.findFirst).mockResolvedValue(null);
 
       const result = await clientService.getClientById('non-existent', 'agency-1');
 
@@ -260,12 +260,13 @@ describe('Phase 5: Client Service - TDD Tests', () => {
         language: 'es',
       };
 
-      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
-        id: 'client-1',
-        agencyId: 'agency-1',
-        email: 'original@test.com',
-      });
-      vi.mocked(mockPrisma.client.findFirst).mockResolvedValue(null);
+      vi.mocked(mockPrisma.client.findFirst)
+        .mockResolvedValueOnce({
+          id: 'client-1',
+          agencyId: 'agency-1',
+          email: 'original@test.com',
+        } as any)
+        .mockResolvedValueOnce(null);
       vi.mocked(mockPrisma.client.update).mockResolvedValue(mockUpdatedClient);
 
       const result = await clientService.updateClient('client-1', 'agency-1', {
@@ -280,14 +281,15 @@ describe('Phase 5: Client Service - TDD Tests', () => {
     });
 
     it('should not allow updating email to duplicate', async () => {
-      vi.mocked(mockPrisma.client.findUnique).mockResolvedValue({
-        id: 'client-1',
-        agencyId: 'agency-1',
-      });
-      vi.mocked(mockPrisma.client.findFirst).mockResolvedValue({
-        id: 'different-client',
-        email: 'existing@test.com',
-      });
+      vi.mocked(mockPrisma.client.findFirst)
+        .mockResolvedValueOnce({
+          id: 'client-1',
+          agencyId: 'agency-1',
+        } as any)
+        .mockResolvedValueOnce({
+          id: 'different-client',
+          email: 'existing@test.com',
+        } as any);
 
       await expect(
         clientService.updateClient('client-1', 'agency-1', {
