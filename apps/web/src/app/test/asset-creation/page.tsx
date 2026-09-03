@@ -267,7 +267,7 @@ export default function AssetCreationTestPage() {
         {/* Section 7: Button Variants Used */}
         <section className="mb-12">
           <h2 className="text-lg font-bold text-[var(--ink)] font-display mb-4 pb-2 border-b-2 border-black dark:border-white">
-            5. Button Variants Used in Components
+            7. Button Variants Used in Components
           </h2>
 
           <div className="space-y-6">
