@@ -177,6 +177,40 @@
     font-family: var(--font-sans), system-ui, sans-serif;
   }
 
+  /* ========================================
+     MONO MICRO-LABEL SYSTEM (v2.0, lazyweb port)
+     Tracking inverts with size: display pulls tight (-0.02/-0.04em via
+     .tracking-display-*), mono micro-labels push OUT (+0.11em). The mono
+     layer is the data substrate — status text, metadata, KPI labels,
+     table headers, footers.
+     ======================================== */
+
+  .label-micro {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.32px; /* +0.12em at 11px */
+    text-transform: uppercase;
+    color: rgb(var(--foreground));
+  }
+
+  .label-nano {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 1px; /* +0.10em at 10px */
+    color: rgb(var(--muted-foreground));
+  }
+
+  /* Display tracking scale — apply to dela/display headings */
+  .tracking-display-lg {
+    letter-spacing: -0.04em; /* ≥3.5rem display */
+  }
+
+  .tracking-display-md {
+    letter-spacing: -0.02em; /* ≥2rem display */
+  }
+
   .font-dela {
     font-family: var(--font-dela), cursive;
   }
