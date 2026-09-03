@@ -20,6 +20,18 @@ const createProductCatalogSchema = z.object({
   name: z.string().min(1, 'Catalog name is required').max(100, 'Name too long'),
 });
 
+const createBusinessSchema = z.object({
+  connectionId: z.string().min(1, 'Connection ID is required'),
+  name: z.string().min(1, 'Business name is required').max(100, 'Name too long'),
+  primaryPageId: z.string().min(1, 'A Facebook Page is required'),
+  timezoneId: z.string().min(1, 'Timezone ID is required'),
+  vertical: z.string().min(1).default('OTHER'),
+});
+
+const getUserPagesSchema = z.object({
+  connectionId: z.string().min(1, 'Connection ID is required'),
+});
+
 const getLinksSchema = z.object({
   businessId: z.string().min(1, 'Business ID is required'),
 });
@@ -184,6 +196,106 @@ export async function registerAssetCreationRoutes(fastify: FastifyInstance) {
 
     return reply.send({
       data: result.data,
+      error: null,
+    });
+  });
+
+  /**
+   * Create a new Meta Business Portfolio for the client user
+   * POST /api/client/:token/create/meta/business
+   */
+  fastify.post('/client/:token/create/meta/business', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    // Validate request body
+    const validated = createBusinessSchema.safeParse(request.body);
+    if (!validated.success) {
+      return sendError(reply, 'VALIDATION_ERROR', 'Invalid request parameters', 400, validated.error.errors);
+    }
+
+    const { connectionId, name, primaryPageId, timezoneId, vertical } = validated.data;
+
+    // Resolve and authorize connection
+    const authContext = await resolveAuthorizedConnection(token, connectionId);
+    if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+      const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+      return reply.code(statusCode).send({
+        data: null,
+        error: authContext.error,
+      });
+    }
+
+    // Create business
+    const result = await metaAssetCreationService.createBusiness(
+      connectionId,
+      { name, vertical, primaryPageId, timezoneId },
+      authContext.connection.clientEmail,
+      authContext.accessRequest.agencyId
+    );
+
+    if (result.error) {
+      const statusCode =
+        result.error.code === 'AUTHORIZATION_NOT_FOUND' ||
+        result.error.code === 'TOKEN_NOT_FOUND'
+          ? 404
+          : result.error.code === 'TOKEN_EXPIRED' ||
+            result.error.code === 'AUTHORIZATION_INACTIVE'
+          ? 400
+          : 500;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send({
+      data: result.data,
+      error: null,
+    });
+  });
+
+  /**
+   * List the client user's own Facebook Pages (guided Page prerequisite check)
+   * GET /api/client/:token/create/meta/user-pages
+   */
+  fastify.get('/client/:token/create/meta/user-pages', async (request, reply) => {
+    const { token } = request.params as { token: string };
+    const query = request.query as { connectionId?: string };
+
+    const validated = getUserPagesSchema.safeParse({ connectionId: query.connectionId });
+    if (!validated.success) {
+      return sendError(reply, 'VALIDATION_ERROR', 'Connection ID is required', 400, validated.error.errors);
+    }
+
+    // Resolve and authorize connection
+    const authContext = await resolveAuthorizedConnection(token, validated.data.connectionId);
+    if (authContext.error || !authContext.connection || !authContext.accessRequest) {
+      const statusCode = authContext.error?.code === 'FORBIDDEN' ? 403 : 404;
+      return reply.code(statusCode).send({
+        data: null,
+        error: authContext.error,
+      });
+    }
+
+    const result = await metaAssetCreationService.getUserPages(validated.data.connectionId);
+
+    if (result.error) {
+      const statusCode =
+        result.error.code === 'AUTHORIZATION_NOT_FOUND' ||
+        result.error.code === 'TOKEN_NOT_FOUND'
+          ? 404
+          : result.error.code === 'TOKEN_EXPIRED' ||
+            result.error.code === 'AUTHORIZATION_INACTIVE'
+          ? 400
+          : 500;
+      return reply.code(statusCode).send({
+        data: null,
+        error: result.error,
+      });
+    }
+
+    return reply.send({
+      data: { pages: result.data },
       error: null,
     });
   });
