@@ -76,23 +76,23 @@ export function SuccessLinkScreen({
 
       {/* Next Steps */}
       <div className="mt-8 max-w-4xl mx-auto">
-        <div className="bg-electric/10 border border-electric/30 rounded-xl p-6">
+        <div className="bg-coral/10 border border-coral/30 rounded-xl p-6">
           <h3 className="font-semibold text-ink mb-3">What's next?</h3>
           <div className="space-y-2 text-sm text-foreground">
             <div className="flex items-start gap-2">
-              <span className="text-electric font-bold">1.</span>
+              <span className="text-coral font-bold">1.</span>
               <span>Copy the link above and send it to {clientName}</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-electric font-bold">2.</span>
+              <span className="text-coral font-bold">2.</span>
               <span>They'll click it and authorize each platform (takes ~2 minutes)</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-electric font-bold">3.</span>
+              <span className="text-coral font-bold">3.</span>
               <span>You'll get instant access to their OAuth tokens</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-electric font-bold">4.</span>
+              <span className="text-coral font-bold">4.</span>
               <span>Track the authorization status from your dashboard</span>
             </div>
           </div>

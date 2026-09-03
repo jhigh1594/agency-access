@@ -17,6 +17,9 @@ export type StatusType =
   | 'expiring'
   | 'unknown'
   | 'active'
+  | 'trialing'
+  | 'incomplete'
+  | 'incomplete_expired'
   | 'revoked'
   | 'invalid';
 
@@ -48,6 +51,21 @@ const STATUS_CONFIG: Record<
     label: 'Active',
     className: 'bg-teal/10 text-teal border border-teal/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
+  },
+  trialing: {
+    label: 'Trialing',
+    className: 'bg-warning/10 text-warning border border-warning/30',
+    icon: <Clock className="h-3 w-3" />,
+  },
+  incomplete: {
+    label: 'Incomplete',
+    className: 'bg-warning/10 text-warning border border-warning/30',
+    icon: <Clock className="h-3 w-3" />,
+  },
+  incomplete_expired: {
+    label: 'Incomplete Expired',
+    className: 'bg-coral/10 text-coral border border-coral/30',
+    icon: <AlertCircle className="h-3 w-3" />,
   },
   past_due: {
     label: 'Past Due',
@@ -118,6 +136,9 @@ const SIZE_CLASSES: Record<
 // Helper to convert string status values to StatusType
 const stringToStatusType: Record<string, StatusType> = {
   active: 'active',
+  trialing: 'trialing',
+  incomplete: 'incomplete',
+  incomplete_expired: 'incomplete_expired',
   past_due: 'past_due',
   canceled: 'cancelled',
   pending: 'pending',

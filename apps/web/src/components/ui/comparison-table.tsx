@@ -174,7 +174,7 @@ export function ComparisonRow({
     <tr
       className={cn(
         'border-b border-black/20 transition-colors duration-150',
-        'hover:bg-electric/10',
+        'hover:bg-coral/10',
         isEven && 'bg-muted/20',
         // Highlight rows where AuthHub has exclusive features
         exclusive && 'bg-teal/5'

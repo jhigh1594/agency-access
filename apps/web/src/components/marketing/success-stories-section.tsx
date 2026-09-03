@@ -124,7 +124,7 @@ export function SuccessStoriesSection() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <div className="inline-block bg-acid text-black px-3 py-1 rounded-[0.5rem] font-dela text-xs border-2 border-black mb-3">
+                  <div className="inline-block bg-coral text-black px-3 py-1 rounded-[0.5rem] font-dela text-xs border-2 border-black mb-3">
                     {currentStudy.industry}
                   </div>
                   <h3 className="font-dela text-2xl sm:text-3xl text-white mb-1">{currentStudy.company}</h3>

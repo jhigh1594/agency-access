@@ -35,7 +35,7 @@ export function HeroCopyRewriteHeroSection() {
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           <div className="lg:col-span-7 flex flex-col items-start gap-6 z-10 text-center lg:text-left w-full">
             <Reveal delay={0.2}>
-              <div className="inline-flex items-center gap-2 border-2 border-black bg-acid text-ink px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
+              <div className="inline-flex items-center gap-2 border-2 border-black bg-coral text-ink px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
                 <Workflow size={14} />
                 Built for small agency owners and operators
               </div>
@@ -106,7 +106,7 @@ export function HeroCopyRewriteHeroSection() {
           </div>
 
           <div className="hidden lg:block lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
-            <div className="absolute inset-0 bg-acid rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-hard-xl opacity-20" />
+            <div className="absolute inset-0 bg-coral rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-hard-xl opacity-20" />
             <div className="absolute inset-0 border-2 border-black border-dashed rounded-[3rem] -rotate-3 z-0" />
 
             <m.div

@@ -80,7 +80,7 @@ export function FAQSection() {
           {/* Section Header */}
           <div className="text-center mb-12 sm:mb-16 max-w-3xl mx-auto">
             <div className="inline-block mb-4">
-              <div className="bg-electric/10 text-electric border-2 border-electric/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block">
+              <div className="bg-coral/10 text-coral border-2 border-coral/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block">
                 FAQ
               </div>
             </div>

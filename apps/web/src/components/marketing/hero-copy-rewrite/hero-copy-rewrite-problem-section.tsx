@@ -61,7 +61,7 @@ const problemCards = [
     label: 'Delayed kickoff',
     description: "You can't build campaigns you can't see. Every day without access is a day the client wonders what they're paying for.",
     icon: TimerReset,
-    color: 'acid',
+    color: 'coral',
   },
 ];
 
@@ -168,7 +168,7 @@ export function HeroCopyRewriteProblemSection() {
                           ? 'bg-coral/15'
                           : card.color === 'teal'
                             ? 'bg-teal/15'
-                            : 'bg-acid/20'
+                            : 'bg-coral/20'
                       }`}
                     >
                       <card.icon className="w-6 h-6 text-ink" />

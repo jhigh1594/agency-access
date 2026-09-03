@@ -51,8 +51,7 @@ export default function DesignSystemPage() {
           <div>
             <h3 className="font-sans text-lg font-medium mb-4 text-muted-foreground">Brutalist Accents</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <ColorSwatch name="Acid" varName="--acid" hex="#CCFF00" description="DECORATIVE ONLY (2%)" darkText />
-              <ColorSwatch name="Electric" varName="--electric" hex="#8B5CF6" description="Hover states" darkText />
+              <ColorSwatch name="Acid" varName="--acid" hex="#CCFF00" description="HERO-ONLY (homepage hero)" darkText />
             </div>
           </div>
 
@@ -318,7 +317,7 @@ function SpacingSample({ value, px }: { value: string, px: string }) {
   return (
     <div className="flex items-center gap-4">
       <code className="text-xs font-mono bg-muted px-2 py-1 rounded">spacing-{value}</code>
-      <div className="h-8 bg-acid/30 border border-black" style={{ width: px }} />
+      <div className="h-8 bg-coral/30 border border-black" style={{ width: px }} />
       <span className="text-xs text-muted-foreground">{px}</span>
     </div>
   );

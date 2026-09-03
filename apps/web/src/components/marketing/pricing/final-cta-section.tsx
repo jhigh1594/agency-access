@@ -38,7 +38,7 @@ export function FinalCTASection() {
             {/* Background Accents - Brutalist */}
             <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-coral/5 -z-0" />
             <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 bg-teal/5 -z-0" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-acid/5 rounded-full blur-3xl -z-0" />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-coral/5 rounded-full blur-3xl -z-0" />
 
             <div className="relative z-10">
               {/* Headline */}

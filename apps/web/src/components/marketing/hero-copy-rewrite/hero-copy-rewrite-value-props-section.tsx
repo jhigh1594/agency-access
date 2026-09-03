@@ -32,7 +32,7 @@ const valueProps = [
     detail:
       'Clients complete the guided flow without calling you to ask which settings panel to click.',
     icon: Zap,
-    tone: 'bg-acid',
+    tone: 'bg-coral',
   },
   {
     eyebrow: 'No password sharing, ever',

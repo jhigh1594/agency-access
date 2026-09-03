@@ -66,7 +66,7 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
             </span>
           </div>
           {/* Placeholder for featured image */}
-          <div className="aspect-video bg-gradient-to-br from-coral/20 via-teal/20 to-acid/20 border-b-2 border-black flex items-center justify-center">
+          <div className="aspect-video bg-gradient-to-br from-coral/20 via-teal/20 to-coral/20 border-b-2 border-black flex items-center justify-center">
             <span className="font-dela text-4xl text-ink/20">
               {post.title.charAt(0)}
             </span>

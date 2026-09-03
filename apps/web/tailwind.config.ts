@@ -48,7 +48,6 @@ const config: Config = {
         coral: "rgb(var(--coral) / <alpha-value>)",
         teal: "rgb(var(--teal) / <alpha-value>)",
         acid: "rgb(var(--acid) / <alpha-value>)",
-        electric: "rgb(var(--electric) / <alpha-value>)",
         /* Dark mode hover surface */
         "hover-surface-dark": "rgb(var(--hover-surface) / <alpha-value>)",
       },
@@ -62,7 +61,8 @@ const config: Config = {
       },
       fontFamily: {
         dela: ["var(--font-dela)", "cursive"],
-        display: ["var(--font-display)", "serif"],
+        /* v2.0: display role collapsed onto Outfit (Fraunces dropped) */
+        display: ["var(--font-sans)", "system-ui", "sans-serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },

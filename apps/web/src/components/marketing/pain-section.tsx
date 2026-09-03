@@ -134,7 +134,7 @@ function StatCard({
   delay?: number;
 }) {
   const { shouldAnimate } = useAnimationOrchestrator();
-  const bgColor = color === 'coral' ? 'bg-coral' : color === 'teal' ? 'bg-teal' : 'bg-acid';
+  const bgColor = color === 'coral' ? 'bg-coral' : color === 'teal' ? 'bg-teal' : 'bg-coral';
   const textColor = color === 'coral' || color === 'teal' ? 'text-white' : 'text-ink';
 
   return (
@@ -152,7 +152,7 @@ function StatCard({
       <div className="text-3xl sm:text-4xl md:text-5xl !leading-none mb-2">
         {color === 'coral' && <StatTicker end={3} duration={2} />}
         {color === 'teal' && <StatTicker end={47} duration={2.5} />}
-        {color === 'acid' && <span className="font-dela">{value}</span>}
+        {color === 'coral' && <span className="font-dela">{value}</span>}
       </div>
       <div className="font-mono text-xs sm:text-sm opacity-75">
         {description}
@@ -296,7 +296,7 @@ export function PainSection() {
                 value="$600+"
                 label="Revenue Lost"
                 description="Per client onboarding"
-                color="acid"
+                color="coral"
                 delay={0.6}
               />
             </div>

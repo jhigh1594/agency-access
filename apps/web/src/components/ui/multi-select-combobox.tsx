@@ -393,7 +393,7 @@ export function MultiSelectCombobox({
                     className={`
                       flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer
                       transition-colors min-h-[44px]
-                      ${isSelected ? 'bg-[rgb(var(--coral))]/10 hover:bg-[rgb(var(--coral))]/20' : 'hover:bg-electric/10'}
+                      ${isSelected ? 'bg-[rgb(var(--coral))]/10 hover:bg-[rgb(var(--coral))]/20' : 'hover:bg-coral/10'}
                       ${isFocused ? 'ring-2 ring-[rgb(var(--coral))]/20 ring-inset' : ''}
                     `}
                     role="option"

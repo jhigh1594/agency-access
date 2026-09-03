@@ -386,11 +386,11 @@ export default function DashboardPage() {
     return (
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-acid/10 border border-acid rounded-lg p-6 text-center">
-            <span className="hidden bg-acid" aria-hidden />
-            <AlertCircle className="h-8 w-8 text-acid mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-acid mb-2">Agency Setup Required</h2>
-            <p className="text-acid/90 mb-4">
+          <div className="bg-coral/10 border border-coral rounded-lg p-6 text-center">
+            <span className="hidden bg-coral" aria-hidden />
+            <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-coral mb-2">Agency Setup Required</h2>
+            <p className="text-coral/90 mb-4">
               We couldn&apos;t find an agency associated with your account. Let&apos;s set one up.
             </p>
             <Button variant="brutalist-rounded" size="md" asChild>
@@ -437,7 +437,7 @@ export default function DashboardPage() {
         )}
 
         {showOnboardingChecklist && (
-          <div className="mb-6 rounded-lg border border-acid/40 bg-acid/10 p-5">
+          <div className="mb-6 rounded-lg border border-coral/40 bg-coral/10 p-5">
             <h2 className="text-lg font-semibold text-ink">Finish your onboarding setup</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {isActivatedChecklist
@@ -525,7 +525,7 @@ export default function DashboardPage() {
                   href={requestClientHref(request) as any}
                   aria-label={`View details for ${request.clientName}`}
                   className={cn(
-                    'group px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/60 focus-visible:ring-inset',
+                    'group px-6 py-4 flex items-center justify-between hover:bg-coral/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/60 focus-visible:ring-inset',
                     index === requests.length - 1 && 'rounded-b-lg'
                   )}
                 >
@@ -591,7 +591,7 @@ export default function DashboardPage() {
                 <div
                   key={connection.id}
                   className={cn(
-                    'px-6 py-4 flex items-center justify-between hover:bg-electric/10 transition-colors',
+                    'px-6 py-4 flex items-center justify-between hover:bg-coral/10 transition-colors',
                     index === connections.length - 1 && 'rounded-b-lg'
                   )}
                 >

@@ -76,11 +76,11 @@ describe('Dashboard Page - Static Design Validation', () => {
       expect(componentCode).toMatch(/(?:text|bg|border|hover:bg|hover:border)-teal/);
     });
 
-    it('should use acid for warning states', () => {
+    it('should use coral for accent states', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(COMPONENT_PATH, 'utf-8');
 
-      expect(componentCode).toMatch(/bg-acid[^/]/);
+      expect(componentCode).toMatch(/bg-coral[^/]/);
     });
 
     it('should use ink for headings', () => {

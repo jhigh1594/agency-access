@@ -21,7 +21,7 @@ const steps = [
     description:
       'Build one client request for Meta, Google Ads, GA4, LinkedIn, and the rest of the accounts your team needs before kickoff.',
     icon: Link2,
-    color: 'acid',
+    color: 'coral',
     time: 'One setup',
   },
   {
@@ -48,7 +48,7 @@ const steps = [
     description:
       'Your team sees request progress in one place and can move onboarding forward without using the inbox as the control panel.',
     icon: Radar,
-    color: 'electric',
+    color: 'coral',
     time: 'Clear status',
   },
 ];
@@ -79,7 +79,7 @@ export function HeroCopyRewriteHowItWorksSection() {
       />
 
       <m.div
-        className="absolute top-20 right-10 w-96 h-96 bg-acid/5 rounded-full blur-3xl -z-10"
+        className="absolute top-20 right-10 w-96 h-96 bg-coral/5 rounded-full blur-3xl -z-10"
         initial={shouldAnimate ? { scale: 1, opacity: 0.05 } : false}
         animate={shouldAnimate ? { scale: [1, 1.2, 1], opacity: [0.05, 0.1, 0.05] } : undefined}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
@@ -124,11 +124,11 @@ export function HeroCopyRewriteHowItWorksSection() {
                     key={index}
                     className="flex items-center gap-4 mx-8 text-paper font-dela text-xl sm:text-2xl"
                   >
-                    <span className="text-acid">Separate setup steps</span>
+                    <span className="text-coral">Separate setup steps</span>
                     <ArrowRight size={16} className="text-coral" />
                     <span className="font-mono text-sm">becomes</span>
                     <ArrowRight size={16} className="text-coral" />
-                    <span className="text-acid">one guided request</span>
+                    <span className="text-coral">one guided request</span>
                   </div>
                 ))}
               </div>
@@ -138,7 +138,7 @@ export function HeroCopyRewriteHowItWorksSection() {
           <div className="relative">
             <div className="absolute left-4 sm:left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gray-200 -z-10 hidden md:block" />
             <m.div
-              className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-acid -z-10 hidden md:block origin-top"
+              className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-coral -z-10 hidden md:block origin-top"
               style={{ height: lineHeight }}
             />
 

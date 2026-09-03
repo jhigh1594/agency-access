@@ -293,7 +293,7 @@ export function OpinionatedInput({
                   w-full px-4 py-3 text-left text-sm transition-colors
                   ${index === highlightedIndex
                     ? 'bg-coral/10 text-coral'
-                    : 'hover:bg-electric/10 text-foreground'
+                    : 'hover:bg-coral/10 text-foreground'
                   }
                 `}
               >

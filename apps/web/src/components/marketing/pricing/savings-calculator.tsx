@@ -79,7 +79,7 @@ export function SavingsCalculator() {
           {/* Section Header */}
           <div className="text-center mb-12 sm:mb-16">
             <div className="inline-block mb-4">
-              <div className="bg-acid/20 text-ink border-2 border-black px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block shadow-brutalist-sm">
+              <div className="bg-coral/20 text-ink border-2 border-black px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block shadow-brutalist-sm">
                 Interactive Calculator
               </div>
             </div>

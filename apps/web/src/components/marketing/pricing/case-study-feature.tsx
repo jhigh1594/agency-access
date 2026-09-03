@@ -55,7 +55,7 @@ export function CaseStudyFeature() {
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
-                      <div className="bg-acid/20 text-ink px-3 py-1 font-mono text-xs font-bold uppercase border-2 border-black flex-shrink-0">
+                      <div className="bg-coral/20 text-ink px-3 py-1 font-mono text-xs font-bold uppercase border-2 border-black flex-shrink-0">
                         After
                       </div>
                       <div className="text-sm text-gray-700">

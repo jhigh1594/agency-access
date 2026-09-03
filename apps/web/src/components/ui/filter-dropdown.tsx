@@ -65,7 +65,7 @@ export function FilterDropdown({
           inline-flex items-center gap-2 px-4 py-2
           border border-slate-300 rounded-lg
           text-sm text-slate-700 bg-white
-          hover:bg-electric/10
+          hover:bg-coral/10
           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
           transition-colors
           min-w-[160px]
@@ -97,7 +97,7 @@ export function FilterDropdown({
                   transition-colors
                   ${isSelected
                     ? 'bg-accent/20 text-indigo-700'
-                    : 'text-slate-700 hover:bg-electric/10'
+                    : 'text-slate-700 hover:bg-coral/10'
                   }
                 `}
                 role="option"

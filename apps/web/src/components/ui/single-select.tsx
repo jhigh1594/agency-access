@@ -105,7 +105,7 @@ export function SingleSelect({
               'transition-colors cursor-pointer',
               isSelected
                 ? 'bg-accent/20 dark:bg-accent/30 text-ink dark:text-ink font-medium'
-                : 'text-ink dark:text-ink hover:bg-electric/10 dark:hover:bg-white/10'
+                : 'text-ink dark:text-ink hover:bg-coral/10 dark:hover:bg-white/10'
             )}
           >
             <span className="flex-1 truncate">{option.label}</span>

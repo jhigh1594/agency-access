@@ -43,8 +43,9 @@
     --teal: 0 168 150;              /* #00A896 - AuthHub Teal - accent (5% usage) */
 
     /* BRUTALIST ACCENTS */
-    --acid: 204 255 0;              /* #CCFF00 - Acid green for kinetic elements (2% usage) */
-    --electric: 139 92 246;         /* #8B5CF6 - Electric purple for hover states */
+    /* --acid is HERO-ONLY (v2.0 decision): one acid element on the homepage hero,
+       never in app surfaces, status, or text (1.4:1 contrast — carries no meaning). */
+    --acid: 204 255 0;              /* #CCFF00 - Acid green, homepage hero only */
 
     /* SEMANTIC COLORS - Accessible status indicators */
     --warning: 180 83 9;            /* #B45309 - Amber for warnings (5.2:1 contrast on white) */
@@ -97,8 +98,8 @@
     --teal: 0 200 180;              /* #00C8B4 - Brighter for dark mode */
 
     /* BRUTALIST ACCENTS - UNCHANGED (high contrast works everywhere) */
-    --acid: 204 255 0;             /* #CCFF00 - Kinetic green preserved */
-    --electric: 139 92 246;          /* #8B5CF6 - Electric purple preserved */
+    /* --acid is HERO-ONLY (v2.0 decision) — see :root comment. */
+    --acid: 204 255 0;             /* #CCFF00 - Kinetic green, homepage hero only */
 
     /* SEMANTIC COLORS - Accessible status indicators */
     --warning: 251 191 36;           /* #FBBF24 - Brighter amber for dark mode (4.5:1 contrast) */
@@ -170,9 +171,10 @@
 }
 
 @layer utilities {
-  /* Typography */
+  /* Typography — display role collapsed onto Outfit (v2.0: Fraunces dropped).
+     dela remains the hero display face; font-display is the section-heading voice. */
   .font-display {
-    font-family: var(--font-display), serif;
+    font-family: var(--font-sans), system-ui, sans-serif;
   }
 
   .font-dela {

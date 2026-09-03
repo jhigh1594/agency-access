@@ -21,7 +21,7 @@ const steps = [
     title: 'Generate Link',
     description: 'Select platforms (Meta, Google, LinkedIn) and get your branded authorization link in seconds.',
     icon: Link2,
-    color: 'acid',
+    color: 'coral',
     time: '30 seconds',
   },
   {
@@ -45,7 +45,7 @@ const steps = [
     title: 'Instant Access',
     description: 'Start working immediately. Access never expires, no more chasing clients for permissions.',
     icon: BarChart3,
-    color: 'electric',
+    color: 'coral',
     time: 'Permanent',
   },
 ];
@@ -68,7 +68,7 @@ export function HowItWorksSection() {
       ref={sectionRef}
       className="py-16 sm:py-20 md:py-24 lg:py-32 relative overflow-hidden bg-paper border-y-2 border-black"
     >
-      {/* Checkerboard background with acid accents */}
+      {/* Checkerboard background with coral accents */}
       <div
         className="absolute inset-0 opacity-[0.02] -z-10"
         style={{
@@ -81,7 +81,7 @@ export function HowItWorksSection() {
 
       {/* Animated gradient blob */}
       <m.div
-        className="absolute top-20 right-10 w-96 h-96 bg-acid/5 rounded-full blur-3xl -z-10"
+        className="absolute top-20 right-10 w-96 h-96 bg-coral/5 rounded-full blur-3xl -z-10"
         initial={shouldAnimate ? { scale: 1, opacity: 0.05 } : false}
         animate={shouldAnimate ? {
           scale: [1, 1.2, 1],
@@ -136,11 +136,11 @@ export function HowItWorksSection() {
                     key={i}
                     className="flex items-center gap-4 mx-8 text-paper font-dela text-xl sm:text-2xl"
                   >
-                    <span className="text-acid">2-3 DAYS</span>
+                    <span className="text-coral">2-3 DAYS</span>
                     <ArrowRight size={16} className="text-coral" />
                     <span className="font-mono text-sm">becomes</span>
                     <ArrowRight size={16} className="text-coral" />
-                    <span className="text-acid">5 MINUTES</span>
+                    <span className="text-coral">5 MINUTES</span>
                   </div>
                 ))}
               </div>
@@ -152,7 +152,7 @@ export function HowItWorksSection() {
             {/* Vertical Progress Line */}
             <div className="absolute left-4 sm:left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gray-200 -z-10 hidden md:block" />
             <m.div
-              className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-acid -z-10 hidden md:block origin-top"
+              className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-coral -z-10 hidden md:block origin-top"
               style={{ height: lineHeight }}
             />
 
@@ -246,7 +246,7 @@ export function HowItWorksSection() {
 
                         {/* Hover Arrow */}
                         <m.div
-                          className="absolute -bottom-2 -right-2 w-10 h-10 bg-acid border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -bottom-2 -right-2 w-10 h-10 bg-coral border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           animate={{ rotate: hoveredStep === step.number ? 45 : 0 }}
                         >
                           <ArrowRight size={16} className="text-black" />
@@ -267,9 +267,9 @@ export function HowItWorksSection() {
             <div className="mt-16 sm:mt-20 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
               {[
                 { value: '99.9%', label: 'Success Rate', icon: Check, color: 'teal' },
-                { value: '8+', label: 'Platforms', icon: Zap, color: 'acid' },
+                { value: '8+', label: 'Platforms', icon: Zap, color: 'coral' },
                 { value: '1 Link', label: 'Per Client', icon: Users, color: 'coral' },
-                { value: '5 min', label: 'Avg Setup', icon: Clock, color: 'electric' },
+                { value: '5 min', label: 'Avg Setup', icon: Clock, color: 'coral' },
               ].map((stat, i) => (
                 <m.div
                   key={stat.label}
