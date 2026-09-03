@@ -1,0 +1,33 @@
+An agency owner that just signed up sent me this image when tyring  to connect his Meta account. We need to fix this immediately
+
+---
+
+It's already live. Is there a Meta MCP or cli that we can install so that you can verify everythign is configured properly?
+
+---
+
+It's already live. Is there a Meta MCP or cli that we can install so that you can verify everythign is configured properly?
+
+---
+
+Here's my App ID: 1215220247221414
+
+App Secret: REDACTED
+
+Where do I find the config id?
+
+---
+
+Here's my App ID: 1215220247221414
+
+App Secret: REDACTED
+
+Where do I find the config id?
+
+---
+
+Looks like everything is in a ready for testing state
+
+---
+
+Looks like everything is in a ready for testing state

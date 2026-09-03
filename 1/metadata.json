@@ -1,0 +1,75 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M1M5TMJJ9M6BAG5GW7D3PTPA",
+  "session_id": "5d5f991b-704e-41e3-8a1b-df58cc290c7a",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-03T17:42:24.573546Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 3,
+  "files_touched": [
+    "apps/api/src/routes/client-auth/__tests__/asset-creation.routes.test.ts"
+  ],
+  "agent": "Factory AI Droid",
+  "model": "gemini-3.7-flash",
+  "turn_id": "291598b63371",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-03T17:42:24.427046Z",
+    "agent_lines": 266,
+    "agent_removed": 0,
+    "human_added": 112,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 378,
+    "total_lines_changed": 378,
+    "agent_percentage": 70.37037037037037,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 2017,
+      "user_lines_removed": 0,
+      "agent_lines_added": 549,
+      "agent_lines_removed": 69,
+      "user_added_per_file": {
+        ".claude/skills/replay-vision-scanner-broken-experiences/SKILL.md": 50,
+        ".claude/skills/replay-vision-scanner-broken-experiences/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanner-user-frustration/SKILL.md": 42,
+        ".claude/skills/replay-vision-scanner-user-frustration/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanners-core/SKILL.md": 114,
+        ".claude/skills/replay-vision-scanners-core/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanners-core/references/replay-vision.md": 66,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "apps/web/clerk.lock": 1,
+        "apps/web/sentry.client.config.ts": 28,
+        "output/lazyweb.com/2026-09-03T17-39-36-883Z_v0.28.0.tokens.json": 464,
+        "pnpm-lock.yaml": 600,
+        "pnpm-workspace.yaml": 2
+      }
+    }
+  ]
+}
