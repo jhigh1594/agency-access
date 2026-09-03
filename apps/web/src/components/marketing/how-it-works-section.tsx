@@ -113,9 +113,9 @@ export function HowItWorksSection() {
                 5-Minute Setup
               </div>
 
-              {/* Main headline with glitch effect */}
+              {/* Main headline */}
               <h2 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight mb-4 sm:mb-6 text-ink leading-[1.1]">
-                <span className="glitch-text inline-block">From 47 emails</span>
+                <span className="inline-block">From 47 emails</span>
                 <br />
                 <span className="text-coral">to 1 link</span>
               </h2>

@@ -44,17 +44,17 @@ export function HeroCopyRewriteHeroSection() {
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.05] tracking-tight text-ink relative">
                 <div className="mb-2 sm:mb-3 md:mb-4">
-                  <span className="glitch-text inline-block">
+                  <span className="inline-block">
                     YOUR KICKOFF IS READY.
                   </span>
                 </div>
                 <div className="mb-2 sm:mb-3 md:mb-4">
-                  <span className="glitch-text inline-block">
+                  <span className="inline-block">
                     YOUR CLIENT&apos;S
                   </span>
                 </div>
                 <div>
-                  <span className="glitch-text inline-block">ACCESS ISN&apos;T.</span>
+                  <span className="inline-block">ACCESS ISN&apos;T.</span>
                 </div>
               </h1>
             </Reveal>

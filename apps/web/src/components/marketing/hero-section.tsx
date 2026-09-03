@@ -43,7 +43,7 @@ export function HeroSection() {
               </div>
             </Reveal>
 
-            {/* Main Headline - Tighter leading, glitch effect */}
+            {/* Main Headline - Tighter leading */}
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.1] tracking-tight text-ink relative">
                 Send one link. Your client is live in{' '}

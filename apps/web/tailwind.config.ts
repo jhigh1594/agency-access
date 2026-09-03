@@ -79,10 +79,6 @@ const config: Config = {
           "0%": { transform: "translateX(-50%)" },
           "100%": { transform: "translateX(0)" },
         },
-        "scroll-left-slow": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
-        },
         "marquee": {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
@@ -99,7 +95,6 @@ const config: Config = {
         "fade-up": "fade-up 0.6s ease-out forwards",
         "scroll-left": "scroll-left 30s linear infinite",
         "scroll-right": "scroll-right 30s linear infinite",
-        "scroll-slow": "scroll-left-slow 40s linear infinite",
         "marquee": "marquee 30s linear infinite",
         // 2.5s per rotation with ease-in-out for smooth, non-frantic feel
         "gentle-spin": "gentle-spin 2.5s ease-in-out infinite",
