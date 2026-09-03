@@ -29,6 +29,7 @@ import {
   AccessRequestUpdatePayloadSchema,
   ClientDetailResponse,
   GoogleAdsAccount,
+  MetaClientBusinessSelectionSchema,
 } from '../types';
 
 // Type imports for TypeScript validation
@@ -751,6 +752,44 @@ describe('Access Request Update Payload Schema', () => {
     expect(() =>
       AccessRequestUpdatePayloadSchema.parse({
         status: 'authorized',
+      })
+    ).toThrow();
+  });
+});
+
+describe('Meta Client Business Selection Schema', () => {
+  it('accepts source "created" for newly created Business Portfolios', () => {
+    const parsed = MetaClientBusinessSelectionSchema.parse({
+      clientBusinessId: '1234567890',
+      clientBusinessName: 'Acme Business',
+      selectedAt: new Date('2026-09-03T00:00:00Z').toISOString(),
+      source: 'created',
+    });
+
+    expect(parsed.source).toBe('created');
+    expect(parsed.clientBusinessName).toBe('Acme Business');
+  });
+
+  it('still accepts the legacy selection sources', () => {
+    const sources = ['user_selection', 'auto_selected'] as const;
+
+    for (const source of sources) {
+      const parsed = MetaClientBusinessSelectionSchema.parse({
+        clientBusinessId: '1234567890',
+        selectedAt: new Date('2026-09-03T00:00:00Z').toISOString(),
+        source,
+      });
+
+      expect(parsed.source).toBe(source);
+    }
+  });
+
+  it('rejects unknown sources', () => {
+    expect(() =>
+      MetaClientBusinessSelectionSchema.parse({
+        clientBusinessId: '1234567890',
+        selectedAt: new Date('2026-09-03T00:00:00Z').toISOString(),
+        source: 'wizard',
       })
     ).toThrow();
   });

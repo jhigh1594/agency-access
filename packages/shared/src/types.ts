@@ -434,7 +434,7 @@ export const MetaClientBusinessSelectionSchema = z.object({
   clientBusinessId: z.string().min(1),
   clientBusinessName: z.string().optional(),
   selectedAt: z.string().datetime(),
-  source: z.enum(['user_selection', 'auto_selected']).optional(),
+  source: z.enum(['user_selection', 'auto_selected', 'created']).optional(),
 });
 export type MetaClientBusinessSelection = z.infer<typeof MetaClientBusinessSelectionSchema>;
 
