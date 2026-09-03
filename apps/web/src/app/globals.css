@@ -24,7 +24,10 @@
     --input: 255 255 255;           /* #FFFFFF - white background for inputs */
     --ring: 255 107 53;
 
-    --radius: 0.75rem;               /* Sleeker rounded corners */
+    /* v2.0 BINARY RADIUS: corners are square (0) or circular (999px/50%).
+       Nothing between. rounded-lg/md/sm all resolve through --radius, so this
+       one flip migrates every shadcn primitive; pills/avatars keep rounded-full. */
+    --radius: 0rem;
 
     /* Section specific backgrounds */
     --warm-gray: 245 245 244;       /* #F5F5F4 */
@@ -254,6 +257,29 @@
   /* Ink/Paper surfaces */
   .bg-ink {
     background-color: rgb(var(--ink));
+  }
+
+  /* Ink panel (v2.0) — the one dark terminal-style surface per view.
+     Ink ground, paper text, mono data layer. This is "one brutalist element
+     per view" given a concrete form (lazyweb port). */
+  .ink-panel {
+    background-color: rgb(var(--ink));
+    color: rgb(var(--paper));
+    border-radius: 0;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+
+  .ink-panel .cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    background: currentColor;
+    vertical-align: text-bottom;
+    animation: blink 1.1s steps(2, start) infinite;
+  }
+
+  @keyframes blink {
+    to { visibility: hidden; }
   }
 
   .bg-paper {
@@ -1100,6 +1126,4 @@ html.animations-ready .animate-float-pillar {
 .card-shadow { @apply shadow-brutalist; }
 .dropdown-shadow { @apply shadow-brutalist-sm; }
 
-/* Border radius mappings */
-.brutalist-rounded { @apply rounded-lg; }
-.brutalist-soft { @apply rounded-xl; }
+/* v2.0: radius mappings removed — binary radius (see --radius: 0rem). */

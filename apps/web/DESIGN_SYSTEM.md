@@ -1,27 +1,56 @@
 # Agency Access Platform — Design System
 
-> **Version**: 1.3.0
-> **Last Updated**: February 15, 2026
-> **Aesthetic**: Acid Brutalism
+> **Version**: 2.0.0
+> **Last Updated**: September 3, 2026
+> **Aesthetic**: Acid Brutalism v2 — subtraction over excess
 
 ---
 
 ## Overview
 
-The Agency Access Platform uses a **hybrid design system** combining:
-- **shadcn/ui** as the foundational component library
-- **Custom "Acid Brutalism" aesthetic** for brand differentiation
-- **Atomic design principles** for component composition
+Acid Brutalism v2.0 is a **refinement through subtraction**, informed by an
+extracted design-DNA kit of lazyweb.com (September 2026) — a site running the
+same brutalist skeleton with tighter discipline. The bones were already ours:
+ink on paper, hard borders, square buttons, offset shadows. What changed is
+restraint.
+
+- **shadcn/ui** remains the foundational component library
+- **One accent** (coral). Acid is hero-only. Electric is gone.
+- **Binary radius**: square or circular. Nothing between.
+- **Shadow budget**: three sizes, applied as punctuation — never a resting state
+- **A mono data layer**: JetBrains Micro-labels carry status, metadata, KPIs
 
 ### Core Philosophy
 
-**Be bold, be memorable, be intentional.**
+**Structure carries the brand. Color only marks the event.**
 
-Our design rejects generic SaaS aesthetics in favor of a distinctive brutalist approach that:
-- Uses hard shadows and bold borders for visual impact
-- Employs kinetic accent colors (acid green, electric purple) sparingly
-- Maintains readability with high-contrast ink/paper surfaces
-- Animates with purpose — one orchestrated reveal beats scattered effects
+1. **Subtraction creates impact.** One accent, one hero moment, three shadows.
+2. **Elevation is drawn, not cast.** 1px ink edges separate; shadows accent.
+3. **Contrast is a token decision, not a hex choice.** Ink variants per ground.
+4. **Tracking inverts with size.** Display pulls tight; micro-labels push out.
+
+---
+
+## Production Moves (the invisible decisions)
+
+Documented beside their tokens in `globals.css` — decisions with evidence, so
+future contributors inherit the *why*.
+
+1. **Dual ink tokens per ground.** Raw teal (#00A896) as text on white measures
+   ~3.0:1 — a WCAG AA failure carried in v1.x. Text now carries `--success-ink`
+   (#0F766E, 5.5:1) and `--danger-ink` (#C2410C, 4.8:1); raw teal/coral are
+   fills and borders only. Dark ground uses lightened variants. (source: authored
+   decision, verified with measured contrast pairs)
+2. **Tracking inversion.** Display headings pull to −0.02/−0.04em
+   (`.tracking-display-*`); mono micro-labels push to +0.10/0.12em
+   (`.label-micro`/`.label-nano`). The extremes move in opposite directions.
+3. **Mid-weights on variable fonts.** Outfit and JetBrains Mono are variable via
+   `next/font` — author 650 where 600 feels weak and 700 feels loud (buttons at
+   650, mono labels at 650–700).
+4. **Two-ring focus.** `outline: 3px solid coral/25` plus a 6px coral/8 halo —
+   inner stroke and outer glow, both derived from the accent.
+5. **Hero-only acid.** `--acid` survives on the homepage hero moment. One
+   element, one view. Its 1.4:1 contrast can never carry meaning.
 
 ---
 
@@ -29,154 +58,148 @@ Our design rejects generic SaaS aesthetics in favor of a distinctive brutalist a
 
 ### Color Palette
 
-Our color system uses CSS custom properties defined in `globals.css`. All colors support light/dark mode via RGB values.
+Defined in `globals.css` (`:root`, light + dark). All colors are RGB triplets.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         PRIMARY SURFACES                            │
 ├─────────────────────────────────────────────────────────────────────┤
-│  --ink      #09090B  │ Deep black for backgrounds                  │
-│  --paper    #FAFAFA  │ Off-white for surfaces                     │
+│  --ink      #09090B  │ Deep black; ink panels, heavy sections       │
+│  --paper    #FAFAFA  │ Off-white; page ground, surfaces             │
 ├─────────────────────────────────────────────────────────────────────┤
-│                          BRAND COLORS                               │
+│                        BRAND COLORS                                 │
 ├─────────────────────────────────────────────────────────────────────┤
-│  --coral    #FF6B35  │ AuthHub Coral — primary accent (10% use)   │
-│  --teal     #00A896  │ AuthHub Teal — secondary accent (5% use)   │
+│  --coral    #FF6B35  │ AuthHub Coral — THE accent (fills, borders)  │
+│  --teal     #00A896  │ Success fills/borders only — never text      │
 ├─────────────────────────────────────────────────────────────────────┤
-│                        SEMANTIC COLORS                              │
+│                     SEMANTIC INK TOKENS (text)                      │
 ├─────────────────────────────────────────────────────────────────────┤
-│  --warning  #B45309  │ Amber for warnings (5.2:1 contrast)        │
-│                       │ Light: #B45309 / Dark: #FBBF24             │
+│  --warning  #B45309  │ Warning text (5.2:1 on white)                │
+│  --success-ink #0F766E │ Success text (5.5:1 on white)  [v2.0]      │
+│  --danger-ink  #C2410C │ Danger text (4.8:1 on white)   [v2.0]      │
 ├─────────────────────────────────────────────────────────────────────┤
-│                        BRUTALIST ACCENTS                            │
+│                        BRUTALIST ACCENT                             │
 ├─────────────────────────────────────────────────────────────────────┤
-│  --acid     #CCFF00  │ Acid green — DECORATIVE ONLY (2% use)      │
-│  --electric  #8B5CF6  │ Electric purple — hover states             │
+│  --acid     #CCFF00  │ HERO-ONLY (homepage hero). Never text/status │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Usage Guidelines
+**The contrast rule (v2.0):** raw coral (~2.9:1) and raw teal (~3.0:1) fail WCAG
+AA as text on white. They are **fill and border colors only**. Status text uses
+the ink tokens. On dark grounds the ink tokens swap to lightened variants.
 
 | Color | When to Use | Examples |
 |-------|-------------|----------|
-| `--ink` | Page backgrounds, footer, heavy sections | Hero background, dashboard sidebar |
-| `--paper` | Cards, modals, content areas | Form containers, data tables |
-| `--coral` | Primary CTAs, key actions | "Create Access Request" button |
-| `--teal` | Success states, completion | "Connected successfully" badge |
-| `--warning` | Warning states, pending items | "Pending" badge, expiration warnings |
-| `--acid` | **DECORATIVE ONLY** — Never for text/status | Loading spinners, reveal animations, marketing accents |
-| `--electric` | Hover states, interactive feedback | Button hover borders |
+| `--ink` | Ink panels, footers, heavy sections, borders | `.ink-panel`, `border-black` |
+| `--paper` | Page ground, cards | Dashboard surfaces |
+| `--coral` | Primary CTAs (fill), borders, the focus system | "Create Access Request" |
+| `--teal` | Success **fills and borders** | Connected badge background |
+| `--success-ink` | Success **text** | "Authorized" badge text |
+| `--danger-ink` | Danger **text** and destructive fills | "Expired" badge text |
+| `--warning` | Warning text and fills | "Pending" badge |
+| `--acid` | Homepage hero decorative moment only | Hero rotation shape |
 
-#### Semantic Colors (Tailwind Integration)
+#### Removed in v2.0
 
-```css
-/* Mapped in tailwind.config.ts */
-background: rgb(var(--background) / <alpha-value>)
-foreground: rgb(var(--foreground) / <alpha-value>)
-primary: rgb(var(--primary) / <alpha-value>)
-secondary: rgb(var(--secondary) / <alpha-value>)
-muted: rgb(var(--muted) / <alpha-value>)
-accent: rgb(var(--accent) / <alpha-value>)
-border: rgb(var(--border) / <alpha-value>)
-ring: rgb(var(--ring) / <alpha-value>)
-```
+- `--electric` (#8B5CF6): a second accent in hover states. Hovers now shift
+  border/text color toward coral, or invert to ink.
+- `--acid` as a general decorative token: hero-only (see above).
 
 ### Typography
 
-We use a **three-font system** for hierarchy and personality:
+Three families, three roles:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Font Family    │ Source        │ Usage                            │
+│  Role      │ Family          │ Variable │ Notes                     │
 ├─────────────────────────────────────────────────────────────────────┤
-│  dela           │ Custom        │ Display headlines, hero text     │
-│                 │ (var(--font-dela))                                │
-├─────────────────────────────────────────────────────────────────────┤
-│  display        │ Geist         │ Section headings, subheadings    │
-│                 │ (var(--font-display))                             │
-├─────────────────────────────────────────────────────────────────────┤
-│  sans           │ System UI      │ Body text, UI elements           │
-│                 │ (var(--font-sans))                                │
-├─────────────────────────────────────────────────────────────────────┤
-│  mono           │ IBM Plex Mono │ Code, data, technical content    │
-│                 │ (var(--font-mono))                                │
+│  Hero      │ Dela Gothic One │ No (400) │ Hero display only         │
+│  Display/  │ Outfit          │ Yes      │ Headings + body           │
+│  Body      │                 │          │ (font-display class =     │
+│            │                 │          │  Outfit since v2.0)       │
+│  Data      │ JetBrains Mono  │ Yes      │ Micro-labels, status,     │
+│            │                 │          │ metadata, terminal panels │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+> **Weight discipline:** Outfit and JetBrains Mono are variable — author 650
+> where 600 feels weak and 700 feels loud. Dela is fixed at 400.
+
+#### Tracking spec (v2.0)
+
+| Context | Tracking | Utility |
+|---|---|---|
+| Display ≥3.5rem | −0.04em | `.tracking-display-lg` |
+| Display ≥2rem | −0.02em | `.tracking-display-md` |
+| Body | none | — |
+| Mono micro (≤11px) | +0.10 to +0.12em | `.label-micro` / `.label-nano` |
+
+#### Mono micro-label system
+
+```tsx
+<span className="label-micro">Connection Health</span>   // JBM 700 11px, uppercase
+<span className="label-nano">Updated 2 min ago</span>     // JBM 400 10px
+```
+
+Apply to: StatusBadge text (already `font-mono uppercase`), card meta rows,
+table headers, KPI labels, footer metadata, section eyebrows.
 
 #### Type Scale
 
 | Element | Size | Weight | Font Family | Line Height |
 |---------|------|--------|-------------|-------------|
-| Hero (fluid) | clamp(2rem, 8vw, 4.5rem) | Bold | dela | 1.05 |
-| H1 | 4.5rem | Bold | dela | 1.1 |
-| H2 | 3rem | Semibold | display | 1.2 |
-| H3 | 2rem | Semibold | display | 1.3 |
-| Body | 1rem | Regular | sans | 1.6 |
-| Small | 0.875rem | Regular | sans | 1.5 |
-| Label | 0.8125rem | Medium | sans | 1.4 |
+| Hero (fluid) | clamp(2rem, 8vw, 4.5rem) | 400 | dela | 1.05 |
+| H1 | 4.5rem | 700 | display | 1.1 |
+| H2 | 3rem | 600–650 | display | 1.2 |
+| H3 | 2rem | 600 | display | 1.3 |
+| Body | 1rem | 400 | display (Outfit) | 1.6 |
+| Small | 0.875rem | 400 | display | 1.5 |
+| Label | 0.8125rem | 500 | display | 1.4 |
+| Micro | 11px | 650–700 | mono | 1.5 |
 
 ### Spacing
 
-Our spacing system follows Tailwind's defaults with brutalist hard edges:
+Tailwind defaults, 4px base grid:
+
+- **Card padding**: `p-6`
+- **Section spacing**: `py-16 md:py-24`
+- **Component gaps**: `gap-4`
+- **Touch targets**: `min-h-[44px]` minimum
+
+### Border Radius — BINARY (v2.0)
 
 ```
-0 → 0px      4 → 1rem      8 → 2rem
-1 → 0.25rem  5 → 1.25rem   10 → 2.5rem
-2 → 0.5rem   6 → 1.5rem    12 → 3rem
-3 → 0.75rem  7 → 1.75rem    16 → 4rem
+0        → Cards, buttons, inputs, modals, badges   (--radius: 0rem)
+999px    → Pills, chips, status dots                (rounded-full)
+50%      → Avatars, icon-only buttons               (rounded-full)
 ```
 
-**Key spacing patterns:**
-- **Card padding**: `p-6` (1.5rem) for standard cards
-- **Section spacing**: `py-16` (4rem) between major sections
-- **Component gaps**: `gap-4` (1rem) for related elements
-- **Touch targets**: `min-h-[44px]` minimum for all interactive elements
+Nothing between. `--radius: 0rem` drives Tailwind's `rounded-sm/md/lg`, so the
+whole shadcn primitive set resolves square automatically. Use `rounded-full`
+only for genuinely circular elements. **Never** author intermediate values
+(`rounded-xl`, `rounded-2xl`, `rounded-[0.75rem]` are now violations).
 
-### Border Radius
+### Shadows — BUDGET OF THREE (v2.0)
 
-Brutalist design uses **minimal rounding** for hard edges:
-
-```
-sm: calc(var(--radius) - 4px)  → ~0.25rem
-md: calc(var(--radius) - 2px)  → ~0.5rem
-lg: var(--radius)              → 0.75rem
-xl: 1rem
-2xl: 1.5rem
-full: 9999px
-```
-
-**Usage:**
-- `rounded-none` — Brutalist buttons, hard-edge cards
-- `rounded-lg` (0.75rem) — Standard cards, modals
-- `rounded-xl` — Form inputs, softer containers
-- `rounded-full` — Icon buttons, avatars
-
-### Shadows
-
-**Hard shadows** define our brutalist aesthetic — no blur, pure offset:
+Shadow is **punctuation** for interactive or hero elements — never a resting
+state. Default cards use a **1px border and no shadow**.
 
 ```css
-/* Defined in globals.css */
---shadow-hard: 0 0 0; /* Pure black */
-
-/* Brutalist shadow utilities */
-.shadow-brutalist-sm     → 2px 2px 0px #000
-.shadow-brutalist        → 4px 4px 0px #000
-.shadow-brutalist-lg     → 6px 6px 0px #000
-.shadow-brutalist-xl     → 8px 8px 0px #000
-.shadow-brutalist-2xl    → 12px 12px 0px #000
-.shadow-brutalist-3xl    → 16px 16px 0px #000
+.shadow-brutalist-sm  → 2px 2px 0px #000   /* inputs, small elements   */
+.shadow-brutalist     → 4px 4px 0px #000   /* primary buttons          */
+.shadow-brutalist-lg  → 6px 6px 0px #000   /* hover peak, hero emphasis */
 ```
 
-**When to use:**
-- `shadow-brutalist` (4px) — Default brutalist cards, buttons
-- `shadow-brutalist-lg` (6px) — Hover states
-- `shadow-brutalist-xl` (8px+) — Special emphasis, featured elements
+- **Budget**: ≤3 shadow applications per view.
+- **Deprecations (v2.0)**: `-xl`, `-2xl`, `-3xl`, `.shadow-hard-xl` are deleted.
+- **Hover**: buttons lift 2px; the shadow does NOT grow (stable elevation).
 
-**Standard shadows** for non-brutalist components:
-- `shadow-sm` → Subtle elevation (tooltips, dropdowns)
-- `shadow-md` → Standard elevation (modals)
-- `shadow-lg` → Prominent elevation (popovers)
+**Hairlines** separate content where shadows once did:
+
+```tsx
+<div className="hairline-b">…</div>   /* 1px ink-secondary bottom rule —
+                                         meta rows, card footers, list dividers */
+```
 
 ---
 
@@ -184,198 +207,63 @@ full: 9999px
 
 ### shadcn/ui Foundation
 
-We use **shadcn/ui patterns** as our base component architecture:
+Unchanged: `cn()` merging, forwardRef, CVA where needed, components in
+`src/components/ui/`.
 
-```
-src/components/ui/
-├── card.tsx              # shadcn/ui base
-├── button.tsx            # Extended with brutalist variants
-├── status-badge.tsx      # Custom, follows shadcn patterns
-├── platform-icon.tsx     # Custom
-└── [components]          # Custom components using cn() utility
-```
+### Button (v2.0 contract)
 
-#### shadcn Utilities
+**Five variants. Nothing else.**
 
-```typescript
-import { cn } from "@/lib/utils"
+| Variant | Look | Use |
+|---|---|---|
+| `primary` | Coral fill, 1px ink border, `shadow-brutalist` | Main actions |
+| `secondary` | Card fill, 1px ink border, no shadow | Alternative/cancel |
+| `ghost` | Transparent | Tertiary, icon-adjacent |
+| `danger` | `danger-ink` fill, white text | Destructive — never looks like primary |
+| `brutalist` | Uppercase coral, 2px border, diagonal shift hover | **Hero CTAs only** |
 
-// Use cn() for conditional className merging
-<div className={cn(
-  "base-styles",
-  isActive && "active-styles",
-  className
-)} />
-```
+- Sizes: `sm | md | lg | xl | icon` — all `rounded-none` except `icon` (circle)
+- Hover: lift 2px (`hover:translate-y-[-2px]`); shadow does not grow
+- Focus: two-ring system (3px coral outline + 6px coral/8 halo)
+- All buttons ≥44px touch height
 
-### Button Component
+> **Migration note:** v1.x `success` → `primary`, `warning` → `primary`,
+> `brutalist-rounded` → `brutalist`, `brutalist-ghost[-rounded]` → `secondary`.
 
-Our button extends shadcn patterns with brutalist variants:
+### Card
 
-```typescript
-variant: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost'
-        | 'brutalist' | 'brutalist-ghost'
-        | 'brutalist-rounded' | 'brutalist-ghost-rounded'
+- **Default**: `border` + `bg-card`, **no shadow** (v2.0)
+- **Static containers**: keep them static when they hold interactive children —
+  one hover target per interactive element (unchanged from v1.x)
+- **`clean-card`**: still available for settings surfaces
 
-size: 'sm' | 'md' | 'lg' | 'xl' | 'icon'
-```
+### StatusBadge
 
-#### Button Hover Behavior
+Status text carries **ink tokens**; fills stay in the family color:
 
-**Standard buttons** (primary, success, warning, danger):
-- Always visible brutalist shadow (`shadow-brutalist`)
-- Hover lifts button 2px up (`hover:translate-y-[-2px]`)
-- Shadow does NOT change on hover — consistent elevation
-- Clear, refined feedback without overwhelming
+| State family | Fill | Border | **Text** |
+|---|---|---|---|
+| Success (authorized/active/healthy) | `bg-teal/10` | `border-teal/30` | `text-success-ink` |
+| Warning (pending/past_due/expiring/trialing/incomplete) | `bg-warning/10` | `border-warning/30` | `text-warning` |
+| Danger (expired/revoked/invalid/incomplete_expired) | `bg-coral/10` | `border-coral/30` | `text-danger-ink` |
+| Neutral (cancelled/unknown) | `bg-muted/10` | `border-border` | `text-muted-foreground` |
 
-**Brutalist buttons**:
-- Hard shadow with diagonal shift effect
-- Hover removes shadow, translates diagonally
-- Used sparingly for hero CTAs
+**Never** `text-teal` or `text-coral` on light ground — they fail AA.
 
-```tsx
-// Standard button: shadow + lift on hover
-<Button variant="primary">
-  {/* Always has shadow-brutalist, lifts 2px on hover */}
-</Button>
-```
+### Ink Panel (v2.0)
 
-### Button Shadows & Hover
-
-**Consistent brutalist shadows with refined hover**:
-
-| Variant | Shadow (Always Visible) | Hover Effect |
-|---------|---------------------|-------------|
-| primary | `shadow-brutalist` | Lifts 2px up (`hover:translate-y-[-2px]`) |
-| success | `shadow-brutalist` | Lifts 2px up (`hover:translate-y-[-2px]`) |
-| warning | `shadow-brutalist` | Lifts 2px up (`hover:translate-y-[-2px]`) |
-| danger | `shadow-brutalist` | Lifts 2px up (`hover:translate-y-[-2px]`) |
+The one dark terminal-style surface per view — "one brutalist element per view"
+given a concrete form:
 
 ```tsx
-// Button: visible shadow + subtle lift on hover
-<Button variant="primary">
-  {/* Always shows shadow-brutalist, lifts 2px on hover */}
-</Button>
-```
-
-**Design rationale:**
-- Brutalist shadow (`shadow-brutalist`) provides consistent presence
-- Subtle 2px lift (`-translate-y-[-2px]`) gives clear feedback
-- Shadow does NOT grow — stable, refined elevation
-- Reserve brutalist hard shadows for hero CTAs and marketing moments
-
-#### Variant Guidelines
-
-| Variant | When to Use |
-|---------|-------------|
-| `primary` | Main CTAs, primary actions in flow |
-| `secondary` | Alternative actions, "Cancel" buttons |
-| `success` | Completion, confirmation states |
-| `danger` | Destructive actions, "Delete", "Disconnect" |
-| `ghost` | Tertiary actions, icon-only buttons |
-| `brutalist` | Hero CTAs, marketing pages — **use sparingly** |
-| `brutalist-ghost` | Outlined brutalist style for less emphasis |
-| `brutalist-rounded` | Softer brutalist for card CTAs |
-| `brutalist-ghost-rounded` | Rounded outlined variant |
-
-**Golden rule**: One brutalist button per view. Let it stand out.
-
-### Card Component
-
-Uses pure shadcn/ui Card composition:
-
-```typescript
-<Card>
-  <CardHeader>
-    <CardTitle>Title</CardTitle>
-    <CardDescription>Description</CardDescription>
-  </CardHeader>
-  <CardContent>
-    {/* Content */}
-  </CardContent>
-  <CardFooter>
-    {/* Actions */}
-  </CardFooter>
-</Card>
-```
-
-#### Card Patterns
-
-**Standard Card** (shadcn base):
-```tsx
-<div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-```
-
-**Brutalist Card** (custom utility):
-```tsx
-<div className="brutalist-card">
-  {/* Applies: border-2, border-black, shadow-[4px_4px_0px_#000] */}
+<div className="ink-panel p-6">
+  <span className="label-micro !text-paper/60">SYNC STATUS</span>
+  <p className="text-sm">4 platforms connected</p>
+  <span className="cursor-blink" />
 </div>
 ```
 
-**Clean Card** (static, no hover):
-```tsx
-<div className="clean-card">
-  {/* Applies: subtle shadow, no hover lift */}
-</div>
-```
-
-**Why static:** Settings and content cards should remain static to avoid "nested hover" confusion when containing interactive elements (buttons, links). The `clean-card` pattern provides subtle elevation without competing with interactive children.
-
-### Badge Components
-
-#### StatusBadge
-
-```typescript
-type StatusType =
-  | 'pending'     // Warning amber
-  | 'authorized'  // Teal (success)
-  | 'expired'     // Coral (danger)
-  | 'cancelled'   // Muted gray
-  | 'past_due'    // Warning amber
-  | 'healthy'     // Teal (success)
-  | 'expiring'    // Warning amber
-  | 'unknown'     // Muted gray
-  | 'active'      // Teal (success)
-  | 'revoked'     // Coral (danger)
-  | 'invalid';    // Coral (danger)
-```
-
-**Color Mapping:**
-- **Teal** (`--teal`): Success states — `authorized`, `active`, `healthy`
-- **Warning** (`--warning`): Pending/attention states — `pending`, `past_due`, `expiring`
-- **Coral** (`--coral`): Error/destructive states — `expired`, `revoked`, `invalid`
-- **Muted**: Neutral states — `cancelled`, `unknown`
-
-#### HealthBadge
-
-```typescript
-status: 'healthy' | 'expiring' | 'expired' | 'unknown'
-```
-
-**Color Mapping:**
-- **Teal** (`--teal`): `healthy`
-- **Warning** (`--warning`): `expiring`
-- **Coral** (`--coral`): `expired`
-- **Muted**: `unknown`
-
-**Usage**: Display connection status, token health, platform states.
-
-#### ⚠️ Color Accessibility Rules
-
-**NEVER use `--acid` for text or status indicators.** The acid color (`#CCFF00`) has a contrast ratio of ~1.4:1 on white, which fails WCAG AA requirements (4.5:1 minimum for text).
-
-```tsx
-// ❌ WRONG — Acid has poor contrast, fails accessibility
-<Badge className="bg-acid/10 text-acid">Pending</Badge>
-
-// ✅ CORRECT — Warning amber has 5.2:1 contrast
-<Badge className="bg-warning/10 text-warning">Pending</Badge>
-```
-
-**When to use each color:**
-- `--warning`: Status text, badges, alerts, form validation warnings
-- `--acid`: Decorative backgrounds, animation highlights, marketing accents (NEVER for text)
+Ink ground, paper text, mono data layer, optional blinking cursor.
 
 ---
 
@@ -383,268 +271,42 @@ status: 'healthy' | 'expiring' | 'expired' | 'unknown'
 
 ### Philosophy
 
-**One orchestrated reveal > scattered micro-interactions.**
+Functional motion only. One hero moment, honest feedback, no decoration for its
+own sake.
 
-Focus animation effort on:
-1. **Page load** — Staggered reveal sequence
-2. **Scroll triggers** — Elements reveal as user scrolls
-3. **Hover states** — Instant feedback for interaction
+- **Reveals**: 450ms, `cubic-bezier(0.2, 0.8, 0.3, 1)` — decel with a settle
+- **Hovers**: 150ms — instant feedback
+- **Continuous**: `animate-marquee` (proof strips) + `animate-float-pillar`
+  (homepage hero) — that is the complete list
 
-### Animation Utilities
+### Removed in v2.0
 
-#### Reveal Animations
+`float-chaos`, `float-order`, `glitch-text`, `ticker-up`, `pulse-button`,
+`expand-reveal`, `collapse-center`, `animate-float`, `shadow-brutal` hover
+growth, `scaleUp`, `scroll-left-slow`.
 
-```tsx
-// Add to elements that should animate in
-<div className="reveal-element reveal-up">
-  Content reveals upward on scroll
-</div>
+### Rules (unchanged from v1.x)
 
-<div className="reveal-element reveal-down stagger-1">
-  Content reveals downward with 100ms delay
-</div>
-```
-
-**Available reveal classes:**
-- `reveal-up` — Fade in + translate Y (3rem → 0)
-- `reveal-down` — Fade in + translate Y (-3rem → 0)
-- `reveal-left` — Fade in + translate X (3rem → 0)
-- `reveal-right` — Fade in + translate X (-3rem → 0)
-
-**Stagger delays:**
-- `stagger-1` through `stagger-5` — 100ms to 500ms delays
-
-#### Hover Effects
-
-```tsx
-// Brutalist hover lift
-<div className="hover-lift-brutalist">
-  {/* Lifts 2px, shadow grows on hover */}
-</div>
-
-// Brutalist button hover
-<button className="brutalist-btn">
-  {/* Hard shadow grows, element shifts on hover */}
-</button>
-```
-
-#### Continuous Animations
-
-```tsx
-// Floating elements
-<div className="animate-float-pillar">
-  {/* Gentle up/down float, 5s duration */}
-</div>
-
-// Marquee / scrolling
-<div className="animate-marquee">
-  {/* Continuous horizontal scroll, 30s loop */}
-</div>
-```
-
-### Animation Best Practices
-
-1. **Respect `prefers-reduced-motion`** — All animations respect this automatically
-2. **Wait for `animations-ready`** — Animations only fire after hydration to prevent SSR mismatch
-3. **Use CSS over JS** — Prefer CSS animations for performance
-4. **One hero animation per page** — Don't compete with yourself
-
-### Animation Anti-Patterns (Learned February 2026)
-
-❌ **DON'T use raw `reveal-element` classes directly** — Causes blank pages without Intersection Observer
-```tsx
-// WRONG — Element stays hidden because no Intersection Observer adds `visible` class
-<div className="reveal-element reveal-up">
-  <Content />
-</div>
-```
-
-✅ **DO use the `Reveal` component** — Properly handles Intersection Observer
-```tsx
-// CORRECT — Component adds `visible` class when element enters viewport
-import { Reveal } from '@/components/marketing/reveal';
-
-<Reveal direction="up">
-  <Content />
-</Reveal>
-```
-
-❌ **DON'T apply hover to containers with interactive elements inside** — Creates confusing "double hover"
-```tsx
-// WRONG — Both card AND button have hover effects
-<div className="clean-card hover:shadow-xl">  {/* Card hover */}
-  <Button>Save</Button>  {/* Button ALSO has hover */}
-</div>
-```
-
-✅ **DO keep containers static when containing interactive elements** — Clear, single hover target
-```tsx
-// CORRECT — Only button has hover effect
-<div className="clean-card">  {/* Static container */}
-  <Button>Save</Button>  {/* Clear hover target */}
-</div>
-```
-
-**Why this matters:**
-- **Clarity over density** — Users should immediately know which element is interactive
-- **Feedback is immediate** — Single, clear hover states prevent confusion
-- **Consistency creates confidence** — Predictable patterns reduce cognitive load
-
----
-
-## Layout Patterns
-
-### Container Widths
-
-```tsx
-// Standard content container
-<div className="container mx-auto px-4 max-w-7xl">
-  {/* Content */}
-</div>
-
-// Narrow content (forms, focused reading)
-<div className="container mx-auto px-4 max-w-2xl">
-  {/* Content */}
-</div>
-
-// Wide content (dashboards, data tables)
-<div className="container mx-auto px-4 max-w-full">
-  {/* Content */}
-</div>
-```
-
-### Section Spacing
-
-```tsx
-// Standard vertical rhythm
-<section className="py-16 md:py-24">
-  {/* Section content */}
-</section>
-```
-
-### Grid Systems
-
-```tsx
-// Responsive card grid
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {/* Cards */}
-</div>
-
-// Sidebar + content
-<div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-  <aside className="lg:col-span-1">{/* Sidebar */}</aside>
-  <main className="lg:col-span-3">{/* Content */}</main>
-</div>
-```
-
----
-
-## Icon System
-
-### Icon Libraries
-
-| Library | Usage | Examples |
-|---------|-------|----------|
-| `lucide-react` | UI icons | Menu, search, close, chevron |
-| **Brandfetch API** | Platform logos | Meta, Google, LinkedIn, TikTok |
-| Custom SVGs | Brand elements | AuthHub logo, custom graphics |
-
-### PlatformIcon Component
-
-Platform icons use the **Brandfetch Logo API** for consistent, high-quality platform logos:
-
-```tsx
-<PlatformIcon platform="meta" size="md" />
-<PlatformIcon platform="google_ads" size="lg" showLabel />
-<PlatformIcon platform="linkedin" size="xl" />
-```
-
-**Features:**
-- Next.js Image optimization with client-side caching
-- Fallback to initials if logo unavailable
-- Configurable sizes: `sm` (24px), `md` (32px), `lg` (48px), `xl` (64px)
-- Optional label display
-- Automatic error handling
-
-**Environment Variable Required:**
-```bash
-NEXT_PUBLIC_BRANDFETCH_CLIENT_ID=your_client_id_here
-```
-
-### Icon Sizing
-
-```
-16px → Inline icons, small badges
-20px → Standard UI icons
-24px → Large UI icons, list items
-32px → Card headers, featured icons
-48px → Hero section icons
-```
+1. Respect `prefers-reduced-motion` — built into all animations
+2. Wait for `animations-ready` — no SSR mismatch
+3. CSS over JS
+4. One hero animation per page
+5. Use the `Reveal` component — never raw `reveal-element` classes
+6. No hover on containers holding interactive elements
 
 ---
 
 ## Forms & Inputs
 
-### Input Styling
-
 ```tsx
-// Standard input
-<input className="w-full px-4 py-3 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
-
-// Brutalist input
-<input className="w-full px-4 py-3 border-2 border-black rounded-none shadow-brutalist-sm focus:shadow-brutalist focus:outline-none" />
+// Base input (globals.css) — 1px border, square, two-ring coral focus
+<input className="w-full px-4 py-3 border border-black rounded-none" />
 ```
 
-### Form Patterns
-
-1. **Always use labels** — Never rely on placeholder-only
-2. **Group related fields** — Use fieldset/legend when appropriate
-3. **Show validation state** — Green for success, red for error
-4. **Keyboard navigation** — Ensure proper tab order
-
----
-
-## Responsive Design
-
-### Breakpoints
-
-```
-xs: 480px   // Small mobile (custom)
-sm: 640px   // Mobile landscape
-md: 768px   // Tablet
-lg: 1024px  // Laptop
-xl: 1280px  // Desktop
-```
-
-### Mobile-First Approach
-
-Write mobile styles first, use `md:` and up for larger screens:
-
-```tsx
-<div className="text-base md:text-lg lg:text-xl">
-  {/* Scales up with screen size */}
-</div>
-```
-
-### Touch Targets
-
-**Minimum 44×44px** for all interactive elements (iOS HIG):
-
-```tsx
-<button className="min-h-[44px] px-6">
-  {/* Meets touch target minimum */}
-</button>
-```
-
-### Safe Areas
-
-Handle notched devices (iPhone X+):
-
-```tsx
-<div className="pb-safe pt-safe">
-  {/* Respects safe area insets */}
-</div>
-```
+- Labels always present; mono micro-labels for field groups
+- Validation: `text-success-ink` success, `text-warning` caution,
+  `text-danger-ink` errors — never raw coral/teal text
+- Focus: 3px coral/25 outline + 6px coral/8 halo (two-ring, automatic)
 
 ---
 
@@ -652,136 +314,92 @@ Handle notched devices (iPhone X+):
 
 ### Color Contrast
 
-- **WCAG AA minimum** — 4.5:1 for normal text
-- **WCAG AAA target** — 7:1 for important text
-- Our ink/paper combination exceeds both standards
+- **WCAG AA minimum** — 4.5:1 for normal text; AAA target 7:1
+- Ink/paper: 21:1. `--ink-secondary`: 9.7:1. All status ink tokens ≥4.5:1
+- **Raw coral/teal are never body or status text on light ground** (v2.0)
+- Orange-family text on white stays in the ink variants
 
 ### Focus States
 
-All interactive elements must show focus:
-
-```tsx
-<button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-  {/* Visible keyboard focus */}
-</button>
-```
-
-### Screen Readers
-
-- Use semantic HTML (`<nav>`, `<main>`, `<article>`)
-- Provide `aria-label` for icon-only buttons
-- Use `aria-live` for dynamic content updates
+Two-ring system everywhere (buttons, inputs): inner 3px coral stroke + outer
+6px soft halo. Keyboard focus is unmistakable at any contrast.
 
 ### Motion Preferences
 
-Respect `prefers-reduced-motion` — built into all our animations:
-
-```css
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-```
+`prefers-reduced-motion` collapses all animation — unchanged from v1.x.
 
 ---
 
 ## Dark Mode
 
-### Implementation
+Planned, not yet the primary experience. The ink tokens already carry dark
+variants in `:root .dark` (lightened success/danger ink), so the token layer is
+dark-ready.
 
-Dark mode uses CSS custom properties that swap values based on `class="dark"` on `<html>`.
+---
 
-**Note**: Our brutalist aesthetic is **light-first**. Dark mode support is planned but not yet implemented.
+## Verification
 
-### Future Pattern
+Design tests enforce this contract (`__tests__` beside components):
 
-```tsx
-// When dark mode is added, use dark: prefix
-<div className="bg-background dark:bg-[#09090B]">
-  {/* Light: white, Dark: ink */}
-</div>
-```
+- `status-badge.test.tsx` — AA contrast contract per status family
+- `button.design.test.tsx` — five variants, binary radius, two-ring focus
+- `src/test/utils/design-system.ts` — shadow budget, radius validator,
+  brand-color usage lints
+
+Run: `npm run test --workspace=apps/web`. Visual reference: `/design-system`.
 
 ---
 
 ## Extending the Design System
 
-### Adding a New Component
-
-1. **Follow shadcn patterns** — Use `cn()`, forwardRef, proper types
-2. **Use design tokens** — Reference CSS variables, not hard-coded values
-3. **Support variants** — Use class-variance-authority (CVA) if needed
-4. **Document usage** — Add examples to this file
-5. **Test accessibility** — Keyboard, screen reader, contrast
-
-### Adding a New Color
-
-1. Define CSS variable in `globals.css`
-2. Add to `tailwind.config.ts` if needed as utility
-3. Document usage in this file
-4. Check contrast ratios
-
-### Creating a New Animation
-
-1. Add `@keyframes` to `globals.css`
-2. Create utility class if reusable
-3. Add to this file's animation section
-4. Test with `prefers-reduced-motion`
+1. **New component**: shadcn patterns, tokens not hex, square by default
+2. **New color**: define CSS variable + tailwind mapping + contrast measurement
+   (both grounds) + document here AND comment the *why* beside the token
+3. **New animation**: functional only; ≤450ms entrances; justify continuous
+   motion in review
 
 ---
 
-## Resources
-
-### Files Reference
+## Files Reference
 
 | File | Purpose |
 |------|---------|
-| `globals.css` | CSS custom properties, utility classes |
-| `tailwind.config.ts` | Tailwind configuration, custom theme |
-| `src/lib/utils.ts` | `cn()` utility function |
+| `globals.css` | Tokens, utilities, production-move comments |
+| `tailwind.config.ts` | Theme mapping (colors, fontFamily, shadows) |
+| `src/lib/utils.ts` | `cn()` |
 | `src/components/ui/` | Component library |
-
-### External Resources
-
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-- [Tailwind CSS Documentation](https://tailwindcss.com)
-- [Radix UI Primitives](https://www.radix-ui.com)
-- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-
----
+| `src/test/utils/design-system.ts` | Contract validators |
+| `~/Desktop/lazyweb.com-design-kit/` | The reference extraction (brief, tokens, scaffold) |
 
 ## Changelog
 
+### v2.0.0 (September 3, 2026) — Subtraction release
+- **Removed `--electric`** — one accent (coral) carries the system
+- **`--acid` restricted to homepage hero** — one element, one view
+- **Dropped Fraunces** — `font-display` role collapsed onto Outfit; dela keeps hero duty
+- **AA contrast contract** — `--success-ink`/`--danger-ink` text tokens; raw
+  teal/coral are fills/borders only (fixes v1.x 3.0:1/2.9:1 text failures)
+- **Binary radius** — `--radius: 0rem`; corners square or circular, nothing between
+- **Shadow budget** — three sizes; default cards border-only, no shadow;
+  `-xl/-2xl/-3xl` deleted
+- **Button consolidation** — 10 variants → 5; danger no longer identical to primary
+- **Two-ring focus** — 3px coral stroke + 6px halo on buttons and inputs
+- **Mono micro-label system** — `.label-micro`/`.label-nano`; tracking inversion spec
+- **Ink panel** — `.ink-panel` terminal surface, one per view
+- **Animation cut** — 11 decorative keyframe families removed; reveals retimed
+  to 450ms decel
+- **Hairline utility** — `.hairline-b` for meta rows and list dividers
+- Fixed documentation drift: fonts documented are the fonts loaded
+
 ### v1.3.0 (February 15, 2026)
-- **Added `--warning` semantic color** — Accessible amber (#B45309, 5.2:1 contrast) for status indicators
-- **Restricted `--acid` to decorative-only** — Never use for text/status due to poor contrast (1.4:1)
-- **Updated all status badges** — Pending, expiring, past_due now use `--warning` instead of `--acid`
-- **Updated billing components** — Usage limits, plan cards use accessible warning color
-- **Updated button warning variant** — Uses `--warning` with white text for accessibility
-- **Added accessibility guidelines** — Documented color contrast requirements for status indicators
+- Added `--warning` semantic color; restricted `--acid` to decorative-only
 
-### v1.2.1 (February 11, 2026)
-- **Fixed button shadow behavior** — Shadow now always visible (`shadow-brutalist`)
-- **Refined hover to lift-only** — 2px lift (`-translate-y-[-2px]`), no shadow growth
-- **Updated documentation** — Clarified shadow + lift behavior
-
-### v1.2.0 (February 11, 2026)
-- **Refined button hover behavior** — Subtle shadows with lift effect (`-translate-y-px`)
-- **Reduced visual weight** — Less aggressive elevation for settings and forms
-- **Updated documentation** — Button shadow consistency section revised
+### v1.2.x (February 11, 2026)
+- Button shadow always visible; hover is lift-only
 
 ### v1.1.0 (February 11, 2026)
-- **Added Animation Anti-Patterns section** — Documented reveal animation and nested hover learnings
-- **Updated Button shadow consistency** — All action buttons now use brutalist hard shadows
-- **Fixed Settings page reveal issue** — Documented proper use of `Reveal` component
-- **Fixed nested hover anti-pattern** — Removed `.clean-card:hover` to prevent double hover effects
-- **Updated `clean-card` pattern** — Now static (no hover) for clearer interaction feedback
+- Animation anti-patterns; clean-card static pattern
 
 ### v1.0.0 (February 10, 2026)
 - Initial design system documentation
-- Centralized Acid Brutalism tokens
-- Documented shadcn/ui integration
-- Established animation system guidelines
-- Defined component usage patterns
