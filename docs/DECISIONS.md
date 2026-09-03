@@ -8,6 +8,30 @@ Record significant technical choices so future sessions (and humans) understand 
 
 ---
 
+### DEC-003: Design System v2.0 — refinement by subtraction (lazyweb extraction)
+**Date:** 2026-09-03
+
+**Context:** The Acid Brutalism system (v1.3.0) carried five chromatic tokens, a six-step shadow ramp, ten button variants, intermediate radii, and eleven decorative animation families. An extracted design-DNA kit of lazyweb.com (same brutalist skeleton, tighter discipline) showed the refinement gap was subtraction, not new tokens. Evidence kit: `~/Desktop/lazyweb.com-design-kit/`; plan: `docs/design-system-delta-plan.md`.
+
+**Decision (user-approved in session):**
+- One accent: `--electric` deleted; `--acid` restricted to the homepage hero moment
+- Fraunces dropped; the `font-display` role collapses onto Outfit (dela keeps hero duty)
+- Shadow budget of three (2/4/6px), token-driven in tailwind; shadow is punctuation, never a resting state — default cards are 1px-border, no shadow
+- AA contrast contract: `--success-ink`/`--danger-ink` carry status TEXT; raw teal/coral are fills and borders only
+- Buttons: 10 variants → 5 (`primary/secondary/ghost/danger/brutalist`); danger uses `bg-danger-ink`
+- Binary radius: `--radius: 0rem`; square or circular, nothing between; all six Tailwind steps map to the token
+- Two-ring focus (3px accent stroke + 6px halo); mono micro-label layer (`.label-micro`/`.label-nano`); `.ink-panel` as the one dark surface per view
+- Reveal timing 450ms `cubic-bezier(0.2,0.8,0.3,1)`; decorative keyframe families removed
+
+**Rationale:** Every accent added after coral competes with it; contrast must be a token decision with measured ratios; contracts that aren't enforced by tests regress silently (mutation-verified during review).
+
+**Consequences:**
+- Positive: single accent reads as intentional; status text passes WCAG AA on both grounds; design contracts test-enforced
+- Negative: raw coral/teal remain <AA as text anywhere not yet migrated (428 residual sites, many on dark ground); v2.0 utilities await consumer adoption
+- Deferred: bind-by-email policy rework (product decision); utility consumer wiring (design decision)
+
+---
+
 ## Template (copy for new entries)
 
 ```markdown
