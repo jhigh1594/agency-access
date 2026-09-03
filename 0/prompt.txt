@@ -1,0 +1,4 @@
+One flag: .claude/settings.json went in with the merge. That change removes the AIPMOS session-start hooks and the permissions allowlist, and adds entire tool hooks. If that swap was not intentional, I can
+  revert just that file on main.
+
+revert this
