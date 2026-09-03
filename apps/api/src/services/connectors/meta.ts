@@ -842,6 +842,110 @@ export class MetaConnector {
   }
 
   /**
+   * List the user's own Facebook Pages (GET /me/accounts)
+   * Used for the guided Page prerequisite check before Business creation
+   *
+   * @param accessToken - Valid Meta access token
+   * @returns Pages the user administers
+   */
+  async getUserPages(
+    accessToken: string
+  ): Promise<Array<{ id: string; name: string; category?: string }>> {
+    const response = await fetch(
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/me/accounts?fields=id,name,category&access_token=${accessToken}`,
+      { method: 'GET' }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(error);
+      } catch {
+        throw new Error(`Failed to fetch user pages: ${error}`);
+      }
+      throw new Error(`Failed to fetch user pages: ${parsedError.error?.message || error}`);
+    }
+
+    const data = (await response.json()) as {
+      data?: Array<{ id: string; name: string; category?: string }>;
+    };
+
+    return (data.data || []).map((page) => ({
+      id: page.id,
+      name: page.name,
+      category: page.category,
+    }));
+  }
+
+  /**
+   * Create a Business Portfolio owned by the token's user
+   * POST /me/businesses — requires business_management on the app and the user token
+   * primary_page must be a Page the user administers; a Business cannot be deleted
+   *
+   * @param accessToken - Valid Meta access token with business_management scope
+   * @param params - Business creation parameters
+   * @returns Created business details
+   */
+  async createBusiness(
+    accessToken: string,
+    params: {
+      name: string;
+      vertical: string;
+      primaryPageId: string;
+      timezoneId: string;
+    }
+  ): Promise<{
+    id: string;
+    name: string;
+    timezoneId: string;
+  }> {
+    const requestBody = new URLSearchParams({
+      access_token: accessToken,
+      name: params.name,
+      vertical: params.vertical,
+      primary_page: params.primaryPageId,
+      timezone_id: params.timezoneId,
+    });
+
+    const response = await fetch(
+      `https://graph.facebook.com/${META_GRAPH_VERSION}/me/businesses`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: requestBody.toString(),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(error);
+      } catch {
+        throw new Error(`Meta business creation failed: ${error}`);
+      }
+      throw new Error(
+        `Meta business creation failed: ${parsedError.error?.message || error}`
+      );
+    }
+
+    const data = (await response.json()) as {
+      id: string;
+      name: string;
+      timezone_id: string;
+    };
+
+    return {
+      id: data.id,
+      name: data.name,
+      timezoneId: data.timezone_id,
+    };
+  }
+
+  /**
    * Get the URL for creating a new Facebook Page within a Business Manager
    * This is a deep link to Meta's page creation flow
    *
@@ -850,6 +954,38 @@ export class MetaConnector {
    */
   getPageCreationUrl(businessId: string): string {
     return `https://business.facebook.com/pages/creation/?business_id=${businessId}`;
+  }
+
+  /**
+   * Get the URL for creating a new Facebook Page as an end user
+   * Used when a client has no Page at all — Pages cannot be created via the API
+   *
+   * @returns URL for page creation
+   */
+  getUserPageCreationUrl(): string {
+    return 'https://www.facebook.com/pages/create/';
+  }
+
+  /**
+   * Get the URL for verifying a Business (Security Center)
+   * Required by Meta before an unverified business can spend on ads
+   *
+   * @param businessId - Business Manager ID
+   * @returns URL for business verification
+   */
+  getBusinessVerificationUrl(businessId: string): string {
+    return `https://business.facebook.com/settings/${businessId}/security_center`;
+  }
+
+  /**
+   * Get the URL for managing a Business payment methods
+   * Required by Meta before an ad account can spend
+   *
+   * @param businessId - Business Manager ID
+   * @returns URL for payment settings
+   */
+  getPaymentMethodUrl(businessId: string): string {
+    return `https://business.facebook.com/settings/${businessId}/payment`;
   }
 
   /**

@@ -483,3 +483,165 @@ describe('MetaConnector Asset Discovery', () => {
     });
   });
 });
+
+describe('MetaConnector Business Creation', () => {
+  let connector: MetaConnector;
+  const accessToken = 'test-access-token';
+
+  beforeEach(() => {
+    connector = new MetaConnector();
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  describe('getUserPages', () => {
+    it('returns the user own pages mapped from /me/accounts', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            { id: 'page-1', name: 'Acme Main', category: 'Retail' },
+            { id: 'page-2', name: 'Acme Deals', category: 'Shopping' },
+          ],
+        }),
+      } as Response);
+
+      const result = await connector.getUserPages(accessToken);
+
+      expect(result).toEqual([
+        { id: 'page-1', name: 'Acme Main', category: 'Retail' },
+        { id: 'page-2', name: 'Acme Deals', category: 'Shopping' },
+      ]);
+      expect(fetch).toHaveBeenCalledWith(
+        'https://graph.facebook.com/v21.0/me/accounts?fields=id,name,category&access_token=test-access-token',
+        { method: 'GET' }
+      );
+    });
+
+    it('returns an empty list when the user owns no pages', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [] }),
+      } as Response);
+
+      const result = await connector.getUserPages(accessToken);
+
+      expect(result).toEqual([]);
+    });
+
+    it('throws with the Meta error payload on failure', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () =>
+          JSON.stringify({ error: { message: 'Invalid OAuth access token' } }),
+      } as unknown as Response);
+
+      await expect(connector.getUserPages(accessToken)).rejects.toThrow(
+        'Failed to fetch user pages: Invalid OAuth access token'
+      );
+    });
+  });
+
+  describe('createBusiness', () => {
+    it('POSTs to /me/businesses with the creation fields and maps the response', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'biz-123',
+          name: 'Acme Business',
+          timezone_id: '25',
+        }),
+      } as Response);
+
+      const result = await connector.createBusiness(accessToken, {
+        name: 'Acme Business',
+        vertical: 'OTHER',
+        primaryPageId: 'page-1',
+        timezoneId: '25',
+      });
+
+      expect(result).toEqual({
+        id: 'biz-123',
+        name: 'Acme Business',
+        timezoneId: '25',
+      });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://graph.facebook.com/v21.0/me/businesses',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
+      );
+
+      const [url, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+      expect(url).toBe('https://graph.facebook.com/v21.0/me/businesses');
+      const body = new URLSearchParams(init.body as string);
+      expect(body.get('access_token')).toBe('test-access-token');
+      expect(body.get('name')).toBe('Acme Business');
+      expect(body.get('vertical')).toBe('OTHER');
+      expect(body.get('primary_page')).toBe('page-1');
+      expect(body.get('timezone_id')).toBe('25');
+    });
+
+    it('throws with the Meta error message on failure', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () =>
+          JSON.stringify({
+            error: { message: 'You have reached the limit of businesses you can create' },
+          }),
+      } as unknown as Response);
+
+      await expect(
+        connector.createBusiness(accessToken, {
+          name: 'Acme Business',
+          vertical: 'OTHER',
+          primaryPageId: 'page-1',
+          timezoneId: '25',
+        })
+      ).rejects.toThrow(
+        'Meta business creation failed: You have reached the limit of businesses you can create'
+      );
+    });
+
+    it('throws with the raw error body when the payload is not JSON', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        text: async () => 'Internal Server Error',
+      } as unknown as Response);
+
+      await expect(
+        connector.createBusiness(accessToken, {
+          name: 'Acme Business',
+          vertical: 'OTHER',
+          primaryPageId: 'page-1',
+          timezoneId: '25',
+        })
+      ).rejects.toThrow('Meta business creation failed: Internal Server Error');
+    });
+  });
+
+  describe('creation and setup URL helpers', () => {
+    it('returns the Facebook page creation URL for users without a page', () => {
+      expect(connector.getUserPageCreationUrl()).toBe(
+        'https://www.facebook.com/pages/create/'
+      );
+    });
+
+    it('returns a business verification deep link scoped to the business', () => {
+      expect(connector.getBusinessVerificationUrl('biz-123')).toBe(
+        'https://business.facebook.com/settings/biz-123/security_center'
+      );
+    });
+
+    it('returns a payment method deep link scoped to the business', () => {
+      expect(connector.getPaymentMethodUrl('biz-123')).toBe(
+        'https://business.facebook.com/settings/biz-123/payment'
+      );
+    });
+  });
+});
