@@ -18,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Non-Negotiable Rules
 
+- [ ] **ALWAYS** read `apps/web/DESIGN_SYSTEM.md` before starting any UI work — components, pages, layouts, styling, or visual changes. No UI implementation without consulting the design system first.
 - [ ] **NEVER** store OAuth tokens in PostgreSQL — use Infisical, store only `secretId` in database.
 - [ ] **ALWAYS** write failing tests before implementation (TDD). Exceptions: config files, type-only definitions, styling/CSS.
 - [ ] **ALWAYS** verify Clerk JWT on every API request via middleware.

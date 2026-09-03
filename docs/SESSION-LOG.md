@@ -27,6 +27,28 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
+## Session: 2026-08-20 — Lazyweb trust strip under hero CTAs
+
+### What was done
+- Implemented Lazyweb recommendation "Agency logo strip under the CTAs" per the Markdown report (generic greyscale placeholder wordmarks, caption "Trusted by marketing agencies").
+- Read DESIGN_SYSTEM.md before UI work; reused font-mono, text-ink with opacity, Reveal delay pattern.
+- Verified visually at desktop 1440px and mobile 375px: strip below CTA pair, left-aligned on desktop, centered on mobile, no overflow/overlap, primary CTA above the fold.
+
+### Files changed
+- `apps/web/src/components/marketing/hero-section.tsx` — trust strip (caption + five inline SVG wordmark placeholders, aria-hidden) added after CTA block in left column; nothing else touched.
+- `docs/SESSION-LOG.md` — this entry.
+
+### Verification
+- `npm run typecheck --workspace=apps/web` clean. TDD-exempt (styling-only).
+
+### Decisions made
+- Placeholder wordmarks are inline SVG shapes (no real company names) per owner-approved brief; `aria-hidden` since decorative.
+
+### Next steps
+- Replace placeholder wordmarks with real customer logos once real customers approve logo use.
+
+---
+
 ## Session: 2026-03-29 — INP improvements and client perf gate
 
 ### What was done
