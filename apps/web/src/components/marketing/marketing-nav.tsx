@@ -198,7 +198,7 @@ export function MarketingNav() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-sm bg-card md:hidden shadow-brutalist-xl border-l-2 border-black flex flex-col"
+                className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-sm bg-card md:hidden shadow-brutalist-lg border-l-2 border-black flex flex-col"
                 style={{ backgroundColor: 'white' }}
               >
               {/* Mobile Menu Header */}

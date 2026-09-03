@@ -197,7 +197,7 @@ export function HeroCopyRewriteSolutionSection() {
               </span>
             </div>
 
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border-4 border-black shadow-brutalist-2xl">
+            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border-4 border-black shadow-brutalist-lg">
               <ImageComparison
                 className="h-full w-full"
                 enableHover

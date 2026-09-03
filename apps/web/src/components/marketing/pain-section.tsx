@@ -144,7 +144,7 @@ function StatCard({
       viewport={{ once: true }}
       transition={{ delay, duration: 0.6 }}
       whileHover={{ translateX: -4, translateY: -4 }}
-      className={`${bgColor} ${textColor} p-6 sm:p-8 border-2 border-black shadow-brutalist-xl hover:shadow-brutalist-xl transition-all duration-200 rounded-lg`}
+      className={`${bgColor} ${textColor} p-6 sm:p-8 border-2 border-black shadow-brutalist-lg hover:shadow-brutalist-lg transition-all duration-200 rounded-lg`}
     >
       <div className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest mb-3 opacity-90">
         {label}
@@ -227,7 +227,7 @@ export function PainSection() {
               whileInView={shouldAnimate ? { rotate: 0 } : undefined}
               viewport={{ once: true }}
               transition={{ duration: 0.3 }}
-              className="inline-flex items-center gap-2 border-2 border-coral bg-coral text-white px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] font-mono shadow-brutalist-lg mb-6 rounded-lg hover:shadow-brutalist-xl hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+              className="inline-flex items-center gap-2 border-2 border-coral bg-coral text-white px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] font-mono shadow-brutalist-lg mb-6 rounded-lg hover:shadow-brutalist-lg hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
             >
               <m.span
                 animate={shouldAnimate ? { opacity: [1, 0.6, 1] } : undefined}

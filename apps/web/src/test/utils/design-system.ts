@@ -52,8 +52,9 @@ const OVER_ROUNDED = [
 export function hasBrutalistShadow(className: string): boolean {
   if (!className) return false;
   // Check if ANY class in the string is a brutalist shadow
+  // v2.0 budget: sm / default / lg only — xl/2xl/3xl are retired
   const classes = className.split(/\s+/);
-  return classes.some(cls => /shadow-brutalist(-sm|-lg|-xl|-2xl|-3xl)?$/.test(cls));
+  return classes.some(cls => /shadow-brutalist(-sm|-lg)?$/.test(cls));
 }
 
 
@@ -203,15 +204,17 @@ export function validateDesignSystem(className: string | undefined): DesignSyste
 }
 
 /**
- * Get the correct brutalist shadow for a given soft shadow
+ * Get the correct brutalist shadow for a given soft shadow.
+ * v2.0 shadow budget: three sizes (sm 2px, default 4px, lg 6px).
+ * Oversized soft shadows collapse to the lg ceiling.
  */
 export function brutalistShadowFor(softShadow: string): string {
   const mapping: Record<string, string> = {
     'shadow-sm': 'shadow-brutalist-sm',
     'shadow-md': 'shadow-brutalist',
     'shadow-lg': 'shadow-brutalist-lg',
-    'shadow-xl': 'shadow-brutalist-xl',
-    'shadow-2xl': 'shadow-brutalist-2xl',
+    'shadow-xl': 'shadow-brutalist-lg',
+    'shadow-2xl': 'shadow-brutalist-lg',
   };
   return mapping[softShadow] || 'shadow-brutalist';
 }

@@ -547,11 +547,6 @@
    PILLAR AI STYLE UTILITIES
    ======================================== */
 
-/* Enhanced hard shadows */
-.shadow-hard-xl {
-  box-shadow: 8px 8px 0px 0px rgb(var(--border-hard));
-}
-
 /* ========================================
    EMAIL APOCALYPSE COLLAPSE UTILITIES
    ======================================== */
@@ -565,7 +560,10 @@
   border: 4px solid rgb(var(--border-hard));
 }
 
-/* Brutalist hard shadows - no blur */
+/* Brutalist hard shadows - no blur.
+   v2.0 shadow budget: three sizes only (sm 2px, default 4px, lg 6px).
+   Shadow is punctuation for interactive/hero elements, never a resting
+   state — default cards use a 1px border with no shadow. */
 .shadow-brutalist-sm {
   box-shadow: 2px 2px 0px rgb(var(--border-hard));
 }
@@ -578,16 +576,10 @@
   box-shadow: 6px 6px 0px rgb(var(--border-hard));
 }
 
-.shadow-brutalist-xl {
-  box-shadow: 8px 8px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-2xl {
-  box-shadow: 12px 12px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-3xl {
-  box-shadow: 16px 16px 0px rgb(var(--border-hard));
+/* Bottom hairline — meta rows, card footers, list dividers.
+   Ported from lazyweb.com: their primary separation device (221 uses). */
+.hairline-b {
+  border-bottom: 1px solid rgb(var(--ink-secondary) / 0.55);
 }
 
 /* Hover lift effect - brutalist style (subtle) */

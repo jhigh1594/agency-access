@@ -28,7 +28,7 @@ export function ComparisonTable({ children, className }: ComparisonTableProps) {
         // Container styling
         'relative overflow-hidden rounded-none',
         'border-[3px] border-black',
-        'shadow-brutalist-xl',
+        'shadow-brutalist-lg',
         // Overflow handling
         'overflow-x-auto',
         className

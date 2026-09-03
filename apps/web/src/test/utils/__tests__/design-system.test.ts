@@ -22,12 +22,16 @@ import {
 } from '../design-system';
 
 describe('hasBrutalistShadow', () => {
-  it('should return true for brutalist shadow variants', () => {
+  it('should return true for the three brutalist shadow sizes', () => {
     expect(hasBrutalistShadow('shadow-brutalist')).toBe(true);
     expect(hasBrutalistShadow('shadow-brutalist-sm')).toBe(true);
     expect(hasBrutalistShadow('shadow-brutalist-lg')).toBe(true);
-    expect(hasBrutalistShadow('shadow-brutalist-xl')).toBe(true);
-    expect(hasBrutalistShadow('shadow-brutalist-2xl')).toBe(true);
+  });
+
+  it('should not recognize deprecated oversized brutalist shadows', () => {
+    // v2.0 shadow budget: xl/2xl/3xl retired — anything above lg collapses
+    expect(hasBrutalistShadow('shadow-brutalist-xl')).toBe(false);
+    expect(hasBrutalistShadow('shadow-brutalist-2xl')).toBe(false);
   });
 
   it('should return false for soft shadows', () => {
@@ -267,12 +271,13 @@ describe('validateDesignSystem', () => {
 });
 
 describe('brutalistShadowFor', () => {
-  it('should map soft shadows to brutalist equivalents', () => {
+  it('should map soft shadows to brutalist equivalents within the three-size budget', () => {
     expect(brutalistShadowFor('shadow-sm')).toBe('shadow-brutalist-sm');
     expect(brutalistShadowFor('shadow-md')).toBe('shadow-brutalist');
     expect(brutalistShadowFor('shadow-lg')).toBe('shadow-brutalist-lg');
-    expect(brutalistShadowFor('shadow-xl')).toBe('shadow-brutalist-xl');
-    expect(brutalistShadowFor('shadow-2xl')).toBe('shadow-brutalist-2xl');
+    // oversized soft shadows collapse to the lg ceiling (v2.0)
+    expect(brutalistShadowFor('shadow-xl')).toBe('shadow-brutalist-lg');
+    expect(brutalistShadowFor('shadow-2xl')).toBe('shadow-brutalist-lg');
   });
 
   it('should default to shadow-brutalist for unknown shadows', () => {

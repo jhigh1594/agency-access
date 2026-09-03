@@ -41,7 +41,7 @@ export function HeroCopyRewriteCaseStudySection() {
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="rounded-[1rem] border-2 border-black bg-ink p-8 text-paper shadow-brutalist-xl">
+          <div className="rounded-[1rem] border-2 border-black bg-ink p-8 text-paper shadow-brutalist-lg">
             <div className="inline-flex rounded-[0.75rem] border-2 border-white/20 bg-white/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide">
               Pillar AI Agency
             </div>

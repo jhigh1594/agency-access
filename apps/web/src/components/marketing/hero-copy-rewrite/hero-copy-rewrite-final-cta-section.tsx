@@ -33,7 +33,7 @@ export function HeroCopyRewriteFinalCtaSection() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-none border-2 border-black bg-card p-8 sm:p-12 md:p-16 lg:p-24 overflow-hidden text-center shadow-brutalist-xl"
+          className="relative rounded-none border-2 border-black bg-card p-8 sm:p-12 md:p-16 lg:p-24 overflow-hidden text-center shadow-brutalist-lg"
         >
           <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-coral/5 -z-0" />
           <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 bg-teal/5 -z-0" />

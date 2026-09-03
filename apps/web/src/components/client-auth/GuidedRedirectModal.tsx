@@ -69,7 +69,7 @@ export function GuidedRedirectModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="w-full max-w-lg border-2 border-black dark:border-white shadow-brutalist-xl bg-white dark:bg-ink">
+      <Card className="w-full max-w-lg border-2 border-black dark:border-white shadow-brutalist-lg bg-white dark:bg-ink">
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b-2 border-black dark:border-white">
           <div>

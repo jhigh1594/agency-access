@@ -13,7 +13,7 @@ export function TrustSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative p-6 sm:p-8 md:p-12 rounded-none border-2 border-black shadow-brutalist-xl bg-card"
+            className="relative p-6 sm:p-8 md:p-12 rounded-none border-2 border-black shadow-brutalist-lg bg-card"
           >
             <blockquote className="font-display text-xl sm:text-2xl md:text-3xl lg:text-5xl italic leading-tight text-ink relative z-10">
               &ldquo;AuthHub literally saved our onboarding process. We went from

@@ -105,9 +105,10 @@ const config: Config = {
         "gentle-spin": "gentle-spin 2.5s ease-in-out infinite",
       },
       boxShadow: {
+        /* v2.0 shadow budget: three sizes only — sm 2px, default 4px, lg 6px */
+        'brutalist-sm': '2px 2px 0px #000',
         'brutalist': '4px 4px 0px #000',
         'brutalist-lg': '6px 6px 0px #000',
-        'brutalist-xl': '8px 8px 0px #000',
       },
     },
   },

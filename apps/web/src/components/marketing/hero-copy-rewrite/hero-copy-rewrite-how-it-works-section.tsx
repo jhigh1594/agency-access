@@ -172,7 +172,7 @@ export function HeroCopyRewriteHowItWorksSection() {
 
                     <div className={`flex-1 w-full ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
                       <m.div
-                        className="bg-card border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
+                        className="bg-card border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
                         whileHover={{ y: -4, boxShadow: '8px 8px 0px #000' }}
                       >
                         <div
@@ -268,7 +268,7 @@ export function HeroCopyRewriteHowItWorksSection() {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="mt-12 sm:mt-16 md:mt-20 text-center"
             >
-              <div className="inline-block bg-card text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-xl relative overflow-hidden group">
+              <div className="inline-block bg-card text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-lg relative overflow-hidden group">
                 <div
                   className="absolute inset-0 opacity-10"
                   style={{

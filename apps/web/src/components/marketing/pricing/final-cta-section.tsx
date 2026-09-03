@@ -33,7 +33,7 @@ export function FinalCTASection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative border-2 border-black bg-paper p-8 sm:p-12 md:p-16 lg:p-20 overflow-hidden text-center shadow-brutalist-xl max-w-4xl mx-auto"
+            className="relative border-2 border-black bg-paper p-8 sm:p-12 md:p-16 lg:p-20 overflow-hidden text-center shadow-brutalist-lg max-w-4xl mx-auto"
           >
             {/* Background Accents - Brutalist */}
             <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-coral/5 -z-0" />

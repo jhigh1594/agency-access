@@ -106,7 +106,7 @@ export function HeroCopyRewriteHeroSection() {
           </div>
 
           <div className="hidden lg:block lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
-            <div className="absolute inset-0 bg-coral rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-hard-xl opacity-20" />
+            <div className="absolute inset-0 bg-coral rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-brutalist-lg opacity-20" />
             <div className="absolute inset-0 border-2 border-black border-dashed rounded-[3rem] -rotate-3 z-0" />
 
             <m.div
@@ -143,7 +143,7 @@ export function HeroCopyRewriteHeroSection() {
               initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : false}
               animate={shouldAnimate ? { opacity: 1, scale: 1 } : undefined}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-hard-xl group"
+              className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-brutalist-lg group"
             >
               <div className="absolute inset-0 p-6">
                 <div className="flex items-center gap-2 mb-6">
