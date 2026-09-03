@@ -71,8 +71,8 @@ jobs:
           NODE_ENV=production
           PORT=3001
           DATABASE_URL=${PERF_DATABASE_URL}
-          FRONTEND_URL=http://localhost:3000
-          API_URL=http://localhost:3001
+          FRONTEND_URL=https://app.example.com
+          API_URL=https://api.example.com
           CLERK_PUBLISHABLE_KEY=${PERF_CLERK_PUBLISHABLE_KEY}
           CLERK_SECRET_KEY=${PERF_CLERK_SECRET_KEY}
           INFISICAL_CLIENT_ID=dummy
