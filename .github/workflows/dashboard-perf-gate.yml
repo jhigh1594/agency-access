@@ -62,6 +62,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=apps/api
+
       - name: Write API env file
         run: |
           cat > apps/api/.env <<ENV
@@ -88,7 +91,7 @@ jobs:
 
       - name: Start API
         run: |
-          node apps/api/dist/index.js > /tmp/dashboard-perf-api.log 2>&1 &
+          (cd apps/api && exec node dist/index.js > /tmp/dashboard-perf-api.log 2>&1) &
           echo $! > /tmp/dashboard-perf-api.pid
 
       - name: Wait for health
