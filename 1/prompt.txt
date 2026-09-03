@@ -1,0 +1,9 @@
+An agency owner that just signed up sent me this image when tyring  to connect his Meta account. We need to fix this immediately
+
+---
+
+It's already live. Is there a Meta MCP or cli that we can install so that you can verify everythign is configured properly?
+
+---
+
+It's already live. Is there a Meta MCP or cli that we can install so that you can verify everythign is configured properly?

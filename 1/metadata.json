@@ -1,0 +1,65 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M1M5NXQYK0EKSYHEJ068NEM4",
+  "session_id": "5d5f991b-704e-41e3-8a1b-df58cc290c7a",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-03T17:39:51.062548Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "save_step_count": 2,
+  "files_touched": [],
+  "agent": "Factory AI Droid",
+  "model": "gemini-3.7-flash",
+  "turn_id": "11a6afa3777f",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 2114,
+      "user_lines_removed": 272,
+      "agent_lines_added": 530,
+      "agent_lines_removed": 69,
+      "user_added_per_file": {
+        ".claude/skills/replay-vision-scanner-broken-experiences/SKILL.md": 50,
+        ".claude/skills/replay-vision-scanner-broken-experiences/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanner-user-frustration/SKILL.md": 42,
+        ".claude/skills/replay-vision-scanner-user-frustration/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanners-core/SKILL.md": 114,
+        ".claude/skills/replay-vision-scanners-core/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanners-core/references/replay-vision.md": 66,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "apps/api/src/services/meta-asset-creation.service.ts": 97,
+        "apps/web/clerk.lock": 1,
+        "apps/web/sentry.client.config.ts": 28,
+        "output/lazyweb.com/2026-09-03T17-39-36-883Z_v0.28.0.tokens.json": 464,
+        "pnpm-lock.yaml": 600,
+        "pnpm-workspace.yaml": 2
+      },
+      "user_removed_per_file": {
+        "apps/api/src/services/meta-asset-creation.service.ts": 272
+      }
+    }
+  ]
+}
