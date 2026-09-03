@@ -7,3 +7,19 @@ It's already live. Is there a Meta MCP or cli that we can install so that you ca
 ---
 
 It's already live. Is there a Meta MCP or cli that we can install so that you can verify everythign is configured properly?
+
+---
+
+Here's my App ID: 1215220247221414
+
+App Secret: REDACTED
+
+Where do I find the config id?
+
+---
+
+Here's my App ID: 1215220247221414
+
+App Secret: REDACTED
+
+Where do I find the config id?
