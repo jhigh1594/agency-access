@@ -316,7 +316,7 @@ function safePagination(page?: number, limit?: number) {
 const SYNTHETIC_OR_TEST_AGENCY_FILTERS = [
   {
     email: {
-      endsWith: '@clerk.temp',
+      equals: 'dev-bypass@agency-access.local',
       mode: 'insensitive' as const,
     },
   },

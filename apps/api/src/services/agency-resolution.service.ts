@@ -9,6 +9,8 @@
 import { prisma } from '@/lib/prisma';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 
+const PLACEHOLDER_EMAIL_SUFFIX = '@clerk.temp';
+
 export interface ResolveAgencyResult {
   data: {
     agencyId: string; // Always returns UUID
@@ -103,6 +105,19 @@ async function resolveAgencyFromDb(
       agency = await prisma.agency.findUnique({
         where: { clerkUserId: identifier },
       });
+
+      if (agency?.email.endsWith(PLACEHOLDER_EMAIL_SUFFIX) && userEmail) {
+        const existingByEmail = await prisma.agency.findUnique({
+          where: { email: userEmail },
+        });
+
+        if (!existingByEmail || existingByEmail.id === agency.id) {
+          agency = await prisma.agency.update({
+            where: { id: agency.id },
+            data: { email: userEmail },
+          });
+        }
+      }
 
       // If not found and we should create, create with proper UUID
       if (!agency && createIfMissing) {
@@ -257,4 +272,3 @@ export async function invalidateAgencyCache(clerkUserId: string): Promise<void> 
     invalidateCache(`agency:${clerkUserId}`),
   ]);
 }
-

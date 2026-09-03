@@ -1,7 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const { resolveAgencyMock } = vi.hoisted(() => ({
+const { resolveAgencyMock, clerkClientMock } = vi.hoisted(() => ({
   resolveAgencyMock: vi.fn(),
+  clerkClientMock: {
+    users: {
+      getUser: vi.fn(),
+    },
+  },
+}));
+
+vi.mock('@clerk/backend', () => ({
+  createClerkClient: vi.fn(() => clerkClientMock),
 }));
 
 vi.mock('@/services/agency-resolution.service', () => ({
@@ -15,6 +24,8 @@ import { resolvePrincipalAgency } from '../authorization';
 describe('resolvePrincipalAgency', () => {
   beforeEach(() => {
     resolveAgencyMock.mockReset();
+    clerkClientMock.users.getUser.mockReset();
+    clerkClientMock.users.getUser.mockRejectedValue(new Error('Clerk unavailable'));
   });
 
   it('uses cache-first lookup without create-if-missing when agency exists', async () => {
@@ -44,6 +55,7 @@ describe('resolvePrincipalAgency', () => {
       createIfMissing: false,
       userEmail: undefined,
     });
+    expect(clerkClientMock.users.getUser).not.toHaveBeenCalled();
 
     expect(result.error).toBeNull();
     expect(result.data).toEqual({
@@ -127,6 +139,40 @@ describe('resolvePrincipalAgency', () => {
     expect(resolveAgencyMock).toHaveBeenCalledWith('user_123', {
       createIfMissing: false,
       userEmail: 'owner@acme.test',
+    });
+  });
+
+  it('fetches the Clerk email before creating a missing agency', async () => {
+    clerkClientMock.users.getUser.mockResolvedValue({
+      primaryEmailAddressId: 'email_1',
+      emailAddresses: [
+        { id: 'email_1', emailAddress: 'ben@mindbentmedia.com' },
+      ],
+    });
+    resolveAgencyMock
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: {
+          agencyId: 'agency_1',
+          agency: {
+            id: 'agency_1',
+            clerkUserId: 'user_1',
+            name: 'Mindbent Media',
+            email: 'ben@mindbentmedia.com',
+          },
+        },
+        error: null,
+      });
+
+    const result = await resolvePrincipalAgency({
+      user: { sub: 'user_1' },
+    } as any);
+
+    expect(result.error).toBeNull();
+    expect(clerkClientMock.users.getUser).toHaveBeenCalledWith('user_1');
+    expect(resolveAgencyMock).toHaveBeenLastCalledWith('user_1', {
+      createIfMissing: true,
+      userEmail: 'ben@mindbentmedia.com',
     });
   });
 });
