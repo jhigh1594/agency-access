@@ -58,7 +58,84 @@ export interface AssetCreationLinks {
   paymentMethodUrl: string;
 }
 
+type MetaPlatformAuthorization = NonNullable<
+  Awaited<ReturnType<typeof prisma.platformAuthorization.findUnique>>
+>;
+
 class MetaAssetCreationService {
+  /**
+   * Resolve the active client Meta OAuth access token for a connection.
+   * Shared guard for every creation path: authorization exists, is active,
+   * and its Infisical token is present and unexpired.
+   */
+  private async getActiveClientAccessToken(
+    connectionId: string
+  ): Promise<{ platformAuth: MetaPlatformAuthorization; accessToken: string } | { error: { code: string; message: string } }> {
+    const platformAuth = await prisma.platformAuthorization.findUnique({
+      where: {
+        connectionId_platform: {
+          connectionId,
+          platform: 'meta',
+        },
+      },
+    });
+
+    if (!platformAuth) {
+      return {
+        error: {
+          code: 'AUTHORIZATION_NOT_FOUND',
+          message: 'Meta authorization not found for this connection',
+        },
+      };
+    }
+
+    if (platformAuth.status !== 'active') {
+      return {
+        error: {
+          code: 'AUTHORIZATION_INACTIVE',
+          message: 'Meta authorization is not active',
+        },
+      };
+    }
+
+    let tokens;
+    try {
+      tokens = await infisical.getOAuthTokens(platformAuth.secretId);
+    } catch (tokenError) {
+      logger.error('Failed to retrieve Meta tokens from Infisical', {
+        connectionId,
+        secretId: platformAuth.secretId,
+        error: tokenError,
+      });
+      return {
+        error: {
+          code: 'TOKEN_NOT_FOUND',
+          message: 'OAuth tokens not found in secure storage',
+        },
+      };
+    }
+
+    if (!tokens || !tokens.accessToken) {
+      return {
+        error: {
+          code: 'TOKEN_NOT_FOUND',
+          message: 'OAuth tokens not found in secure storage',
+        },
+      };
+    }
+
+    if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
+      return {
+        error: {
+          code: 'TOKEN_EXPIRED',
+          message: 'Your authorization has expired. Please reconnect your Meta account.',
+        },
+      };
+    }
+
+    return { platformAuth, accessToken: tokens.accessToken };
+  }
+
   /**
    * Create a new Meta ad account for a client connection
    *
@@ -84,80 +161,15 @@ class MetaAssetCreationService {
         currency: params.currency,
       });
 
-      // Step 1: Get the platform authorization for this connection
-      const platformAuth = await prisma.platformAuthorization.findUnique({
-        where: {
-          connectionId_platform: {
-            connectionId,
-            platform: 'meta',
-          },
-        },
-      });
-
-      if (!platformAuth) {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found for this connection',
-          },
-        };
+      const token = await this.getActiveClientAccessToken(connectionId);
+      if ('error' in token) {
+        return { data: null, error: token.error };
       }
-
-      // Step 2: Check if authorization is active
-      if (platformAuth.status !== 'active') {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_INACTIVE',
-            message: 'Meta authorization is not active',
-          },
-        };
-      }
-
-      // Step 3: Retrieve tokens from Infisical (NEVER from database)
-      let tokens;
-      try {
-        tokens = await infisical.getOAuthTokens(platformAuth.secretId);
-      } catch (tokenError) {
-        logger.error('Failed to retrieve Meta tokens from Infisical', {
-          connectionId,
-          secretId: platformAuth.secretId,
-          error: tokenError,
-        });
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      if (!tokens || !tokens.accessToken) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      // Step 4: Check if token is expired
-      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_EXPIRED',
-            message: 'Your authorization has expired. Please reconnect your Meta account.',
-          },
-        };
-      }
+      const { platformAuth, accessToken } = token;
 
       // Step 5: Create ad account via Meta API
       const createdAccount = await metaConnector.createAdAccount(
-        tokens.accessToken,
+        accessToken,
         businessId,
         params
       );
@@ -283,80 +295,15 @@ class MetaAssetCreationService {
         catalogName: params.name,
       });
 
-      // Step 1: Get the platform authorization for this connection
-      const platformAuth = await prisma.platformAuthorization.findUnique({
-        where: {
-          connectionId_platform: {
-            connectionId,
-            platform: 'meta',
-          },
-        },
-      });
-
-      if (!platformAuth) {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found for this connection',
-          },
-        };
+      const token = await this.getActiveClientAccessToken(connectionId);
+      if ('error' in token) {
+        return { data: null, error: token.error };
       }
-
-      // Step 2: Check if authorization is active
-      if (platformAuth.status !== 'active') {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_INACTIVE',
-            message: 'Meta authorization is not active',
-          },
-        };
-      }
-
-      // Step 3: Retrieve tokens from Infisical (NEVER from database)
-      let tokens;
-      try {
-        tokens = await infisical.getOAuthTokens(platformAuth.secretId);
-      } catch (tokenError) {
-        logger.error('Failed to retrieve Meta tokens from Infisical', {
-          connectionId,
-          secretId: platformAuth.secretId,
-          error: tokenError,
-        });
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      if (!tokens || !tokens.accessToken) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      // Step 4: Check if token is expired
-      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_EXPIRED',
-            message: 'Your authorization has expired. Please reconnect your Meta account.',
-          },
-        };
-      }
+      const { platformAuth, accessToken } = token;
 
       // Step 5: Create product catalog via Meta API
       const createdCatalog = await metaConnector.createProductCatalog(
-        tokens.accessToken,
+        accessToken,
         businessId,
         params.name
       );
@@ -471,74 +418,13 @@ class MetaAssetCreationService {
     error: { code: string; message: string } | null;
   }> {
     try {
-      const platformAuth = await prisma.platformAuthorization.findUnique({
-        where: {
-          connectionId_platform: {
-            connectionId,
-            platform: 'meta',
-          },
-        },
-      });
-
-      if (!platformAuth) {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found for this connection',
-          },
-        };
+      const token = await this.getActiveClientAccessToken(connectionId);
+      if ('error' in token) {
+        return { data: null, error: token.error };
       }
+      const { platformAuth, accessToken } = token;
 
-      if (platformAuth.status !== 'active') {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_INACTIVE',
-            message: 'Meta authorization is not active',
-          },
-        };
-      }
-
-      let tokens;
-      try {
-        tokens = await infisical.getOAuthTokens(platformAuth.secretId);
-      } catch (tokenError) {
-        logger.error('Failed to retrieve Meta tokens from Infisical', {
-          connectionId,
-          secretId: platformAuth.secretId,
-          error: tokenError,
-        });
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      if (!tokens || !tokens.accessToken) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_EXPIRED',
-            message: 'Your authorization has expired. Please reconnect your Meta account.',
-          },
-        };
-      }
-
-      const pages = await metaConnector.getUserPages(tokens.accessToken);
+      const pages = await metaConnector.getUserPages(accessToken);
 
       return { data: pages, error: null };
     } catch (error) {
@@ -583,74 +469,13 @@ class MetaAssetCreationService {
         primaryPageId: params.primaryPageId,
       });
 
-      const platformAuth = await prisma.platformAuthorization.findUnique({
-        where: {
-          connectionId_platform: {
-            connectionId,
-            platform: 'meta',
-          },
-        },
-      });
-
-      if (!platformAuth) {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_NOT_FOUND',
-            message: 'Meta authorization not found for this connection',
-          },
-        };
+      const token = await this.getActiveClientAccessToken(connectionId);
+      if ('error' in token) {
+        return { data: null, error: token.error };
       }
+      const { platformAuth, accessToken } = token;
 
-      if (platformAuth.status !== 'active') {
-        return {
-          data: null,
-          error: {
-            code: 'AUTHORIZATION_INACTIVE',
-            message: 'Meta authorization is not active',
-          },
-        };
-      }
-
-      let tokens;
-      try {
-        tokens = await infisical.getOAuthTokens(platformAuth.secretId);
-      } catch (tokenError) {
-        logger.error('Failed to retrieve Meta tokens from Infisical', {
-          connectionId,
-          secretId: platformAuth.secretId,
-          error: tokenError,
-        });
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      if (!tokens || !tokens.accessToken) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_NOT_FOUND',
-            message: 'OAuth tokens not found in secure storage',
-          },
-        };
-      }
-
-      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
-        return {
-          data: null,
-          error: {
-            code: 'TOKEN_EXPIRED',
-            message: 'Your authorization has expired. Please reconnect your Meta account.',
-          },
-        };
-      }
-
-      const createdBusiness = await metaConnector.createBusiness(tokens.accessToken, params);
+      const createdBusiness = await metaConnector.createBusiness(accessToken, params);
 
       logger.info('Meta business created successfully', {
         connectionId,
