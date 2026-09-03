@@ -15,6 +15,8 @@
 
 import { useState, useEffect } from 'react';
 import { MetaAssetCreator } from '@/components/client-auth/MetaAssetCreator';
+import { MetaBusinessCreator } from '@/components/client-auth/MetaBusinessCreator';
+import { MetaBusinessSetupChecklist } from '@/components/client-auth/MetaBusinessSetupChecklist';
 import { GuidedRedirectCard } from '@/components/client-auth/GuidedRedirectModal';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -222,7 +224,47 @@ export default function AssetCreationTestPage() {
           )}
         </section>
 
-        {/* Section 5: Button Variants Used */}
+        {/* Section 5: MetaBusinessCreator (zero-portfolio clients) */}
+        <section className="mb-12">
+          <h2 className="text-lg font-bold text-[var(--ink)] font-display mb-4 pb-2 border-b-2 border-black dark:border-white">
+            5. MetaBusinessCreator (Create Business Portfolio)
+          </h2>
+
+          <div className="border-2 border-black dark:border-white bg-slate-50 dark:bg-slate-900 p-6 space-y-4">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--ink)] font-display">
+                No Business Portfolio yet
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                Zero-portfolio empty state as rendered in the wizard (Page check passed).
+                Timezone list loads from the API — in dev it needs a valid request token,
+                so it may render with the default selection only.
+              </p>
+            </div>
+
+            <MetaBusinessCreator
+              connectionId="test-connection-id"
+              accessRequestToken="test-token"
+              userPages={[
+                { id: 'page-1', name: 'Acme Main', category: 'Retail' },
+                { id: 'page-2', name: 'Acme Deals', category: 'Shopping' },
+              ]}
+              onSuccess={(business) => console.log('Business created:', business)}
+              onError={(error) => console.error('Error:', error)}
+            />
+          </div>
+        </section>
+
+        {/* Section 6: MetaBusinessSetupChecklist (unverified portfolio) */}
+        <section className="mb-12">
+          <h2 className="text-lg font-bold text-[var(--ink)] font-display mb-4 pb-2 border-b-2 border-black dark:border-white">
+            6. MetaBusinessSetupChecklist (Unverified Portfolio)
+          </h2>
+
+          <MetaBusinessSetupChecklist accessRequestToken="test-token" businessId="test-business-id" />
+        </section>
+
+        {/* Section 7: Button Variants Used */}
         <section className="mb-12">
           <h2 className="text-lg font-bold text-[var(--ink)] font-display mb-4 pb-2 border-b-2 border-black dark:border-white">
             5. Button Variants Used in Components
@@ -280,7 +322,7 @@ export default function AssetCreationTestPage() {
           </div>
         </section>
 
-        {/* Section 6: Design System Checklist */}
+        {/* Section 8: Design System Checklist */}
         <section className="mb-12">
           <h2 className="text-lg font-bold text-[var(--ink)] font-display mb-4 pb-2 border-b-2 border-black dark:border-white">
             6. Design System Checklist
