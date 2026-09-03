@@ -11,6 +11,8 @@ import { infisical } from '../lib/infisical.js';
 import { prisma } from '../lib/prisma.js';
 import { auditService } from './audit.service.js';
 import { metaConnector } from './connectors/meta.js';
+import { MetaClientAuthorizationMetadataSchema } from '@agency-platform/shared';
+import type { MetaClientAuthorizationMetadata } from '@agency-platform/shared';
 
 export interface CreateAdAccountParams {
   name: string;
@@ -20,6 +22,13 @@ export interface CreateAdAccountParams {
 
 export interface CreateProductCatalogParams {
   name: string;
+}
+
+export interface CreateBusinessParams {
+  name: string;
+  vertical: string;
+  primaryPageId: string;
+  timezoneId: string;
 }
 
 export interface CreatedAdAccount {
@@ -36,9 +45,17 @@ export interface CreatedProductCatalog {
   catalogType: string;
 }
 
+export interface CreatedBusiness {
+  id: string;
+  name: string;
+  timezoneId: string;
+}
+
 export interface AssetCreationLinks {
   pageCreationUrl: string;
   pixelCreationUrl: string;
+  businessVerificationUrl: string;
+  paymentMethodUrl: string;
 }
 
 class MetaAssetCreationService {
@@ -439,6 +456,354 @@ class MetaAssetCreationService {
   }
 
   /**
+   * List the client user's own Facebook Pages (guided Page prerequisite check)
+   *
+   * An empty list is a valid result: it means the user owns no Page and must
+   * create one before a Business Portfolio can be created.
+   *
+   * @param connectionId - Client connection ID
+   * @returns Pages the user administers, or an error
+   */
+  async getUserPages(
+    connectionId: string
+  ): Promise<{
+    data: Array<{ id: string; name: string; category?: string }> | null;
+    error: { code: string; message: string } | null;
+  }> {
+    try {
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return {
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'Meta authorization not found for this connection',
+          },
+        };
+      }
+
+      if (platformAuth.status !== 'active') {
+        return {
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_INACTIVE',
+            message: 'Meta authorization is not active',
+          },
+        };
+      }
+
+      let tokens;
+      try {
+        tokens = await infisical.getOAuthTokens(platformAuth.secretId);
+      } catch (tokenError) {
+        logger.error('Failed to retrieve Meta tokens from Infisical', {
+          connectionId,
+          secretId: platformAuth.secretId,
+          error: tokenError,
+        });
+        return {
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        };
+      }
+
+      if (!tokens || !tokens.accessToken) {
+        return {
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        };
+      }
+
+      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
+        return {
+          data: null,
+          error: {
+            code: 'TOKEN_EXPIRED',
+            message: 'Your authorization has expired. Please reconnect your Meta account.',
+          },
+        };
+      }
+
+      const pages = await metaConnector.getUserPages(tokens.accessToken);
+
+      return { data: pages, error: null };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to fetch client user pages', { connectionId, error: errorMessage });
+
+      return {
+        data: null,
+        error: {
+          code: 'USER_PAGES_FETCH_FAILED',
+          message: `Failed to fetch your Facebook Pages: ${errorMessage}`,
+        },
+      };
+    }
+  }
+
+  /**
+   * Create a Business Portfolio owned by the client user
+   *
+   * After a successful Graph call this PERSISTS the business selection into
+   * PlatformAuthorization.metadata.meta (source: 'created') so the existing
+   * grant-meta-access flow works on the new business immediately — save-assets
+   * never carries the business selection.
+   *
+   * @param connectionId - Client connection ID
+   * @param params - Business creation parameters
+   * @param userEmail - User email for audit logging
+   * @param agencyId - Agency ID for audit logging
+   * @returns Created business details
+   */
+  async createBusiness(
+    connectionId: string,
+    params: CreateBusinessParams,
+    userEmail: string,
+    agencyId: string
+  ): Promise<{ data: CreatedBusiness | null; error: { code: string; message: string; details?: any } | null }> {
+    try {
+      logger.info('Creating Meta business', {
+        connectionId,
+        businessName: params.name,
+        vertical: params.vertical,
+        primaryPageId: params.primaryPageId,
+      });
+
+      const platformAuth = await prisma.platformAuthorization.findUnique({
+        where: {
+          connectionId_platform: {
+            connectionId,
+            platform: 'meta',
+          },
+        },
+      });
+
+      if (!platformAuth) {
+        return {
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_NOT_FOUND',
+            message: 'Meta authorization not found for this connection',
+          },
+        };
+      }
+
+      if (platformAuth.status !== 'active') {
+        return {
+          data: null,
+          error: {
+            code: 'AUTHORIZATION_INACTIVE',
+            message: 'Meta authorization is not active',
+          },
+        };
+      }
+
+      let tokens;
+      try {
+        tokens = await infisical.getOAuthTokens(platformAuth.secretId);
+      } catch (tokenError) {
+        logger.error('Failed to retrieve Meta tokens from Infisical', {
+          connectionId,
+          secretId: platformAuth.secretId,
+          error: tokenError,
+        });
+        return {
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        };
+      }
+
+      if (!tokens || !tokens.accessToken) {
+        return {
+          data: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'OAuth tokens not found in secure storage',
+          },
+        };
+      }
+
+      if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
+        return {
+          data: null,
+          error: {
+            code: 'TOKEN_EXPIRED',
+            message: 'Your authorization has expired. Please reconnect your Meta account.',
+          },
+        };
+      }
+
+      const createdBusiness = await metaConnector.createBusiness(tokens.accessToken, params);
+
+      logger.info('Meta business created successfully', {
+        connectionId,
+        businessId: createdBusiness.id,
+        businessName: createdBusiness.name,
+      });
+
+      // Persist selection + discovery into PlatformAuthorization.metadata.meta so
+      // grant-meta-access can run against the new business without a re-selection.
+      const rootMetadata =
+        platformAuth.metadata && typeof platformAuth.metadata === 'object' &&
+        !Array.isArray(platformAuth.metadata)
+          ? { ...(platformAuth.metadata as Record<string, unknown>) }
+          : {};
+      const parsedMeta = MetaClientAuthorizationMetadataSchema.safeParse(rootMetadata.meta);
+      const currentMeta: MetaClientAuthorizationMetadata = parsedMeta.success
+        ? parsedMeta.data
+        : {};
+
+      const existingBusinesses = currentMeta.discovery?.availableBusinesses ?? [];
+      const alreadyListed = existingBusinesses.some((b) => b.id === createdBusiness.id);
+      const availableBusinesses = alreadyListed
+        ? existingBusinesses
+        : [
+            ...existingBusinesses,
+            { id: createdBusiness.id, name: createdBusiness.name, verificationStatus: 'unverified' },
+          ];
+
+      await prisma.platformAuthorization.update({
+        where: { id: platformAuth.id },
+        data: {
+          metadata: {
+            ...rootMetadata,
+            meta: {
+              ...currentMeta,
+              discovery: {
+                availableBusinesses,
+                discoveredAt: new Date().toISOString(),
+              },
+              selection: {
+                clientBusinessId: createdBusiness.id,
+                clientBusinessName: createdBusiness.name,
+                selectedAt: new Date().toISOString(),
+                source: 'created',
+              },
+            },
+          },
+        },
+      });
+
+      // Append to ClientConnection.grantedAssets (mirrors createdAdAccounts)
+      const connection = await prisma.clientConnection.findUnique({
+        where: { id: connectionId },
+      });
+
+      if (connection) {
+        const currentGrantedAssets = (connection.grantedAssets as any) || {};
+        const createdBusinesses = currentGrantedAssets.meta?.createdBusinesses || [];
+
+        await prisma.clientConnection.update({
+          where: { id: connectionId },
+          data: {
+            grantedAssets: {
+              ...currentGrantedAssets,
+              meta: {
+                ...(currentGrantedAssets.meta || {}),
+                createdBusinesses: [
+                  ...createdBusinesses,
+                  {
+                    id: createdBusiness.id,
+                    name: createdBusiness.name,
+                    timezoneId: createdBusiness.timezoneId,
+                    vertical: params.vertical,
+                    primaryPageId: params.primaryPageId,
+                    createdAt: new Date().toISOString(),
+                  },
+                ],
+              },
+            },
+          },
+        });
+      }
+
+      await auditService.createAuditLog({
+        agencyId,
+        userEmail,
+        action: 'META_BUSINESS_CREATED',
+        resourceType: 'client_connection',
+        resourceId: connectionId,
+        metadata: {
+          platform: 'meta',
+          businessId: createdBusiness.id,
+          businessName: createdBusiness.name,
+          vertical: params.vertical,
+          primaryPageId: params.primaryPageId,
+          timezoneId: createdBusiness.timezoneId,
+        },
+      });
+
+      return { data: createdBusiness, error: null };
+    } catch (error) {
+      logger.error('Failed to create Meta business', {
+        connectionId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const normalizedError = errorMessage.toLowerCase();
+
+      if (normalizedError.includes('permission') || normalizedError.includes('scope')) {
+        return {
+          data: null,
+          error: {
+            code: 'INSUFFICIENT_PERMISSIONS',
+            message:
+              'Your Meta account does not have permission to create a Business Portfolio. Reconnect your Meta account if you just granted the permission.',
+          },
+        };
+      }
+
+      if (normalizedError.includes('limit') || normalizedError.includes('maximum')) {
+        return {
+          data: null,
+          error: {
+            code: 'LIMIT_EXCEEDED',
+            message:
+              'Meta limits how many Business Portfolios one person can create. Use an existing portfolio or contact Meta support.',
+          },
+        };
+      }
+
+      if (normalizedError.includes('primary_page')) {
+        return {
+          data: null,
+          error: {
+            code: 'INVALID_PRIMARY_PAGE',
+            message:
+              "The selected Page cannot be used as the Business Portfolio's primary Page. Make sure you are an admin of the Page.",
+          },
+        };
+      }
+
+      return {
+        data: null,
+        error: {
+          code: 'CREATION_FAILED',
+          message: `Failed to create Business Portfolio: ${errorMessage}`,
+        },
+      };
+    }
+  }
+
+  /**
    * Get asset creation links for manual asset creation (pages, pixels)
    *
    * @param businessId - Meta Business Manager ID
@@ -448,6 +813,8 @@ class MetaAssetCreationService {
     return {
       pageCreationUrl: metaConnector.getPageCreationUrl(businessId),
       pixelCreationUrl: metaConnector.getPixelCreationUrl(businessId),
+      businessVerificationUrl: metaConnector.getBusinessVerificationUrl(businessId),
+      paymentMethodUrl: metaConnector.getPaymentMethodUrl(businessId),
     };
   }
 
