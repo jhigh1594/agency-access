@@ -84,6 +84,7 @@ jobs:
           META_APP_SECRET=dummy
           CREEM_API_KEY=dummy
           CREEM_WEBHOOK_SECRET=dummy
+          OAUTH_STATE_HMAC_SECRET=ci-perf-gate-dummy-hmac-secret-0123456789abcdef
           ENV
 
       - name: Build API
