@@ -49,6 +49,11 @@
 
     /* SEMANTIC COLORS - Accessible status indicators */
     --warning: 180 83 9;            /* #B45309 - Amber for warnings (5.2:1 contrast on white) */
+    /* v2.0 contrast-aware ink tokens (lazyweb port — dual tokens per ground).
+       Raw teal/coral FAIL AA as text on white (3.0:1 / 2.9:1) — they are
+       fills and borders only. Text carries the darkened ink variants. */
+    --success-ink: 15 118 110;      /* #0F766E - teal-700, ~5.5:1 on white (AA) */
+    --danger-ink: 194 65 12;        /* #C2410C - orange-700, ~4.8:1 on white (AA) */
 
     /* BORDERS & SHADOWS */
     --border-hard: 0 0 0;           /* #000000 - Pure black borders */
@@ -103,6 +108,9 @@
 
     /* SEMANTIC COLORS - Accessible status indicators */
     --warning: 251 191 36;           /* #FBBF24 - Brighter amber for dark mode (4.5:1 contrast) */
+    /* v2.0 ink tokens lightened for dark ground (raw teal/coral remain fills) */
+    --success-ink: 45 212 191;      /* #2DD4BF - teal-400 on dark */
+    --danger-ink: 251 138 110;      /* #FB8A6E - light coral on dark */
 
     /* BORDERS & SHADOWS - Inverted for visibility */
     --border-hard: 255 255 255;     /* #FFFFFF - White borders on dark */
@@ -1065,7 +1073,8 @@ html.animations-ready .animate-float-pillar {
    ======================================== */
 
 /* Generic color to brand color mappings */
-.text-success { @apply text-teal; }
+/* v2.0: text success/danger use the AA-compliant ink tokens; raw teal/coral are fills */
+.text-success { color: rgb(var(--success-ink)); }
 .bg-success-light { @apply bg-teal/10; }
 .border-success { @apply border-teal; }
 
@@ -1073,7 +1082,7 @@ html.animations-ready .animate-float-pillar {
 .bg-warning-light { background-color: rgb(var(--warning) / 0.1); }
 .border-warning { border-color: rgb(var(--warning)); }
 
-.text-danger { @apply text-coral; }
+.text-danger { color: rgb(var(--danger-ink)); }
 .bg-danger-light { @apply bg-coral/10; }
 .border-danger { @apply border-coral; }
 

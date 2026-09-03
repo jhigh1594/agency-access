@@ -44,12 +44,12 @@ const STATUS_CONFIG: Record<
   },
   authorized: {
     label: 'Authorized',
-    className: 'bg-teal/10 text-teal border border-teal/30',
+    className: 'bg-teal/10 text-success-ink border border-teal/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   active: {
     label: 'Active',
-    className: 'bg-teal/10 text-teal border border-teal/30',
+    className: 'bg-teal/10 text-success-ink border border-teal/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   trialing: {
@@ -64,7 +64,7 @@ const STATUS_CONFIG: Record<
   },
   incomplete_expired: {
     label: 'Incomplete Expired',
-    className: 'bg-coral/10 text-coral border border-coral/30',
+    className: 'bg-coral/10 text-danger-ink border border-coral/30',
     icon: <AlertCircle className="h-3 w-3" />,
   },
   past_due: {
@@ -79,22 +79,22 @@ const STATUS_CONFIG: Record<
   },
   revoked: {
     label: 'Revoked',
-    className: 'bg-coral/10 text-coral border border-coral/30',
+    className: 'bg-coral/10 text-danger-ink border border-coral/30',
     icon: <XCircle className="h-3 w-3" />,
   },
   invalid: {
     label: 'Invalid',
-    className: 'bg-coral/10 text-coral border border-coral/30',
+    className: 'bg-coral/10 text-danger-ink border border-coral/30',
     icon: <AlertCircle className="h-3 w-3" />,
   },
   expired: {
     label: 'Expired',
-    className: 'bg-coral/10 text-coral border border-coral/30',
+    className: 'bg-coral/10 text-danger-ink border border-coral/30',
     icon: <XCircle className="h-3 w-3" />,
   },
   healthy: {
     label: 'Healthy',
-    className: 'bg-teal/10 text-teal border border-teal/30',
+    className: 'bg-teal/10 text-success-ink border border-teal/30',
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   expiring: {
@@ -112,7 +112,7 @@ const STATUS_CONFIG: Record<
 const VARIANT_CONFIG: Record<StatusVariant, { label: string; className: string }> = {
   success: {
     label: 'Success',
-    className: 'bg-teal/10 text-teal border border-teal/30',
+    className: 'bg-teal/10 text-success-ink border border-teal/30',
   },
   warning: {
     label: 'Warning',

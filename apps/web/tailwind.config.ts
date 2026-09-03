@@ -47,6 +47,9 @@ const config: Config = {
         paper: "rgb(var(--paper) / <alpha-value>)",
         coral: "rgb(var(--coral) / <alpha-value>)",
         teal: "rgb(var(--teal) / <alpha-value>)",
+        /* v2.0 AA ink tokens — status TEXT; raw teal/coral are fills/borders only */
+        "success-ink": "rgb(var(--success-ink) / <alpha-value>)",
+        "danger-ink": "rgb(var(--danger-ink) / <alpha-value>)",
         acid: "rgb(var(--acid) / <alpha-value>)",
         /* Dark mode hover surface */
         "hover-surface-dark": "rgb(var(--hover-surface) / <alpha-value>)",
