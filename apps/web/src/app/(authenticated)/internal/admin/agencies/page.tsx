@@ -109,7 +109,11 @@ export default function InternalAdminAgenciesPage() {
                       </td>
                       <td className="py-3 text-ink">{agency.subscriptionTier || 'FREE'}</td>
                       <td className="py-3">
-                        <StatusBadge status={(agency.subscriptionStatus as any) || 'unknown'} />
+                        {agency.subscriptionStatus ? (
+                          <StatusBadge status={agency.subscriptionStatus as any} />
+                        ) : (
+                          <StatusBadge badgeVariant="default">No subscription</StatusBadge>
+                        )}
                       </td>
                       <td className="py-3 text-right text-ink tabular-nums">{agency.memberCount}</td>
                       <td className="py-3 text-right text-ink">
@@ -172,8 +176,8 @@ export default function InternalAdminAgenciesPage() {
                 </div>
                 <div className="border border-border rounded-md p-3 bg-background">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscription</p>
-                  <p className="mt-2 text-ink">Tier: {selectedAgency.subscription?.tier || 'STARTER'}</p>
-                  <p className="text-ink">Status: {selectedAgency.subscription?.status || 'none'}</p>
+                  <p className="mt-2 text-ink">Tier: {selectedAgency.subscription?.tier || 'FREE'}</p>
+                  <p className="text-ink">Status: {selectedAgency.subscription?.status || 'No subscription'}</p>
                 </div>
                 <div className="border border-border rounded-md p-3 bg-background">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Members</p>

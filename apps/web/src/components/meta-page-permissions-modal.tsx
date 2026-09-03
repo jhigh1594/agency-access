@@ -168,7 +168,7 @@ export function MetaPagePermissionsModal({
               </div>
               <Button
                 type="button"
-                variant="brutalist-ghost-rounded"
+                variant="secondary"
                 size="icon"
                 onClick={onClose}
                 disabled={isSaving}
@@ -246,7 +246,7 @@ export function MetaPagePermissionsModal({
                   type="button"
                   onClick={onClose}
                   disabled={isSaving}
-                  variant="brutalist-ghost-rounded"
+                  variant="secondary"
                   size="sm"
                 >
                   Cancel
@@ -255,7 +255,7 @@ export function MetaPagePermissionsModal({
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving || localPermissions.length === 0}
-                  variant="brutalist-rounded"
+                  variant="brutalist"
                   size="sm"
                 >
                   {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}

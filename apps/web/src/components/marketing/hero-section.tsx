@@ -43,7 +43,7 @@ export function HeroSection() {
               </div>
             </Reveal>
 
-            {/* Main Headline - Tighter leading, glitch effect */}
+            {/* Main Headline - Tighter leading */}
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.1] tracking-tight text-ink relative">
                 Send one link. Your client is live in{' '}
@@ -82,7 +82,7 @@ export function HeroSection() {
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 w-full mt-6 self-stretch">
                   <SignUpButton mode="modal">
                     <Button
-                      variant="brutalist-rounded"
+                      variant="brutalist"
                       size="xl"
                       className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
                       rightIcon={<Zap size={18} />}
@@ -92,7 +92,7 @@ export function HeroSection() {
                     </Button>
                   </SignUpButton>
                   <Button
-                    variant="brutalist-ghost-rounded"
+                    variant="secondary"
                     size="xl"
                     className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
                     onClick={() => setIsDemoModalOpen(true)}
@@ -132,7 +132,7 @@ export function HeroSection() {
           <div className="hidden lg:block lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
             {/* Background shapes */}
             <div
-              className="absolute inset-0 bg-acid rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-hard-xl opacity-20 animate-pulse"
+              className="absolute inset-0 bg-acid rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-brutalist-lg opacity-20 animate-pulse"
               style={{ animationDuration: '4s' }}
             />
             <div className="absolute inset-0 border-2 border-black border-dashed rounded-[3rem] -rotate-3 z-0" />
@@ -176,7 +176,7 @@ export function HeroSection() {
               initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : false}
               animate={shouldAnimate ? { opacity: 1, scale: 1 } : undefined}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-hard-xl group"
+              className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-brutalist-lg group"
             >
               {/* Dashboard mockup */}
               <div className="absolute inset-0 p-6">
@@ -213,7 +213,7 @@ export function HeroSection() {
                       </m.div>
                     ))}
                   </div>
-                  <Button variant="brutalist-rounded" className="w-full h-12 text-sm font-bold group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
+                  <Button variant="brutalist" className="w-full h-12 text-sm font-bold group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
                     Grant Access
                   </Button>
                 </div>

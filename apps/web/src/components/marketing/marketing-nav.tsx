@@ -146,7 +146,7 @@ export function MarketingNav() {
         <div className="hidden md:flex items-center gap-3">
           <div className="h-6 w-px bg-black" />
           <SignInButton mode="modal">
-            <Button variant="brutalist-ghost" size="sm" className="font-bold uppercase tracking-wider text-xs">Sign In</Button>
+            <Button variant="secondary" size="sm" className="font-bold uppercase tracking-wider text-xs">Sign In</Button>
           </SignInButton>
           <SignUpButton mode="modal">
             <Button
@@ -198,7 +198,7 @@ export function MarketingNav() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-sm bg-card md:hidden shadow-brutalist-xl border-l-2 border-black flex flex-col"
+                className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-sm bg-card md:hidden shadow-brutalist-lg border-l-2 border-black flex flex-col"
                 style={{ backgroundColor: 'white' }}
               >
               {/* Mobile Menu Header */}
@@ -250,7 +250,7 @@ export function MarketingNav() {
                   <div className="space-y-3 pt-6 border-t-2 border-black">
                     <SignInButton mode="modal">
                       <Button
-                        variant="brutalist-ghost"
+                        variant="secondary"
                         className="w-full font-bold uppercase tracking-wider text-sm py-6"
                         onClick={handleLinkClick}
                       >

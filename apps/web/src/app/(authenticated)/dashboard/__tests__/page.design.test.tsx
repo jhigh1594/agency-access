@@ -66,7 +66,10 @@ describe('Dashboard Page - Static Design Validation', () => {
       const componentCode = fs.readFileSync(COMPONENT_PATH, 'utf-8');
 
       // Coral is used either directly (bg-coral) or via brutalist Button variants
-      expect(componentCode).toMatch(/bg-coral|variant="brutalist-rounded"|variant="brutalist"/);
+      expect(componentCode).toMatch(/bg-coral|variant="brutalist"/);
+      // Consolidation guard: the deprecated rounded brutalist variants stay gone.
+      // Without this, swapping variant="brutalist" for variant="brutalist-rounded" still passes.
+      expect(componentCode).not.toMatch(/variant="brutalist-(ghost-)?rounded"/);
     });
 
     it('should use teal for success states', () => {
@@ -76,11 +79,11 @@ describe('Dashboard Page - Static Design Validation', () => {
       expect(componentCode).toMatch(/(?:text|bg|border|hover:bg|hover:border)-teal/);
     });
 
-    it('should use acid for warning states', () => {
+    it('should use coral for accent states', () => {
       const fs = require('fs');
       const componentCode = fs.readFileSync(COMPONENT_PATH, 'utf-8');
 
-      expect(componentCode).toMatch(/bg-acid[^/]/);
+      expect(componentCode).toMatch(/bg-coral[^/]/);
     });
 
     it('should use ink for headings', () => {

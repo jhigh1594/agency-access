@@ -440,7 +440,7 @@ export default function MetaAdsAccessGuidePage() {
             <p className="font-mono text-sm text-white/90 mb-6">
               Get Meta Ads access and intake forms in one link. No Business ID hunting. No expired invitations.
             </p>
-            <ComparisonCTA variant="brutalist-rounded" size="xl">
+            <ComparisonCTA variant="brutalist" size="xl">
               Start free trial
             </ComparisonCTA>
             <p className="mt-4 font-mono text-xs text-white/70">

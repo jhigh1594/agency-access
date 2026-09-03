@@ -134,8 +134,8 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 bg-acid/20 rounded-lg">
-                <Plus className="h-4 w-4 text-acid" />
+              <div className="flex items-center justify-center w-8 h-8 bg-coral/20 rounded-lg">
+                <Plus className="h-4 w-4 text-coral" />
               </div>
               <h2 className="text-lg font-semibold text-ink">Create Client</h2>
             </div>
@@ -158,7 +158,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-acid focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
                 placeholder="Client contact name"
                 disabled={createMutation.isPending}
               />
@@ -173,7 +173,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
                 type="text"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-acid focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
                 placeholder="Company name"
                 disabled={createMutation.isPending}
               />
@@ -188,7 +188,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-acid focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
                 placeholder="client@company.com"
                 disabled={createMutation.isPending}
               />
@@ -204,7 +204,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
                 type="url"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-acid focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
                 placeholder="https://example.com"
                 disabled={createMutation.isPending}
               />

@@ -280,7 +280,7 @@ export function ContactForm() {
             {/* Submit Button */}
             <Button
               type="submit"
-              variant="brutalist-rounded"
+              variant="brutalist"
               size="lg"
               disabled={isSubmitting}
               className="w-full"

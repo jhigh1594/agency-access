@@ -55,7 +55,7 @@ export function HeroCopyRewriteIntegrationsSection() {
       />
 
       <div className="relative max-w-7xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2 border-2 border-black bg-acid text-black px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist rounded-[0.75rem] mb-6">
+        <div className="inline-flex items-center gap-2 border-2 border-black bg-coral text-black px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist rounded-[0.75rem] mb-6">
           <Zap size={14} />
           Platform coverage
         </div>

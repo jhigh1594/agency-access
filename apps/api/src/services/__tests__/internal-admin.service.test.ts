@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { internalAdminService } from '../internal-admin.service.js';
 import { prisma } from '@/lib/prisma.js';
 import { getProductId } from '@/config/creem.config.js';
+import { DEV_BYPASS_AGENCY_EMAIL } from '@/middleware/auth.js';
 
 vi.mock('@/lib/prisma.js', () => ({
   prisma: {
@@ -151,6 +152,22 @@ describe('InternalAdminService', () => {
           }),
         }),
       }));
+    });
+
+    it('keeps clerk placeholder agencies visible and hides the dev bypass agency', async () => {
+      vi.mocked(prisma.agency.count).mockResolvedValue(0);
+      vi.mocked(prisma.agency.findMany).mockResolvedValue([] as any);
+
+      await internalAdminService.listAgencies({});
+
+      const syntheticFilters = vi.mocked(prisma.agency.findMany).mock.calls[0][0].where.NOT.OR;
+      expect(JSON.stringify(syntheticFilters)).not.toContain('@clerk.temp');
+      expect(syntheticFilters).toContainEqual({
+        email: {
+          equals: DEV_BYPASS_AGENCY_EMAIL,
+          mode: 'insensitive',
+        },
+      });
     });
 
     it('can include synthetic and test agencies when explicitly requested', async () => {

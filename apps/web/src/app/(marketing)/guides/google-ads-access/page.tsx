@@ -328,7 +328,7 @@ export default function GoogleAdsAccessGuidePage() {
             <p className="font-mono text-sm text-white/90 mb-6">
               Save 2–3 days per client with a single link that handles Google Ads and other platforms, plus optional intake. One flow, one link.
             </p>
-            <ComparisonCTA variant="brutalist-rounded" size="xl">
+            <ComparisonCTA variant="brutalist" size="xl">
               Start free trial
             </ComparisonCTA>
             <p className="mt-4 font-mono text-xs text-white/70">

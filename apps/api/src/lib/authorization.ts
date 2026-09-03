@@ -1,4 +1,5 @@
 import type { FastifyRequest } from 'fastify';
+import { getClerkClient } from '@/lib/clerk';
 import { agencyResolutionService } from '@/services/agency-resolution.service';
 
 export interface AuthorizationError {
@@ -42,6 +43,24 @@ export function resolveUserEmail(user: AuthUserClaims | undefined): string | und
   return normalizeEmail(nested);
 }
 
+async function fetchClerkEmailAddress(userId: string): Promise<string | undefined> {
+  try {
+    const user = await getClerkClient().users.getUser(userId);
+    // Only verified addresses may drive agency identity. An unverified address
+    // on the Clerk record is not proof of control and must not be inherited.
+    const verifiedEmails = user.emailAddresses.filter(
+      email => email.verification?.status === 'verified'
+    );
+    const primary = verifiedEmails.find(
+      email => email.id === user.primaryEmailAddressId
+    );
+    const email = primary?.emailAddress || verifiedEmails[0]?.emailAddress;
+    return email ? normalizeEmail(email) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function resolvePrincipalAgency(
   request: FastifyRequest
 ): Promise<{ data: PrincipalAgencyData | null; error: AuthorizationError | null }> {
@@ -58,7 +77,7 @@ export async function resolvePrincipalAgency(
     };
   }
 
-  const userEmail = resolveUserEmail(user);
+  let userEmail = resolveUserEmail(user);
   const buildPrincipalData = (agencyResultData: {
     agencyId: string;
     agency: {
@@ -87,6 +106,10 @@ export async function resolvePrincipalAgency(
       data: buildPrincipalData(cacheFirstResult.data),
       error: null,
     };
+  }
+
+  if (!userEmail && user?.sub?.startsWith('user_')) {
+    userEmail = await fetchClerkEmailAddress(user.sub);
   }
 
   // Only fallback to create-if-missing when agency does not exist.

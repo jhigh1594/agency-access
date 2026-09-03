@@ -51,8 +51,7 @@ export default function DesignSystemPage() {
           <div>
             <h3 className="font-sans text-lg font-medium mb-4 text-muted-foreground">Brutalist Accents</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <ColorSwatch name="Acid" varName="--acid" hex="#CCFF00" description="DECORATIVE ONLY (2%)" darkText />
-              <ColorSwatch name="Electric" varName="--electric" hex="#8B5CF6" description="Hover states" darkText />
+              <ColorSwatch name="Acid" varName="--acid" hex="#CCFF00" description="HERO-ONLY (homepage hero)" darkText />
             </div>
           </div>
 
@@ -91,7 +90,6 @@ export default function DesignSystemPage() {
               <div className="flex flex-wrap gap-4">
                 <Button variant="primary">Primary</Button>
                 <Button variant="secondary">Secondary</Button>
-                <Button variant="success">Success</Button>
                 <Button variant="danger">Danger</Button>
                 <Button variant="ghost">Ghost</Button>
               </div>
@@ -101,9 +99,7 @@ export default function DesignSystemPage() {
               <h3 className="font-sans text-sm font-medium text-muted-foreground mb-4">Brutalist Variants</h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="brutalist">Brutalist</Button>
-                <Button variant="brutalist-ghost">Brutalist Ghost</Button>
-                <Button variant="brutalist-rounded">Brutalist Rounded</Button>
-                <Button variant="brutalist-ghost-rounded">Brutalist Ghost Rounded</Button>
+                <Button variant="secondary">Secondary</Button>
               </div>
             </div>
 
@@ -187,13 +183,10 @@ export default function DesignSystemPage() {
         <section>
           <h2 className="font-display text-3xl font-semibold mb-6">Shadows</h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <ShadowSample level="sm" />
-            <ShadowSample level="md" />
+            <ShadowSample level="default" />
             <ShadowSample level="lg" />
-            <ShadowSample level="xl" />
-            <ShadowSample level="2xl" />
-            <ShadowSample level="3xl" />
           </div>
         </section>
 
@@ -243,11 +236,8 @@ export default function DesignSystemPage() {
           <h2 className="font-display text-3xl font-semibold mb-6">Border Radius</h2>
 
           <div className="flex flex-wrap gap-6">
-            <RadiusSample value="none" label="None (Brutalist)" />
-            <RadiusSample value="lg" label="Large (Default)" />
-            <RadiusSample value="xl" label="Extra Large" />
-            <RadiusSample value="2xl" label="2X Large" />
-            <RadiusSample value="full" label="Full" />
+            <RadiusSample value="none" label="Square — default" />
+            <RadiusSample value="full" label="Pill / circle" />
           </div>
         </section>
       </div>
@@ -303,13 +293,19 @@ function TypeSample({
   );
 }
 
-function ShadowSample({ level }: { level: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' }) {
+const BRUTALIST_SHADOW_CLASSES = {
+  sm: 'shadow-brutalist-sm',
+  default: 'shadow-brutalist',
+  lg: 'shadow-brutalist-lg',
+} as const;
+
+function ShadowSample({ level }: { level: keyof typeof BRUTALIST_SHADOW_CLASSES }) {
   return (
     <div className="space-y-2 text-center">
       <div
-        className={`h-20 w-full bg-ink shadow-brutalist-${level}`}
+        className={`h-20 w-full bg-ink ${BRUTALIST_SHADOW_CLASSES[level]}`}
       />
-      <p className="text-xs font-mono text-muted-foreground">shadow-brutalist-{level}</p>
+      <p className="text-xs font-mono text-muted-foreground">{BRUTALIST_SHADOW_CLASSES[level]}</p>
     </div>
   );
 }
@@ -318,17 +314,22 @@ function SpacingSample({ value, px }: { value: string, px: string }) {
   return (
     <div className="flex items-center gap-4">
       <code className="text-xs font-mono bg-muted px-2 py-1 rounded">spacing-{value}</code>
-      <div className="h-8 bg-acid/30 border border-black" style={{ width: px }} />
+      <div className="h-8 bg-coral/30 border border-black" style={{ width: px }} />
       <span className="text-xs text-muted-foreground">{px}</span>
     </div>
   );
 }
 
-function RadiusSample({ value, label }: { value: string, label: string }) {
+const RADIUS_CLASSES = {
+  none: 'rounded-none',
+  full: 'rounded-full',
+} as const;
+
+function RadiusSample({ value, label }: { value: keyof typeof RADIUS_CLASSES, label: string }) {
   return (
     <div className="space-y-2 text-center">
       <div
-        className={`h-16 w-16 bg-coral border-2 border-black rounded-${value}`}
+        className={`h-16 w-16 bg-coral border-2 border-black ${RADIUS_CLASSES[value]}`}
       />
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>

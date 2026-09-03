@@ -12,10 +12,12 @@ import { sendError } from '../lib/response.js';
 type VerifiedAuthClaims = Record<string, unknown>;
 const AUTH_DURATION_MS = Symbol('auth-duration-ms');
 const DEV_BYPASS_TOKEN = 'dev-bypass-token';
+/** Synthetic agency owner email used by dev bypass and excluded from internal admin metrics. */
+export const DEV_BYPASS_AGENCY_EMAIL = 'dev-bypass@agency-access.local';
 const DEV_BYPASS_USER = {
   sub: 'dev_user_test_123456789',
   orgId: 'dev_org_test_987654321',
-  email: 'dev-bypass@agency-access.local',
+  email: DEV_BYPASS_AGENCY_EMAIL,
 } satisfies VerifiedAuthClaims;
 
 let verifyTokenImpl:

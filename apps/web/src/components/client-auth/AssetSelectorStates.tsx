@@ -71,7 +71,7 @@ export function AssetSelectorEmpty({
 
       {/* Optional action button */}
       {actionLabel && onAction && (
-        <Button variant="brutalist-rounded" size="sm" onClick={onAction}>
+        <Button variant="brutalist" size="sm" onClick={onAction}>
           {actionLabel}
         </Button>
       )}
@@ -110,7 +110,7 @@ export function AssetSelectorError({
 
           {/* Retry button */}
           {onRetry && (
-            <Button variant="brutalist-rounded" size="sm" onClick={onRetry}>
+            <Button variant="brutalist" size="sm" onClick={onRetry}>
               <RefreshCw className="w-4 h-4" />
               {retryLabel}
             </Button>

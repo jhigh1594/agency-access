@@ -32,7 +32,7 @@
 
 import { type SubscriptionTier, type MetricType, getTierLimitsConfig } from '@agency-platform/shared';
 import { prisma } from '@/lib/prisma';
-import { createClerkClient } from '@clerk/backend';
+import { getClerkClient } from '@/lib/clerk';
 import { resolveEffectiveSubscriptionTier } from '@/lib/effective-subscription-tier';
 
 // ============================================================
@@ -120,7 +120,9 @@ export class QuotaExceededError extends Error {
 // ============================================================
 
 export class QuotaService {
-  private clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+  private get clerkClient() {
+    return getClerkClient();
+  }
 
   /**
    * Atomically check quota and increment usage in a single transaction.

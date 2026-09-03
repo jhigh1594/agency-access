@@ -700,7 +700,7 @@ export function PlatformAuthWizard({
               <Button
                 onClick={() => router.push(`/invite/${accessRequestToken}/${manualRoute}` as any)}
                 size="xl"
-                variant="brutalist-rounded"
+                variant="brutalist"
                 rightIcon={<ExternalLink className="w-5 h-5" />}
               >
                 Continue in {platformName}
@@ -747,7 +747,7 @@ export function PlatformAuthWizard({
               onClick={handleConnectClick}
               isLoading={isProcessing}
               size="xl"
-              variant="brutalist-rounded"
+              variant="brutalist"
               rightIcon={!isProcessing ? <ExternalLink className="w-5 h-5" /> : undefined}
             >
               Connect {platformName}
@@ -785,7 +785,7 @@ export function PlatformAuthWizard({
               </div>
               <Button
                 onClick={() => setCurrentStep(1)}
-                variant="brutalist-rounded"
+                variant="brutalist"
                 size="lg"
               >
                 Go to Step 1
@@ -818,7 +818,7 @@ export function PlatformAuthWizard({
               <Button
                 onClick={() => setCurrentStep(3)}
                 size="xl"
-                variant="brutalist-rounded"
+                variant="brutalist"
                 rightIcon={<CheckCircle2 className="w-6 h-6" />}
               >
                 Review access confirmation
@@ -972,7 +972,7 @@ export function PlatformAuthWizard({
                 disabled={!canContinueFromAssetSelection()}
                 isLoading={isProcessing}
                 size="xl"
-                variant="brutalist-rounded"
+                variant="brutalist"
                 rightIcon={!isProcessing ? <CheckCircle2 className="w-6 h-6" /> : undefined}
               >
                 {hasZeroAssetFollowUp ? 'Share access' : 'Share Access'}
@@ -1155,7 +1155,7 @@ export function PlatformAuthWizard({
                               <Button
                                 onClick={() => setCurrentStep(3)}
                                 size="xl"
-                                variant="brutalist-rounded"
+                                variant="brutalist"
                                 rightIcon={<CheckCircle2 className="w-6 h-6" />}
                               >
                                 Review access confirmation
@@ -1231,7 +1231,7 @@ export function PlatformAuthWizard({
                               <Button
                                 onClick={() => setCurrentStep(3)}
                                 size="lg"
-                                variant="brutalist-rounded"
+                                variant="brutalist"
                               >
                                 Review partial access confirmation
                               </Button>
@@ -1273,7 +1273,7 @@ export function PlatformAuthWizard({
                               <Button
                                 onClick={() => setCurrentStep(3)}
                                 size="lg"
-                                variant="brutalist-rounded"
+                                variant="brutalist"
                               >
                                 Review partial access confirmation
                               </Button>
@@ -1440,7 +1440,7 @@ export function PlatformAuthWizard({
 
             <Button
               onClick={onComplete}
-              variant="brutalist-rounded"
+              variant="brutalist"
               size="lg"
               className="w-full"
             >

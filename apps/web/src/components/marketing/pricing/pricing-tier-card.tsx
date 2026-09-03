@@ -25,7 +25,7 @@ interface PricingTierCardProps {
   hasTrial?: boolean; // Whether this tier has a free trial (default: true for paid tiers)
   features: Feature[];
   buttonText: string;
-  buttonVariant?: 'brutalist' | 'brutalist-rounded' | 'brutalist-ghost' | 'brutalist-ghost-rounded';
+  buttonVariant?: 'brutalist' | 'secondary';
   billingInterval?: 'monthly' | 'yearly'; // Pass through for checkout
 }
 

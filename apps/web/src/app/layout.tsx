@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Outfit, JetBrains_Mono, Dela_Gothic_One } from "next/font/google";
+import { Outfit, JetBrains_Mono, Dela_Gothic_One } from "next/font/google";
 import { DeferredAnalytics } from "@/components/deferred-analytics";
 import { RootProviders } from "./root-providers";
 import "./globals.css";
@@ -22,12 +22,6 @@ const outfit = Outfit({
 
 // DEFERRED: Display fonts - use optional to avoid blocking render
 // These will load in the background and only show if loaded quickly enough
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "optional",
-});
-
 const delaGothicOne = Dela_Gothic_One({
   subsets: ["latin"],
   weight: ["400"],
@@ -118,7 +112,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${outfit.variable} ${jetbrainsMono.variable} ${delaGothicOne.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${outfit.variable} ${jetbrainsMono.variable} ${delaGothicOne.variable}`} suppressHydrationWarning>
       <head>
         <meta name="facebook-domain-verification" content="3m49m2lu2cvxshjd01sbp77phldp4w" />
         {/* Google Tag Manager */}

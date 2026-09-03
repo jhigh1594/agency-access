@@ -27,6 +27,32 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
+## Session: 2026-09-03 — Design System v2.0 (lazyweb extraction → delta plan → TDD execution → adversarial review)
+
+### What was done
+- Extracted a full design-DNA kit from lazyweb.com (Dembrandt + authored-CSS verification): `~/Desktop/lazyweb.com-design-kit/` (brief.md, tokens.json, scaffold.html, preview.png). Key production moves: mid-weights 650/750, dual green tokens per WCAG ground with in-CSS rationale comments, two-ring focus, tracking inversion (display −0.04em / micro +0.11em), radius binary.
+- Wrote `docs/design-system-delta-plan.md` (3 phases, acceptance criteria). Jon decided: acid hero-only, stay teal (add `--success-ink`), full binary radius, drop Fraunces.
+- Executed 7 units TDD where components were touched (red→green observed at StatusBadge, Button, shadow validators): b69922b subtraction (Fraunces/electric/acid), 56c8da7 shadow budget + hairline, 895ba9a animation cut, d93c5b7 mono labels + tracking, e00ec7f AA ink tokens, bf3b480 buttons 10→5 + two-ring focus, 7a87fa4 radius flip + ink panel + DESIGN_SYSTEM.md v2.0.0.
+- Ran ce-code-review (6 reviewers + validator batch; codex peer died at startup on MCP transport — lens degraded). Verdict: Not ready → 24 findings. Jon chose apply-all: 8 fix subagents, all 21 actionable addressed, committed as 237feed. Deferred by design: #1 bind-policy rework, #8 utility consumer adoption, brutalist-on-in-app-CTAs tension.
+- Final state: web 840 passed / api 1099 passed / typechecks clean / lint 0 errors. Recorded DEC-003.
+
+### Files changed
+- `apps/web/src/app/globals.css`, `tailwind.config.ts` — v2.0 token layer (see DEC-003)
+- `apps/web/src/components/ui/{button,status-badge}.tsx` + design tests — contracts
+- `apps/web/DESIGN_SYSTEM.md` — rewritten to v2.0.0 (production moves, contracts, verification)
+- ~40 consumer files — electric/acid→coral, shadow collapse, variant migration
+- `apps/api/src/lib/{authorization,clerk}.ts`, `agency-resolution.service.ts`, `internal-admin.service.ts`, `middleware/auth.ts`, `quota.service.ts` — verified-email P0 fix + Clerk client consolidation (rode the branch; reviewed)
+- `docs/design-system-delta-plan.md`, `docs/DECISIONS.md` (DEC-003)
+
+### Decisions made
+- DEC-003 (above). Review observations logged to the task-observer workspace (0030: production-moves label count vs gate).
+
+### Next steps
+- Push `feat/design-system-v2` and open PR (on Jon's go).
+- Residual design calls: brutalist variant on 9 in-app CTAs (doc says hero-only) — loosen doc or remap; wire .label-micro/.ink-panel consumers; 428 raw text-teal/coral sites repo-wide (dark-ground-aware sweep).
+- Operational: `/design-system` route is Clerk-gated; consider a public token-showcase for review flows.
+- Gotcha for CLAUDE.md: `npx vitest run` from repo root picks the wrong config (node env, mass failures) — always run from `apps/web`.
+
 ## Session: 2026-09-03 — Meta Business Portfolio creation (Leadsie parity+)
 
 ### What was done

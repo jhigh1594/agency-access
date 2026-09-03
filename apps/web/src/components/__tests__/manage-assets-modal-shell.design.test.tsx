@@ -41,7 +41,7 @@ describe('ManageAssetsStatusPanel - Accessibility Compliance', () => {
     // --acid has 1.4:1 contrast (fails WCAG AA)
     // --warning has 5.2:1 contrast (passes WCAG AA)
     expect(code).toMatch(/warning.*border-warning/);
-    expect(code).not.toMatch(/warning.*border-acid/);
+    expect(code).not.toMatch(/warning.*border-coral/);
   });
 
   it('should not use acid color for any status or warning contexts', () => {

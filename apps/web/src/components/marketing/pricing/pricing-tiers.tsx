@@ -124,7 +124,7 @@ export function PricingTiers() {
               hasTrial={true}
               features={tierFeatures.starter}
               buttonText="Start Free Trial"
-              buttonVariant="brutalist-rounded"
+              buttonVariant="brutalist"
               billingInterval={isYearly ? 'yearly' : 'monthly'}
             />
           </div>
@@ -143,7 +143,7 @@ export function PricingTiers() {
               hasTrial={true}
               features={tierFeatures.growth}
               buttonText="Start Free Trial"
-              buttonVariant="brutalist-rounded"
+              buttonVariant="brutalist"
               billingInterval={isYearly ? 'yearly' : 'monthly'}
             />
           </div>
@@ -162,7 +162,7 @@ export function PricingTiers() {
               hasTrial={true}
               features={tierFeatures.agency}
               buttonText="Start Free Trial"
-              buttonVariant="brutalist-rounded"
+              buttonVariant="brutalist"
               billingInterval={isYearly ? 'yearly' : 'monthly'}
             />
           </div>

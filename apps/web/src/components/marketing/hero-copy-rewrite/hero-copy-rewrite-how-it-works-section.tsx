@@ -21,7 +21,7 @@ const steps = [
     description:
       'Build one client request for Meta, Google Ads, GA4, LinkedIn, and the rest of the accounts your team needs before kickoff.',
     icon: Link2,
-    color: 'acid',
+    color: 'coral',
     time: 'One setup',
   },
   {
@@ -48,7 +48,7 @@ const steps = [
     description:
       'Your team sees request progress in one place and can move onboarding forward without using the inbox as the control panel.',
     icon: Radar,
-    color: 'electric',
+    color: 'coral',
     time: 'Clear status',
   },
 ];
@@ -79,7 +79,7 @@ export function HeroCopyRewriteHowItWorksSection() {
       />
 
       <m.div
-        className="absolute top-20 right-10 w-96 h-96 bg-acid/5 rounded-full blur-3xl -z-10"
+        className="absolute top-20 right-10 w-96 h-96 bg-coral/5 rounded-full blur-3xl -z-10"
         initial={shouldAnimate ? { scale: 1, opacity: 0.05 } : false}
         animate={shouldAnimate ? { scale: [1, 1.2, 1], opacity: [0.05, 0.1, 0.05] } : undefined}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
@@ -124,11 +124,11 @@ export function HeroCopyRewriteHowItWorksSection() {
                     key={index}
                     className="flex items-center gap-4 mx-8 text-paper font-dela text-xl sm:text-2xl"
                   >
-                    <span className="text-acid">Separate setup steps</span>
+                    <span className="text-coral">Separate setup steps</span>
                     <ArrowRight size={16} className="text-coral" />
                     <span className="font-mono text-sm">becomes</span>
                     <ArrowRight size={16} className="text-coral" />
-                    <span className="text-acid">one guided request</span>
+                    <span className="text-coral">one guided request</span>
                   </div>
                 ))}
               </div>
@@ -138,7 +138,7 @@ export function HeroCopyRewriteHowItWorksSection() {
           <div className="relative">
             <div className="absolute left-4 sm:left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gray-200 -z-10 hidden md:block" />
             <m.div
-              className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-acid -z-10 hidden md:block origin-top"
+              className="absolute left-4 sm:left-8 md:left-1/2 top-0 w-1 bg-coral -z-10 hidden md:block origin-top"
               style={{ height: lineHeight }}
             />
 
@@ -172,7 +172,7 @@ export function HeroCopyRewriteHowItWorksSection() {
 
                     <div className={`flex-1 w-full ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
                       <m.div
-                        className="bg-card border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
+                        className="bg-card border-2 border-black p-6 sm:p-8 rounded-none shadow-brutalist hover:shadow-brutalist-lg hover:-translate-x-1 hover:-translate-y-1 transition-all duration-200 relative group"
                         whileHover={{ y: -4, boxShadow: '8px 8px 0px #000' }}
                       >
                         <div
@@ -268,7 +268,7 @@ export function HeroCopyRewriteHowItWorksSection() {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="mt-12 sm:mt-16 md:mt-20 text-center"
             >
-              <div className="inline-block bg-card text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-xl relative overflow-hidden group">
+              <div className="inline-block bg-card text-ink border-2 border-black p-8 sm:p-12 rounded-none shadow-brutalist-lg relative overflow-hidden group">
                 <div
                   className="absolute inset-0 opacity-10"
                   style={{
@@ -297,7 +297,7 @@ export function HeroCopyRewriteHowItWorksSection() {
                       </Button>
                     </SignUpButton>
                     <Button
-                      variant="brutalist-ghost"
+                      variant="secondary"
                       size="lg"
                       className="bg-transparent text-ink border-2 border-black hover:bg-ink hover:text-paper hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-brutalist-sm"
                       onClick={() => setIsDemoModalOpen(true)}

@@ -57,7 +57,7 @@ export function ManageAssetsModalShell({
               </div>
               <Button
                 type="button"
-                variant="brutalist-rounded"
+                variant="brutalist"
                 size="sm"
                 onClick={onClose}
                 className="shrink-0"

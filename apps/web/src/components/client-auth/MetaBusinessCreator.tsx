@@ -8,7 +8,7 @@
  * the chosen Page becomes the portfolio's primary Page.
  *
  * Acid Brutalism: brutalist input borders, one brutalist submit button
- * (brutalist-rounded), teal/coral semantic states — mirrors MetaAssetCreator.
+ * (brutalist variant), teal/coral semantic states — mirrors MetaAssetCreator.
  */
 
 import { useEffect, useState, FormEvent } from 'react';
@@ -187,7 +187,7 @@ export function MetaBusinessCreator({
             <h3 className="font-bold text-[var(--coral)] mb-1 font-display">Creation Failed</h3>
             <p className="text-sm text-[var(--coral)] mb-3">{errorMessage}</p>
 
-            <Button variant="brutalist-rounded" size="sm" onClick={handleReset}>
+            <Button variant="brutalist" size="sm" onClick={handleReset}>
               Try Again
             </Button>
           </div>
@@ -311,7 +311,7 @@ export function MetaBusinessCreator({
       {/* Submit Button - the one brutalist element */}
       <Button
         type="submit"
-        variant="brutalist-rounded"
+        variant="brutalist"
         size="lg"
         isLoading={state === 'loading'}
         disabled={!businessName.trim() || !primaryPageId || state === 'loading'}

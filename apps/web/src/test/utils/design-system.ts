@@ -36,13 +36,24 @@ const SOFT_SHADOWS = [
 ] as const;
 
 /**
- * Over-rounded border radius values that conflict with brutalist aesthetic
+ * Non-binary radius classes that conflict with the brutalist binary radius
+ * rule (--radius is 0rem; see tailwind.config.ts borderRadius map).
+ * rounded-none and rounded-full are sanctioned; every other step is square
+ * and therefore a violation when written literally.
  */
 const OVER_ROUNDED = [
+  'rounded-sm',
+  'rounded-md',
+  'rounded-lg',
+  'rounded-xl',
   'rounded-2xl',
   'rounded-3xl',
-  'rounded-full',
-] as const;
+];
+
+/**
+ * Arbitrary radius values (e.g. rounded-[0.75rem]) are also non-binary.
+ */
+const ARBITRARY_RADIUS = /rounded-\[/;
 
 /**
  * Test if element uses brutalist shadow class
@@ -52,8 +63,9 @@ const OVER_ROUNDED = [
 export function hasBrutalistShadow(className: string): boolean {
   if (!className) return false;
   // Check if ANY class in the string is a brutalist shadow
+  // v2.0 budget: sm / default / lg only — xl/2xl/3xl are retired
   const classes = className.split(/\s+/);
-  return classes.some(cls => /shadow-brutalist(-sm|-lg|-xl|-2xl|-3xl)?$/.test(cls));
+  return classes.some(cls => /shadow-brutalist(-sm|-lg)?$/.test(cls));
 }
 
 
@@ -90,19 +102,23 @@ export function usesBrandColor(className: string): boolean {
 }
 
 /**
- * Test if element has over-rounded border radius
+ * Test if element has a non-binary border radius
  * @param className - CSS className string to test
- * @returns true if over-rounded radius is detected
+ * @returns true if a non-binary radius is detected
  */
 export function hasOverRoundedRadius(className: string): boolean {
   if (!className) return false;
-  return OVER_ROUNDED.some(radius => className.includes(radius));
+  const classes = className.split(/\s+/);
+  return classes.some(
+    cls => OVER_ROUNDED.includes(cls) || ARBITRARY_RADIUS.test(cls)
+  );
 }
 
 /**
- * Test if element uses appropriate brutalist radius
+ * Test if element uses the binary radius contract
+ * rounded-none and rounded-full are the only sanctioned curves.
  * @param className - CSS className string to test
- * @returns true if radius is within brutalist guidelines
+ * @returns true if radius complies with binary radius
  */
 export function hasBrutalistRadius(className: string): boolean {
   if (!className) return true;
@@ -189,12 +205,13 @@ export function validateDesignSystem(className: string | undefined): DesignSyste
       });
     }
 
-    // Check for over-rounded
-    if (OVER_ROUNDED.some(radius => cls.includes(radius))) {
+    // Check for non-binary radius
+    if (OVER_ROUNDED.includes(cls) || ARBITRARY_RADIUS.test(cls)) {
       violations.push({
         type: 'over-rounded',
         className: cls,
-        suggestion: 'Use smaller radius (rounded, rounded-lg) or sharp borders',
+        suggestion:
+          'Binary radius only: rounded-none or rounded-full (--radius is 0rem)',
       });
     }
   }
@@ -203,15 +220,17 @@ export function validateDesignSystem(className: string | undefined): DesignSyste
 }
 
 /**
- * Get the correct brutalist shadow for a given soft shadow
+ * Get the correct brutalist shadow for a given soft shadow.
+ * v2.0 shadow budget: three sizes (sm 2px, default 4px, lg 6px).
+ * Oversized soft shadows collapse to the lg ceiling.
  */
 export function brutalistShadowFor(softShadow: string): string {
   const mapping: Record<string, string> = {
     'shadow-sm': 'shadow-brutalist-sm',
     'shadow-md': 'shadow-brutalist',
     'shadow-lg': 'shadow-brutalist-lg',
-    'shadow-xl': 'shadow-brutalist-xl',
-    'shadow-2xl': 'shadow-brutalist-2xl',
+    'shadow-xl': 'shadow-brutalist-lg',
+    'shadow-2xl': 'shadow-brutalist-lg',
   };
   return mapping[softShadow] || 'shadow-brutalist';
 }

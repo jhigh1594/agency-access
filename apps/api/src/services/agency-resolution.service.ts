@@ -9,6 +9,14 @@
 import { prisma } from '@/lib/prisma';
 import { getCached, CacheKeys, CacheTTL } from '@/lib/cache.js';
 
+const PLACEHOLDER_EMAIL_SUFFIX = '@clerk.temp';
+
+// Email is an agency identity key. Normalize before any lookup or write so case
+// variants cannot split or collide identity.
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export interface ResolveAgencyResult {
   data: {
     agencyId: string; // Always returns UUID
@@ -91,6 +99,7 @@ async function resolveAgencyFromDb(
   }
 ): Promise<ResolveAgencyResult> {
   const { createIfMissing = false, userEmail, agencyName = 'My Agency' } = options;
+  const normalizedUserEmail = userEmail ? normalizeEmail(userEmail) : undefined;
 
   try {
     // Check if identifier is a Clerk ID
@@ -104,12 +113,25 @@ async function resolveAgencyFromDb(
         where: { clerkUserId: identifier },
       });
 
+      if (agency?.email.endsWith(PLACEHOLDER_EMAIL_SUFFIX) && normalizedUserEmail) {
+        const existingByEmail = await prisma.agency.findUnique({
+          where: { email: normalizedUserEmail },
+        });
+
+        if (!existingByEmail || existingByEmail.id === agency.id) {
+          agency = await prisma.agency.update({
+            where: { id: agency.id },
+            data: { email: normalizedUserEmail },
+          });
+        }
+      }
+
       // If not found and we should create, create with proper UUID
       if (!agency && createIfMissing) {
         // Check for duplicate email if provided
-        if (userEmail) {
+        if (normalizedUserEmail) {
           const existingByEmail = await prisma.agency.findUnique({
-            where: { email: userEmail },
+            where: { email: normalizedUserEmail },
           });
 
           if (existingByEmail) {
@@ -145,7 +167,7 @@ async function resolveAgencyFromDb(
           agency = await prisma.agency.create({
             data: {
               name: agencyName,
-              email: userEmail || `${identifier}@clerk.temp`,
+              email: normalizedUserEmail || `${identifier}@clerk.temp`,
               clerkUserId: identifier,
             },
           });
@@ -257,4 +279,3 @@ export async function invalidateAgencyCache(clerkUserId: string): Promise<void> 
     invalidateCache(`agency:${clerkUserId}`),
   ]);
 }
-

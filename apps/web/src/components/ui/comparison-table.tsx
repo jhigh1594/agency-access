@@ -28,7 +28,7 @@ export function ComparisonTable({ children, className }: ComparisonTableProps) {
         // Container styling
         'relative overflow-hidden rounded-none',
         'border-[3px] border-black',
-        'shadow-brutalist-xl',
+        'shadow-brutalist-lg',
         // Overflow handling
         'overflow-x-auto',
         className
@@ -174,7 +174,7 @@ export function ComparisonRow({
     <tr
       className={cn(
         'border-b border-black/20 transition-colors duration-150',
-        'hover:bg-electric/10',
+        'hover:bg-coral/10',
         isEven && 'bg-muted/20',
         // Highlight rows where AuthHub has exclusive features
         exclusive && 'bg-teal/5'

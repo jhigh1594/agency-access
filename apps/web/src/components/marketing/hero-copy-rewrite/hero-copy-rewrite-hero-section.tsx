@@ -35,7 +35,7 @@ export function HeroCopyRewriteHeroSection() {
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           <div className="lg:col-span-7 flex flex-col items-start gap-6 z-10 text-center lg:text-left w-full">
             <Reveal delay={0.2}>
-              <div className="inline-flex items-center gap-2 border-2 border-black bg-acid text-ink px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
+              <div className="inline-flex items-center gap-2 border-2 border-black bg-coral text-ink px-4 sm:px-6 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest font-mono shadow-brutalist -rotate-2 hover:rotate-0 transition-transform rounded-[0.75rem]">
                 <Workflow size={14} />
                 Built for small agency owners and operators
               </div>
@@ -44,17 +44,17 @@ export function HeroCopyRewriteHeroSection() {
             <Reveal delay={0.3}>
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.05] tracking-tight text-ink relative">
                 <div className="mb-2 sm:mb-3 md:mb-4">
-                  <span className="glitch-text inline-block">
+                  <span className="inline-block">
                     YOUR KICKOFF IS READY.
                   </span>
                 </div>
                 <div className="mb-2 sm:mb-3 md:mb-4">
-                  <span className="glitch-text inline-block">
+                  <span className="inline-block">
                     YOUR CLIENT&apos;S
                   </span>
                 </div>
                 <div>
-                  <span className="glitch-text inline-block">ACCESS ISN&apos;T.</span>
+                  <span className="inline-block">ACCESS ISN&apos;T.</span>
                 </div>
               </h1>
             </Reveal>
@@ -84,7 +84,7 @@ export function HeroCopyRewriteHeroSection() {
                 <div className="flex flex-col sm:flex-row gap-4 w-full mt-6 self-stretch">
                   <SignUpButton mode="modal">
                     <Button
-                      variant="brutalist-rounded"
+                      variant="brutalist"
                       size="xl"
                       className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
                       onClick={handleTrialSignup}
@@ -93,7 +93,7 @@ export function HeroCopyRewriteHeroSection() {
                     </Button>
                   </SignUpButton>
                   <Button
-                    variant="brutalist-ghost-rounded"
+                    variant="secondary"
                     size="xl"
                     className="w-full sm:w-auto text-center sm:min-w-[180px] px-8 sm:px-10"
                     onClick={() => setIsDemoModalOpen(true)}
@@ -106,7 +106,7 @@ export function HeroCopyRewriteHeroSection() {
           </div>
 
           <div className="hidden lg:block lg:col-span-5 relative mt-12 lg:mt-0 min-h-[400px] lg:min-h-[600px] flex items-center justify-center order-first lg:order-last">
-            <div className="absolute inset-0 bg-acid rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-hard-xl opacity-20" />
+            <div className="absolute inset-0 bg-coral rounded-[3rem] border-[3px] border-black rotate-3 z-0 shadow-brutalist-lg opacity-20" />
             <div className="absolute inset-0 border-2 border-black border-dashed rounded-[3rem] -rotate-3 z-0" />
 
             <m.div
@@ -143,7 +143,7 @@ export function HeroCopyRewriteHeroSection() {
               initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : false}
               animate={shouldAnimate ? { opacity: 1, scale: 1 } : undefined}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-hard-xl group"
+              className="relative bg-paper rounded-[2rem] border-2 border-black overflow-hidden z-10 w-full aspect-[4/5] shadow-brutalist-lg group"
             >
               <div className="absolute inset-0 p-6">
                 <div className="flex items-center gap-2 mb-6">
@@ -184,7 +184,7 @@ export function HeroCopyRewriteHeroSection() {
                       </m.div>
                     ))}
                   </div>
-                  <Button variant="brutalist-rounded" className="w-full h-12 text-sm font-bold">
+                  <Button variant="brutalist" className="w-full h-12 text-sm font-bold">
                     Send branded link
                   </Button>
                 </div>

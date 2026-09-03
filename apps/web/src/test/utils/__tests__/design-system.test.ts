@@ -7,6 +7,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   hasBrutalistShadow,
   hasSoftShadow,
@@ -22,12 +24,16 @@ import {
 } from '../design-system';
 
 describe('hasBrutalistShadow', () => {
-  it('should return true for brutalist shadow variants', () => {
+  it('should return true for the three brutalist shadow sizes', () => {
     expect(hasBrutalistShadow('shadow-brutalist')).toBe(true);
     expect(hasBrutalistShadow('shadow-brutalist-sm')).toBe(true);
     expect(hasBrutalistShadow('shadow-brutalist-lg')).toBe(true);
-    expect(hasBrutalistShadow('shadow-brutalist-xl')).toBe(true);
-    expect(hasBrutalistShadow('shadow-brutalist-2xl')).toBe(true);
+  });
+
+  it('should not recognize deprecated oversized brutalist shadows', () => {
+    // v2.0 shadow budget: xl/2xl/3xl retired — anything above lg collapses
+    expect(hasBrutalistShadow('shadow-brutalist-xl')).toBe(false);
+    expect(hasBrutalistShadow('shadow-brutalist-2xl')).toBe(false);
   });
 
   it('should return false for soft shadows', () => {
@@ -114,31 +120,44 @@ describe('usesBrandColor', () => {
 });
 
 describe('hasOverRoundedRadius', () => {
-  it('should return true for over-rounded borders', () => {
+  it('should return true for every non-binary radius step', () => {
+    // Binary radius: --radius is 0rem, so these steps are violations
+    expect(hasOverRoundedRadius('rounded-sm')).toBe(true);
+    expect(hasOverRoundedRadius('rounded-md')).toBe(true);
+    expect(hasOverRoundedRadius('rounded-lg')).toBe(true);
+    expect(hasOverRoundedRadius('rounded-xl')).toBe(true);
     expect(hasOverRoundedRadius('rounded-2xl')).toBe(true);
     expect(hasOverRoundedRadius('rounded-3xl')).toBe(true);
-    expect(hasOverRoundedRadius('rounded-full')).toBe(true);
   });
 
-  it('should return false for acceptable border radius', () => {
+  it('should return true for arbitrary radius values', () => {
+    expect(hasOverRoundedRadius('rounded-[0.75rem]')).toBe(true);
+  });
+
+  it('should return false for sanctioned binary radius', () => {
     expect(hasOverRoundedRadius('rounded')).toBe(false);
-    expect(hasOverRoundedRadius('rounded-md')).toBe(false);
-    expect(hasOverRoundedRadius('rounded-lg')).toBe(false);
-    expect(hasOverRoundedRadius('rounded-xl')).toBe(false);
+    expect(hasOverRoundedRadius('rounded-none')).toBe(false);
+    expect(hasOverRoundedRadius('rounded-full')).toBe(false);
+  });
+
+  it('should not flag directional radii as step violations', () => {
+    // rounded-l-lg is a directional edge, not a step value
+    expect(hasOverRoundedRadius('rounded-l-lg')).toBe(false);
   });
 });
 
 describe('hasBrutalistRadius', () => {
-  it('should return true for acceptable radius', () => {
+  it('should return true for the sanctioned binary radius', () => {
     expect(hasBrutalistRadius('rounded')).toBe(true);
-    expect(hasBrutalistRadius('rounded-md')).toBe(true);
-    expect(hasBrutalistRadius('rounded-lg')).toBe(true);
+    expect(hasBrutalistRadius('rounded-none')).toBe(true);
+    expect(hasBrutalistRadius('rounded-full')).toBe(true);
   });
 
-  it('should return false for over-rounded borders', () => {
+  it('should return false for non-binary radius steps', () => {
+    expect(hasBrutalistRadius('rounded-lg')).toBe(false);
+    expect(hasBrutalistRadius('rounded-xl')).toBe(false);
     expect(hasBrutalistRadius('rounded-2xl')).toBe(false);
     expect(hasBrutalistRadius('rounded-3xl')).toBe(false);
-    expect(hasBrutalistRadius('rounded-full')).toBe(false);
   });
 });
 
@@ -227,10 +246,17 @@ describe('validateDesignSystem', () => {
 
   it('should detect over-rounded violations', () => {
     const violations = validateDesignSystem('rounded-2xl');
-    
+
     expect(violations).toHaveLength(1);
     expect(violations[0].type).toBe('over-rounded');
     expect(violations[0].className).toBe('rounded-2xl');
+  });
+
+  it('should detect arbitrary radius violations', () => {
+    const violations = validateDesignSystem('rounded-[0.75rem]');
+
+    expect(violations).toHaveLength(1);
+    expect(violations[0].type).toBe('over-rounded');
   });
 
   it('should detect multiple violations', () => {
@@ -247,9 +273,9 @@ describe('validateDesignSystem', () => {
 
   it('should return empty array for compliant classes', () => {
     const violations = validateDesignSystem(
-      'bg-coral text-teal shadow-brutalist rounded-lg'
+      'bg-coral text-teal shadow-brutalist rounded-full'
     );
-    
+
     expect(violations).toHaveLength(0);
   });
 
@@ -267,15 +293,51 @@ describe('validateDesignSystem', () => {
 });
 
 describe('brutalistShadowFor', () => {
-  it('should map soft shadows to brutalist equivalents', () => {
+  it('should map soft shadows to brutalist equivalents within the three-size budget', () => {
     expect(brutalistShadowFor('shadow-sm')).toBe('shadow-brutalist-sm');
     expect(brutalistShadowFor('shadow-md')).toBe('shadow-brutalist');
     expect(brutalistShadowFor('shadow-lg')).toBe('shadow-brutalist-lg');
-    expect(brutalistShadowFor('shadow-xl')).toBe('shadow-brutalist-xl');
-    expect(brutalistShadowFor('shadow-2xl')).toBe('shadow-brutalist-2xl');
+    // oversized soft shadows collapse to the lg ceiling (v2.0)
+    expect(brutalistShadowFor('shadow-xl')).toBe('shadow-brutalist-lg');
+    expect(brutalistShadowFor('shadow-2xl')).toBe('shadow-brutalist-lg');
   });
 
   it('should default to shadow-brutalist for unknown shadows', () => {
     expect(brutalistShadowFor('unknown')).toBe('shadow-brutalist');
+  });
+});
+
+/**
+ * Shadow budget contract — reads the real Tailwind config so a config edit
+ * that widens the budget or drops the --border-hard token fails CI.
+ * Path: src/test/utils/__tests__/ -> apps/web/tailwind.config.ts
+ */
+const TAILWIND_CONFIG_PATH = path.resolve(
+  __dirname,
+  '../../../../tailwind.config.ts'
+);
+
+describe('tailwind.config.ts shadow budget', () => {
+  const configSource = readFileSync(TAILWIND_CONFIG_PATH, 'utf8');
+  const boxShadowBlock = configSource.match(/boxShadow:\s*\{([\s\S]*?)\},/);
+  const entries = boxShadowBlock
+    ? [...boxShadowBlock[1].matchAll(/'([^']+)':\s*'([^']+)'/g)].map(m => ({
+        key: m[1],
+        value: m[2],
+      }))
+    : [];
+  const keys = entries.map(entry => entry.key);
+
+  it('should define exactly the three brutalist shadow sizes', () => {
+    expect(boxShadowBlock).not.toBeNull();
+    expect(keys).toEqual(['brutalist-sm', 'brutalist', 'brutalist-lg']);
+  });
+
+  it('should derive every shadow color from --border-hard', () => {
+    expect(entries.length).toBeGreaterThan(0);
+    for (const { key, value } of entries) {
+      expect(value).toContain('rgb(var(--border-hard))');
+      expect(value).not.toContain('#000');
+    }
   });
 });

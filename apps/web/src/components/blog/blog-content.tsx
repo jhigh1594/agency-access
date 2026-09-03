@@ -213,7 +213,7 @@ export function BlogContent({ post }: BlogContentProps) {
             {post.readTime} min read
           </span>
           <Button
-            variant="brutalist-ghost"
+            variant="secondary"
             size="sm"
             className="ml-auto"
             onClick={() => {

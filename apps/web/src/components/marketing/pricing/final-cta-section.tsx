@@ -33,12 +33,12 @@ export function FinalCTASection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative border-2 border-black bg-paper p-8 sm:p-12 md:p-16 lg:p-20 overflow-hidden text-center shadow-brutalist-xl max-w-4xl mx-auto"
+            className="relative border-2 border-black bg-paper p-8 sm:p-12 md:p-16 lg:p-20 overflow-hidden text-center shadow-brutalist-lg max-w-4xl mx-auto"
           >
             {/* Background Accents - Brutalist */}
             <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-coral/5 -z-0" />
             <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 bg-teal/5 -z-0" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-acid/5 rounded-full blur-3xl -z-0" />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-coral/5 rounded-full blur-3xl -z-0" />
 
             <div className="relative z-10">
               {/* Headline */}
@@ -58,7 +58,7 @@ export function FinalCTASection() {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8 sm:mb-12 px-2">
                 <SignUpButton mode="modal">
                   <Button
-                    variant="brutalist-rounded"
+                    variant="brutalist"
                     size="xl"
                     className="w-full sm:w-auto px-8 sm:px-12"
                     rightIcon={<ArrowRight size={20} />}
@@ -73,7 +73,7 @@ export function FinalCTASection() {
                   rel="noopener noreferrer"
                 >
                   <Button
-                    variant="brutalist-ghost-rounded"
+                    variant="secondary"
                     size="xl"
                     className="w-full sm:w-auto font-bold uppercase tracking-wider text-xs"
                   >

@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "Meta Social Technologies": {
+      "url": "https://mcp.facebook.com/devtools",
+      "type": "http"
+    },
     "reddit": {
       "command": "uvx",
       "args": ["--from", "git+https://github.com/adhikasp/mcp-reddit.git", "mcp-reddit"],

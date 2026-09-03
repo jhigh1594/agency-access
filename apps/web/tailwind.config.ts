@@ -47,22 +47,30 @@ const config: Config = {
         paper: "rgb(var(--paper) / <alpha-value>)",
         coral: "rgb(var(--coral) / <alpha-value>)",
         teal: "rgb(var(--teal) / <alpha-value>)",
+        /* v2.0 AA ink tokens — status TEXT; raw teal/coral are fills/borders only */
+        "success-ink": "rgb(var(--success-ink) / <alpha-value>)",
+        "danger-ink": "rgb(var(--danger-ink) / <alpha-value>)",
         acid: "rgb(var(--acid) / <alpha-value>)",
-        electric: "rgb(var(--electric) / <alpha-value>)",
         /* Dark mode hover surface */
         "hover-surface-dark": "rgb(var(--hover-surface) / <alpha-value>)",
       },
+      /* Binary radius: --radius is 0rem, so every non-full step is square.
+         rounded-none and rounded-full are the only sanctioned curves. */
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "var(--radius)",
+        sm: "var(--radius)",
+        xl: "var(--radius)",
+        "2xl": "var(--radius)",
+        "3xl": "var(--radius)",
       },
       spacing: {
         'mobile-safe': 'env(safe-area-inset-bottom)',
       },
       fontFamily: {
         dela: ["var(--font-dela)", "cursive"],
-        display: ["var(--font-display)", "serif"],
+        /* v2.0: display role collapsed onto Outfit (Fraunces dropped) */
+        display: ["var(--font-sans)", "system-ui", "sans-serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
@@ -78,10 +86,6 @@ const config: Config = {
         "scroll-right": {
           "0%": { transform: "translateX(-50%)" },
           "100%": { transform: "translateX(0)" },
-        },
-        "scroll-left-slow": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
         },
         "marquee": {
           "0%": { transform: "translateX(0%)" },
@@ -99,15 +103,16 @@ const config: Config = {
         "fade-up": "fade-up 0.6s ease-out forwards",
         "scroll-left": "scroll-left 30s linear infinite",
         "scroll-right": "scroll-right 30s linear infinite",
-        "scroll-slow": "scroll-left-slow 40s linear infinite",
         "marquee": "marquee 30s linear infinite",
         // 2.5s per rotation with ease-in-out for smooth, non-frantic feel
         "gentle-spin": "gentle-spin 2.5s ease-in-out infinite",
       },
       boxShadow: {
-        'brutalist': '4px 4px 0px #000',
-        'brutalist-lg': '6px 6px 0px #000',
-        'brutalist-xl': '8px 8px 0px #000',
+        /* v2.0 shadow budget: three sizes only — sm 2px, default 4px, lg 6px.
+           Token-driven so hover: variants flip to white in dark mode. */
+        'brutalist-sm': '2px 2px 0px rgb(var(--border-hard))',
+        'brutalist': '4px 4px 0px rgb(var(--border-hard))',
+        'brutalist-lg': '6px 6px 0px rgb(var(--border-hard))',
       },
     },
   },

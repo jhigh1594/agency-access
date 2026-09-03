@@ -24,7 +24,10 @@
     --input: 255 255 255;           /* #FFFFFF - white background for inputs */
     --ring: 255 107 53;
 
-    --radius: 0.75rem;               /* Sleeker rounded corners */
+    /* v2.0 BINARY RADIUS: corners are square (0) or circular (999px/50%).
+       Nothing between. rounded-lg/md/sm all resolve through --radius, so this
+       one flip migrates every shadcn primitive; pills/avatars keep rounded-full. */
+    --radius: 0rem;
 
     /* Section specific backgrounds */
     --warm-gray: 245 245 244;       /* #F5F5F4 */
@@ -38,16 +41,25 @@
     --ink: 9 9 11;                  /* #09090B - Deep black for backgrounds */
     --paper: 250 250 250;           /* #FAFAFA - Off-white for surfaces */
 
+    /* Secondary ink for dividers and hairlines (.hairline-b) */
+    --ink-secondary: 63 63 70;      /* #3F3F46 - zinc-700, ~10.4:1 on white */
+
     /* BRAND COLORS - Preserved as accents */
     --coral: 255 107 53;            /* #FF6B35 - AuthHub Coral - accent (10% usage) */
     --teal: 0 168 150;              /* #00A896 - AuthHub Teal - accent (5% usage) */
 
     /* BRUTALIST ACCENTS */
-    --acid: 204 255 0;              /* #CCFF00 - Acid green for kinetic elements (2% usage) */
-    --electric: 139 92 246;         /* #8B5CF6 - Electric purple for hover states */
+    /* --acid is HERO-ONLY (v2.0 decision): one acid element on the homepage hero,
+       never in app surfaces, status, or text (1.4:1 contrast — carries no meaning). */
+    --acid: 204 255 0;              /* #CCFF00 - Acid green, homepage hero only */
 
     /* SEMANTIC COLORS - Accessible status indicators */
     --warning: 180 83 9;            /* #B45309 - Amber for warnings (5.2:1 contrast on white) */
+    /* v2.0 contrast-aware ink tokens (lazyweb port — dual tokens per ground).
+       Raw teal/coral FAIL AA as text on white (3.0:1 / 2.9:1) — they are
+       fills and borders only. Text carries the darkened ink variants. */
+    --success-ink: 15 118 110;      /* #0F766E - teal-700, ~5.5:1 on white (AA) */
+    --danger-ink: 194 65 12;        /* #C2410C - orange-700, ~4.8:1 on white (AA) */
 
     /* BORDERS & SHADOWS */
     --border-hard: 0 0 0;           /* #000000 - Pure black borders */
@@ -92,16 +104,22 @@
     --ink: 250 250 250;             /* #FAFAFA - White surface (inverted) */
     --paper: 20 20 25;              /* #141419 - Dark background (inverted) */
 
+    /* Secondary ink for dividers and hairlines (.hairline-b) */
+    --ink-secondary: 212 212 216;   /* #D4D4D8 - zinc-300 on dark */
+
     /* BRAND COLORS - Adjusted for contrast */
     --coral: 255 115 80;            /* #FF7350 - Brighter for dark mode */
     --teal: 0 200 180;              /* #00C8B4 - Brighter for dark mode */
 
     /* BRUTALIST ACCENTS - UNCHANGED (high contrast works everywhere) */
-    --acid: 204 255 0;             /* #CCFF00 - Kinetic green preserved */
-    --electric: 139 92 246;          /* #8B5CF6 - Electric purple preserved */
+    /* --acid is HERO-ONLY (v2.0 decision) — see :root comment. */
+    --acid: 204 255 0;             /* #CCFF00 - Kinetic green, homepage hero only */
 
     /* SEMANTIC COLORS - Accessible status indicators */
     --warning: 251 191 36;           /* #FBBF24 - Brighter amber for dark mode (4.5:1 contrast) */
+    /* v2.0 ink tokens lightened for dark ground (raw teal/coral remain fills) */
+    --success-ink: 45 212 191;      /* #2DD4BF - teal-400 on dark */
+    --danger-ink: 251 138 110;      /* #FB8A6E - light coral on dark */
 
     /* BORDERS & SHADOWS - Inverted for visibility */
     --border-hard: 255 255 255;     /* #FFFFFF - White borders on dark */
@@ -136,8 +154,17 @@
   select {
     @apply bg-input text-foreground border-border rounded-md;
     @apply placeholder:text-muted-foreground;
-    @apply focus:ring-2 focus:ring-ring focus:border-ring focus:outline-none;
-    @apply transition-colors duration-200;
+    /* v2.0 two-ring focus: inner 3px coral stroke + outer 6px soft halo */
+    @apply focus:border-coral focus:outline-none;
+    @apply focus-visible:outline-[3px] focus-visible:outline-coral/25;
+    box-shadow: 0 0 0 0 rgb(var(--primary) / 0);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    box-shadow: 0 0 0 6px rgb(var(--primary) / 0.08);
   }
 
   /* Input text is white in dark mode for better readability */
@@ -157,11 +184,7 @@
   }
 
   /* Input focus visible for better accessibility */
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible {
-    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
-  }
+  /* v2.0: legacy ring focus replaced by the two-ring system above */
 
   /* Ensure dropdown triggers have white background in light mode */
   :root:not(.dark) select {
@@ -170,9 +193,44 @@
 }
 
 @layer utilities {
-  /* Typography */
+  /* Typography — display role collapsed onto Outfit (v2.0: Fraunces dropped).
+     dela remains the hero display face; font-display is the section-heading voice. */
   .font-display {
-    font-family: var(--font-display), serif;
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+
+  /* ========================================
+     MONO MICRO-LABEL SYSTEM (v2.0, lazyweb port)
+     Tracking inverts with size: display pulls tight (-0.02/-0.04em via
+     .tracking-display-*), mono micro-labels push OUT (+0.11em). The mono
+     layer is the data substrate — status text, metadata, KPI labels,
+     table headers, footers.
+     ======================================== */
+
+  .label-micro {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.32px; /* +0.12em at 11px */
+    text-transform: uppercase;
+    color: rgb(var(--foreground));
+  }
+
+  .label-nano {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 1px; /* +0.10em at 10px */
+    color: rgb(var(--muted-foreground));
+  }
+
+  /* Display tracking scale — apply to dela/display headings */
+  .tracking-display-lg {
+    letter-spacing: -0.04em; /* ≥3.5rem display */
+  }
+
+  .tracking-display-md {
+    letter-spacing: -0.02em; /* ≥2rem display */
   }
 
   .font-dela {
@@ -205,6 +263,29 @@
   /* Ink/Paper surfaces */
   .bg-ink {
     background-color: rgb(var(--ink));
+  }
+
+  /* Ink panel (v2.0) — the one dark terminal-style surface per view.
+     Ink ground, paper text, mono data layer. This is "one brutalist element
+     per view" given a concrete form (lazyweb port). */
+  .ink-panel {
+    background-color: rgb(var(--ink));
+    color: rgb(var(--paper));
+    border-radius: 0;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+
+  .ink-panel .cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    background: currentColor;
+    vertical-align: text-bottom;
+    animation: blink 1.1s steps(2, start) infinite;
+  }
+
+  @keyframes blink {
+    to { visibility: hidden; }
   }
 
   .bg-paper {
@@ -257,18 +338,6 @@
     border-color: rgb(var(--warning));
   }
 
-  /* Reveal on Scroll */
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
   /* Reveal Element Animations - CSS-based entrance animations
    * Uses opacity-based approach to prevent three-state hydration flicker
    * Timing:
@@ -278,8 +347,8 @@
    */
   .reveal-element {
     will-change: opacity, transform;
-    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.3, 1),
+                transform 0.45s cubic-bezier(0.2, 0.8, 0.3, 1);
     transition-delay: var(--reveal-delay, 0s);
   }
 
@@ -317,21 +386,6 @@
     transform: translate(0, 0);
   }
 
-  /* Floating animation - starts smoothly after animations ready */
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
-
-  .animate-float {
-    animation: none;
-    will-change: transform;
-  }
-
-  html.animations-ready .animate-float {
-    animation: float 5s ease-in-out infinite;
-  }
-
   /* Staggered entrance helpers */
   .stagger-1 { transition-delay: 100ms; }
   .stagger-2 { transition-delay: 200ms; }
@@ -361,52 +415,9 @@
     }
   }
 
-  @keyframes scaleUp {
-    0% {
-      transform: scale(0.8);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  .animate-scaleUp {
-    animation: none;
-  }
-
-  html.animations-ready .animate-scaleUp {
-    animation: scaleUp 0.3s ease-out forwards;
-  }
-
   /* ========================================
      BRUTALIST ANIMATIONS
      ======================================== */
-
-  /* Hard shadow hover animation */
-  @keyframes shadow-brutal {
-    0% { box-shadow: 4px 4px 0px var(--shadow-hard); }
-    100% { box-shadow: 6px 6px 0px var(--shadow-hard); transform: translate(-2px, -2px); }
-  }
-
-  .animate-brutal-hover:hover {
-    animation: shadow-brutal 0.2s ease-out forwards;
-  }
-
-  /* Marquee scroll (slow) */
-  @keyframes scroll-left-slow {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .animate-scroll-slow {
-    animation: none;
-  }
-
-  html.animations-ready .animate-scroll-slow {
-    animation: scroll-left-slow 40s linear infinite;
-  }
 
   /* ========================================
      Mobile Optimization Utilities
@@ -542,16 +553,7 @@
 }
 
 /* ========================================
-   PILLAR AI STYLE UTILITIES
-   ======================================== */
-
-/* Enhanced hard shadows */
-.shadow-hard-xl {
-  box-shadow: 8px 8px 0px 0px rgb(var(--border-hard));
-}
-
-/* ========================================
-   EMAIL APOCALYPSE COLLAPSE UTILITIES
+   BRUTALIST PRIMITIVES
    ======================================== */
 
 /* Brutalist borders - 3px hard border */
@@ -563,29 +565,17 @@
   border: 4px solid rgb(var(--border-hard));
 }
 
-/* Brutalist hard shadows - no blur */
-.shadow-brutalist-sm {
-  box-shadow: 2px 2px 0px rgb(var(--border-hard));
-}
+/* Brutalist hard shadows - no blur.
+   v2.0 shadow budget: three sizes only (sm 2px, default 4px, lg 6px).
+   Shadow is punctuation for interactive/hero elements, never a resting
+   state — default cards use a 1px border with no shadow.
+   Single source of truth: tailwind.config.ts boxShadow (token-driven via
+   --border-hard), so hover: variants resolve the correct theme color. */
 
-.shadow-brutalist {
-  box-shadow: 4px 4px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-lg {
-  box-shadow: 6px 6px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-xl {
-  box-shadow: 8px 8px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-2xl {
-  box-shadow: 12px 12px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-3xl {
-  box-shadow: 16px 16px 0px rgb(var(--border-hard));
+/* Bottom hairline — meta rows, card footers, list dividers.
+   Ported from lazyweb.com: their primary separation device (221 uses). */
+.hairline-b {
+  border-bottom: 1px solid rgb(var(--ink-secondary) / 0.55);
 }
 
 /* Hover lift effect - brutalist style (subtle) */
@@ -599,90 +589,10 @@
 }
 
 /* ========================================
-   EMAIL COLLAPSE ANIMATIONS
+   HERO FLOAT (v2.0: the one continuous decorative animation,
+   homepage hero only — see --acid comment)
    ======================================== */
 
-/* Chaos float - random delay for email cards */
-@keyframes float-chaos {
-  0%, 100% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
-  50% { transform: translateY(-8px) rotate(var(--rotation, 0deg)); }
-}
-
-.animate-float-chaos {
-  animation: none;
-  will-change: transform;
-}
-
-html.animations-ready .animate-float-chaos {
-  animation: float-chaos 5s ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-
-/* Order float - calm synchronized float */
-@keyframes float-order {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-
-.animate-float-order {
-  animation: none;
-  will-change: transform;
-}
-
-html.animations-ready .animate-float-order {
-  animation: float-order 3s ease-in-out infinite;
-}
-
-/* Collapse to center animation */
-@keyframes collapse-center {
-  0% {
-    transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--rotation, 0deg)) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(0, 0) rotate(0deg) scale(0);
-    opacity: 0;
-  }
-}
-
-.animate-collapse {
-  animation: collapse-center 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
-
-/* Expand reveal animation */
-@keyframes expand-reveal {
-  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-  50% { transform: scale(1.3) rotate(10deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
-}
-
-.animate-expand {
-  animation: expand-reveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-/* Stats ticker animation */
-@keyframes ticker-up {
-  0% { transform: translateY(100%); opacity: 0; }
-  20% { transform: translateY(0); opacity: 1; }
-  80% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-100%); opacity: 0; }
-}
-
-.animate-ticker {
-  animation: ticker-up 2s ease-in-out infinite;
-}
-
-/* Collapse button pulse */
-@keyframes pulse-button {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.animate-pulse-button {
-  animation: pulse-button 2s ease-in-out infinite;
-}
-
-/* Float animation for floating cards */
 @keyframes float-pillar {
   0%, 100% {
     transform: translateY(0px);
@@ -705,36 +615,6 @@ html.animations-ready .animate-float-pillar {
   .animate-float-pillar,
   .animate-pulse {
     animation: none !important;
-  }
-
-  .glitch-text:hover {
-    animation: none;
-  }
-}
-
-/* Glitch text effect on hover */
-.glitch-text:hover {
-  animation: glitch-pillar 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
-}
-
-@keyframes glitch-pillar {
-  0% {
-    transform: translate(0);
-  }
-  20% {
-    transform: translate(-2px, 2px);
-  }
-  40% {
-    transform: translate(-2px, -2px);
-  }
-  60% {
-    transform: translate(2px, 2px);
-  }
-  80% {
-    transform: translate(2px, -2px);
-  }
-  100% {
-    transform: translate(0);
   }
 }
 
@@ -1197,34 +1077,7 @@ html.animations-ready .animate-float-pillar {
   }
 }
 
-/* ========================================
-   MIGRATION HELPERS (Temporary)
-   These help migrate components incrementally
-   TODO: Remove after migration complete
-   ======================================== */
-
-/* Generic color to brand color mappings */
-.text-success { @apply text-teal; }
-.bg-success-light { @apply bg-teal/10; }
-.border-success { @apply border-teal; }
-
-.text-warning { color: rgb(var(--warning)); }
-.bg-warning-light { background-color: rgb(var(--warning) / 0.1); }
-.border-warning { border-color: rgb(var(--warning)); }
-
-.text-danger { @apply text-coral; }
-.bg-danger-light { @apply bg-coral/10; }
-.border-danger { @apply border-coral; }
-
+/* Muted aliases — live consumers in src/. `.text-muted` darkens the muted
+   token to gray-600 for long-form body text; `.bg-muted` maps to paper. */
 .text-muted { @apply text-gray-600; }
 .bg-muted { @apply bg-paper; }
-.border-muted { @apply border-black/10; }
-
-/* Soft shadow to brutalist shadow mappings */
-.modal-shadow { @apply shadow-brutalist-lg; }
-.card-shadow { @apply shadow-brutalist; }
-.dropdown-shadow { @apply shadow-brutalist-sm; }
-
-/* Border radius mappings */
-.brutalist-rounded { @apply rounded-lg; }
-.brutalist-soft { @apply rounded-xl; }

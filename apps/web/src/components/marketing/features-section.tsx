@@ -90,7 +90,7 @@ export function FeaturesSection() {
         </div>
 
         {/* Features Grid - Checkerboard pattern with brutalist styling */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-black border-2 border-black max-w-5xl mx-auto shadow-brutalist-xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-black border-2 border-black max-w-5xl mx-auto shadow-brutalist-lg">
           {features.map((feature, i) => (
             <m.div
               key={feature.title}

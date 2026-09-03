@@ -57,7 +57,7 @@ export default function CombinedFeaturedSection() {
           {/* Platform badges */}
           <div className="flex flex-wrap gap-2 mb-2">
             {['Meta Ads', 'Google Ads', 'GA4', 'TikTok', 'LinkedIn'].map((platform, i) => (
-              <span key={platform} className="px-3 py-1 text-xs font-bold border-2 border-black bg-acid/20 text-ink rounded-[0.5rem]">
+              <span key={platform} className="px-3 py-1 text-xs font-bold border-2 border-black bg-coral/20 text-ink rounded-[0.5rem]">
                 {platform}
               </span>
             ))}
@@ -66,15 +66,15 @@ export default function CombinedFeaturedSection() {
           {/* Key stats */}
           <div className="grid grid-cols-3 gap-3 mt-auto">
             <div className="text-center p-3 border-2 border-black bg-teal/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-teal mb-1">30+</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-success-ink mb-1">30+</div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Emails Eliminated</div>
             </div>
             <div className="text-center p-3 border-2 border-black bg-coral/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-coral mb-1">5 min</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-danger-ink mb-1">5 min</div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Setup Time</div>
             </div>
-            <div className="text-center p-3 border-2 border-black bg-acid/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-acid mb-1">100%</div>
+            <div className="text-center p-3 border-2 border-black bg-coral/10 rounded-[0.5rem]">
+              <div className="font-dela text-xl sm:text-2xl font-bold text-danger-ink mb-1">100%</div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Completion</div>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function CombinedFeaturedSection() {
           className="p-6 sm:p-8 border-2 border-black bg-paper shadow-brutalist rounded-[0.75rem] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200 touch-feedback flex flex-col"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 border-2 border-black bg-acid flex items-center justify-center rounded-[0.5rem] flex-shrink-0">
+            <div className="w-10 h-10 border-2 border-black bg-coral flex items-center justify-center rounded-[0.5rem] flex-shrink-0">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-bold uppercase tracking-wide text-ink">Enterprise Security</span>

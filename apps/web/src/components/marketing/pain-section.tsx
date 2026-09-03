@@ -125,16 +125,20 @@ function StatCard({
   label,
   description,
   color,
+  display,
+  tickerEnd = 0,
   delay = 0
 }: {
   value: string;
   label: string;
   description: string;
   color: string;
+  display?: 'ticker' | 'static';
+  tickerEnd?: number;
   delay?: number;
 }) {
   const { shouldAnimate } = useAnimationOrchestrator();
-  const bgColor = color === 'coral' ? 'bg-coral' : color === 'teal' ? 'bg-teal' : 'bg-acid';
+  const bgColor = color === 'coral' ? 'bg-coral' : color === 'teal' ? 'bg-teal' : 'bg-coral';
   const textColor = color === 'coral' || color === 'teal' ? 'text-white' : 'text-ink';
 
   return (
@@ -144,15 +148,14 @@ function StatCard({
       viewport={{ once: true }}
       transition={{ delay, duration: 0.6 }}
       whileHover={{ translateX: -4, translateY: -4 }}
-      className={`${bgColor} ${textColor} p-6 sm:p-8 border-2 border-black shadow-brutalist-xl hover:shadow-brutalist-xl transition-all duration-200 rounded-lg`}
+      className={`${bgColor} ${textColor} p-6 sm:p-8 border-2 border-black shadow-brutalist-lg hover:shadow-brutalist-lg transition-all duration-200 rounded-lg`}
     >
       <div className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest mb-3 opacity-90">
         {label}
       </div>
       <div className="text-3xl sm:text-4xl md:text-5xl !leading-none mb-2">
-        {color === 'coral' && <StatTicker end={3} duration={2} />}
-        {color === 'teal' && <StatTicker end={47} duration={2.5} />}
-        {color === 'acid' && <span className="font-dela">{value}</span>}
+        {display === 'ticker' && <StatTicker end={tickerEnd} duration={2.4} />}
+        {display === 'static' && <span className="font-dela">{value}</span>}
       </div>
       <div className="font-mono text-xs sm:text-sm opacity-75">
         {description}
@@ -227,7 +230,7 @@ export function PainSection() {
               whileInView={shouldAnimate ? { rotate: 0 } : undefined}
               viewport={{ once: true }}
               transition={{ duration: 0.3 }}
-              className="inline-flex items-center gap-2 border-2 border-coral bg-coral text-white px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] font-mono shadow-brutalist-lg mb-6 rounded-lg hover:shadow-brutalist-xl hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+              className="inline-flex items-center gap-2 border-2 border-coral bg-coral text-white px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] font-mono shadow-brutalist-lg mb-6 rounded-lg hover:shadow-brutalist-lg hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
             >
               <m.span
                 animate={shouldAnimate ? { opacity: [1, 0.6, 1] } : undefined}
@@ -283,6 +286,8 @@ export function PainSection() {
                 label="Days Lost"
                 description="Per client onboarding"
                 color="coral"
+                display="ticker"
+                tickerEnd={3}
                 delay={0.4}
               />
               <StatCard
@@ -290,13 +295,16 @@ export function PainSection() {
                 label="Email Exchanges"
                 description="Average per client"
                 color="teal"
+                display="ticker"
+                tickerEnd={47}
                 delay={0.5}
               />
               <StatCard
                 value="$600+"
                 label="Revenue Lost"
                 description="Per client onboarding"
-                color="acid"
+                color="coral"
+                display="static"
                 delay={0.6}
               />
             </div>

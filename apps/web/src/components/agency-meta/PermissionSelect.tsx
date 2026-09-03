@@ -98,7 +98,7 @@ export function PermissionSelect({ value, onChange, disabled }: PermissionSelect
                   setOpen(false);
                 }}
                 className={`
-                  w-full px-3 py-2 text-left hover:bg-electric/10 transition-colors
+                  w-full px-3 py-2 text-left hover:bg-coral/10 transition-colors
                   ${value === permission.value ? 'bg-accent/20' : ''}
                 `}
               >

@@ -61,7 +61,7 @@ const problemCards = [
     label: 'Delayed kickoff',
     description: "You can't build campaigns you can't see. Every day without access is a day the client wonders what they're paying for.",
     icon: TimerReset,
-    color: 'acid',
+    color: 'coral',
   },
 ];
 
@@ -156,7 +156,7 @@ export function HeroCopyRewriteProblemSection() {
                   whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
                   viewport={{ once: true }}
                   transition={{ delay: 0.4 + index * 0.1, duration: 0.6 }}
-                  className="p-6 sm:p-8 border-2 border-black shadow-brutalist-xl rounded-lg bg-card"
+                  className="p-6 sm:p-8 border-2 border-black shadow-brutalist-lg rounded-lg bg-card"
                 >
                   <div className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest mb-3 opacity-90 text-gray-600">
                     {card.label}
@@ -168,7 +168,7 @@ export function HeroCopyRewriteProblemSection() {
                           ? 'bg-coral/15'
                           : card.color === 'teal'
                             ? 'bg-teal/15'
-                            : 'bg-acid/20'
+                            : 'bg-coral/20'
                       }`}
                     >
                       <card.icon className="w-6 h-6 text-ink" />

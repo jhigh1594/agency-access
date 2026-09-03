@@ -513,7 +513,7 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
             </div>
 
             {/* Switch to AuthHub */}
-            <div className="border-[3px] border-coral p-6 rounded-none shadow-brutalist-xl bg-coral/5">
+            <div className="border-[3px] border-coral p-6 rounded-none shadow-brutalist-lg bg-coral/5">
               <h3 className="font-dela text-xl text-coral mb-4">
                 Switch to {ourProduct.name} If
               </h3>
