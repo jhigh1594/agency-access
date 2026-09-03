@@ -162,7 +162,9 @@ async function main() {
     };
   }
 
-  const outputFile = path.join(__dirname, 'results', `api-${label}-${Date.now()}.json`);
+  const resultsDir = path.join(__dirname, 'results');
+  await fs.mkdir(resultsDir, { recursive: true });
+  const outputFile = path.join(resultsDir, `api-${label}-${Date.now()}.json`);
   await fs.writeFile(outputFile, JSON.stringify(report, null, 2));
 
   process.stdout.write(`\nSaved API benchmark report: ${outputFile}\n`);
