@@ -22,6 +22,8 @@ import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 import { SingleSelect } from '@/components/ui/single-select';
 import { AssetSelectorLoading, AssetSelectorError } from './AssetSelectorStates';
 import { MetaAssetCreator } from './MetaAssetCreator';
+import { MetaBusinessCreator } from './MetaBusinessCreator';
+import { MetaBusinessSetupChecklist } from './MetaBusinessSetupChecklist';
 import { GuidedRedirectCard } from './GuidedRedirectModal';
 import { Plus } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/api/api-env';
@@ -31,6 +33,7 @@ interface MetaAssets {
   businesses?: Array<{
     id: string;
     name: string;
+    verificationStatus?: string;
   }>;
   selectedBusinessId?: string | null;
   selectedBusinessName?: string | null;
@@ -103,6 +106,13 @@ export function MetaAssetSelector({
   // Creation UI state
   const [showAdAccountCreator, setShowAdAccountCreator] = useState(false);
   const [showPageCreator, setShowPageCreator] = useState(false);
+
+  // Business creation state (zero-portfolio clients)
+  const [userPages, setUserPages] = useState<Array<{ id: string; name: string; category?: string }> | null>(null);
+  const [userPagesLoading, setUserPagesLoading] = useState(false);
+  const [userPagesError, setUserPagesError] = useState<string | null>(null);
+  const [createdBusiness, setCreatedBusiness] = useState<{ id: string; name: string } | null>(null);
+  const userPagesFetchedFor = useRef<string | null>(null);
 
   // Track if we've already captured the event (to avoid duplicates)
   const hasTrackedSelection = useRef(false);
@@ -184,6 +194,59 @@ export function MetaAssetSelector({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, accessRequestToken]);
+
+  // Fetch the client user's own Pages — only needed in the zero-portfolio
+  // branch (guided Page prerequisite for Business creation).
+  const fetchUserPages = async () => {
+    try {
+      setUserPagesLoading(true);
+      setUserPagesError(null);
+
+      const response = await fetch(
+        `${getApiBaseUrl()}/api/client/${accessRequestToken}/create/meta/user-pages?connectionId=${sessionId}`
+      );
+      const json = await parseJsonResponse<{
+        data?: { pages?: Array<{ id: string; name: string; category?: string }> };
+        error?: { message?: string };
+      }>(response, { fallbackErrorMessage: 'Failed to load your Facebook Pages' });
+
+      if (json.error) {
+        throw new Error(json.error.message || 'Failed to load your Facebook Pages');
+      }
+
+      setUserPages(json.data?.pages || []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load your Facebook Pages';
+      setUserPagesError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
+      setUserPagesLoading(false);
+    }
+  };
+
+  // Lazy-fetch user pages once when the zero-portfolio branch is entered
+  useEffect(() => {
+    if (isLoading || error || !assets) return;
+    const zeroPortfolio =
+      (assets.businesses || []).length === 0 && !selectedBusinessId && !businessId;
+    if (!zeroPortfolio) return;
+
+    const fetchKey = `${sessionId}`;
+    if (userPagesFetchedFor.current !== fetchKey) {
+      userPagesFetchedFor.current = fetchKey;
+      void fetchUserPages();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets, isLoading, error, selectedBusinessId, businessId, sessionId]);
+
+  // Business created → refetch scoped to the new portfolio and open the
+  // ad-account creator inline: one pass, no return-and-reselect journey.
+  const handleBusinessCreated = (business: { id: string; name: string }) => {
+    void fetchAssets(business.id).then(() => {
+      setCreatedBusiness(business);
+      setShowAdAccountCreator(true);
+    });
+  };
 
   // Notify parent of changes
   useEffect(() => {
@@ -312,6 +375,17 @@ export function MetaAssetSelector({
     assets?.selectionRequired && !selectedBusinessId && availableBusinesses.length > 0
   );
   const creationBusinessId = selectedBusinessId || businessId;
+  const hasNoBusinessPortfolio =
+    !requiresBusinessSelection && !creationBusinessId && availableBusinesses.length === 0;
+
+  const selectedBusinessVerification = availableBusinesses.find(
+    (b) => b.id === selectedBusinessId
+  )?.verificationStatus;
+  const showSetupChecklist = Boolean(
+    selectedBusinessId &&
+      (createdBusiness?.id === selectedBusinessId ||
+        (selectedBusinessVerification && selectedBusinessVerification !== 'verified'))
+  );
 
   const handleBusinessSelectionLoad = () => {
     if (!pendingBusinessId) return;
@@ -330,6 +404,7 @@ export function MetaAssetSelector({
     setSelectedInstagram(new Set());
     setShowAdAccountCreator(false);
     setShowPageCreator(false);
+    setCreatedBusiness(null);
     setAssets((currentAssets) =>
       currentAssets
         ? {
@@ -347,7 +422,49 @@ export function MetaAssetSelector({
 
   return (
     <div className="space-y-6">
-      {requiresBusinessSelection ? (
+      {hasNoBusinessPortfolio ? (
+        <div className="border-2 border-black dark:border-white bg-[rgb(var(--warm-gray))]/20 p-6 space-y-4">
+          <div>
+            <h3 className="text-lg font-bold text-[rgb(var(--ink))] font-display">
+              No Business Portfolio yet
+            </h3>
+            <p className="text-sm text-[rgb(var(--muted-foreground))] mt-1">
+              Meta requires a Business Portfolio to hold ad accounts and Pages. Create one
+              here — it takes about a minute.
+            </p>
+          </div>
+
+          {userPagesError ? (
+            <div className="border-2 border-[rgb(var(--warning))] bg-[rgb(var(--warning))]/10 p-4 text-sm text-[rgb(var(--warning))]">
+              {userPagesError}
+            </div>
+          ) : userPagesLoading ? (
+            <p className="text-sm text-[rgb(var(--muted-foreground))]">
+              Checking your Facebook Pages...
+            </p>
+          ) : userPages && userPages.length === 0 ? (
+            <GuidedRedirectCard
+              title="Create a Facebook Page first"
+              description="A Business Portfolio needs a primary Facebook Page. Pages are created on Facebook — follow these steps:"
+              businessManagerUrl="https://www.facebook.com/pages/create/"
+              instructions={[
+                { title: 'Click the button below to open Facebook', description: 'A new tab will open' },
+                { title: 'Create a Page for your business', description: 'Add a name, category, and description' },
+                { title: 'Return here and refresh', description: 'Your Page will appear and business creation unlocks' },
+              ]}
+              onRefresh={fetchUserPages}
+            />
+          ) : userPages && userPages.length > 0 ? (
+            <MetaBusinessCreator
+              connectionId={sessionId}
+              accessRequestToken={accessRequestToken}
+              userPages={userPages}
+              onSuccess={handleBusinessCreated}
+              onError={onError}
+            />
+          ) : null}
+        </div>
+      ) : requiresBusinessSelection ? (
         <div className="border-2 border-black dark:border-white bg-[rgb(var(--warm-gray))]/20 p-6 space-y-4">
           <div>
             <h3 className="text-lg font-bold text-[rgb(var(--ink))] font-display">
@@ -414,7 +531,7 @@ export function MetaAssetSelector({
         </div>
       ) : null}
 
-      {requiresBusinessSelection ? null : (
+      {hasNoBusinessPortfolio || requiresBusinessSelection ? null : (
         <>
       {/* Asset Groups */}
       <div className="space-y-4">
@@ -591,6 +708,14 @@ export function MetaAssetSelector({
         />
         ) : null}
       </div>
+
+      {/* Post-creation setup guidance for unverified portfolios */}
+      {showSetupChecklist && selectedBusinessId ? (
+        <MetaBusinessSetupChecklist
+          accessRequestToken={accessRequestToken}
+          businessId={selectedBusinessId}
+        />
+      ) : null}
         </>
       )}
     </div>
