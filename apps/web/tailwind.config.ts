@@ -54,10 +54,15 @@ const config: Config = {
         /* Dark mode hover surface */
         "hover-surface-dark": "rgb(var(--hover-surface) / <alpha-value>)",
       },
+      /* Binary radius: --radius is 0rem, so every non-full step is square.
+         rounded-none and rounded-full are the only sanctioned curves. */
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "var(--radius)",
+        sm: "var(--radius)",
+        xl: "var(--radius)",
+        "2xl": "var(--radius)",
+        "3xl": "var(--radius)",
       },
       spacing: {
         'mobile-safe': 'env(safe-area-inset-bottom)',
@@ -103,10 +108,11 @@ const config: Config = {
         "gentle-spin": "gentle-spin 2.5s ease-in-out infinite",
       },
       boxShadow: {
-        /* v2.0 shadow budget: three sizes only — sm 2px, default 4px, lg 6px */
-        'brutalist-sm': '2px 2px 0px #000',
-        'brutalist': '4px 4px 0px #000',
-        'brutalist-lg': '6px 6px 0px #000',
+        /* v2.0 shadow budget: three sizes only — sm 2px, default 4px, lg 6px.
+           Token-driven so hover: variants flip to white in dark mode. */
+        'brutalist-sm': '2px 2px 0px rgb(var(--border-hard))',
+        'brutalist': '4px 4px 0px rgb(var(--border-hard))',
+        'brutalist-lg': '6px 6px 0px rgb(var(--border-hard))',
       },
     },
   },

@@ -41,6 +41,9 @@
     --ink: 9 9 11;                  /* #09090B - Deep black for backgrounds */
     --paper: 250 250 250;           /* #FAFAFA - Off-white for surfaces */
 
+    /* Secondary ink for dividers and hairlines (.hairline-b) */
+    --ink-secondary: 63 63 70;      /* #3F3F46 - zinc-700, ~10.4:1 on white */
+
     /* BRAND COLORS - Preserved as accents */
     --coral: 255 107 53;            /* #FF6B35 - AuthHub Coral - accent (10% usage) */
     --teal: 0 168 150;              /* #00A896 - AuthHub Teal - accent (5% usage) */
@@ -100,6 +103,9 @@
     /* PRIMARY SURFACES - Inverted */
     --ink: 250 250 250;             /* #FAFAFA - White surface (inverted) */
     --paper: 20 20 25;              /* #141419 - Dark background (inverted) */
+
+    /* Secondary ink for dividers and hairlines (.hairline-b) */
+    --ink-secondary: 212 212 216;   /* #D4D4D8 - zinc-300 on dark */
 
     /* BRAND COLORS - Adjusted for contrast */
     --coral: 255 115 80;            /* #FF7350 - Brighter for dark mode */
@@ -332,19 +338,6 @@
     border-color: rgb(var(--warning));
   }
 
-  /* Reveal on Scroll — v2.0 timing: 450ms decel with slight settle
-     (lazyweb port: entrances 300–550ms, cubic-bezier(.2,.8,.3,1)) */
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.45s cubic-bezier(0.2, 0.8, 0.3, 1);
-  }
-
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
   /* Reveal Element Animations - CSS-based entrance animations
    * Uses opacity-based approach to prevent three-state hydration flicker
    * Timing:
@@ -560,11 +553,7 @@
 }
 
 /* ========================================
-   PILLAR AI STYLE UTILITIES
-   ======================================== */
-
-/* ========================================
-   EMAIL APOCALYPSE COLLAPSE UTILITIES
+   BRUTALIST PRIMITIVES
    ======================================== */
 
 /* Brutalist borders - 3px hard border */
@@ -579,18 +568,9 @@
 /* Brutalist hard shadows - no blur.
    v2.0 shadow budget: three sizes only (sm 2px, default 4px, lg 6px).
    Shadow is punctuation for interactive/hero elements, never a resting
-   state — default cards use a 1px border with no shadow. */
-.shadow-brutalist-sm {
-  box-shadow: 2px 2px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist {
-  box-shadow: 4px 4px 0px rgb(var(--border-hard));
-}
-
-.shadow-brutalist-lg {
-  box-shadow: 6px 6px 0px rgb(var(--border-hard));
-}
+   state — default cards use a 1px border with no shadow.
+   Single source of truth: tailwind.config.ts boxShadow (token-driven via
+   --border-hard), so hover: variants resolve the correct theme color. */
 
 /* Bottom hairline — meta rows, card footers, list dividers.
    Ported from lazyweb.com: their primary separation device (221 uses). */
@@ -1097,33 +1077,7 @@ html.animations-ready .animate-float-pillar {
   }
 }
 
-/* ========================================
-   MIGRATION HELPERS (Temporary)
-   These help migrate components incrementally
-   TODO: Remove after migration complete
-   ======================================== */
-
-/* Generic color to brand color mappings */
-/* v2.0: text success/danger use the AA-compliant ink tokens; raw teal/coral are fills */
-.text-success { color: rgb(var(--success-ink)); }
-.bg-success-light { @apply bg-teal/10; }
-.border-success { @apply border-teal; }
-
-.text-warning { color: rgb(var(--warning)); }
-.bg-warning-light { background-color: rgb(var(--warning) / 0.1); }
-.border-warning { border-color: rgb(var(--warning)); }
-
-.text-danger { color: rgb(var(--danger-ink)); }
-.bg-danger-light { @apply bg-coral/10; }
-.border-danger { @apply border-coral; }
-
+/* Muted aliases — live consumers in src/. `.text-muted` darkens the muted
+   token to gray-600 for long-form body text; `.bg-muted` maps to paper. */
 .text-muted { @apply text-gray-600; }
 .bg-muted { @apply bg-paper; }
-.border-muted { @apply border-black/10; }
-
-/* Soft shadow to brutalist shadow mappings */
-.modal-shadow { @apply shadow-brutalist-lg; }
-.card-shadow { @apply shadow-brutalist; }
-.dropdown-shadow { @apply shadow-brutalist-sm; }
-
-/* v2.0: radius mappings removed — binary radius (see --radius: 0rem). */

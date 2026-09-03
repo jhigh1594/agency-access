@@ -80,19 +80,19 @@ export function SuccessLinkScreen({
           <h3 className="font-semibold text-ink mb-3">What's next?</h3>
           <div className="space-y-2 text-sm text-foreground">
             <div className="flex items-start gap-2">
-              <span className="text-coral font-bold">1.</span>
+              <span className="text-danger-ink font-bold">1.</span>
               <span>Copy the link above and send it to {clientName}</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-coral font-bold">2.</span>
+              <span className="text-danger-ink font-bold">2.</span>
               <span>They'll click it and authorize each platform (takes ~2 minutes)</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-coral font-bold">3.</span>
+              <span className="text-danger-ink font-bold">3.</span>
               <span>You'll get instant access to their OAuth tokens</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-coral font-bold">4.</span>
+              <span className="text-danger-ink font-bold">4.</span>
               <span>Track the authorization status from your dashboard</span>
             </div>
           </div>

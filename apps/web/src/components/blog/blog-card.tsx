@@ -54,7 +54,7 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
     return (
       <Link
         href={`/blog/${post.slug}`}
-        className="group block border-[3px] border-black bg-card rounded-none shadow-brutalist-lg hover:shadow-hard-2xl hover:-translate-y-1 transition-all overflow-hidden"
+        className="group block border-[3px] border-black bg-card rounded-none shadow-brutalist-lg hover:-translate-y-1 transition-all overflow-hidden"
       >
         {/* Category badge - tilted */}
         <div className="relative">

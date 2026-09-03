@@ -141,8 +141,9 @@ Three families, three roles:
 <span className="label-nano">Updated 2 min ago</span>     // JBM 400 10px
 ```
 
-Apply to: StatusBadge text (already `font-mono uppercase`), card meta rows,
-table headers, KPI labels, footer metadata, section eyebrows.
+Adoption targets (planned): StatusBadge text, card meta rows, table headers,
+KPI labels, footer metadata, section eyebrows — no consumer wired yet; land
+consumers before relying on the utilities.
 
 #### Type Scale
 
@@ -200,6 +201,8 @@ state. Default cards use a **1px border and no shadow**.
 <div className="hairline-b">…</div>   /* 1px ink-secondary bottom rule —
                                          meta rows, card footers, list dividers */
 ```
+
+Defined and ready; adoption is planned — no consumer wired yet.
 
 ---
 
@@ -265,6 +268,8 @@ given a concrete form:
 
 Ink ground, paper text, mono data layer, optional blinking cursor.
 
+Defined and ready; adoption is planned — no consumer wired yet.
+
 ---
 
 ## Animation System
@@ -315,7 +320,7 @@ growth, `scaleUp`, `scroll-left-slow`.
 ### Color Contrast
 
 - **WCAG AA minimum** — 4.5:1 for normal text; AAA target 7:1
-- Ink/paper: 21:1. `--ink-secondary`: 9.7:1. All status ink tokens ≥4.5:1
+- Ink/paper: 21:1. `--ink-secondary`: 10.4:1. All status ink tokens ≥4.5:1
 - **Raw coral/teal are never body or status text on light ground** (v2.0)
 - Orange-family text on white stays in the ink variants
 

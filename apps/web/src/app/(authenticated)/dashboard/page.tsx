@@ -389,8 +389,8 @@ export default function DashboardPage() {
           <div className="bg-coral/10 border border-coral rounded-lg p-6 text-center">
             <span className="hidden bg-coral" aria-hidden />
             <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-coral mb-2">Agency Setup Required</h2>
-            <p className="text-coral/90 mb-4">
+            <h2 className="text-lg font-semibold text-danger-ink mb-2">Agency Setup Required</h2>
+            <p className="text-danger-ink mb-4">
               We couldn&apos;t find an agency associated with your account. Let&apos;s set one up.
             </p>
             <Button variant="brutalist" size="md" asChild>

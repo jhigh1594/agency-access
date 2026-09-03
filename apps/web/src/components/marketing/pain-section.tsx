@@ -125,12 +125,16 @@ function StatCard({
   label,
   description,
   color,
+  display,
+  tickerEnd = 0,
   delay = 0
 }: {
   value: string;
   label: string;
   description: string;
   color: string;
+  display?: 'ticker' | 'static';
+  tickerEnd?: number;
   delay?: number;
 }) {
   const { shouldAnimate } = useAnimationOrchestrator();
@@ -150,9 +154,8 @@ function StatCard({
         {label}
       </div>
       <div className="text-3xl sm:text-4xl md:text-5xl !leading-none mb-2">
-        {color === 'coral' && <StatTicker end={3} duration={2} />}
-        {color === 'teal' && <StatTicker end={47} duration={2.5} />}
-        {color === 'coral' && <span className="font-dela">{value}</span>}
+        {display === 'ticker' && <StatTicker end={tickerEnd} duration={2.4} />}
+        {display === 'static' && <span className="font-dela">{value}</span>}
       </div>
       <div className="font-mono text-xs sm:text-sm opacity-75">
         {description}
@@ -283,6 +286,8 @@ export function PainSection() {
                 label="Days Lost"
                 description="Per client onboarding"
                 color="coral"
+                display="ticker"
+                tickerEnd={3}
                 delay={0.4}
               />
               <StatCard
@@ -290,6 +295,8 @@ export function PainSection() {
                 label="Email Exchanges"
                 description="Average per client"
                 color="teal"
+                display="ticker"
+                tickerEnd={47}
                 delay={0.5}
               />
               <StatCard
@@ -297,6 +304,7 @@ export function PainSection() {
                 label="Revenue Lost"
                 description="Per client onboarding"
                 color="coral"
+                display="static"
                 delay={0.6}
               />
             </div>

@@ -146,7 +146,11 @@ describe('resolvePrincipalAgency', () => {
     clerkClientMock.users.getUser.mockResolvedValue({
       primaryEmailAddressId: 'email_1',
       emailAddresses: [
-        { id: 'email_1', emailAddress: 'ben@mindbentmedia.com' },
+        {
+          id: 'email_1',
+          emailAddress: 'ben@mindbentmedia.com',
+          verification: { status: 'verified' },
+        },
       ],
     });
     resolveAgencyMock
@@ -173,6 +177,82 @@ describe('resolvePrincipalAgency', () => {
     expect(resolveAgencyMock).toHaveBeenLastCalledWith('user_1', {
       createIfMissing: true,
       userEmail: 'ben@mindbentmedia.com',
+    });
+  });
+
+  it('does not inherit an unverified Clerk email as agency identity', async () => {
+    clerkClientMock.users.getUser.mockResolvedValue({
+      primaryEmailAddressId: 'email_1',
+      emailAddresses: [
+        {
+          id: 'email_1',
+          emailAddress: 'owner@victim-agency.test',
+          verification: { status: 'unverified' },
+        },
+      ],
+    });
+    resolveAgencyMock
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: {
+          agencyId: 'agency_1',
+          agency: {
+            id: 'agency_1',
+            clerkUserId: 'user_1',
+            name: 'My Agency',
+            email: 'user_1@clerk.temp',
+          },
+        },
+        error: null,
+      });
+
+    const result = await resolvePrincipalAgency({
+      user: { sub: 'user_1' },
+    } as any);
+
+    expect(clerkClientMock.users.getUser).toHaveBeenCalledWith('user_1');
+    expect(resolveAgencyMock).toHaveBeenLastCalledWith('user_1', {
+      createIfMissing: true,
+      userEmail: undefined,
+    });
+  });
+
+  it('prefers the primary email over a later verified address', async () => {
+    clerkClientMock.users.getUser.mockResolvedValue({
+      primaryEmailAddressId: 'email_2',
+      emailAddresses: [
+        {
+          id: 'email_1',
+          emailAddress: 'first@acme.test',
+          verification: { status: 'verified' },
+        },
+        {
+          id: 'email_2',
+          emailAddress: 'primary@acme.test',
+          verification: { status: 'verified' },
+        },
+      ],
+    });
+    resolveAgencyMock
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: {
+          agencyId: 'agency_1',
+          agency: {
+            id: 'agency_1',
+            clerkUserId: 'user_1',
+            name: 'Acme',
+            email: 'primary@acme.test',
+          },
+        },
+        error: null,
+      });
+
+    await resolvePrincipalAgency({ user: { sub: 'user_1' } } as any);
+
+    expect(resolveAgencyMock).toHaveBeenLastCalledWith('user_1', {
+      createIfMissing: true,
+      userEmail: 'primary@acme.test',
     });
   });
 });

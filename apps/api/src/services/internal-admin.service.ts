@@ -1,6 +1,7 @@
 import { getIntervalFromProductId } from '@/config/creem.config.js';
 import { env } from '@/lib/env.js';
 import { prisma } from '@/lib/prisma.js';
+import { DEV_BYPASS_AGENCY_EMAIL } from '@/middleware/auth.js';
 import {
   getWebhookSupportDetails,
   listWebhookEndpointsForSupport,
@@ -316,7 +317,7 @@ function safePagination(page?: number, limit?: number) {
 const SYNTHETIC_OR_TEST_AGENCY_FILTERS = [
   {
     email: {
-      equals: 'dev-bypass@agency-access.local',
+      equals: DEV_BYPASS_AGENCY_EMAIL,
       mode: 'insensitive' as const,
     },
   },

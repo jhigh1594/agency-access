@@ -7,7 +7,7 @@
  * - Account name input with brutalist border styling
  * - Currency dropdown (USD, EUR, GBP, CAD, AUD, etc.)
  * - Timezone dropdown with common timezones
- * - "Create Ad Account" button with brutalist-rounded variant
+ * - "Create Ad Account" button with brutalist variant
  * - Loading state with spinner
  * - Success state with teal checkmark
  * - Error state with coral error message
@@ -300,7 +300,7 @@ export function MetaAssetCreator({
         </p>
       </div>
 
-      {/* Submit Button - Brutalist Rounded */}
+      {/* Submit Button - Brutalist */}
       <Button
         type="submit"
         variant="brutalist"

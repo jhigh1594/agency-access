@@ -271,10 +271,10 @@ export default function AssetCreationTestPage() {
           </h2>
 
           <div className="space-y-6">
-            {/* Brutalist Rounded */}
+            {/* Brutalist */}
             <div>
               <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wide">
-                brutalist-rounded
+                brutalist
               </h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="brutalist" size="lg">
@@ -289,10 +289,10 @@ export default function AssetCreationTestPage() {
               </div>
             </div>
 
-            {/* Brutalist Ghost Rounded */}
+            {/* Secondary */}
             <div>
               <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wide">
-                brutalist-ghost-rounded
+                secondary
               </h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="secondary" size="md">

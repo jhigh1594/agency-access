@@ -33,78 +33,83 @@ interface StatusBadgeProps {
   children?: React.ReactNode;
 }
 
+const SUCCESS_BADGE = 'bg-teal/10 text-success-ink border border-teal/30';
+const WARNING_BADGE = 'bg-warning/10 text-warning border border-warning/30';
+const DANGER_BADGE = 'bg-coral/10 text-danger-ink border border-coral/30';
+const NEUTRAL_BADGE = 'bg-muted/10 text-muted-foreground border border-border';
+
 const STATUS_CONFIG: Record<
   StatusType,
   { label: string; className: string; icon: React.ReactNode }
 > = {
   pending: {
     label: 'Pending',
-    className: 'bg-warning/10 text-warning border border-warning/30',
+    className: WARNING_BADGE,
     icon: <Clock className="h-3 w-3" />,
   },
   authorized: {
     label: 'Authorized',
-    className: 'bg-teal/10 text-success-ink border border-teal/30',
+    className: SUCCESS_BADGE,
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   active: {
     label: 'Active',
-    className: 'bg-teal/10 text-success-ink border border-teal/30',
+    className: SUCCESS_BADGE,
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   trialing: {
     label: 'Trialing',
-    className: 'bg-warning/10 text-warning border border-warning/30',
+    className: WARNING_BADGE,
     icon: <Clock className="h-3 w-3" />,
   },
   incomplete: {
     label: 'Incomplete',
-    className: 'bg-warning/10 text-warning border border-warning/30',
+    className: WARNING_BADGE,
     icon: <Clock className="h-3 w-3" />,
   },
   incomplete_expired: {
     label: 'Incomplete Expired',
-    className: 'bg-coral/10 text-danger-ink border border-coral/30',
+    className: DANGER_BADGE,
     icon: <AlertCircle className="h-3 w-3" />,
   },
   past_due: {
     label: 'Past Due',
-    className: 'bg-warning/10 text-warning border border-warning/30',
+    className: WARNING_BADGE,
     icon: <AlertCircle className="h-3 w-3" />,
   },
   cancelled: {
     label: 'Cancelled',
-    className: 'bg-muted/10 text-muted-foreground border border-border',
+    className: NEUTRAL_BADGE,
     icon: <XCircle className="h-3 w-3" />,
   },
   revoked: {
     label: 'Revoked',
-    className: 'bg-coral/10 text-danger-ink border border-coral/30',
+    className: DANGER_BADGE,
     icon: <XCircle className="h-3 w-3" />,
   },
   invalid: {
     label: 'Invalid',
-    className: 'bg-coral/10 text-danger-ink border border-coral/30',
+    className: DANGER_BADGE,
     icon: <AlertCircle className="h-3 w-3" />,
   },
   expired: {
     label: 'Expired',
-    className: 'bg-coral/10 text-danger-ink border border-coral/30',
+    className: DANGER_BADGE,
     icon: <XCircle className="h-3 w-3" />,
   },
   healthy: {
     label: 'Healthy',
-    className: 'bg-teal/10 text-success-ink border border-teal/30',
+    className: SUCCESS_BADGE,
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   expiring: {
     label: 'Expiring Soon',
-    className: 'bg-warning/10 text-warning border border-warning/30',
+    className: WARNING_BADGE,
     icon: <AlertCircle className="h-3 w-3" />,
   },
   unknown: {
     label: 'Unknown',
-    className: 'bg-muted/10 text-muted-foreground border border-border',
+    className: NEUTRAL_BADGE,
     icon: <Clock className="h-3 w-3" />,
   },
 };
@@ -112,15 +117,15 @@ const STATUS_CONFIG: Record<
 const VARIANT_CONFIG: Record<StatusVariant, { label: string; className: string }> = {
   success: {
     label: 'Success',
-    className: 'bg-teal/10 text-success-ink border border-teal/30',
+    className: SUCCESS_BADGE,
   },
   warning: {
     label: 'Warning',
-    className: 'bg-warning/10 text-warning border border-warning/30',
+    className: WARNING_BADGE,
   },
   default: {
     label: 'Default',
-    className: 'bg-muted/10 text-muted-foreground border border-border',
+    className: NEUTRAL_BADGE,
   },
 };
 
@@ -133,27 +138,14 @@ const SIZE_CLASSES: Record<
   lg: 'px-3 py-1.5 text-sm',
 };
 
-// Helper to convert string status values to StatusType
+// Non-identity aliases only; any other string is used as-is and falls back to STATUS_CONFIG.unknown
 const stringToStatusType: Record<string, StatusType> = {
-  active: 'active',
-  trialing: 'trialing',
-  incomplete: 'incomplete',
-  incomplete_expired: 'incomplete_expired',
-  past_due: 'past_due',
   canceled: 'cancelled',
-  pending: 'pending',
-  authorized: 'authorized',
-  expired: 'expired',
-  revoked: 'revoked',
-  invalid: 'invalid',
-  healthy: 'healthy',
-  expiring: 'expiring',
-  unknown: 'unknown',
 };
 
 export function StatusBadge({ status, badgeVariant, size = 'md', icon, children }: StatusBadgeProps) {
-  // Convert string status to StatusType if needed
-  const statusType = typeof status === 'string' ? stringToStatusType[status] || status : status;
+  // Normalize string status to StatusType
+  const statusType = typeof status === 'string' ? (stringToStatusType[status] ?? status) : status;
 
   // Support variant-based API (for generic badges)
   if (badgeVariant) {

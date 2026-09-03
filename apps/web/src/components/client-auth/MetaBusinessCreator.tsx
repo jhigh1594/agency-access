@@ -8,7 +8,7 @@
  * the chosen Page becomes the portfolio's primary Page.
  *
  * Acid Brutalism: brutalist input borders, one brutalist submit button
- * (brutalist-rounded), teal/coral semantic states — mirrors MetaAssetCreator.
+ * (brutalist variant), teal/coral semantic states — mirrors MetaAssetCreator.
  */
 
 import { useEffect, useState, FormEvent } from 'react';

@@ -36,13 +36,24 @@ const SOFT_SHADOWS = [
 ] as const;
 
 /**
- * Over-rounded border radius values that conflict with brutalist aesthetic
+ * Non-binary radius classes that conflict with the brutalist binary radius
+ * rule (--radius is 0rem; see tailwind.config.ts borderRadius map).
+ * rounded-none and rounded-full are sanctioned; every other step is square
+ * and therefore a violation when written literally.
  */
 const OVER_ROUNDED = [
+  'rounded-sm',
+  'rounded-md',
+  'rounded-lg',
+  'rounded-xl',
   'rounded-2xl',
   'rounded-3xl',
-  'rounded-full',
-] as const;
+];
+
+/**
+ * Arbitrary radius values (e.g. rounded-[0.75rem]) are also non-binary.
+ */
+const ARBITRARY_RADIUS = /rounded-\[/;
 
 /**
  * Test if element uses brutalist shadow class
@@ -91,19 +102,23 @@ export function usesBrandColor(className: string): boolean {
 }
 
 /**
- * Test if element has over-rounded border radius
+ * Test if element has a non-binary border radius
  * @param className - CSS className string to test
- * @returns true if over-rounded radius is detected
+ * @returns true if a non-binary radius is detected
  */
 export function hasOverRoundedRadius(className: string): boolean {
   if (!className) return false;
-  return OVER_ROUNDED.some(radius => className.includes(radius));
+  const classes = className.split(/\s+/);
+  return classes.some(
+    cls => OVER_ROUNDED.includes(cls) || ARBITRARY_RADIUS.test(cls)
+  );
 }
 
 /**
- * Test if element uses appropriate brutalist radius
+ * Test if element uses the binary radius contract
+ * rounded-none and rounded-full are the only sanctioned curves.
  * @param className - CSS className string to test
- * @returns true if radius is within brutalist guidelines
+ * @returns true if radius complies with binary radius
  */
 export function hasBrutalistRadius(className: string): boolean {
   if (!className) return true;
@@ -190,12 +205,13 @@ export function validateDesignSystem(className: string | undefined): DesignSyste
       });
     }
 
-    // Check for over-rounded
-    if (OVER_ROUNDED.some(radius => cls.includes(radius))) {
+    // Check for non-binary radius
+    if (OVER_ROUNDED.includes(cls) || ARBITRARY_RADIUS.test(cls)) {
       violations.push({
         type: 'over-rounded',
         className: cls,
-        suggestion: 'Use smaller radius (rounded, rounded-lg) or sharp borders',
+        suggestion:
+          'Binary radius only: rounded-none or rounded-full (--radius is 0rem)',
       });
     }
   }

@@ -66,15 +66,15 @@ export default function CombinedFeaturedSection() {
           {/* Key stats */}
           <div className="grid grid-cols-3 gap-3 mt-auto">
             <div className="text-center p-3 border-2 border-black bg-teal/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-teal mb-1">30+</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-success-ink mb-1">30+</div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Emails Eliminated</div>
             </div>
             <div className="text-center p-3 border-2 border-black bg-coral/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-coral mb-1">5 min</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-danger-ink mb-1">5 min</div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Setup Time</div>
             </div>
             <div className="text-center p-3 border-2 border-black bg-coral/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-coral mb-1">100%</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-danger-ink mb-1">100%</div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-gray-600">Completion</div>
             </div>
           </div>

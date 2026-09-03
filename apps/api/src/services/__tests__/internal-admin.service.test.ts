@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { internalAdminService } from '../internal-admin.service.js';
 import { prisma } from '@/lib/prisma.js';
 import { getProductId } from '@/config/creem.config.js';
+import { DEV_BYPASS_AGENCY_EMAIL } from '@/middleware/auth.js';
 
 vi.mock('@/lib/prisma.js', () => ({
   prisma: {
@@ -163,7 +164,7 @@ describe('InternalAdminService', () => {
       expect(JSON.stringify(syntheticFilters)).not.toContain('@clerk.temp');
       expect(syntheticFilters).toContainEqual({
         email: {
-          equals: 'dev-bypass@agency-access.local',
+          equals: DEV_BYPASS_AGENCY_EMAIL,
           mode: 'insensitive',
         },
       });

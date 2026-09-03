@@ -38,6 +38,35 @@ describe('Button v2.0 variant consolidation', () => {
     expect(dangerCls).not.toBe(primaryCls);
   });
 
+  it('renders all five variants with their distinguishing tokens', () => {
+    const classesFor = (variant: 'primary' | 'secondary' | 'ghost' | 'danger' | 'brutalist') => {
+      const { container } = render(<Button variant={variant}>x</Button>);
+      return container.firstElementChild?.className ?? '';
+    };
+
+    const primaryCls = classesFor('primary');
+    const secondaryCls = classesFor('secondary');
+    const ghostCls = classesFor('ghost');
+    const dangerCls = classesFor('danger');
+    const brutalistCls = classesFor('brutalist');
+
+    // secondary keeps its identity: card surface with the coral hover border
+    expect(secondaryCls).toContain('bg-card');
+    expect(secondaryCls).toContain('hover:border-coral');
+
+    // ghost keeps its identity: transparent ground
+    expect(ghostCls).toContain('bg-transparent');
+
+    // brutalist keeps its identity: coral fill, uppercase label
+    expect(brutalistCls).toContain('bg-coral');
+    expect(brutalistCls).toContain('uppercase');
+
+    // primary and danger stay distinct from each other and from the rest
+    expect(primaryCls).toContain('bg-primary');
+    expect(dangerCls).toContain('bg-danger-ink');
+    expect(new Set([primaryCls, secondaryCls, ghostCls, dangerCls, brutalistCls]).size).toBe(5);
+  });
+
   it('keeps square corners on standard sizes (binary radius)', () => {
     const { container } = render(<Button variant="primary">x</Button>);
     const cls = container.firstElementChild?.className ?? '';
@@ -48,6 +77,15 @@ describe('Button v2.0 variant consolidation', () => {
     const { container } = render(<Button variant="primary" size="icon" aria-label="close">x</Button>);
     const cls = container.firstElementChild?.className ?? '';
     expect(cls).toContain('rounded-full');
+  });
+
+  it('pins the radius flip in the :root block of globals.css (--radius: 0rem)', () => {
+    // Binary radius is a token contract: rounded-lg/md/sm all resolve through
+    // --radius, so only the :root flip migrates every shadcn primitive.
+    const globalsPath = join(__dirname, '../../../app/globals.css');
+    const globals = readFileSync(globalsPath, 'utf-8');
+    const rootBlock = globals.slice(0, globals.indexOf('.dark'));
+    expect(rootBlock).toMatch(/--radius:\s*0rem;/);
   });
 
   it('uses the accent-derived two-ring focus system', () => {

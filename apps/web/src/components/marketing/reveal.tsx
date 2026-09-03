@@ -18,7 +18,8 @@ interface RevealProps {
  * without flicker or layout shifts.
  *
  * Timing:
- * - Waits for animationsReady before creating IntersectionObserver
+ * - Waits for isHydrated before creating IntersectionObserver (not
+ *   animationsReady — see the flash note on the effect below)
  * - Prevents SSR observer creation
  * - Smooth opacity-based entrance
  */
@@ -26,7 +27,7 @@ export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const isMobile = useMobile();
-  const { animationsReady } = useAnimationOrchestrator();
+  const { isHydrated } = useAnimationOrchestrator();
 
   // Map direction to CSS class
   const getDirectionClass = () => {
@@ -46,9 +47,14 @@ export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
 
   useEffect(() => {
     const element = ref.current;
-    // Defer Intersection Observer creation until animations ready
-    // This prevents premature observer creation during SSR/hydration
-    if (!element || !animationsReady) return;
+    // Observe as soon as the component is hydrated. Waiting for animationsReady
+    // caused a paint-then-hide flash: `html.animations-ready .reveal-element`
+    // sets opacity: 0 at +100ms, so above-the-fold content painted visible,
+    // got hidden, then transitioned back. Observing at hydration lets
+    // in-viewport elements earn `.visible` before (or in the same frame as)
+    // the opacity gate applies. The CSS transition itself stays gated on
+    // `html.hydrated` / `html.animations-ready` in globals.css.
+    if (!element || !isHydrated) return;
 
     // Mobile-optimized observer options
     const observerOptions: IntersectionObserverInit = {
@@ -78,7 +84,7 @@ export function Reveal({ children, delay = 0, direction = 'up' }: RevealProps) {
         observer.unobserve(element);
       }
     };
-  }, [isMobile, animationsReady]);
+  }, [isMobile, isHydrated]);
 
   // Set CSS variable for delay
   const style = {

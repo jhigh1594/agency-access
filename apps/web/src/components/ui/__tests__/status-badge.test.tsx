@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { render, screen } from '@testing-library/react';
 import { StatusBadge } from '../status-badge';
 
@@ -60,5 +62,37 @@ describe('StatusBadge AA contrast contract (v2.0)', () => {
     expect(classes).toContain('text-warning');
     expect(classes).not.toContain('text-teal');
     expect(classes).not.toContain('text-coral');
+  });
+
+  it('declares light-mode ink tokens that clear AA (>= 4.5:1) on white', () => {
+    // src/app/globals.css, resolved from this test's directory
+    const globalsPath = join(__dirname, '../../../app/globals.css');
+    const globals = readFileSync(globalsPath, 'utf-8');
+    // Light mode comes first: everything before the .dark block is :root.
+    const rootBlock = globals.slice(0, globals.indexOf('.dark'));
+
+    const parseInk = (token: string): [number, number, number] => {
+      const match = rootBlock.match(new RegExp(`--${token}:\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)`));
+      if (!match) throw new Error(`missing --${token} in the :root block of globals.css`);
+      return [Number(match[1]), Number(match[2]), Number(match[3])];
+    };
+
+    const srgbToLinear = (value: number) => {
+      const channel = value / 255;
+      return channel <= 0.03928
+        ? channel / 12.92
+        : Math.pow((channel + 0.055) / 1.055, 2.4);
+    };
+
+    const contrastOnWhite = ([r, g, b]: [number, number, number]) => {
+      const luminance =
+        0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+      return 1.05 / (luminance + 0.05);
+    };
+
+    for (const token of ['success-ink', 'danger-ink']) {
+      const ratio = contrastOnWhite(parseInk(token));
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
