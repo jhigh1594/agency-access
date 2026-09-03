@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M1M5HV8CQR0Q9NRXP7GQNJBA",
+  "session_id": "5d5f991b-704e-41e3-8a1b-df58cc290c7a",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-03T17:37:37.317004Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Factory AI Droid",
+  "model": "gemini-3.7-flash",
+  "turn_id": "13095170c341",
+  "checkpoint_transcript_start": 49,
+  "transcript_lines_at_start": 49,
+  "compact_transcript_start": 40,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 1634,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1013,
+      "agent_lines_removed": 69,
+      "user_added_per_file": {
+        ".claude/skills/replay-vision-scanner-broken-experiences/SKILL.md": 50,
+        ".claude/skills/replay-vision-scanner-broken-experiences/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanner-user-frustration/SKILL.md": 42,
+        ".claude/skills/replay-vision-scanner-user-frustration/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanners-core/SKILL.md": 114,
+        ".claude/skills/replay-vision-scanners-core/references/COMMANDMENTS.md": 5,
+        ".claude/skills/replay-vision-scanners-core/references/replay-vision.md": 66,
+        ".codex/hooks.json": 88,
+        ".cursor/hooks.json": 40,
+        ".factory/settings.json": 90,
+        ".impeccable/hook.cache.json": 1,
+        ".opencode/plugins/entire.ts": 269,
+        ".pi/extensions/entire/index.ts": 147,
+        "apps/api/src/services/__tests__/meta-asset-creation.service.test.ts": 346,
+        "apps/api/src/services/meta-asset-creation.service.ts": 366
+      }
+    }
+  ]
+}
