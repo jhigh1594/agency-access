@@ -16,14 +16,15 @@ export default function TermsOfServicePage() {
           Terms of Service
         </h1>
         <p className="mt-4 text-muted-foreground">
-          Last updated: January 27, 2026
+          Last updated: September 3, 2026
         </p>
 
         <div className="mt-12 space-y-12 text-foreground">
           <section>
             <h2 className="text-2xl font-semibold">1. Acceptance of Terms</h2>
             <p className="mt-4 text-muted-foreground leading-7">
-              By accessing or using AuthHub (&quot;Service&quot;), you agree to be bound by these
+              AuthHub is owned and operated by High Enterprises LLC, a Wyoming limited liability
+              company. By accessing or using AuthHub (&quot;Service&quot;), you agree to be bound by these
               Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, you may not
               use the Service. These Terms apply to all users, including agencies and their
               clients who authorize platform access.
@@ -133,7 +134,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-semibold">8. Intellectual Property</h2>
             <p className="mt-4 text-muted-foreground leading-7">
               The Service, including its original content, features, and functionality, is
-              owned by AuthHub and is protected by international copyright, trademark, and
+              owned by High Enterprises LLC and is protected by international copyright, trademark, and
               other intellectual property laws. You may not copy, modify, or create derivative
               works based on the Service without our express written permission.
             </p>
@@ -221,6 +222,9 @@ export default function TermsOfServicePage() {
               If you have questions about these Terms of Service, please contact us at:
             </p>
             <p className="mt-4 text-muted-foreground leading-7">
+              High Enterprises LLC<br />
+              30 N Gould St Ste N<br />
+              Sheridan, WY 82801<br />
               Email: support [at] authhub.co
             </p>
           </section>

@@ -16,14 +16,15 @@ export default function PrivacyPolicyPage() {
           Privacy Policy
         </h1>
         <p className="mt-4 text-muted-foreground">
-          Last updated: January 27, 2026
+          Last updated: September 3, 2026
         </p>
 
         <div className="mt-12 space-y-12 text-foreground">
           <section>
             <h2 className="text-2xl font-semibold">1. Introduction</h2>
             <p className="mt-4 text-muted-foreground leading-7">
-              AuthHub (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy.
+              AuthHub is owned and operated by High Enterprises LLC, a Wyoming limited liability
+              company (&quot;AuthHub,&quot; &quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your privacy.
               This Privacy Policy explains how we collect, use, disclose, and safeguard
               your information when you use our OAuth aggregation platform and related
               services.
@@ -169,6 +170,9 @@ export default function PrivacyPolicyPage() {
               please contact us at:
             </p>
             <p className="mt-4 text-muted-foreground leading-7">
+              High Enterprises LLC<br />
+              30 N Gould St Ste N<br />
+              Sheridan, WY 82801<br />
               Email: support [at] authhub.co
             </p>
           </section>

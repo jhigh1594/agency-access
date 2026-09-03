@@ -109,7 +109,7 @@ export function MarketingFooter() {
 
         <div className="mt-12 sm:mt-16 md:mt-24 pt-6 sm:pt-8 border-t-2 border-black flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-xs sm:text-sm text-gray-600 font-mono">
-            © {new Date().getFullYear()} AuthHub. All rights reserved.
+            © {new Date().getFullYear()} High Enterprises LLC. All rights reserved. AuthHub is owned and operated by High Enterprises LLC.
           </p>
           <div className="flex gap-6 sm:gap-8 text-xs sm:text-sm text-gray-600 font-mono">
             <Link href="/privacy-policy" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy</Link>
