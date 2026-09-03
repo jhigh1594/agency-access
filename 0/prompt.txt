@@ -1,0 +1,9 @@
+Alright, I just got off a call with a potential customer for AuthHub. They're asking a number of questions around the onboarding flow for their clients that are needed so here's the questions they ask and I want to make sure our system is fully set up or what the steps are to support these types of use cases The client doesn't have Facebook ads account created yet. So I want to understand end-to-end right? Let's consider this a non technical client at all let's just say they have a Facebook business page and an Instagram account created and that's it What does the end-and flow that that client would need to do in order Are agency owners the correct access to manage their ad accounts and Instagram and Facebook pages on their behalf? The other one would be right. So understanding what that flow is, understanding if they need to, if their Instagram pages need to be linked to their to their Facebook account. So let's walk through all of that make sure our system is set up to support that understand what is needed to support that
+
+---
+
+Didn't we already build the flow for helping a client create a business portfolio during the access request flow if we can't find one for their account?
+
+---
+
+Huh okay. First, let's merge everything on this branch to main then commit and push and move to main
