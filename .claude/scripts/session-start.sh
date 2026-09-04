@@ -53,12 +53,8 @@ If a skill has a checklist, YOU MUST create TodoWrite todos for EACH item.
 **Finding a relevant skill = mandatory to read and use it. Not optional.**
 '
 
-# Escape output for JSON
-using_skills_escaped=$(echo "$using_skills_content" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
-
 # Load memory.md if it exists
 memory_context=""
-memory_escaped=""
 
 # Discover workspace root by walking up from current directory
 workspace_root=$(pwd)
@@ -75,15 +71,9 @@ fi
 # Try to load learned patterns if they exist
 learned_patterns_file="$workspace_root/memory-bank/learned-patterns.md"
 learned_patterns_context=""
-learned_patterns_escaped=""
 
 if [ -f "$learned_patterns_file" ]; then
     learned_patterns_context=$(cat "$learned_patterns_file")
-fi
-
-# Escape learned patterns context for JSON
-if [ -n "$learned_patterns_context" ]; then
-    learned_patterns_escaped=$(echo "$learned_patterns_context" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
 fi
 
 # Initialize session intent file if it doesn't exist or is stale
@@ -115,31 +105,37 @@ if [ "$init_intent" = true ]; then
 EOF
 fi
 
-# Escape memory context for JSON
-if [ -n "$memory_context" ]; then
-    memory_escaped=$(echo "$memory_context" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
-fi
-
 # Build additional context
-additional_context="<EXTREMELY-IMPORTANT>\\nYou have many skills.\\n\\n**Below is the full content of your '\''using-skills'\'' skill - your introduction to using skills. For all other skills, use the '\''Skill'\'' tool:**\\n\\n${using_skills_escaped}"
+additional_context="<EXTREMELY-IMPORTANT>
+You have many skills.
 
-if [ -n "$memory_escaped" ]; then
-    additional_context="${additional_context}\\n\\n---\\n\\n## Memory Context\\n\\n${memory_escaped}"
+**Below is the full content of your 'using-skills' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**
+
+${using_skills_content}"
+
+if [ -n "$memory_context" ]; then
+    additional_context="${additional_context}
+
+---
+
+## Memory Context
+
+${memory_context}"
 fi
 
-if [ -n "$learned_patterns_escaped" ]; then
-    additional_context="${additional_context}\\n\\n---\\n\\n## Recently Learned Patterns\\n\\n${learned_patterns_escaped}"
+if [ -n "$learned_patterns_context" ]; then
+    additional_context="${additional_context}
+
+---
+
+## Recently Learned Patterns
+
+${learned_patterns_context}"
 fi
 
-# Output context injection as JSON
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "${additional_context}"
-  }
-}
-EOF
+# Output context injection as JSON (jq encodes the string safely)
+jq -n --arg ctx "$additional_context" \
+    '{hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $ctx}}'
 
 # Initialize observers and record session start (Phase 1 Memory System)
 # Use venv python if available, otherwise system python
