@@ -116,7 +116,7 @@ export function HeroCopyRewriteHeroSection() {
               className="absolute top-10 right-0 z-20 bg-paper border-2 border-black p-4 rounded-xl shadow-brutalist max-w-[220px] rotate-6"
             >
               <div className="flex items-center gap-3">
-                <div className="bg-teal/20 p-2 rounded-lg border border-black text-teal">
+                <div className="bg-teal/20 p-2 rounded-lg border border-black text-success-ink">
                   <Link2 className="w-6 h-6" />
                 </div>
                 <div className="text-ink">

@@ -57,13 +57,13 @@ export function TestimonialCards() {
           {/* Section Header */}
           <div className="text-center mb-12 sm:mb-16">
             <div className="inline-block mb-4">
-              <div className="bg-teal/10 text-teal border-2 border-teal/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block">
+              <div className="bg-teal/10 text-success-ink border-2 border-teal/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block">
                 Social Proof
               </div>
             </div>
             <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl tracking-tight mb-4 text-ink">
               Trusted by{' '}
-              <span className="text-coral italic">performance teams</span>
+              <span className="text-danger-ink italic">performance teams</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
               See what teams are saying about their experience.
@@ -92,7 +92,7 @@ export function TestimonialCards() {
 
                 {/* Outcome Badge */}
                 <div className="inline-block mb-4">
-                  <div className="bg-coral/10 text-coral border-2 border-coral/30 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider">
+                  <div className="bg-coral/10 text-danger-ink border-2 border-coral/30 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider">
                     {testimonial.outcome}
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export function TestimonialCards() {
                       key={i}
                       className="font-mono text-sm text-gray-600 flex items-center gap-2 border-b border-gray-200 last:border-0 pb-3 last:pb-0"
                     >
-                      <span className="text-coral flex-shrink-0">◆</span>
+                      <span className="text-danger-ink flex-shrink-0">◆</span>
                       <span>{quote}</span>
                     </div>
                   ))}
@@ -157,7 +157,7 @@ export function TestimonialCards() {
                         key={i}
                         className="font-mono text-xs sm:text-sm text-gray-600 flex items-center gap-2"
                       >
-                        <span className="text-coral">◆</span>
+                        <span className="text-danger-ink">◆</span>
                         <span>{quote}</span>
                       </div>
                     ))}

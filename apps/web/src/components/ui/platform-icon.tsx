@@ -70,7 +70,7 @@ export function PlatformIcon({
   return (
     <div className="inline-flex items-center gap-2">
       <div
-        className="rounded-lg overflow-hidden bg-card"
+        className="overflow-hidden"
         style={{ width: config.width, height: config.height }}
       >
         <Image

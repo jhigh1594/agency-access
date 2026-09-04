@@ -39,7 +39,7 @@ export function CurrentPlanCard() {
       <section className="clean-card p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-teal/10 rounded-lg">
-            <CreditCard className="h-5 w-5 text-teal" />
+            <CreditCard className="h-5 w-5 text-success-ink" />
           </div>
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">Current Plan</h2>
@@ -77,7 +77,7 @@ export function CurrentPlanCard() {
     <section className="clean-card p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-teal/10 rounded-lg">
-          <CreditCard className="h-5 w-5 text-teal" />
+          <CreditCard className="h-5 w-5 text-success-ink" />
         </div>
         <div className="flex-1">
           <h2 className="font-display text-lg font-semibold text-ink">Current Plan</h2>

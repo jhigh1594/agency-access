@@ -27,7 +27,7 @@ export function InviteSupportCard({
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink">{title}</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
-          <a href={href} className="mt-3 inline-block text-sm font-semibold text-coral hover:text-coral/90">
+          <a href={href} className="mt-3 inline-block text-sm font-semibold text-danger-ink hover:text-coral/90">
             {linkLabel}
           </a>
         </div>

@@ -162,9 +162,9 @@ export function ManualInvitationModal({
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-card border border-border flex items-center justify-center">
                 {isBusinessIdPlatform ? (
-                  <Building2 className="h-5 w-5 text-coral" />
+                  <Building2 className="h-5 w-5 text-danger-ink" />
                 ) : (
-                  <Mail className="h-5 w-5 text-coral" />
+                  <Mail className="h-5 w-5 text-danger-ink" />
                 )}
               </div>
               <div>
@@ -298,7 +298,7 @@ export function ManualInvitationModal({
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-coral hover:text-coral/90 font-medium inline-flex items-center gap-1"
+                          className="text-danger-ink hover:text-coral/90 font-medium inline-flex items-center gap-1"
                         >
                           Pinterest Business Manager
                           <ExternalLink className="h-3 w-3" />

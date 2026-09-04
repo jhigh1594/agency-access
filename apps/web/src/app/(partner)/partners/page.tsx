@@ -95,7 +95,7 @@ export default function PartnerPortalPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-paper p-6">
         <div className="clean-card max-w-lg p-8 text-center">
-          <p className="text-xs font-mono uppercase tracking-[0.3em] text-coral">Partner Portal</p>
+          <p className="text-xs font-mono uppercase tracking-[0.3em] text-danger-ink">Partner Portal</p>
           <h1 className="mt-3 font-display text-3xl font-semibold text-ink">
             Sign in to access your affiliate dashboard.
           </h1>
@@ -126,7 +126,7 @@ export default function PartnerPortalPage() {
         <div className="clean-card max-w-2xl p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-mono uppercase tracking-[0.3em] text-coral">Partner Portal</p>
+              <p className="text-xs font-mono uppercase tracking-[0.3em] text-danger-ink">Partner Portal</p>
               <h1 className="mt-3 font-display text-3xl font-semibold text-ink">
                 Access pending approval
               </h1>
@@ -254,7 +254,7 @@ export default function PartnerPortalPage() {
               {createLinkMutation.isPending ? 'Creating…' : 'Create campaign link'}
             </Button>
             {formError ? (
-              <p className="text-sm text-coral">{formError}</p>
+              <p className="text-sm text-danger-ink">{formError}</p>
             ) : null}
           </form>
         </AffiliateSurfaceCard>
@@ -398,7 +398,7 @@ export default function PartnerPortalPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className="h-auto px-0 text-coral hover:bg-transparent hover:text-coral/80"
+                className="h-auto px-0 text-danger-ink hover:bg-transparent hover:text-coral/80"
                 onClick={() => row.url && copyToClipboard(`link:${row.url}`, row.url)}
               >
                 {copiedKey === `link:${row.url}` ? 'Copied' : 'Copy'}
@@ -413,7 +413,7 @@ export default function PartnerPortalPage() {
           title="Commission history"
           description="Track each qualifying invoice, hold window, and final payout state."
           actions={historyError ? (
-            <span className="text-xs text-coral">
+            <span className="text-xs text-danger-ink">
               {historyError instanceof Error ? historyError.message : 'Unable to load commission history.'}
             </span>
           ) : null}

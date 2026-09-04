@@ -48,10 +48,10 @@ describe('LogoSpinner', () => {
   it('accepts custom className', async () => {
     const LogoSpinner = await loadLogoSpinner();
 
-    render(<LogoSpinner className="text-coral" />);
+    render(<LogoSpinner className="text-danger-ink" />);
 
     const container = screen.getByTestId('logo-spinner');
-    expect(container.className).toContain('text-coral');
+    expect(container.className).toContain('text-danger-ink');
   });
 
   it('has proper accessibility attributes for loading state', async () => {

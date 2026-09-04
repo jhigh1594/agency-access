@@ -136,7 +136,7 @@ export function SuccessStoriesSection() {
               <div className="order-1 md:order-2">
                 {/* Quote Card */}
                 <div className="bg-card border-2 border-black rounded-[0.75rem] p-6 sm:p-8 shadow-brutalist mb-6 relative hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-                  <div className="absolute top-4 sm:top-6 left-4 sm:left-8 text-coral/10 font-dela text-4xl sm:text-6xl leading-none select-none -z-0">
+                  <div className="absolute top-4 sm:top-6 left-4 sm:left-8 text-danger-ink/10 font-dela text-4xl sm:text-6xl leading-none select-none -z-0">
                     &ldquo;
                   </div>
                   <div className="relative z-10">
@@ -187,7 +187,7 @@ export function SuccessStoriesSection() {
                             <span className="text-gray-400 line-through font-mono text-xs sm:text-sm">
                               {metric.before}
                             </span>
-                            <span className="text-coral font-dela text-lg sm:text-xl">→</span>
+                            <span className="text-danger-ink font-dela text-lg sm:text-xl">→</span>
                             <span className="text-ink font-dela text-base sm:text-xl">{metric.after}</span>
                           </div>
                         </div>

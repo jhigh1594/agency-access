@@ -69,13 +69,13 @@ export function PricingTiers() {
           {/* Section Header */}
           <div className="text-center mb-12 sm:mb-16">
             <div className="inline-block mb-4">
-              <div className="bg-coral/10 text-coral border-2 border-coral/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block">
+              <div className="bg-coral/10 text-danger-ink border-2 border-coral/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider inline-block">
                 Simple Pricing
               </div>
             </div>
             <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mb-4 sm:mb-6 text-ink">
               Choose the plan that{' '}
-              <span className="text-coral italic">fits your team</span>
+              <span className="text-danger-ink italic">fits your team</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
               All plans include a 14-day free trial. Choose the plan that fits your agency's needs.
@@ -95,7 +95,7 @@ export function PricingTiers() {
                 <span className="text-gray-600">{isYearly ? '$24/mo' : '$29/mo'}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-coral/5 -mx-2 px-2">
-                <span className="font-bold text-coral">Growth → Most Popular</span>
+                <span className="font-bold text-danger-ink">Growth → Most Popular</span>
                 <span className="text-gray-600">{isYearly ? '$66/mo' : '$79/mo'}</span>
               </div>
               <div className="flex justify-between items-center py-2">

@@ -87,7 +87,7 @@ export function GA4AssetSelector({
       <div className="space-y-4">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 text-coral animate-spin mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 text-danger-ink animate-spin mx-auto mb-4" />
             <p className="text-lg font-semibold text-ink">
               Loading your properties
             </p>
@@ -100,8 +100,8 @@ export function GA4AssetSelector({
   if (error) {
     return (
       <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-6 text-center">
-        <h3 className="text-lg font-bold text-coral mb-2">Couldn't load properties</h3>
-        <p className="text-coral mb-4">{error}</p>
+        <h3 className="text-lg font-bold text-danger-ink mb-2">Couldn't load properties</h3>
+        <p className="text-danger-ink mb-4">{error}</p>
         <button
           onClick={fetchAssets}
           className="px-6 py-3 bg-coral text-white font-semibold rounded-xl hover:bg-coral/90 transition-colors"
@@ -126,8 +126,8 @@ export function GA4AssetSelector({
       <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-coral">Selected</h3>
-            <p className="text-xs text-coral/90 mt-0.5">
+            <h3 className="text-sm font-semibold text-danger-ink">Selected</h3>
+            <p className="text-xs text-danger-ink/90 mt-0.5">
               Properties you're sharing
             </p>
           </div>

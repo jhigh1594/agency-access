@@ -117,7 +117,7 @@ export default function MetaAdsAccessGuidePage() {
       <section className="border-b-2 border-black bg-coral/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-3xl mx-auto">
-            <p className="font-mono text-sm text-coral font-bold uppercase tracking-wider mb-3">
+            <p className="font-mono text-sm text-danger-ink font-bold uppercase tracking-wider mb-3">
               Platform Access Guide
             </p>
             <h1 className="font-dela text-3xl sm:text-4xl md:text-5xl text-ink mb-4 tracking-tight">
@@ -165,7 +165,7 @@ export default function MetaAdsAccessGuidePage() {
             <p className="font-mono text-sm text-foreground mb-2">
               Meta Business Suite → Business Settings → Accounts → Ad Accounts → select account → Add People → Add a Partner → enter Business ID → choose permissions → confirm. Agency accepts from their Business Settings.
             </p>
-            <Link href="#step-by-step" className="font-mono text-sm text-coral font-bold hover:underline">
+            <Link href="#step-by-step" className="font-mono text-sm text-danger-ink font-bold hover:underline">
               See step-by-step instructions →
             </Link>
           </div>
@@ -342,43 +342,43 @@ export default function MetaAdsAccessGuidePage() {
             </h2>
             <ul className="space-y-2 font-mono text-sm text-foreground list-none">
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Client has Meta Business Suite account
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Agency has provided Business ID
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Client knows which ad accounts to share
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Previous agency partners removed (if applicable)
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Correct permission level selected
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Partner invitation sent
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Agency accepted invitation
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Access verified: Can you see campaigns? Can you edit?
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Screenshot account overview for records
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Document Business Manager name and ad account IDs
               </li>
             </ul>
@@ -394,7 +394,7 @@ export default function MetaAdsAccessGuidePage() {
               Need a Complete Onboarding Process?
             </h2>
             <p className="font-mono text-sm text-foreground mb-4">
-              Getting Meta Ads access is just one step. Download our complete <Link href="/blog/client-onboarding-checklist" className="text-coral font-bold hover:underline">Client Onboarding Checklist</Link> with all platforms, intake forms, and first-week milestones.
+              Getting Meta Ads access is just one step. Download our complete <Link href="/blog/client-onboarding-checklist" className="text-danger-ink font-bold hover:underline">Client Onboarding Checklist</Link> with all platforms, intake forms, and first-week milestones.
             </p>
           </div>
         </div>
@@ -409,19 +409,19 @@ export default function MetaAdsAccessGuidePage() {
             </h2>
             <p className="font-mono text-sm text-foreground mb-4">
               Need access to other platforms? We have guides for{" "}
-              <Link href="/guides/google-ads-access" className="text-coral font-bold hover:underline">
+              <Link href="/guides/google-ads-access" className="text-danger-ink font-bold hover:underline">
                 Google Ads access for agencies
               </Link>
               ,{" "}
-              <Link href="/blog/linkedin-ads-access-agency" className="text-coral font-bold hover:underline">
+              <Link href="/blog/linkedin-ads-access-agency" className="text-danger-ink font-bold hover:underline">
                 LinkedIn Ads access
               </Link>
               ,{" "}
-              <Link href="/blog/tiktok-ads-access-agency" className="text-coral font-bold hover:underline">
+              <Link href="/blog/tiktok-ads-access-agency" className="text-danger-ink font-bold hover:underline">
                 TikTok Ads access
               </Link>
               , and{" "}
-              <Link href="/blog/pinterest-ads-access-agencies" className="text-coral font-bold hover:underline">
+              <Link href="/blog/pinterest-ads-access-agencies" className="text-danger-ink font-bold hover:underline">
                 Pinterest Ads access
               </Link>
               .
@@ -445,7 +445,7 @@ export default function MetaAdsAccessGuidePage() {
             </ComparisonCTA>
             <p className="mt-4 font-mono text-xs text-white/70">
               Or{" "}
-              <Link href="/compare/leadsie-alternative" className="text-coral font-bold hover:underline">
+              <Link href="/compare/leadsie-alternative" className="text-danger-ink font-bold hover:underline">
                 see how we compare to other tools
               </Link>
             </p>

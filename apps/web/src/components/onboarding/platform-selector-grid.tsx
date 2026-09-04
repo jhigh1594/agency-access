@@ -220,7 +220,7 @@ export function PlatformSelectorGrid({
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-start gap-3">
-            <span className="text-teal text-xl font-bold">→</span>
+            <span className="text-success-ink text-xl font-bold">→</span>
             <div className="flex-1">
               <div className="font-semibold text-ink mb-1">
                 Most agencies start with Google and Meta

@@ -24,7 +24,7 @@ export function UsageLimitsCard() {
       <section className="clean-card p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-coral/10 rounded-lg">
-            <TrendingUp className="h-5 w-5 text-coral" />
+            <TrendingUp className="h-5 w-5 text-danger-ink" />
           </div>
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">Usage This Month</h2>
@@ -121,7 +121,7 @@ export function UsageLimitsCard() {
           <span
             className={`font-medium ${
               isAtLimit
-                ? 'text-coral'
+                ? 'text-danger-ink'
                 : isNearLimit
                   ? 'text-warning'
                   : 'text-ink'
@@ -143,7 +143,7 @@ export function UsageLimitsCard() {
           />
         </div>
         {!isUnlimited && isNearLimit && (
-          <p className={`text-xs ${isAtLimit ? 'text-coral' : 'text-warning'}`}>
+          <p className={`text-xs ${isAtLimit ? 'text-danger-ink' : 'text-warning'}`}>
             {isAtLimit
               ? 'Limit reached. Upgrade to continue.'
               : `${numericLimit - used} remaining. Consider upgrading soon.`}
@@ -165,7 +165,7 @@ export function UsageLimitsCard() {
     <section className="clean-card p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 bg-coral/10 rounded-lg">
-          <TrendingUp className="h-5 w-5 text-coral" />
+          <TrendingUp className="h-5 w-5 text-danger-ink" />
         </div>
         <div className="flex-1">
           <h2 className="font-display text-lg font-semibold text-ink">Usage This Month</h2>
@@ -188,8 +188,8 @@ export function UsageLimitsCard() {
 
       {errorMessage && (
         <div className="mt-4 p-3 bg-coral/10 border border-coral/20 rounded-lg flex items-start gap-2">
-          <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-coral">{errorMessage}</p>
+          <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-danger-ink">{errorMessage}</p>
         </div>
       )}
 

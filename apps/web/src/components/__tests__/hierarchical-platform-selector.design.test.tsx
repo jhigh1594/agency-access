@@ -21,7 +21,7 @@ describe('HierarchicalPlatformSelector - Static Design Validation', () => {
 
   it('should use coral token directly', () => {
     const code = readComponent();
-    expect(code).toMatch(/text-coral/);
+    expect(code).toMatch(/text-danger-ink/);
     expect(code).toMatch(/bg-coral/);
     expect(code).toMatch(/border-coral/);
   });

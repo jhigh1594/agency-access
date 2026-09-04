@@ -29,7 +29,7 @@ export function ClientStats({ stats }: ClientStatsProps) {
     {
       label: 'Active Connections',
       value: stats.activeConnections,
-      icon: <Link className="h-5 w-5 text-teal" />,
+      icon: <Link className="h-5 w-5 text-success-ink" />,
       iconContainerClass: 'bg-teal/10',
     },
     {
@@ -41,7 +41,7 @@ export function ClientStats({ stats }: ClientStatsProps) {
     {
       label: 'Expired',
       value: stats.expiredConnections,
-      icon: <AlertCircle className="h-5 w-5 text-coral" />,
+      icon: <AlertCircle className="h-5 w-5 text-danger-ink" />,
       iconContainerClass: 'bg-coral/10',
     },
   ] as const;

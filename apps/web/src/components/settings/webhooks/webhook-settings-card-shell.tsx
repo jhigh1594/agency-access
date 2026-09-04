@@ -21,7 +21,7 @@ export function WebhookSettingsCardShell({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <div className="rounded-xl bg-coral/10 p-2.5">
-            <Icon className="h-5 w-5 text-coral" />
+            <Icon className="h-5 w-5 text-danger-ink" />
           </div>
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>

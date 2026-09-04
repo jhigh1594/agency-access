@@ -116,7 +116,7 @@ export function UpgradeModal({
               {/* Limit reached message */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-coral/20 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-coral" />
+                  <TrendingUp className="h-6 w-6 text-danger-ink" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-ink">
@@ -156,19 +156,19 @@ export function UpgradeModal({
                     </h4>
                     <ul className="space-y-2">
                       <li className="flex items-center gap-2 text-sm text-foreground">
-                        <Check className="h-4 w-4 text-teal" />
+                        <Check className="h-4 w-4 text-success-ink" />
                         <span>
                           Up to <strong>{suggestedTierConfig.clients === -1 ? 'unlimited' : suggestedTierConfig.clients}</strong> clients
                         </span>
                       </li>
                       <li className="flex items-center gap-2 text-sm text-foreground">
-                        <Check className="h-4 w-4 text-teal" />
+                        <Check className="h-4 w-4 text-success-ink" />
                         <span>
                           Up to <strong>{suggestedTierConfig.members === -1 ? 'unlimited' : suggestedTierConfig.members}</strong> team members
                         </span>
                       </li>
                       <li className="flex items-center gap-2 text-sm text-foreground">
-                        <Check className="h-4 w-4 text-teal" />
+                        <Check className="h-4 w-4 text-success-ink" />
                         <span>
                           Up to <strong>{suggestedTierConfig.accessRequests === -1 ? 'unlimited' : suggestedTierConfig.accessRequests}</strong> access requests
                         </span>
@@ -201,7 +201,7 @@ export function UpgradeModal({
                         return (
                           <span
                             key={feature}
-                            className="px-2 py-1 bg-teal/10 text-teal text-xs rounded-md border border-teal/20"
+                            className="px-2 py-1 bg-teal/10 text-success-ink text-xs rounded-md border border-teal/20"
                           >
                             {formattedFeature}
                           </span>

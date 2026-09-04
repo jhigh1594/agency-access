@@ -111,16 +111,16 @@ export function FinalSuccessScreen({
         variants={staggerItem}
       >
         <div className="bg-teal/10 border-2 border-teal rounded-lg p-6">
-          <h3 className="font-semibold text-teal-90 mb-4">What you've accomplished:</h3>
+          <h3 className="font-semibold text-success-ink mb-4">What you've accomplished:</h3>
           <div className="space-y-3">
             {ACCOMPLISHMENTS.map((item, index) => (
-              <div key={index} className="flex items-center gap-3 text-teal800">
+              <div key={index} className="flex items-center gap-3 text-success-ink">
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 <span>{item.text}</span>
               </div>
             ))}
             {teamInvitesSent > 0 && (
-              <div className="flex items-center gap-3 text-teal800">
+              <div className="flex items-center gap-3 text-success-ink">
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                 <span>{teamInvitesSent} team invite{teamInvitesSent > 1 ? 's' : ''} sent</span>
               </div>
@@ -145,7 +145,7 @@ export function FinalSuccessScreen({
               variants={staggerItem}
               whileHover={{ scale: 1.02 }}
             >
-              <feature.icon className="w-6 h-6 text-coral mb-2" />
+              <feature.icon className="w-6 h-6 text-danger-ink mb-2" />
               <h4 className="font-semibold text-ink mb-1">{feature.title}</h4>
               <p className="text-sm text-muted-foreground">{feature.description}</p>
             </motion.div>
@@ -160,13 +160,13 @@ export function FinalSuccessScreen({
           variants={staggerItem}
         >
           <div className="bg-paper border-2 border-black rounded-lg p-6 text-center">
-            <div className="text-sm text-coral600 font-semibold uppercase tracking-wide mb-2">
+            <div className="text-sm text-danger-ink font-semibold uppercase tracking-wide mb-2">
               ⚡ Lightning Fast
             </div>
-            <div className="text-3xl font-bold text-coral900 mb-1">
+            <div className="text-3xl font-bold text-danger-ink mb-1">
               Under 60 seconds
             </div>
-            <div className="text-sm text-coral700">
+            <div className="text-sm text-danger-ink">
               That's how long it took you to create your first access request
             </div>
           </div>

@@ -37,7 +37,7 @@ export default function InternalAdminSubscriptionsPage() {
   if (isLoading) {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-coral" />
+        <Loader2 className="h-8 w-8 animate-spin text-danger-ink" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function InternalAdminSubscriptionsPage() {
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-6xl mx-auto clean-card p-6 border border-coral/40 bg-coral/5">
           <h1 className="font-display text-2xl font-semibold text-ink">Subscription Monitoring</h1>
-          <p className="text-sm text-coral mt-2">
+          <p className="text-sm text-danger-ink mt-2">
             {error instanceof Error ? error.message : 'Unable to load subscriptions.'}
           </p>
         </div>
@@ -72,14 +72,14 @@ export default function InternalAdminSubscriptionsPage() {
           <nav className="flex items-center gap-3 text-sm">
             <a href="/internal/admin" className="text-muted-foreground hover:text-foreground">Overview</a>
             <a href="/internal/admin/agencies" className="text-muted-foreground hover:text-foreground">Agencies</a>
-            <a href="/internal/admin/subscriptions" className="text-coral font-semibold">Subscriptions</a>
+            <a href="/internal/admin/subscriptions" className="text-danger-ink font-semibold">Subscriptions</a>
             <a href="/internal/admin/webhooks" className="text-muted-foreground hover:text-foreground">Webhooks</a>
             <a href="/internal/admin/affiliates" className="text-muted-foreground hover:text-foreground">Affiliates</a>
           </nav>
         </header>
 
         {messages ? (
-          <div className={`clean-card p-3 text-sm ${messages.type === 'error' ? 'border-coral/40 bg-coral/5 text-coral' : 'border-teal/40 bg-teal/5 text-teal'}`}>
+          <div className={`clean-card p-3 text-sm ${messages.type === 'error' ? 'border-coral/40 bg-coral/5 text-danger-ink' : 'border-teal/40 bg-teal/5 text-success-ink'}`}>
             {messages.text}
           </div>
         ) : null}
@@ -212,7 +212,7 @@ export default function InternalAdminSubscriptionsPage() {
                                   });
                                 }
                               }}
-                              className="px-3 py-1.5 rounded-md border border-coral/40 text-coral hover:bg-coral/10 disabled:opacity-40"
+                              className="px-3 py-1.5 rounded-md border border-coral/40 text-danger-ink hover:bg-coral/10 disabled:opacity-40"
                             >
                               Cancel
                             </button>

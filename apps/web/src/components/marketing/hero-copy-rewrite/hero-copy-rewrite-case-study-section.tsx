@@ -69,7 +69,7 @@ export function HeroCopyRewriteCaseStudySection() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="inline-flex rounded-[0.75rem] border-2 border-black bg-teal/15 p-3">
-                      <metric.icon size={20} className="text-teal" />
+                      <metric.icon size={20} className="text-success-ink" />
                     </div>
                     <div>
                       <p className="font-black uppercase tracking-wide text-ink">
@@ -82,7 +82,7 @@ export function HeroCopyRewriteCaseStudySection() {
                     <span className="font-mono text-sm text-gray-400 line-through">
                       {metric.before}
                     </span>
-                    <span className="font-dela text-xl text-coral">→</span>
+                    <span className="font-dela text-xl text-danger-ink">→</span>
                     <span className="font-dela text-lg text-ink">{metric.after}</span>
                   </div>
                 </div>

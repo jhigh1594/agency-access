@@ -61,7 +61,7 @@ export function CancelRequestModal({
           <div className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-coral/20 rounded-lg">
-                <Unlink className="h-5 w-5 text-coral" />
+                <Unlink className="h-5 w-5 text-danger-ink" />
               </div>
               <h3 className="text-lg font-semibold text-ink">Revoke this access request?</h3>
             </div>

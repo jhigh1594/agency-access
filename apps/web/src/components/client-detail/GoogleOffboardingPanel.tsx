@@ -59,7 +59,7 @@ const ITEM_STATUS_BADGE: Record<ItemStatus, { label: string; variant: 'success' 
 function ItemStatusBadge({ status }: { status: ItemStatus }) {
   const config = ITEM_STATUS_BADGE[status] ?? ITEM_STATUS_BADGE.pending;
   return (
-    <span className="inline-flex items-center gap-1 rounded-sm font-mono font-medium uppercase tracking-wider border bg-teal/10 text-teal border-teal/30 px-2 py-0.5 text-xs">
+    <span className="inline-flex items-center gap-1 rounded-sm font-mono font-medium uppercase tracking-wider border bg-teal/10 text-success-ink border-teal/30 px-2 py-0.5 text-xs">
       {config.icon}
       {config.label}
     </span>
@@ -71,15 +71,15 @@ function ItemStatusIcon({ status }: { status: ItemStatus }) {
     case 'revoked_verified':
     case 'already_absent':
     case 'attestation_recorded':
-      return <CheckCircle2 className="h-4 w-4 text-teal" />;
+      return <CheckCircle2 className="h-4 w-4 text-success-ink" />;
     case 'awaiting_client_approval':
       return <Clock className="h-4 w-4 text-warning" />;
     case 'failed_retryable':
-      return <AlertCircle className="h-4 w-4 text-coral" />;
+      return <AlertCircle className="h-4 w-4 text-danger-ink" />;
     case 'failed_terminal':
-      return <AlertCircle className="h-4 w-4 text-coral" />;
+      return <AlertCircle className="h-4 w-4 text-danger-ink" />;
     case 'not_safely_reversible':
-      return <ShieldAlert className="h-4 w-4 text-coral" />;
+      return <ShieldAlert className="h-4 w-4 text-danger-ink" />;
     case 'pending':
       return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
     default:
@@ -225,7 +225,7 @@ export function GoogleOffboardingPanel({
     return (
       <Card className="p-6 border-2 border-coral/30 bg-peach">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+          <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-ink">Something went wrong</p>
             <p className="text-sm text-ink/70 mt-1">{error}</p>
@@ -326,7 +326,7 @@ export function GoogleOffboardingPanel({
       <Card className="p-6 border-2 border-coral/30 bg-peach">
         <div className="space-y-4">
           <div className="flex items-start gap-3">
-            <TriangleAlert className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+            <TriangleAlert className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="text-sm font-semibold text-ink">
                 Confirm Offboarding — {connectionLabel}
@@ -382,7 +382,7 @@ export function GoogleOffboardingPanel({
       return (
         <Card className="p-6 border-2 border-coral/30 bg-peach">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-ink">Offboarding progress unavailable</p>
               <p className="text-sm text-ink/70 mt-1">{msg}</p>
@@ -496,9 +496,9 @@ export function GoogleOffboardingPanel({
       queued: <Clock className="h-5 w-5 text-warning" />,
       executing: <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />,
       receipt_pending: <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />,
-      completed: <CheckCircle2 className="h-5 w-5 text-teal" />,
+      completed: <CheckCircle2 className="h-5 w-5 text-success-ink" />,
       completed_with_manual_follow_up: <CheckCircle2 className="h-5 w-5 text-warning" />,
-      incomplete: <AlertCircle className="h-5 w-5 text-coral" />,
+      incomplete: <AlertCircle className="h-5 w-5 text-danger-ink" />,
       canceled: <AlertCircle className="h-5 w-5 text-muted-foreground" />,
     };
 

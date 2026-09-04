@@ -122,7 +122,7 @@ export function ClientDetailHeader({ client }: ClientDetailHeaderProps) {
               variant="secondary"
               size="sm"
               leftIcon={<Trash2 className="h-4 w-4" />}
-              className="text-coral border-coral/40 hover:bg-coral/10"
+              className="text-danger-ink border-coral/40 hover:bg-coral/10"
             >
               Delete
             </Button>

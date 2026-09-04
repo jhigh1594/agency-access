@@ -111,7 +111,7 @@ export function CancelSubscriptionModal({
                   {/* Warning icon */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-3 bg-coral/20 rounded-full">
-                      <AlertTriangle className="h-6 w-6 text-coral" />
+                      <AlertTriangle className="h-6 w-6 text-danger-ink" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-ink">
@@ -125,7 +125,7 @@ export function CancelSubscriptionModal({
 
                   {/* Warning message */}
                   <div className="bg-coral/10 border-2 border-coral rounded-lg p-4 mb-6">
-                    <p className="text-sm text-coral-90">
+                    <p className="text-sm text-danger-ink">
                       <strong>Important:</strong> After cancellation, you will lose access to paid plan features
                       and will move to Free plan limits. Any remaining clients, team members, or access requests
                       exceeding those limits may be restricted.
@@ -152,7 +152,7 @@ export function CancelSubscriptionModal({
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Calendar className="h-4 w-4 text-coral600" />
+                          <Calendar className="h-4 w-4 text-danger-ink" />
                           <p className="font-medium text-ink">At the end of the billing period (Recommended)</p>
                         </div>
                         <p className="text-sm text-gray-600">
@@ -188,7 +188,7 @@ export function CancelSubscriptionModal({
                   <div className="mb-6">
                     <button
                       onClick={() => setShowFeedback(!showFeedback)}
-                      className="text-sm text-coral600 hover:text-coral700 flex items-center gap-1 mb-2"
+                      className="text-sm text-danger-ink hover:text-danger-ink flex items-center gap-1 mb-2"
                     >
                       {showFeedback ? (
                         <>
@@ -221,7 +221,7 @@ export function CancelSubscriptionModal({
                   {/* Error message */}
                   {errorMessage && (
                     <div className="p-3 bg-coral/10 border border-coral rounded-lg mb-4">
-                      <p className="text-sm text-coral-90">{errorMessage}</p>
+                      <p className="text-sm text-danger-ink">{errorMessage}</p>
                     </div>
                   )}
 
@@ -271,7 +271,7 @@ export function CancelSubscriptionModal({
                 /* Success message */
                 <div className="text-center py-4">
                   <div className="flex items-center justify-center gap-2 mb-3">
-                    <CheckCircle2 className="h-8 w-8 text-teal" />
+                    <CheckCircle2 className="h-8 w-8 text-success-ink" />
                     <p className="text-xl font-semibold text-ink">Subscription Canceled</p>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">

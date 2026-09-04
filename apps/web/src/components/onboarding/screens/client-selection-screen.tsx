@@ -138,7 +138,7 @@ export function ClientSelectionScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-coral mb-2">Step 2 of 6</div>
+        <div className="text-sm font-semibold text-danger-ink mb-2">Step 2 of 6</div>
         <h2 className="text-3xl font-bold text-ink mb-2">Create your first access request</h2>
         <p className="text-muted-foreground">
           This is how you'll get client OAuth tokens in under 2 minutes.
@@ -191,7 +191,7 @@ export function ClientSelectionScreen({
                       <div className="text-sm text-muted-foreground">{client.email}</div>
                     </div>
                     {selectedClientId === client.id && (
-                      <svg className="w-5 h-5 text-coral" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-danger-ink" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -208,7 +208,7 @@ export function ClientSelectionScreen({
             <button
               type="button"
               onClick={handleCreateNew}
-              className="text-sm text-coral hover:text-coral font-medium"
+              className="text-sm text-danger-ink hover:text-coral font-medium"
             >
               + Create a new client instead
             </button>
@@ -222,7 +222,7 @@ export function ClientSelectionScreen({
               <button
                 type="button"
                 onClick={handleSwitchToExisting}
-                className="text-sm text-coral hover:text-coral font-medium"
+                className="text-sm text-danger-ink hover:text-coral font-medium"
               >
                 ← Back to client list
               </button>
@@ -286,7 +286,7 @@ export function ClientSelectionScreen({
             <button
               type="button"
               onClick={() => void onDefer()}
-              className="text-sm font-medium text-coral hover:text-coral"
+              className="text-sm font-medium text-danger-ink hover:text-coral"
             >
               No client yet
             </button>

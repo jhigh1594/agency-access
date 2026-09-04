@@ -102,7 +102,7 @@ function formatDateTime(value: string | null | undefined): string {
 }
 
 function getFeedbackTone(isError: boolean): string {
-  return isError ? 'text-coral' : 'text-teal';
+  return isError ? 'text-danger-ink' : 'text-success-ink';
 }
 
 export function WebhookSettingsTab() {
@@ -315,7 +315,7 @@ export function WebhookSettingsTab() {
         description="Manage the outbound endpoint used for access request lifecycle updates."
         icon={Webhook}
       >
-        <div className="rounded-2xl border border-coral/30 bg-coral/5 p-5 text-sm text-coral">
+        <div className="rounded-2xl border border-coral/30 bg-coral/5 p-5 text-sm text-danger-ink">
           {agencyQuery.error instanceof Error
             ? agencyQuery.error.message
             : endpointQuery.error instanceof Error
@@ -394,7 +394,7 @@ export function WebhookSettingsTab() {
                         onChange={(event) => handleEventToggle(option.value, event.target.checked)}
                         disabled={isBusy}
                         aria-label={option.value}
-                        className="mt-1 h-4 w-4 rounded border-border text-coral focus:ring-coral"
+                        className="mt-1 h-4 w-4 rounded border-border text-danger-ink focus:ring-coral"
                       />
                       <div>
                         <div className="font-mono text-sm font-semibold text-ink">{option.label}</div>
@@ -455,7 +455,7 @@ export function WebhookSettingsTab() {
 
           <aside className="rounded-3xl border border-border bg-gradient-to-br from-coral/10 via-paper to-teal/10 p-5">
             <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <BellRing className="h-4 w-4 text-coral" />
+              <BellRing className="h-4 w-4 text-danger-ink" />
               Delivery posture
             </div>
 
@@ -520,7 +520,7 @@ export function WebhookSettingsTab() {
         {signingSecret && (
           <div className="rounded-3xl border border-teal/30 bg-teal/5 p-5">
             <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <KeyRound className="h-4 w-4 text-teal" />
+              <KeyRound className="h-4 w-4 text-success-ink" />
               Signing secret
             </div>
             <p className="mt-2 text-sm text-muted-foreground">

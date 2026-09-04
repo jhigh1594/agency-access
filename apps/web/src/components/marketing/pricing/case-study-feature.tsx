@@ -30,12 +30,12 @@ export function CaseStudyFeature() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                 {/* Content */}
                 <div>
-                  <p className="font-mono text-xs font-bold uppercase tracking-wider text-coral mb-3">
+                  <p className="font-mono text-xs font-bold uppercase tracking-wider text-danger-ink mb-3">
                     Featured Story
                   </p>
                   <h2 className="font-dela text-2xl sm:text-3xl lg:text-4xl text-ink mb-4 leading-tight">
                     How GrowthFlow scaled from{' '}
-                    <span className="text-coral italic">15 → 50 clients</span>
+                    <span className="text-danger-ink italic">15 → 50 clients</span>
                   </h2>
                   <p className="text-base text-gray-700 mb-6 leading-relaxed">
                     GrowthFlow Agency was drowning in email threads and manual OAuth setup. With
@@ -81,7 +81,7 @@ export function CaseStudyFeature() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                   <div className="border-2 border-black bg-paper p-4 sm:p-6 shadow-brutalist-sm">
-                    <div className="font-dela text-3xl sm:text-4xl lg:text-5xl text-coral mb-1">
+                    <div className="font-dela text-3xl sm:text-4xl lg:text-5xl text-danger-ink mb-1">
                       3.3x
                     </div>
                     <div className="font-mono text-[10px] sm:text-xs text-gray-600 uppercase tracking-wider">
@@ -89,7 +89,7 @@ export function CaseStudyFeature() {
                     </div>
                   </div>
                   <div className="border-2 border-black bg-paper p-4 sm:p-6 shadow-brutalist-sm">
-                    <div className="font-dela text-3xl sm:text-4xl lg:text-5xl text-teal mb-1">
+                    <div className="font-dela text-3xl sm:text-4xl lg:text-5xl text-success-ink mb-1">
                       480h
                     </div>
                     <div className="font-mono text-[10px] sm:text-xs text-gray-600 uppercase tracking-wider">

@@ -82,8 +82,8 @@ export function UsageDisplay({
   };
 
   const getTextColor = () => {
-    if (isUnlimited) return 'text-teal';
-    if (percentage >= 100) return 'text-coral';
+    if (isUnlimited) return 'text-success-ink';
+    if (percentage >= 100) return 'text-danger-ink';
     if (percentage >= 80) return 'text-yellow-600';
     return 'text-gray-600';
   };
@@ -123,8 +123,8 @@ export function UsageDisplay({
           onClick={onUpgradeClick}
           className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-coral/10 border border-coral/30 rounded-md hover:bg-coral/20 transition-colors"
         >
-          <TrendingUp className="h-4 w-4 text-coral" />
-          <span className={`${currentSize.text} text-coral font-medium`}>
+          <TrendingUp className="h-4 w-4 text-danger-ink" />
+          <span className={`${currentSize.text} text-danger-ink font-medium`}>
             {remaining === 0 ? 'Limit reached — Upgrade now' : '1 remaining — Upgrade soon'}
           </span>
         </button>
@@ -132,7 +132,7 @@ export function UsageDisplay({
 
       {/* Warning when at limit */}
       {percentage >= 100 && !showUpgradeNudge && (
-        <div className="mt-2 flex items-center gap-2 text-coral">
+        <div className="mt-2 flex items-center gap-2 text-danger-ink">
           <AlertTriangle className="h-4 w-4" />
           <span className={`${currentSize.text} font-medium`}>
             Limit reached

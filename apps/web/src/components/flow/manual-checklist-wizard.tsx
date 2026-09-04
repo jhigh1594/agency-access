@@ -214,14 +214,14 @@ export function ManualChecklistWizard({
                   setValidationError(null);
                 }
               }}
-              className="mt-1 h-4 w-4 rounded border-border text-coral focus:ring-ring"
+              className="mt-1 h-4 w-4 rounded border-border text-danger-ink focus:ring-ring"
             />
             <span className="text-sm font-medium text-foreground">{currentStep.completionGate.label}</span>
           </label>
         ) : null}
 
         {validationError ? (
-          <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+          <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-danger-ink">
             {validationError}
           </div>
         ) : null}
@@ -283,7 +283,7 @@ export function ManualChecklistWizard({
       </div>
 
       <div className="border-t border-border bg-paper px-5 py-3 flex items-center gap-2 text-xs text-muted-foreground">
-        <Check className="h-4 w-4 text-teal" />
+        <Check className="h-4 w-4 text-success-ink" />
         Credentials are never requested in this flow.
       </div>
     </div>

@@ -114,7 +114,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full border border-teal bg-teal/10 flex items-center justify-center">
-                <Check className="h-6 w-6 text-teal" />
+                <Check className="h-6 w-6 text-success-ink" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-ink">Share Authorization Link</h2>

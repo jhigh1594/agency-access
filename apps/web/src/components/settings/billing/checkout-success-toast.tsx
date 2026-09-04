@@ -33,7 +33,7 @@ export function CheckoutSuccessToast() {
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
       <div className="flex items-center gap-3 bg-teal/10 border border-teal/20 rounded-lg px-4 py-3 shadow-lg">
         <div className="flex-shrink-0 w-8 h-8 bg-teal/20 rounded-full flex items-center justify-center">
-          <Check className="h-5 w-5 text-teal" />
+          <Check className="h-5 w-5 text-success-ink" />
         </div>
         <div>
           <p className="text-sm font-medium text-ink">Subscription updated</p>
@@ -43,7 +43,7 @@ export function CheckoutSuccessToast() {
         </div>
         <button
           onClick={() => setVisible(false)}
-          className="text-teal hover:text-teal/80"
+          className="text-success-ink hover:text-teal/80"
         >
           <X className="h-4 w-4" />
         </button>

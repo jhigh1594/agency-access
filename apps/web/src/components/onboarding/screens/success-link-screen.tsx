@@ -56,7 +56,7 @@ export function SuccessLinkScreen({
     >
       {/* Step Header */}
       <div className="mb-8 text-center">
-        <div className="text-sm font-semibold text-teal mb-2">Step 4 of 6</div>
+        <div className="text-sm font-semibold text-success-ink mb-2">Step 4 of 6</div>
         <h2 className="text-3xl font-bold text-ink mb-2">
           Your access link is ready!
         </h2>

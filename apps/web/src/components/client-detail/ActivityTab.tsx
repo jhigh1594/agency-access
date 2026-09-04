@@ -27,9 +27,9 @@ const ACTIVITY_ICONS: Record<string, ReactNode> = {
 
 const ACTIVITY_COLORS: Record<string, string> = {
   request_created: 'bg-primary/10 text-primary',
-  request_completed: 'bg-teal/10 text-teal',
+  request_completed: 'bg-teal/10 text-success-ink',
   connection_created: 'bg-accent text-accent-foreground',
-  connection_revoked: 'bg-coral/10 text-coral',
+  connection_revoked: 'bg-coral/10 text-danger-ink',
   client_updated: 'bg-muted/20 text-muted-foreground',
 };
 

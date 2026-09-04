@@ -58,8 +58,8 @@ export function BenefitsSection() {
               >
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-none border-2 border-black bg-coral/10 flex items-center justify-center">
-                    <Check size={20} className="text-coral sm:hidden" />
-                    <Check size={16} className="text-coral hidden sm:block" />
+                    <Check size={20} className="text-danger-ink sm:hidden" />
+                    <Check size={16} className="text-danger-ink hidden sm:block" />
                   </div>
                 </div>
                 <div>

@@ -110,7 +110,7 @@ export default function InternalAdminAffiliatesPage() {
   if (isLoading) {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-coral" />
+        <Loader2 className="h-8 w-8 animate-spin text-danger-ink" />
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function InternalAdminAffiliatesPage() {
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-6xl mx-auto clean-card p-6 border border-coral/40 bg-coral/5">
           <h1 className="font-display text-2xl font-semibold text-ink">Affiliate Review Queue</h1>
-          <p className="text-sm text-coral mt-2">
+          <p className="text-sm text-danger-ink mt-2">
             {error instanceof Error ? error.message : 'Unable to load affiliate review queue.'}
           </p>
         </div>
@@ -397,12 +397,12 @@ export default function InternalAdminAffiliatesPage() {
             <a href="/internal/admin/agencies" className="text-muted-foreground hover:text-foreground">Agencies</a>
             <a href="/internal/admin/subscriptions" className="text-muted-foreground hover:text-foreground">Subscriptions</a>
             <a href="/internal/admin/webhooks" className="text-muted-foreground hover:text-foreground">Webhooks</a>
-            <a href="/internal/admin/affiliates" className="text-coral font-semibold">Affiliates</a>
+            <a href="/internal/admin/affiliates" className="text-danger-ink font-semibold">Affiliates</a>
           </nav>
         </header>
 
         {messages ? (
-          <div className={`clean-card p-3 text-sm ${messages.type === 'error' ? 'border-coral/40 bg-coral/5 text-coral' : 'border-teal/40 bg-teal/5 text-teal'}`}>
+          <div className={`clean-card p-3 text-sm ${messages.type === 'error' ? 'border-coral/40 bg-coral/5 text-danger-ink' : 'border-teal/40 bg-teal/5 text-success-ink'}`}>
             {messages.text}
           </div>
         ) : null}
@@ -480,7 +480,7 @@ export default function InternalAdminAffiliatesPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedPartnerId(partner.id)}
-                            className="text-coral hover:text-coral/80 font-semibold"
+                            className="text-danger-ink hover:text-coral/80 font-semibold"
                           >
                             Review
                           </button>
@@ -542,10 +542,10 @@ export default function InternalAdminAffiliatesPage() {
 
                 {isPartnerDetailLoading ? (
                   <div className="rounded-md border border-border bg-background p-6 flex items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-coral" />
+                    <Loader2 className="h-5 w-5 animate-spin text-danger-ink" />
                   </div>
                 ) : partnerDetailError ? (
-                  <div className="rounded-md border border-coral/40 bg-coral/5 p-3 text-coral">
+                  <div className="rounded-md border border-coral/40 bg-coral/5 p-3 text-danger-ink">
                     {partnerDetailError instanceof Error ? partnerDetailError.message : 'Unable to load affiliate partner detail.'}
                   </div>
                 ) : partnerDetail ? (
@@ -598,7 +598,7 @@ export default function InternalAdminAffiliatesPage() {
                             ) : partnerDetail.links.map((link) => (
                               <tr key={link.id} className="border-b border-border/50">
                                 <td className="py-3">
-                                  <a href={link.url} target="_blank" rel="noreferrer" className="font-medium text-coral hover:text-coral/80">
+                                  <a href={link.url} target="_blank" rel="noreferrer" className="font-medium text-danger-ink hover:text-coral/80">
                                     /r/{link.code}
                                   </a>
                                   <p className="text-xs text-muted-foreground">{link.destinationPath}{link.campaign ? ` · ${link.campaign}` : ''}</p>
@@ -613,7 +613,7 @@ export default function InternalAdminAffiliatesPage() {
                                       type="button"
                                       disabled={isMutationPending}
                                       onClick={() => handleDisableLink(link.id)}
-                                      className="text-coral hover:text-coral/80 font-semibold disabled:opacity-40"
+                                      className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
                                     >
                                       Disable
                                     </button>
@@ -680,7 +680,7 @@ export default function InternalAdminAffiliatesPage() {
                                       type="button"
                                       disabled={isMutationPending}
                                       onClick={() => handleDisqualifyReferral(referral.id)}
-                                      className="text-coral hover:text-coral/80 font-semibold disabled:opacity-40"
+                                      className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
                                     >
                                       Disqualify
                                     </button>
@@ -752,7 +752,7 @@ export default function InternalAdminAffiliatesPage() {
                                         type="button"
                                         disabled={isMutationPending}
                                         onClick={() => handleAdjustCommissionStatus(commission.id, 'approved')}
-                                        className="text-teal hover:text-teal/80 font-semibold disabled:opacity-40"
+                                        className="text-success-ink hover:text-teal/80 font-semibold disabled:opacity-40"
                                       >
                                         Approve
                                       </button>
@@ -762,7 +762,7 @@ export default function InternalAdminAffiliatesPage() {
                                         type="button"
                                         disabled={isMutationPending}
                                         onClick={() => handleAdjustCommissionStatus(commission.id, 'void')}
-                                        className="text-coral hover:text-coral/80 font-semibold disabled:opacity-40"
+                                        className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
                                       >
                                         Void
                                       </button>
@@ -798,7 +798,7 @@ export default function InternalAdminAffiliatesPage() {
                     type="button"
                     disabled={isMutationPending}
                     onClick={() => handleReviewDecision('rejected')}
-                    className="px-4 py-2 rounded-md border border-coral/40 text-coral hover:bg-coral/10 disabled:opacity-40"
+                    className="px-4 py-2 rounded-md border border-coral/40 text-danger-ink hover:bg-coral/10 disabled:opacity-40"
                   >
                     Reject partner
                   </button>
@@ -849,10 +849,10 @@ export default function InternalAdminAffiliatesPage() {
         >
           {isPayoutBatchLoading ? (
             <div className="rounded-md border border-border bg-background p-6 flex items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-coral" />
+              <Loader2 className="h-5 w-5 animate-spin text-danger-ink" />
             </div>
           ) : payoutBatchError ? (
-            <div className="rounded-md border border-coral/40 bg-coral/5 p-3 text-coral">
+            <div className="rounded-md border border-coral/40 bg-coral/5 p-3 text-danger-ink">
               {payoutBatchError instanceof Error ? payoutBatchError.message : 'Unable to load payout batches.'}
             </div>
           ) : (
@@ -894,7 +894,7 @@ export default function InternalAdminAffiliatesPage() {
                           type="button"
                           disabled={isMutationPending}
                           onClick={() => void handleExportPayoutBatch(batch.id)}
-                          className="text-coral hover:text-coral/80 font-semibold disabled:opacity-40"
+                          className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
                         >
                           {batch.exportedAt ? 'Re-export CSV' : 'Export CSV'}
                         </button>
@@ -913,10 +913,10 @@ export default function InternalAdminAffiliatesPage() {
         >
           {isFraudQueueLoading ? (
             <div className="rounded-md border border-border bg-background p-6 flex items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-coral" />
+              <Loader2 className="h-5 w-5 animate-spin text-danger-ink" />
             </div>
           ) : fraudQueueError ? (
-            <div className="rounded-md border border-coral/40 bg-coral/5 p-3 text-coral">
+            <div className="rounded-md border border-coral/40 bg-coral/5 p-3 text-danger-ink">
               {fraudQueueError instanceof Error ? fraudQueueError.message : 'Unable to load fraud review queue.'}
             </div>
           ) : (
@@ -976,7 +976,7 @@ export default function InternalAdminAffiliatesPage() {
                                 type="button"
                                 disabled={isMutationPending}
                                 onClick={() => void handleResolveReferralReview(referral.id, 'clear')}
-                                className="text-teal hover:text-teal/80 font-semibold disabled:opacity-40"
+                                className="text-success-ink hover:text-teal/80 font-semibold disabled:opacity-40"
                               >
                                 Clear
                               </button>
@@ -992,7 +992,7 @@ export default function InternalAdminAffiliatesPage() {
                                 type="button"
                                 disabled={isMutationPending}
                                 onClick={() => void handleResolveReferralReview(referral.id, 'disqualify')}
-                                className="text-coral hover:text-coral/80 font-semibold disabled:opacity-40"
+                                className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
                               >
                                 Disqualify
                               </button>

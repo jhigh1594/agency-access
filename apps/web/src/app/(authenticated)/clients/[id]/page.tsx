@@ -69,8 +69,8 @@ export default function ClientDetailPage() {
             All clients
           </Link>
           <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-coral mx-auto mb-3" />
-            <p className="text-coral mb-2">{error instanceof Error ? error.message : 'Failed to load client'}</p>
+            <AlertCircle className="h-12 w-12 text-danger-ink mx-auto mb-3" />
+            <p className="text-danger-ink mb-2">{error instanceof Error ? error.message : 'Failed to load client'}</p>
             <Link href="/clients" className="text-primary hover:text-primary/90">
               Return to clients list
             </Link>

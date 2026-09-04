@@ -207,7 +207,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
 
   if (!settings) {
     return (
-      <div className="p-8 text-coral text-center">
+      <div className="p-8 text-danger-ink text-center">
         <AlertCircle className="h-6 w-6 mx-auto mb-2" />
         Failed to load Google settings
       </div>
@@ -216,7 +216,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
 
   if (accountsError) {
     return (
-      <div className="p-8 text-coral text-center">
+      <div className="p-8 text-danger-ink text-center">
         <AlertCircle className="h-6 w-6 mx-auto mb-2" />
         Failed to load Google accounts
       </div>
@@ -402,7 +402,7 @@ export function GoogleUnifiedSettings({ agencyId }: GoogleUnifiedSettingsProps) 
           />
 
           <ProductCard
-            icon={<ShoppingBag className="h-5 w-5 text-coral" />}
+            icon={<ShoppingBag className="h-5 w-5 text-danger-ink" />}
             label="Google Merchant Center"
             description="Connect the Merchant Center account used for shopping feeds and commerce operations."
             enabled={settings.googleMerchantCenter.enabled}
@@ -515,7 +515,7 @@ function ProductCard({
             <div className="space-y-3">
               {accounts.length === 0 ? (
                 <div className="rounded-[1rem] border border-coral/40 bg-coral/5 px-4 py-3">
-                  <p className="text-sm font-medium text-coral">No accounts available</p>
+                  <p className="text-sm font-medium text-danger-ink">No accounts available</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Connect your {label} account first to select assets.
                   </p>

@@ -25,11 +25,11 @@ const STATUS_STYLES: Record<AffiliateStatus, { label: string; className: string 
   },
   approved: {
     label: 'Approved',
-    className: 'border-teal/30 bg-teal/10 text-teal',
+    className: 'border-teal/30 bg-teal/10 text-success-ink',
   },
   rejected: {
     label: 'Rejected',
-    className: 'border-coral/30 bg-coral/10 text-coral',
+    className: 'border-coral/30 bg-coral/10 text-danger-ink',
   },
   disabled: {
     label: 'Disabled',
@@ -37,7 +37,7 @@ const STATUS_STYLES: Record<AffiliateStatus, { label: string; className: string 
   },
   active: {
     label: 'Active',
-    className: 'border-teal/30 bg-teal/10 text-teal',
+    className: 'border-teal/30 bg-teal/10 text-success-ink',
   },
   archived: {
     label: 'Archived',
@@ -49,11 +49,11 @@ const STATUS_STYLES: Record<AffiliateStatus, { label: string; className: string 
   },
   qualified: {
     label: 'Qualified',
-    className: 'border-teal/30 bg-teal/10 text-teal',
+    className: 'border-teal/30 bg-teal/10 text-success-ink',
   },
   disqualified: {
     label: 'Disqualified',
-    className: 'border-coral/30 bg-coral/10 text-coral',
+    className: 'border-coral/30 bg-coral/10 text-danger-ink',
   },
   pending: {
     label: 'Pending',
@@ -61,11 +61,11 @@ const STATUS_STYLES: Record<AffiliateStatus, { label: string; className: string 
   },
   paid: {
     label: 'Paid',
-    className: 'border-teal/30 bg-teal/10 text-teal',
+    className: 'border-teal/30 bg-teal/10 text-success-ink',
   },
   void: {
     label: 'Void',
-    className: 'border-coral/30 bg-coral/10 text-coral',
+    className: 'border-coral/30 bg-coral/10 text-danger-ink',
   },
   review_required: {
     label: 'Review Required',

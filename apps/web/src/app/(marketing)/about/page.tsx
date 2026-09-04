@@ -20,7 +20,7 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <span className="inline-block bg-coral/10 text-coral px-4 py-1.5 rounded-full font-mono text-sm font-medium mb-6">
+          <span className="inline-block bg-coral/10 text-danger-ink px-4 py-1.5 rounded-full font-mono text-sm font-medium mb-6">
             About AuthHub
           </span>
           <h1 className="font-dela text-4xl sm:text-5xl lg:text-6xl font-black text-ink mb-6 leading-tight">
@@ -62,17 +62,17 @@ export default function AboutPage() {
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="border-2 border-ink p-6 shadow-brutalist">
-              <span className="font-mono text-coral text-sm font-medium">01</span>
+              <span className="font-mono text-danger-ink text-sm font-medium">01</span>
               <h3 className="font-dela text-xl font-black text-ink mt-2 mb-3">Create a Request</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Select the platforms and permission levels you need. One request, multiple platforms.</p>
             </div>
             <div className="border-2 border-ink p-6 shadow-brutalist">
-              <span className="font-mono text-coral text-sm font-medium">02</span>
+              <span className="font-mono text-danger-ink text-sm font-medium">02</span>
               <h3 className="font-dela text-xl font-black text-ink mt-2 mb-3">Send a Link</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Your client gets one simple link — no screenshots, no confusion, no back-and-forth.</p>
             </div>
             <div className="border-2 border-ink p-6 shadow-brutalist">
-              <span className="font-mono text-coral text-sm font-medium">03</span>
+              <span className="font-mono text-danger-ink text-sm font-medium">03</span>
               <h3 className="font-dela text-xl font-black text-ink mt-2 mb-3">Get Access</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Client authorizes through a guided flow. You see real-time status — done, pending, or blocked.</p>
             </div>

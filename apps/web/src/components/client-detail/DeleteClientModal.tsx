@@ -168,7 +168,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
             {/* Warning icon */}
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-coral/20 rounded-full">
-                <AlertTriangle className="h-6 w-6 text-coral" />
+                <AlertTriangle className="h-6 w-6 text-danger-ink" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-ink">
@@ -182,7 +182,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
 
             {/* Warning message */}
             <div className="bg-coral/10 border border-coral rounded-lg p-4 mb-6">
-              <p className="text-sm text-coral">
+              <p className="text-sm text-danger-ink">
                 <strong>Warning:</strong> This action cannot be undone. All access requests and
                 connections associated with this client will be permanently deleted.
               </p>
@@ -210,7 +210,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
                 {/* Error message */}
                 {errorMessage && (
                   <div className="p-3 bg-coral/10 border border-coral rounded-lg">
-                    <p className="text-sm text-coral">{errorMessage}</p>
+                    <p className="text-sm text-danger-ink">{errorMessage}</p>
                   </div>
                 )}
 
@@ -241,7 +241,7 @@ export function DeleteClientModal({ client, onClose }: DeleteClientModalProps) {
             {success && (
               <div className="text-center py-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <CheckCircle2 className="h-6 w-6 text-teal" />
+                  <CheckCircle2 className="h-6 w-6 text-success-ink" />
                   <p className="text-lg font-semibold text-ink">Client Deleted</p>
                 </div>
                 <p className="text-sm text-muted-foreground">

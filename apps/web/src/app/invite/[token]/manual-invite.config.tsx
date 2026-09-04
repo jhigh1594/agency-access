@@ -462,7 +462,7 @@ export const pinterestManualConfig: ManualInviteConfig<PinterestManualData> = {
               'Agency Business ID'
             )
           : (
-              <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-3 text-sm text-coral">
+              <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-3 text-sm text-danger-ink">
                 Pinterest Business ID is missing. Contact your agency before continuing.
               </div>
             ),

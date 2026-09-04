@@ -56,7 +56,7 @@ export function InviteStickyRail({
                 : `${remainingCount} ${remainingCount === 1 ? 'platform remains' : 'platforms remain'} in this request.`}
             </p>
             {actionStatus?.disabledReason ? (
-              <p className="mt-2 text-xs font-medium text-coral">{actionStatus.disabledReason}</p>
+              <p className="mt-2 text-xs font-medium text-danger-ink">{actionStatus.disabledReason}</p>
             ) : null}
           </div>
 
@@ -84,7 +84,7 @@ export function InviteStickyRail({
             </p>
             <a
               href={supportHref}
-              className="shrink-0 text-sm font-semibold text-coral transition-colors hover:text-coral/90"
+              className="shrink-0 text-sm font-semibold text-danger-ink transition-colors hover:text-coral/90"
             >
               Visit support
             </a>

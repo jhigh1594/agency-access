@@ -98,7 +98,7 @@ export function PricingTierCard({
       {persona && (
         <div className={`mb-3 inline-block`}>
           <span className={`font-mono text-[10px] font-bold uppercase tracking-widest ${
-            isPopular ? 'text-coral' : 'text-gray-500'
+            isPopular ? 'text-danger-ink' : 'text-gray-500'
           }`}>
             {persona}
           </span>

@@ -118,7 +118,7 @@ export function ContactForm() {
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-teal/10 border-2 border-teal rounded-lg p-8 text-center"
           >
-            <CheckCircle className="w-16 h-16 text-teal mx-auto mb-4" />
+            <CheckCircle className="w-16 h-16 text-success-ink mx-auto mb-4" />
             <h3 className="font-display text-2xl font-bold text-ink mb-2">
               Message Sent!
             </h3>
@@ -148,7 +148,7 @@ export function ContactForm() {
                 htmlFor="name"
                 className="block text-sm font-semibold text-ink mb-1.5"
               >
-                Name <span className="text-coral">*</span>
+                Name <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -186,7 +186,7 @@ export function ContactForm() {
                 htmlFor="email"
                 className="block text-sm font-semibold text-ink mb-1.5"
               >
-                Email <span className="text-coral">*</span>
+                Email <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="email"
@@ -245,7 +245,7 @@ export function ContactForm() {
                 htmlFor="message"
                 className="block text-sm font-semibold text-ink mb-1.5"
               >
-                Message <span className="text-coral">*</span>
+                Message <span className="text-danger-ink">*</span>
               </label>
               <textarea
                 id="message"

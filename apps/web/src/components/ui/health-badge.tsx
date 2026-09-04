@@ -20,7 +20,7 @@ const HEALTH_CONFIG: Record<
 > = {
   healthy: {
     label: 'Healthy',
-    className: 'bg-teal/10 text-teal border-teal/30',
+    className: 'bg-teal/10 text-success-ink border-teal/30',
     icon: <CheckCircle2 className="h-4 w-4" />,
   },
   expiring: {
@@ -30,7 +30,7 @@ const HEALTH_CONFIG: Record<
   },
   expired: {
     label: 'Expired',
-    className: 'bg-coral/10 text-coral border-coral/30',
+    className: 'bg-coral/10 text-danger-ink border-coral/30',
     icon: <XCircle className="h-4 w-4" />,
   },
   unknown: {
@@ -78,11 +78,11 @@ export function ExpirationCountdown({
   const isUrgent = daysUntilExpiry <= 2;
 
   if (daysUntilExpiry < 0) {
-    return <span className="text-sm text-coral font-medium">Expired</span>;
+    return <span className="text-sm text-danger-ink font-medium">Expired</span>;
   }
 
   if (daysUntilExpiry === 0) {
-    return <span className="text-sm text-coral font-medium">Today</span>;
+    return <span className="text-sm text-danger-ink font-medium">Today</span>;
   }
 
   if (daysUntilExpiry === 1) {

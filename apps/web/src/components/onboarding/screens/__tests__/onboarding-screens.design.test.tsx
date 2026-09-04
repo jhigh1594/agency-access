@@ -45,7 +45,7 @@ describe('Platform Selection Screen - Static Design Validation', () => {
 
     it('should use coral for step indicator', () => {
       const componentCode = fs.readFileSync(COMPONENT_PATH, 'utf-8');
-      expect(componentCode).toMatch(/text-coral/);
+      expect(componentCode).toMatch(/text-danger-ink/);
     });
 
     it('should use ink for text', () => {
@@ -219,7 +219,7 @@ describe('Final Success Screen - Static Design Validation', () => {
 
     it('should use teal for success states', () => {
       const componentCode = fs.readFileSync(COMPONENT_PATH, 'utf-8');
-      expect(componentCode).toMatch(/text-teal/);
+      expect(componentCode).toMatch(/text-success-ink/);
     });
   });
 });

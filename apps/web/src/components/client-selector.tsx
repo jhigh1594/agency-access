@@ -175,7 +175,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
           onClick={() => setActiveTab('existing')}
           className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
             activeTab === 'existing'
-              ? 'text-coral border-coral bg-coral/10'
+              ? 'text-danger-ink border-coral bg-coral/10'
               : 'text-muted-foreground border-transparent hover:text-ink hover:bg-muted/20'
           }`}
         >
@@ -187,7 +187,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
           onClick={() => setActiveTab('new')}
           className={`flex-1 px-5 py-3.5 text-base font-medium transition-colors border-b-2 ${
             activeTab === 'new'
-              ? 'text-coral border-coral bg-coral/10'
+              ? 'text-danger-ink border-coral bg-coral/10'
               : 'text-muted-foreground border-transparent hover:text-ink hover:bg-muted/20'
           }`}
         >
@@ -215,7 +215,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
           {/* Loading State */}
           {loading && (
             <div className="flex items-center justify-center py-10" role="status" aria-live="polite">
-              <Loader2 className="h-6 w-6 animate-spin text-coral mr-2" />
+              <Loader2 className="h-6 w-6 animate-spin text-danger-ink mr-2" />
               <span className="text-muted-foreground text-base">Loading clients...</span>
             </div>
           )}
@@ -223,12 +223,12 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
           {/* Error State */}
           {error && !loading && (
             <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <AlertCircle className="h-9 w-9 text-coral" />
+              <AlertCircle className="h-9 w-9 text-danger-ink" />
               <p className="text-muted-foreground text-base">Failed to load clients</p>
               <button
                 type="button"
                 onClick={refreshClients}
-                className="px-5 py-2.5 text-coral hover:text-coral/90 text-base rounded-lg hover:bg-muted/20 transition-colors"
+                className="px-5 py-2.5 text-danger-ink hover:text-coral/90 text-base rounded-lg hover:bg-muted/20 transition-colors"
               >
                 Retry
               </button>
@@ -269,7 +269,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
                       <p className="text-xs text-muted-foreground mt-1">{client.email}</p>
                     </div>
                     {isSelected && (
-                      <Check className="h-5 w-5 text-coral" />
+                      <Check className="h-5 w-5 text-danger-ink" />
                     )}
                   </button>
                 );
@@ -294,15 +294,15 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
             {/* Error */}
             {error && (
               <div className="p-4 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-                <p className="text-base text-coral">{error}</p>
+                <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+                <p className="text-base text-danger-ink">{error}</p>
               </div>
             )}
 
             {/* Name */}
             <div>
               <label htmlFor="client-name" className="block text-sm font-medium text-foreground mb-1.5">
-                Client Name <span className="text-coral">*</span>
+                Client Name <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -317,7 +317,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
                 aria-describedby={formErrors.name ? 'name-error' : undefined}
               />
               {formErrors.name && (
-                <p id="name-error" className="mt-1.5 text-sm text-coral">
+                <p id="name-error" className="mt-1.5 text-sm text-danger-ink">
                   {formErrors.name}
                 </p>
               )}
@@ -326,7 +326,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
             {/* Company */}
             <div>
               <label htmlFor="client-company" className="block text-sm font-medium text-foreground mb-1.5">
-                Company <span className="text-coral">*</span>
+                Company <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -341,7 +341,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
                 aria-describedby={formErrors.company ? 'company-error' : undefined}
               />
               {formErrors.company && (
-                <p id="company-error" className="mt-1.5 text-sm text-coral">
+                <p id="company-error" className="mt-1.5 text-sm text-danger-ink">
                   {formErrors.company}
                 </p>
               )}
@@ -350,7 +350,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
             {/* Email */}
             <div>
               <label htmlFor="client-email" className="block text-sm font-medium text-foreground mb-1.5">
-                Email <span className="text-coral">*</span>
+                Email <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="email"
@@ -365,7 +365,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
                 aria-describedby={formErrors.email ? 'email-error' : undefined}
               />
               {formErrors.email && (
-                <p id="email-error" className="mt-1.5 text-sm text-coral">
+                <p id="email-error" className="mt-1.5 text-sm text-danger-ink">
                   {formErrors.email}
                 </p>
               )}

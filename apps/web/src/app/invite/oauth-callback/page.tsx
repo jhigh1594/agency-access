@@ -63,7 +63,7 @@ function ClientOAuthCallbackContent() {
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-lg border-2 border-black bg-card p-8 shadow-brutalist text-center">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-coral bg-coral/10">
-            <AlertCircle className="h-7 w-7 text-coral" />
+            <AlertCircle className="h-7 w-7 text-danger-ink" />
           </div>
           <h1 className="text-2xl font-semibold text-ink font-display">Authorization Failed</h1>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>

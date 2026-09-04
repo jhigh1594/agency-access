@@ -144,13 +144,13 @@ export function AffiliateProgramForm() {
       </div>
 
       {status === 'success' ? (
-        <p className="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-teal">
+        <p className="rounded-lg border border-teal/30 bg-teal/10 px-4 py-3 text-sm text-success-ink">
           Application received. We&apos;ll review it and follow up by email.
         </p>
       ) : null}
 
       {status === 'error' && error ? (
-        <p className="rounded-lg border border-coral/30 bg-coral/10 px-4 py-3 text-sm text-coral">
+        <p className="rounded-lg border border-coral/30 bg-coral/10 px-4 py-3 text-sm text-danger-ink">
           {error}
         </p>
       ) : null}

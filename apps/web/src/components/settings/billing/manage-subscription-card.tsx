@@ -69,7 +69,7 @@ export function ManageSubscriptionCard() {
       <section className="clean-card p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-coral/10 rounded-lg">
-            <Info className="h-5 w-5 text-coral" />
+            <Info className="h-5 w-5 text-danger-ink" />
           </div>
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">Manage Subscription</h2>
@@ -150,7 +150,7 @@ export function ManageSubscriptionCard() {
     <section id="manage-subscription-card" className="clean-card p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-coral/10 rounded-lg">
-          <Info className="h-5 w-5 text-coral" />
+          <Info className="h-5 w-5 text-danger-ink" />
         </div>
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">Manage Subscription</h2>
@@ -168,13 +168,13 @@ export function ManageSubscriptionCard() {
             className="mb-4"
           >
             <div className="flex items-center gap-2 p-3 bg-teal/10 border border-teal/20 rounded-lg">
-              <CheckCircle2 className="h-5 w-5 text-teal flex-shrink-0" />
-              <p className="text-sm text-teal">{successMessage}</p>
+              <CheckCircle2 className="h-5 w-5 text-success-ink flex-shrink-0" />
+              <p className="text-sm text-success-ink">{successMessage}</p>
               <button
                 onClick={clearSuccessMessage}
                 className="ml-auto p-1 hover:bg-teal/20 rounded"
               >
-                <X className="h-4 w-4 text-teal" />
+                <X className="h-4 w-4 text-success-ink" />
               </button>
             </div>
           </motion.div>
@@ -191,13 +191,13 @@ export function ManageSubscriptionCard() {
             className="mb-4"
           >
             <div className="flex items-center gap-2 p-3 bg-coral/10 border border-coral/20 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-coral flex-shrink-0" />
-              <p className="text-sm text-coral">{errorMessage}</p>
+              <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0" />
+              <p className="text-sm text-danger-ink">{errorMessage}</p>
               <button
                 onClick={clearErrorMessage}
                 className="ml-auto p-1 hover:bg-coral/20 rounded"
               >
-                <X className="h-4 w-4 text-coral" />
+                <X className="h-4 w-4 text-danger-ink" />
               </button>
             </div>
           </motion.div>
@@ -291,7 +291,7 @@ export function ManageSubscriptionCard() {
                             </span>
                           )}
                           {isUpgradeOption && !isCurrent && (
-                            <span className="text-xs px-2 py-0.5 bg-teal/10 text-teal rounded-full flex items-center gap-1">
+                            <span className="text-xs px-2 py-0.5 bg-teal/10 text-success-ink rounded-full flex items-center gap-1">
                               <ArrowUp className="h-3 w-3" />
                               Upgrade
                             </span>
@@ -368,8 +368,8 @@ export function ManageSubscriptionCard() {
                 {/* Summary */}
                 <div className="p-3 bg-coral/5 border border-coral/20 rounded-lg mb-4">
                   <div className="flex items-start gap-2">
-                    <Info className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-coral">
+                    <Info className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-danger-ink">
                       <p className="font-semibold mb-1">
                         {isUpgrade ? 'Upgrade' : 'Downgrade'} to {getPricingTierNameFromSubscriptionTier(selectedTier)}
                       </p>

@@ -62,7 +62,7 @@ export function SettingsTabs({ generalContent, billingContent, webhooksContent, 
               onMouseEnter={tab.id === 'billing' ? prefetchBilling : undefined}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative ${
                 currentTab === tab.id
-                  ? 'text-coral'
+                  ? 'text-danger-ink'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >

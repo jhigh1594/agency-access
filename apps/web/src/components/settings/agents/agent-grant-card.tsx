@@ -52,7 +52,7 @@ export function AgentGrantCard({ grant, onRevoke, onUpdate, isRevoking = false, 
             <p className="text-sm text-muted-foreground">Last used {formatDate(grant.lastUsedAt)}</p>
           </div>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${grant.state === 'active' ? 'bg-teal/10 text-teal' : 'bg-muted text-muted-foreground'}`}>{grant.state}</span>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${grant.state === 'active' ? 'bg-teal/10 text-success-ink' : 'bg-muted text-muted-foreground'}`}>{grant.state}</span>
       </div>
       <div className="mt-4 flex flex-wrap gap-2" aria-label="Granted permissions">
         {grant.permissions.map((permission) => <span key={permission} className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">{permission}</span>)}
@@ -83,7 +83,7 @@ export function AgentGrantCard({ grant, onRevoke, onUpdate, isRevoking = false, 
               </label>)}
             </div>
           </fieldset>
-          {permissions.length === 0 && <p role="alert" className="text-sm text-coral">Select at least one capability.</p>}
+          {permissions.length === 0 && <p role="alert" className="text-sm text-danger-ink">Select at least one capability.</p>}
           <div className="flex gap-2">
             <Button type="submit" size="sm" isLoading={isUpdating} disabled={isUpdating || permissions.length === 0 || displayName.trim().length === 0}>Save access</Button>
             <Button type="button" size="sm" variant="ghost" disabled={isUpdating} onClick={() => { setDisplayName(grant.displayName); setPermissions(grant.permissions); setManaging(false); }}>Cancel</Button>

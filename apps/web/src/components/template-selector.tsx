@@ -103,13 +103,13 @@ export function TemplateSelector({ agencyId, onSelect, selectedTemplate }: Templ
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-coral/20 rounded-lg">
-                    <LayoutTemplate className="h-5 w-5 text-coral" />
+                    <LayoutTemplate className="h-5 w-5 text-danger-ink" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-ink">{template.name}</h3>
                       {template.isDefault && (
-                        <Star className="h-4 w-4 text-coral fill-coral" />
+                        <Star className="h-4 w-4 text-danger-ink fill-coral" />
                       )}
                     </div>
                     {template.description && (

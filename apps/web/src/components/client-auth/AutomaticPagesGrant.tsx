@@ -137,7 +137,7 @@ export function AutomaticPagesGrant({
       </div>
 
       {localError && (
-        <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-4 text-coral">
+        <div className="bg-coral/10 border-2 border-coral/30 rounded-xl p-4 text-danger-ink">
           <p className="font-semibold">{localError}</p>
         </div>
       )}
@@ -189,7 +189,7 @@ export function AutomaticPagesGrant({
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     )}
                     {isFailed && (
-                      <AlertCircle className="w-4 h-4 text-coral" />
+                      <AlertCircle className="w-4 h-4 text-danger-ink" />
                     )}
                     {!isGranting && (
                       <button
@@ -206,7 +206,7 @@ export function AutomaticPagesGrant({
             )}
           </div>
           {hasFailed && (
-            <div className="mt-2 text-sm text-coral">
+            <div className="mt-2 text-sm text-danger-ink">
               Some pages failed to grant access. Please try again.
             </div>
           )}

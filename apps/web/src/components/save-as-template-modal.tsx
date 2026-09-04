@@ -171,7 +171,7 @@ export function SaveAsTemplateModal({
               <div className="p-6 space-y-4">
                 <div>
                   <label htmlFor="template-name" className="block text-sm font-medium text-foreground mb-1">
-                    Template Name <span className="text-coral">*</span>
+                    Template Name <span className="text-danger-ink">*</span>
                   </label>
                   <input
                     type="text"
@@ -202,7 +202,7 @@ export function SaveAsTemplateModal({
                     type="checkbox"
                     checked={isDefault}
                     onChange={(e) => setIsDefault(e.target.checked)}
-                    className="h-4 w-4 rounded border-border text-coral focus:ring-ring"
+                    className="h-4 w-4 rounded border-border text-danger-ink focus:ring-ring"
                   />
                   <span className="text-sm text-foreground">Set as default template</span>
                 </label>
@@ -211,7 +211,7 @@ export function SaveAsTemplateModal({
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-coral/10 border border-coral/30 rounded-lg text-sm text-coral"
+                    className="p-3 bg-coral/10 border border-coral/30 rounded-lg text-sm text-danger-ink"
                   >
                     {error}
                   </motion.div>

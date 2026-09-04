@@ -33,7 +33,7 @@ export function ShopifySubmissionPanel({ requested, submission }: ShopifySubmiss
     return (
       <div className="rounded-lg border border-coral/30 bg-coral/10 p-4">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-coral mt-0.5" />
+          <AlertCircle className="h-5 w-5 text-danger-ink mt-0.5" />
           <div className="w-full">
             <p className="text-sm font-semibold text-ink">Client Re-confirmation Needed</p>
             <p className="mt-1 text-sm text-muted-foreground">

@@ -25,7 +25,7 @@ export default function ContactPage() {
       <section className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal direction="up">
-            <span className="inline-block bg-coral/10 text-coral px-4 py-1.5 rounded-full font-mono text-sm font-medium mb-6">
+            <span className="inline-block bg-coral/10 text-danger-ink px-4 py-1.5 rounded-full font-mono text-sm font-medium mb-6">
               We&apos;d love to hear from you
             </span>
           </Reveal>
@@ -85,7 +85,7 @@ export default function ContactPage() {
                 </h3>
                 <p className="text-gray-600">
                   We offer simple tiered pricing based on the number of clients you onboard per month.
-                  Check out our <a href="/pricing" className="text-coral hover:underline">pricing page</a> for details.
+                  Check out our <a href="/pricing" className="text-danger-ink hover:underline">pricing page</a> for details.
                 </p>
               </div>
             </Reveal>
@@ -116,7 +116,7 @@ export default function ContactPage() {
             <div className="text-center mt-8">
               <a
                 href={getDocsUrl()}
-                className="inline-flex items-center gap-2 text-coral hover:text-coral/80 font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-danger-ink hover:text-coral/80 font-medium transition-colors"
               >
                 Visit the Help Center
                 <span>&rarr;</span>
