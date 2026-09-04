@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono, Dela_Gothic_One } from "next/font/google";
 import { DeferredAnalytics } from "@/components/deferred-analytics";
 import { RootProviders } from "./root-providers";
+import { AnimationGate } from "@/components/animation-gate";
 import "./globals.css";
 
 // Preconnect to Google Fonts for faster font loading
@@ -149,6 +150,7 @@ export default function RootLayout({
           }}
         />
         <RootProviders>{children}</RootProviders>
+        <AnimationGate />
         <DeferredAnalytics />
       </body>
     </html>

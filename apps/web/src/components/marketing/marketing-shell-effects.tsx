@@ -1,30 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-import {
-  ANIMATIONS_READY_CLASS,
-  ANIMATIONS_READY_EVENT,
-  HYDRATED_CLASS,
-  HYDRATED_EVENT,
-} from '@/lib/animation-lifecycle';
-
-export function MarketingShellEffects() {
-  useEffect(() => {
-    const frameId = window.requestAnimationFrame(() => {
-      document.documentElement.classList.add(HYDRATED_CLASS);
-      window.dispatchEvent(new Event(HYDRATED_EVENT));
-    });
-
-    const timeoutId = window.setTimeout(() => {
-      document.documentElement.classList.add(ANIMATIONS_READY_CLASS);
-      window.dispatchEvent(new Event(ANIMATIONS_READY_EVENT));
-    }, 100);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
-
-  return null;
-}
+/**
+ * Marketing-only alias for the app-wide AnimationGate.
+ * v2.0: the gate is mounted by the ROOT layout (src/app/layout.tsx) so
+ * authenticated route groups animate skeletons and gate reveals too.
+ * Kept as a re-export so existing marketing-layout usage and its
+ * motion test mocks stay valid. Do not add new logic here.
+ */
+export { AnimationGate as MarketingShellEffects } from '@/components/animation-gate';
