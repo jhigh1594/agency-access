@@ -62,7 +62,7 @@ export function GoogleInviteEmailInput({
         }`}
       />
       {showError && (
-        <p id="google-ads-email-error" className="text-xs text-coral" role="alert">
+        <p id="google-ads-email-error" className="text-xs text-danger-ink" role="alert">
           Please enter a valid email address.
         </p>
       )}

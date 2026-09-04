@@ -315,7 +315,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
             <div className="p-6">
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-teal/10 rounded-full mb-4">
-                  <CheckCircle2 className="h-8 w-8 text-teal" />
+                  <CheckCircle2 className="h-8 w-8 text-success-ink" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2 font-display">Access Request Created!</h3>
                 <p className="text-muted-foreground">Send this link to {client.name} to request platform access</p>
@@ -557,7 +557,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                 {/* Step 2: Access Level */}
                 <div className="px-6 py-4 border-b border-border">
                   <h3 className="text-sm font-semibold text-foreground mb-4">
-                    2. Select Access Level <span className="text-coral">*</span>
+                    2. Select Access Level <span className="text-danger-ink">*</span>
                   </h3>
 
                   <div className="space-y-3">
@@ -593,7 +593,7 @@ export function CreateRequestModal({ client, onClose, onSuccess }: CreateRequest
                 {/* Error message */}
                 {errorMessage && (
                   <div className="mx-6 mb-4 p-3 bg-coral/10 border border-coral/40 rounded-lg">
-                    <p className="text-sm text-coral">{errorMessage}</p>
+                    <p className="text-sm text-danger-ink">{errorMessage}</p>
                   </div>
                 )}
 

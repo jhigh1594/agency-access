@@ -28,7 +28,7 @@ export function TrustSection() {
               </div>
             </div>
 
-            <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-12 text-coral/10 font-dela text-6xl sm:text-8xl md:text-[12rem] leading-none select-none -z-0">&ldquo;</div>
+            <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-12 text-danger-ink/10 font-dela text-6xl sm:text-8xl md:text-[12rem] leading-none select-none -z-0">&ldquo;</div>
           </m.div>
         </div> */}
 

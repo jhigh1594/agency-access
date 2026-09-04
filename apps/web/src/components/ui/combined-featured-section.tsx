@@ -142,7 +142,7 @@ export default function CombinedFeaturedSection() {
             </div>
             <div className="text-right">
               <div className="text-[10px] font-mono text-gray-600 uppercase tracking-wider">Growth Rate</div>
-              <div className="font-dela text-lg sm:text-xl font-bold text-teal">+127%</div>
+              <div className="font-dela text-lg sm:text-xl font-bold text-success-ink">+127%</div>
             </div>
           </div>
           <h3 className="font-dela text-xl sm:text-2xl text-ink">
@@ -156,11 +156,11 @@ export default function CombinedFeaturedSection() {
           <div className="grid grid-cols-2 gap-3 my-4">
             <div className="p-3 border-2 border-black bg-coral/10 rounded-[0.5rem]">
               <div className="text-[10px] font-mono text-gray-600 mb-1 uppercase tracking-wider">Active OAuth Tokens</div>
-              <div className="font-dela text-2xl sm:text-3xl font-bold text-coral">400</div>
+              <div className="font-dela text-2xl sm:text-3xl font-bold text-danger-ink">400</div>
             </div>
             <div className="p-3 border-2 border-black bg-teal/10 rounded-[0.5rem]">
               <div className="text-[10px] font-mono text-gray-600 mb-1 uppercase tracking-wider">New Authorizations</div>
-              <div className="font-dela text-2xl sm:text-3xl font-bold text-teal">520</div>
+              <div className="font-dela text-2xl sm:text-3xl font-bold text-success-ink">520</div>
             </div>
           </div>
           
@@ -201,11 +201,11 @@ export default function CombinedFeaturedSection() {
           {/* Key stats */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="p-3 border-2 border-black bg-teal/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-teal mb-1">SOC 2</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-success-ink mb-1">SOC 2</div>
               <div className="text-[10px] sm:text-xs font-mono text-gray-600 uppercase tracking-wider">Type II Certified</div>
             </div>
             <div className="p-3 border-2 border-black bg-coral/10 rounded-[0.5rem]">
-              <div className="font-dela text-xl sm:text-2xl font-bold text-coral mb-1">99.9%</div>
+              <div className="font-dela text-xl sm:text-2xl font-bold text-danger-ink mb-1">99.9%</div>
               <div className="text-[10px] sm:text-xs font-mono text-gray-600 uppercase tracking-wider">Token Uptime</div>
             </div>
           </div>

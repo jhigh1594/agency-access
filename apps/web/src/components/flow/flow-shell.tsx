@@ -69,9 +69,9 @@ export function FlowShell({
                       className={[
                         'rounded-lg border px-3 py-2 text-xs font-semibold uppercase tracking-wide',
                         isActive
-                          ? 'border-coral bg-coral/10 text-coral'
+                          ? 'border-coral bg-coral/10 text-danger-ink'
                           : isComplete
-                          ? 'border-teal bg-teal/10 text-teal-90'
+                          ? 'border-teal bg-teal/10 text-success-ink'
                           : 'border-border bg-card text-muted-foreground',
                       ].join(' ')}
                     >

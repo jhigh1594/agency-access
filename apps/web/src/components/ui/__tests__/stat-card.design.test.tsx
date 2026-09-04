@@ -18,8 +18,9 @@ describe('StatCard - Static Design Validation', () => {
   it('should not reference non-existent color tokens (text-technical, text-success, text-error)', () => {
     const code = readComponent();
     expect(code).not.toContain('text-technical');
-    expect(code).not.toContain('text-success');
-    expect(code).not.toContain('text-error');
+    // bare legacy tokens only — text-success-ink is the sanctioned v2.0 token
+    expect(code).not.toMatch(/text-success(?![-\w])/);
+    expect(code).not.toMatch(/text-error(?![-\w])/);
   });
 
   it('should use text-foreground for stat value display', () => {
@@ -27,13 +28,13 @@ describe('StatCard - Static Design Validation', () => {
     expect(code).toMatch(/text-foreground/);
   });
 
-  it('should use text-teal for positive trends', () => {
+  it('should use text-success-ink for positive trends', () => {
     const code = readComponent();
-    expect(code).toMatch(/text-teal/);
+    expect(code).toMatch(/text-success-ink/);
   });
 
-  it('should use text-coral for negative trends', () => {
+  it('should use text-danger-ink for negative trends', () => {
     const code = readComponent();
-    expect(code).toMatch(/text-coral/);
+    expect(code).toMatch(/text-danger-ink/);
   });
 });

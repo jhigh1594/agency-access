@@ -160,7 +160,7 @@ const markdownComponents: Components = {
     <a
       {...props}
       href={href}
-      className="font-mono text-coral font-bold underline hover:no-underline"
+      className="font-mono text-danger-ink font-bold underline hover:no-underline"
       target={href?.startsWith('http') ? '_blank' : undefined}
       rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
     >

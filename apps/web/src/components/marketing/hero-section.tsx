@@ -48,7 +48,7 @@ export function HeroSection() {
               <h1 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.1] tracking-tight text-ink relative">
                 Send one link. Your client is live in{' '}
                 <span className="relative inline-block">
-                  <span className="text-coral">5 minutes.</span>
+                  <span className="text-danger-ink">5 minutes.</span>
                   <svg
                     className="absolute -bottom-2 md:-bottom-3 left-0 w-full"
                     viewBox="0 0 200 16"
@@ -146,7 +146,7 @@ export function HeroSection() {
             >
               <div className="animate-float-pillar">
                 <div className="flex items-center gap-3">
-                  <div className="bg-teal/20 p-2 rounded-lg border border-black text-teal">
+                  <div className="bg-teal/20 p-2 rounded-lg border border-black text-success-ink">
                     <TrendingUp className="w-6 h-6" />
                   </div>
                   <div className="text-ink">

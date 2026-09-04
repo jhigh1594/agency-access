@@ -48,7 +48,7 @@ export function CTASection() {
             {/* Headline */}
             <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mb-6 sm:mb-8 leading-[1.1] text-ink">
               Stop chasing access.{' '}
-              <span className="text-coral italic">Start scaling.</span>
+              <span className="text-danger-ink italic">Start scaling.</span>
             </h2>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-12 text-gray-600 leading-relaxed px-2 font-mono">
               Your clients authorize their platforms in 5 minutes. Your team starts work the same day.
@@ -81,19 +81,19 @@ export function CTASection() {
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-600 font-mono">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Check size={14} className="text-coral sm:hidden" />
-                <Check size={16} className="text-coral hidden sm:block" />
+                <Check size={14} className="text-danger-ink sm:hidden" />
+                <Check size={16} className="text-danger-ink hidden sm:block" />
                 <span className="hidden xs:inline">No credit card required</span>
                 <span className="xs:hidden">No card required</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Check size={14} className="text-coral sm:hidden" />
-                <Check size={16} className="text-coral hidden sm:block" />
+                <Check size={14} className="text-danger-ink sm:hidden" />
+                <Check size={16} className="text-danger-ink hidden sm:block" />
                 <span>Unlimited clients</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Check size={14} className="text-coral sm:hidden" />
-                <Check size={16} className="text-coral hidden sm:block" />
+                <Check size={14} className="text-danger-ink sm:hidden" />
+                <Check size={16} className="text-danger-ink hidden sm:block" />
                 <span>Cancel anytime</span>
               </div>
             </div>

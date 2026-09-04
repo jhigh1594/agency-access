@@ -315,7 +315,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-lg border border-coral/30 bg-card p-6 text-center">
-          <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
+          <AlertCircle className="h-8 w-8 text-danger-ink mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">{error}</p>
           <div className="mt-4">
             <Button variant="secondary" onClick={() => router.push('/dashboard')}>
@@ -400,7 +400,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
                 <button
                   type="button"
                   onClick={() => router.push(profileEditHref as any)}
-                  className="ml-1 font-semibold text-coral hover:text-coral/90"
+                  className="ml-1 font-semibold text-danger-ink hover:text-coral/90"
                 >
                   Edit client profile
                 </button>
@@ -452,7 +452,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
                   <button
                     type="button"
                     onClick={() => removeIntakeField(field.id)}
-                    className="inline-flex items-center gap-1 text-sm text-coral hover:text-coral/90"
+                    className="inline-flex items-center gap-1 text-sm text-danger-ink hover:text-coral/90"
                   >
                     <Trash2 className="h-4 w-4" />
                     Remove
@@ -512,13 +512,13 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
         </div>
 
         {error && (
-          <div className="rounded-lg border border-coral/30 bg-coral/10 p-3 text-sm text-coral">
+          <div className="rounded-lg border border-coral/30 bg-coral/10 p-3 text-sm text-danger-ink">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="rounded-lg border border-teal/30 bg-teal/10 p-3 text-sm text-teal-90">
+          <div className="rounded-lg border border-teal/30 bg-teal/10 p-3 text-sm text-success-ink">
             {success}
           </div>
         )}

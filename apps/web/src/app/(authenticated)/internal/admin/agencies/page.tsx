@@ -26,7 +26,7 @@ export default function InternalAdminAgenciesPage() {
   if (isLoading) {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-coral" />
+        <Loader2 className="h-8 w-8 animate-spin text-danger-ink" />
       </div>
     );
   }
@@ -36,7 +36,7 @@ export default function InternalAdminAgenciesPage() {
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-6xl mx-auto clean-card p-6 border border-coral/40 bg-coral/5">
           <h1 className="font-display text-2xl font-semibold text-ink">Agency Monitoring</h1>
-          <p className="text-sm text-coral mt-2">
+          <p className="text-sm text-danger-ink mt-2">
             {error instanceof Error ? error.message : 'Unable to load agencies.'}
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function InternalAdminAgenciesPage() {
           </div>
           <nav className="flex items-center gap-3 text-sm">
             <a href="/internal/admin" className="text-muted-foreground hover:text-foreground">Overview</a>
-            <a href="/internal/admin/agencies" className="text-coral font-semibold">Agencies</a>
+            <a href="/internal/admin/agencies" className="text-danger-ink font-semibold">Agencies</a>
             <a href="/internal/admin/subscriptions" className="text-muted-foreground hover:text-foreground">Subscriptions</a>
             <a href="/internal/admin/webhooks" className="text-muted-foreground hover:text-foreground">Webhooks</a>
             <a href="/internal/admin/affiliates" className="text-muted-foreground hover:text-foreground">Affiliates</a>
@@ -123,7 +123,7 @@ export default function InternalAdminAgenciesPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedAgencyId(agency.id)}
-                          className="text-coral hover:text-coral/80 font-semibold"
+                          className="text-danger-ink hover:text-coral/80 font-semibold"
                         >
                           View
                         </button>

@@ -253,7 +253,7 @@ export function PainSection() {
               <br />
               ONBOARDING
               <br />
-              <span className="text-coral">
+              <span className="text-danger-ink">
                 IS BROKEN
               </span>
             </h2>

@@ -126,7 +126,7 @@ export function HeroCopyRewriteProblemSection() {
             <h2 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl !leading-[1.05] tracking-tight mb-6 text-ink">
               THE ACCESS STEP
               <br />
-              <span className="text-coral">SLOWS EVERYTHING DOWN</span>
+              <span className="text-danger-ink">SLOWS EVERYTHING DOWN</span>
             </h2>
 
             <p className="font-sans text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed text-gray-600">
@@ -134,7 +134,7 @@ export function HeroCopyRewriteProblemSection() {
               is ready, and then you spend three days chasing platform access
               before you can start any of it.
             </p>
-            <p className="font-mono text-sm sm:text-base font-bold text-coral mt-2">
+            <p className="font-mono text-sm sm:text-base font-bold text-danger-ink mt-2">
               The problem is not demand. The problem is the handoff.
             </p>
           </div>

@@ -195,11 +195,11 @@ function AccessRequestWizardContent() {
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="relative z-10 h-9 w-9 rounded-full bg-coral/20 border-4 border-white flex items-center justify-center">
-                      <span className="text-sm font-semibold text-coral/90">1</span>
+                      <span className="text-sm font-semibold text-danger-ink/90">1</span>
                     </div>
                     <div>
                       <label className="block text-base font-semibold text-ink">
-                        Select Client <span className="text-coral">*</span>
+                        Select Client <span className="text-danger-ink">*</span>
                       </label>
                       <p className="text-sm text-muted-foreground">Who is this access request for?</p>
                     </div>
@@ -292,8 +292,8 @@ function AccessRequestWizardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 p-4 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-3"
               >
-                <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-                <p className="text-base text-coral">{state.error}</p>
+                <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+                <p className="text-base text-danger-ink">{state.error}</p>
               </m.div>
             )}
 
@@ -340,7 +340,7 @@ function AccessRequestWizardContent() {
                   Select Platforms
                 </label>
                 {platformCount > 0 && (
-                  <span className="text-sm text-coral font-medium">
+                  <span className="text-sm text-danger-ink font-medium">
                     {platformCount} selected
                   </span>
                 )}
@@ -359,7 +359,7 @@ function AccessRequestWizardContent() {
               {platformConnections.filter((p: any) => p.connected).length > 0 && (
                 <p className="mt-3 text-xs text-muted-foreground">
                   Only your connected platforms are shown.{' '}
-                  <a href="/connections" className="text-coral hover:text-coral/90 font-medium">
+                  <a href="/connections" className="text-danger-ink hover:text-coral/90 font-medium">
                     Connect more platforms
                   </a>{' '}
                   to include them in access requests.
@@ -374,8 +374,8 @@ function AccessRequestWizardContent() {
               animate={{ opacity: 1, y: 0 }}
               className="mt-6 p-3 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-2"
               >
-              <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-coral">{state.error}</p>
+              <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-danger-ink">{state.error}</p>
               </m.div>
             )}
 
@@ -422,7 +422,7 @@ function AccessRequestWizardContent() {
                   onClick={() => setCustomizeTab('fields')}
                   className={`pb-3 px-1 text-sm font-medium transition-colors ${
                     customizeTab === 'fields'
-                      ? 'text-coral border-b-2 border-coral'
+                      ? 'text-danger-ink border-b-2 border-coral'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -433,7 +433,7 @@ function AccessRequestWizardContent() {
                   onClick={() => setCustomizeTab('branding')}
                   className={`pb-3 px-1 text-sm font-medium transition-colors ${
                     customizeTab === 'branding'
-                      ? 'text-coral border-b-2 border-coral'
+                      ? 'text-danger-ink border-b-2 border-coral'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -485,7 +485,7 @@ function AccessRequestWizardContent() {
                     onChange={(e) =>
               updateIntakeField(field.id, { required: e.target.checked })
                     }
-                    className="h-4 w-4 rounded border-border text-coral focus:ring-ring"
+                    className="h-4 w-4 rounded border-border text-danger-ink focus:ring-ring"
                   />
                   Required
                 </label>
@@ -494,7 +494,7 @@ function AccessRequestWizardContent() {
                 <button
                   type="button"
                   onClick={() => removeIntakeField(field.id)}
-                  className="p-2 text-coral hover:bg-coral/10 rounded-lg transition-colors"
+                  className="p-2 text-danger-ink hover:bg-coral/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -615,8 +615,8 @@ function AccessRequestWizardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 p-3 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-2"
               >
-                <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-coral">{state.error}</p>
+                <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-danger-ink">{state.error}</p>
               </m.div>
             )}
 
@@ -682,7 +682,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
                     >
                       Edit
                     </button>
@@ -692,7 +692,7 @@ function AccessRequestWizardContent() {
                   <div className="p-4 flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <div className="h-10 w-10 rounded-full bg-teal/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-5 w-5 text-teal" />
+                        <Check className="h-5 w-5 text-success-ink" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Platforms</p>
@@ -715,7 +715,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
                     >
                       Edit
                     </button>
@@ -741,11 +741,11 @@ function AccessRequestWizardContent() {
                                   <span className="text-sm text-foreground">{PLATFORM_NAMES[platformGroup as keyof typeof PLATFORM_NAMES] || platformGroup}:</span>
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                                     level === 'admin'
-                                      ? 'bg-coral/20 text-coral'
+                                      ? 'bg-coral/20 text-danger-ink'
                                       : level === 'standard'
                                       ? 'bg-muted/30 text-foreground'
                                       : level === 'read_only'
-                                      ? 'bg-teal/20 text-teal-90'
+                                      ? 'bg-teal/20 text-success-ink'
                                       : 'bg-accent text-foreground'
                                   }`}>
                                     {ACCESS_LEVEL_DESCRIPTIONS[level]?.title.replace(' Access', '') ?? level}
@@ -760,7 +760,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
                     >
                       Edit
                     </button>
@@ -785,7 +785,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(3)}
-                      className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
                     >
                       Edit
                     </button>
@@ -836,7 +836,7 @@ function AccessRequestWizardContent() {
                       <button
                         type="button"
                         onClick={() => setStep(3)}
-                        className="text-xs font-semibold uppercase tracking-wide text-coral hover:text-coral/90"
+                        className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
                       >
                         Edit
                       </button>
@@ -851,8 +851,8 @@ function AccessRequestWizardContent() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-3 bg-coral/10 border border-coral/30 rounded-lg flex items-start gap-2"
                   >
-                    <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-coral">{state.error}</p>
+                    <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-danger-ink">{state.error}</p>
                   </m.div>
                 )}
 
@@ -871,7 +871,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setIsSaveTemplateModalOpen(true)}
-                      className="px-4 py-2.5 text-coral bg-coral/10 hover:bg-coral/20 rounded-lg transition-colors flex items-center gap-2"
+                      className="px-4 py-2.5 text-danger-ink bg-coral/10 hover:bg-coral/20 rounded-lg transition-colors flex items-center gap-2"
                       disabled={state.submitting}
                     >
                       <Save className="h-4 w-4" />

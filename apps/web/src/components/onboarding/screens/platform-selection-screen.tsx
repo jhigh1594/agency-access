@@ -100,7 +100,7 @@ export function PlatformSelectionScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-coral mb-2">Step 3 of 6</div>
+        <div className="text-sm font-semibold text-danger-ink mb-2">Step 3 of 6</div>
         <h2 className="text-3xl font-bold text-ink mb-2">Choose Platforms</h2>
         <p className="text-ink/60">
           Which platforms does this client need to authorize?
@@ -136,7 +136,7 @@ export function PlatformSelectionScreen({
         {/* What Happens Next - Brutalist Info Card */}
         <div className="mt-6 p-5 bg-paper border-2 border-black rounded-lg">
           <h3 className="font-semibold text-ink mb-3 flex items-center gap-2">
-            <span className="text-teal">→</span> What happens next?
+            <span className="text-success-ink">→</span> What happens next?
           </h3>
           <ol className="text-sm text-ink/80 space-y-2 list-decimal list-inside">
             <li>We'll generate a unique access link for your client</li>

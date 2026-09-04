@@ -72,7 +72,7 @@ export default function InternalAdminWebhooksPage() {
   if (isLoading) {
     return (
       <div className="flex-1 bg-paper p-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-coral" />
+        <Loader2 className="h-8 w-8 animate-spin text-danger-ink" />
       </div>
     );
   }
@@ -82,7 +82,7 @@ export default function InternalAdminWebhooksPage() {
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-6xl mx-auto clean-card p-6 border border-coral/40 bg-coral/5">
           <h1 className="font-display text-2xl font-semibold text-ink">Webhook Support</h1>
-          <p className="text-sm text-coral mt-2">
+          <p className="text-sm text-danger-ink mt-2">
             {error instanceof Error ? error.message : 'Unable to load webhook support data.'}
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function InternalAdminWebhooksPage() {
             <a href="/internal/admin" className="text-muted-foreground hover:text-foreground">Overview</a>
             <a href="/internal/admin/agencies" className="text-muted-foreground hover:text-foreground">Agencies</a>
             <a href="/internal/admin/subscriptions" className="text-muted-foreground hover:text-foreground">Subscriptions</a>
-            <a href="/internal/admin/webhooks" className="text-coral font-semibold">Webhooks</a>
+            <a href="/internal/admin/webhooks" className="text-danger-ink font-semibold">Webhooks</a>
             <a href="/internal/admin/affiliates" className="text-muted-foreground hover:text-foreground">Affiliates</a>
           </nav>
         </header>
@@ -191,7 +191,7 @@ export default function InternalAdminWebhooksPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedAgencyId(endpoint.agencyId)}
-                          className="text-coral hover:text-coral/80 font-semibold"
+                          className="text-danger-ink hover:text-coral/80 font-semibold"
                         >
                           Inspect
                         </button>
@@ -217,7 +217,7 @@ export default function InternalAdminWebhooksPage() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mx-auto" />
             </div>
           ) : detailError ? (
-            <div className="rounded-2xl border border-coral/30 bg-coral/5 p-5 text-sm text-coral">
+            <div className="rounded-2xl border border-coral/30 bg-coral/5 p-5 text-sm text-danger-ink">
               {detailError instanceof Error ? detailError.message : 'Unable to load webhook detail.'}
             </div>
           ) : (
@@ -225,7 +225,7 @@ export default function InternalAdminWebhooksPage() {
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.9fr)]">
                 <div className="rounded-2xl border border-border bg-card/60 p-5">
                   <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                    <Webhook className="h-4 w-4 text-coral" />
+                    <Webhook className="h-4 w-4 text-danger-ink" />
                     Endpoint summary
                   </div>
                   <dl className="mt-4 grid gap-4 sm:grid-cols-2 text-sm">
@@ -252,7 +252,7 @@ export default function InternalAdminWebhooksPage() {
 
                 <div className="rounded-2xl border border-border bg-gradient-to-br from-coral/10 via-paper to-warning/10 p-5">
                   <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                    <AlertTriangle className="h-4 w-4 text-coral" />
+                    <AlertTriangle className="h-4 w-4 text-danger-ink" />
                     Support triage
                   </div>
                   <ul className="mt-4 space-y-2 text-sm text-muted-foreground">

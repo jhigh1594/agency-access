@@ -214,7 +214,7 @@ export function OpinionatedInput({
       {/* Label */}
       <label className="block text-sm font-semibold text-foreground mb-1.5">
         {label}
-        {required && <span className="text-coral ml-1">*</span>}
+        {required && <span className="text-danger-ink ml-1">*</span>}
       </label>
 
       {/* Input Container */}
@@ -257,7 +257,7 @@ export function OpinionatedInput({
                 exit={{ scale: 0, rotate: 180 }}
                 transition={{ duration: 0.2 }}
               >
-                <AlertCircle className="w-5 h-5 text-coral" />
+                <AlertCircle className="w-5 h-5 text-danger-ink" />
               </motion.div>
             )}
             {isValid && value.length > 0 && !showError && (
@@ -268,7 +268,7 @@ export function OpinionatedInput({
                 exit={{ scale: 0, rotate: 180 }}
                 transition={{ duration: 0.2 }}
               >
-                <Check className="w-5 h-5 text-teal" />
+                <Check className="w-5 h-5 text-success-ink" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -292,7 +292,7 @@ export function OpinionatedInput({
                 className={`
                   w-full px-4 py-3 text-left text-sm transition-colors
                   ${index === highlightedIndex
-                    ? 'bg-coral/10 text-coral'
+                    ? 'bg-coral/10 text-danger-ink'
                     : 'hover:bg-coral/10 text-foreground'
                   }
                 `}
@@ -315,7 +315,7 @@ export function OpinionatedInput({
           <motion.p
             key="error"
             id={`${label}-error`}
-            className="mt-1.5 text-sm text-coral flex items-start gap-1.5"
+            className="mt-1.5 text-sm text-danger-ink flex items-start gap-1.5"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}

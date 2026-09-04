@@ -104,7 +104,7 @@ export function TeamInviteScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-coral mb-2">Step 5 of 6 (Optional)</div>
+        <div className="text-sm font-semibold text-danger-ink mb-2">Step 5 of 6 (Optional)</div>
         <h2 className="text-3xl font-bold text-ink mb-2">Want to invite your team?</h2>
         <p className="text-muted-foreground">
           Team members can help manage access requests. You can also do this later from Settings.
@@ -115,7 +115,7 @@ export function TeamInviteScreen({
         {/* Add Team Member Input */}
         <div className="bg-paper border-2 border-dashed border-border rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Plus className="w-5 h-5 text-coral" />
+            <Plus className="w-5 h-5 text-danger-ink" />
             <h3 className="font-semibold text-ink">Add team member</h3>
           </div>
 
@@ -186,7 +186,7 @@ export function TeamInviteScreen({
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-coral/15 rounded-full flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-coral" />
+                    <Mail className="w-5 h-5 text-danger-ink" />
                   </div>
                   <div>
                     <div className="font-medium text-ink">{invite.email}</div>

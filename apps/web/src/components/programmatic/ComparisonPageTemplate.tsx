@@ -247,7 +247,7 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
             <div className="grid md:grid-cols-3 gap-6 text-center">
               {ourProduct.differentiators.slice(0, 3).map((diff, i) => (
                 <div key={i} className="p-4">
-                  <div className="text-coral font-bold text-lg mb-2">{diff}</div>
+                  <div className="text-danger-ink font-bold text-lg mb-2">{diff}</div>
                   <p className="font-mono text-sm text-white/80">
                     {getDifferentiatorDescription(diff)}
                   </p>
@@ -465,7 +465,7 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
                           <td className="px-4 py-3 text-center border-r border-gray-300">
                             {typeof feature.competitor === "boolean" ? (
                               feature.competitor ? (
-                                <Check size={16} className="text-teal mx-auto" />
+                                <Check size={16} className="text-success-ink mx-auto" />
                               ) : (
                                 <X size={16} className="text-red mx-auto" />
                               )
@@ -476,7 +476,7 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
                           <td className="px-4 py-3 text-center">
                             {typeof feature.authhub === "boolean" ? (
                               feature.authhub ? (
-                                <Check size={16} className="text-teal mx-auto" />
+                                <Check size={16} className="text-success-ink mx-auto" />
                               ) : (
                                 <X size={16} className="text-red mx-auto" />
                               )
@@ -514,7 +514,7 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
 
             {/* Switch to AuthHub */}
             <div className="border-[3px] border-coral p-6 rounded-none shadow-brutalist-lg bg-coral/5">
-              <h3 className="font-dela text-xl text-coral mb-4">
+              <h3 className="font-dela text-xl text-danger-ink mb-4">
                 Switch to {ourProduct.name} If
               </h3>
               <ul className="space-y-2 font-mono text-sm text-foreground">
@@ -555,7 +555,7 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
 
               <div className="mt-10 p-4 bg-ink/5 border border-ink/10 inline-flex items-center gap-3">
                 <div className="w-8 h-8 bg-teal/20 rounded-full flex items-center justify-center">
-                  <Check size={16} className="text-teal" />
+                  <Check size={16} className="text-success-ink" />
                 </div>
                 <p className="font-mono text-sm text-ink/80">
                   <span className="font-semibold">Free migration support:</span> Our team walks you through the switch during onboarding.
@@ -581,14 +581,14 @@ export function ComparisonPageTemplate({ page }: ComparisonPageTemplateProps) {
                   </blockquote>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-coral/20 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-coral">{testimonial.author[0]}</span>
+                      <span className="font-bold text-danger-ink">{testimonial.author[0]}</span>
                     </div>
                     <div>
                       <p className="font-bold text-ink text-sm">{testimonial.author}</p>
                       <p className="text-muted-foreground text-xs font-mono">
                         {testimonial.role} at {testimonial.company}
                         {testimonial.previousTool && (
-                          <span className="text-coral"> • {testimonial.previousTool}</span>
+                          <span className="text-danger-ink"> • {testimonial.previousTool}</span>
                         )}
                       </p>
                     </div>

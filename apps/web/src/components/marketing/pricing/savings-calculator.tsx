@@ -85,7 +85,7 @@ export function SavingsCalculator() {
             </div>
             <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mb-4 sm:mb-6 text-ink">
               Calculate your{' '}
-              <span className="text-coral italic">annual savings</span>
+              <span className="text-danger-ink italic">annual savings</span>
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto font-mono">
               See how much time and money your team could save by automating client OAuth onboarding.
@@ -143,7 +143,7 @@ export function SavingsCalculator() {
                   />
                   <div className="flex justify-between font-mono text-xs text-gray-600">
                     <span>1 hour</span>
-                    <span className="font-bold text-coral">{hoursPerClient} hours</span>
+                    <span className="font-bold text-danger-ink">{hoursPerClient} hours</span>
                     <span>8 hours</span>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export function SavingsCalculator() {
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                    className="font-dela text-5xl sm:text-6xl text-coral mb-2"
+                    className="font-dela text-5xl sm:text-6xl text-danger-ink mb-2"
                   >
                     ${savings.annualMoneySaved.toLocaleString()}
                   </m.div>
@@ -260,7 +260,7 @@ export function SavingsCalculator() {
                         key={savings.weeksReclaimed}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="font-dela text-2xl text-teal"
+                        className="font-dela text-2xl text-success-ink"
                       >
                         ≈ {savings.weeksReclaimed} weeks
                       </m.span>
@@ -320,7 +320,7 @@ export function SavingsCalculator() {
             className="mt-12 text-center max-w-2xl mx-auto"
           >
             <div className="inline-flex items-center gap-2 bg-paper border-2 border-black px-4 py-3 shadow-brutalist-sm">
-              <Check size={16} className="text-coral" />
+              <Check size={16} className="text-danger-ink" />
               <span className="font-mono text-xs text-gray-700">
                 Conservative baseline calculation. Actual savings often 2-3× higher when accounting for full onboarding overhead.
               </span>

@@ -132,7 +132,7 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Name <span className="text-coral">*</span>
+                Name <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -146,7 +146,7 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
             {/* Company */}
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Company <span className="text-coral">*</span>
+                Company <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -189,15 +189,15 @@ export function EditClientModal({ client, onClose }: EditClientModalProps) {
             {/* Error message */}
             {errorMessage && (
               <div className="p-3 bg-coral/10 border border-coral rounded-lg">
-                <p className="text-sm text-coral">{errorMessage}</p>
+                <p className="text-sm text-danger-ink">{errorMessage}</p>
               </div>
             )}
 
             {/* Success message */}
             {success && (
               <div className="p-3 bg-teal/10 border border-teal rounded-lg flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-teal flex-shrink-0" />
-                <p className="text-sm text-teal">Client updated successfully</p>
+                <CheckCircle2 className="h-4 w-4 text-success-ink flex-shrink-0" />
+                <p className="text-sm text-success-ink">Client updated successfully</p>
               </div>
             )}
 

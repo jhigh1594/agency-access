@@ -99,7 +99,7 @@ export function MetricBanner() {
                 className="text-center h-full"
               >
                 <div className="border-2 border-black bg-white p-6 sm:p-8 shadow-brutalist h-full flex flex-col justify-center">
-                  <div className="font-dela text-4xl sm:text-5xl lg:text-6xl text-coral mb-2">
+                  <div className="font-dela text-4xl sm:text-5xl lg:text-6xl text-danger-ink mb-2">
                     {metric.displayValue ? (
                       <span>{metric.displayValue}</span>
                     ) : (

@@ -44,7 +44,7 @@ export function FinalCTASection() {
               {/* Headline */}
               <h2 className="font-dela text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mb-6 sm:mb-8 leading-[1.1] text-ink">
                 Ready to reclaim{' '}
-                <span className="text-coral italic">your time?</span>
+                <span className="text-danger-ink italic">your time?</span>
               </h2>
 
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-12 text-gray-600 leading-relaxed px-2 font-mono max-w-2xl mx-auto">
@@ -85,15 +85,15 @@ export function FinalCTASection() {
               {/* Trust Badges */}
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-600 font-mono">
                 <div className="flex items-center gap-2">
-                  <Check size={16} className="text-coral" />
+                  <Check size={16} className="text-danger-ink" />
                   <span>14-day free trial</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check size={16} className="text-coral" />
+                  <Check size={16} className="text-danger-ink" />
                   <span>No credit card required</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check size={16} className="text-coral" />
+                  <Check size={16} className="text-danger-ink" />
                   <span>Cancel anytime</span>
                 </div>
               </div>

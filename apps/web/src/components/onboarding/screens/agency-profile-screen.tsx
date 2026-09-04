@@ -85,7 +85,7 @@ export function AgencyProfileScreen({
     >
       {/* Step Header */}
       <div className="mb-8">
-        <div className="text-sm font-semibold text-coral mb-2">Step 1 of 6</div>
+        <div className="text-sm font-semibold text-danger-ink mb-2">Step 1 of 6</div>
         <h2 className="text-3xl font-bold text-ink mb-2">Tell us about your agency</h2>
         <p className="text-muted-foreground">We'll get you set up in seconds.</p>
       </div>
@@ -110,7 +110,7 @@ export function AgencyProfileScreen({
         <div className="p-4 bg-teal/10 border border-teal/30 rounded-lg">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-teal mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-success-ink mt-0.5 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -122,10 +122,10 @@ export function AgencyProfileScreen({
             </svg>
             <div className="flex-1">
               <div className="font-semibold text-ink mb-1">Timezone detected</div>
-              <div className="text-sm text-teal">
+              <div className="text-sm text-success-ink">
                 Your timezone is set to <span className="font-mono bg-card px-1.5 py-0.5 rounded">{localTimezone}</span>
               </div>
-              <div className="text-xs text-teal mt-1">
+              <div className="text-xs text-success-ink mt-1">
                 You can customize this in Settings later
               </div>
             </div>
@@ -157,7 +157,7 @@ export function AgencyProfileScreen({
         <div className="p-4 bg-coral/10 border border-coral/30 rounded-lg">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-coral mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-danger-ink mt-0.5 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -185,7 +185,7 @@ export function AgencyProfileScreen({
               { label: 'Team Roles', value: 'Admin, Member, Viewer' },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 text-sm">
-                <svg className="w-4 h-4 text-teal flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success-ink flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"

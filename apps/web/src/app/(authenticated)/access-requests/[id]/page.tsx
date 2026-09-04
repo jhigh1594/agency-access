@@ -137,7 +137,7 @@ export default function AccessRequestDetailPage({ params }: AccessRequestDetailP
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-lg border border-coral/40 bg-card p-8 text-center shadow-sm">
-          <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
+          <AlertCircle className="h-8 w-8 text-danger-ink mx-auto mb-3" />
           <h1 className="text-2xl font-semibold font-display text-ink">Request Not Found</h1>
           <p className="mt-2 text-sm text-muted-foreground">{error || 'Could not load request.'}</p>
         </div>

@@ -105,7 +105,7 @@ export function HeroCopyRewriteHowItWorksSection() {
               <h2 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight mb-4 sm:mb-6 text-ink leading-[1.1]">
                 From inbox chaos
                 <br />
-                <span className="text-coral">to one repeatable workflow</span>
+                <span className="text-danger-ink">to one repeatable workflow</span>
               </h2>
 
               <p className="font-mono text-base sm:text-lg md:text-xl max-w-3xl mx-auto text-gray-600 leading-relaxed">
@@ -124,11 +124,11 @@ export function HeroCopyRewriteHowItWorksSection() {
                     key={index}
                     className="flex items-center gap-4 mx-8 text-paper font-dela text-xl sm:text-2xl"
                   >
-                    <span className="text-coral">Separate setup steps</span>
-                    <ArrowRight size={16} className="text-coral" />
+                    <span className="text-danger-ink">Separate setup steps</span>
+                    <ArrowRight size={16} className="text-danger-ink" />
                     <span className="font-mono text-sm">becomes</span>
-                    <ArrowRight size={16} className="text-coral" />
-                    <span className="text-coral">one guided request</span>
+                    <ArrowRight size={16} className="text-danger-ink" />
+                    <span className="text-danger-ink">one guided request</span>
                   </div>
                 ))}
               </div>

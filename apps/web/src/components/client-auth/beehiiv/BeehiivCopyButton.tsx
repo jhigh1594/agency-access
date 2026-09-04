@@ -32,7 +32,7 @@ export function BeehiivCopyButton({
     'hover:bg-muted/20 hover:border-border',
     'active:bg-muted/30',
     'transition-all duration-200',
-    copied ? 'border-teal bg-teal/10 text-teal-90' : '',
+    copied ? 'border-teal bg-teal/10 text-success-ink' : '',
     className,
   ].filter(Boolean).join(' ');
 
@@ -58,7 +58,7 @@ export function BeehiivCopyButton({
       {/* Optional tooltip/subtle confirmation below button */}
       {copied && (
         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-          <span className="text-xs text-teal font-medium">
+          <span className="text-xs text-success-ink font-medium">
             Copied to clipboard!
           </span>
         </div>

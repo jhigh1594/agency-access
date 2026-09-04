@@ -80,7 +80,7 @@ describe('EditClientModal - Static Design Validation', () => {
         'utf-8'
       );
 
-      expect(componentCode).toMatch(/text-teal[^/]/);
+      expect(componentCode).toMatch(/text-success-ink[^/]/);
     });
   });
 });

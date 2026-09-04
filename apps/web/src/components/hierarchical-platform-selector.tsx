@@ -249,7 +249,7 @@ export function HierarchicalPlatformSelector({
                 )}
               >
                 {selectionState === 'all' && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
-                {selectionState === 'partial' && <Minus className="h-3.5 w-3.5 text-coral" strokeWidth={3} />}
+                {selectionState === 'partial' && <Minus className="h-3.5 w-3.5 text-danger-ink" strokeWidth={3} />}
               </button>
 
               {/* Clickable header area */}
@@ -271,7 +271,7 @@ export function HierarchicalPlatformSelector({
                 </div>
 
                 {selectionCount > 0 && (
-                  <span className="flex-shrink-0 text-xs font-semibold text-coral">
+                  <span className="flex-shrink-0 text-xs font-semibold text-danger-ink">
                     {selectionCount} selected
                   </span>
                 )}
@@ -308,7 +308,7 @@ export function HierarchicalPlatformSelector({
                         <div className="border-t border-border/50 p-4 bg-muted/10">
                           <div className="flex items-start gap-3 p-4 bg-card border border-border rounded-xl">
                             <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-coral/10 border border-border flex items-center justify-center">
-                              <Mail className="h-5 w-5 text-coral" />
+                              <Mail className="h-5 w-5 text-danger-ink" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-semibold text-foreground mb-1">Invitation Email</h4>
@@ -371,7 +371,7 @@ export function HierarchicalPlatformSelector({
                             )}
                           >
                             {selectionState === 'all' && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                            {selectionState === 'partial' && <Minus className="h-3 w-3 text-coral" strokeWidth={3} />}
+                            {selectionState === 'partial' && <Minus className="h-3 w-3 text-danger-ink" strokeWidth={3} />}
                           </div>
                           <span className="text-sm font-medium text-foreground">
                             Select all ({group.products.length})
@@ -440,12 +440,12 @@ export function HierarchicalPlatformSelector({
                                 <PlatformIcon platform={product.id as Platform} size="sm" />
                                 <span className={cn(
                                   'text-sm font-medium leading-tight',
-                                  isSelected ? 'text-coral' : 'text-foreground'
+                                  isSelected ? 'text-danger-ink' : 'text-foreground'
                                 )}>
                                   {product.name}
                                 </span>
                                 {isSelected && (
-                                  <Check className="h-3.5 w-3.5 text-coral ml-auto flex-shrink-0" />
+                                  <Check className="h-3.5 w-3.5 text-danger-ink ml-auto flex-shrink-0" />
                                 )}
                               </label>
                             );

@@ -135,7 +135,7 @@ export function ComparisonRow({
           className={cn(
             'inline-flex items-center justify-center w-7 h-7 rounded-sm border-2',
             isAuthHub
-              ? 'bg-teal/10 border-teal text-teal'
+              ? 'bg-teal/10 border-teal text-success-ink'
               : 'bg-muted/50 border-black/20 text-foreground'
           )}
         >
@@ -162,7 +162,7 @@ export function ComparisonRow({
       <span
         className={cn(
           'font-mono text-sm',
-          isAuthHub && 'font-bold text-teal'
+          isAuthHub && 'font-bold text-success-ink'
         )}
       >
         {value}
@@ -250,9 +250,9 @@ export function ComparisonWinnerRow({
       </td>
       <td className="px-5 py-4 text-center bg-gradient-to-r from-coral/10 to-transparent">
         <div className="flex flex-col items-center gap-1">
-          <span className="font-dela text-lg text-coral">{authhubValue}</span>
+          <span className="font-dela text-lg text-danger-ink">{authhubValue}</span>
           {highlight && (
-            <span className="text-[10px] font-bold uppercase tracking-widest text-teal bg-teal/10 px-2 py-0.5 rounded-sm">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-success-ink bg-teal/10 px-2 py-0.5 rounded-sm">
               {highlight}
             </span>
           )}

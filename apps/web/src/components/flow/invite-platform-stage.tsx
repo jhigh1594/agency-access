@@ -65,7 +65,7 @@ export function InvitePlatformStage({
                 </div>
               </>
             ) : (
-              <div className="rounded-full border border-teal/40 bg-teal/10 px-3 py-1 text-xs font-semibold text-teal">
+              <div className="rounded-full border border-teal/40 bg-teal/10 px-3 py-1 text-xs font-semibold text-success-ink">
                 Final authorization step
               </div>
             )}

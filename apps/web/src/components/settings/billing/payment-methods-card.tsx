@@ -25,7 +25,7 @@ export function PaymentMethodsCard() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-coral/10 rounded-lg">
-            <CreditCard className="h-5 w-5 text-coral" />
+            <CreditCard className="h-5 w-5 text-danger-ink" />
           </div>
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">Payment Methods</h2>

@@ -59,7 +59,7 @@ export function AgentsSettingsTab() {
   return (
     <section className="space-y-6" aria-labelledby="agents-heading">
       <div className="rounded-xl border border-border bg-card p-6">
-        <div className="flex items-start gap-3"><Bot className="mt-1 h-5 w-5 text-coral" /><div>
+        <div className="flex items-start gap-3"><Bot className="mt-1 h-5 w-5 text-danger-ink" /><div>
           <h2 id="agents-heading" className="text-xl font-semibold">Personal agents</h2>
           <p className="mt-1 text-sm text-muted-foreground">Point a compatible personal agent at this endpoint. You will sign in and approve its agency permissions before it can read anything.</p>
         </div></div>
@@ -75,7 +75,7 @@ export function AgentsSettingsTab() {
           <p className="mt-2 text-sm text-muted-foreground">OAuth client <code>{pendingOauthClientId}</code> is requesting the conservative onboarding profile. Dispatches still require a separate approval.</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm"><li>Read agency setup, clients, templates, requests, and operation status</li><li>Start human connection handoffs</li><li>Prepare onboarding requests for your approval</li></ul>
           <button type="button" disabled={connectMutation.isPending} onClick={() => connectMutation.mutate()} className="mt-4 min-h-11 rounded-lg bg-coral px-5 font-semibold text-white disabled:opacity-50">{connectMutation.isPending ? 'Connecting…' : 'Connect agent'}</button>
-          {connectMutation.isError && <p role="alert" className="mt-3 text-sm text-coral">This agent could not be connected. Confirm your agency is allowlisted.</p>}
+          {connectMutation.isError && <p role="alert" className="mt-3 text-sm text-danger-ink">This agent could not be connected. Confirm your agency is allowlisted.</p>}
         </div>
       )}
       {grantsQuery.isLoading && <p role="status" className="text-sm text-muted-foreground">Loading connected agents…</p>}
@@ -89,8 +89,8 @@ export function AgentsSettingsTab() {
         onRevoke={(grantId) => revokeMutation.mutateAsync(grantId).then(() => undefined)}
         onUpdate={(grantId, input) => updateMutation.mutateAsync({ grantId, ...input }).then(() => undefined)}
       />)}</div>
-      {updateMutation.isError && <p role="alert" className="text-sm text-coral">The agent permissions could not be updated. Try again.</p>}
-      {revokeMutation.isError && <p role="alert" className="text-sm text-coral">The agent could not be revoked. Try again.</p>}
+      {updateMutation.isError && <p role="alert" className="text-sm text-danger-ink">The agent permissions could not be updated. Try again.</p>}
+      {revokeMutation.isError && <p role="alert" className="text-sm text-danger-ink">The agent could not be revoked. Try again.</p>}
     </section>
   );
 }

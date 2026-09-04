@@ -362,11 +362,11 @@ export default function DashboardPage() {
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-coral/10 border border-coral rounded-lg p-6 text-center">
-            <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-coral mb-2">
+            <AlertCircle className="h-8 w-8 text-danger-ink mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-danger-ink mb-2">
               {isAuthUnavailable ? 'Authenticating Session' : 'Failed to Load Dashboard'}
             </h2>
-            <p className="text-coral/90 mb-4">
+            <p className="text-danger-ink/90 mb-4">
               {isAuthUnavailable
                 ? 'We are still initializing your session. Please wait a moment and retry.'
                 : error instanceof Error
@@ -388,7 +388,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto">
           <div className="bg-coral/10 border border-coral rounded-lg p-6 text-center">
             <span className="hidden bg-coral" aria-hidden />
-            <AlertCircle className="h-8 w-8 text-coral mx-auto mb-3" />
+            <AlertCircle className="h-8 w-8 text-danger-ink mx-auto mb-3" />
             <h2 className="text-lg font-semibold text-danger-ink mb-2">Agency Setup Required</h2>
             <p className="text-danger-ink mb-4">
               We couldn&apos;t find an agency associated with your account. Let&apos;s set one up.
@@ -575,7 +575,7 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <Link href="/clients" className="text-sm text-coral hover:text-coral/90 font-semibold">
+            <Link href="/clients" className="text-sm text-danger-ink hover:text-coral/90 font-semibold">
               Manage Clients
             </Link>
           </div>

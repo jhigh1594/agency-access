@@ -92,7 +92,7 @@ export function PlatformCard({
                     variant="ghost"
                     size="sm"
                     onClick={() => onManageAssets(platform)}
-                    className="text-coral hover:text-coral/90 hover:bg-coral/5"
+                    className="text-danger-ink hover:text-coral/90 hover:bg-coral/5"
                   >
                     Manage Assets
                   </Button>

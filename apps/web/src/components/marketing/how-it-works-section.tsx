@@ -117,7 +117,7 @@ export function HowItWorksSection() {
               <h2 className="font-dela text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight mb-4 sm:mb-6 text-ink leading-[1.1]">
                 <span className="inline-block">From 47 emails</span>
                 <br />
-                <span className="text-coral">to 1 link</span>
+                <span className="text-danger-ink">to 1 link</span>
               </h2>
 
               {/* Subheadline */}
@@ -136,11 +136,11 @@ export function HowItWorksSection() {
                     key={i}
                     className="flex items-center gap-4 mx-8 text-paper font-dela text-xl sm:text-2xl"
                   >
-                    <span className="text-coral">2-3 DAYS</span>
-                    <ArrowRight size={16} className="text-coral" />
+                    <span className="text-danger-ink">2-3 DAYS</span>
+                    <ArrowRight size={16} className="text-danger-ink" />
                     <span className="font-mono text-sm">becomes</span>
-                    <ArrowRight size={16} className="text-coral" />
-                    <span className="text-coral">5 MINUTES</span>
+                    <ArrowRight size={16} className="text-danger-ink" />
+                    <span className="text-danger-ink">5 MINUTES</span>
                   </div>
                 ))}
               </div>

@@ -32,7 +32,7 @@ export function ContactInfoCard() {
           {/* Email */}
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 bg-coral/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Mail className="w-5 h-5 text-coral" />
+              <Mail className="w-5 h-5 text-danger-ink" />
             </div>
             <div>
               <p className="font-mono text-sm text-gray-500 mb-1">Email us</p>
@@ -53,7 +53,7 @@ export function ContactInfoCard() {
           {/* Schedule Demo */}
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 bg-coral/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-5 h-5 text-coral" />
+              <Calendar className="w-5 h-5 text-danger-ink" />
             </div>
             <div>
               <p className="font-mono text-sm text-gray-500 mb-1">Talk to us</p>
@@ -71,7 +71,7 @@ export function ContactInfoCard() {
           {/* Response Time */}
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 bg-teal/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 h-5 text-teal" />
+              <Clock className="w-5 h-5 text-success-ink" />
             </div>
             <div>
               <p className="font-mono text-sm text-gray-500 mb-1">Response time</p>
@@ -116,7 +116,7 @@ export function ContactInfoCard() {
           <p className="font-mono text-xs text-gray-500 mb-2">Looking for quick answers?</p>
           <a
             href={getDocsUrl()}
-            className="text-coral hover:text-coral/80 transition-colors text-sm font-medium"
+            className="text-danger-ink hover:text-coral/80 transition-colors text-sm font-medium"
           >
             Visit the Help Center &rarr;
           </a>

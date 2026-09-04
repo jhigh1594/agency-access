@@ -46,7 +46,7 @@ export function InvitePlatformQueueItem({
         </div>
 
         {isCompleted ? (
-          <Check className="h-5 w-5 shrink-0 text-teal" />
+          <Check className="h-5 w-5 shrink-0 text-success-ink" />
         ) : (
           <div className="rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold text-ink">
             {sequenceLabel || 'Queue'}

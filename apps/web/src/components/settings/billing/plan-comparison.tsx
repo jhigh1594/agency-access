@@ -150,7 +150,7 @@ export function PlanComparison() {
       {/* Section Header */}
       <div className="mb-6">
         <div className="inline-block mb-3">
-          <div className="bg-coral/10 text-coral border-2 border-coral/30 px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider inline-block">
+          <div className="bg-coral/10 text-danger-ink border-2 border-coral/30 px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider inline-block">
             Compare Plans
           </div>
         </div>
@@ -164,8 +164,8 @@ export function PlanComparison() {
 
       {errorMessage && (
         <div className="mb-6 p-3 bg-coral/10 border border-coral/20 rounded-lg flex items-start gap-2">
-          <AlertCircle className="h-5 w-5 text-coral flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-coral">{errorMessage}</p>
+          <AlertCircle className="h-5 w-5 text-danger-ink flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-danger-ink">{errorMessage}</p>
         </div>
       )}
 
@@ -192,7 +192,7 @@ export function PlanComparison() {
           >
             <span className="inline-flex items-center gap-2">
               Yearly
-              <span className="rounded-full border border-black/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral">
+              <span className="rounded-full border border-black/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-danger-ink">
                 2 Months Free
               </span>
             </span>
@@ -219,7 +219,7 @@ export function PlanComparison() {
           <Check size={14} color="rgb(var(--teal))" />
           No credit card for trial
         </span>
-        <span className="flex items-center gap-1.5 ml-auto text-teal">
+        <span className="flex items-center gap-1.5 ml-auto text-success-ink">
           <Check size={14} color="rgb(var(--teal))" />
           Pays for itself in 1 onboard
         </span>
@@ -240,8 +240,8 @@ export function PlanComparison() {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-gray-200 bg-coral/5 -mx-2 px-2 rounded">
               <div>
-                <span className="font-bold text-coral">Growth</span>
-                <span className="text-xs text-coral/70 block">Most Popular</span>
+                <span className="font-bold text-danger-ink">Growth</span>
+                <span className="text-xs text-danger-ink/70 block">Most Popular</span>
               </div>
               <span className="text-gray-600">{isYearly ? '$66/mo' : '$79/mo'}</span>
             </div>
@@ -302,7 +302,7 @@ export function PlanComparison() {
               <div className="p-4 border-b-2 border-border">
                 {/* Persona Label */}
                 <span className={`font-mono text-[10px] font-bold uppercase tracking-widest ${
-                  isRecommended ? 'text-coral' : 'text-gray-500'
+                  isRecommended ? 'text-danger-ink' : 'text-gray-500'
                 }`}>
                   {persona}
                 </span>

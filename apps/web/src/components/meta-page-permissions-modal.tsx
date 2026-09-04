@@ -160,7 +160,7 @@ export function MetaPagePermissionsModal({
                   <div className={`h-6 w-11 rounded-full border border-black transition-colors ${allSelected ? 'bg-teal' : 'bg-border'}`}>
                     <div className={`mt-0.5 ml-0.5 h-5 w-5 rounded-full bg-card transition-transform ${allSelected ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
-                  <Facebook className="h-5 w-5 text-coral" />
+                  <Facebook className="h-5 w-5 text-danger-ink" />
                   <span className="text-lg font-semibold text-ink">
                     Page {allSelected ? '(all permissions)' : '(selected permissions only)'}
                   </span>
@@ -188,7 +188,7 @@ export function MetaPagePermissionsModal({
                 onClick={handleRequestMaximum}
                 variant="ghost"
                 size="sm"
-                className="px-0 text-coral hover:bg-transparent hover:text-coral"
+                className="px-0 text-danger-ink hover:bg-transparent hover:text-coral"
                 disabled={isSaving}
               >
                 Request maximum permissions
@@ -216,7 +216,7 @@ export function MetaPagePermissionsModal({
                         checked={isChecked}
                         onChange={() => handleTogglePermission(permission.id)}
                         disabled={isSaving}
-                        className="mt-1 h-4 w-4 rounded border-2 border-black text-coral focus:ring-coral cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="mt-1 h-4 w-4 rounded border-2 border-black text-danger-ink focus:ring-coral cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <div className="flex-1">
                         <div className="text-sm font-medium text-ink">

@@ -30,7 +30,7 @@ export default function InternalAdminOverviewPage() {
       <div className="flex-1 bg-paper p-8">
         <div className="max-w-6xl mx-auto clean-card p-6 border border-coral/40 bg-coral/5">
           <h1 className="font-display text-2xl font-semibold text-ink">Internal Admin</h1>
-          <p className="text-sm text-coral mt-2">
+          <p className="text-sm text-danger-ink mt-2">
             {error instanceof Error ? error.message : 'Unable to load internal admin overview.'}
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function InternalAdminOverviewPage() {
             <p className="text-sm text-muted-foreground mt-1">Cross-agency operational overview</p>
           </div>
           <nav className="flex items-center gap-3 text-sm">
-            <a href="/internal/admin" className="text-coral font-semibold">Overview</a>
+            <a href="/internal/admin" className="text-danger-ink font-semibold">Overview</a>
             <a href="/internal/admin/agencies" className="text-muted-foreground hover:text-foreground">Agencies</a>
             <a href="/internal/admin/subscriptions" className="text-muted-foreground hover:text-foreground">Subscriptions</a>
             <a href="/internal/admin/webhooks" className="text-muted-foreground hover:text-foreground">Webhooks</a>
@@ -71,7 +71,7 @@ export default function InternalAdminOverviewPage() {
           actions={
             <a
               href="/internal/admin/agencies"
-              className="text-sm font-semibold text-coral hover:text-coral/80"
+              className="text-sm font-semibold text-danger-ink hover:text-coral/80"
             >
               View all agencies
             </a>

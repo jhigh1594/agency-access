@@ -118,7 +118,7 @@ export function AgencyProfileCard() {
     <section className="clean-card p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 bg-coral/10 rounded-lg">
-          <Building2 className="h-5 w-5 text-coral" />
+          <Building2 className="h-5 w-5 text-danger-ink" />
         </div>
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">Agency Profile</h2>

@@ -194,7 +194,7 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
 
   if (!settings) {
     return (
-      <div className="p-8 text-center text-coral">
+      <div className="p-8 text-center text-danger-ink">
         <AlertCircle className="h-6 w-6 mx-auto mb-2" />
         Failed to load Meta settings
       </div>
@@ -380,7 +380,7 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
                     updateSetting('page', 'limitPermissions', false);
                     updateSetting('page', 'selectedPermissions', undefined);
                   }}
-                  className="justify-start px-0 text-coral hover:bg-transparent hover:text-coral"
+                  className="justify-start px-0 text-danger-ink hover:bg-transparent hover:text-coral"
                 >
                   {settings.page.limitPermissions ? 'Allow all permissions' : 'Limit permissions'}
                 </Button>
@@ -415,7 +415,7 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
                       id="dataset-full-access"
                       checked={settings.dataset.requestFullAccess}
                       onChange={(e) => updateSetting('dataset', 'requestFullAccess', e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-border text-coral focus:ring-coral"
+                      className="mt-0.5 h-4 w-4 rounded border-border text-danger-ink focus:ring-coral"
                     />
                     <span className="flex items-center gap-2">
                       Enable full Dataset access
@@ -447,11 +447,11 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
                       id="instagram-full-access"
                       checked={settings.instagramAccount.requestFullAccess}
                       onChange={(e) => updateSetting('instagramAccount', 'requestFullAccess', e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-border text-coral focus:ring-coral"
+                      className="mt-0.5 h-4 w-4 rounded border-border text-danger-ink focus:ring-coral"
                     />
                     <span className="flex items-center gap-2">
                       Enable full Instagram access
-                      <AlertTriangle className="h-3.5 w-3.5 text-coral" />
+                      <AlertTriangle className="h-3.5 w-3.5 text-danger-ink" />
                     </span>
                   </label>
                 </ManageAssetsStatusPanel>
@@ -507,7 +507,7 @@ function AssetCard({
           type="checkbox"
           checked={enabled}
           onChange={(e) => onToggle(e.target.checked)}
-          className="mt-1 h-5 w-5 rounded border-border text-coral focus:ring-coral"
+          className="mt-1 h-5 w-5 rounded border-border text-danger-ink focus:ring-coral"
         />
         <div className="flex-1">
           <div className="flex items-start gap-3">

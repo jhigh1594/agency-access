@@ -180,7 +180,7 @@ export function BillingHero() {
       </div>
 
       {errorMessage && (
-        <div className="mt-4 rounded-lg border border-coral/20 bg-coral/10 p-3 text-sm text-coral">
+        <div className="mt-4 rounded-lg border border-coral/20 bg-coral/10 p-3 text-sm text-danger-ink">
           <AlertCircle className="mr-1 inline h-4 w-4" />
           {errorMessage}
         </div>

@@ -170,7 +170,7 @@ const markdownComponents: Components = {
     <a
       {...props}
       href={href}
-      className="font-mono text-coral font-bold underline hover:no-underline"
+      className="font-mono text-danger-ink font-bold underline hover:no-underline"
       target={href?.startsWith("http") ? "_blank" : undefined}
       rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
     >
@@ -189,8 +189,8 @@ function DirectAnswerBox({ answer }: { answer: string }) {
   return (
     <div className="bg-teal/10 border-2 border-teal p-6 mb-8 rounded-none">
       <div className="flex items-center gap-2 mb-3">
-        <BookOpen size={20} className="text-teal" />
-        <span className="font-mono text-sm font-bold text-teal uppercase tracking-wider">
+        <BookOpen size={20} className="text-success-ink" />
+        <span className="font-mono text-sm font-bold text-success-ink uppercase tracking-wider">
           Quick Answer
         </span>
       </div>
@@ -251,7 +251,7 @@ function TableOfContents({ content }: { content: string }) {
           <li key={item.slug}>
             <a
               href={`#${item.slug}`}
-              className="font-mono text-sm text-coral hover:underline"
+              className="font-mono text-sm text-danger-ink hover:underline"
             >
               {i + 1}. {item.text}
             </a>
@@ -272,7 +272,7 @@ function AuthorBio({ author }: { author: ProgrammaticBlogPost["author"] }) {
         {author.avatar ? (
           <img src={author.avatar} alt={author.name} className="w-full h-full rounded-full object-cover" />
         ) : (
-          <span className="font-dela text-2xl text-coral">{author.name[0]}</span>
+          <span className="font-dela text-2xl text-danger-ink">{author.name[0]}</span>
         )}
       </div>
       <div>
@@ -304,7 +304,7 @@ function CTABox({ cta, testimonial }: { cta: ProgrammaticBlogPost["cta"]; testim
           &ldquo;{testimonial.quote}&rdquo;
           <footer className="mt-1 not-italic font-bold text-ink">
             — {testimonial.author}, {testimonial.company}
-            {testimonial.metric && <span className="text-teal"> ({testimonial.metric})</span>}
+            {testimonial.metric && <span className="text-success-ink"> ({testimonial.metric})</span>}
           </footer>
         </blockquote>
       )}
@@ -384,7 +384,7 @@ export function BlogPostTemplate({ post }: BlogPostTemplateProps) {
               year: "numeric",
             })}
             {isUpdated && (
-              <span className="text-teal">(Updated {new Date(updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })})</span>
+              <span className="text-success-ink">(Updated {new Date(updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })})</span>
             )}
           </span>
           <span className="flex items-center gap-2">

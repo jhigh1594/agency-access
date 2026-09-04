@@ -111,7 +111,7 @@ export default function GoogleAdsAccessGuidePage() {
       <section className="border-b-2 border-black bg-coral/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-3xl mx-auto">
-            <p className="font-mono text-sm text-coral font-bold uppercase tracking-wider mb-3">
+            <p className="font-mono text-sm text-danger-ink font-bold uppercase tracking-wider mb-3">
               Platform Access Guide
             </p>
             <h1 className="font-dela text-3xl sm:text-4xl md:text-5xl text-ink mb-4 tracking-tight">
@@ -156,7 +156,7 @@ export default function GoogleAdsAccessGuidePage() {
             <p className="font-mono text-sm text-foreground mb-2">
               In Google Ads, go to Tools & Settings → Access and security, then add the agency&apos;s email and pick Admin, Standard, or Read-only. They get an email invite and accept. For full steps, see the section below.
             </p>
-            <Link href="#step-by-step" className="font-mono text-sm text-coral font-bold hover:underline">
+            <Link href="#step-by-step" className="font-mono text-sm text-danger-ink font-bold hover:underline">
               See step-by-step instructions →
             </Link>
           </div>
@@ -250,7 +250,7 @@ export default function GoogleAdsAccessGuidePage() {
                 href="https://support.google.com/google-ads/answer/6139186"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-coral font-bold hover:underline"
+                className="text-danger-ink font-bold hover:underline"
               >
                 Google Ads Help – Add or remove users
               </a>
@@ -268,23 +268,23 @@ export default function GoogleAdsAccessGuidePage() {
             </h2>
             <ul className="space-y-2 font-mono text-sm text-foreground list-none">
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Client is signed in to the correct Google Ads account
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Agency email is correct (no typos)
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Role chosen: Admin, Standard, or Read-only
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 Invitation accepted on the agency side
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-coral font-bold">□</span>
+                <span className="text-danger-ink font-bold">□</span>
                 If using AuthHub: one link sent, client completed the flow
               </li>
             </ul>
@@ -301,15 +301,15 @@ export default function GoogleAdsAccessGuidePage() {
             </h2>
             <p className="font-mono text-sm text-foreground mb-4">
               Need access to other platforms? We have guides for{" "}
-              <Link href="/guides/meta-ads-access" className="text-coral font-bold hover:underline">
+              <Link href="/guides/meta-ads-access" className="text-danger-ink font-bold hover:underline">
                 Meta Ads access for agencies
               </Link>
               ,{" "}
-              <Link href="/blog/ga4-access-agencies" className="text-coral font-bold hover:underline">
+              <Link href="/blog/ga4-access-agencies" className="text-danger-ink font-bold hover:underline">
                 Google Analytics (GA4) access for agencies
               </Link>
               , and{" "}
-              <Link href="/blog/linkedin-ads-access-agency" className="text-coral font-bold hover:underline">
+              <Link href="/blog/linkedin-ads-access-agency" className="text-danger-ink font-bold hover:underline">
                 LinkedIn Ads access
               </Link>
               .
@@ -333,7 +333,7 @@ export default function GoogleAdsAccessGuidePage() {
             </ComparisonCTA>
             <p className="mt-4 font-mono text-xs text-white/70">
               Or{" "}
-              <Link href="/compare/leadsie-alternative" className="text-coral font-bold hover:underline">
+              <Link href="/compare/leadsie-alternative" className="text-danger-ink font-bold hover:underline">
                 see how we compare to other tools
               </Link>
             </p>

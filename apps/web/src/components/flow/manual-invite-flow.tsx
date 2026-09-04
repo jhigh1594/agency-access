@@ -123,7 +123,7 @@ export function renderManualFormFields<TData>(
               }`}
               inputMode={field.inputMode}
             />
-            {showInvalid ? <p className="mt-1 text-xs text-coral">{field.invalidMessage}</p> : null}
+            {showInvalid ? <p className="mt-1 text-xs text-danger-ink">{field.invalidMessage}</p> : null}
           </div>
         );
       })}
@@ -258,7 +258,7 @@ export function ManualInviteFlow<TData extends ManualInviteFlowData>({
           <div className="space-y-3">
             {config.completion.renderSummary?.(ctx)}
             {submissionError ? (
-              <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+              <div className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-danger-ink">
                 {submissionError}
               </div>
             ) : (

@@ -49,7 +49,7 @@ const features: Array<{
       <div className="w-full h-full bg-gray-100 rounded-none p-3 space-y-3 border-2 border-black shadow-[4px_4px_0px_#000]">
         <div className="flex justify-center">
           <div className="w-8 h-8 rounded-none border-2 border-black bg-teal/20 flex items-center justify-center">
-            <Shield size={16} className="text-teal" strokeWidth={2.5} />
+            <Shield size={16} className="text-success-ink" strokeWidth={2.5} />
           </div>
         </div>
         <div className="space-y-1.5">

@@ -38,7 +38,7 @@ export function PricingToggle({ isYearly, onToggle }: PricingToggleProps) {
         >
           <span className="inline-flex items-center gap-2">
             Yearly
-            <span className="rounded-full border border-black/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral">
+            <span className="rounded-full border border-black/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-danger-ink">
               Save 25%
             </span>
           </span>

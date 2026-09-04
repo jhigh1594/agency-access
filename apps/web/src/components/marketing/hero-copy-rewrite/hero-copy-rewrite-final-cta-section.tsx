@@ -71,19 +71,19 @@ export function HeroCopyRewriteFinalCtaSection() {
 
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-600 font-mono">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Check size={14} className="text-coral sm:hidden" />
-                <Check size={16} className="text-coral hidden sm:block" />
+                <Check size={14} className="text-danger-ink sm:hidden" />
+                <Check size={16} className="text-danger-ink hidden sm:block" />
                 <span className="hidden xs:inline">No credit card required</span>
                 <span className="xs:hidden">No card required</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Check size={14} className="text-coral sm:hidden" />
-                <Check size={16} className="text-coral hidden sm:block" />
+                <Check size={14} className="text-danger-ink sm:hidden" />
+                <Check size={16} className="text-danger-ink hidden sm:block" />
                 <span>Unlimited clients</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Check size={14} className="text-coral sm:hidden" />
-                <Check size={16} className="text-coral hidden sm:block" />
+                <Check size={14} className="text-danger-ink sm:hidden" />
+                <Check size={16} className="text-danger-ink hidden sm:block" />
                 <span>Cancel anytime</span>
               </div>
             </div>

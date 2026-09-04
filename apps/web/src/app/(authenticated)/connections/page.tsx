@@ -399,14 +399,14 @@ function ConnectionsPageContent() {
         {/* Success/Error Messages */}
         {successMessage && (
           <div className="mb-6 bg-teal/10 border border-teal/30 rounded-lg p-4 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-teal flex-shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-success-ink flex-shrink-0" />
             <p className="text-ink">{successMessage}</p>
           </div>
         )}
 
         {errorMessage && (
           <div className="mb-6 bg-coral/10 border border-coral/30 rounded-lg p-4 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-coral flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 text-danger-ink flex-shrink-0" />
             <p className="text-foreground">{errorMessage}</p>
           </div>
         )}
@@ -414,7 +414,7 @@ function ConnectionsPageContent() {
         {/* Query Error */}
         {error && (
           <div className="mb-6 bg-coral/10 border border-coral/30 rounded-lg p-4 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-coral flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 text-danger-ink flex-shrink-0" />
             <div>
               <p className="text-foreground font-medium">Failed to load platforms</p>
               <p className="text-muted-foreground text-sm mt-1">{(error as Error).message}</p>

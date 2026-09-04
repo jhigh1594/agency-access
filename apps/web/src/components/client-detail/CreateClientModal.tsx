@@ -135,7 +135,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 bg-coral/20 rounded-lg">
-                <Plus className="h-4 w-4 text-coral" />
+                <Plus className="h-4 w-4 text-danger-ink" />
               </div>
               <h2 className="text-lg font-semibold text-ink">Create Client</h2>
             </div>
@@ -152,7 +152,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name <span className="text-coral">*</span>
+                Name <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -167,7 +167,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
             {/* Company */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company <span className="text-coral">*</span>
+                Company <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="text"
@@ -182,7 +182,7 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-coral">*</span>
+                Email <span className="text-danger-ink">*</span>
               </label>
               <input
                 type="email"
@@ -213,15 +213,15 @@ export function CreateClientModal({ onClose, onSuccess }: CreateClientModalProps
             {/* Error message */}
             {errorMessage && (
               <div className="p-3 bg-coral/10 border border-coral rounded-lg">
-                <p className="text-sm text-coral-90">{errorMessage}</p>
+                <p className="text-sm text-danger-ink">{errorMessage}</p>
               </div>
             )}
 
             {/* Success message */}
             {success && (
               <div className="p-3 bg-teal/10 border border-teal rounded-lg flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-teal flex-shrink-0" />
-                <p className="text-sm text-teal">Client created successfully</p>
+                <CheckCircle2 className="h-4 w-4 text-success-ink flex-shrink-0" />
+                <p className="text-sm text-success-ink">Client created successfully</p>
               </div>
             )}
 

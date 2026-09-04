@@ -23,7 +23,7 @@ export function NotificationsCard() {
     <section className="clean-card p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 bg-coral/10 rounded-lg">
-          <Bell className="h-5 w-5 text-coral" />
+          <Bell className="h-5 w-5 text-danger-ink" />
         </div>
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">Notifications</h2>
@@ -36,7 +36,7 @@ export function NotificationsCard() {
           <input
             type="checkbox"
             defaultChecked
-            className="w-4 h-4 text-coral border-input rounded focus:ring-coral"
+            className="w-4 h-4 text-danger-ink border-input rounded focus:ring-coral"
           />
           <div>
             <p className="text-sm font-medium text-ink">
@@ -52,7 +52,7 @@ export function NotificationsCard() {
           <input
             type="checkbox"
             defaultChecked
-            className="w-4 h-4 text-coral border-input rounded focus:ring-coral"
+            className="w-4 h-4 text-danger-ink border-input rounded focus:ring-coral"
           />
           <div>
             <p className="text-sm font-medium text-ink">Token expiration alerts</p>
@@ -65,7 +65,7 @@ export function NotificationsCard() {
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
-            className="w-4 h-4 text-coral border-input rounded focus:ring-coral"
+            className="w-4 h-4 text-danger-ink border-input rounded focus:ring-coral"
           />
           <div>
             <p className="text-sm font-medium text-ink">Weekly summary</p>

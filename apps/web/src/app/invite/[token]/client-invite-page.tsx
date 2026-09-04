@@ -518,7 +518,7 @@ export default function ClientAuthorizationPage({
                 <div key={field.id} className="space-y-2">
                   <label className="block text-sm font-semibold text-ink">
                     {field.label}
-                    {field.required ? <span className="ml-1 text-coral">*</span> : null}
+                    {field.required ? <span className="ml-1 text-danger-ink">*</span> : null}
                   </label>
 
                   {field.type === 'textarea' ? (
@@ -755,7 +755,7 @@ export default function ClientAuthorizationPage({
           {completionError ? (
             <>
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-coral bg-coral/10">
-                <RefreshCw className="h-8 w-8 text-coral" />
+                <RefreshCw className="h-8 w-8 text-danger-ink" />
               </div>
               <h2 className="text-2xl font-semibold text-ink font-display">
                 Almost done — finalize failed
@@ -765,7 +765,7 @@ export default function ClientAuthorizationPage({
                 agency.
               </p>
               <div className="mt-4 rounded-lg border border-coral/30 bg-coral/10 p-4 text-left">
-                <p className="text-sm text-coral">{completionError}</p>
+                <p className="text-sm text-danger-ink">{completionError}</p>
               </div>
               <Button
                 className="mt-3"
@@ -779,7 +779,7 @@ export default function ClientAuthorizationPage({
           ) : (
             <>
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-teal bg-teal/10">
-                <Check className="h-8 w-8 text-teal" />
+                <Check className="h-8 w-8 text-success-ink" />
               </div>
               <h2 className="text-2xl font-semibold text-ink font-display">
                 All set — you&apos;re done
