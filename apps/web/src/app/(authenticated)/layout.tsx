@@ -12,8 +12,8 @@ import { getDocsUrl } from '@/lib/docs-url';
 import {
   LayoutDashboard,
   Network,
-  Heart,
-  Users,
+  HeartPulse,
+  UsersRound,
   Settings,
   CircleHelp,
 } from 'lucide-react';
@@ -255,39 +255,41 @@ function AuthenticatedLayoutInner({
     );
   }
 
-  const links = [
+  const navigationGroups = [
     {
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: (
-        <LayoutDashboard className="h-6 w-6 flex-shrink-0" />
-      ),
+      label: 'Workspace',
+      links: [
+        {
+          label: 'Dashboard',
+          href: '/dashboard',
+          icon: <LayoutDashboard className="h-5 w-5 flex-shrink-0" />,
+        },
+        {
+          label: 'Connections',
+          href: '/connections',
+          icon: <Network className="h-5 w-5 flex-shrink-0" />,
+        },
+        {
+          label: 'Token Health',
+          href: '/token-health',
+          icon: <HeartPulse className="h-5 w-5 flex-shrink-0" />,
+        },
+        {
+          label: 'Clients',
+          href: '/clients',
+          icon: <UsersRound className="h-5 w-5 flex-shrink-0" />,
+        },
+      ],
     },
     {
-      label: 'Connections',
-      href: '/connections',
-      icon: (
-        <Network className="h-6 w-6 flex-shrink-0" />
-      ),
-    },
-    {
-      label: 'Token Health',
-      href: '/token-health',
-      icon: <Heart className="text-foreground h-6 w-6 flex-shrink-0" />,
-    },
-    {
-      label: 'Clients',
-      href: '/clients',
-      icon: (
-        <Users className="h-6 w-6 flex-shrink-0" />
-      ),
-    },
-    {
-      label: 'Settings',
-      href: '/settings',
-      icon: (
-        <Settings className="h-6 w-6 flex-shrink-0" />
-      ),
+      label: 'Account',
+      links: [
+        {
+          label: 'Settings',
+          href: '/settings',
+          icon: <Settings className="h-5 w-5 flex-shrink-0" />,
+        },
+      ],
     },
   ];
   const docsUrl = getDocsUrl();
@@ -334,9 +336,24 @@ function AuthenticatedLayoutInner({
             </div>
 
             {/* Navigation Links */}
-            <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-2">
-              {links.map((link) => (
-                <SidebarLink key={link.href} link={link} />
+            <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-8">
+              {navigationGroups.map((group) => (
+                <div key={group.label} className="flex flex-col gap-2">
+                  <span
+                    aria-hidden={!open}
+                    className={cn(
+                      'label-nano pl-4 text-muted-foreground',
+                      !open && 'hidden'
+                    )}
+                  >
+                    {group.label}
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    {group.links.map((link) => (
+                      <SidebarLink key={link.href} link={link} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </nav>
 
@@ -347,24 +364,24 @@ function AuthenticatedLayoutInner({
                 rel="noreferrer"
                 aria-label="Help Center"
                 className={cn(
-                  'group flex w-full items-center rounded-lg transition-colors',
-                  'hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  'group flex min-h-[44px] w-full items-center border-l-4 border-transparent transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   open ? 'justify-start pl-3 py-2' : 'justify-center px-4 py-3'
                 )}
               >
                 <div
                   className={cn(
-                    'flex h-6 w-6 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground',
-                    open && 'mr-2'
+                    'flex h-5 w-5 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground',
+                    open && 'mr-4'
                   )}
                 >
-                  <CircleHelp className="h-6 w-6 flex-shrink-0" />
+                  <CircleHelp className="h-5 w-5 flex-shrink-0" />
                 </div>
                 <div className={cn(open ? 'overflow-visible' : 'overflow-hidden')}>
                   <span
                     aria-hidden={!open}
                     className={cn(
-                      'inline-block origin-left whitespace-nowrap text-base text-muted-foreground transition-all duration-200 motion-reduce:transition-none group-hover:translate-x-1 group-hover:text-foreground',
+                      'inline-block origin-left whitespace-nowrap text-lg font-medium text-muted-foreground transition-all duration-200 motion-reduce:transition-none group-hover:translate-x-1 group-hover:text-foreground',
                       open ? 'translate-x-0 scale-x-100 opacity-100' : '-translate-x-2 scale-x-0 opacity-0'
                     )}
                   >

@@ -202,15 +202,15 @@ export const SidebarLink = ({
     (link.href !== "/" && pathname?.startsWith(`${link.href}/`));
 
   return (
-    <div className="rounded-lg">
+    <div>
       <Link
         href={link.href as any}
         aria-label={link.label}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "group/sidebar flex w-full items-center rounded-lg transition-colors",
-          "hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          isActive && "bg-muted/20",
+          "group/sidebar flex min-h-[44px] w-full items-center border-l-4 border-transparent transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          isActive && "border-coral",
           open ? "justify-start pl-3 py-2" : "justify-center px-4 py-3",
           className
         )}
@@ -218,8 +218,8 @@ export const SidebarLink = ({
       >
         <div
           className={cn(
-            "flex h-6 w-6 flex-shrink-0 items-center justify-center transition-colors",
-            open && "mr-2",
+            "flex h-5 w-5 flex-shrink-0 items-center justify-center transition-colors",
+            open && "mr-4",
             isActive ? "text-foreground" : "text-muted-foreground group-hover/sidebar:text-foreground"
           )}
         >
@@ -229,10 +229,10 @@ export const SidebarLink = ({
           <span
             aria-hidden={!open}
             className={cn(
-              "inline-block origin-left whitespace-nowrap !m-0 !p-0 font-sans text-base transition-all duration-200 motion-reduce:transition-none",
+              "inline-block origin-left whitespace-nowrap !m-0 !p-0 font-sans text-lg transition-all duration-200 motion-reduce:transition-none",
               open ? "translate-x-0 scale-x-100 opacity-100" : "-translate-x-2 scale-x-0 opacity-0",
               isActive
-                ? "font-medium text-foreground"
+                ? "font-semibold text-foreground"
                 : "text-muted-foreground group-hover/sidebar:translate-x-1 group-hover/sidebar:text-foreground"
             )}
           >
