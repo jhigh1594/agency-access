@@ -27,6 +27,25 @@ Append-only log of what was done each session. Newest first. Read the last 3–5
 
 ## Sessions
 
+## Session: 2026-09-04 — v2.0 tail: review fixes, AA text pass, animation gate, rulings
+
+### What was done
+- Ran ce-code-review (6 reviewers + validator; codex peer died on MCP transport — lens degraded). Verdict Not ready → 24 findings; Jon chose apply-all. 8 fix subagents applied all 21 actionable findings (P0 verified-email agency binding, ticker renderer, AA text on edited lines, hairline token, showcase prune, contract tests, shadow/token integrity, Clerk client consolidation) — committed fix(review) 237feed. Merged to main, pushed.
+- AA text audit (`docs/aa-text-audit.md`): classified 505 raw text-teal/coral sites; Jon approved full swap. 453 sites/131 files swapped to ink tokens on feat/aa-text-swap; also repaired 16 malformed dead classes (text-teal-90/coral600/900). Merged, pushed (4ab4e00).
+- Animation gate hoisted to root layout (AnimationGate component) — animate-pulse skeletons + reveals now work on ALL route groups; root-layout reachability contract pinned in new test. Pushed 91ed325.
+- Utility adoption: StatCard labels → .label-micro (red→green); dashboard Active Connections header → .ink-panel with ground-aware child rules. Pushed c95f1cd.
+- Three delegated rulings executed: (1) brutalist rule rewritten to "one per view — the view's primary action" (48 in-app call sites made 'marketing-only' indefensible); dashboard duplicate createRequestButton demoted to primary on panel mount. (2) Hover AA pass: hover:/group-hover: text-coral/teal → ink tokens, 28 files, dark: untouched. (3) Footer column headings → .label-micro; comparison-table thead reclassified display-role. Pushed 7f8b7d4.
+
+### Decisions made
+- Brutalist = per-view primary action, not marketing-only (doc + button.tsx docstring updated)
+- Coral-family text on light ground is always danger-ink — static or hovered; alpha hover variants dropped (sub-AA)
+- Comparison-table thead is a display role, excluded from micro-label adoption
+
+### Next steps
+- zsh gotcha: unquoted $var does NOT word-split — xargs for multi-file perl passes
+- Hover-state contrast on dark grounds unverified in browser (raw tokens assumed correct)
+- `/design-system` showcase: consider public (non-Clerk) route for review flows
+
 ## Session: 2026-09-03 — Design System v2.0 (lazyweb extraction → delta plan → TDD execution → adversarial review)
 
 ### What was done
