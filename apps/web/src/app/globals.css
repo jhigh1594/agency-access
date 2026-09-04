@@ -275,6 +275,21 @@
     font-family: var(--font-mono), ui-monospace, monospace;
   }
 
+  /* Ground-aware label utilities inside the panel (dual-token rule, CSS form):
+     micro/nano carry light-ground colors by default; on ink they inherit paper. */
+  .ink-panel .label-micro {
+    color: inherit;
+  }
+
+  .ink-panel .label-nano {
+    color: rgb(var(--paper) / 0.6);
+  }
+
+  /* Links on ink panels are raw coral — on ink, raw tokens are correct (7.5:1). */
+  .ink-panel a.label-micro {
+    color: rgb(var(--coral));
+  }
+
   .ink-panel .cursor-blink {
     display: inline-block;
     width: 8px;

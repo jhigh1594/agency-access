@@ -141,9 +141,9 @@ Three families, three roles:
 <span className="label-nano">Updated 2 min ago</span>     // JBM 400 10px
 ```
 
-Adoption targets (planned): StatusBadge text, card meta rows, table headers,
-KPI labels, footer metadata, section eyebrows — no consumer wired yet; land
-consumers before relying on the utilities.
+Adopted: StatCard labels, dashboard Active Connections header (ink-panel
+header with ground-aware child rules). Remaining targets: card meta rows,
+table headers, footer metadata, section eyebrows.
 
 #### Type Scale
 
@@ -202,7 +202,7 @@ state. Default cards use a **1px border and no shadow**.
                                          meta rows, card footers, list dividers */
 ```
 
-Defined and ready; adoption is planned — no consumer wired yet.
+Adopted: dashboard Active Connections header (ground-aware child rules included).
 
 ---
 

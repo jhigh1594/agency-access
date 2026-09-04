@@ -37,4 +37,10 @@ describe('StatCard - Static Design Validation', () => {
     const code = readComponent();
     expect(code).toMatch(/text-danger-ink/);
   });
+
+  it('renders its label with the mono micro-label utility (v2.0 adoption)', () => {
+    const code = readComponent();
+    expect(code).toMatch(/label-micro/);
+    expect(code).not.toMatch(/font-sans font-medium uppercase tracking-wider/);
+  });
 });

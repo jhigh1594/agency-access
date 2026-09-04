@@ -565,17 +565,17 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="bg-card rounded-lg shadow-brutalist border border-black/10 mt-6">
-          <div className="px-6 py-4 border-b border-black/10 flex items-center justify-between">
+        <div className="bg-card rounded-lg shadow-brutalist border border-black/10 mt-6 overflow-hidden">
+          <div className="ink-panel px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-ink">Active Connections</h2>
+              <h2 className="label-micro">Active Connections</h2>
               {connectionsMeta?.hasMore && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="label-nano mt-1">
                   Showing latest {connectionsMeta.returned} of {connectionsMeta.total} connections
                 </p>
               )}
             </div>
-            <Link href="/clients" className="text-sm text-danger-ink hover:text-coral/90 font-semibold">
+            <Link href="/clients" className="label-micro hover:text-coral/80 font-semibold">
               Manage Clients
             </Link>
           </div>

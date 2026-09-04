@@ -24,7 +24,7 @@ export function StatCard({
   return (
     <div className="bg-card rounded-sm border border-black/10 p-6 shadow-sm hover:shadow-brutalist transition-all">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-sans font-medium uppercase tracking-wider text-muted">
+        <span className="label-micro">
           {label}
         </span>
         <div className="p-2.5 rounded-sm bg-background border border-border">
