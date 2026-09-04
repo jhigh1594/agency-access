@@ -271,10 +271,12 @@ export default function DashboardPage() {
   };
 
   // Shared Create Request button (header + Recent Access Requests panel).
-  const createRequestButton = (
+  // v2.0 rule: one brutalist per view. Header mount keeps it; the panel
+  // header mount renders primary.
+  const createRequestButton = (variant: 'brutalist' | 'primary' = 'brutalist') => (
     <Button
       type="button"
-      variant="brutalist"
+      variant={variant}
       size="sm"
       data-testid="dashboard-create-request"
       onClick={handleCreateRequest}
@@ -424,7 +426,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage client access requests</p>
           </div>
-          {createRequestButton}
+          {createRequestButton('brutalist')}
         </div>
 
         {trialBanner && (
@@ -509,7 +511,7 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            {createRequestButton}
+            {createRequestButton('primary')}
           </div>
 
           {requests.length === 0 ? (
@@ -575,7 +577,7 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <Link href="/clients" className="label-micro hover:text-coral/80 font-semibold">
+            <Link href="/clients" className="label-micro hover:text-danger-ink font-semibold">
               Manage Clients
             </Link>
           </div>

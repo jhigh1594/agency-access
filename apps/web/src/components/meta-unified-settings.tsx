@@ -380,7 +380,7 @@ export function MetaUnifiedSettings({ agencyId }: MetaUnifiedSettingsProps) {
                     updateSetting('page', 'limitPermissions', false);
                     updateSetting('page', 'selectedPermissions', undefined);
                   }}
-                  className="justify-start px-0 text-danger-ink hover:bg-transparent hover:text-coral"
+                  className="justify-start px-0 text-danger-ink hover:bg-transparent hover:text-danger-ink"
                 >
                   {settings.page.limitPermissions ? 'Allow all permissions' : 'Limit permissions'}
                 </Button>

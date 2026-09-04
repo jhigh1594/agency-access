@@ -400,7 +400,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
                 <button
                   type="button"
                   onClick={() => router.push(profileEditHref as any)}
-                  className="ml-1 font-semibold text-danger-ink hover:text-coral/90"
+                  className="ml-1 font-semibold text-danger-ink hover:text-danger-ink"
                 >
                   Edit client profile
                 </button>
@@ -452,7 +452,7 @@ export default function EditAccessRequestPage({ params }: EditAccessRequestPageP
                   <button
                     type="button"
                     onClick={() => removeIntakeField(field.id)}
-                    className="inline-flex items-center gap-1 text-sm text-danger-ink hover:text-coral/90"
+                    className="inline-flex items-center gap-1 text-sm text-danger-ink hover:text-danger-ink"
                   >
                     <Trash2 className="h-4 w-4" />
                     Remove

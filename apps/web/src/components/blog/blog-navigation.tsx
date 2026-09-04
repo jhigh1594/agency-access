@@ -30,7 +30,7 @@ export function BlogNavigation({
                 <ChevronLeft size={16} />
                 <span>PREVIOUS</span>
               </div>
-              <h3 className="font-dela text-lg text-ink group-hover:text-coral transition-colors line-clamp-2">
+              <h3 className="font-dela text-lg text-ink hover:text-danger-ink transition-colors line-clamp-2">
                 {previousPost.title}
               </h3>
               <p className="font-mono text-xs text-gray-500 mt-2">
@@ -58,7 +58,7 @@ export function BlogNavigation({
                 <span>NEXT</span>
                 <ChevronRight size={16} />
               </div>
-              <h3 className="font-dela text-lg text-ink group-hover:text-coral transition-colors line-clamp-2">
+              <h3 className="font-dela text-lg text-ink hover:text-danger-ink transition-colors line-clamp-2">
                 {nextPost.title}
               </h3>
               <p className="font-mono text-xs text-gray-500 mt-2">

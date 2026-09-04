@@ -191,7 +191,7 @@ export default function InternalAdminWebhooksPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedAgencyId(endpoint.agencyId)}
-                          className="text-danger-ink hover:text-coral/80 font-semibold"
+                          className="text-danger-ink hover:text-danger-ink font-semibold"
                         >
                           Inspect
                         </button>

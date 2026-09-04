@@ -15,7 +15,7 @@ export function UsageOverviewCard() {
         <h2 className="text-sm font-semibold text-ink">Usage Overview</h2>
         <Link
           href="/settings?tab=billing"
-          className="text-xs text-danger-ink hover:text-coral/90 font-medium"
+          className="text-xs text-danger-ink hover:text-danger-ink font-medium"
         >
           View Details →
         </Link>

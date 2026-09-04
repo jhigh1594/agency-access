@@ -84,7 +84,7 @@ export function InviteStickyRail({
             </p>
             <a
               href={supportHref}
-              className="shrink-0 text-sm font-semibold text-danger-ink transition-colors hover:text-coral/90"
+              className="shrink-0 text-sm font-semibold text-danger-ink transition-colors hover:text-danger-ink"
             >
               Visit support
             </a>

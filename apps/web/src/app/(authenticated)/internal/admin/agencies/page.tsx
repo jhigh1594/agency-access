@@ -123,7 +123,7 @@ export default function InternalAdminAgenciesPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedAgencyId(agency.id)}
-                          className="text-danger-ink hover:text-coral/80 font-semibold"
+                          className="text-danger-ink hover:text-danger-ink font-semibold"
                         >
                           View
                         </button>

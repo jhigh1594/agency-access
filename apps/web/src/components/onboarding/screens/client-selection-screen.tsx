@@ -208,7 +208,7 @@ export function ClientSelectionScreen({
             <button
               type="button"
               onClick={handleCreateNew}
-              className="text-sm text-danger-ink hover:text-coral font-medium"
+              className="text-sm text-danger-ink hover:text-danger-ink font-medium"
             >
               + Create a new client instead
             </button>
@@ -222,7 +222,7 @@ export function ClientSelectionScreen({
               <button
                 type="button"
                 onClick={handleSwitchToExisting}
-                className="text-sm text-danger-ink hover:text-coral font-medium"
+                className="text-sm text-danger-ink hover:text-danger-ink font-medium"
               >
                 ← Back to client list
               </button>
@@ -286,7 +286,7 @@ export function ClientSelectionScreen({
             <button
               type="button"
               onClick={() => void onDefer()}
-              className="text-sm font-medium text-danger-ink hover:text-coral"
+              className="text-sm font-medium text-danger-ink hover:text-danger-ink"
             >
               No client yet
             </button>

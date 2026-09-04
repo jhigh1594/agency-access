@@ -480,7 +480,7 @@ export default function InternalAdminAffiliatesPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedPartnerId(partner.id)}
-                            className="text-danger-ink hover:text-coral/80 font-semibold"
+                            className="text-danger-ink hover:text-danger-ink font-semibold"
                           >
                             Review
                           </button>
@@ -598,7 +598,7 @@ export default function InternalAdminAffiliatesPage() {
                             ) : partnerDetail.links.map((link) => (
                               <tr key={link.id} className="border-b border-border/50">
                                 <td className="py-3">
-                                  <a href={link.url} target="_blank" rel="noreferrer" className="font-medium text-danger-ink hover:text-coral/80">
+                                  <a href={link.url} target="_blank" rel="noreferrer" className="font-medium text-danger-ink hover:text-danger-ink">
                                     /r/{link.code}
                                   </a>
                                   <p className="text-xs text-muted-foreground">{link.destinationPath}{link.campaign ? ` · ${link.campaign}` : ''}</p>
@@ -613,7 +613,7 @@ export default function InternalAdminAffiliatesPage() {
                                       type="button"
                                       disabled={isMutationPending}
                                       onClick={() => handleDisableLink(link.id)}
-                                      className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
+                                      className="text-danger-ink hover:text-danger-ink font-semibold disabled:opacity-40"
                                     >
                                       Disable
                                     </button>
@@ -680,7 +680,7 @@ export default function InternalAdminAffiliatesPage() {
                                       type="button"
                                       disabled={isMutationPending}
                                       onClick={() => handleDisqualifyReferral(referral.id)}
-                                      className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
+                                      className="text-danger-ink hover:text-danger-ink font-semibold disabled:opacity-40"
                                     >
                                       Disqualify
                                     </button>
@@ -743,7 +743,7 @@ export default function InternalAdminAffiliatesPage() {
                                       type="button"
                                       disabled={isMutationPending}
                                       onClick={() => handleAdjustCommissionAmount(commission.id, commission.amountCents)}
-                                      className="text-foreground hover:text-coral font-semibold disabled:opacity-40"
+                                      className="text-foreground hover:text-danger-ink font-semibold disabled:opacity-40"
                                     >
                                       Adjust
                                     </button>
@@ -752,7 +752,7 @@ export default function InternalAdminAffiliatesPage() {
                                         type="button"
                                         disabled={isMutationPending}
                                         onClick={() => handleAdjustCommissionStatus(commission.id, 'approved')}
-                                        className="text-success-ink hover:text-teal/80 font-semibold disabled:opacity-40"
+                                        className="text-success-ink hover:text-success-ink font-semibold disabled:opacity-40"
                                       >
                                         Approve
                                       </button>
@@ -762,7 +762,7 @@ export default function InternalAdminAffiliatesPage() {
                                         type="button"
                                         disabled={isMutationPending}
                                         onClick={() => handleAdjustCommissionStatus(commission.id, 'void')}
-                                        className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
+                                        className="text-danger-ink hover:text-danger-ink font-semibold disabled:opacity-40"
                                       >
                                         Void
                                       </button>
@@ -894,7 +894,7 @@ export default function InternalAdminAffiliatesPage() {
                           type="button"
                           disabled={isMutationPending}
                           onClick={() => void handleExportPayoutBatch(batch.id)}
-                          className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
+                          className="text-danger-ink hover:text-danger-ink font-semibold disabled:opacity-40"
                         >
                           {batch.exportedAt ? 'Re-export CSV' : 'Export CSV'}
                         </button>
@@ -976,7 +976,7 @@ export default function InternalAdminAffiliatesPage() {
                                 type="button"
                                 disabled={isMutationPending}
                                 onClick={() => void handleResolveReferralReview(referral.id, 'clear')}
-                                className="text-success-ink hover:text-teal/80 font-semibold disabled:opacity-40"
+                                className="text-success-ink hover:text-success-ink font-semibold disabled:opacity-40"
                               >
                                 Clear
                               </button>
@@ -984,7 +984,7 @@ export default function InternalAdminAffiliatesPage() {
                                 type="button"
                                 disabled={isMutationPending}
                                 onClick={() => void handleResolveReferralReview(referral.id, 'keep_review_required')}
-                                className="text-foreground hover:text-coral font-semibold disabled:opacity-40"
+                                className="text-foreground hover:text-danger-ink font-semibold disabled:opacity-40"
                               >
                                 Keep under review
                               </button>
@@ -992,7 +992,7 @@ export default function InternalAdminAffiliatesPage() {
                                 type="button"
                                 disabled={isMutationPending}
                                 onClick={() => void handleResolveReferralReview(referral.id, 'disqualify')}
-                                className="text-danger-ink hover:text-coral/80 font-semibold disabled:opacity-40"
+                                className="text-danger-ink hover:text-danger-ink font-semibold disabled:opacity-40"
                               >
                                 Disqualify
                               </button>

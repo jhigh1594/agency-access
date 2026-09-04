@@ -43,7 +43,7 @@ export function CheckoutSuccessToast() {
         </div>
         <button
           onClick={() => setVisible(false)}
-          className="text-success-ink hover:text-teal/80"
+          className="text-success-ink hover:text-success-ink"
         >
           <X className="h-4 w-4" />
         </button>

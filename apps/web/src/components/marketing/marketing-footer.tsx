@@ -73,35 +73,35 @@ export function MarketingFooter() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 md:gap-12 w-full md:w-auto">
             <div>
-              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Product</h4>
+              <h4 className="label-micro mb-4 sm:mb-6">Product</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
-                <li><Link href="#trusted-by-agencies" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
-                <li><Link href="#how-it-works" onClick={handleSmoothScroll} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
-                <li><Link href="/pricing" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Pricing</Link></li>
-                <li><Link href="/affiliate" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Affiliates</Link></li>
-                <li><Link href="/blog" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Blog</Link></li>
-                <li><a href={getDocsUrl()} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Help Center</a></li>
+                <li><Link href="#trusted-by-agencies" onClick={handleSmoothScroll} className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Features</Link></li>
+                <li><Link href="#how-it-works" onClick={handleSmoothScroll} className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">How It Works</Link></li>
+                <li><Link href="/pricing" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Pricing</Link></li>
+                <li><Link href="/affiliate" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Affiliates</Link></li>
+                <li><Link href="/blog" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Blog</Link></li>
+                <li><a href={getDocsUrl()} className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Help Center</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Compare</h4>
+              <h4 className="label-micro mb-4 sm:mb-6">Compare</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
-                <li><Link href="/compare/leadsie-alternative" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Leadsie Alternative</Link></li>
-                <li><Link href="/compare/agencyaccess-alternative" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">AgencyAccess Alternative</Link></li>
+                <li><Link href="/compare/leadsie-alternative" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Leadsie Alternative</Link></li>
+                <li><Link href="/compare/agencyaccess-alternative" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">AgencyAccess Alternative</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Company</h4>
+              <h4 className="label-micro mb-4 sm:mb-6">Company</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
-                <li><Link href={"/about" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">About</Link></li>
-                <li><Link href={"/contact" as Route} className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Contact</Link></li>
+                <li><Link href={"/about" as Route} className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">About</Link></li>
+                <li><Link href={"/contact" as Route} className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Contact</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-black uppercase tracking-widest text-xs mb-4 sm:mb-6 text-ink">Legal</h4>
+              <h4 className="label-micro mb-4 sm:mb-6">Legal</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm text-gray-600 font-mono">
-                <li><Link href="/privacy-policy" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms of Service</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
@@ -112,8 +112,8 @@ export function MarketingFooter() {
             © {new Date().getFullYear()} High Enterprises LLC. All rights reserved. AuthHub is owned and operated by High Enterprises LLC.
           </p>
           <div className="flex gap-6 sm:gap-8 text-xs sm:text-sm text-gray-600 font-mono">
-            <Link href="/privacy-policy" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Privacy</Link>
-            <Link href="/terms" className="hover:text-coral hover:underline decoration-2 underline-offset-2 transition-all">Terms</Link>
+            <Link href="/privacy-policy" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Privacy</Link>
+            <Link href="/terms" className="hover:text-danger-ink hover:underline decoration-2 underline-offset-2 transition-all">Terms</Link>
           </div>
         </div>
       </div>

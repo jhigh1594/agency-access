@@ -356,7 +356,7 @@ export function BlogPostTemplate({ post }: BlogPostTemplateProps) {
       <header className="mb-10 pb-10 border-b-2 border-black">
         {/* Breadcrumb */}
         <nav className="font-mono text-sm text-muted-foreground mb-4">
-          <Link href="/blog" className="hover:text-coral">Blog</Link>
+          <Link href="/blog" className="hover:text-danger-ink">Blog</Link>
           <span className="mx-2">/</span>
           <span className="text-ink">{title}</span>
         </nav>

@@ -188,7 +188,7 @@ export function MetaPagePermissionsModal({
                 onClick={handleRequestMaximum}
                 variant="ghost"
                 size="sm"
-                className="px-0 text-danger-ink hover:bg-transparent hover:text-coral"
+                className="px-0 text-danger-ink hover:bg-transparent hover:text-danger-ink"
                 disabled={isSaving}
               >
                 Request maximum permissions

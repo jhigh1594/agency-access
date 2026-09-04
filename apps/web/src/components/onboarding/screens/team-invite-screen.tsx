@@ -206,7 +206,7 @@ export function TeamInviteScreen({
                 <button
                   type="button"
                   onClick={() => handleRemoveInvite(invite.email)}
-                  className="p-2 text-muted-foreground hover:text-coral hover:bg-coral/10 rounded-lg transition-all"
+                  className="p-2 text-muted-foreground hover:text-danger-ink hover:bg-coral/10 rounded-lg transition-all"
                   aria-label="Remove invite"
                 >
                   <X className="w-5 h-5" />

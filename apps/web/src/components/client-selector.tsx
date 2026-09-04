@@ -228,7 +228,7 @@ export function ClientSelector({ onSelect, value }: ClientSelectorProps) {
               <button
                 type="button"
                 onClick={refreshClients}
-                className="px-5 py-2.5 text-danger-ink hover:text-coral/90 text-base rounded-lg hover:bg-muted/20 transition-colors"
+                className="px-5 py-2.5 text-danger-ink hover:text-danger-ink text-base rounded-lg hover:bg-muted/20 transition-colors"
               >
                 Retry
               </button>

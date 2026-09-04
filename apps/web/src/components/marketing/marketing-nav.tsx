@@ -131,7 +131,7 @@ export function MarketingNav() {
               className="w-full h-full object-contain"
             />
           </div>
-          <span className="font-dela text-3xl tracking-tight text-ink font-bold group-hover:text-coral transition-colors">AuthHub</span>
+          <span className="font-dela text-3xl tracking-tight text-ink font-bold hover:text-danger-ink transition-colors">AuthHub</span>
         </Link>
 
         {/* Desktop Navigation - Brutalist pills */}

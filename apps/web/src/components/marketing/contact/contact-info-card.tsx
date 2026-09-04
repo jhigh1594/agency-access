@@ -38,7 +38,7 @@ export function ContactInfoCard() {
               <p className="font-mono text-sm text-gray-500 mb-1">Email us</p>
               <a
                 href="#"
-                className="text-ink hover:text-coral transition-colors font-medium"
+                className="text-ink hover:text-danger-ink transition-colors font-medium"
                 onClick={(e) => {
                   e.preventDefault();
                   handleEmailClick();
@@ -94,7 +94,7 @@ export function ContactInfoCard() {
               href="https://linkedin.com/company/authhub"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-coral/10 hover:text-coral transition-colors"
+              className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-coral/10 hover:text-danger-ink transition-colors"
               aria-label="LinkedIn"
             >
               <Linkedin className="w-5 h-5" />
@@ -103,7 +103,7 @@ export function ContactInfoCard() {
               href="https://twitter.com/authhub"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-coral/10 hover:text-coral transition-colors"
+              className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-coral/10 hover:text-danger-ink transition-colors"
               aria-label="X (Twitter)"
             >
               <Twitter className="w-5 h-5" />
@@ -116,7 +116,7 @@ export function ContactInfoCard() {
           <p className="font-mono text-xs text-gray-500 mb-2">Looking for quick answers?</p>
           <a
             href={getDocsUrl()}
-            className="text-danger-ink hover:text-coral/80 transition-colors text-sm font-medium"
+            className="text-danger-ink hover:text-danger-ink transition-colors text-sm font-medium"
           >
             Visit the Help Center &rarr;
           </a>

@@ -225,7 +225,7 @@ function AccessRequestWizardContent() {
                       <span className="text-sm font-semibold text-muted-foreground">2</span>
                     </div>
                     <div className="flex-1">
-                      <span className="block text-base font-semibold text-ink group-hover:text-coral/90 transition-colors">
+                      <span className="block text-base font-semibold text-ink hover:text-danger-ink transition-colors">
                         Advanced Settings <span className="text-muted-foreground font-normal">(Optional)</span>
                       </span>
                       <p className="text-sm text-muted-foreground">
@@ -359,7 +359,7 @@ function AccessRequestWizardContent() {
               {platformConnections.filter((p: any) => p.connected).length > 0 && (
                 <p className="mt-3 text-xs text-muted-foreground">
                   Only your connected platforms are shown.{' '}
-                  <a href="/connections" className="text-danger-ink hover:text-coral/90 font-medium">
+                  <a href="/connections" className="text-danger-ink hover:text-danger-ink font-medium">
                     Connect more platforms
                   </a>{' '}
                   to include them in access requests.
@@ -505,7 +505,7 @@ function AccessRequestWizardContent() {
               <button
                 type="button"
                 onClick={addIntakeField}
-                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:border-coral/40 hover:text-coral hover:bg-coral/10 transition-all"
+                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:border-coral/40 hover:text-danger-ink hover:bg-coral/10 transition-all"
               >
                 <Plus className="h-4 w-4" />
                 Add Field
@@ -682,7 +682,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-danger-ink"
                     >
                       Edit
                     </button>
@@ -715,7 +715,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-danger-ink"
                     >
                       Edit
                     </button>
@@ -760,7 +760,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-danger-ink"
                     >
                       Edit
                     </button>
@@ -785,7 +785,7 @@ function AccessRequestWizardContent() {
                     <button
                       type="button"
                       onClick={() => setStep(3)}
-                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
+                      className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-danger-ink"
                     >
                       Edit
                     </button>
@@ -836,7 +836,7 @@ function AccessRequestWizardContent() {
                       <button
                         type="button"
                         onClick={() => setStep(3)}
-                        className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-coral/90"
+                        className="text-xs font-semibold uppercase tracking-wide text-danger-ink hover:text-danger-ink"
                       >
                         Edit
                       </button>

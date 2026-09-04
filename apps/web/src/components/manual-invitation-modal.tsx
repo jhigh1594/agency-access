@@ -298,7 +298,7 @@ export function ManualInvitationModal({
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-danger-ink hover:text-coral/90 font-medium inline-flex items-center gap-1"
+                          className="text-danger-ink hover:text-danger-ink font-medium inline-flex items-center gap-1"
                         >
                           Pinterest Business Manager
                           <ExternalLink className="h-3 w-3" />

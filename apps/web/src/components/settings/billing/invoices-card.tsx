@@ -71,7 +71,7 @@ export function InvoicesCard() {
                         href={invoice.pdfUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-danger-ink hover:text-coral/80 font-medium"
+                        className="inline-flex items-center gap-1 text-danger-ink hover:text-danger-ink font-medium"
                       >
                         <Download className="h-4 w-4" />
                         PDF

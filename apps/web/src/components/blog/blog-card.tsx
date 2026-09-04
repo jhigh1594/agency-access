@@ -28,7 +28,7 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
             >
               {category.icon} {category.name}
             </span>
-            <h3 className="font-dela text-lg text-ink group-hover:text-coral transition-colors line-clamp-2">
+            <h3 className="font-dela text-lg text-ink hover:text-danger-ink transition-colors line-clamp-2">
               {post.title}
             </h3>
             <div className="flex items-center gap-3 mt-2 text-xs font-mono text-gray-600">
@@ -74,7 +74,7 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
         </div>
 
         <div className="p-6">
-          <h2 className="font-dela text-2xl md:text-3xl text-ink group-hover:text-coral transition-colors mb-3">
+          <h2 className="font-dela text-2xl md:text-3xl text-ink hover:text-danger-ink transition-colors mb-3">
             {post.title}
           </h2>
           <p className="font-mono text-sm text-gray-600 mb-4 line-clamp-2">
@@ -136,7 +136,7 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
       </div>
 
       <div className="p-6 pt-3">
-        <h3 className="font-dela text-xl text-ink group-hover:text-coral transition-colors mb-2 line-clamp-2">
+        <h3 className="font-dela text-xl text-ink hover:text-danger-ink transition-colors mb-2 line-clamp-2">
           {post.title}
         </h3>
         <p className="font-mono text-sm text-gray-600 mb-4 line-clamp-3">

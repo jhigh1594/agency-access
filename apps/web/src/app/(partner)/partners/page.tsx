@@ -398,7 +398,7 @@ export default function PartnerPortalPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className="h-auto px-0 text-danger-ink hover:bg-transparent hover:text-coral/80"
+                className="h-auto px-0 text-danger-ink hover:bg-transparent hover:text-danger-ink"
                 onClick={() => row.url && copyToClipboard(`link:${row.url}`, row.url)}
               >
                 {copiedKey === `link:${row.url}` ? 'Copied' : 'Copy'}

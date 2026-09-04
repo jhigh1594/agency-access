@@ -116,7 +116,7 @@ export default function ContactPage() {
             <div className="text-center mt-8">
               <a
                 href={getDocsUrl()}
-                className="inline-flex items-center gap-2 text-danger-ink hover:text-coral/80 font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-danger-ink hover:text-danger-ink font-medium transition-colors"
               >
                 Visit the Help Center
                 <span>&rarr;</span>

@@ -142,8 +142,9 @@ Three families, three roles:
 ```
 
 Adopted: StatCard labels, dashboard Active Connections header (ink-panel
-header with ground-aware child rules). Remaining targets: card meta rows,
-table headers, footer metadata, section eyebrows.
+header with ground-aware child rules), marketing footer column headings.
+Comparison-table `thead` is a display role, not a micro-label target.
+Remaining targets: card meta rows, section eyebrows.
 
 #### Type Scale
 
@@ -223,7 +224,7 @@ Unchanged: `cn()` merging, forwardRef, CVA where needed, components in
 | `secondary` | Card fill, 1px ink border, no shadow | Alternative/cancel |
 | `ghost` | Transparent | Tertiary, icon-adjacent |
 | `danger` | `danger-ink` fill, white text | Destructive — never looks like primary |
-| `brutalist` | Uppercase coral, 2px border, diagonal shift hover | **Hero CTAs only** |
+| `brutalist` | Uppercase coral, 2px border, diagonal shift hover | **One per view** — the view's primary action, wherever it lives (marketing hero, app page, or modal) |
 
 - Sizes: `sm | md | lg | xl | icon` — all `rounded-none` except `icon` (circle)
 - Hover: lift 2px (`hover:translate-y-[-2px]`); shadow does not grow

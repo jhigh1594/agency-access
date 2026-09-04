@@ -71,7 +71,7 @@ export default function InternalAdminOverviewPage() {
           actions={
             <a
               href="/internal/admin/agencies"
-              className="text-sm font-semibold text-danger-ink hover:text-coral/80"
+              className="text-sm font-semibold text-danger-ink hover:text-danger-ink"
             >
               View all agencies
             </a>
